@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Balance Simulator</title>
+<style>
+:root{--ink:#1f2733;--ink2:#475467;--mute:#98a2b3;--line:#e4e7ec;--line2:#eef1f4;--bg:#f5f7fa;
+  --ok:#2e9e5b;--warn:#d98324;--bad:#d9432b;--gold:#b7791f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Helvetica Neue',Arial,'Segoe UI Emoji',sans-serif;color:var(--ink);
+  background:var(--bg);line-height:1.4;padding:26px 22px 80px}
+h1{font-size:27px;font-weight:800;letter-spacing:-.6px}
+h2{font-size:17px;font-weight:800;margin:26px 0 10px}
+.sub{color:var(--ink2);font-size:14.5px;margin:6px 0 18px;max-width:900px}
+.wrap{max-width:1240px;margin:0 auto}
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);
+  border-radius:12px;padding:13px 16px;margin-bottom:18px;font-size:14px}
+.controls label{display:flex;gap:6px;align-items:center;font-weight:700}
+.controls input[type=number]{width:70px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font:inherit}
+button{font:inherit;font-weight:800;background:var(--ok);color:#fff;border:none;border-radius:10px;
+  padding:9px 20px;cursor:pointer}
+button:hover{filter:brightness(1.07)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:8px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi .n{font-size:27px;font-weight:800;letter-spacing:-1px}
+.kpi .l{font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.4px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;font-size:13.5px}
+th{text-align:left;font-size:11px;letter-spacing:.7px;color:var(--mute);background:#fbfcfd;
+  padding:9px 11px;border-bottom:1.5px solid var(--line);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--ink)}
+td{padding:7px 11px;border-bottom:1px solid var(--line2);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.name{font-weight:700}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.bar{display:inline-block;height:9px;border-radius:5px;vertical-align:middle;margin-right:7px}
+.tag{font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:4px;
+  background:#f2f4f7;color:#667085}
+.tag.CAPSTONE{background:#fbecc8;color:var(--gold)}
+.tag.CREATION{background:#e7edfb;color:#3b5bab}
+.ok{color:var(--ok);font-weight:800}
+.warn{color:var(--warn);font-weight:800}
+.bad{color:var(--bad);font-weight:800}
+.muted{color:var(--mute)}
+#status{font-weight:700;color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>⚗️ Elementia — Balance Simulator</h1>
+<p class="sub">
+Ports <code>simulation/model.py</code> to the browser so it runs without a Python install. Same source data as the
+game and the PDFs. Both bugs called out in HANDOFF.md §5 are fixed here: station routing is
+<b>scarcity-weighted</b> (Bug A) and requirement totals are a <b>DAG walk</b>, not a tree walk (Bug B).
+</p>
+
+<div class="controls">
+  <label>Visits <input type="number" id="visits" value="15" min="1" max="40"></label>
+  <label>Take <input type="number" id="take" value="5" min="1" max="10"></label>
+  <label>Groups/item <input type="number" id="trials" value="600" min="50" max="5000" step="50"></label>
+  <label>Sloppiness <input type="number" id="eps" value="0.25" min="0" max="1" step="0.05"></label>
+  <label><input type="checkbox" id="noRepeat" checked> No repeat station twice in a row</label>
+  <label><input type="checkbox" id="proposed"> City with Museum (rejected — for comparison)</label>
+  <button id="run">▶ Run simulation</button>
+  <span id="status"></span>
+</div>
+
+<div id="out"></div>
+</div>
+
+<script>
+/* =====================================================================
+   GAME DATA — generated from pdf_generation/build_guide.py
+   Do not hand-edit. Regenerate with:  python game/build_game.py
+   ===================================================================== */
+const DATA = /*__GAME_DATA_START__*/{
+ "take": 5,
+ "version": "2026.08.07",
+ "suits": {
+  "ocean": {
+   "label": "OCEAN",
+   "color": "#8a5ce0",
+   "soft": "#ece3f9"
+  },
+  "power": {
+   "label": "POWER PLANT",
+   "color": "#3aa9a0",
+   "soft": "#e1f2f0"
+  },
+  "greenhouse": {
+   "label": "GREENHOUSE",
+   "color": "#3aab6d",
+   "soft": "#e2f1e7"
+  },
+  "mine": {
+   "label": "DEEP MINE",
+   "color": "#e2a83e",
+   "soft": "#f8ecd7"
+  },
+  "forest": {
+   "label": "OLD GROWTH",
+   "color": "#e2823a",
+   "soft": "#f8e4d5"
+  },
+  "bakery": {
+   "label": "BAKERY",
+   "color": "#8cb43e",
+   "soft": "#eef3dc"
+  },
+  "city": {
+   "label": "THE CITY",
+   "color": "#e2543b",
+   "soft": "#f8e6e1"
+  },
+  "observatory": {
+   "label": "OBSERVATORY",
+   "color": "#4d7cf2",
+   "soft": "#e3ebfb"
+  }
+ },
+ "stations": [
+  {
+   "emoji": "🌊",
+   "name": "The Ocean",
+   "suit": "ocean",
+   "dice": [
+    "C",
+    "O",
+    "H",
+    "Si",
+    "N",
+    "Ca"
+   ],
+   "shop": [
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "⏳",
+     "Sand",
+     "MATERIAL",
+     "Si + O",
+     2
+    ],
+    [
+     "🌿",
+     "Seaweed",
+     "MATERIAL",
+     "C + H + O",
+     2
+    ],
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "✨",
+     "Life",
+     "CREATION",
+     "🦴 Bone + 🧬 DNA + ⭐ Star",
+     10
+    ],
+    [
+     "🍌",
+     "Banana",
+     "CREATION",
+     "🌳 Tree + 💧 Water + K",
+     6
+    ],
+    [
+     "☁️",
+     "Cloud",
+     "COMPONENT",
+     "💧 Water + N + C",
+     8
+    ],
+    [
+     "__LIGHTHOUSE__",
+     "Lighthouse",
+     "CREATION",
+     "💡 Light Bulb + ⬜ Concrete",
+     10
+    ],
+    [
+     "__ORCA__",
+     "Orca",
+     "CREATION",
+     "🌿 Seaweed + 🐟 Salmon + 🦴 Bone",
+     5
+    ],
+    [
+     "🚤",
+     "Speedboat",
+     "CREATION",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass",
+     19
+    ]
+   ],
+   "capstone": [
+    "__CORAL__",
+    "Coral Reef",
+    "CAPSTONE",
+    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",
+    13
+   ]
+  },
+  {
+   "emoji": "⚡",
+   "name": "The Power Plant",
+   "suit": "power",
+   "dice": [
+    "Si",
+    "Al",
+    "Ag",
+    "Ni",
+    "Cu",
+    "Fe"
+   ],
+   "shop": [
+    [
+     "🔋",
+     "Battery",
+     "MATERIAL",
+     "Ni + Fe + K",
+     2
+    ],
+    [
+     "🔌",
+     "Wire",
+     "MATERIAL",
+     "Cu + Al",
+     2
+    ],
+    [
+     "🕐",
+     "Clock",
+     "COMPONENT",
+     "🔋 Battery + 🛠️ Tools",
+     6
+    ],
+    [
+     "⚙️",
+     "Engine",
+     "COMPONENT",
+     "🛠️ Tools + 🛢️ Natural Gas",
+     6
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     4
+    ],
+    [
+     "💡",
+     "Light Bulb",
+     "COMPONENT",
+     "🪟 Glass + 🔌 Wire",
+     6
+    ],
+    [
+     "🔆",
+     "Solar Cell",
+     "COMPONENT",
+     "Si + Ag + 🪟 Glass",
+     6
+    ],
+    [
+     "🥤",
+     "Plastic",
+     "COMPONENT",
+     "🛢️ Natural Gas + 🔥 Furnace",
+     9
+    ],
+    [
+     "🚗",
+     "Car",
+     "CREATION",
+     "⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + 🔘 Rubber Tire",
+     16
+    ],
+    [
+     "💻",
+     "Computer",
+     "COMPONENT",
+     "🔋 Battery + 🥤 Plastic + 🎛️ Microchip",
+     11
+    ]
+   ],
+   "capstone": [
+    "🤖",
+    "Robot",
+    "CAPSTONE",
+    "💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + 🎛️ Microchip",
+    20
+   ]
+  },
+  {
+   "emoji": "🌱",
+   "name": "Greenhouse",
+   "suit": "greenhouse",
+   "dice": [
+    "C",
+    "H",
+    "O",
+    "K",
+    "N",
+    "P"
+   ],
+   "shop": [
+    [
+     "♻️",
+     "Fertilizer",
+     "MATERIAL",
+     "N + P + K",
+     2
+    ],
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "⏳",
+     "Sand",
+     "MATERIAL",
+     "Si + O",
+     2
+    ],
+    [
+     "🍬",
+     "Sugar",
+     "MATERIAL",
+     "C + H + O",
+     2
+    ],
+    [
+     "🧬",
+     "DNA",
+     "MATERIAL",
+     "🍬 Sugar + P + N",
+     4
+    ],
+    [
+     "🌱",
+     "Soil",
+     "COMPONENT",
+     "🏺 Clay + ⏳ Sand + 💧 Water",
+     6
+    ],
+    [
+     "🧑‍🌾",
+     "Farm",
+     "CREATION",
+     "🌱 Soil + 🛠️ Tools + 💧 Water",
+     10
+    ],
+    [
+     "🐔",
+     "Chicken",
+     "CREATION",
+     "🧑‍🌾 Farm + 🥚 Egg",
+     13
+    ],
+    [
+     "🍎",
+     "Fruit",
+     "CREATION",
+     "🌳 Tree + 💧 Water",
+     9
+    ],
+    [
+     "🌾",
+     "Grain",
+     "COMPONENT",
+     "🧑‍🌾 Farm + ♻️ Fertilizer",
+     13
+    ],
+    [
+     "🚜",
+     "Tractor",
+     "CREATION",
+     "🧑‍🌾 Farm + ⚙️ Engine",
+     12
+    ]
+   ],
+   "capstone": [
+    "🏡",
+    "Homestead",
+    "CAPSTONE",
+    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🏢 Building",
+    20
+   ]
+  },
+  {
+   "emoji": "💎",
+   "name": "Deep Mine",
+   "suit": "mine",
+   "dice": [
+    "Ni",
+    "Si",
+    "Al",
+    "Fe",
+    "C",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     3
+    ],
+    [
+     "🛢️",
+     "Natural Gas",
+     "MATERIAL",
+     "C + H",
+     2
+    ],
+    [
+     "🔩",
+     "Steel",
+     "MATERIAL",
+     "Fe + C",
+     2
+    ],
+    [
+     "🛠️",
+     "Tools",
+     "CREATION",
+     "Fe + Ti + Al",
+     4
+    ],
+    [
+     "🔥",
+     "Furnace",
+     "CREATION",
+     "🏺 Clay + C",
+     5
+    ],
+    [
+     "🌱",
+     "Soil",
+     "COMPONENT",
+     "🏺 Clay + ⏳ Sand + 💧 Water",
+     6
+    ],
+    [
+     "🦾",
+     "Aluminum Alloy",
+     "MATERIAL",
+     "Al + Mg + 🔥 Furnace",
+     2
+    ],
+    [
+     "🔩",
+     "Stainless Steel",
+     "MATERIAL",
+     "🔩 Steel + Ni + 🔥 Furnace",
+     3
+    ],
+    [
+     "💎",
+     "Diamond",
+     "COMPONENT",
+     "C + 🔥 Furnace + 🕐 Clock",
+     6
+    ],
+    [
+     "🛡️",
+     "Titanium Alloy",
+     "MATERIAL",
+     "Ti + Al + 🔥 Furnace",
+     2
+    ],
+    [
+     "🔘",
+     "Rubber Tire",
+     "COMPONENT",
+     "🦾 Aluminum Alloy + 🛢️ Natural Gas + S",
+     8
+    ]
+   ],
+   "capstone": [
+    "🚄",
+    "Maglev Train",
+    "CAPSTONE",
+    "⚙️ Engine + 🪟 Glass + 🧲 Magnet + 🌉 Bridge + 🦾 Aluminum Alloy",
+    17
+   ]
+  },
+  {
+   "emoji": "🌲",
+   "name": "Old Growth Forest",
+   "suit": "forest",
+   "flavor": "Nanaimo coal seams · Horne Lake limestone karst · Courtenay elasmosaur beds",
+   "dice": [
+    "C",
+    "O",
+    "Si",
+    "Al",
+    "Mg",
+    "S"
+   ],
+   "shop": [
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     3
+    ],
+    [
+     "⏳",
+     "Sand",
+     "MATERIAL",
+     "Si + O",
+     2
+    ],
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "🦴",
+     "Bone",
+     "MATERIAL",
+     "💧 Water + C + Ca + S",
+     2
+    ],
+    [
+     "🌱",
+     "Soil",
+     "COMPONENT",
+     "🏺 Clay + ⏳ Sand + 💧 Water",
+     6
+    ],
+    [
+     "🐟",
+     "Salmon",
+     "CREATION",
+     "🌿 Seaweed + 💧 Water + 🥚 Egg",
+     4
+    ],
+    [
+     "🌳",
+     "Tree",
+     "COMPONENT",
+     "🌱 Soil + C + O",
+     8
+    ],
+    [
+     "🛶",
+     "Canoe",
+     "COMPONENT",
+     "🌳 Tree + 💧 Water",
+     6
+    ],
+    [
+     "🦌",
+     "Deer",
+     "CREATION",
+     "🌳 Tree + 💧 Water + 🦴 Bone",
+     9
+    ]
+   ],
+   "capstone": [
+    "🌎",
+    "Ecosystem",
+    "CAPSTONE",
+    "🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow",
+    20
+   ]
+  },
+  {
+   "emoji": "🍞",
+   "name": "The Bakery",
+   "suit": "bakery",
+   "dice": [
+    "O",
+    "H",
+    "P",
+    "S",
+    "Ca",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "🛢️",
+     "Natural Gas",
+     "MATERIAL",
+     "C + H",
+     2
+    ],
+    [
+     "🍬",
+     "Sugar",
+     "MATERIAL",
+     "C + H + O",
+     2
+    ],
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "🦠",
+     "Yeast",
+     "COMPONENT",
+     "🍬 Sugar + 💧 Water",
+     4
+    ],
+    [
+     "🥚",
+     "Egg",
+     "COMPONENT",
+     "🧬 DNA + Ca + O",
+     14
+    ],
+    [
+     "__FLOUR__",
+     "Flour",
+     "COMPONENT",
+     "🌾 Grain + 🛠️ Tools",
+     14
+    ],
+    [
+     "🫓",
+     "Dough",
+     "COMPONENT",
+     "__FLOUR__ Flour + 💧 Water",
+     15
+    ],
+    [
+     "🍞",
+     "Bread",
+     "CREATION",
+     "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
+     19
+    ],
+    [
+     "🍰",
+     "Cake",
+     "CREATION",
+     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
+     21
+    ]
+   ],
+   "capstone": [
+    "🎂",
+    "Fruit Cake",
+    "CAPSTONE",
+    "🍞 Bread + 🍰 Cake + 🍎 Fruit + 🕐 Clock + 🍌 Banana",
+    27
+   ]
+  },
+  {
+   "emoji": "🏗️",
+   "name": "The City",
+   "suit": "city",
+   "flavor": "Urban infrastructure & civic engineering — Ca, C, O, Al, S, Fe.",
+   "dice": [
+    "Ca",
+    "C",
+    "O",
+    "Al",
+    "Si",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     3
+    ],
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "🔩",
+     "Steel",
+     "MATERIAL",
+     "Fe + C",
+     2
+    ],
+    [
+     "⬜",
+     "Concrete",
+     "COMPONENT",
+     "🏺 Clay + 🪨 Limestone",
+     6
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     4
+    ],
+    [
+     "🌉",
+     "Bridge",
+     "CREATION",
+     "🔩 Steel + ⬜ Concrete + 💧 Water",
+     8
+    ],
+    [
+     "🏢",
+     "Building",
+     "CREATION",
+     "⬜ Concrete + 🪟 Glass + 🔩 Steel",
+     10
+    ],
+    [
+     "✈️",
+     "Airplane",
+     "CREATION",
+     "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",
+     16
+    ],
+    [
+     "🍣",
+     "Sushi Restaurant",
+     "CREATION",
+     "🌿 Seaweed + 🐟 Salmon + 🏢 Building",
+     12
+    ],
+    [
+     "🗼",
+     "Skyscraper",
+     "CREATION",
+     "🏢 Building + ☁️ Cloud",
+     14
+    ]
+   ],
+   "capstone": [
+    "🌆",
+    "Metropolis",
+    "CAPSTONE",
+    "🌉 Bridge + 🗼 Skyscraper + ✈️ Airplane + 🚗 Car + 💡 Light Bulb",
+    21
+   ]
+  },
+  {
+   "emoji": "🔭",
+   "name": "The Observatory",
+   "suit": "observatory",
+   "flavor": "Saanich's Dominion Astrophysical Observatory — from silvered mirror to launch pad.",
+   "dice": [
+    "Ni",
+    "Al",
+    "Fe",
+    "Ag",
+    "Ti",
+    "Si"
+   ],
+   "shop": [
+    [
+     "🎛️",
+     "Microchip",
+     "COMPONENT",
+     "🔌 Wire + Si + Ag",
+     8
+    ],
+    [
+     "🛠️",
+     "Tools",
+     "CREATION",
+     "Fe + Ti + Al",
+     4
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     4
+    ],
+    [
+     "🧲",
+     "Magnet",
+     "COMPONENT",
+     "Fe + 🔋 Battery",
+     3
+    ],
+    [
+     "🧭",
+     "Compass",
+     "COMPONENT",
+     "🧲 Magnet + 💧 Water + 🪟 Glass",
+     8
+    ],
+    [
+     "📡",
+     "Satellite Dish",
+     "COMPONENT",
+     "🦾 Aluminum Alloy + 🔌 Wire",
+     9
+    ],
+    [
+     "🔭",
+     "Telescope",
+     "CREATION",
+     "🪟 Glass + 🦾 Aluminum Alloy + Ag",
+     7
+    ],
+    [
+     "⭐",
+     "Star",
+     "CREATION",
+     "🔭 Telescope + H + 🕐 Clock",
+     13
+    ],
+    [
+     "🌈",
+     "Rainbow",
+     "CREATION",
+     "☁️ Cloud + ⭐ Star",
+     14
+    ],
+    [
+     "🚀",
+     "Rocket",
+     "CREATION",
+     "💻 Computer + 🔆 Solar Cell + 🛡️ Titanium Alloy",
+     16
+    ]
+   ],
+   "capstone": [
+    "🛰️",
+    "Space Station",
+    "CAPSTONE",
+    "🚀 Rocket + 🍎 Fruit + ⭐ Star + 📡 Satellite Dish",
+    27
+   ]
+  }
+ ]
+}/*__GAME_DATA_END__*/;
+</script>
+
+<script>
+/* =====================================================================
+   Model layer — mirrors simulation/model.py
+   ===================================================================== */
+const EL_RE = /^[A-Z][a-z]?$/;
+const ELEMENTS = new Set();
+DATA.stations.forEach(s => s.dice.forEach(d => ELEMENTS.add(d)));
+
+function parseRecipe(str){
+  return str.split("+").map(t => t.trim()).filter(Boolean).map(tok => {
+    const catalyst = tok.endsWith("*");
+    tok = tok.replace(/\*/g, "").trim();
+    if (EL_RE.test(tok)) return {name:tok, kind:"element", catalyst};
+    const sp = tok.indexOf(" ");
+    return {name: sp >= 0 ? tok.slice(sp + 1).trim() : tok, kind:"item", catalyst};
+  });
+}
+
+/* 2026-07-20 rebalance: City = Bridge+Skyscraper+Waterworks+Car shipped as
+   the default (60% reach). Folding Museum in instead was tested and
+   rejected -- Museum is deliberately kept hard (Dinosaur/Clock chain), so
+   requiring it in City crashed City's reach to ~20%, worse than the
+   original outlier problem. Toggle below to see the rejected version. */
+const REJECTED_CITY_WITH_MUSEUM = {
+  "City": "🌉 Bridge + 🏛️ Museum + 🗼 Skyscraper + 🚰 Waterworks"
+};
+
+let ENTRIES, STATION, BY_STATION, RECIPES, NAMES, HOMES, TIER, EMOJI, CAPSTONES, SOURCES;
+
+const ORIGINAL_STATIONS = JSON.parse(JSON.stringify(DATA.stations));
+
+function buildModel(patches){
+  const stations = JSON.parse(JSON.stringify(ORIGINAL_STATIONS));
+  if (patches) stations.forEach(s => {
+    const fix = row => { if (patches[row[1]] !== undefined) row[3] = patches[row[1]]; };
+    s.shop.forEach(fix);
+    if (s.farm_section) s.farm_section.items.forEach(fix);
+    fix(s.capstone);
+  });
+
+  ENTRIES = [];
+  stations.forEach(s => {
+    const push = (row, farm) => {
+      const [emoji, name, tier, recipe] = row;
+      const reqs = parseRecipe(recipe);
+      if (farm) reqs.forEach(r => { if (r.name === "Farm") r.catalyst = true; });
+      ENTRIES.push({station:s.name, emoji, name, tier, recipe, reqs});
+    };
+    s.shop.forEach(r => push(r, false));
+    if (s.farm_section) s.farm_section.items.forEach(r => push(r, true));
+    push(s.capstone, false);
+  });
+
+  STATION = {}; stations.forEach(s => STATION[s.name] = s);
+  BY_STATION = {}; stations.forEach(s => BY_STATION[s.name] = ENTRIES.filter(e => e.station === s.name));
+  RECIPES = {}; ENTRIES.forEach(e => (RECIPES[e.name] = RECIPES[e.name] || []).push(e));
+  NAMES = Object.keys(RECIPES);
+  HOMES = {}; NAMES.forEach(n => HOMES[n] = RECIPES[n].map(e => e.station));
+  TIER  = {}; ENTRIES.forEach(e => TIER[e.name] = e.tier);
+  const CUSTOM_ICON_LABELS = {"__ORCA__": "🐋", "__CORAL__": "🐠"};
+  EMOJI = {}; ENTRIES.forEach(e => EMOJI[e.name] = CUSTOM_ICON_LABELS[e.emoji] || e.emoji);
+  CAPSTONES = stations.map(s => s.capstone[1]);
+  /* how many stations can roll each element (drives the Bug-A scarcity fix) */
+  SOURCES = {};
+  [...ELEMENTS].forEach(el => SOURCES[el] = stations.filter(s => s.dice.includes(el)).length);
+
+  depthCache = {}; vCache = {};   // caches are model-specific
+  DATA.stations = stations;       // keep chooseStation's iteration in sync
+}
+const scarcityBonus = el => SOURCES[el] === 1 ? 10 : SOURCES[el] === 2 ? 5 : 1;
+
+/* crafting depth (model.py compute_depth) --------------------------------- */
+let depthCache = {};
+function depth(item, seen = new Set()){
+  if (ELEMENTS.has(item)) return 0;
+  if (item in depthCache) return depthCache[item];
+  if (seen.has(item) || !RECIPES[item]) return Infinity;
+  let best = Infinity;
+  for (const e of RECIPES[item]){
+    let worst = 0, ok = true;
+    for (const r of e.reqs){
+      const d = r.kind === "element" ? 0 : depth(r.name, new Set([...seen, item]));
+      if (d === Infinity){ ok = false; break; }
+      worst = Math.max(worst, d);
+    }
+    if (ok) best = Math.min(best, 1 + worst);
+  }
+  if (seen.size === 0) depthCache[item] = best;
+  return best;
+}
+
+/* DAG-correct requirement totals (model.py total_needs / HANDOFF §5 Bug B) -
+   every unique crafted item is built once, so its element cost is paid once. */
+function closureOf(goal){
+  const items = new Set(), stack = [goal];
+  while (stack.length){
+    const n = stack.pop();
+    if (items.has(n) || !RECIPES[n]) continue;
+    items.add(n);
+    RECIPES[n][0].reqs.forEach(r => { if (r.kind === "item") stack.push(r.name); });
+  }
+  return items;
+}
+function totalNeeds(goal){
+  const items = closureOf(goal), els = {};
+  items.forEach(n => RECIPES[n][0].reqs.forEach(r => {
+    if (r.kind === "element" && !r.catalyst) els[r.name] = (els[r.name] || 0) + 1;
+  }));
+  return {items, els, elementCount: Object.values(els).reduce((a,b) => a+b, 0)};
+}
+
+/* Optimistic lower bound on station visits: assumes every die roll lands
+   perfectly, so this measures pure CHAIN LENGTH — how many times you are
+   forced to change station because an ingredient lives somewhere else.
+   V(item,h) = extra visits before the visit at h where item gets built. */
+let vCache = {};
+function V(item, h, stack = new Set()){
+  const key = item + "|" + h;
+  if (key in vCache) return vCache[key];
+  if (stack.has(key)) return Infinity;
+  const entry = RECIPES[item].find(e => e.station === h);
+  if (!entry) return Infinity;
+  const sub = new Set([...stack, key]);
+  let worst = 0;
+  for (const r of entry.reqs){
+    if (r.kind !== "item") continue;
+    let best = Infinity;
+    for (const h2 of HOMES[r.name]) best = Math.min(best, V(r.name, h2, sub) + (h2 === h ? 0 : 1));
+    worst = Math.max(worst, best);
+  }
+  if (!stack.size) vCache[key] = worst;
+  return worst;
+}
+function minVisits(item){
+  let best = Infinity, bestHome = null;
+  HOMES[item].forEach(h => { const v = V(item, h); if (v + 1 < best){ best = v + 1; bestHome = h; } });
+  return {visits: best, home: bestHome};
+}
+/* distinct stations that must be entered at least once */
+function stationsRequired(goal){
+  const need = closureOf(goal), chosen = new Set();
+  // greedy set cover over each item's possible homes, preferring stations already chosen
+  const sorted = [...need].sort((a,b) => HOMES[a].length - HOMES[b].length);
+  sorted.forEach(n => {
+    if (HOMES[n].some(h => chosen.has(h))) return;
+    chosen.add(HOMES[n][0]);
+  });
+  return chosen.size;
+}
+
+/* =====================================================================
+   Monte Carlo — a group with one goal, played to the wall
+   ===================================================================== */
+function craftableNow(entry, els, items){
+  const need = {};
+  for (const r of entry.reqs){
+    if (r.kind === "item"){ if (!items.has(r.name)) return false; }
+    else if (!r.catalyst) need[r.name] = (need[r.name] || 0) + 1;
+  }
+  for (const k in need) if ((els[k] || 0) < need[k]) return false;
+  return true;
+}
+function doCraft(entry, els, items){
+  for (const r of entry.reqs) if (r.kind === "element" && !r.catalyst) els[r.name]--;
+  items.add(entry.name);
+}
+
+/* Bug-A fix: elements are scored by how rare their source is, so a station
+   that is the ONLY roller of a needed element still beats a busy station. */
+function chooseStation(els, items, wanted, last, noRepeat, eps){
+  const pool = DATA.stations.filter(s => !(noRepeat && s.name === last));
+  // eps models an imperfect group: sometimes they just wander off to a station
+  // that isn't the optimal next stop. eps=0 is the best-case ceiling.
+  if (Math.random() < eps) return pool[(Math.random() * pool.length) | 0].name;
+
+  const deficit = {};
+  wanted.forEach(n => { if (!items.has(n)) RECIPES[n][0].reqs.forEach(r => {
+    if (r.kind === "element" && !r.catalyst) deficit[r.name] = (deficit[r.name] || 0) + 1; }); });
+  const short = Object.keys(deficit).filter(el => deficit[el] - (els[el] || 0) > 0);
+
+  let best = null, bestScore = -Infinity;
+  for (const s of pool){
+    let score = Math.random() * 0.01;
+    for (const e of BY_STATION[s.name]){
+      if (!wanted.has(e.name) || items.has(e.name)) continue;
+      if (craftableNow(e, els, items)) score += 2;
+    }
+    for (const el of short) if (s.dice.includes(el)) score += scarcityBonus(el);
+    if (score > bestScore){ bestScore = score; best = s.name; }
+  }
+  return best;
+}
+
+function runGroup(goal, opts){
+  const {visits, take, noRepeat, eps} = opts;
+  const els = {}, items = new Set(), wanted = closureOf(goal);
+  const order = [...wanted].sort((a,b) => depth(a) - depth(b));
+  let last = null;
+  for (let v = 1; v <= visits; v++){
+    const st = chooseStation(els, items, wanted, last, noRepeat, eps);
+    const dice = STATION[st].dice;
+    for (let i = 0; i < take; i++){
+      const sym = dice[Math.floor(Math.random() * 6)];
+      els[sym] = (els[sym] || 0) + 1;
+    }
+    let changed = true;
+    while (changed){                       // craft to fixpoint, shallowest first
+      changed = false;
+      for (const n of order){
+        if (items.has(n)) continue;
+        const e = RECIPES[n].find(e => e.station === st && craftableNow(e, els, items));
+        if (e){ doCraft(e, els, items); changed = true; }
+      }
+    }
+    if (items.has(goal)) return {ok:true, visits:v};
+    last = st;
+  }
+  return {ok:false, visits:null};
+}
+
+function reachability(goal, opts){
+  let hits = 0; const when = [];
+  for (let i = 0; i < opts.trials; i++){
+    const r = runGroup(goal, opts);
+    if (r.ok){ hits++; when.push(r.visits); }
+  }
+  when.sort((a,b) => a-b);
+  return {
+    pct: hits / opts.trials,
+    median: when.length ? when[Math.floor(when.length/2)] : null
+  };
+}
+
+/* =====================================================================
+   Report
+   ===================================================================== */
+function pctClass(p){ return p >= .6 ? "ok" : p >= .25 ? "warn" : "bad"; }
+function barColor(p){ return p >= .6 ? "#2e9e5b" : p >= .25 ? "#d98324" : "#d9432b"; }
+
+let rows = [], sortKey = "pct", sortDir = 1;
+
+function runAll(){
+  const opts = {
+    visits: +document.getElementById("visits").value,
+    take: +document.getElementById("take").value,
+    trials: +document.getElementById("trials").value,
+    eps: +document.getElementById("eps").value,
+    noRepeat: document.getElementById("noRepeat").checked,
+    proposed: document.getElementById("proposed").checked
+  };
+  buildModel(opts.proposed ? REJECTED_CITY_WITH_MUSEUM : null);
+  rows = NAMES.map(n => {
+    const t = totalNeeds(n), mv = minVisits(n), r = reachability(n, opts);
+    const scarcest = Object.keys(t.els).length
+      ? Math.min(...Object.keys(t.els).map(e => SOURCES[e])) : 9;
+    return {
+      name:n, tier:TIER[n], emoji:EMOJI[n], homes:HOMES[n].length,
+      depth:depth(n), minVisits:mv.visits, stations:stationsRequired(n),
+      subItems:t.items.size - 1, elements:t.elementCount, scarcest,
+      pct:r.pct, median:r.median
+    };
+  });
+  render(opts);
+  return summary(opts);
+}
+
+function summary(opts){
+  const caps = rows.filter(r => r.tier === "CAPSTONE");
+  return {
+    opts,
+    capstoneAvg: +(caps.reduce((a,b) => a + b.pct, 0) / caps.length).toFixed(3),
+    capstones: caps.sort((a,b) => b.pct - a.pct).map(r => [r.name, +(r.pct*100).toFixed(1), r.minVisits]),
+    hardest: rows.slice().sort((a,b) => a.pct - b.pct).slice(0, 16)
+      .map(r => [r.name, r.tier, +(r.pct*100).toFixed(1), r.minVisits, r.stations, r.elements])
+  };
+}
+
+function render(opts){
+  rows.sort((a,b) => (a[sortKey] > b[sortKey] ? 1 : a[sortKey] < b[sortKey] ? -1 : 0) * sortDir);
+  const caps = rows.filter(r => r.tier === "CAPSTONE");
+  const capAvg = caps.reduce((a,b) => a + b.pct, 0) / caps.length;
+  const dead = rows.filter(r => r.pct < .05).length;
+
+  const cols = [["emoji",""],["name","ITEM"],["tier","TIER"],["pct","REACH @"+opts.visits],
+    ["median","MED. VISITS"],["minVisits","MIN VISITS"],["stations","STATIONS"],
+    ["subItems","SUB-ITEMS"],["elements","ELEMENTS"],["scarcest","RAREST EL."],["homes","SOLD AT"]];
+
+  document.getElementById("out").innerHTML = `
+    <div class="cards">
+      <div class="kpi"><div class="n ${pctClass(capAvg)}">${(capAvg*100).toFixed(0)}%</div>
+        <div class="l">AVG CAPSTONE REACH</div></div>
+      <div class="kpi"><div class="n">${caps.filter(c => c.pct >= .5).length}/8</div>
+        <div class="l">CAPSTONES ≥50%</div></div>
+      <div class="kpi"><div class="n ${dead ? "bad" : "ok"}">${dead}</div>
+        <div class="l">ITEMS UNDER 5%</div></div>
+      <div class="kpi"><div class="n">${rows.length}</div><div class="l">ITEMS ANALYSED</div></div>
+    </div>
+    <h2>Every item, focused pursuit, ${opts.trials} groups each</h2>
+    <table><thead><tr>${cols.map(([k,l]) =>
+      `<th data-k="${k}">${l}</th>`).join("")}</tr></thead><tbody>
+      ${rows.map(r => `<tr>
+        <td>${r.emoji}</td>
+        <td class="name">${r.name}</td>
+        <td><span class="tag ${r.tier}">${r.tier}</span></td>
+        <td class="num"><span class="bar" style="width:${Math.round(r.pct*46)}px;background:${barColor(r.pct)}"></span>
+          <span class="${pctClass(r.pct)}">${(r.pct*100).toFixed(0)}%</span></td>
+        <td class="num muted">${r.median ?? "—"}</td>
+        <td class="num">${r.minVisits}</td>
+        <td class="num">${r.stations}</td>
+        <td class="num muted">${r.subItems}</td>
+        <td class="num muted">${r.elements}</td>
+        <td class="num ${r.scarcest === 1 ? "bad" : r.scarcest === 2 ? "warn" : "muted"}">${r.scarcest}</td>
+        <td class="num muted">${r.homes}</td>
+      </tr>`).join("")}
+    </tbody></table>`;
+
+  document.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+    render(opts);
+  });
+}
+
+document.getElementById("run").onclick = () => {
+  document.getElementById("status").textContent = "running…";
+  setTimeout(() => {
+    const t0 = performance.now();
+    runAll();
+    document.getElementById("status").textContent =
+      `done in ${((performance.now()-t0)/1000).toFixed(1)}s`;
+  }, 20);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Mini-game Sandbox</title>
+<style>
+  :root{ --ink:#e8edf4; --mute:#8a97a8; --bg:#12171f; --card:#1a212b; --line:#2b3442; --ok:#3fb46c; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; padding:22px 16px 60px; min-height:100vh;
+  }
+  h1{font-size:16px; letter-spacing:.5px; color:var(--mute); font-weight:800; text-transform:uppercase; margin-bottom:2px}
+  h2{font-size:24px; font-weight:800; margin-bottom:14px}
+  .game-tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; justify-content:center}
+  .game-tab{
+    font:inherit; font-weight:800; font-size:13px; padding:8px 16px; border-radius:999px;
+    border:1.5px solid var(--line); background:var(--card); color:var(--mute); cursor:pointer;
+  }
+  .game-tab.active{background:var(--ok); border-color:var(--ok); color:#08210f}
+  .stage-wrap{
+    width:100%; max-width:380px; aspect-ratio:3/4; border:1.5px solid var(--line); border-radius:18px;
+    overflow:hidden; background:var(--card); box-shadow:0 12px 40px rgba(0,0,0,.4);
+  }
+  #stage{width:100%; height:100%}
+  .controls{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center}
+  button{
+    font:inherit; font-weight:800; font-size:14px; padding:11px 20px; border-radius:11px;
+    border:1.5px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;
+  }
+  button.primary{background:var(--ok); border-color:var(--ok); color:#08210f}
+  button:hover{filter:brightness(1.08)}
+  .readout{
+    margin-top:18px; padding:14px 18px; border:1.5px solid var(--line); border-radius:13px;
+    background:var(--card); font-size:14px; min-width:260px; text-align:center;
+  }
+  .readout .score{font-size:26px; font-weight:800; color:var(--ok); margin-bottom:2px}
+  .readout .label{color:var(--mute); font-weight:700; font-size:11px; letter-spacing:.5px; text-transform:uppercase}
+  .hint{margin-top:22px; font-size:12.5px; color:var(--mute); max-width:380px; text-align:center; line-height:1.5}
+  code{background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:11.5px}
+</style>
+</head>
+<body>
+
+<h1>Elementia — Mini-game Sandbox</h1>
+<h2 id="gameTitle">🌊 Ocean: Bubble Pop</h2>
+
+<div class="game-tabs" id="gameTabs"></div>
+
+<div class="stage-wrap"><div id="stage"></div></div>
+
+<div class="controls">
+  <button class="primary" id="startBtn">▶ Start round</button>
+</div>
+
+<div class="readout" id="readout" style="display:none">
+  <div class="score" id="scoreOut">--</div>
+  <div class="label">bonus dice this run would map to</div>
+</div>
+
+<p class="hint">
+  This is a dev-only harness, not part of the shipped game. Each tab calls a different
+  <code>runMinigame(container, onComplete)</code> module -- the exact function that gets pasted
+  into <code>elementia.html</code> once a game is ready. Tune constants at the top of that game's
+  <code>.js</code> file and hit Start again to feel the difference immediately.
+</p>
+
+<!-- Each mini-game file defines window.runMinigame as its paste-ready contract (kept pure/
+     untouched so it copy-pastes into elementia.html as-is). We capture that value into GAMES
+     right after each script tag runs, before the next one overwrites it. -->
+<script src="ocean-bubbles.js"></script>
+<script>window.GAMES = window.GAMES || {}; window.GAMES.ocean = { title: "🌊 Ocean: Bubble Pop", run: window.runMinigame };</script>
+<script src="old-growth-forest.js"></script>
+<script>window.GAMES.forest = { title: "🌲 Old Growth Forest: Plant Trees", run: window.runMinigame };</script>
+<script src="quarry.js"></script>
+<script>window.GAMES.quarry = { title: "⛏️ The Quarry: Stack the Stones", run: window.runMinigame };</script>
+<script src="observatory.js"></script>
+<script>window.GAMES.observatory = { title: "🔭 Observatory: Fly the Rocket", run: window.runMinigame };</script>
+<script src="greenhouse.js"></script>
+<script>window.GAMES.greenhouse = { title: "🌱 Greenhouse: Catch the Eggs", run: window.runMinigame };</script>
+<script src="power-plant.js"></script>
+<script>window.GAMES.powerplant = { title: "⚡ Power Plant: Untangle the Wires", run: window.runMinigame };</script>
+<script src="deep-mine.js"></script>
+<script>window.GAMES.deepmine = { title: "⛏️ Deep Mine: Break the Rocks", run: window.runMinigame };</script>
+<script src="bakery.js"></script>
+<script>window.GAMES.bakery = { title: "🍰 Bakery: Fill the Order", run: window.runMinigame };</script>
+
+<script>
+  const stage = document.getElementById("stage");
+  const startBtn = document.getElementById("startBtn");
+  const readout = document.getElementById("readout");
+  const scoreOut = document.getElementById("scoreOut");
+  const gameTitle = document.getElementById("gameTitle");
+  const gameTabs = document.getElementById("gameTabs");
+  const MAX_BONUS = 3; // matches the suggested doRoll() formula: TAKE + round(score * MAX_BONUS)
+
+  let currentKey = "ocean";
+  let playing = false;
+
+  function renderTabs() {
+    gameTabs.innerHTML = "";
+    Object.keys(window.GAMES).forEach(key => {
+      const btn = document.createElement("button");
+      btn.className = "game-tab" + (key === currentKey ? " active" : "");
+      btn.textContent = window.GAMES[key].title.replace(/^\S+\s/, "");
+      btn.addEventListener("click", () => selectGame(key));
+      gameTabs.appendChild(btn);
+    });
+  }
+
+  function selectGame(key) {
+    if (playing) return;
+    currentKey = key;
+    gameTitle.textContent = window.GAMES[key].title;
+    readout.style.display = "none";
+    stage.innerHTML = "";
+    renderTabs();
+  }
+
+  function start() {
+    readout.style.display = "none";
+    startBtn.disabled = true;
+    startBtn.textContent = "Playing…";
+    playing = true;
+    window.GAMES[currentKey].run(stage, score => {
+      const bonus = Math.round(score * MAX_BONUS);
+      scoreOut.textContent = `${Math.round(score * 100)}%  →  +${bonus} dice`;
+      readout.style.display = "block";
+      startBtn.disabled = false;
+      startBtn.textContent = "▶ Play again";
+      playing = false;
+    });
+  }
+
+  startBtn.addEventListener("click", start);
+  renderTabs();
+</script>
+</body>
+</html>

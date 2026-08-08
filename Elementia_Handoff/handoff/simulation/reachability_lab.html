@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Elementia — Reachability Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#121212; --panel:#1a1a19; --panel2:#1f1f1e; --line:#2c2c2a; --line2:#3a3a37;
+    --ink:#ffffff; --ink2:#c3c2b7; --mute:#898781;
+    --accent:#3987e5; --accent-soft:#17324f;
+    --ok:#3fb46c; --ok-soft:#16301f;
+    --bad:#e66767; --bad-soft:#3a1f1f;
+    --gold:#eda100; --gold-soft:#3a2c0d;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; font-size:14px;
+  }
+  header{padding:18px 22px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:20}
+  header h1{margin:0 0 4px; font-size:19px; font-weight:800}
+  header p{margin:0; color:var(--mute); font-size:13px; max-width:80ch; line-height:1.5}
+  .wrap{max-width:1400px; margin:0 auto; padding:0 22px 60px}
+  .toolbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:16px 0;
+    padding:14px; background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    position:sticky; top:78px; z-index:15;
+  }
+  .toolbar label{font-size:12px; color:var(--mute); font-weight:700; margin-right:4px}
+  select, input[type=number]{
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line2); border-radius:8px;
+    padding:7px 9px; font:inherit; font-size:13px;
+  }
+  button{
+    font:inherit; font-size:13px; font-weight:700; border-radius:9px; padding:8px 14px;
+    border:1px solid var(--line2); background:var(--panel2); color:var(--ink); cursor:pointer;
+  }
+  button:hover{border-color:var(--mute)}
+  button.primary{background:var(--ok); border-color:var(--ok); color:#08170f}
+  button.primary:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.45; cursor:not-allowed}
+  .spacer{flex:1}
+  .status{font-size:12.5px; color:var(--mute)}
+  .status.busy{color:var(--gold)}
+  .status.error{color:var(--bad)}
+
+  section.card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; margin-bottom:18px;
+  }
+  section.card h2{margin:0 0 4px; font-size:14px; font-weight:800}
+  section.card .hint{color:var(--mute); font-size:12.5px; margin:0 0 12px; line-height:1.5}
+
+  /* dice editor */
+  .dice-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px}
+  .dice-station{background:var(--panel2); border:1px solid var(--line2); border-radius:10px; padding:10px}
+  .dice-station .name{font-weight:800; font-size:12.5px; margin-bottom:8px}
+  .dice-row{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+  .dice-row select{padding:5px 4px; font-size:12.5px; text-align:center}
+
+  /* item homes editor */
+  #itemFilter{width:100%; margin-bottom:10px}
+  .item-table{width:100%; border-collapse:collapse; font-size:12.5px}
+  .item-table th{text-align:left; color:var(--mute); font-weight:700; font-size:11px;
+    text-transform:uppercase; letter-spacing:.04em; padding:6px 8px; border-bottom:1px solid var(--line2)}
+  .item-table td{padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:middle}
+  .item-table tr:hover td{background:var(--panel2)}
+  .recipe-cell{color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px}
+  .pill-row{display:flex; flex-wrap:wrap; gap:4px}
+  .pill{
+    font-family:inherit; font-size:10.5px; font-weight:700; padding:3px 7px; border-radius:999px;
+    border:1px solid var(--line2); background:var(--panel2); color:var(--mute); cursor:pointer;
+    white-space:nowrap; user-select:none;
+  }
+  .pill.on{background:var(--accent-soft); border-color:var(--accent); color:#bcd8fb}
+  .pill.disabled{opacity:.3; cursor:not-allowed}
+  .pill:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  .item-count{color:var(--mute); font-size:12px}
+  .name-input{width:130px}
+  .recipe-input{width:100%; min-width:200px}
+  .pts-input{width:52px}
+  .name-input, .recipe-input, .pts-input, .tier-select{
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line2); border-radius:6px;
+    padding:4px 6px; font:inherit; font-size:12.5px;
+  }
+  .name-input:focus, .recipe-input:focus, .pts-input:focus, .tier-select:focus{border-color:var(--accent)}
+  .del-btn{
+    padding:3px 8px; font-size:12px; border-radius:6px; background:var(--bad-soft); border-color:var(--bad);
+    color:var(--bad);
+  }
+  .del-btn:hover{filter:brightness(1.2)}
+  .add-item-row{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px; padding:10px;
+    background:var(--panel2); border:1px dashed var(--line2); border-radius:10px;
+  }
+  .add-item-row .recipe-input{flex:1; min-width:220px}
+
+  /* graph editor */
+  .graph-matrix{border-collapse:collapse; font-size:12px}
+  .graph-matrix th, .graph-matrix td{padding:5px 7px; text-align:center; border:1px solid var(--line)}
+  .graph-matrix th{color:var(--mute); font-weight:700; font-size:10.5px; max-width:60px}
+  .graph-matrix th.rowlabel{text-align:right; white-space:nowrap}
+  .graph-matrix td.na{background:var(--panel2)}
+  .graph-matrix input[type=checkbox]{width:16px; height:16px; cursor:pointer}
+  .stats-row{display:flex; gap:18px; margin-top:10px; font-size:12.5px; color:var(--ink2)}
+  .stats-row b{color:var(--ink)}
+
+  /* results */
+  #resultsMeta{display:flex; gap:22px; flex-wrap:wrap; margin-bottom:12px; font-size:13px}
+  #resultsMeta .stat{background:var(--panel2); border:1px solid var(--line2); border-radius:9px; padding:8px 12px}
+  #resultsMeta .stat .n{font-weight:800; font-size:16px}
+  #resultsMeta .stat .l{color:var(--mute); font-size:10.5px; text-transform:uppercase; letter-spacing:.04em}
+  table.results{width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums}
+  table.results th{
+    position:sticky; top:0; background:var(--panel2); cursor:pointer; user-select:none;
+    padding:7px 8px; text-align:right; border-bottom:1.5px solid var(--line2); font-size:10.5px;
+    color:var(--mute); text-transform:uppercase; letter-spacing:.03em; white-space:nowrap;
+  }
+  table.results th:first-child, table.results th:nth-child(2){text-align:left}
+  table.results th.sorted{color:var(--accent)}
+  table.results td{padding:6px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap}
+  table.results td:first-child, table.results td:nth-child(2){text-align:left}
+  table.results tr:hover td{background:var(--panel2)}
+  .results-scroll{max-height:70vh; overflow:auto; border:1px solid var(--line); border-radius:10px}
+  .tier-tag{font-size:9.5px; font-weight:800; letter-spacing:.03em; color:var(--mute)}
+  .dnf{color:var(--bad); font-weight:700}
+
+  details summary{cursor:pointer; font-weight:800; font-size:13px; padding:4px 0}
+  .elem-table{width:100%; max-width:480px; border-collapse:collapse; font-size:12.5px; margin-top:10px}
+  .elem-table th{text-align:left; color:var(--mute); font-size:11px; padding:5px 8px; border-bottom:1px solid var(--line2)}
+  .elem-table td{padding:5px 8px; border-bottom:1px solid var(--line)}
+  .errbox{background:var(--bad-soft); border:1px solid var(--bad); border-radius:9px; padding:10px 14px; margin-bottom:14px; font-size:13px}
+  .errbox ul{margin:6px 0 0; padding-left:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧪 Elementia — Reachability Lab</h1>
+  <p>Edit station dice, which station(s) sell each item, and the station graph below, then Run.
+     This never touches build_guide.py or any real game file — everything here lives only in this
+     browser tab until you download it.</p>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <label for="graphPreset">Graph preset</label>
+    <select id="graphPreset"></select>
+    <label for="trials">Trials/cell</label>
+    <input type="number" id="trials" value="25" min="5" max="200" style="width:64px">
+    <button id="runBtn" class="primary">▶ Run Simulation</button>
+    <span id="status" class="status"></span>
+    <div class="spacer"></div>
+    <button id="resetBtn">Reset to game defaults</button>
+    <button id="saveBtn">Save config…</button>
+    <button id="loadBtn">Load config…</button>
+    <input type="file" id="loadFile" accept="application/json" style="display:none">
+    <button id="downloadBtn" disabled>Download results CSV</button>
+  </div>
+
+  <section class="card">
+    <h2>Station element pools (dice)</h2>
+    <p class="hint">Each station rolls 6 faces per die. Pick any element for any slot — duplicates are allowed (a repeated element rolls more often).</p>
+    <div id="diceGrid" class="dice-grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Item catalog (recipes, tiers, points, and where each item is sold)</h2>
+    <p class="hint">Everything here is editable: rename an item, rewrite its recipe (e.g. "Furnace + C + Clock" — raw elements as bare symbols, other items by name, no emoji needed), change its tier/points, tap a station pill to add/remove it as a home, or delete it outright with the ✕. Add brand-new items with the form at the bottom. Nothing here ever touches build_guide.py.</p>
+    <input id="itemFilter" type="search" placeholder="Filter items by name, tier, or station…">
+    <div class="results-scroll" style="max-height:50vh">
+      <table class="item-table">
+        <thead><tr><th>Item</th><th>Tier</th><th>Pts</th><th>Recipe</th><th>Homes</th><th></th></tr></thead>
+        <tbody id="itemBody"></tbody>
+      </table>
+    </div>
+    <div class="add-item-row">
+      <input id="newItemName" class="name-input" type="text" placeholder="New item name">
+      <select id="newItemTier" class="tier-select">
+        <option>MATERIAL</option><option>COMPONENT</option><option>CREATION</option><option>CAPSTONE</option>
+      </select>
+      <input id="newItemPoints" class="pts-input" type="number" value="5" min="0">
+      <input id="newItemRecipe" class="recipe-input" type="text" placeholder="Recipe, e.g. Furnace + C + Clock">
+      <button id="addItemBtn" type="button">+ Add item</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Station graph</h2>
+    <p class="hint">Which stations connect to which — movement is single-hop along these edges only. Loading a preset replaces the grid below; you can still hand-edit after.</p>
+    <div id="graphGrid" style="overflow:auto"></div>
+    <div class="stats-row" id="graphStats"></div>
+  </section>
+
+  <section class="card">
+    <h2>Results</h2>
+    <div id="resultsBox">
+      <p class="hint">Click "Run Simulation" above to populate this.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const TIERS = ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"];
+let BASELINE = null;
+let dice = {}, edges = [];
+let workingItems = []; // [{name, tier, points, recipe, homes}] -- fully editable, add/remove included
+let lastResult = null;
+let sortState = {col: "rank", dir: 1};
+
+async function loadBaseline(){
+  const r = await fetch("/api/baseline");
+  BASELINE = await r.json();
+  resetToDefaults();
+  renderGraphPresetOptions();
+}
+
+function resetToDefaults(){
+  dice = JSON.parse(JSON.stringify(BASELINE.dice));
+  workingItems = BASELINE.items.map(it => ({
+    name: it.name, tier: it.tier, points: it.points, recipe: it.recipe, homes: [...it.homes],
+  }));
+  edges = BASELINE.graphPresets[BASELINE.defaultGraph].map(e => [...e]);
+  renderDice(); renderItems(); renderGraph();
+}
+
+/* ---------------------------------------------------------- dice UI --- */
+function renderDice(){
+  const grid = document.getElementById("diceGrid");
+  grid.innerHTML = "";
+  BASELINE.stations.forEach(st => {
+    const div = document.createElement("div");
+    div.className = "dice-station";
+    const opts = BASELINE.elements.map(e => `<option value="${e}">${e}</option>`).join("");
+    const slots = dice[st].map((val, i) =>
+      `<select data-station="${st}" data-slot="${i}">${opts}</select>`).join("");
+    div.innerHTML = `<div class="name">${st}</div><div class="dice-row">${slots}</div>`;
+    grid.appendChild(div);
+  });
+  BASELINE.stations.forEach(st => {
+    dice[st].forEach((val, i) => {
+      const sel = grid.querySelector(`select[data-station="${CSS.escape(st)}"][data-slot="${i}"]`);
+      sel.value = val;
+      sel.addEventListener("change", () => { dice[st][i] = sel.value; });
+    });
+  });
+}
+
+/* ---------------------------------------------------------- items UI --- */
+function stationAbbrev(st){
+  return st.replace(/^The /, "").split(" ").map(w => w.slice(0,3)).join(" ");
+}
+
+function escAttr(s){
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function renderItems(filterText){
+  const body = document.getElementById("itemBody");
+  const q = (filterText || "").toLowerCase();
+  body.innerHTML = "";
+  workingItems.forEach((it, idx) => {
+    const hay = `${it.name} ${it.tier} ${it.recipe} ${it.homes.join(" ")}`.toLowerCase();
+    if (q && !hay.includes(q)) return;
+    const tr = document.createElement("tr");
+    const pills = BASELINE.stations.map(st => {
+      const on = it.homes.includes(st);
+      return `<button type="button" class="pill ${on ? "on" : ""}" data-idx="${idx}" data-station="${st}"
+        title="${st}" aria-pressed="${on}" aria-label="${on ? "Remove" : "Add"} ${escAttr(it.name)} at ${st}">${stationAbbrev(st)}</button>`;
+    }).join("");
+    const tierOpts = TIERS.map(t => `<option value="${t}" ${t === it.tier ? "selected" : ""}>${t}</option>`).join("");
+    tr.innerHTML = `
+      <td><input type="text" class="name-input" data-idx="${idx}" value="${escAttr(it.name)}"></td>
+      <td><select class="tier-select" data-idx="${idx}">${tierOpts}</select></td>
+      <td><input type="number" class="pts-input" data-idx="${idx}" value="${it.points}" min="0"></td>
+      <td><input type="text" class="recipe-input" data-idx="${idx}" value="${escAttr(it.recipe)}" placeholder="e.g. Furnace + C + Clock"></td>
+      <td><div class="pill-row">${pills}</div></td>
+      <td><button type="button" class="del-btn" data-idx="${idx}" title="Remove ${escAttr(it.name)}" aria-label="Remove ${escAttr(it.name)} from this simulation">✕</button></td>`;
+    body.appendChild(tr);
+  });
+  // structural edits (homes, delete) rebuild the table; text/number/select
+  // edits mutate the model directly so the input never loses focus mid-type.
+  body.querySelectorAll(".pill").forEach(p => p.addEventListener("click", () => {
+    const idx = +p.dataset.idx, st = p.dataset.station;
+    const cur = workingItems[idx].homes;
+    const i2 = cur.indexOf(st);
+    if (i2 !== -1) cur.splice(i2, 1); else cur.push(st);
+    renderItems(document.getElementById("itemFilter").value);
+  }));
+  body.querySelectorAll(".del-btn").forEach(btn => btn.addEventListener("click", () => {
+    const idx = +btn.dataset.idx;
+    const name = workingItems[idx].name;
+    if (confirm(`Remove "${name}" from this simulation? Any other recipe that still references it will show an error on Run until you update it too.`)){
+      workingItems.splice(idx, 1);
+      renderItems(document.getElementById("itemFilter").value);
+    }
+  }));
+  body.querySelectorAll(".name-input").forEach(inp => inp.addEventListener("input", () => {
+    workingItems[+inp.dataset.idx].name = inp.value;
+  }));
+  body.querySelectorAll(".recipe-input").forEach(inp => inp.addEventListener("input", () => {
+    workingItems[+inp.dataset.idx].recipe = inp.value;
+  }));
+  body.querySelectorAll(".pts-input").forEach(inp => inp.addEventListener("input", () => {
+    workingItems[+inp.dataset.idx].points = +inp.value || 0;
+  }));
+  body.querySelectorAll(".tier-select").forEach(sel => sel.addEventListener("change", () => {
+    workingItems[+sel.dataset.idx].tier = sel.value;
+  }));
+}
+document.getElementById("itemFilter").addEventListener("input", e => renderItems(e.target.value));
+
+document.getElementById("addItemBtn").addEventListener("click", () => {
+  const nameInp = document.getElementById("newItemName");
+  const name = nameInp.value.trim();
+  if (!name){ nameInp.focus(); return; }
+  if (workingItems.some(it => it.name.toLowerCase() === name.toLowerCase())){
+    setStatus(`"${name}" already exists — rename it in the table instead, or pick a different name.`, "error");
+    return;
+  }
+  workingItems.push({
+    name,
+    tier: document.getElementById("newItemTier").value,
+    points: +document.getElementById("newItemPoints").value || 0,
+    recipe: document.getElementById("newItemRecipe").value.trim(),
+    homes: [],
+  });
+  nameInp.value = "";
+  document.getElementById("newItemRecipe").value = "";
+  document.getElementById("itemFilter").value = name;
+  renderItems(name);
+  setStatus(`Added "${name}" — tap a station pill below to give it a home.`);
+});
+
+/* --------------------------------------------------------- graph UI --- */
+function edgeKey(a, b){ return [a, b].sort().join("|"); }
+function hasEdge(a, b){
+  if (a === b) return null;
+  const k = edgeKey(a, b);
+  return edges.some(e => edgeKey(e[0], e[1]) === k);
+}
+function toggleEdge(a, b){
+  const k = edgeKey(a, b);
+  const i = edges.findIndex(e => edgeKey(e[0], e[1]) === k);
+  if (i !== -1) edges.splice(i, 1); else edges.push([a, b]);
+}
+
+function renderGraph(){
+  const grid = document.getElementById("graphGrid");
+  const st = BASELINE.stations;
+  let html = `<table class="graph-matrix"><tr><th></th>${st.map(s => `<th>${stationAbbrev(s)}</th>`).join("")}</tr>`;
+  st.forEach(a => {
+    html += `<tr><th class="rowlabel">${a}</th>`;
+    st.forEach(b => {
+      if (a === b){ html += `<td class="na">—</td>`; return; }
+      const on = hasEdge(a, b);
+      html += `<td><input type="checkbox" data-a="${a}" data-b="${b}" ${on ? "checked" : ""}></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</table>`;
+  grid.innerHTML = html;
+  grid.querySelectorAll("input[type=checkbox]").forEach(cb => {
+    cb.addEventListener("change", () => {
+      toggleEdge(cb.dataset.a, cb.dataset.b);
+      renderGraph();
+    });
+  });
+  renderGraphStats();
+}
+
+function renderGraphStats(){
+  const adj = {};
+  BASELINE.stations.forEach(s => adj[s] = new Set());
+  edges.forEach(([a,b]) => { adj[a].add(b); adj[b].add(a); });
+  const stranded = BASELINE.stations.filter(s => adj[s].size === 0);
+  const box = document.getElementById("graphStats");
+  box.innerHTML = `<div>${edges.length} edges</div>` +
+    (stranded.length ? `<div style="color:var(--bad)">Disconnected: ${stranded.join(", ")}</div>` : `<div style="color:var(--ok)">All stations connected</div>`);
+}
+
+function renderGraphPresetOptions(){
+  const sel = document.getElementById("graphPreset");
+  sel.innerHTML = `<option value="">— custom (hand-edited) —</option>` +
+    Object.keys(BASELINE.graphPresets).map(name =>
+      `<option value="${name}">${name}</option>`).join("");
+  sel.value = BASELINE.defaultGraph;
+  sel.addEventListener("change", () => {
+    if (!sel.value) return;
+    edges = BASELINE.graphPresets[sel.value].map(e => [...e]);
+    renderGraph();
+  });
+}
+
+/* ------------------------------------------------------------- run --- */
+function setStatus(text, cls){
+  const el = document.getElementById("status");
+  el.textContent = text;
+  el.className = "status" + (cls ? " " + cls : "");
+}
+
+document.getElementById("runBtn").addEventListener("click", async () => {
+  const trials = Math.max(5, Math.min(200, +document.getElementById("trials").value || 25));
+  setStatus("Running… this can take a few seconds.", "busy");
+  document.getElementById("runBtn").disabled = true;
+  try {
+    const r = await fetch("/api/run", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({dice, items: workingItems, edges, trials}),
+    });
+    const result = await r.json();
+    if (result.errors && result.errors.length){
+      renderErrors(result.errors);
+      setStatus("Fix the errors above and try again.", "error");
+    } else {
+      lastResult = result;
+      renderResults(result);
+      document.getElementById("downloadBtn").disabled = false;
+      setStatus(`Done — ${trials} trials/cell.`);
+    }
+  } catch (e) {
+    setStatus("Request failed: " + e, "error");
+  } finally {
+    document.getElementById("runBtn").disabled = false;
+  }
+});
+
+function renderErrors(errors){
+  const box = document.getElementById("resultsBox");
+  box.innerHTML = `<div class="errbox"><b>Can't run yet:</b><ul>${errors.map(e => `<li>${e}</li>`).join("")}</ul></div>`;
+}
+
+/* --------------------------------------------------------- results --- */
+function renderResults(result){
+  const box = document.getElementById("resultsBox");
+  const s = result.structural;
+  let html = `<div id="resultsMeta">
+    <div class="stat"><div class="n">${s.avgHops.toFixed(2)}</div><div class="l">Avg hops</div></div>
+    <div class="stat"><div class="n">${s.diameter}</div><div class="l">Diameter</div></div>
+    <div class="stat"><div class="n">${s.avgDegree.toFixed(2)}</div><div class="l">Avg degree</div></div>
+  </div>`;
+  html += `<div class="results-scroll"><table class="results" id="resultsTable"><thead><tr>
+    <th data-col="rank">Rank</th><th data-col="item">Item</th><th data-col="tier">Tier</th>
+    <th data-col="steps">Steps</th><th data-col="usedBy">UsedBy</th><th data-col="avgVisits">AvgVisits</th>
+    <th data-col="score">Score</th>
+    ${BASELINE.stations.map(st => `<th data-col="st:${st}">${stationAbbrev(st)}</th>`).join("")}
+  </tr></thead><tbody id="resultsBody"></tbody></table></div>`;
+  html += `<details style="margin-top:14px"><summary>Element scarcity</summary>
+    <table class="elem-table"><tr><th>Elem</th><th>Used by</th><th>#Stations</th><th>Ratio</th></tr>
+    ${result.elements.map(e => `<tr><td>${e.element}</td><td>${e.usedBy}</td><td>${e.stations}</td><td>${e.ratio ?? "—"}</td></tr>`).join("")}
+    </table></details>`;
+  box.innerHTML = html;
+  document.querySelectorAll("#resultsTable th").forEach(th => th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    sortState.dir = (sortState.col === col) ? -sortState.dir : 1;
+    sortState.col = col;
+    renderResultsRows();
+  }));
+  renderResultsRows();
+}
+
+function cellVal(row, col){
+  if (col.startsWith("st:")) {
+    const st = col.slice(3);
+    const v = row.byStation[st];
+    return v ? v[0] : null;
+  }
+  return row[col];
+}
+
+function renderResultsRows(){
+  const rows = [...lastResult.rows];
+  const {col, dir} = sortState;
+  rows.sort((a, b) => {
+    let va = cellVal(a, col), vb = cellVal(b, col);
+    if (va === null || va === undefined) va = col === "item" ? "" : Infinity;
+    if (vb === null || vb === undefined) vb = col === "item" ? "" : Infinity;
+    if (typeof va === "string") return va.localeCompare(vb) * dir;
+    return (va - vb) * dir;
+  });
+  document.querySelectorAll("#resultsTable th").forEach(th =>
+    th.classList.toggle("sorted", th.dataset.col === col));
+  const body = document.getElementById("resultsBody");
+  body.innerHTML = rows.map(r => {
+    const stCells = BASELINE.stations.map(st => {
+      const v = r.byStation[st];
+      if (!v || v[0] === null) return `<td class="dnf">DNF</td>`;
+      return `<td>${v[0]}${v[1] ? ` <span class="dnf">(${v[1]}x)</span>` : ""}</td>`;
+    }).join("");
+    return `<tr><td>${r.rank ?? "—"}</td><td>${r.item}</td><td class="tier-tag">${r.tier}</td>
+      <td>${r.steps ?? "—"}</td><td>${r.usedBy}</td><td>${r.avgVisits ?? "—"}</td>
+      <td>${r.score ?? "—"}</td>${stCells}</tr>`;
+  }).join("");
+}
+
+/* --------------------------------------------------- save/load/export */
+function download(filename, text, mime){
+  const blob = new Blob([text], {type: mime});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset dice, the item catalog, and the graph back to the game's current settings? This discards any recipe edits, added/removed items, and home changes.")) resetToDefaults();
+});
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  download("reachability-config.json", JSON.stringify({dice, items: workingItems, edges}, null, 2), "application/json");
+});
+
+document.getElementById("loadBtn").addEventListener("click", () => document.getElementById("loadFile").click());
+document.getElementById("loadFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  try {
+    const cfg = JSON.parse(text);
+    dice = cfg.dice; edges = cfg.edges;
+    workingItems = cfg.items || cfg.homes && Object.keys(cfg.homes).map(name => {
+      const base = BASELINE.items.find(it => it.name === name);
+      return {name, tier: base ? base.tier : "?", points: base ? base.points : 0,
+              recipe: base ? base.recipe : "", homes: [...cfg.homes[name]]};
+    }) || [];
+    renderDice(); renderItems(); renderGraph();
+    document.getElementById("graphPreset").value = "";
+    setStatus("Config loaded.");
+  } catch (err) {
+    setStatus("Couldn't read that file: " + err, "error");
+  }
+  e.target.value = "";
+});
+
+document.getElementById("downloadBtn").addEventListener("click", () => {
+  if (!lastResult) return;
+  const cols = ["rank","item","tier","steps","usedBy","avgVisits","score", ...BASELINE.stations];
+  const lines = [cols.join(",")];
+  lastResult.rows.forEach(r => {
+    const vals = ["rank","item","tier","steps","usedBy","avgVisits","score"].map(c => r[c] ?? "");
+    BASELINE.stations.forEach(st => {
+      const v = r.byStation[st];
+      vals.push(v && v[0] !== null ? (v[1] ? `${v[0]} (${v[1]}xDNF)` : v[0]) : "DNF");
+    });
+    lines.push(vals.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  });
+  download("reachability_lab_results.csv", lines.join("\n"), "text/csv");
+});
+
+loadBaseline();
+</script>
+</body>
+</html>
