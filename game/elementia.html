@@ -942,25 +942,31 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 }
 .item.owned{opacity:.62}
 /* Same checkmark badge as the map's station-item-icon.owned -- one
-   consistent "you already have this" language everywhere ownership shows. */
+   consistent "you already have this" language everywhere ownership shows.
+   Sized to match .crafted-row .station-item-icon (22px glyph + 3px
+   padding each side = 28px) -- same size language as the shop's own
+   "crafted items" icon row, not an arbitrary badge size. z-index below
+   .item-pin-badge's (see below) so the tracked-item badge always wins
+   wherever the two corner badges happen to overlap. */
 .item.owned::after{
-  content:"✓"; position:absolute; top:-7px; right:-7px; width:20px; height:20px;
-  border-radius:50%; background:var(--ok); color:#fff; font-size:12px; font-weight:800;
+  content:"✓"; position:absolute; top:-8px; right:-8px; width:28px; height:28px;
+  border-radius:50%; background:var(--ok); color:#fff; font-size:15px; font-weight:800;
   display:flex; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 0 0 2px var(--card);
+  box-shadow:0 0 0 2px var(--card); z-index:1;
 }
 /* "Needed for [selected pinned item]" badge -- the SELECTED item's own
    icon, not this card's, so it reads as a pointer back to what it's
-   feeding into. Twice the size of the plain owned checkmark below (this
-   is the one carrying actual meaning -- WHICH item it feeds -- so it
-   needs to read at a glance, not just as a checkmark-shaped fact). Sits
-   further left of the owned checkmark's corner spot than its old size did
-   so the two can both show at once without overlapping. */
+   feeding into. Same 28px size as the owned checkmark above (both now
+   match .crafted-row .station-item-icon's own footprint) and a higher
+   z-index so it stays on top wherever the two overlap -- it used to
+   render behind the checkmark (plain DOM/paint order put the checkmark,
+   a ::after pseudo-element, above an earlier real sibling), silently
+   hiding the more informative of the two badges. */
 .item-pin-badge{
-  position:absolute; top:-16px; right:24px; width:48px; height:48px;
-  border-radius:50%; background:var(--card); border:3px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
-  box-shadow:0 1px 4px rgba(0,0,0,.3);
+  position:absolute; top:-9px; right:20px; width:28px; height:28px;
+  border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
 }
 .item .iem{font-size:38px; line-height:1.15; width:34px; text-align:center; flex:none}
 .item .ibody{flex:1; min-width:0}
