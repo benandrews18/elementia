@@ -80,10 +80,11 @@ def strip_pwa_block(text):
 
 
 # Matches any quoted reference to a local webp asset, wherever it appears --
-# the TOUR_SLIDES array, the STATION_BG object, or anywhere else one might
-# show up later. General on purpose: adding a new tutorial slide or station
-# backdrop shouldn't require touching this script too.
-LOCAL_IMG_RE = re.compile(r'"((?:tutorial|backdrops|banners)/[\w.\-]+\.webp)"')
+# the TOUR_SLIDES array, the STATION_BG object, MINIGAME_ASSETS, or anywhere
+# else one might show up later. General on purpose: adding a new tutorial
+# slide, station backdrop, or mini-game sprite shouldn't require touching
+# this script too.
+LOCAL_IMG_RE = re.compile(r'"((?:tutorial|backdrops|banners|minigames)/[\w.\-]+\.webp)"')
 
 
 def inline_local_images(text):

@@ -24,16 +24,33 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 40000;      // total round length
+  const DURATION_MS = 60000;      // total round length
   const TARGET_SOLVES = 5;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
-  const MAX_WIRES = 7;            // +1 wire per solve, capped here
+  const MAX_WIRES = 9;            // +1 wire per solve, capped here
   const MARGIN = 30;              // px, inset from stage edges for handle travel
-  const HANDLE_R = 11;            // px, visible handle radius
-  const HIT_R = 22;               // px, generous pointerdown target radius
+  const HANDLE_R = 21;            // px, visible handle radius
+  const HIT_R = 42;               // px, generous pointerdown target radius
   const RESULT_HOLD_MS = 1300;
+  const DICE_MIN = 3;             // dice awarded at score 0
+  const DICE_MAX = 6;             // dice awarded at score 1
+  const BACKDROP = "power-plant"; // backdrops/<BACKDROP>.webp
 
   const WIRE_COLORS = ["#e6564f", "#eb9a3c", "#e8d24c", "#5fcf6a", "#4ea8de", "#8b6fe0", "#e06fc0"];
+
+  /* Station art behind the stage. The base is overridable so one file works
+     both from game/minigames/ (sandbox + tuning lab) and from the built
+     single-file game, where backdrops/ sits alongside the HTML instead. */
+  function backdropURL() {
+    const f = BACKDROP + ".webp";
+    return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[f]) ||
+           ((global.MINIGAME_BACKDROP_BASE || "../backdrops/") + f);
+  }
+  /* Dice this run has earned so far -- shown live in the HUD so effort in
+     the mini-game visibly feeds the roll it pays out into. */
+  function diceFor(score) {
+    return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -43,7 +60,10 @@
         position:relative; width:100%; height:100%; overflow:hidden; border-radius:16px;
         background:
           linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px) 0 0/100% 24px,
-          linear-gradient(180deg,#232a33 0%,#1a2027 55%,#12171d 100%);
+          linear-gradient(180deg,rgba(35,42,51,.78) 0%,rgba(26,32,39,.72) 55%,rgba(18,23,29,.8) 100%),
+          var(--mg-backdrop, none);
+        background-size:100% 24px, cover, cover;
+        background-position:0 0, center, center;
         touch-action:none; user-select:none; font-family:inherit;
       }
       .mg-power-hud{
@@ -58,8 +78,15 @@
       .mg-power-hud .mg-pill.mg-power-clear{ background:rgba(95,207,106,.35); }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
-      .mg-power-handle{ cursor:grab; }
-      .mg-power-handle.mg-power-dragging{ cursor:grabbing; }
+      .mg-power-handle{ cursor:grab; transition:filter .12s ease; }
+      /* Much stronger feedback than just the cursor swap (invisible on
+         touch anyway): the dragged handle itself grows (see the JS r
+         bump around drag start/end) plus a bright glow ring, so it's
+         obvious which wire end is actually being held. */
+      .mg-power-handle.mg-power-dragging{
+        cursor:grabbing;
+        filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 12px rgba(255,255,255,.85));
+      }
       .mg-power-stage.mg-power-solved{ animation:mg-power-pulse .35s ease; }
       @keyframes mg-power-pulse{
         0%{ box-shadow: inset 0 0 0 0 rgba(95,207,106,0) } 30%{ box-shadow: inset 0 0 50px 8px rgba(95,207,106,.55) }
@@ -109,10 +136,13 @@
 
     const stage = document.createElement("div");
     stage.className = "mg-power-stage";
+    stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span><span class="mg-pill" id="mg-power-status">Drag to untangle</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span>` +
+      `<span class="mg-pill" id="mg-power-status">Drag to untangle</span>` +
+      `<span class="mg-pill" id="mg-power-dice">\u{1F3B2} ${DICE_MIN}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-power-timebar";
@@ -127,6 +157,7 @@
 
     const solvedEl = hud.querySelector("#mg-power-solved");
     const statusEl = hud.querySelector("#mg-power-status");
+    const diceEl = hud.querySelector("#mg-power-dice");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
     const TOP_Y = 46, BOTTOM_Y = stageH - 46;
@@ -134,12 +165,15 @@
     let running = true;
     let solved = 0;
     let wireCount = START_WIRES;
-    // bottomX[k]/slot k are the same fixed x-coordinates throughout a puzzle.
-    // slotOfWire[wireIndex] = which slot that wire's top currently sits in --
-    // a permutation of 0..wireCount-1. topX is purely derived for rendering.
-    let bottomX = [], slotOfWire = [], topX = [];
-    let lines = [], topHandles = [], hitHandles = [], botHandles = [];
-    let draggingIndex = null;
+    // BOTH ends are draggable. slotX[k] are the fixed x-coordinates shared
+    // by the top and bottom rows; topSlot[w]/botSlot[w] say which slot each
+    // end of wire w currently occupies, each its own permutation of
+    // 0..wireCount-1. topX/botX are pixel positions derived from those --
+    // except for whichever end is mid-drag, which follows the pointer.
+    let slotX = [], topSlot = [], botSlot = [], topX = [], botX = [];
+    let lines = [], topHandles = [], botHandles = [], hitHandles = [];
+    // {wire, end:"top"|"bot"} while dragging, else null.
+    let drag = null;
 
     function slotPositions(n) {
       if (n === 1) return [stageW / 2];
@@ -148,21 +182,22 @@
       return arr;
     }
 
-    // Counts inversions in a wireIndex -> slotIndex permutation: since bottom
-    // slots are always in wire-index order, wire i crosses wire j (i<j) iff
-    // their top order is reversed, i.e. slots[i] > slots[j].
-    function crossingsOf(slots) {
+    // Two wires cross exactly when their ends are ordered oppositely at the
+    // top and the bottom. With both ends free the goal isn't "wires in index
+    // order" any more -- it's just that the two permutations agree on SOME
+    // common ordering, which is what a zero here means.
+    function crossingsOf(top, bot) {
       let c = 0;
       for (let i = 0; i < wireCount; i++) {
         for (let j = i + 1; j < wireCount; j++) {
-          if (slots[i] > slots[j]) c++;
+          if ((top[i] - top[j]) * (bot[i] - bot[j]) < 0) c++;
         }
       }
       return c;
     }
 
-    function updateStatus(slots) {
-      const c = crossingsOf(slots);
+    function updateStatus(top, bot) {
+      const c = crossingsOf(top, bot);
       if (c === 0) {
         statusEl.textContent = "Untangled!";
         statusEl.classList.add("mg-power-clear");
@@ -176,60 +211,73 @@
     function positionsToDom() {
       for (let i = 0; i < wireCount; i++) {
         lines[i].setAttribute("x1", topX[i]);
-        lines[i].setAttribute("x2", bottomX[i]);
+        lines[i].setAttribute("x2", botX[i]);
         topHandles[i].setAttribute("cx", topX[i]);
-        hitHandles[i].setAttribute("cx", topX[i]);
+        botHandles[i].setAttribute("cx", botX[i]);
+        hitHandles[i].top.setAttribute("cx", topX[i]);
+        hitHandles[i].bot.setAttribute("cx", botX[i]);
       }
     }
 
     function buildPuzzle() {
       svg.innerHTML = "";
-      lines = []; topHandles = []; hitHandles = []; botHandles = [];
-      bottomX = slotPositions(wireCount);
-      slotOfWire = shuffledSlots(wireCount);
-      topX = slotOfWire.map(s => bottomX[s]);
+      lines = []; topHandles = []; botHandles = []; hitHandles = [];
+      slotX = slotPositions(wireCount);
+      // Shuffle both ends, then insist the result actually starts tangled --
+      // with two free permutations it's now perfectly possible to roll a
+      // pair that already agree, which would hand out a free solve.
+      do {
+        topSlot = shuffledSlots(wireCount);
+        botSlot = shuffledSlots(wireCount);
+      } while (wireCount > 1 && crossingsOf(topSlot, botSlot) === 0);
+      topX = topSlot.map(s => slotX[s]);
+      botX = botSlot.map(s => slotX[s]);
 
       for (let i = 0; i < wireCount; i++) {
         const color = WIRE_COLORS[i % WIRE_COLORS.length];
         const line = svgEl("line", {
-          x1: topX[i], y1: TOP_Y, x2: bottomX[i], y2: BOTTOM_Y,
+          x1: topX[i], y1: TOP_Y, x2: botX[i], y2: BOTTOM_Y,
           stroke: color, "stroke-width": 5, "stroke-linecap": "round", opacity: 0.85,
         });
         svg.appendChild(line);
         lines.push(line);
       }
+      // Handles are appended after every line so they always paint on top,
+      // and the invisible hit targets after those so a tap near two close
+      // handles still resolves to a handle rather than the wire behind it.
       for (let i = 0; i < wireCount; i++) {
         const color = WIRE_COLORS[i % WIRE_COLORS.length];
-        const bot = svgEl("circle", { cx: bottomX[i], cy: BOTTOM_Y, r: HANDLE_R - 2, fill: color, stroke: "#fff", "stroke-width": 2 });
-        svg.appendChild(bot);
-        botHandles.push(bot);
-      }
-      for (let i = 0; i < wireCount; i++) {
-        const color = WIRE_COLORS[i % WIRE_COLORS.length];
-        const top = svgEl("circle", {
-          cx: topX[i], cy: TOP_Y, r: HANDLE_R, fill: color, stroke: "#fff", "stroke-width": 2.5,
+        const mk = (cx, cy) => svgEl("circle", {
+          cx: cx, cy: cy, r: HANDLE_R, fill: color, stroke: "rgba(0,0,0,.7)", "stroke-width": 3.5,
           class: "mg-power-handle",
         });
-        // invisible, larger circle on top purely for a touch-friendly hit target --
-        // the visible handle stays small so several can sit close together.
+        const top = mk(topX[i], TOP_Y), bot = mk(botX[i], BOTTOM_Y);
+        svg.appendChild(top); svg.appendChild(bot);
+        topHandles.push(top); botHandles.push(bot);
+      }
+      for (let i = 0; i < wireCount; i++) {
+        // Invisible, larger circles purely for a touch-friendly hit target --
+        // the visible handles stay small so several can sit close together.
         // pointer-events must be forced to "all": SVG's default
         // (visiblePainted) skips hit-testing on transparent fills entirely.
-        const hit = svgEl("circle", {
-          cx: topX[i], cy: TOP_Y, r: HIT_R, fill: "transparent", "pointer-events": "all", class: "mg-power-handle",
-        });
-        hit.dataset.index = i;
-        hit.addEventListener("pointerdown", (e) => {
-          e.preventDefault();
-          draggingIndex = i;
-          top.classList.add("mg-power-dragging");
-          hit.setPointerCapture && hit.setPointerCapture(e.pointerId);
-        });
-        svg.appendChild(top);
-        svg.appendChild(hit);
-        topHandles.push(top);
-        hitHandles.push(hit);
+        const mkHit = (cx, cy, end) => {
+          const hit = svgEl("circle", {
+            cx: cx, cy: cy, r: HIT_R, fill: "transparent", "pointer-events": "all", class: "mg-power-handle",
+          });
+          hit.addEventListener("pointerdown", (e) => {
+            e.preventDefault();
+            drag = { wire: i, end: end };
+            const handleEl = (end === "top" ? topHandles : botHandles)[i];
+            handleEl.classList.add("mg-power-dragging");
+            handleEl.setAttribute("r", HANDLE_R * 1.5); // grabbed handle grows -- see onUp() for the reset
+            hit.setPointerCapture && hit.setPointerCapture(e.pointerId);
+          });
+          svg.appendChild(hit);
+          return hit;
+        };
+        hitHandles.push({ top: mkHit(topX[i], TOP_Y, "top"), bot: mkHit(botX[i], BOTTOM_Y, "bot") });
       }
-      updateStatus(slotOfWire);
+      updateStatus(topSlot, botSlot);
     }
     buildPuzzle();
 
@@ -238,44 +286,53 @@
     function nearestSlot(x) {
       let best = 0, bestDist = Infinity;
       for (let s = 0; s < wireCount; s++) {
-        const d = Math.abs(bottomX[s] - x);
+        const d = Math.abs(slotX[s] - x);
         if (d < bestDist) { bestDist = d; best = s; }
       }
       return best;
     }
 
     function onMove(e) {
-      if (draggingIndex === null) return;
+      if (!drag) return;
       const rect = stage.getBoundingClientRect();
       const x = Math.max(MARGIN, Math.min(stageW - MARGIN, e.clientX - rect.left));
-      topX[draggingIndex] = x;
+      (drag.end === "top" ? topX : botX)[drag.wire] = x;
       positionsToDom();
-      // live feedback only -- swap the dragged wire's slot into a scratch
-      // copy so the crossing count previews where it would land, without
-      // touching the authoritative permutation until it's actually dropped.
-      const provisional = slotOfWire.slice();
-      provisional[draggingIndex] = nearestSlot(x);
-      updateStatus(provisional);
+      // Live feedback only -- move the dragged end's slot in a scratch copy
+      // so the crossing count previews where it would land, without touching
+      // the authoritative permutation until it's actually dropped.
+      const provisional = (drag.end === "top" ? topSlot : botSlot).slice();
+      provisional[drag.wire] = nearestSlot(x);
+      updateStatus(drag.end === "top" ? provisional : topSlot,
+                   drag.end === "top" ? botSlot : provisional);
     }
     function onUp() {
-      if (draggingIndex === null) return;
-      topHandles[draggingIndex].classList.remove("mg-power-dragging");
+      if (!drag) return;
+      const { wire, end } = drag;
+      const handles = end === "top" ? topHandles : botHandles;
+      const slots = end === "top" ? topSlot : botSlot;
+      handles[wire].classList.remove("mg-power-dragging");
+      handles[wire].setAttribute("r", HANDLE_R);
 
-      const targetSlot = nearestSlot(topX[draggingIndex]);
-      const oldSlot = slotOfWire[draggingIndex];
+      // Snap to the nearest slot, swapping with whoever already held it so
+      // this end's arrangement stays a permutation (no two ends stacked).
+      const targetSlot = nearestSlot(end === "top" ? topX[wire] : botX[wire]);
+      const oldSlot = slots[wire];
       if (targetSlot !== oldSlot) {
-        const otherWire = slotOfWire.indexOf(targetSlot);
-        slotOfWire[draggingIndex] = targetSlot;
-        if (otherWire !== -1) slotOfWire[otherWire] = oldSlot;
+        const otherWire = slots.indexOf(targetSlot);
+        slots[wire] = targetSlot;
+        if (otherWire !== -1) slots[otherWire] = oldSlot;
       }
-      topX = slotOfWire.map(s => bottomX[s]);
+      topX = topSlot.map(s => slotX[s]);
+      botX = botSlot.map(s => slotX[s]);
       positionsToDom();
-      draggingIndex = null;
+      drag = null;
 
-      const c = updateStatus(slotOfWire);
+      const c = updateStatus(topSlot, botSlot);
       if (c === 0) {
         solved++;
         solvedEl.textContent = "\u{1F50C} " + solved;
+        diceEl.textContent = "\u{1F3B2} " + diceFor(solved / TARGET_SOLVES);
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
         stage.classList.add("mg-power-solved");
@@ -312,7 +369,7 @@
       resultEl.className = "mg-power-result";
       resultEl.innerHTML = `
         <div class="mg-big">\u{1F50C} ${solved} puzzle${solved === 1 ? "" : "s"} untangled</div>
-        <div class="mg-sub">${Math.round(score * 100)}% -- nice work!</div>`;
+        <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
       setTimeout(() => onComplete(score), RESULT_HOLD_MS);

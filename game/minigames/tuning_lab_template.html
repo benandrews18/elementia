@@ -1,0 +1,564 @@
+<title>Elementia — Mini-game Tuning Lab</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161c26; --panel2:#1c2431; --line:#2a3342; --line2:#374255;
+    --ink:#eef2f8; --ink2:#c2cbdb; --mute:#8593a8; --gold:#ffce54; --gold-ink:#3a2c05;
+    --ok:#3fb46c; --bad:#e6564f; --mono:'SF Mono',ui-monospace,'Cascadia Code','Consolas',monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(255,206,84,.05), transparent),
+      var(--bg);
+    color:var(--ink); font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    padding:26px 18px 60px; min-height:100vh;
+  }
+  .wrap{max-width:1080px; margin:0 auto}
+  header{margin-bottom:22px}
+  .eyebrow{
+    font-size:11px; font-weight:800; letter-spacing:1.6px; text-transform:uppercase;
+    color:var(--gold); margin-bottom:6px;
+  }
+  h1{font-size:26px; font-weight:800; letter-spacing:-.3px; margin:0 0 6px}
+  .sub{color:var(--mute); font-size:14.5px; line-height:1.55; max-width:640px}
+  .sub code{background:var(--panel2); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-family:var(--mono); font-size:12.5px}
+
+  .tabs{display:flex; gap:7px; flex-wrap:wrap; margin:22px 0 18px}
+  .tab{
+    font:inherit; font-weight:800; font-size:13px; padding:9px 15px 9px 12px; border-radius:11px;
+    border:1.5px solid var(--line); background:var(--panel); color:var(--ink2); cursor:pointer;
+    display:flex; align-items:center; gap:7px; transition:border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  .tab .dot{width:8px; height:8px; border-radius:50%; flex:none}
+  .tab:hover{border-color:var(--line2)}
+  .tab.active{background:var(--panel2); border-color:var(--gold); color:var(--ink)}
+
+  .layout{display:grid; grid-template-columns:minmax(280px,380px) 1fr; gap:20px; align-items:start}
+  @media (max-width:760px){ .layout{grid-template-columns:1fr} }
+
+  .stage-col{position:sticky; top:20px}
+  @media (max-width:760px){ .stage-col{position:static} }
+  .stage-wrap{
+    width:100%; aspect-ratio:3/4; border:1.5px solid var(--line); border-radius:18px;
+    overflow:hidden; background:var(--panel); box-shadow:0 14px 40px rgba(0,0,0,.4); position:relative;
+  }
+  /* Fullscreen is a CSS-only overlay (not the browser Fullscreen API,
+     which the sandboxed contexts this file gets viewed in -- Artifacts,
+     embedded previews -- routinely block) so it works everywhere the lab
+     itself loads. It fills the real viewport at its own aspect ratio,
+     same as the mini-game would see inside the shipped game's station
+     screen, rather than the lab's fixed 3:4 preview box. */
+  .stage-wrap.mg-fullscreen{
+    position:fixed; inset:0; width:100vw; height:100dvh; aspect-ratio:auto;
+    border:none; border-radius:0; box-shadow:none; z-index:1000;
+  }
+  #stage{width:100%; height:100%}
+  .stage-idle{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--mute); font-size:13.5px; text-align:center; padding:0 30px;
+  }
+  .stage-fs-bar{
+    position:absolute; top:0; left:0; right:0; z-index:1001; display:none;
+    justify-content:flex-end; gap:8px; padding:10px; pointer-events:none;
+  }
+  .stage-wrap.mg-fullscreen .stage-fs-bar{ display:flex; }
+  .stage-fs-bar .btn{
+    pointer-events:auto; padding:8px 14px; font-size:13px;
+    background:rgba(15,17,23,.7); backdrop-filter:blur(3px); border-color:rgba(255,255,255,.2);
+  }
+  .stage-controls{display:flex; gap:9px; margin-top:14px; flex-wrap:wrap}
+  button{font:inherit}
+  .btn{
+    font-weight:800; font-size:14px; padding:11px 18px; border-radius:11px;
+    border:1.5px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer;
+    transition:filter .1s ease, border-color .15s ease;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn.gold{background:var(--gold); border-color:var(--gold); color:var(--gold-ink)}
+  .btn.ghost{background:transparent; color:var(--mute)}
+  .btn.ghost:hover{color:var(--ink); border-color:var(--line2)}
+  .btn:disabled{opacity:.5; cursor:not-allowed; filter:none}
+
+  .check-row{display:flex; align-items:center; gap:8px; margin-top:12px; font-size:13px; color:var(--ink2)}
+  .check-row input{accent-color:var(--gold)}
+
+  .readout{
+    margin-top:16px; padding:14px 16px; border:1.5px solid var(--line); border-radius:13px;
+    background:var(--panel);
+  }
+  .readout.empty{color:var(--mute); font-size:13px; text-align:center}
+  .readout-row{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+  .readout .score{font-family:var(--mono); font-size:28px; font-weight:700; color:var(--gold)}
+  .readout .dice{font-family:var(--mono); font-size:15px; color:var(--ink2)}
+  .readout .lbl{font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--mute)}
+
+  .history{margin-top:14px}
+  .history-title{font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--mute); margin-bottom:8px}
+  .history-list{display:flex; flex-direction:column; gap:5px; max-height:190px; overflow-y:auto}
+  .history-row{
+    display:flex; align-items:center; gap:8px; font-size:12.5px; font-family:var(--mono);
+    padding:6px 9px; border-radius:8px; background:var(--panel2); color:var(--ink2);
+  }
+  .history-row .hg{flex:none; width:20px; text-align:center}
+  .history-row .hs{flex:1; color:var(--ink)}
+  .history-row .hd{flex:none; color:var(--gold)}
+  .history-empty{color:var(--mute); font-size:12.5px; padding:8px 0}
+
+  .panel{background:var(--panel); border:1.5px solid var(--line); border-radius:16px; padding:18px 20px}
+  .panel + .panel{margin-top:16px}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap}
+  .panel-title{font-size:14px; font-weight:800}
+  .panel-title .n{color:var(--mute); font-weight:700; font-size:12px}
+
+  .knobs{display:grid; grid-template-columns:1fr 1fr; gap:14px 18px}
+  @media (max-width:520px){ .knobs{grid-template-columns:1fr} }
+  .knob{display:flex; flex-direction:column; gap:5px}
+  .knob-top{display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+  .knob-label{font-size:12.5px; font-weight:700; color:var(--ink2)}
+  .knob-val{font-family:var(--mono); font-size:12.5px; color:var(--gold); font-weight:700; white-space:nowrap}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:5px; border-radius:999px; background:var(--line2); outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--gold);
+    border:2px solid var(--gold-ink); cursor:pointer; margin-top:-1px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px; height:14px; border-radius:50%; background:var(--gold); border:2px solid var(--gold-ink); cursor:pointer;
+  }
+
+  .dice-preview{display:flex; gap:3px; align-items:flex-end; height:54px; margin-top:6px}
+  .dice-bar{flex:1; border-radius:4px 4px 0 0; background:var(--line2); position:relative; min-height:6px}
+  .dice-bar .n{
+    position:absolute; top:-16px; left:0; right:0; text-align:center; font-family:var(--mono);
+    font-size:10px; color:var(--mute);
+  }
+  .dice-bar.mine{background:var(--gold)}
+
+  textarea{
+    width:100%; min-height:110px; resize:vertical; background:var(--panel2); color:var(--ink);
+    border:1.5px solid var(--line); border-radius:10px; padding:11px 12px; font:inherit; font-size:13.5px;
+    line-height:1.5;
+  }
+  textarea:focus{outline:2px solid var(--gold); outline-offset:1px}
+  .copied{color:var(--ok); font-size:12.5px; font-weight:700; margin-left:8px; opacity:0; transition:opacity .2s}
+  .copied.show{opacity:1}
+
+  footer{margin-top:26px; color:var(--mute); font-size:12px; text-align:center}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Dev-only harness · not part of the shipped game</div>
+    <h1>🎮 Mini-game Tuning Lab</h1>
+    <p class="sub">
+      Play each station's mini-game back to back, drag a slider, hit Play again. Every knob here
+      is a real <code>const</code> from that game's own file in <code>game/minigames/</code> —
+      nothing is simulated. Settings and notes are saved in this browser as you go.
+    </p>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="layout">
+    <div class="stage-col">
+      <div class="stage-wrap" id="stageWrap">
+        <div class="stage-fs-bar">
+          <button class="btn ghost" id="fsEndBtn" disabled>⏹ End round</button>
+          <button class="btn ghost" id="fsExitBtn">✕ Exit fullscreen</button>
+        </div>
+        <div id="stage"></div>
+        <div class="stage-idle" id="stageIdle">Pick a mini-game above, then hit Play round.</div>
+      </div>
+      <div class="stage-controls">
+        <button class="btn gold" id="playBtn">▶ Play round</button>
+        <button class="btn ghost" id="endBtn" disabled>⏹ End round</button>
+        <button class="btn ghost" id="fsBtn">⛶ Fullscreen</button>
+        <button class="btn ghost" id="resetBtn">Reset knobs</button>
+      </div>
+      <label class="check-row"><input type="checkbox" id="autoReplay"> Auto-replay after each round</label>
+
+      <div class="readout empty" id="readout">No runs yet this session.</div>
+      <div class="readout empty" id="rebuiltNote" style="display:none; margin-top:10px">
+        Mini-game sources changed since your last visit — knobs reset to the values in the files.
+      </div>
+
+      <div class="history">
+        <div class="history-title">Recent runs</div>
+        <div class="history-list" id="historyList"><div class="history-empty">Nothing yet.</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Tunables <span class="n" id="knobCount"></span></div>
+        </div>
+        <div class="knobs" id="knobs"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Score → bonus dice</div>
+        </div>
+        <p class="sub" style="margin-bottom:12px">
+          The mapping every mini-game's 0–1 score would turn into, once wired into the real game
+          (today's fixed roll is <code>TAKE = 5</code>). Tune the floor/ceiling/curve and watch the
+          bars move.
+        </p>
+        <div class="knobs" id="diceKnobs"></div>
+        <div class="dice-preview" id="dicePreview"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Notes</div>
+          <div><button class="btn ghost" id="copyNotes" style="padding:6px 12px; font-size:12.5px">Copy</button><span class="copied" id="copiedFlag">Copied!</span></div>
+        </div>
+        <textarea id="notes" placeholder="What's working, what's not, what to try next -- paste this back into the chat when you're done playtesting."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <footer>Nothing here touches <code>elementia.html</code> or the shipped game files. Tune, note, send the notes back.</footer>
+</div>
+
+<script>window.MINIGAME_SOURCES_B64 = __MINIGAME_SOURCES_JSON__;</script>
+<!-- Station backdrops and the Deep Mine rock strip, inlined as data URIs.
+     Each mini-game's backdropURL()/spriteURL() checks this map before
+     falling back to a relative path, so the published lab needs no files
+     alongside it. -->
+<script>window.MINIGAME_ASSETS = __MINIGAME_ASSETS_JSON__;</script>
+<script>
+(function(){
+  "use strict";
+
+  const GAMES = __GAMES_JSON__;
+  // Fingerprint of the built-in defaults; see the saved.stamp check below.
+  const BUILD_STAMP = "__BUILD_STAMP__";
+  let rebuiltSinceLastVisit = false;
+
+  const LS_KEY = "mgLab.v1";
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch(e) { saved = {}; }
+  saved.values = saved.values || {};
+  /* Slider positions are remembered between visits -- but only for the
+     build they were set on. Once a mini-game's source constants change, a
+     stale saved value would silently mask the new default and you'd be
+     tuning against numbers that no longer exist in the file. On a rebuild
+     the knobs snap back to source; notes and run history are kept. */
+  if (saved.stamp !== BUILD_STAMP){
+    saved.values = {};
+    saved.stamp = BUILD_STAMP;
+    rebuiltSinceLastVisit = true;
+  }
+  saved.dice = saved.dice || { min:3, max:6, curve:1 };
+  saved.notes = saved.notes || "";
+  const history = saved.history || [];
+
+  function persist(){
+    saved.history = history.slice(-40);
+    localStorage.setItem(LS_KEY, JSON.stringify(saved));
+  }
+
+  function valuesFor(key){
+    const g = GAMES.find(g => g.key === key);
+    saved.values[key] = saved.values[key] || {};
+    g.tunables.forEach(t => {
+      if (saved.values[key][t.name] === undefined) saved.values[key][t.name] = t.def;
+    });
+    return saved.values[key];
+  }
+
+  function decode(b64){
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+
+  function patchSource(source, tunables, values){
+    let out = source;
+    tunables.forEach(t => {
+      let v = values[t.name];
+      if (t.negate) v = -v;
+      const re = new RegExp("(const\\s+" + t.name + "\\s*=\\s*)-?[0-9.]+");
+      out = out.replace(re, "$1" + v);
+    });
+    return out;
+  }
+
+  let currentKey = GAMES[0].key;
+  let playing = false;
+
+  const tabsEl = document.getElementById("tabs");
+  const stageEl = document.getElementById("stage");
+  const stageIdleEl = document.getElementById("stageIdle");
+  const playBtn = document.getElementById("playBtn");
+  const endBtn = document.getElementById("endBtn");
+  const stageWrapEl = document.getElementById("stageWrap");
+  const fsBtn = document.getElementById("fsBtn");
+  const fsExitBtn = document.getElementById("fsExitBtn");
+  const fsEndBtn = document.getElementById("fsEndBtn");
+  if (rebuiltSinceLastVisit) document.getElementById("rebuiltNote").style.display = "";
+  const resetBtn = document.getElementById("resetBtn");
+  const autoReplayEl = document.getElementById("autoReplay");
+  const readoutEl = document.getElementById("readout");
+  const historyListEl = document.getElementById("historyList");
+  const knobsEl = document.getElementById("knobs");
+  const knobCountEl = document.getElementById("knobCount");
+  const diceKnobsEl = document.getElementById("diceKnobs");
+  const dicePreviewEl = document.getElementById("dicePreview");
+  const notesEl = document.getElementById("notes");
+  const copyNotesBtn = document.getElementById("copyNotes");
+  const copiedFlag = document.getElementById("copiedFlag");
+
+  function renderTabs(){
+    tabsEl.innerHTML = "";
+    GAMES.forEach(g => {
+      const b = document.createElement("button");
+      b.className = "tab" + (g.key === currentKey ? " active" : "");
+      b.innerHTML = `<span class="dot" style="background:${g.color}"></span>${g.emoji} ${g.title.split(":")[0]}`;
+      b.title = g.title;
+      b.addEventListener("click", () => selectGame(g.key));
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function fmt(v){
+    return (Math.round(v * 100) / 100).toString();
+  }
+
+  function renderKnobs(){
+    const g = GAMES.find(g => g.key === currentKey);
+    const vals = valuesFor(currentKey);
+    knobCountEl.textContent = "(" + g.tunables.length + ")";
+    knobsEl.innerHTML = "";
+    g.tunables.forEach(t => {
+      const wrap = document.createElement("div");
+      wrap.className = "knob";
+      wrap.innerHTML = `
+        <div class="knob-top"><span class="knob-label">${t.label}</span><span class="knob-val" id="kv-${t.name}"></span></div>
+        <input type="range" id="ki-${t.name}" min="${t.min}" max="${t.max}" step="${t.step}" value="${vals[t.name]}">
+      `;
+      knobsEl.appendChild(wrap);
+      const input = wrap.querySelector("input");
+      const out = wrap.querySelector(".knob-val");
+      const updateLabel = () => { out.textContent = fmt(vals[t.name]) + (t.unit ? " " + t.unit : ""); };
+      updateLabel();
+      input.addEventListener("input", () => {
+        vals[t.name] = Number(input.value);
+        updateLabel();
+        persist();
+      });
+    });
+  }
+
+  function selectGame(key){
+    if (playing) return;
+    currentKey = key;
+    stageEl.innerHTML = "";
+    stageIdleEl.style.display = "flex";
+    renderTabs();
+    renderKnobs();
+  }
+
+  function diceForScore(score){
+    const t = Math.pow(Math.max(0, Math.min(1, score)), saved.dice.curve);
+    return Math.round(saved.dice.min + (saved.dice.max - saved.dice.min) * t);
+  }
+
+  function renderDiceKnobs(){
+    const defs = [
+      {name:"min", label:"Min dice (0% score)", min:1, max:6, step:1},
+      {name:"max", label:"Max dice (100% score)", min:1, max:10, step:1},
+      {name:"curve", label:"Curve (1 = linear, >1 = back-loaded)", min:0.4, max:3, step:0.1},
+    ];
+    diceKnobsEl.innerHTML = "";
+    defs.forEach(d => {
+      const wrap = document.createElement("div");
+      wrap.className = "knob";
+      wrap.innerHTML = `
+        <div class="knob-top"><span class="knob-label">${d.label}</span><span class="knob-val" id="dv-${d.name}"></span></div>
+        <input type="range" id="di-${d.name}" min="${d.min}" max="${d.max}" step="${d.step}" value="${saved.dice[d.name]}">
+      `;
+      diceKnobsEl.appendChild(wrap);
+      const input = wrap.querySelector("input");
+      const out = wrap.querySelector(".knob-val");
+      const update = () => { out.textContent = fmt(saved.dice[d.name]); };
+      update();
+      input.addEventListener("input", () => {
+        saved.dice[d.name] = Number(input.value);
+        update();
+        renderDicePreview();
+        persist();
+      });
+    });
+  }
+
+  function renderDicePreview(){
+    dicePreviewEl.innerHTML = "";
+    for (let i = 0; i <= 10; i++){
+      const score = i / 10;
+      const dice = diceForScore(score);
+      const maxDice = Math.max(saved.dice.max, 1);
+      const h = Math.max(6, (dice / maxDice) * 54);
+      const bar = document.createElement("div");
+      bar.className = "dice-bar";
+      bar.style.height = h + "px";
+      bar.innerHTML = `<span class="n">${dice}</span>`;
+      dicePreviewEl.appendChild(bar);
+    }
+  }
+
+  function renderHistory(){
+    if (!history.length){
+      historyListEl.innerHTML = '<div class="history-empty">Nothing yet.</div>';
+      return;
+    }
+    historyListEl.innerHTML = history.slice().reverse().map(h => {
+      const g = GAMES.find(g => g.key === h.key);
+      return `<div class="history-row"><span class="hg">${g ? g.emoji : "?"}</span><span class="hs">${Math.round(h.score*100)}%</span><span class="hd">+${h.dice} dice</span></div>`;
+    }).join("");
+  }
+
+  /* The mini-games own their own rAF/timer loops and the shared contract
+     has no dispose hook -- so to abandon a round mid-play the lab records
+     every timer the running game schedules (by shadowing the globals while
+     it runs) and cancels the lot on End. Nothing in the games changes;
+     they simply stop being ticked. */
+  let runToken = 0;
+  let restoreTimers = null;
+  const liveRafs = new Set(), liveTimeouts = new Set(), liveIntervals = new Set();
+
+  function captureTimers(){
+    const rAF = window.requestAnimationFrame.bind(window);
+    const cAF = window.cancelAnimationFrame.bind(window);
+    const sT = window.setTimeout.bind(window);
+    const sI = window.setInterval.bind(window);
+    window.requestAnimationFrame = cb => {
+      const id = rAF(t => { liveRafs.delete(id); cb(t); });
+      liveRafs.add(id); return id;
+    };
+    window.setTimeout = (fn, ms) => {
+      const id = sT(() => { liveTimeouts.delete(id); fn(); }, ms);
+      liveTimeouts.add(id); return id;
+    };
+    window.setInterval = (fn, ms) => { const id = sI(fn, ms); liveIntervals.add(id); return id; };
+    return () => {
+      window.requestAnimationFrame = rAF; window.cancelAnimationFrame = cAF;
+      window.setTimeout = sT; window.setInterval = sI;
+      liveRafs.forEach(id => cAF(id)); liveRafs.clear();
+      liveTimeouts.forEach(id => clearTimeout(id)); liveTimeouts.clear();
+      liveIntervals.forEach(id => clearInterval(id)); liveIntervals.clear();
+    };
+  }
+
+  function finishRun(){
+    if (restoreTimers){ restoreTimers(); restoreTimers = null; }
+    playBtn.disabled = false;
+    playBtn.textContent = "▶ Play again";
+    endBtn.disabled = true;
+    fsEndBtn.disabled = true;
+    playing = false;
+  }
+
+  function endRoundEarly(){
+    if (!playing) return;
+    runToken++;                 // any onComplete still in flight is now stale
+    finishRun();
+    stageEl.innerHTML = "";
+    stageIdleEl.style.display = "";
+    readoutEl.className = "readout empty";
+    readoutEl.textContent = "Round ended early — not scored.";
+  }
+
+  function play(){
+    if (playing) return;
+    const g = GAMES.find(g => g.key === currentKey);
+    const vals = valuesFor(currentKey);
+    const raw = decode(window.MINIGAME_SOURCES_B64[currentKey]);
+    const patched = patchSource(raw, g.tunables, vals);
+
+    const old = document.getElementById("mg-active-script");
+    if (old) old.remove();
+    delete window.runMinigame;
+    const s = document.createElement("script");
+    s.id = "mg-active-script";
+    s.textContent = patched;
+    document.body.appendChild(s);
+
+    stageIdleEl.style.display = "none";
+    playBtn.disabled = true;
+    playBtn.textContent = "Playing…";
+    endBtn.disabled = false;
+    fsEndBtn.disabled = false;
+    playing = true;
+
+    const token = ++runToken;
+    restoreTimers = captureTimers();
+
+    window.runMinigame(stageEl, score => {
+      if (token !== runToken) return;   // abandoned via End round
+      const dice = diceForScore(score);
+      history.push({ key: currentKey, score, dice, ts: Date.now() });
+      persist();
+      renderHistory();
+      readoutEl.className = "readout";
+      readoutEl.innerHTML = `
+        <div class="readout-row">
+          <div><div class="lbl">Score</div><div class="score">${Math.round(score*100)}%</div></div>
+          <div style="text-align:right"><div class="lbl">Would map to</div><div class="dice">+${dice} dice</div></div>
+        </div>`;
+      finishRun();
+      if (autoReplayEl.checked){
+        setTimeout(() => { if (!playing) play(); }, 900);
+      }
+    });
+  }
+
+  playBtn.addEventListener("click", play);
+  endBtn.addEventListener("click", endRoundEarly);
+  fsEndBtn.addEventListener("click", endRoundEarly);
+
+  /* Fullscreen: a CSS-only overlay (see .stage-wrap.mg-fullscreen), not the
+     browser Fullscreen API -- see that rule's own comment for why. Body
+     scroll is locked while it's open so nothing scrolls behind it, and
+     Escape exits it the same as the explicit button does. */
+  function setFullscreen(on){
+    stageWrapEl.classList.toggle("mg-fullscreen", on);
+    document.body.style.overflow = on ? "hidden" : "";
+    fsBtn.textContent = on ? "⛶ Exit fullscreen" : "⛶ Fullscreen";
+  }
+  fsBtn.addEventListener("click", () => setFullscreen(!stageWrapEl.classList.contains("mg-fullscreen")));
+  fsExitBtn.addEventListener("click", () => setFullscreen(false));
+  document.addEventListener("keydown", ev => {
+    if (ev.key === "Escape" && stageWrapEl.classList.contains("mg-fullscreen")) setFullscreen(false);
+  });
+
+  resetBtn.addEventListener("click", () => {
+    if (playing) return;
+    const g = GAMES.find(g => g.key === currentKey);
+    saved.values[currentKey] = {};
+    g.tunables.forEach(t => saved.values[currentKey][t.name] = t.def);
+    persist();
+    renderKnobs();
+  });
+
+  notesEl.value = saved.notes;
+  notesEl.addEventListener("input", () => { saved.notes = notesEl.value; persist(); });
+  copyNotesBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(notesEl.value || "").then(() => {
+      copiedFlag.classList.add("show");
+      setTimeout(() => copiedFlag.classList.remove("show"), 1400);
+    });
+  });
+
+  renderTabs();
+  renderKnobs();
+  renderDiceKnobs();
+  renderDicePreview();
+  renderHistory();
+})();
+</script>

@@ -24,18 +24,26 @@
   /* ---- tunables -------------------------------------------------------- */
   const DURATION_MS = 30000;      // total round length
   const TARGET_CAKES = 6;         // matching this many orders => score 1.0
-  const SEND_ANIM_MS = 480;       // conveyor slide-away duration
+  const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
+  const ORDER_QUEUE = 3;          // order cards shown: the live one + look-ahead
+  const DICE_MIN = 3;             // dice awarded at score 0
+  const DICE_MAX = 6;             // dice awarded at score 1
+  const BACKDROP = "bakery";      // backdrops/<BACKDROP>.webp
 
+  // Darker/more saturated than the original pastel set -- close pairs like
+  // vanilla-vs-white or straw-vs-pink used to sit within a few percent
+  // lightness of each other; this pass pushes every swatch further from
+  // its neighbors so a glance (not a careful look) tells them apart.
   const BASES = [
-    { key: "choc", label: "Chocolate", color: "#6b4226" },
-    { key: "vanilla", label: "Vanilla", color: "#f0dcae" },
-    { key: "straw", label: "Strawberry", color: "#f2a6b8" },
+    { key: "choc", label: "Chocolate", color: "#4a2a16" },
+    { key: "vanilla", label: "Vanilla", color: "#e8b94f" },
+    { key: "straw", label: "Strawberry", color: "#d43d5c" },
   ];
   const FROSTINGS = [
-    { key: "white", label: "White", color: "#fffdf7" },
-    { key: "choc", label: "Chocolate", color: "#4a2c17" },
-    { key: "pink", label: "Pink", color: "#ff9ec7" },
+    { key: "white", label: "White", color: "#fdfaf3" },
+    { key: "choc", label: "Chocolate", color: "#2e1a0d" },
+    { key: "pink", label: "Pink", color: "#ff4fa0" },
   ];
   const FRUITS = [
     { key: "cherry", emoji: "\u{1F352}" },
@@ -44,13 +52,29 @@
     { key: "banana", emoji: "\u{1F34C}" },
   ];
 
+  /* Station art behind the stage. The base is overridable so one file works
+     both from game/minigames/ (sandbox + tuning lab) and from the built
+     single-file game, where backdrops/ sits alongside the HTML instead. */
+  function backdropURL() {
+    const f = BACKDROP + ".webp";
+    return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[f]) ||
+           ((global.MINIGAME_BACKDROP_BASE || "../backdrops/") + f);
+  }
+  /* Dice this run has earned so far -- shown live in the HUD so effort in
+     the mini-game visibly feeds the roll it pays out into. */
+  function diceFor(s) {
+    return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
+
   let styleInjected = false;
   function injectStyle() {
     if (styleInjected || document.getElementById("mg-bakery-style")) { styleInjected = true; return; }
     const css = `
       .mg-bakery-stage{
         position:relative; width:100%; height:100%; overflow:hidden; border-radius:16px;
-        background:linear-gradient(180deg,#3a2418 0%,#2b1a10 60%,#1e120a 100%);
+        background:linear-gradient(180deg,rgba(58,36,24,.76) 0%,rgba(43,26,16,.7) 60%,rgba(30,18,10,.8) 100%),
+          var(--mg-backdrop, none);
+        background-size:cover, cover; background-position:center, center;
         touch-action:manipulation; user-select:none; font-family:inherit;
         display:flex; flex-direction:column;
       }
@@ -60,16 +84,28 @@
       }
       .mg-bakery-hud .mg-pill{ background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; }
       .mg-bakery-timebar{ height:4px; background:#e0a23d; margin:8px 0 0; transition:width .1s linear; width:100%; }
-      .mg-bakery-order{
-        margin:10px 14px 0; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.08);
-        display:flex; align-items:center; gap:10px;
+      /* Orders are square cards showing the FINISHED cake, not a row of
+         swatches -- the player is matching a picture, so the brief should
+         look like the thing they're building. The live order is the first
+         card; the rest are look-ahead. */
+      .mg-bakery-orders{
+        margin:10px 14px 0; display:flex; gap:8px; align-items:stretch;
       }
-      .mg-bakery-order .mg-bakery-order-label{ font-size:11px; font-weight:800; color:#e0c8a8;
-        text-transform:uppercase; letter-spacing:.5px; }
-      .mg-bakery-swatch{
-        width:26px; height:26px; border-radius:50%; box-shadow:inset 0 0 0 2px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.3);
+      .mg-bakery-ordercard{
+        flex:1; aspect-ratio:1/1; border-radius:12px; position:relative;
+        background:rgba(255,255,255,.10); border:2px solid rgba(255,255,255,.16);
+        display:flex; align-items:center; justify-content:center; overflow:hidden;
       }
-      .mg-bakery-order .mg-bakery-fruit{ font-size:20px; }
+      .mg-bakery-ordercard.mg-bakery-live{
+        background:rgba(255,255,255,.17); border-color:#e0a23d;
+        box-shadow:0 0 0 2px rgba(224,162,61,.35);
+      }
+      .mg-bakery-ordercard:not(.mg-bakery-live){ opacity:.55; }
+      .mg-bakery-ordercard .mg-bakery-cake{ transform:scale(.62); }
+      .mg-bakery-ordertag{
+        position:absolute; top:4px; left:6px; font-size:9px; font-weight:800; letter-spacing:.4px;
+        color:#f0d9b8; text-transform:uppercase; opacity:.85;
+      }
       .mg-bakery-platezone{
         flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:70px;
       }
@@ -90,11 +126,20 @@
       .mg-bakery-layer-fruit{
         position:absolute; left:50%; bottom:38px; transform:translateX(-50%); font-size:20px;
       }
+      /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
+         .mg-bakery-cake above), which would otherwise shrink the fruit
+         along with everything else -- bump the source font-size so the
+         fruit renders twice as large as usual once that scale is applied. */
+      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:40px; }
+      /* Straight horizontal travel, no rotation or fade -- it's a conveyor
+         carrying the cake out of the kitchen, so it simply leaves the frame.
+         --fly is the full stage width plus a margin, set per cake in JS.
+         Several can be in flight at once; each is its own element. */
       .mg-bakery-cake.mg-bakery-flying{
         position:absolute; left:50%; top:50%; margin-left:-32px; margin-top:-28px;
-        transition:transform ${SEND_ANIM_MS}ms ease-in, opacity ${SEND_ANIM_MS}ms ease-in; z-index:5;
+        transition:transform ${SEND_ANIM_MS}ms linear; z-index:5;
       }
-      .mg-bakery-cake.mg-bakery-flying.mg-bakery-go{ transform:translate(220px,10px) rotate(12deg); opacity:0; }
+      .mg-bakery-cake.mg-bakery-flying.mg-bakery-go{ transform:translateX(var(--fly,120vw)); }
       .mg-bakery-belt{
         height:10px; margin:0 14px; border-radius:5px;
         background:repeating-linear-gradient(90deg,#5a4534 0 14px,#4a3728 14px 28px);
@@ -103,10 +148,30 @@
       .mg-bakery-row{ display:flex; gap:6px; align-items:center; }
       .mg-bakery-row-label{ width:26px; font-size:11px; font-weight:800; color:#c9ac86; text-align:center; }
       .mg-bakery-opt{
-        flex:1; height:34px; border-radius:9px; border:2px solid rgba(255,255,255,.18); cursor:pointer;
+        flex:1; height:34px; border-radius:9px; border:2.5px solid rgba(0,0,0,.6); cursor:pointer;
         display:flex; align-items:center; justify-content:center; font-size:18px;
+        position:relative; overflow:hidden; background:rgba(255,255,255,.06);
       }
       .mg-bakery-opt.mg-bakery-selected{ border-color:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.35) inset; }
+      /* Base swatch: a shallow cylinder, not a flat square -- a lighter
+         top-surface ellipse over the swatch color reads as "the cake
+         itself, seen at an angle" rather than an abstract color chip. */
+      .mg-bakery-opt[data-category="base"]{ background:var(--swatch); border-radius:5px 5px 11px 11px; }
+      .mg-bakery-opt[data-category="base"]::before{
+        content:""; position:absolute; left:10%; right:10%; top:-55%; height:70%;
+        border-radius:50%; background:rgba(255,255,255,.4); mix-blend-mode:overlay;
+      }
+      /* Icing swatch: a cluster of overlapping dollops in the frosting's
+         own color -- a soft-serve swirl silhouette instead of a plain
+         square, so it visually reads as "icing" rather than just "color". */
+      .mg-bakery-opt[data-category="frosting"]{
+        background:
+          radial-gradient(circle at 50% 14%, var(--swatch) 0 26%, transparent 27%),
+          radial-gradient(circle at 34% 34%, var(--swatch) 0 25%, transparent 26%),
+          radial-gradient(circle at 66% 34%, var(--swatch) 0 25%, transparent 26%),
+          radial-gradient(circle at 50% 58%, var(--swatch) 0 32%, transparent 33%),
+          rgba(255,255,255,.06);
+      }
       .mg-bakery-sendwrap{ padding:0 14px 14px; }
       .mg-bakery-send{
         width:100%; padding:12px; border-radius:12px; border:none; font-weight:800; font-size:15px;
@@ -146,21 +211,18 @@
 
     const stage = document.createElement("div");
     stage.className = "mg-bakery-stage";
+    stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span><span class="mg-pill">Fill the order!</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span>` +
+      `<span class="mg-pill" id="mg-bakery-dice">\u{1F3B2} ${DICE_MIN}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-bakery-timebar";
 
     const orderRow = document.createElement("div");
-    orderRow.className = "mg-bakery-order";
-    orderRow.innerHTML = `
-      <span class="mg-bakery-order-label">Order</span>
-      <span class="mg-bakery-swatch" id="mg-bakery-order-base"></span>
-      <span class="mg-bakery-swatch" id="mg-bakery-order-frosting"></span>
-      <span class="mg-bakery-fruit" id="mg-bakery-order-fruit"></span>`;
+    orderRow.className = "mg-bakery-orders";
 
     const plateZone = document.createElement("div");
     plateZone.className = "mg-bakery-platezone";
@@ -188,15 +250,17 @@
         btn.className = "mg-bakery-opt";
         btn.dataset.category = category;
         btn.dataset.key = item.key;
-        if (item.color) { btn.style.background = item.color; }
+        if (item.color) { btn.style.setProperty("--swatch", item.color); }
         else { btn.textContent = item.emoji; btn.style.background = "rgba(255,255,255,.06)"; }
         row.appendChild(btn);
       });
       return row;
     }
-    rows.appendChild(buildRow("Base", BASES, "base"));
-    rows.appendChild(buildRow("Icing", FROSTINGS, "frosting"));
+    // Bottom-up to match how the cake is actually stacked: the base sits on
+    // the bottom row, icing above it, fruit on top.
     rows.appendChild(buildRow("Top", FRUITS, "fruit"));
+    rows.appendChild(buildRow("Icing", FROSTINGS, "frosting"));
+    rows.appendChild(buildRow("Base", BASES, "base"));
 
     const sendWrap = document.createElement("div");
     sendWrap.className = "mg-bakery-sendwrap";
@@ -216,24 +280,35 @@
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-bakery-count");
-    const orderBaseEl = orderRow.querySelector("#mg-bakery-order-base");
-    const orderFrostingEl = orderRow.querySelector("#mg-bakery-order-frosting");
-    const orderFruitEl = orderRow.querySelector("#mg-bakery-order-fruit");
+    const diceEl = hud.querySelector("#mg-bakery-dice");
 
     let running = true;
     let matched = 0;
-    let target = null;
     let selected = { base: null, frosting: null, fruit: null };
+    // queue[0] is the live order; the rest are shown dimmed as look-ahead.
+    const queue = [];
+    const target = () => queue[0];
 
-    function newOrder() {
+    function randomOrder(avoid) {
       let next;
       do {
         next = { base: pick(BASES), frosting: pick(FROSTINGS), fruit: pick(FRUITS) };
-      } while (target && next.base === target.base && next.frosting === target.frosting && next.fruit === target.fruit);
-      target = next;
-      orderBaseEl.style.background = target.base.color;
-      orderFrostingEl.style.background = target.frosting.color;
-      orderFruitEl.textContent = target.fruit.emoji;
+      } while (avoid && next.base === avoid.base && next.frosting === avoid.frosting && next.fruit === avoid.fruit);
+      return next;
+    }
+
+    function renderOrders() {
+      orderRow.innerHTML = queue.map((o, i) => `
+        <div class="mg-bakery-ordercard ${i === 0 ? "mg-bakery-live" : ""}">
+          ${i === 0 ? '<span class="mg-bakery-ordertag">Now</span>' : ""}
+          <div class="mg-bakery-cake">${cakeInnerHTML(o.base.color, o.frosting.color, o.fruit.emoji)}</div>
+        </div>`).join("");
+    }
+
+    function advanceOrder() {
+      queue.shift();
+      while (queue.length < ORDER_QUEUE) queue.push(randomOrder(queue[queue.length - 1]));
+      renderOrders();
     }
 
     function resetPlate() {
@@ -268,14 +343,19 @@
 
     sendBtn.addEventListener("click", () => {
       if (!running || sendBtn.disabled) return;
-      const isMatch = selected.base === target.base && selected.frosting === target.frosting && selected.fruit === target.fruit;
+      const t = target();
+      const isMatch = selected.base === t.base && selected.frosting === t.frosting && selected.fruit === t.fruit;
 
+      // Each send is its own element travelling the full width of the stage,
+      // so sending again before the last one has left simply puts a second
+      // cake on the belt rather than interrupting the first.
       const flying = document.createElement("div");
       flying.className = "mg-bakery-cake mg-bakery-flying";
       flying.innerHTML = cake.innerHTML;
-      plate.appendChild(flying);
+      flying.style.setProperty("--fly", (stage.clientWidth + 140) + "px");
+      plateZone.appendChild(flying);
       requestAnimationFrame(() => flying.classList.add("mg-bakery-go"));
-      setTimeout(() => flying.remove(), SEND_ANIM_MS + 60);
+      setTimeout(() => flying.remove(), SEND_ANIM_MS + 80);
 
       stage.classList.remove("mg-bakery-ok", "mg-bakery-bad");
       void stage.offsetWidth;
@@ -284,12 +364,14 @@
       if (isMatch) {
         matched++;
         countEl.textContent = "\u{1F382} " + matched;
+        diceEl.textContent = "\u{1F3B2} " + diceFor(matched / TARGET_CAKES);
       }
       resetPlate();
-      newOrder();
+      advanceOrder();
     });
 
-    newOrder();
+    while (queue.length < ORDER_QUEUE) queue.push(randomOrder(queue[queue.length - 1]));
+    renderOrders();
 
     const start = Date.now();
     let rafId = null;
@@ -311,7 +393,7 @@
       resultEl.className = "mg-bakery-result";
       resultEl.innerHTML = `
         <div class="mg-big">\u{1F382} ${matched} order${matched === 1 ? "" : "s"} filled</div>
-        <div class="mg-sub">${Math.round(score * 100)}% -- nice baking!</div>`;
+        <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
       setTimeout(() => onComplete(score), RESULT_HOLD_MS);

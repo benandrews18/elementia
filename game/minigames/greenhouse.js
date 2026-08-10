@@ -26,15 +26,49 @@
   const DURATION_MS = 24000;         // total round length
   const TARGET_GOOD = 14;            // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
-  const BASKET_W = 66, BASKET_H = 28;
-  const BASKET_BOTTOM_GAP = 14;      // px from stage floor to basket bottom
-  const EGG_W = 24, EGG_H = 30;
+  const BASKET_W = 24;
+  const BASKET_H = 60;
+  const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
+  // ~0.71 w:h is what actually reads as an egg rather than a small oval --
+  // the shape comes from the border-radius in .mg-green-egg, but it needs
+  // both the ratio AND enough pixels to be legible while falling.
+  const EGG_W = 30;
+  const EGG_H = 42;
   const CATCH_BAND = 14;             // px of vertical tolerance around the basket rim
   const FALL_MS_RAMP = 20000;        // time to reach max fall speed / spawn rate
-  const FALL_SPEED_START = 100, FALL_SPEED_MAX = 220;  // px/s
-  const SPAWN_MS_START = 900, SPAWN_MS_MIN = 430;
-  const BAD_CHANCE_START = 0.24, BAD_CHANCE_MAX = 0.4;
+  const FALL_SPEED_START = 100;      // px/s
+  const FALL_SPEED_MAX = 600;        // px/s
+  const SPAWN_MS_START = 900;
+  const SPAWN_MS_MIN = 250;
+  const BAD_CHANCE_START = 0.24;
+  const BAD_CHANCE_MAX = 0.4;
   const RESULT_HOLD_MS = 1300;
+  const DICE_MIN = 3;                // dice awarded at score 0
+  const DICE_MAX = 6;                // dice awarded at score 1
+  const BACKDROP = "greenhouse";     // backdrops/<BACKDROP>.webp
+
+  /* Good eggs run through the rainbow; bad ones are deliberately OUTSIDE
+     that palette (dark, cracked) so "is this one worth catching" is never
+     a hue judgement between two similar greens. */
+  const EGG_COLORS = [
+    ["#ff8a80", "#e5384a"], ["#ffc17a", "#ef8b21"], ["#ffe680", "#e8c22a"],
+    ["#a8e6a3", "#43a047"], ["#8fd3f4", "#2196c4"], ["#a9a8f0", "#4a47c9"],
+    ["#d6a8f0", "#8e3fc0"],
+  ];
+
+  /* Station art behind the stage. The base is overridable so one file works
+     both from game/minigames/ (sandbox + tuning lab) and from the built
+     single-file game, where backdrops/ sits alongside the HTML instead. */
+  function backdropURL() {
+    const f = BACKDROP + ".webp";
+    return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[f]) ||
+           ((global.MINIGAME_BACKDROP_BASE || "../backdrops/") + f);
+  }
+  /* Dice this run has earned so far -- shown live in the HUD so effort in
+     the mini-game visibly feeds the roll it pays out into. */
+  function diceFor(s) {
+    return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -42,7 +76,9 @@
     const css = `
       .mg-green-stage{
         position:relative; width:100%; height:100%; overflow:hidden; border-radius:16px;
-        background:linear-gradient(180deg,#dff3d8 0%,#bfe3b4 55%,#8fc47f 100%);
+        background:linear-gradient(180deg,rgba(223,243,216,.58) 0%,rgba(191,227,180,.5) 55%,rgba(143,196,127,.58) 100%),
+          var(--mg-backdrop, none);
+        background-size:cover, cover; background-position:center, center;
         touch-action:none; user-select:none; font-family:inherit;
       }
       .mg-green-hud{
@@ -55,26 +91,39 @@
       }
       .mg-green-timebar{position:absolute; top:0; left:0; height:4px; background:#4c9a3f; z-index:3;
         transition:width .1s linear}
+      /* The classic CSS egg: equal horizontal radii, but a much taller
+         vertical radius at the top than the bottom, which pulls the top to
+         a point and leaves the base round. Needs the ~0.71 w:h from EGG_W/
+         EGG_H to actually look like one. */
       .mg-green-egg{
-        position:absolute; border-radius:50% 50% 46% 46% / 60% 60% 40% 40%; z-index:2;
+        position:absolute; z-index:2;
+        border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;
+        box-shadow:inset -3px -5px 8px rgba(0,0,0,.18), 0 2px 4px rgba(0,0,0,.22);
       }
       .mg-green-egg.mg-green-good{
-        background:radial-gradient(circle at 34% 28%, #fffaf0, #f4e6c8 60%, #e0c98f 100%);
-        box-shadow:inset 0 0 0 1px rgba(150,120,60,.35);
+        background:radial-gradient(circle at 34% 26%, #fff 0%, var(--egg-a) 38%, var(--egg-b) 100%);
       }
+      /* Cracked and colourless -- reads as "don't catch" on shape and value,
+         not just hue (see EGG_COLORS). */
       .mg-green-egg.mg-green-bad{
-        background:radial-gradient(circle at 34% 28%, #cbe08a, #93a852 55%, #5f6e33 100%);
-        box-shadow:inset 0 0 0 1px rgba(40,50,10,.4);
+        background:radial-gradient(circle at 34% 26%, #7c7468, #4a443b 55%, #2b2822 100%);
+      }
+      .mg-green-egg.mg-green-bad::after{
+        content:""; position:absolute; inset:0;
+        background:
+          linear-gradient(115deg, transparent 44%, rgba(0,0,0,.75) 45%, transparent 47%),
+          linear-gradient(60deg, transparent 56%, rgba(0,0,0,.6) 57%, transparent 59%);
       }
       .mg-green-egg.mg-green-pop{ animation:mg-green-pop-anim .22s ease-out forwards; }
       @keyframes mg-green-pop-anim{ 0%{transform:scale(1); opacity:1} 100%{transform:scale(1.5); opacity:0} }
       .mg-green-basket{
-        position:absolute; z-index:3; border-radius:0 0 12px 12px;
+        position:absolute; z-index:3; border-radius:0 0 12px 12px; box-sizing:border-box;
         background:linear-gradient(180deg,#b9834a,#8a5d31); box-shadow:0 3px 6px rgba(0,0,0,.25);
+        border:3px solid rgba(0,0,0,.6); border-top:none;
       }
       .mg-green-basket::before{
         content:""; position:absolute; left:-4px; right:-4px; top:-6px; height:8px; border-radius:6px;
-        background:#a3703e; box-shadow:0 2px 3px rgba(0,0,0,.2);
+        background:#a3703e; box-shadow:0 2px 3px rgba(0,0,0,.2); border:2px solid rgba(0,0,0,.6);
       }
       .mg-green-stage.mg-green-bad-flash{ animation:mg-green-flash .3s ease; }
       @keyframes mg-green-flash{
@@ -105,10 +154,12 @@
 
     const stage = document.createElement("div");
     stage.className = "mg-green-stage";
+    stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span><span class="mg-pill">Catch the good eggs!</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span>` +
+      `<span class="mg-pill" id="mg-green-dice">\u{1F3B2} ${DICE_MIN}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-green-timebar";
@@ -125,9 +176,15 @@
     container.appendChild(stage);
 
     const scoreEl = hud.querySelector("#mg-green-score");
-    const stageW = stage.clientWidth || 320;
-    const stageH = stage.clientHeight || 420;
-    const basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
+    const diceEl = hud.querySelector("#mg-green-dice");
+    // Live, not captured once -- the stage can still be resizing when the
+    // round starts (e.g. entering the CSS-only fullscreen overlay resizes
+    // the stage element itself without firing a window "resize" event), so
+    // a value read right here can be stale for the rest of the round. Kept
+    // in sync every frame (see tick()) instead.
+    let stageW = stage.clientWidth || 320;
+    let stageH = stage.clientHeight || 420;
+    let basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
     basket.style.top = basketTop + "px";
 
     let basketX = stageW / 2 - BASKET_W / 2;
@@ -136,6 +193,7 @@
     let running = true;
     let score = 0;
     let nextSpawnAt = 0;
+    let eggHue = 0;   // walks EGG_COLORS so consecutive eggs differ
     const eggs = [];
 
     function setBasketX(clientX) {
@@ -152,6 +210,11 @@
       const bad = Math.random() < BAD_CHANCE_START + (BAD_CHANCE_MAX - BAD_CHANCE_START) * ramp;
       const el = document.createElement("div");
       el.className = "mg-green-egg " + (bad ? "mg-green-bad" : "mg-green-good");
+      if (!bad) {
+        const c = EGG_COLORS[eggHue++ % EGG_COLORS.length];
+        el.style.setProperty("--egg-a", c[0]);
+        el.style.setProperty("--egg-b", c[1]);
+      }
       el.style.width = EGG_W + "px";
       el.style.height = EGG_H + "px";
       const x = rand(4, stageW - EGG_W - 4);
@@ -165,6 +228,7 @@
 
     function updateScore() {
       scoreEl.textContent = "\u{1F95A} " + Math.max(0, score);
+      diceEl.textContent = "\u{1F3B2} " + diceFor(Math.max(0, score) / TARGET_GOOD);
     }
 
     function flashBad() {
@@ -195,6 +259,16 @@
       const dt = Math.min(0.05, (now - lastFrame) / 1000);
       lastFrame = now;
       const elapsed = now - start;
+
+      const liveW = stage.clientWidth || stageW;
+      const liveH = stage.clientHeight || stageH;
+      if (liveW !== stageW || liveH !== stageH) {
+        stageW = liveW; stageH = liveH;
+        basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
+        basket.style.top = basketTop + "px";
+        basketX = Math.max(0, Math.min(stageW - BASKET_W, basketX));
+        basket.style.left = basketX + "px";
+      }
 
       if (elapsed >= nextSpawnAt) spawnEgg(elapsed);
 
@@ -236,7 +310,7 @@
       resultEl.className = "mg-green-result";
       resultEl.innerHTML = `
         <div class="mg-big">\u{1F95A} ${net} caught</div>
-        <div class="mg-sub">${Math.round(finalScore * 100)}% -- nice catching!</div>`;
+        <div class="mg-sub">\u{1F3B2} ${diceFor(finalScore)} dice earned</div>`;
       stage.appendChild(resultEl);
 
       setTimeout(() => onComplete(finalScore), RESULT_HOLD_MS);

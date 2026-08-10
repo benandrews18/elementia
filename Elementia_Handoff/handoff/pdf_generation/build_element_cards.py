@@ -45,12 +45,12 @@ ELEMENTS = [
     ("Si", "Silicon",    14, "earth"),
     ("Al", "Aluminum",   13, "earth"),
     ("Mg", "Magnesium",  12, "earth"),
-    ("P",  "Phosphorus", 15, "earth"),
+    ("P",  "Phosphorus", 15, "reactive"),
     ("Fe", "Iron",       26, "metal"),
     ("Ti", "Titanium",   22, "metal"),
     ("Cu", "Copper",     29, "metal"),
     ("Ag", "Silver",     47, "metal"),
-    ("Ni", "Nickel",     28, "metal"),
+    ("Ni", "Nickel",     28, "earth"),
 ]
 
 # which stations gather each element (for the "GATHERED AT" row)

@@ -76,7 +76,7 @@ game and the PDFs. Both bugs called out in HANDOFF.md §5 are fixed here: statio
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 5,
- "version": "2026.08.07",
+ "version": "2026.08.09",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -134,6 +134,13 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
      "🪨",
      "Limestone",
      "MATERIAL",
@@ -152,56 +159,91 @@ const DATA = /*__GAME_DATA_START__*/{
      "Seaweed",
      "MATERIAL",
      "C + H + O",
-     2
-    ],
-    [
-     "💧",
-     "Water",
-     "MATERIAL",
-     "H + O",
-     2
-    ],
-    [
-     "✨",
-     "Life",
-     "CREATION",
-     "🦴 Bone + 🧬 DNA + ⭐ Star",
-     10
-    ],
-    [
-     "🍌",
-     "Banana",
-     "CREATION",
-     "🌳 Tree + 💧 Water + K",
-     6
+     4
     ],
     [
      "☁️",
      "Cloud",
      "COMPONENT",
      "💧 Water + N + C",
+     5
+    ],
+    [
+     "🍌",
+     "Banana",
+     "CREATION",
+     "🌳 Tree + 💧 Water + K",
      8
+    ],
+    [
+     "🧵",
+     "Fabric",
+     "COMPONENT",
+     "🧶 Plant Fiber",
+     9
+    ],
+    [
+     "⛵",
+     "Sailboat",
+     "CREATION",
+     "🛶 Canoe + 🧵 Fabric",
+     10
+    ],
+    [
+     "🧪",
+     "Biofuel",
+     "CREATION",
+     "🌿 Seaweed + 🦴 Bone + 🌱 Soil + 🔋 Battery",
+     11
+    ],
+    [
+     "__PEARL__",
+     "Pearl",
+     "COMPONENT",
+     "Ca + O + 🔥 Furnace + 🕐 Clock",
+     13
     ],
     [
      "__LIGHTHOUSE__",
      "Lighthouse",
      "CREATION",
      "💡 Light Bulb + ⬜ Concrete",
-     10
+     13
     ],
     [
      "__ORCA__",
      "Orca",
      "CREATION",
      "🌿 Seaweed + 🐟 Salmon + 🦴 Bone",
-     5
+     14
+    ],
+    [
+     "__LIFE__",
+     "Life",
+     "CREATION",
+     "🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock",
+     14
+    ],
+    [
+     "🌊",
+     "Water Turbine",
+     "CREATION",
+     "💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
+     16
     ],
     [
      "🚤",
      "Speedboat",
      "CREATION",
      "🛶 Canoe + ⚙️ Engine + 🧭 Compass",
-     19
+     17
+    ],
+    [
+     "🏖️",
+     "Beach Town",
+     "CREATION",
+     "__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",
+     25
     ]
    ],
    "capstone": [
@@ -209,7 +251,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Coral Reef",
     "CAPSTONE",
     "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",
-    13
+    22
    ]
   },
   {
@@ -226,82 +268,96 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
-     "🔋",
-     "Battery",
-     "MATERIAL",
-     "Ni + Fe + K",
-     2
-    ],
-    [
      "🔌",
      "Wire",
      "MATERIAL",
      "Cu + Al",
-     2
+     3
     ],
     [
-     "🕐",
-     "Clock",
-     "COMPONENT",
-     "🔋 Battery + 🛠️ Tools",
-     6
+     "🔋",
+     "Battery",
+     "MATERIAL",
+     "Ni + Fe + K",
+     4
     ],
     [
-     "⚙️",
-     "Engine",
-     "COMPONENT",
-     "🛠️ Tools + 🛢️ Natural Gas",
-     6
+     "🎆",
+     "Fireworks",
+     "MATERIAL",
+     "C + S + K",
+     4
     ],
     [
      "🪟",
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     4
+     5
+    ],
+    [
+     "⚙️",
+     "Engine",
+     "COMPONENT",
+     "🛠️ Tools + 🛢️ Natural Gas",
+     7
     ],
     [
      "💡",
      "Light Bulb",
      "COMPONENT",
      "🪟 Glass + 🔌 Wire",
-     6
+     7
     ],
     [
-     "🔆",
-     "Solar Cell",
+     "🕐",
+     "Clock",
      "COMPONENT",
-     "Si + Ag + 🪟 Glass",
-     6
+     "🔋 Battery + 🛠️ Tools",
+     8
     ],
     [
      "🥤",
      "Plastic",
      "COMPONENT",
      "🛢️ Natural Gas + 🔥 Furnace",
-     9
+     8
     ],
     [
-     "🚗",
-     "Car",
-     "CREATION",
-     "⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + 🔘 Rubber Tire",
-     16
+     "🔆",
+     "Solar Cell",
+     "COMPONENT",
+     "Si + Ag + 🪟 Glass",
+     8
     ],
     [
      "💻",
      "Computer",
      "COMPONENT",
-     "🔋 Battery + 🥤 Plastic + 🎛️ Microchip",
-     11
+     "🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",
+     15
+    ],
+    [
+     "🚗",
+     "Car",
+     "CREATION",
+     "⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",
+     18
+    ],
+    [
+     "🌍",
+     "Renewable Grid",
+     "CREATION",
+     "🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Solar Farm + ♨️ Geothermal Pump",
+     22
     ]
    ],
    "capstone": [
     "🤖",
     "Robot",
     "CAPSTONE",
-    "💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + 🎛️ Microchip",
-    20
+    "💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",
+    21
    ]
   },
   {
@@ -318,13 +374,6 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
-     "♻️",
-     "Fertilizer",
-     "MATERIAL",
-     "N + P + K",
-     2
-    ],
-    [
      "🪨",
      "Limestone",
      "MATERIAL",
@@ -332,18 +381,18 @@ const DATA = /*__GAME_DATA_START__*/{
      2
     ],
     [
-     "⏳",
-     "Sand",
+     "♻️",
+     "Fertilizer",
      "MATERIAL",
-     "Si + O",
-     2
+     "N + P + K",
+     3
     ],
     [
      "🍬",
      "Sugar",
      "MATERIAL",
      "C + H + O",
-     2
+     3
     ],
     [
      "🧬",
@@ -356,51 +405,79 @@ const DATA = /*__GAME_DATA_START__*/{
      "🌱",
      "Soil",
      "COMPONENT",
-     "🏺 Clay + ⏳ Sand + 💧 Water",
-     6
-    ],
-    [
-     "🧑‍🌾",
-     "Farm",
-     "CREATION",
-     "🌱 Soil + 🛠️ Tools + 💧 Water",
-     10
-    ],
-    [
-     "🐔",
-     "Chicken",
-     "CREATION",
-     "🧑‍🌾 Farm + 🥚 Egg",
-     13
+     "🏺 Clay + ⏳ Sand",
+     4
     ],
     [
      "🍎",
      "Fruit",
      "CREATION",
      "🌳 Tree + 💧 Water",
-     9
+     7
+    ],
+    [
+     "🧑‍🌾",
+     "Farm",
+     "CREATION",
+     "🌱 Soil + 🛠️ Tools + 💧 Water",
+     7
     ],
     [
      "🌾",
      "Grain",
      "COMPONENT",
      "🧑‍🌾 Farm + ♻️ Fertilizer",
-     13
+     8
+    ],
+    [
+     "🌻",
+     "Solar Farm",
+     "CREATION",
+     "🔆 Solar Cell + 🔌 Wire + 🔋 Battery",
+     9
     ],
     [
      "🚜",
      "Tractor",
      "CREATION",
      "🧑‍🌾 Farm + ⚙️ Engine",
-     12
+     10
+    ],
+    [
+     "__OPAL__",
+     "Opal",
+     "COMPONENT",
+     "Si + O + 🔥 Furnace + 🕐 Clock",
+     11
+    ],
+    [
+     "🐔",
+     "Chicken",
+     "CREATION",
+     "🧑‍🌾 Farm + 🥚 Egg",
+     11
+    ],
+    [
+     "🚲",
+     "Bicycle",
+     "CREATION",
+     "🦾 Aluminum Alloy + 🔘 Wheel + __RUBBER__ Rubber",
+     15
+    ],
+    [
+     "🌬️",
+     "Windmill",
+     "CREATION",
+     "☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
+     16
     ]
    ],
    "capstone": [
     "🏡",
     "Homestead",
     "CAPSTONE",
-    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🏢 Building",
-    20
+    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin",
+    19
    ]
   },
   {
@@ -417,13 +494,6 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
-     "🏺",
-     "Clay",
-     "MATERIAL",
-     "Al + Si + Mg",
-     3
-    ],
-    [
      "🛢️",
      "Natural Gas",
      "MATERIAL",
@@ -438,11 +508,18 @@ const DATA = /*__GAME_DATA_START__*/{
      2
     ],
     [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     2
+    ],
+    [
      "🛠️",
      "Tools",
      "CREATION",
      "Fe + Ti + Al",
-     4
+     3
     ],
     [
      "🔥",
@@ -452,31 +529,24 @@ const DATA = /*__GAME_DATA_START__*/{
      5
     ],
     [
-     "🌱",
-     "Soil",
+     "__RUBBER__",
+     "Rubber",
      "COMPONENT",
-     "🏺 Clay + ⏳ Sand + 💧 Water",
-     6
-    ],
-    [
-     "🦾",
-     "Aluminum Alloy",
-     "MATERIAL",
-     "Al + Mg + 🔥 Furnace",
-     2
+     "🛢️ Natural Gas + S",
+     5
     ],
     [
      "🔩",
      "Stainless Steel",
      "MATERIAL",
      "🔩 Steel + Ni + 🔥 Furnace",
-     3
+     5
     ],
     [
-     "💎",
-     "Diamond",
-     "COMPONENT",
-     "C + 🔥 Furnace + 🕐 Clock",
+     "🦾",
+     "Aluminum Alloy",
+     "MATERIAL",
+     "Al + Mg + 🔥 Furnace",
      6
     ],
     [
@@ -484,14 +554,35 @@ const DATA = /*__GAME_DATA_START__*/{
      "Titanium Alloy",
      "MATERIAL",
      "Ti + Al + 🔥 Furnace",
-     2
+     6
     ],
     [
-     "🔘",
-     "Rubber Tire",
+     "♨️",
+     "Geothermal Pump",
+     "CREATION",
+     "🔥 Furnace + 💧 Water + 🔋 Battery",
+     10
+    ],
+    [
+     "__DIAMOND__",
+     "Diamond",
      "COMPONENT",
-     "🦾 Aluminum Alloy + 🛢️ Natural Gas + S",
-     8
+     "C + 🔥 Furnace + 🕐 Clock",
+     12
+    ],
+    [
+     "🌋",
+     "Volcano",
+     "CREATION",
+     "🌎 Planet + 🔥 Furnace",
+     14
+    ],
+    [
+     "__GEMCOLLECTION__",
+     "Gemstone Collection",
+     "CREATION",
+     "__PEARL__ Pearl + __RUBY__ Ruby + __OPAL__ Opal + __TURQUOISE__ Turquoise + __AMBER__ Amber + __DIAMOND__ Diamond",
+     19
     ]
    ],
    "capstone": [
@@ -499,14 +590,13 @@ const DATA = /*__GAME_DATA_START__*/{
     "Maglev Train",
     "CAPSTONE",
     "⚙️ Engine + 🪟 Glass + 🧲 Magnet + 🌉 Bridge + 🦾 Aluminum Alloy",
-    17
+    22
    ]
   },
   {
    "emoji": "🌲",
    "name": "Old Growth Forest",
    "suit": "forest",
-   "flavor": "Nanaimo coal seams · Horne Lake limestone karst · Courtenay elasmosaur beds",
    "dice": [
     "C",
     "O",
@@ -517,11 +607,11 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
-     "🏺",
-     "Clay",
+     "💧",
+     "Water",
      "MATERIAL",
-     "Al + Si + Mg",
-     3
+     "H + O",
+     2
     ],
     [
      "⏳",
@@ -531,31 +621,24 @@ const DATA = /*__GAME_DATA_START__*/{
      2
     ],
     [
-     "💧",
-     "Water",
+     "🏺",
+     "Clay",
      "MATERIAL",
-     "H + O",
+     "Al + Si + Mg",
      2
     ],
     [
      "🦴",
      "Bone",
      "MATERIAL",
-     "💧 Water + C + Ca + S",
-     2
+     "C + Ca + S",
+     4
     ],
     [
      "🌱",
      "Soil",
      "COMPONENT",
-     "🏺 Clay + ⏳ Sand + 💧 Water",
-     6
-    ],
-    [
-     "🐟",
-     "Salmon",
-     "CREATION",
-     "🌿 Seaweed + 💧 Water + 🥚 Egg",
+     "🏺 Clay + ⏳ Sand",
      4
     ],
     [
@@ -563,7 +646,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Tree",
      "COMPONENT",
      "🌱 Soil + C + O",
-     8
+     6
     ],
     [
      "🛶",
@@ -577,15 +660,50 @@ const DATA = /*__GAME_DATA_START__*/{
      "Deer",
      "CREATION",
      "🌳 Tree + 💧 Water + 🦴 Bone",
-     9
+     7
+    ],
+    [
+     "🧶",
+     "Plant Fiber",
+     "MATERIAL",
+     "🌳 Tree + 🛠️ Tools",
+     8
+    ],
+    [
+     "🛖",
+     "Log Cabin",
+     "CREATION",
+     "🌳 Tree + 🛠️ Tools + 🔥 Furnace",
+     8
+    ],
+    [
+     "__AMBER__",
+     "Amber",
+     "COMPONENT",
+     "🌳 Tree + C + 🕐 Clock",
+     11
+    ],
+    [
+     "🐟",
+     "Salmon",
+     "CREATION",
+     "🌿 Seaweed + 💧 Water + 🥚 Egg",
+     12
+    ],
+    [
+     "🦖",
+     "Dinosaur",
+     "CREATION",
+     "🦴 Bone + __AMBER__ Amber + 🧬 DNA",
+     13
     ]
    ],
    "capstone": [
-    "🌎",
+    "__ECOSYSTEM__",
     "Ecosystem",
     "CAPSTONE",
     "🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow",
-    20
+    28
    ]
   },
   {
@@ -602,6 +720,13 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
      "🛢️",
      "Natural Gas",
      "MATERIAL",
@@ -613,56 +738,56 @@ const DATA = /*__GAME_DATA_START__*/{
      "Sugar",
      "MATERIAL",
      "C + H + O",
-     2
-    ],
-    [
-     "💧",
-     "Water",
-     "MATERIAL",
-     "H + O",
-     2
+     3
     ],
     [
      "🦠",
      "Yeast",
      "COMPONENT",
      "🍬 Sugar + 💧 Water",
-     4
+     5
     ],
     [
      "🥚",
      "Egg",
      "COMPONENT",
      "🧬 DNA + Ca + O",
-     14
+     6
     ],
     [
      "__FLOUR__",
      "Flour",
      "COMPONENT",
      "🌾 Grain + 🛠️ Tools",
-     14
+     10
     ],
     [
      "🫓",
      "Dough",
      "COMPONENT",
      "__FLOUR__ Flour + 💧 Water",
-     15
+     11
     ],
     [
      "🍞",
      "Bread",
      "CREATION",
      "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
-     19
+     12
     ],
     [
      "🍰",
      "Cake",
      "CREATION",
      "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
-     21
+     13
+    ],
+    [
+     "🍽️",
+     "Grand Banquet",
+     "CREATION",
+     "🍎 Fruit + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",
+     24
     ]
    ],
    "capstone": [
@@ -670,14 +795,13 @@ const DATA = /*__GAME_DATA_START__*/{
     "Fruit Cake",
     "CAPSTONE",
     "🍞 Bread + 🍰 Cake + 🍎 Fruit + 🕐 Clock + 🍌 Banana",
-    27
+    25
    ]
   },
   {
    "emoji": "🏗️",
    "name": "The City",
    "suit": "city",
-   "flavor": "Urban infrastructure & civic engineering — Ca, C, O, Al, S, Fe.",
    "dice": [
     "Ca",
     "C",
@@ -687,13 +811,6 @@ const DATA = /*__GAME_DATA_START__*/{
     "Mg"
    ],
    "shop": [
-    [
-     "🏺",
-     "Clay",
-     "MATERIAL",
-     "Al + Si + Mg",
-     3
-    ],
     [
      "🪨",
      "Limestone",
@@ -709,18 +826,32 @@ const DATA = /*__GAME_DATA_START__*/{
      2
     ],
     [
-     "⬜",
-     "Concrete",
-     "COMPONENT",
-     "🏺 Clay + 🪨 Limestone",
-     6
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     2
     ],
     [
      "🪟",
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     4
+     5
+    ],
+    [
+     "⬜",
+     "Concrete",
+     "COMPONENT",
+     "🏺 Clay + 🪨 Limestone",
+     5
+    ],
+    [
+     "🗿",
+     "Statue",
+     "COMPONENT",
+     "🪨 Limestone + 🛠️ Tools",
+     6
     ],
     [
      "🌉",
@@ -734,28 +865,70 @@ const DATA = /*__GAME_DATA_START__*/{
      "Building",
      "CREATION",
      "⬜ Concrete + 🪟 Glass + 🔩 Steel",
-     10
+     8
+    ],
+    [
+     "📕",
+     "Book",
+     "COMPONENT",
+     "🧶 Plant Fiber",
+     12
+    ],
+    [
+     "__RUBY__",
+     "Ruby",
+     "COMPONENT",
+     "Al + O + 🔥 Furnace + 🕐 Clock",
+     13
+    ],
+    [
+     "📚",
+     "Library",
+     "CREATION",
+     "🏢 Building + 📕 Book",
+     15
     ],
     [
      "✈️",
      "Airplane",
      "CREATION",
      "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",
+     15
+    ],
+    [
+     "🗼",
+     "Skyscraper",
+     "CREATION",
+     "🏢 Building + ☁️ Cloud + 📡 Satellite Dish",
      16
+    ],
+    [
+     "🏍️",
+     "Motorcycle",
+     "CREATION",
+     "🚲 Bicycle + ⚙️ Engine",
+     18
     ],
     [
      "🍣",
      "Sushi Restaurant",
      "CREATION",
      "🌿 Seaweed + 🐟 Salmon + 🏢 Building",
-     12
+     19
     ],
     [
-     "🗼",
-     "Skyscraper",
+     "🏛️",
+     "Museum",
      "CREATION",
-     "🏢 Building + ☁️ Cloud",
-     14
+     "🏢 Building + 🦖 Dinosaur + 🔭 Telescope + 🗿 Statue",
+     21
+    ],
+    [
+     "🚉",
+     "Central Station",
+     "CREATION",
+     "✈️ Airplane + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",
+     25
     ]
    ],
    "capstone": [
@@ -763,14 +936,13 @@ const DATA = /*__GAME_DATA_START__*/{
     "Metropolis",
     "CAPSTONE",
     "🌉 Bridge + 🗼 Skyscraper + ✈️ Airplane + 🚗 Car + 💡 Light Bulb",
-    21
+    23
    ]
   },
   {
    "emoji": "🔭",
    "name": "The Observatory",
    "suit": "observatory",
-   "flavor": "Saanich's Dominion Astrophysical Observatory — from silvered mirror to launch pad.",
    "dice": [
     "Ni",
     "Al",
@@ -781,74 +953,102 @@ const DATA = /*__GAME_DATA_START__*/{
    ],
    "shop": [
     [
-     "🎛️",
-     "Microchip",
-     "COMPONENT",
-     "🔌 Wire + Si + Ag",
-     8
-    ],
-    [
      "🛠️",
      "Tools",
      "CREATION",
      "Fe + Ti + Al",
-     4
+     3
     ],
     [
      "🪟",
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     4
+     5
+    ],
+    [
+     "__MICROCHIP__",
+     "Microchip",
+     "COMPONENT",
+     "🔌 Wire + Si + Ag",
+     8
+    ],
+    [
+     "🌎",
+     "Planet",
+     "CREATION",
+     "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
+     8
     ],
     [
      "🧲",
      "Magnet",
      "COMPONENT",
      "Fe + 🔋 Battery",
-     3
+     9
     ],
     [
      "🧭",
      "Compass",
      "COMPONENT",
      "🧲 Magnet + 💧 Water + 🪟 Glass",
-     8
+     10
+    ],
+    [
+     "🔘",
+     "Wheel",
+     "MATERIAL",
+     "🌳 Tree + 🛠️ Tools",
+     11
     ],
     [
      "📡",
      "Satellite Dish",
      "COMPONENT",
      "🦾 Aluminum Alloy + 🔌 Wire",
-     9
+     12
     ],
     [
      "🔭",
      "Telescope",
      "CREATION",
      "🪟 Glass + 🦾 Aluminum Alloy + Ag",
-     7
+     12
+    ],
+    [
+     "__TURQUOISE__",
+     "Turquoise",
+     "COMPONENT",
+     "Cu + Al + P + 🔥 Furnace + 🕐 Clock",
+     14
     ],
     [
      "⭐",
      "Star",
      "CREATION",
      "🔭 Telescope + H + 🕐 Clock",
-     13
+     16
     ],
     [
      "🌈",
      "Rainbow",
      "CREATION",
      "☁️ Cloud + ⭐ Star",
-     14
+     17
+    ],
+    [
+     "☀️",
+     "Solar System",
+     "CREATION",
+     "⭐ Star + 🌎 Planet",
+     18
     ],
     [
      "🚀",
      "Rocket",
      "CREATION",
      "💻 Computer + 🔆 Solar Cell + 🛡️ Titanium Alloy",
-     16
+     21
     ]
    ],
    "capstone": [
@@ -856,10 +1056,115 @@ const DATA = /*__GAME_DATA_START__*/{
     "Space Station",
     "CAPSTONE",
     "🚀 Rocket + 🍎 Fruit + ⭐ Star + 📡 Satellite Dish",
-    27
+    28
    ]
   }
- ]
+ ],
+ "avgVisits": {
+  "Planet": 9.3,
+  "Flour": 9.7,
+  "Battery": 4.8,
+  "Beach Town": 26.0,
+  "Bridge": 7.7,
+  "Fireworks": 4.6,
+  "Robot": 17.7,
+  "Log Cabin": 7.8,
+  "Dough": 9.4,
+  "Farm": 7.9,
+  "Microchip": 8.4,
+  "Orca": 13.6,
+  "Sugar": 3.3,
+  "Deer": 6.7,
+  "Limestone": 2.9,
+  "Concrete": 5.8,
+  "Book": 11.3,
+  "Dinosaur": 12.7,
+  "Engine": 7.2,
+  "Natural Gas": 3.0,
+  "Metropolis": 23.1,
+  "Light Bulb": 7.5,
+  "Plant Fiber": 7.3,
+  "Building": 8.6,
+  "Ecosystem": 24.2,
+  "Coral Reef": 17.1,
+  "Yeast": 5.4,
+  "Satellite Dish": 11.5,
+  "Amber": 11.1,
+  "Life": 15.2,
+  "Chicken": 11.0,
+  "Renewable Grid": 22.7,
+  "Car": 18.2,
+  "Star": 16.8,
+  "Bicycle": 14.9,
+  "Soil": 4.8,
+  "Maglev Train": 19.5,
+  "Ruby": 13.3,
+  "Grain": 8.4,
+  "Compass": 11.2,
+  "Rainbow": 17.0,
+  "Volcano": 15.0,
+  "Windmill": 15.9,
+  "Motorcycle": 17.4,
+  "Computer": 15.8,
+  "Tree": 5.2,
+  "Cake": 11.7,
+  "Skyscraper": 16.4,
+  "Bread": 11.1,
+  "Telescope": 12.1,
+  "Banana": 7.5,
+  "Sushi Restaurant": 19.3,
+  "Opal": 11.4,
+  "Fruit": 7.0,
+  "Library": 14.1,
+  "Solar Cell": 8.3,
+  "Aluminum Alloy": 5.5,
+  "Glass": 5.5,
+  "Steel": 3.0,
+  "Water Turbine": 15.8,
+  "Wire": 4.0,
+  "Wheel": 10.8,
+  "Tools": 3.6,
+  "Turquoise": 14.9,
+  "Bone": 4.8,
+  "Solar Farm": 9.1,
+  "Titanium Alloy": 6.2,
+  "Fruit Cake": 19.8,
+  "Fertilizer": 3.5,
+  "Cloud": 5.4,
+  "DNA": 4.0,
+  "Grand Banquet": 23.0,
+  "Magnet": 9.2,
+  "Homestead": 14.7,
+  "Stainless Steel": 5.5,
+  "Rocket": 21.9,
+  "Fabric": 8.5,
+  "Tractor": 10.3,
+  "Museum": 20.7,
+  "Plastic": 8.1,
+  "Solar System": 18.3,
+  "Space Station": 24.2,
+  "Clock": 8.3,
+  "Gemstone Collection": 19.7,
+  "Canoe": 6.2,
+  "Sailboat": 9.5,
+  "Rubber": 5.2,
+  "Egg": 5.8,
+  "Speedboat": 16.6,
+  "Clay": 2.8,
+  "Statue": 6.4,
+  "Diamond": 12.7,
+  "Furnace": 4.8,
+  "Lighthouse": 14.0,
+  "Salmon": 11.8,
+  "Airplane": 15.2,
+  "Pearl": 13.7,
+  "Water": 2.7,
+  "Sand": 3.0,
+  "Biofuel": 11.8,
+  "Central Station": 25.5,
+  "Seaweed": 5.1,
+  "Geothermal Pump": 10.1
+ }
 }/*__GAME_DATA_END__*/;
 </script>
 

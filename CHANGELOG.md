@@ -10,6 +10,83 @@ Run `python build_all.py` after any content change to regenerate every PDF
 and sync the digital game. Run `python game/build_artifact.py` and
 republish to push a content change to the shared Artifact link.
 
+## v2026.08.08b (layout/stacking fixes, item points recalibrated)
+
+- **Layout fixes from the previous pass**: map screen background now
+  reaches the true top of the viewport (no residual gap); the topbar
+  pills, pins tray, and floating pins/convert buttons all moved to
+  negative z-index so every real window (drawer, settings, Job Board,
+  Item Reference, the map's station-preview card) renders above them
+  automatically instead of the other way around; pills are now map-screen
+  only (hidden entirely on station/reference screens); station and map
+  titles reverted to their original left-aligned layout; the map's
+  station-preview card sits flush with the top edge; closed a stray gap
+  between the open pins tray and the bottom hub (was double-counting the
+  device safe-area inset).
+- **Station shop cards**: item icons enlarged within their existing card
+  border; the MATERIAL/COMPONENT/CREATION tier label removed (CAPSTONE
+  tag stays); cards now extend to the screen edges horizontally, same
+  height as before; the job-highlight green ring on capstone cards now
+  correctly wraps the whole capstone box instead of rendering with no
+  room to breathe; cards belonging to the selected pinned item's
+  ingredient closure now also show a small corner badge with that
+  pinned item's own icon, alongside the existing green ring.
+- **Map**: removed the small direction arrows on station paths; dashed
+  line segments now render at a consistent size regardless of an edge's
+  angle (vector-effect:non-scaling-stroke, since the map's non-uniform
+  stretch was distorting the dash pattern differently per angle); the
+  path web no longer draws at all while still choosing a starting
+  station, only once one's picked.
+- **Convert Elements**: window gets a visible 2px border against the
+  scrim; the "+" and "Pick element" placeholder text is now white
+  (was unreadable dark-on-dark), switching to dark automatically once
+  an element's picked and the box goes white to match; Convert/Close
+  buttons pushed down further from the picker boxes above them.
+- **Pinned items tray**: extra bottom padding so item text can't render
+  under the floating buttons anymore; boot icon changed to 🥾.
+- **Job Board**: available offers now list above the accepted "My Jobs"
+  section (was reversed); both sections collapse independently. New red
+  badge on the Jobs hub button when a station's offers haven't been
+  opened yet, separate from the existing green "ready to turn in" badge.
+  New "!" attention badges on the floating pins button (pinned items
+  exist but none is selected) and convert button (holding 3+ of some
+  element) — both get a white border too, for contrast against busy
+  backgrounds.
+- **Element card popup**: flavor text removed; symbol + name now center
+  in the remaining space above the suit pill instead of sitting fixed
+  near the top with empty space beneath.
+- **Item catalog**: the 7 items sold at multiple stations (Water,
+  Limestone, Natural Gas, Sand, Steel, Glass, Soil) now appear in the
+  same relative order in every shop that carries them; every station's
+  shop otherwise sorts by point value. Point values recalibrated from
+  scratch using `AvgVisits` + `Steps` out of the reachability simulation
+  (empirical crafting difficulty, not just recipe depth) — the old
+  values had drifted noticeably out of sync with actual difficulty after
+  many content changes (e.g. Salmon was 4pts despite averaging ~12
+  visits to reach; Egg was 14pts at only ~5.6). Capstones keep a flat
+  point premium on top of the same formula so they still read as the
+  special payoff items.
+
+## v2026.08.08 (minimal-hub UI pass, station item cap)
+
+- **Topbar**: replaced the visits progress bar + score circle with two
+  floating "pill" overlays (👢 visits x/max, ⭐ score) that sit
+  transparently over whatever's underneath instead of a solid bar.
+- **Pins + Convert**: pulled out of the topbar entirely into two circular
+  floating buttons just above the bottom hub (pins on the left, convert
+  on the right). The pins button now opens a tray that slides up from
+  behind the hub (closed state sits z-index-below the hub, hidden behind
+  it; open state rests flush above it) instead of showing pinned items
+  inline in the topbar — tapping the button again slides it back down.
+- **Map station previews**: the preview card is now edge-to-edge (no
+  side padding/radius) and its item row no longer wraps — a single
+  horizontally-scrollable line, so every item fits on one row.
+- **Item cap**: Greenhouse and Deep Mine both had 11 shop items (max is
+  10). Cut Sand from Greenhouse (still sold at The Ocean and Old Growth
+  Forest) and Soil from Deep Mine (still sold at Greenhouse and Old
+  Growth Forest) — both remain fully reachable, just with one fewer home
+  each.
+
 ## v2026.08.07 (map graph, alloy recipes, digital-game UI pass)
 
 - **Station map**: added 2 more edges (The City ↔ The Power Plant, The
