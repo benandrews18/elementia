@@ -872,19 +872,18 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .col-label{font-size:12px; font-weight:800; letter-spacing:1.5px; color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.55), 0 1px 8px rgba(0,0,0,.25);
   padding-bottom:8px; border-bottom:2px solid var(--line2); margin-bottom:14px}
-.col-label.shop-label{text-align:center}
-/* Header row for the shop label + its "Collapse crafted" toggle -- the
-   label centers within whatever space is left (text-align:center above
-   still applies to it), while the toggle stays pinned to the row's end.
-   Its chevron (.collapse-chevron) is the exact same border-drawn shape as
+/* "ITEM SHOP" is its own centered line now, larger than the default
+   .col-label size -- the "Crafted Items" toggle used to share this row
+   with it (flex, pinned to the row's end); it now renders separately,
+   left-aligned, right above the crafted-item row/list itself (see
+   shopBodyHTML()) instead. */
+.col-label.shop-label{text-align:center; font-size:16px; letter-spacing:.8px}
+/* Its chevron (.collapse-chevron) is the exact same border-drawn shape as
    the Job Board's own section chevron (see .job-board-heading::before)
    just recolored via currentColor rather than a hardcoded gold, so every
    collapse control in the game reads as one consistent symbol. */
-.shop-header{display:flex; align-items:center; gap:10px; margin-bottom:14px}
-.shop-header .col-label{flex:1; margin-bottom:0; padding-bottom:0; border-bottom:none}
-.shop-header-rule{border-bottom:2px solid var(--line2); padding-bottom:8px; margin-bottom:0}
 .shop-collapse-toggle{
-  flex:none; display:flex; align-items:center; gap:6px;
+  display:flex; align-items:center; gap:6px; margin-bottom:9px;
   font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
   background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:5px 12px 5px 10px;
   white-space:nowrap;
@@ -3857,7 +3856,7 @@ function freshState(){
     craftCounts: {},   // {itemName: N} -- Hard Mode only, times ever successfully crafted
                         // (not current stock -- items get spent, this never decrements).
                         // Drives the tiered card-popup border (see craftTier()).
-    collapseCraftedItems: false, // global "Collapse crafted" toggle for every station shop
+    collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
   };
@@ -4816,12 +4815,7 @@ function renderStation(name){
       ${playBar}
     </div>
     <div class="makewrap">
-      <div class="shop-header shop-header-rule">
-        <div class="col-label shop-label">ITEM SHOP</div>
-        <button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
-          <span class="collapse-chevron"></span>${state.collapseCraftedItems ? "Crafted collapsed" : "Collapse crafted"}
-        </button>
-      </div>
+      <div class="col-label shop-label">ITEM SHOP</div>
       ${shopBodyHTML(shopEntries, idx)}
       <div class="capbox ${capEntry && !owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
         ${itemHTML(capEntry, idx(capEntry))}
@@ -4830,18 +4824,25 @@ function renderStation(name){
   </div>`;
 }
 
-/* Split out of renderStation() so the "Collapse crafted" toggle only has
-   to decide, once, whether owned items render as full cards (default) or
-   fold into the compact craftedIconsHTML() row -- capstones are never
-   part of this (they keep their own permanent capbox regardless). */
+/* Split out of renderStation() so the "Crafted Items" toggle only has to
+   decide, once, whether owned items render as full cards or fold into
+   the compact craftedIconsHTML() row -- capstones are never part of this
+   (they keep their own permanent capbox regardless). The toggle itself
+   always renders first, left-aligned right above wherever the crafted
+   items currently show -- the row when collapsed (the default), or their
+   normal spot mixed into the full list when expanded -- so it's never
+   stranded with no way back to the other state. */
 function shopBodyHTML(shopEntries, idx){
+  const toggle = `<button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
+      <span class="collapse-chevron"></span>Crafted Items
+    </button>`;
   if (!state.collapseCraftedItems){
-    return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+    return toggle + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
   const owned = shopEntries.filter(e => owns(e.name));
   const rest = shopEntries.filter(e => !owns(e.name));
   const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
-  return row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  return toggle + row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 function renderDrawer(){
