@@ -483,14 +483,21 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .job-section[open] > .job-board-heading::before{transform:rotate(45deg) translate(-1px,-3px)}
 /* Both the available-offers board and the My Jobs list collapse
    independently via native <details> -- no extra state to track, and it
-   comes with built-in keyboard/a11y support for free. */
+   comes with built-in keyboard/a11y support for free. (A second,
+   redundant rule set used to duplicate this same ::before with its own
+   literal "▸" glyph and its own rotation -- higher specificity than the
+   chevron rule above, so it won the "content" property while the chevron
+   rule's border/size/rotation properties still won everywhere it didn't
+   redeclare them, rendering the actual triangle CHARACTER sized and
+   border-boxed for a completely different shape, then rotated on top of
+   that. Removed -- the border-drawn chevron above is the only one now,
+   for this and every other collapse control that reuses .job-board-heading,
+   including the shop's own "Collapse crafted" toggle.) */
 .job-section > summary.job-board-heading{
   cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;
   -webkit-user-select:none; user-select:none;
 }
 .job-section > summary.job-board-heading::-webkit-details-marker{display:none}
-.job-section > summary.job-board-heading::before{content:"▸"; font-size:10px; transition:transform .15s ease}
-.job-section[open] > summary.job-board-heading::before{transform:rotate(90deg)}
 
 /* recursive to-do tree: every node (any tier) expands independently to
    reveal its own ingredients, down to raw elements. Indentation compounds
@@ -663,22 +670,20 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    its ingredient closure get highlighted rather than the row being
    filtered down to just them, so the shop's full contents stay visible
    either way. */
-/* Single line, not wrapped -- items are capped at 10 per station (see
-   build_guide.py) specifically so this fits without wrapping on a normal
-   phone width; overflow-x is just a safety net for narrow devices or
-   larger text zoom, not the expected everyday case. Negative margin +
-   matching horizontal padding lets the row's own edge items bleed to the
-   now edge-to-edge card's true left/right edge instead of stopping short.
-   Vertical padding matters more than it looks like it should here:
-   setting overflow-x to anything but "visible" forces overflow-y to
-   compute as "auto" too (that's plain CSS, not a bug), so the
-   job-highlight ring's box-shadow and the owned checkmark badge -- both
-   of which extend a few px past the icon's own box via negative
-   offsets -- were getting clipped top/bottom with no room to breathe. */
+/* Wraps onto a second line after 10 icons (see the explicit
+   .station-items-break spacer stationItemIconsHTML() inserts every 10th
+   item) rather than scrolling off a single line -- stations can now carry
+   more than 10 items. Negative margin + matching horizontal padding lets
+   the row's own edge items bleed to the now edge-to-edge card's true
+   left/right edge instead of stopping short. overflow stays visible (no
+   overflow-x scroll needed anymore) so the job-highlight ring's box-shadow
+   and the owned checkmark badge -- both of which extend a few px past the
+   icon's own box via negative offsets -- never get clipped. */
 .station-items{
-  display:flex; gap:7px; flex-wrap:nowrap; align-items:center; min-height:19px;
-  overflow-x:auto; margin:0 -17px; padding:9px 17px;
+  display:flex; gap:7px 7px; flex-wrap:wrap; align-items:center; min-height:19px;
+  overflow:visible; margin:0 -17px; padding:9px 17px;
 }
+.station-items-break{flex-basis:100%; height:0}
 .station-item-icon{
   flex:none; position:relative; font-size:19px; line-height:1;
   border-radius:7px; padding:3px; box-shadow:0 0 0 3px transparent;
@@ -752,22 +757,36 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .sheet-head h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff}
 .sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
 
+/* flex-wrap:nowrap unconditionally -- this used to wrap onto a second row
+   below a max-width:640px media query, which only fires off the actual
+   BROWSER viewport width. That's the wrong signal: .sheet itself is a
+   narrow mobile-proportioned card even inside a wide desktop/tablet
+   viewport, so the query could stay dark while the card itself was far
+   too narrow for 5-6 un-shrunk gchips, wrapping them anyway. Always
+   nowrap instead, with .gcol free to shrink (min-width:0) so the row
+   always resolves to a single line regardless of viewport width -- see
+   .gcol/.gchip below for how the chips themselves shrink to fit. */
 .gather{
-  margin:4px 26px 0; padding:0 16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
+  margin:4px 26px 0; padding:0 16px; display:flex; gap:10px; justify-content:center; flex-wrap:nowrap;
 }
-.gcol{flex:1; min-width:62px; max-width:104px; display:flex; flex-direction:column;
-  align-items:center; gap:7px}
+.gcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
+  align-items:center; gap:7px; container-type:inline-size}
 /* Symbol-only now (no element name label) -- a square white "mini card"
    the same shape/border weight as every other element box in the game
    (--suit set inline per chip, see the gather map in renderStation()),
    sized off its own width via aspect-ratio so it stays square across the
-   .gcol column's responsive width range. */
+   .gcol column's responsive width range. Font-size in container-query
+   width units (cqw, relative to .gcol's own rendered width, set as a
+   query container above) so the symbol actually shrinks together with
+   the chip on a station with many elements instead of overflowing it --
+   min() caps it at the original 26px so chips don't balloon past their
+   old size on a roomy station with few elements. */
 .gchip{
-  width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-size:26px; font-weight:800;
+  width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
   text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
   display:flex; align-items:center; justify-content:center;
 }
-.gchip .gsym{line-height:1}
+.gchip .gsym{line-height:1; font-size:min(26px, 40cqw)}
 /* Base grid layout shared by both dice contexts below -- sizing/border
    are context-specific (legend vs. roll), see each. */
 .die{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
@@ -778,10 +797,10 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    (not sized/framed by anything else), unlike the roll-animation die
    below, so it needs a visible border of its own to read as a die. */
 .gcol > .die{
-  width:24px; height:24px; padding:3px; margin:0 auto;
+  width:min(24px, 60cqw); height:min(24px, 60cqw); padding:3px; margin:0 auto;
   background:var(--card); border:2px solid var(--line); border-radius:6px;
 }
-.gcol > .die .pip{width:4px; height:4px}
+.gcol > .die .pip{width:min(4px, 10cqw); height:min(4px, 10cqw)}
 /* Roll-animation die -- no border/background of its own; .rollcard is
    already the one visible bordered square around it (see below), so a
    second nested border here read as two concentric squares. Sized in JS
@@ -855,17 +874,26 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 /* Header row for the shop label + its "Collapse crafted" toggle -- the
    label centers within whatever space is left (text-align:center above
    still applies to it), while the toggle stays pinned to the row's end.
-   Icon/wording here is a placeholder; a dedicated collapse glyph shared
-   with the Job Board's own collapse controls is a separate pass. */
+   Its chevron (.collapse-chevron) is the exact same border-drawn shape as
+   the Job Board's own section chevron (see .job-board-heading::before)
+   just recolored via currentColor rather than a hardcoded gold, so every
+   collapse control in the game reads as one consistent symbol. */
 .shop-header{display:flex; align-items:center; gap:10px; margin-bottom:14px}
 .shop-header .col-label{flex:1; margin-bottom:0; padding-bottom:0; border-bottom:none}
 .shop-header-rule{border-bottom:2px solid var(--line2); padding-bottom:8px; margin-bottom:0}
 .shop-collapse-toggle{
-  flex:none; font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
-  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:5px 11px;
+  flex:none; display:flex; align-items:center; gap:6px;
+  font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
+  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:5px 12px 5px 10px;
   white-space:nowrap;
 }
 .shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+.collapse-chevron{
+  flex:none; width:8px; height:8px;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(-45deg) translate(-1px,-1px); transition:transform .18s ease;
+}
+.shop-collapse-toggle.active .collapse-chevron{transform:rotate(45deg) translate(-2px,-1px)}
 /* Collapsed crafted-items row -- same icon language as the map's station
    preview strip (.station-item-icon), but wrapping instead of a forced
    single scrollable line since there's no shell here constraining height. */
@@ -887,11 +915,13 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    rather than sitting centered with its own padding -- the vertical
    padding that used to live on .item itself moves onto .irow, the only
    other flex child, so the button can span true edge-to-edge top-to-
-   bottom via align-self:stretch while .item stays padding:0. overflow:
-   hidden clips the button's square corners to the card's own
-   border-radius on the right side for free. */
+   bottom via align-self:stretch while .item stays padding:0. No
+   overflow:hidden here -- that would also clip the owned-checkmark badge
+   and the job-tracking pin badge, both of which deliberately poke a few
+   px past .item's own box via negative offsets. The button rounds its
+   own right corners instead (see .craftbtn) to match the card's shape. */
 .item{
-  position:relative; cursor:pointer; overflow:hidden;
+  position:relative; cursor:pointer;
   display:flex; align-items:stretch; border-radius:12px;
   border:1.5px solid transparent; border-left:12px solid var(--suit);
   background:linear-gradient(to right, var(--item-bg-start), var(--item-bg-end));
@@ -919,13 +949,15 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 }
 /* "Needed for [selected pinned item]" badge -- the SELECTED item's own
    icon, not this card's, so it reads as a pointer back to what it's
-   feeding into. Sits just left of the owned checkmark's corner spot
-   (rather than the same spot) so the two can both show at once without
-   overlapping. */
+   feeding into. Twice the size of the plain owned checkmark below (this
+   is the one carrying actual meaning -- WHICH item it feeds -- so it
+   needs to read at a glance, not just as a checkmark-shaped fact). Sits
+   further left of the owned checkmark's corner spot than its old size did
+   so the two can both show at once without overlapping. */
 .item-pin-badge{
-  position:absolute; top:-9px; right:16px; width:24px; height:24px;
-  border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:13px; line-height:1;
+  position:absolute; top:-16px; right:24px; width:48px; height:48px;
+  border-radius:50%; background:var(--card); border:3px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3);
 }
 .item .iem{font-size:38px; line-height:1.15; width:34px; text-align:center; flex:none}
@@ -974,16 +1006,19 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .tok.el .cat{color:#fff; opacity:.75}
 /* Fills the entire end of the card, edge-to-edge top-to-bottom (see
    .item/.irow above) -- a flush panel rather than a pill-shaped button, so
-   it reads as part of the card's own structure. The shared bounce/ledge
-   button treatment (see the .craftbtn rules further down, ~line 1213)
-   would put a 3D "lift" shadow right at this panel's own edges where
-   .item's overflow:hidden would just clip it off -- overridden below,
-   right after that shared block, with a plain brightness/scale press
-   instead. */
+   it reads as part of the card's own structure. Its own right corners
+   round to match .item's border-radius (.item itself deliberately has no
+   overflow:hidden -- see above -- so this rounding has to happen on the
+   button, not by clipping). The shared bounce/ledge button treatment (see
+   the .craftbtn rules further down, ~line 1213) would put a 3D "lift"
+   shadow right at this panel's own edges, at odds with sitting flush
+   against the card -- overridden below, right after that shared block,
+   with a plain brightness/scale press instead. */
 .craftbtn{
   flex:none; align-self:stretch; width:72px;
   display:flex; align-items:center; justify-content:center; text-align:center;
-  border:none; border-left:1.5px solid var(--line); border-radius:0;
+  border:none; border-left:1.5px solid var(--line);
+  border-radius:0 10.5px 10.5px 0;
   padding:4px 6px; font-size:13px; font-weight:800; line-height:1.15; background:var(--card);
 }
 .craftbtn.go{background:var(--ok); border-left-color:var(--ok); color:#fff}
@@ -1265,8 +1300,9 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 /* Craft button opt-out from the shared ledge/lift look (see the block just
    above) -- it now fills the card's own right edge flush, so a 3D lift
-   would just get clipped by .item's overflow:hidden. Flat panel instead,
-   with a brightness dip standing in for the "pressed" feedback. */
+   shadow would stick out past the card's own rounded bottom edge instead
+   of reading as part of it. Flat panel instead, with a brightness dip
+   standing in for the "pressed" feedback. */
 .craftbtn{box-shadow:none}
 .craftbtn:not(:disabled):active{transform:none; filter:brightness(.88)}
 #convert .bigbtn, #convert .tbtn, #convertPicker .bigbtn, #convertPicker .tbtn{
@@ -1698,7 +1734,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   .sheet-head{padding:18px 16px 12px}
   .gather,.playbar{padding-left:16px; padding-right:16px; margin:12px 0 0}
   .gather{margin:12px 16px 0; padding:0 6px; gap:4px}
-  .gcol{min-width:0; max-width:none; flex:1 1 0; gap:4px}
+  .gcol{max-width:none; gap:4px}
   .makewrap{padding:18px 6px 22px}
   /* Station screen goes edge-to-edge on phones -- no outer gutter around
      the card, no rounded/bordered sides. main keeps its own bottom padding
@@ -3940,17 +3976,19 @@ function recipeHTML(entry){
 function itemHTML(entry, idx){
   const has = owns(entry.name), can = canCraft(entry);
   const cls = [has ? "owned" : (can ? "can" : "")];
-  // Same green-ring treatment as the topbar job chips (see toggleJobSelect()) --
-  // lets players tap between their job items and see the shop highlight
-  // whichever of its ingredients live at this station. The corner badge
-  // repeats the SELECTED item's own icon (not this card's icon) on every
-  // card in its closure, so it reads as "this feeds into [that pinned
-  // item]" at a glance, alongside the ring.
+  // Green ring means exactly "you can build this right now" -- decoupled
+  // from job tracking, which used to also light the ring for anything in
+  // the tracked item's component closure even when it wasn't actually
+  // buildable yet (that was confusing: a green ring that didn't mean
+  // "go"). The corner badge below still tracks the job's closure
+  // separately -- it repeats the SELECTED item's own icon (not this
+  // card's icon), so it reads as "this feeds into [that pinned item]" at
+  // a glance regardless of whether it's craftable yet.
+  if (can && !has) cls.push("job-highlight");
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...componentClosure(selectedJobItem)]);
     if (jobTree.has(entry.name)){
-      cls.push("job-highlight");
       const selEntry = ENTRIES.find(e => e.name === selectedJobItem);
       if (selEntry) pinBadge = `<span class="item-pin-badge" title="Needed for ${esc(selectedJobItem)}">${em(selEntry.emoji)}</span>`;
     }
@@ -3988,23 +4026,28 @@ function craftedIconsHTML(entries){
    ===================================================================== */
 /* Every shop item this station sells, icon-only, always shown. Two
    independent visual states, not one: owned items render in full color
-   (greyscale otherwise), and whichever belong to the selected job item's
-   ingredient closure (see componentClosure()) get a green ring -- the
-   selected item itself counts too, not just its ingredients, in case it's
-   directly buildable here. An item can be both, either, or neither. */
+   (greyscale otherwise), and whichever the player can craft RIGHT NOW with
+   their current inventory get a green ring -- "you can build this," not
+   "this feeds into whatever job you're tracking" (that used to drive the
+   ring here too; the corner badge on the full shop card is the one that
+   still tracks the job's component closure, see itemHTML()). An item can
+   be both, either, or neither. */
 function stationItemIconsHTML(stationName){
-  const jobTree = selectedJobItem
-    ? new Set([selectedJobItem, ...componentClosure(selectedJobItem)])
-    : null;
-  return entriesAt(stationName)
+  const icons = entriesAt(stationName)
     .filter(e => e.tier !== "CAPSTONE" && isRevealed(e))
     .map(e => {
       markSeen(e.name);
       const cls = ["station-item-icon"];
       if (owns(e.name)) cls.push("owned");
-      if (jobTree && jobTree.has(e.name)) cls.push("job-highlight");
+      if (!owns(e.name) && canCraft(e)) cls.push("job-highlight");
       return `<span class="${cls.join(" ")}" title="${esc(e.name)}">${em(e.emoji)}</span>`;
-    }).join("");
+    });
+  // Hard-wraps onto a new row every 10 icons regardless of the card's own
+  // pixel width (see .station-items-break in the CSS) -- a flex-basis:100%
+  // spacer forces the wrap at an exact item count instead of wherever the
+  // row's own width happens to run out.
+  return icons.reduce((html, icon, i) =>
+    html + (i > 0 && i % 10 === 0 ? '<span class="station-items-break"></span>' : "") + icon, "");
 }
 
 /* The clean (unmarked) map artwork has no path lines baked in -- they're
@@ -4629,7 +4672,7 @@ function renderStation(name){
       <div class="shop-header shop-header-rule">
         <div class="col-label shop-label">ITEM SHOP</div>
         <button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
-          ${state.collapseCraftedItems ? "✓ Crafted collapsed" : "Collapse crafted"}
+          <span class="collapse-chevron"></span>${state.collapseCraftedItems ? "Crafted collapsed" : "Collapse crafted"}
         </button>
       </div>
       ${shopBodyHTML(shopEntries, idx)}
