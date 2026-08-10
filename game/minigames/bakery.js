@@ -79,42 +79,45 @@
         display:flex; flex-direction:column;
       }
       .mg-bakery-hud{
-        display:flex; justify-content:space-between; align-items:center; padding:20px 28px 0;
-        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:28px;
+        display:flex; justify-content:space-between; align-items:center; padding:12px 20px 0;
+        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:20px;
       }
       .mg-bakery-hud .mg-pill{
-        background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; white-space:nowrap;
+        background:rgba(255,255,255,.13); border-radius:999px; padding:5px 16px; white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size (em is relative to the
          parent's own font-size, so this scales correctly whatever that
          happens to be per game). */
-      .mg-dice-pill{ font-size:3em; padding:2px 14px; line-height:1; }
-      .mg-bakery-timebar{ height:8px; background:#e0a23d; margin:16px 0 0; transition:width .1s linear; width:100%; }
-      /* Orders are square cards showing the FINISHED cake, not a row of
+      .mg-dice-pill{ font-size:3em; padding:2px 10px; line-height:1; }
+      .mg-bakery-timebar{ height:6px; background:#e0a23d; margin:9px 0 0; transition:width .1s linear; width:100%; }
+      /* Orders are compact cards showing the FINISHED cake, not a row of
          swatches -- the player is matching a picture, so the brief should
          look like the thing they're building. The live order is the first
-         card; the rest are look-ahead. */
+         card; the rest are look-ahead. Fixed height (not square) so this
+         row stays a small strip regardless of how many cards/how wide the
+         stage is -- the plate below is what deserves the real vertical
+         space, not the look-ahead preview. */
       .mg-bakery-orders{
-        margin:20px 28px 0; display:flex; gap:16px; align-items:stretch;
+        margin:10px 18px 0; display:flex; gap:8px; align-items:stretch;
       }
       .mg-bakery-ordercard{
-        flex:1; aspect-ratio:1/1; border-radius:24px; position:relative;
-        background:rgba(255,255,255,.10); border:4px solid rgba(255,255,255,.16);
+        flex:1; height:60px; border-radius:16px; position:relative;
+        background:rgba(255,255,255,.10); border:3px solid rgba(255,255,255,.16);
         display:flex; align-items:center; justify-content:center; overflow:hidden;
       }
       .mg-bakery-ordercard.mg-bakery-live{
         background:rgba(255,255,255,.17); border-color:#e0a23d;
-        box-shadow:0 0 0 4px rgba(224,162,61,.35);
+        box-shadow:0 0 0 3px rgba(224,162,61,.35);
       }
       .mg-bakery-ordercard:not(.mg-bakery-live){ opacity:.55; }
       .mg-bakery-ordercard .mg-bakery-cake{ transform:scale(.62); }
       .mg-bakery-ordertag{
-        position:absolute; top:8px; left:12px; font-size:18px; font-weight:800; letter-spacing:.4px;
+        position:absolute; top:4px; left:8px; font-size:12px; font-weight:800; letter-spacing:.3px;
         color:#f0d9b8; text-transform:uppercase; opacity:.85;
       }
       .mg-bakery-platezone{
-        flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:140px;
+        flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:110px;
       }
       /* The conveyor belt as a pale line running behind the plate/cake,
          not a separate striped bar of its own -- appended before the
@@ -124,50 +127,67 @@
         background:rgba(0,0,0,.35); z-index:0;
       }
       .mg-bakery-plate{
-        width:192px; height:192px; border-radius:50%; background:radial-gradient(circle,#efe6d8 0%,#d8cbb4 100%);
+        width:150px; height:150px; border-radius:50%; background:radial-gradient(circle,#efe6d8 0%,#d8cbb4 100%);
         display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,0,0,.4);
         position:relative; z-index:1;
       }
-      .mg-bakery-cake{ position:relative; width:128px; height:112px; }
+      .mg-bakery-cake{ position:relative; width:100px; height:88px; }
+      /* Base and icing layers, on the plate AND in the order-card preview,
+         now use the exact same swirl-cone silhouette as the option buttons
+         below (see .mg-bakery-opt[data-category] further down) -- four
+         tapering radial blobs filled with the layer's own color via
+         --swatch, set inline per layer instead of a flat background-color.
+         The picture the player is matching now genuinely looks like the
+         buttons they're tapping, not a plain striped rectangle standing
+         in for it. */
+      .mg-bakery-layer-base, .mg-bakery-layer-frosting{
+        background-image:
+          radial-gradient(circle at 50% 10%, var(--swatch) 0 18%, transparent 19%),
+          radial-gradient(circle at 42% 30%, var(--swatch) 0 26%, transparent 27%),
+          radial-gradient(circle at 58% 52%, var(--swatch) 0 34%, transparent 35%),
+          radial-gradient(circle at 50% 80%, var(--swatch) 0 46%, transparent 47%);
+      }
       .mg-bakery-layer-base{
-        position:absolute; left:0; right:0; bottom:0; height:64px; border-radius:16px 16px 8px 8px;
+        position:absolute; left:0; right:0; bottom:0; height:50px; border-radius:16px 16px 8px 8px;
         box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
       }
       .mg-bakery-layer-frosting{
-        position:absolute; left:4px; right:4px; bottom:52px; height:32px; border-radius:16px 16px 6px 6px;
+        position:absolute; left:3px; right:3px; bottom:41px; height:25px; border-radius:16px 16px 6px 6px;
         box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
       }
       .mg-bakery-layer-fruit{
-        position:absolute; left:50%; bottom:76px; transform:translateX(-50%); font-size:40px;
+        position:absolute; left:50%; bottom:59px; transform:translateX(-50%); font-size:31px;
       }
       /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
          .mg-bakery-cake above), which would otherwise shrink the fruit
          along with everything else -- bump the source font-size so the
          fruit renders twice as large as usual once that scale is applied. */
-      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:80px; }
+      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:62px; }
       /* Straight horizontal travel, no rotation or fade -- it's a conveyor
          carrying the cake out of the kitchen, so it simply leaves the frame.
          --fly is the full stage width plus a margin, set per cake in JS. */
       .mg-bakery-cake.mg-bakery-flying{
-        position:absolute; left:50%; top:50%; margin-left:-64px; margin-top:-56px;
+        position:absolute; left:50%; top:50%; margin-left:-50px; margin-top:-44px;
         transition:transform ${SEND_ANIM_MS}ms linear; z-index:5;
       }
       .mg-bakery-cake.mg-bakery-flying.mg-bakery-go{ transform:translateX(var(--fly,120vw)); }
-      .mg-bakery-rows{ padding:16px 28px 20px; display:flex; flex-direction:column; gap:12px; }
-      .mg-bakery-row{ display:flex; gap:12px; align-items:center; }
-      .mg-bakery-row-label{ width:52px; font-size:22px; font-weight:800; color:#c9ac86; text-align:center; }
+      .mg-bakery-rows{ padding:8px 20px 10px; display:flex; flex-direction:column; gap:7px; }
+      .mg-bakery-row{ display:flex; gap:8px; align-items:center; }
+      .mg-bakery-row-label{ width:42px; font-size:16px; font-weight:800; color:#c9ac86; text-align:center; }
       .mg-bakery-opt{
-        flex:1; height:68px; border-radius:18px; border:5px solid rgba(0,0,0,.6); cursor:pointer;
-        display:flex; align-items:center; justify-content:center; font-size:36px;
+        flex:1; height:50px; border-radius:14px; border:4px solid rgba(0,0,0,.6); cursor:pointer;
+        display:flex; align-items:center; justify-content:center; font-size:26px;
         position:relative; overflow:hidden; background:rgba(255,255,255,.06);
       }
-      .mg-bakery-opt.mg-bakery-selected{ border-color:#fff; box-shadow:0 0 0 4px rgba(255,255,255,.35) inset; }
+      .mg-bakery-opt.mg-bakery-selected{ border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35) inset; }
       /* Base and icing swatches: the silhouette of a soft-serve swirl (the
          same reference shape as \u{1F4A9}, just the swirl-cone body -- no
          face) built from four tapering stacked blobs, filled in the
          topping's own color. Same shape language for both rows now,
          instead of a cylinder for base and a wider dollop-cluster for
-         icing, so "this is a topping" reads consistently either way. */
+         icing, so "this is a topping" reads consistently either way. Same
+         gradient stack as .mg-bakery-layer-base/-frosting above, just
+         layered over the button's own translucent rest-state fill. */
       .mg-bakery-opt[data-category="base"], .mg-bakery-opt[data-category="frosting"]{
         background:
           radial-gradient(circle at 50% 12%, var(--swatch) 0 15%, transparent 16%),
@@ -176,9 +196,9 @@
           radial-gradient(circle at 50% 76%, var(--swatch) 0 42%, transparent 43%),
           rgba(255,255,255,.06);
       }
-      .mg-bakery-sendwrap{ padding:0 28px 28px; }
+      .mg-bakery-sendwrap{ padding:0 20px 14px; }
       .mg-bakery-send{
-        width:100%; padding:24px; border-radius:24px; border:none; font-weight:800; font-size:30px;
+        width:100%; padding:14px; border-radius:18px; border:none; font-weight:800; font-size:22px;
         background:#4c9a3f; color:#fff; cursor:pointer;
       }
       .mg-bakery-send:disabled{ background:#4a4038; color:#8a7f70; cursor:not-allowed; }
@@ -204,8 +224,8 @@
 
   function cakeInnerHTML(baseColor, frostingColor, fruitEmoji) {
     return `
-      <div class="mg-bakery-layer-base" style="background:${baseColor}"></div>
-      <div class="mg-bakery-layer-frosting" style="background:${frostingColor}"></div>
+      <div class="mg-bakery-layer-base" style="--swatch:${baseColor}"></div>
+      <div class="mg-bakery-layer-frosting" style="--swatch:${frostingColor}"></div>
       <div class="mg-bakery-layer-fruit">${fruitEmoji}</div>`;
   }
 
