@@ -17,12 +17,12 @@ BUILD.mkdir(parents=True, exist_ok=True)
 # where the dice alone don't resolve a clean lean (see the element-palette
 # artifact for the full reasoning).
 SUITS = {
-    "ocean":      {"label": "OCEAN",       "color": "#8a5ce0", "soft": "#ece3f9"},
-    "power":      {"label": "POWER PLANT", "color": "#3aa9a0", "soft": "#e1f2f0"},
+    "ocean":      {"label": "OCEAN",       "color": "#3aa9a0", "soft": "#e1f2f0"},
+    "power":      {"label": "POWER PLANT", "color": "#8a5ce0", "soft": "#ece3f9"},
     "greenhouse": {"label": "GREENHOUSE",  "color": "#3aab6d", "soft": "#e2f1e7"},
     "mine":       {"label": "DEEP MINE",   "color": "#e2a83e", "soft": "#f8ecd7"},
     "forest":     {"label": "OLD GROWTH",  "color": "#e2823a", "soft": "#f8e4d5"},
-    "bakery":     {"label": "BAKERY",      "color": "#8cb43e", "soft": "#eef3dc"},
+    "bakery":     {"label": "BAKERY",      "color": "#d9a838", "soft": "#f8f0d8"},
     "city":       {"label": "THE CITY",    "color": "#e2543b", "soft": "#f8e6e1"},
     "observatory":{"label": "OBSERVATORY", "color": "#4d7cf2", "soft": "#e3ebfb"},
 }
@@ -57,7 +57,7 @@ STATIONS = [
              ("__PEARL__","Pearl","COMPONENT","Ca + O + 🔥 Furnace + 🕐 Clock",13),
              ("__LIGHTHOUSE__","Lighthouse","CREATION","💡 Light Bulb + ⬜ Concrete",13),
              ("__ORCA__","Orca","CREATION","🌿 Seaweed + 🐟 Salmon + 🦴 Bone",14),
-             ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock",14),
+             ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",14),
              ("🌊","Water Turbine","CREATION","💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",16),
              ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",17),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25)],
@@ -73,10 +73,10 @@ STATIONS = [
              ("💡","Light Bulb","COMPONENT","🪟 Glass + 🔌 Wire",7),
              ("🕐","Clock","COMPONENT","🔋 Battery + 🛠️ Tools",8),
              ("🥤","Plastic","COMPONENT","🛢️ Natural Gas + 🔥 Furnace",8),
-             ("🔆","Solar Cell","COMPONENT","Si + Ag + 🪟 Glass",8),
+             ("🔆","Solar Cell","COMPONENT","🔌 Wire + 🔋 Battery",8),
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
-             ("🌍","Renewable Grid","CREATION","🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Solar Farm + ♨️ Geothermal Pump",22)],
+             ("🌍","Renewable Grid","CREATION","🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
@@ -89,7 +89,7 @@ STATIONS = [
              ("🍎","Fruit","CREATION","🌳 Tree + 💧 Water",7),
              ("🧑‍🌾","Farm","CREATION","🌱 Soil + 🛠️ Tools + 💧 Water",7),
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",8),
-             ("🌻","Solar Farm","CREATION","🔆 Solar Cell + 🔌 Wire + 🔋 Battery",9),
+             ("🌻","Sunflower","CREATION","🔆 Solar Cell + 🌾 Grain",9),
              ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine",10),
              ("__OPAL__","Opal","COMPONENT","Si + O + 🔥 Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",11),

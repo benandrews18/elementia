@@ -27,7 +27,7 @@
   const DURATION_MS = 60000;      // total round length
   const TARGET_SOLVES = 5;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
-  const MAX_WIRES = 9;            // +1 wire per solve, capped here
+  const MAX_WIRES = 8;            // +1 wire per solve, capped here
   const MARGIN = 30;              // px, inset from stage edges for handle travel
   const HANDLE_R = 21;            // px, visible handle radius
   const HIT_R = 42;               // px, generous pointerdown target radius
