@@ -852,6 +852,29 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
   text-shadow:0 1px 2px rgba(0,0,0,.55), 0 1px 8px rgba(0,0,0,.25);
   padding-bottom:8px; border-bottom:2px solid var(--line2); margin-bottom:14px}
 .col-label.shop-label{text-align:center}
+/* Header row for the shop label + its "Collapse crafted" toggle -- the
+   label centers within whatever space is left (text-align:center above
+   still applies to it), while the toggle stays pinned to the row's end.
+   Icon/wording here is a placeholder; a dedicated collapse glyph shared
+   with the Job Board's own collapse controls is a separate pass. */
+.shop-header{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+.shop-header .col-label{flex:1; margin-bottom:0; padding-bottom:0; border-bottom:none}
+.shop-header-rule{border-bottom:2px solid var(--line2); padding-bottom:8px; margin-bottom:0}
+.shop-collapse-toggle{
+  flex:none; font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
+  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:5px 11px;
+  white-space:nowrap;
+}
+.shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+/* Collapsed crafted-items row -- same icon language as the map's station
+   preview strip (.station-item-icon), but wrapping instead of a forced
+   single scrollable line since there's no shell here constraining height. */
+.crafted-row{
+  display:flex; flex-wrap:wrap; gap:9px; align-items:center;
+  padding:10px 12px; margin-bottom:9px; border-radius:12px;
+  background:var(--sunken); border:1.5px solid var(--line2);
+}
+.crafted-row .station-item-icon{font-size:22px}
 /* Sits in the dark .stationhead card above the dice, not .makewrap --
    own spacing/no divider line rather than inheriting .col-label's
    light-section border, but identical text treatment. */
@@ -860,12 +883,21 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 /* Opaque on the left (behind the emoji/name, where legibility matters
    most) fading to translucent on the right, so the station backdrop
    still reads as visible through the row without competing with text. */
+/* Craft button now fills the card's full right edge (see .craftbtn below)
+   rather than sitting centered with its own padding -- the vertical
+   padding that used to live on .item itself moves onto .irow, the only
+   other flex child, so the button can span true edge-to-edge top-to-
+   bottom via align-self:stretch while .item stays padding:0. overflow:
+   hidden clips the button's square corners to the card's own
+   border-radius on the right side for free. */
 .item{
-  position:relative; cursor:pointer;
-  display:flex; gap:15px; align-items:center; padding:10px 12px 10px 10px; border-radius:12px;
+  position:relative; cursor:pointer; overflow:hidden;
+  display:flex; align-items:stretch; border-radius:12px;
   border:1.5px solid transparent; border-left:12px solid var(--suit);
   background:linear-gradient(to right, var(--item-bg-start), var(--item-bg-end));
 }
+.item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:center; padding:10px 10px 10px 10px}
+.capbox .item .irow{padding:0}
 .item.can{background:var(--ok-soft); border-color:var(--ok-line); border-left-color:var(--suit)}
 /* Same green ring as the topbar's job chips -- lets a player tap between
    their job items and see which of this station's items feed into
@@ -902,11 +934,13 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 .tier{font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink2); background:var(--sunken);
   padding:2px 7px; border-radius:5px}
-/* Right-aligned within .ibody so the component list sits away from the
-   item's icon and ends flush with the body's own right edge -- leaves an
-   even gutter before the Craft button rather than trailing off mid-card. */
+/* Left-aligned, flush with the item name above it -- now that the Craft
+   button lives outside .ibody entirely (see .craftbtn), there's no longer
+   a gutter to keep the list away from, and left-justifying against the
+   title reads as one coherent block rather than the list drifting off to
+   whatever the longest line happens to be. */
 .recipe{font-size:14px; color:var(--ink2); margin-top:4px; display:flex; flex-wrap:wrap;
-  align-items:center; justify-content:flex-end; gap:5px}
+  align-items:center; justify-content:flex-start; gap:5px}
 .plus{color:var(--mute); font-weight:700}
 .tok{display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:7px;
   font-weight:700; font-size:13.5px; border:1.5px solid}
@@ -938,15 +972,24 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .tok.el.need .qty{color:var(--bad)}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
 .tok.el .cat{color:#fff; opacity:.75}
+/* Fills the entire end of the card, edge-to-edge top-to-bottom (see
+   .item/.irow above) -- a flush panel rather than a pill-shaped button, so
+   it reads as part of the card's own structure. The shared bounce/ledge
+   button treatment (see the .craftbtn rules further down, ~line 1213)
+   would put a 3D "lift" shadow right at this panel's own edges where
+   .item's overflow:hidden would just clip it off -- overridden below,
+   right after that shared block, with a plain brightness/scale press
+   instead. */
 .craftbtn{
-  flex:none; align-self:center; border:1.5px solid var(--line); border-radius:10px;
-  padding:8px 15px; font-size:14px; font-weight:800; background:var(--card); white-space:nowrap;
+  flex:none; align-self:stretch; width:72px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  border:none; border-left:1.5px solid var(--line); border-radius:0;
+  padding:4px 6px; font-size:13px; font-weight:800; line-height:1.15; background:var(--card);
 }
-.craftbtn.go{background:var(--ok); border-color:var(--ok); color:#fff; box-shadow:0 3px 0 #24774a}
+.craftbtn.go{background:var(--ok); border-left-color:var(--ok); color:#fff}
 .craftbtn.go:hover{filter:brightness(1.07)}
-.craftbtn.go:not(:disabled):active{box-shadow:0 1px 0 #24774a}
-.craftbtn:disabled{background:var(--sunken); color:var(--mute); border-color:var(--line2); box-shadow:none}
-.craftbtn.done{background:transparent; border-color:transparent; color:var(--ok); box-shadow:none; animation:none}
+.craftbtn:disabled{background:var(--sunken); color:var(--mute); border-left-color:var(--line2)}
+.craftbtn.done{background:var(--ok-soft); border-left-color:var(--ok-line); color:var(--ok); animation:none}
 
 .capbox{margin-top:16px; background:var(--cap-grad);
   border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
@@ -1220,6 +1263,12 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
 button.setting-row:not(:disabled):active, .mode-card:active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
+/* Craft button opt-out from the shared ledge/lift look (see the block just
+   above) -- it now fills the card's own right edge flush, so a 3D lift
+   would just get clipped by .item's overflow:hidden. Flat panel instead,
+   with a brightness dip standing in for the "pressed" feedback. */
+.craftbtn{box-shadow:none}
+.craftbtn:not(:disabled):active{transform:none; filter:brightness(.88)}
 #convert .bigbtn, #convert .tbtn, #convertPicker .bigbtn, #convertPicker .tbtn{
   animation:none; box-shadow:none; transition:transform .12s cubic-bezier(.3,.8,.4,1);
 }
@@ -3630,6 +3679,7 @@ function freshState(){
     craftCounts: {},   // {itemName: N} -- Hard Mode only, times ever successfully crafted
                         // (not current stock -- items get spent, this never decrements).
                         // Drives the tiered card-popup border (see craftTier()).
+    collapseCraftedItems: false, // global "Collapse crafted" toggle for every station shop
   };
 }
 
@@ -3867,7 +3917,7 @@ function tokenHTML(r, groupedEls){
     const ok = have >= need;
     const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
     return `<button class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
-      `${esc(r.name)}<span class="qty">${have}/${need}</span>` +
+      `${esc(r.name)}` +
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
   }
   const ok = owns(r.name);
@@ -3914,11 +3964,23 @@ function itemHTML(entry, idx){
   const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
     ${pinBadge}
-    <div class="iem">${em(entry.emoji)}</div>
-    <div class="ibody">
-      <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}</div>
-      <div class="recipe">${recipeHTML(entry)}</div>
+    <div class="irow">
+      <div class="iem">${em(entry.emoji)}</div>
+      <div class="ibody">
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}</div>
+        <div class="recipe">${recipeHTML(entry)}</div>
+      </div>
     </div>${btn}</div>`;
+}
+
+/* Compact stand-in for a station shop's crafted items when the "Collapse
+   crafted" toggle is on (see renderStation()) -- same icon-row language as
+   the map's station preview strip (.station-item-icon, checkmark and all),
+   just reused here so "already own this" collapses to the same visual
+   shorthand everywhere in the game. */
+function craftedIconsHTML(entries){
+  return entries.map(e => `<span class="station-item-icon owned" title="${esc(e.name)}" data-item-card="${idx(e)}">${em(e.emoji)}</span>`).join("");
+  function idx(e){ return ENTRIES.indexOf(e); }
 }
 
 /* =====================================================================
@@ -4564,13 +4626,32 @@ function renderStation(name){
       ${playBar}
     </div>
     <div class="makewrap">
-      <div class="col-label shop-label">ITEM SHOP</div>
-      <div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>
+      <div class="shop-header shop-header-rule">
+        <div class="col-label shop-label">ITEM SHOP</div>
+        <button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
+          ${state.collapseCraftedItems ? "✓ Crafted collapsed" : "Collapse crafted"}
+        </button>
+      </div>
+      ${shopBodyHTML(shopEntries, idx)}
       <div class="capbox ${capEntry && !owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
         ${itemHTML(capEntry, idx(capEntry))}
       </div>
     </div>
   </div>`;
+}
+
+/* Split out of renderStation() so the "Collapse crafted" toggle only has
+   to decide, once, whether owned items render as full cards (default) or
+   fold into the compact craftedIconsHTML() row -- capstones are never
+   part of this (they keep their own permanent capbox regardless). */
+function shopBodyHTML(shopEntries, idx){
+  if (!state.collapseCraftedItems){
+    return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  }
+  const owned = shopEntries.filter(e => owns(e.name));
+  const rest = shopEntries.filter(e => !owns(e.name));
+  const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
+  return row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 function renderDrawer(){
@@ -5317,6 +5398,13 @@ document.getElementById("screen").addEventListener("click", ev => {
   }
 
   if (ev.target.closest("#playBtn")){ launchMinigame(); return; }
+
+  if (ev.target.closest("#collapseCraftedBtn")){
+    state.collapseCraftedItems = !state.collapseCraftedItems;
+    save();
+    render();
+    return;
+  }
 
   const cBtn = ev.target.closest("[data-craft]");
   if (cBtn){
