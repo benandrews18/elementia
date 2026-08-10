@@ -24,8 +24,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 60000;      // total round length
-  const TARGET_SOLVES = 5;        // solving this many puzzles => score 1.0
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
   const MARGIN = 30;              // px, inset from stage edges for handle travel
@@ -75,6 +75,7 @@
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
+      .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-power-hud .mg-pill.mg-power-clear{ background:rgba(95,207,106,.35); }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
@@ -142,7 +143,7 @@
     hud.className = "mg-power-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span>` +
       `<span class="mg-pill" id="mg-power-status">Drag to untangle</span>` +
-      `<span class="mg-pill" id="mg-power-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-power-timebar";
@@ -332,7 +333,7 @@
       if (c === 0) {
         solved++;
         solvedEl.textContent = "\u{1F50C} " + solved;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(solved / TARGET_SOLVES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
         stage.classList.add("mg-power-solved");

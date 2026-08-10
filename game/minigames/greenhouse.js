@@ -23,8 +23,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 24000;         // total round length
-  const TARGET_GOOD = 14;            // net good-egg-equivalents => score 1.0
+  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const TARGET_GOOD = 9;             // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
   // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
   // able to comfortably cover it regardless of device width. Height keeps
@@ -92,6 +92,9 @@
       .mg-green-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size. */
+      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
       .mg-green-timebar{position:absolute; top:0; left:0; height:4px; background:#4c9a3f; z-index:3;
         transition:width .1s linear}
       /* The classic CSS egg: equal horizontal radii, but a much taller
@@ -162,7 +165,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span>` +
-      `<span class="mg-pill" id="mg-green-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-green-timebar";
@@ -234,7 +237,7 @@
 
     function updateScore() {
       scoreEl.textContent = "\u{1F95A} " + Math.max(0, score);
-      diceEl.textContent = "\u{1F3B2} " + diceFor(Math.max(0, score) / TARGET_GOOD);
+      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 
     function flashBad() {

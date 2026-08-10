@@ -21,7 +21,7 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 16000;        // total round length
+  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
   const TARGET_ROCKS = 6;           // breaking this many => score 1.0
   const HITS_START = 2;             // taps needed for rock #1
   const HITS_STEP = 1;              // extra taps needed per subsequent rock
@@ -80,6 +80,10 @@
       .mg-mine-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size (em is relative to the
+         parent's own font-size). */
+      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
       .mg-mine-timebar{position:absolute; top:0; left:0; height:4px; background:#e0a23d; z-index:3;
         transition:width .1s linear}
       /* Finer-grained than the 6 sprite frames can show -- with up to 12
@@ -143,7 +147,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-mine-count">⛏️ 0</span>` +
-      `<span class="mg-pill" id="mg-mine-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-mine-timebar";
@@ -272,7 +276,7 @@
         shattering = true;
         broken++;
         countEl.textContent = "⛏️ " + broken;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(broken / TARGET_ROCKS);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();
         playShatter();

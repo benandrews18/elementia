@@ -22,8 +22,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;      // total round length
-  const TARGET_CAKES = 6;         // matching this many orders => score 1.0
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const TARGET_CAKES = 3;         // matching this many orders => score 1.0
   const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
   const ORDER_QUEUE = 3;          // order cards shown: the live one + look-ahead
@@ -83,6 +83,11 @@
         font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:28px;
       }
       .mg-bakery-hud .mg-pill{ background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size (em is relative to the
+         parent's own font-size, so this scales correctly whatever that
+         happens to be per game). */
+      .mg-dice-pill{ font-size:3em; padding:2px 14px; line-height:1; }
       .mg-bakery-timebar{ height:8px; background:#e0a23d; margin:16px 0 0; transition:width .1s linear; width:100%; }
       /* Orders are square cards showing the FINISHED cake, not a row of
          swatches -- the player is matching a picture, so the brief should
@@ -213,7 +218,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span>` +
-      `<span class="mg-pill" id="mg-bakery-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-bakery-timebar";
@@ -361,7 +366,7 @@
       if (isMatch) {
         matched++;
         countEl.textContent = "\u{1F382} " + matched;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(matched / TARGET_CAKES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();
       advanceOrder();

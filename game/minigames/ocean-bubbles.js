@@ -22,7 +22,7 @@
   /* ---- tunables --------------------------------------------------------
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
-  const DURATION_MS = 21000;      // total round length
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
   const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
@@ -32,7 +32,7 @@
   // lazy drifters with ones that streak past in well under two seconds.
   const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
   const RISE_MAX_MS = 6000;
-  const TARGET_POPS = 24;         // popping this many => score 1.0 (fewer bubbles spawn now)
+  const TARGET_POPS = 17;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble
   // and the one furthest from the bubbles still low on screen wins, so a
@@ -77,6 +77,7 @@
       .mg-ocean-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      .mg-ocean-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-ocean-timebar{position:absolute; top:0; left:0; height:4px; background:#ff8a3d; z-index:3;
         transition:width .1s linear}
       .mg-bubble{
@@ -120,7 +121,7 @@
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-pop-count">🫧 0</span><span class="mg-pill" id="mg-dice">🎲 ${DICE_MIN}</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-pop-count">🫧 0</span><span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
     timebar.style.width = "100%";
@@ -210,7 +211,7 @@
         anim.cancel();
         popped++;
         popCountEl.textContent = "🫧 " + popped;
-        diceEl.textContent = "🎲 " + diceFor(popped / TARGET_POPS);
+        diceEl.textContent = "🎲".repeat(diceFor(popped / TARGET_POPS));
         b.classList.add("mg-pop");
         setTimeout(() => b.remove(), 250);
       };

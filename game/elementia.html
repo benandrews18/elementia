@@ -1328,13 +1328,64 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    inlined verbatim near the end of this file -- see build_minigames.py).
    Class-toggled rather than inline-styled to match the rest of the
    codebase's show/hide convention; sits above everything, including the
-   intro cinematic, since it's a full interactive takeover. */
+   intro cinematic, since it's a full interactive takeover. top is set
+   inline per launch (see launchMinigame()) to clear the real station
+   title/icon banner rather than covering the full viewport -- the
+   "ELEMENTS FOUND HERE" row and dice legend sit right where the overlay's
+   top edge lands, so they end up hidden behind it without needing to
+   touch that markup at all. */
 #mgOverlay{
-  position:fixed; inset:0; z-index:220; background:#000; display:none;
+  position:fixed; left:0; right:0; bottom:0; top:0; z-index:220; background:#000; display:none;
 }
 #mgOverlay.show{ display:block; animation:mgFadeIn .25s ease both; }
 #mgStage{ width:100%; height:100%; }
 @keyframes mgFadeIn{ from{opacity:0} to{opacity:1} }
+
+/* Pre-round intro card ("Pop the Bubbles" / how to play / Tap to
+   Continue) -- covers the stage until tapped, then launchMinigame()
+   actually starts the round. Tap-anywhere, same convention as the old
+   intro cinematic used to use. */
+#mgIntro{
+  position:absolute; inset:0; z-index:2; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px; text-align:center; padding:0 30px;
+  background:rgba(0,0,0,.55); color:#fff;
+}
+#mgIntro.show{ display:flex; animation:mgFadeIn .2s ease both; }
+.mg-intro-title{ font-size:32px; font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.6); }
+.mg-intro-blurb{ font-size:16px; font-weight:600; line-height:1.4; max-width:340px; opacity:.92; }
+.mg-intro-tap{
+  margin-top:10px; font-size:13px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+  opacity:.8; animation:mg-intro-pulse 1.4s ease-in-out infinite;
+}
+@keyframes mg-intro-pulse{ 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* Big countdown, only shown for the back half of the round (see
+   launchMinigame()) -- independent of any individual game's own HUD, so
+   it works the same across all 8 without touching their own code. */
+#mgCountdown{
+  position:absolute; top:14px; left:0; right:0; z-index:3; display:none;
+  justify-content:center; pointer-events:none;
+}
+#mgCountdown.show{ display:flex; }
+#mgCountdown .n{
+  font-size:44px; font-weight:800; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.7);
+  background:rgba(0,0,0,.35); border-radius:999px; width:64px; height:64px;
+  display:flex; align-items:center; justify-content:center; animation:mg-count-pop .5s cubic-bezier(.25,1,.4,1) both;
+}
+@keyframes mg-count-pop{ 0%{transform:scale(1.35); opacity:0} 100%{transform:scale(1); opacity:1} }
+
+/* Results beat between the round ending and the dice roll: station icon,
+   dice earned, and the same die-emoji-row language the in-round HUD now
+   uses. Shown over a cleared stage (see launchMinigame()). */
+#mgResults{
+  position:absolute; inset:0; z-index:4; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; text-align:center;
+  background:rgba(0,0,0,.6); color:#fff;
+}
+#mgResults.show{ display:flex; animation:mgFadeIn .2s ease both; }
+.mg-results-icon{ font-size:64px; line-height:1; }
+.mg-results-pts{ font-size:20px; font-weight:800; }
+.mg-results-dice{ font-size:34px; letter-spacing:4px; }
 
 /* crafted-card popup */
 .pc-card{
@@ -1910,7 +1961,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- station mini-game overlay: runMinigame(container, onComplete) runs
      fullscreen here on PLAY; see launchMinigame() -->
-<div id="mgOverlay" role="dialog" aria-modal="true" aria-label="Station mini-game"><div id="mgStage"></div></div>
+<div id="mgOverlay" role="dialog" aria-modal="true" aria-label="Station mini-game">
+  <div id="mgStage"></div>
+  <div id="mgIntro"></div>
+  <div id="mgCountdown"></div>
+  <div id="mgResults"></div>
+</div>
 
 <!-- job board: a slide-out side panel, same shape as the inventory drawer
      (.dhead/.dbody) just mirrored onto the left edge -- a running list of
@@ -4931,19 +4987,113 @@ const MG_DICE_MIN = 3, MG_DICE_MAX = 6;
 function minigameDiceFor(score){
   return Math.round(MG_DICE_MIN + (MG_DICE_MAX - MG_DICE_MIN) * Math.max(0, Math.min(1, score)));
 }
+// Every game's own DURATION_MS is standardized to this; the countdown is
+// driven independently off wall-clock time from when the round actually
+// starts (after the intro card is dismissed), not from anything inside
+// the game files themselves, so this needs to stay in sync with them by
+// hand if that ever changes.
+const MG_ROUND_MS = 15000, MG_COUNTDOWN_AT_MS = 5000;
+// One line of "what is this" + "how do I play it" per station, shown on
+// the pre-round intro card. Deliberately terse -- this is a "tap to
+// continue" beat, not a rules page.
+const MINIGAME_INTRO = {
+  "The Ocean":         {title:"Pop the Bubbles", blurb:"Tap rising bubbles before they float off the top."},
+  "The Power Plant":   {title:"Untangle the Wires", blurb:"Drag each handle so no wire crosses another."},
+  "Greenhouse":        {title:"Catch the Eggs", blurb:"Drag the basket under falling eggs. Dodge the bad ones."},
+  "Deep Mine":         {title:"Break the Rocks", blurb:"Tap a rock again and again to crack it open."},
+  "Old Growth Forest": {title:"Plant the Trees", blurb:"Tap when the arm sweeps through the green zone."},
+  "The Bakery":        {title:"Fill the Order", blurb:"Match the base, icing, and topping shown, then send it."},
+  "The City":          {title:"Stack the Stones", blurb:"Tap to drop each stone lined up with the one below."},
+  "The Observatory":   {title:"Fly the Rocket", blurb:"Tap to thrust upward and dodge the asteroids."},
+};
 function launchMinigame(){
   if (state.rolledHere) return;
   const run = window.MINIGAMES && window.MINIGAMES[current];
   if (!run){ doRoll(); return; }
   const overlay = document.getElementById("mgOverlay");
   const stage = document.getElementById("mgStage");
+  const introEl = document.getElementById("mgIntro");
+  const countdownEl = document.getElementById("mgCountdown");
+  const resultsEl = document.getElementById("mgResults");
   stage.innerHTML = "";
+  resultsEl.classList.remove("show");
+  countdownEl.classList.remove("show");
+
+  // Cropped to start below the real station title/icon banner (left
+  // showing through above it) rather than covering the whole viewport --
+  // see #mgOverlay's own comment for why nothing else needs to change to
+  // hide "ELEMENTS FOUND HERE"/the dice legend/PLAY underneath it. Scroll
+  // is pinned to the top and locked for as long as the overlay is open
+  // (restored when it closes, below) -- the crop is measured once here,
+  // so if the page were free to scroll underneath, the banner would drift
+  // out from under the gap it's supposed to show through.
+  window.scrollTo({top:0, behavior:"instant"});
+  const bannerEl = document.querySelector(".sheet-head");
+  overlay.style.top = (bannerEl ? Math.max(0, bannerEl.getBoundingClientRect().bottom) : 0) + "px";
+  // Both html and body -- whichever one is the real scrolling box depends
+  // on the browser/page, and getting this wrong on just one leaves the
+  // page free to scroll the banner right back out from under the crop.
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.overflow = "hidden";
+  // Belt-and-suspenders on top of the overflow lock above: something
+  // (an autofocus scrollIntoView, a stray render() elsewhere) can still
+  // move the scroll position programmatically even with overflow:hidden
+  // set, which would carry the banner right out from under the overlay's
+  // crop without this snapping it straight back.
+  function mgScrollGuard(){ if (window.scrollY !== 0) window.scrollTo(0, 0); }
+  window.addEventListener("scroll", mgScrollGuard, {passive:true});
+
+  const info = MINIGAME_INTRO[current] || {title: current, blurb: "Do your best before time runs out."};
+  introEl.innerHTML = `<div class="mg-intro-title">${esc(info.title)}</div>` +
+    `<div class="mg-intro-blurb">${esc(info.blurb)}</div>` +
+    `<div class="mg-intro-tap">Tap to Continue</div>`;
   overlay.classList.add("show");
-  run(stage, (score) => {
-    overlay.classList.remove("show");
-    stage.innerHTML = "";
-    doRoll(minigameDiceFor(score));
-  });
+  introEl.classList.add("show");
+
+  function startRound(){
+    introEl.classList.remove("show");
+    introEl.removeEventListener("click", startRound);
+
+    const roundStart = Date.now();
+    let countdownRaf = null;
+    function tickCountdown(){
+      const elapsed = Date.now() - roundStart;
+      const remainingMs = MG_ROUND_MS - elapsed;
+      if (elapsed >= MG_COUNTDOWN_AT_MS && remainingMs > 0){
+        const secs = Math.ceil(remainingMs / 1000);
+        if (countdownEl.dataset.n !== String(secs)){
+          countdownEl.dataset.n = String(secs);
+          countdownEl.innerHTML = `<span class="n">${secs}</span>`;
+        }
+        countdownEl.classList.add("show");
+      } else {
+        countdownEl.classList.remove("show");
+      }
+      if (remainingMs > -1000) countdownRaf = requestAnimationFrame(tickCountdown);
+    }
+    countdownRaf = requestAnimationFrame(tickCountdown);
+
+    run(stage, (score) => {
+      if (countdownRaf) cancelAnimationFrame(countdownRaf);
+      countdownEl.classList.remove("show");
+      const diceCount = minigameDiceFor(score);
+      const s = STATION_BY_NAME[current];
+      stage.innerHTML = "";
+      resultsEl.innerHTML = `<div class="mg-results-icon">${em(s.emoji)}</div>` +
+        `<div class="mg-results-pts">+${diceCount} dice earned</div>` +
+        `<div class="mg-results-dice">${"\u{1F3B2}".repeat(diceCount)}</div>`;
+      resultsEl.classList.add("show");
+      setTimeout(() => {
+        resultsEl.classList.remove("show");
+        overlay.classList.remove("show");
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+        window.removeEventListener("scroll", mgScrollGuard);
+        doRoll(diceCount);
+      }, 1400);
+    });
+  }
+  introEl.addEventListener("click", startRound);
 }
 function doRoll(rollCount){
   if (state.rolledHere) return;
@@ -5891,7 +6041,7 @@ window.MINIGAMES = {};
   /* ---- tunables --------------------------------------------------------
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
-  const DURATION_MS = 21000;      // total round length
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
   const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
@@ -5901,7 +6051,7 @@ window.MINIGAMES = {};
   // lazy drifters with ones that streak past in well under two seconds.
   const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
   const RISE_MAX_MS = 6000;
-  const TARGET_POPS = 24;         // popping this many => score 1.0 (fewer bubbles spawn now)
+  const TARGET_POPS = 17;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble
   // and the one furthest from the bubbles still low on screen wins, so a
@@ -5946,6 +6096,7 @@ window.MINIGAMES = {};
       .mg-ocean-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      .mg-ocean-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-ocean-timebar{position:absolute; top:0; left:0; height:4px; background:#ff8a3d; z-index:3;
         transition:width .1s linear}
       .mg-bubble{
@@ -5989,7 +6140,7 @@ window.MINIGAMES = {};
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-pop-count">🫧 0</span><span class="mg-pill" id="mg-dice">🎲 ${DICE_MIN}</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-pop-count">🫧 0</span><span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
     timebar.style.width = "100%";
@@ -6079,7 +6230,7 @@ window.MINIGAMES = {};
         anim.cancel();
         popped++;
         popCountEl.textContent = "🫧 " + popped;
-        diceEl.textContent = "🎲 " + diceFor(popped / TARGET_POPS);
+        diceEl.textContent = "🎲".repeat(diceFor(popped / TARGET_POPS));
         b.classList.add("mg-pop");
         setTimeout(() => b.remove(), 250);
       };
@@ -6173,8 +6324,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 60000;      // total round length
-  const TARGET_SOLVES = 5;        // solving this many puzzles => score 1.0
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
   const MARGIN = 30;              // px, inset from stage edges for handle travel
@@ -6224,6 +6375,7 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
+      .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-power-hud .mg-pill.mg-power-clear{ background:rgba(95,207,106,.35); }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
@@ -6291,7 +6443,7 @@ window.MINIGAMES = {};
     hud.className = "mg-power-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span>` +
       `<span class="mg-pill" id="mg-power-status">Drag to untangle</span>` +
-      `<span class="mg-pill" id="mg-power-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-power-timebar";
@@ -6481,7 +6633,7 @@ window.MINIGAMES = {};
       if (c === 0) {
         solved++;
         solvedEl.textContent = "\u{1F50C} " + solved;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(solved / TARGET_SOLVES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
         stage.classList.add("mg-power-solved");
@@ -6558,8 +6710,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 24000;         // total round length
-  const TARGET_GOOD = 14;            // net good-egg-equivalents => score 1.0
+  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const TARGET_GOOD = 9;             // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
   // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
   // able to comfortably cover it regardless of device width. Height keeps
@@ -6627,6 +6779,9 @@ window.MINIGAMES = {};
       .mg-green-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size. */
+      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
       .mg-green-timebar{position:absolute; top:0; left:0; height:4px; background:#4c9a3f; z-index:3;
         transition:width .1s linear}
       /* The classic CSS egg: equal horizontal radii, but a much taller
@@ -6697,7 +6852,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span>` +
-      `<span class="mg-pill" id="mg-green-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-green-timebar";
@@ -6769,7 +6924,7 @@ window.MINIGAMES = {};
 
     function updateScore() {
       scoreEl.textContent = "\u{1F95A} " + Math.max(0, score);
-      diceEl.textContent = "\u{1F3B2} " + diceFor(Math.max(0, score) / TARGET_GOOD);
+      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 
     function flashBad() {
@@ -6893,7 +7048,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 16000;        // total round length
+  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
   const TARGET_ROCKS = 6;           // breaking this many => score 1.0
   const HITS_START = 2;             // taps needed for rock #1
   const HITS_STEP = 1;              // extra taps needed per subsequent rock
@@ -6952,6 +7107,10 @@ window.MINIGAMES = {};
       .mg-mine-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size (em is relative to the
+         parent's own font-size). */
+      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
       .mg-mine-timebar{position:absolute; top:0; left:0; height:4px; background:#e0a23d; z-index:3;
         transition:width .1s linear}
       /* Finer-grained than the 6 sprite frames can show -- with up to 12
@@ -7015,7 +7174,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-mine-count">⛏️ 0</span>` +
-      `<span class="mg-pill" id="mg-mine-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-mine-timebar";
@@ -7144,7 +7303,7 @@ window.MINIGAMES = {};
         shattering = true;
         broken++;
         countEl.textContent = "⛏️ " + broken;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(broken / TARGET_ROCKS);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();
         playShatter();
@@ -7224,8 +7383,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 24000;        // total round length
-  const TARGET_TREES = 4;           // planting this many => score 1.0
+  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
+  const TARGET_TREES = 3;           // planting this many => score 1.0
   const SWEEP_MS_START = 1500;      // full left-right-left cycle, tree #1
   const SWEEP_MS_MIN = 1150;        // cycle time floor as difficulty ramps
   const SWEEP_MS_STEP = 130;        // cycle time lost per tree planted
@@ -7277,6 +7436,7 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
+      .mg-forest-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-forest-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-forest-steps{
@@ -7385,7 +7545,7 @@ window.MINIGAMES = {};
     hud.className = "mg-forest-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-forest-count">\u{1F332} 0</span>` +
       `<span class="mg-pill" id="mg-forest-task">${STEPS[0].icon} ${STEPS[0].label}</span>` +
-      `<span class="mg-pill" id="mg-forest-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-forest-timebar";
@@ -7478,7 +7638,7 @@ window.MINIGAMES = {};
       if (stepIndex >= STEPS.length) {
         treesPlanted++;
         countEl.textContent = "\u{1F332} " + treesPlanted;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(treesPlanted / TARGET_TREES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(treesPlanted / TARGET_TREES));
         showToast("\u{1F333} Tree planted!");
         stepIndex = 0;
         sweepMs = Math.max(SWEEP_MS_MIN, SWEEP_MS_START - treesPlanted * SWEEP_MS_STEP);
@@ -7559,8 +7719,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;      // total round length
-  const TARGET_CAKES = 6;         // matching this many orders => score 1.0
+  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const TARGET_CAKES = 3;         // matching this many orders => score 1.0
   const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
   const ORDER_QUEUE = 3;          // order cards shown: the live one + look-ahead
@@ -7620,6 +7780,11 @@ window.MINIGAMES = {};
         font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:28px;
       }
       .mg-bakery-hud .mg-pill{ background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; }
+      /* Dice earned shown as that many die-face emojis in a row, not a
+         number -- 3x the surrounding HUD text size (em is relative to the
+         parent's own font-size, so this scales correctly whatever that
+         happens to be per game). */
+      .mg-dice-pill{ font-size:3em; padding:2px 14px; line-height:1; }
       .mg-bakery-timebar{ height:8px; background:#e0a23d; margin:16px 0 0; transition:width .1s linear; width:100%; }
       /* Orders are square cards showing the FINISHED cake, not a row of
          swatches -- the player is matching a picture, so the brief should
@@ -7750,7 +7915,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span>` +
-      `<span class="mg-pill" id="mg-bakery-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-bakery-timebar";
@@ -7898,7 +8063,7 @@ window.MINIGAMES = {};
       if (isMatch) {
         matched++;
         countEl.textContent = "\u{1F382} " + matched;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(matched / TARGET_CAKES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();
       advanceOrder();
@@ -7967,8 +8132,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 47000;         // total round length (a clean run can go long)
-  const TARGET_STONES = 10;          // stacking this many => score 1.0
+  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const TARGET_STONES = 4;           // stacking this many => score 1.0
   const STONE_H = 70;                // px, height of each stone row
   const BASE_TOP = 360;              // px, screen y where the base stone's top sits
   const START_WIDTH_FRAC = 0.7;      // first stone's width, as a fraction of stage width
@@ -8020,6 +8185,7 @@ window.MINIGAMES = {};
       .mg-city-hud .mg-pill{
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
         transition:width .1s linear}
       .mg-city-track{ position:absolute; left:0; right:0; top:0; height:100%; will-change:transform; }
@@ -8061,7 +8227,7 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill" id="mg-city-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -8170,7 +8336,7 @@ window.MINIGAMES = {};
 
       stonesPlaced++;
       countEl.textContent = "\u{1FAA8} " + stonesPlaced;
-      diceEl.textContent = "\u{1F3B2} " + diceFor(stonesPlaced / TARGET_STONES);
+      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
       prevRight = overlapLeft + curWidth;
@@ -8248,8 +8414,9 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 10000;         // absolute round cap
-  const TARGET_SURVIVE_MS = 20000;   // surviving this long => score 1.0
+  const DURATION_MS = 15000;         // absolute round cap (standardized across all 8 games)
+  const TARGET_SURVIVE_MS = 15000;   // surviving this long => score 1.0 (== DURATION_MS: a full
+                                      // clean run should actually be able to hit max score)
   const THRUST_ACCEL = 800;          // px/s^2 sideways while a side is held
   const DRIFT_DECEL = 300;           // px/s^2 bleeding speed off when released
   const MAX_VX = 1190;               // px/s, terminal sideways speed
@@ -8339,6 +8506,7 @@ window.MINIGAMES = {};
       .mg-obs-hud .mg-pill{
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      .mg-obs-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-obs-timebar{position:absolute; top:0; left:0; height:4px; background:#7ea8ff; z-index:4;
         transition:width .1s linear}
       /* Faint tap zones so it's discoverable that the halves steer. */
@@ -8401,7 +8569,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-obs-time">\u{1F680} 0.0s</span>` +
-      `<span class="mg-pill" id="mg-obs-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-obs-timebar";
@@ -8556,7 +8724,7 @@ window.MINIGAMES = {};
       }
 
       timeEl.textContent = "\u{1F680} " + (elapsed / 1000).toFixed(1) + "s";
-      diceEl.textContent = "\u{1F3B2} " + diceFor(elapsed / TARGET_SURVIVE_MS);
+      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(elapsed / TARGET_SURVIVE_MS));
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }
       rafId = requestAnimationFrame(tick);

@@ -21,8 +21,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 24000;        // total round length
-  const TARGET_TREES = 4;           // planting this many => score 1.0
+  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
+  const TARGET_TREES = 3;           // planting this many => score 1.0
   const SWEEP_MS_START = 1500;      // full left-right-left cycle, tree #1
   const SWEEP_MS_MIN = 1150;        // cycle time floor as difficulty ramps
   const SWEEP_MS_STEP = 130;        // cycle time lost per tree planted
@@ -74,6 +74,7 @@
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
+      .mg-forest-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-forest-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-forest-steps{
@@ -182,7 +183,7 @@
     hud.className = "mg-forest-hud";
     hud.innerHTML = `<span class="mg-pill" id="mg-forest-count">\u{1F332} 0</span>` +
       `<span class="mg-pill" id="mg-forest-task">${STEPS[0].icon} ${STEPS[0].label}</span>` +
-      `<span class="mg-pill" id="mg-forest-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+      `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-forest-timebar";
@@ -275,7 +276,7 @@
       if (stepIndex >= STEPS.length) {
         treesPlanted++;
         countEl.textContent = "\u{1F332} " + treesPlanted;
-        diceEl.textContent = "\u{1F3B2} " + diceFor(treesPlanted / TARGET_TREES);
+        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(treesPlanted / TARGET_TREES));
         showToast("\u{1F333} Tree planted!");
         stepIndex = 0;
         sweepMs = Math.max(SWEEP_MS_MIN, SWEEP_MS_START - treesPlanted * SWEEP_MS_STEP);

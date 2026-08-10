@@ -23,8 +23,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 47000;         // total round length (a clean run can go long)
-  const TARGET_STONES = 10;          // stacking this many => score 1.0
+  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const TARGET_STONES = 4;           // stacking this many => score 1.0
   const STONE_H = 70;                // px, height of each stone row
   const BASE_TOP = 360;              // px, screen y where the base stone's top sits
   const START_WIDTH_FRAC = 0.7;      // first stone's width, as a fraction of stage width
@@ -76,6 +76,7 @@
       .mg-city-hud .mg-pill{
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
       }
+      .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
         transition:width .1s linear}
       .mg-city-track{ position:absolute; left:0; right:0; top:0; height:100%; will-change:transform; }
@@ -117,7 +118,7 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill" id="mg-city-dice">\u{1F3B2} ${DICE_MIN}</span>`;
+    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -226,7 +227,7 @@
 
       stonesPlaced++;
       countEl.textContent = "\u{1FAA8} " + stonesPlaced;
-      diceEl.textContent = "\u{1F3B2} " + diceFor(stonesPlaced / TARGET_STONES);
+      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
       prevRight = overlapLeft + curWidth;
