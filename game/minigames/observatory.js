@@ -116,6 +116,7 @@
       }
       .mg-obs-hud .mg-pill{
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       .mg-obs-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-obs-timebar{position:absolute; top:0; left:0; height:4px; background:#7ea8ff; z-index:4;
@@ -179,8 +180,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-obs-time">\u{1F680} 0.0s</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-obs-timebar";
@@ -334,7 +335,7 @@
         if (rock.y > stageH + rock.r * 2) { rock.el.remove(); rocks.splice(i, 1); }
       }
 
-      timeEl.textContent = "\u{1F680} " + (elapsed / 1000).toFixed(1) + "s";
+      timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(elapsed / TARGET_SURVIVE_MS));
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }

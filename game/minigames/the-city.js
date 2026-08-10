@@ -75,6 +75,7 @@
       }
       .mg-city-hud .mg-pill{
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
@@ -118,7 +119,7 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -226,7 +227,7 @@
       if (right > overlapRight) spawnChip(overlapRight, right - overlapRight, rowIndex);
 
       stonesPlaced++;
-      countEl.textContent = "\u{1FAA8} " + stonesPlaced;
+      countEl.textContent = "\u{1F3D7}\u{FE0F} " + stonesPlaced;
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;

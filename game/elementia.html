@@ -170,14 +170,12 @@ main{max-width:1180px; margin:0 auto; padding:22px 18px calc(var(--hub-h, 67px) 
    (see below) reaches the literal top of the viewport instead of leaving
    a gap above it -- every other screen keeps the normal breathing room. */
 body[data-screen="map"] main{padding-top:0}
-/* The map's own art already carries real margin below the lowest node
-   (the diamond source image doesn't place any node flush with its bottom
-   edge), so the generic +80px clearance above stacks a second, redundant
-   gap on top of that and reads as a big dead zone below "You are here" --
-   shrink it to just what the floating pins button/tracked pill actually
-   need to clear (52px button + 14px own offset from the hub, + a little
-   breathing room) rather than the shop-card-sized default. */
-body[data-screen="map"] main{padding-bottom:calc(var(--hub-h, 67px) + 40px)}
+/* Map's own scroll maximum sits flush with the hub's top edge -- no extra
+   clearance below it anymore (an earlier +40px breathing-room gap here is
+   gone; the map's own art already carries real margin below the lowest
+   node, so the generic +80px clearance the base main{} rule uses was
+   redundant on top of that regardless). */
+body[data-screen="map"] main{padding-bottom:var(--hub-h, 67px)}
 /* Item Reference is plain static content with no z-index of its own, so
    without this it would stack BELOW the floating pills/pins/convert
    buttons (any positioned z-index element beats non-positioned static
@@ -3737,8 +3735,12 @@ function takeJob(cardIndex){
   state.jobBoard.taken = true;
   // Selecting a job is exactly the moment its items become worth tracking
   // everywhere -- auto-pin each one (Item Reference's pinned section +
-  // the topbar) rather than making the player do it by hand.
-  items.forEach(name => { if (!isPinned(name)) togglePin(name); });
+  // the topbar) rather than making the player do it by hand. Skip
+  // anything already owned, though -- a pin's whole point is tracking
+  // progress toward something not built yet (see the matching auto-UNpin
+  // in craft()), so pre-pinning an already-crafted item would just show
+  // up as an already-complete pin with nothing left to do.
+  items.forEach(name => { if (!owns(name) && !isPinned(name)) togglePin(name); });
   save(); render();
 }
 function jobDone(job){ return job.items.every(owns); }
@@ -6558,6 +6560,7 @@ window.MINIGAMES = {};
       }
       .mg-ocean-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       .mg-ocean-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-ocean-timebar{position:absolute; top:0; left:0; height:4px; background:#ff8a3d; z-index:3;
@@ -6603,7 +6606,7 @@ window.MINIGAMES = {};
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-pop-count">🫧 0</span><span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
     timebar.style.width = "100%";
@@ -6692,7 +6695,7 @@ window.MINIGAMES = {};
         liveBubbles.delete(b);
         anim.cancel();
         popped++;
-        popCountEl.textContent = "🫧 " + popped;
+        popCountEl.textContent = "\u{1F30A} " + popped;
         diceEl.textContent = "🎲".repeat(diceFor(popped / TARGET_POPS));
         b.classList.add("mg-pop");
         setTimeout(() => b.remove(), 250);
@@ -6839,7 +6842,6 @@ window.MINIGAMES = {};
         white-space:nowrap;
       }
       .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
-      .mg-power-hud .mg-pill.mg-power-clear{ background:rgba(95,207,106,.35); }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-power-handle{ cursor:grab; transition:filter .12s ease; }
@@ -6904,9 +6906,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span>` +
-      `<span class="mg-pill" id="mg-power-status">Drag to untangle</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-power-timebar";
@@ -6920,7 +6921,6 @@ window.MINIGAMES = {};
     container.appendChild(stage);
 
     const solvedEl = hud.querySelector("#mg-power-solved");
-    const statusEl = hud.querySelector("#mg-power-status");
     const diceEl = hud.querySelector("#mg-power-dice");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
@@ -6956,18 +6956,6 @@ window.MINIGAMES = {};
         for (let j = i + 1; j < wireCount; j++) {
           if ((top[i] - top[j]) * (bot[i] - bot[j]) < 0) c++;
         }
-      }
-      return c;
-    }
-
-    function updateStatus(top, bot) {
-      const c = crossingsOf(top, bot);
-      if (c === 0) {
-        statusEl.textContent = "Untangled!";
-        statusEl.classList.add("mg-power-clear");
-      } else {
-        statusEl.textContent = c + (c === 1 ? " crossing" : " crossings");
-        statusEl.classList.remove("mg-power-clear");
       }
       return c;
     }
@@ -7041,7 +7029,6 @@ window.MINIGAMES = {};
         };
         hitHandles.push({ top: mkHit(topX[i], TOP_Y, "top"), bot: mkHit(botX[i], BOTTOM_Y, "bot") });
       }
-      updateStatus(topSlot, botSlot);
     }
     buildPuzzle();
 
@@ -7062,13 +7049,6 @@ window.MINIGAMES = {};
       const x = Math.max(MARGIN, Math.min(stageW - MARGIN, e.clientX - rect.left));
       (drag.end === "top" ? topX : botX)[drag.wire] = x;
       positionsToDom();
-      // Live feedback only -- move the dragged end's slot in a scratch copy
-      // so the crossing count previews where it would land, without touching
-      // the authoritative permutation until it's actually dropped.
-      const provisional = (drag.end === "top" ? topSlot : botSlot).slice();
-      provisional[drag.wire] = nearestSlot(x);
-      updateStatus(drag.end === "top" ? provisional : topSlot,
-                   drag.end === "top" ? botSlot : provisional);
     }
     function onUp() {
       if (!drag) return;
@@ -7092,10 +7072,10 @@ window.MINIGAMES = {};
       positionsToDom();
       drag = null;
 
-      const c = updateStatus(topSlot, botSlot);
+      const c = crossingsOf(topSlot, botSlot);
       if (c === 0) {
         solved++;
-        solvedEl.textContent = "\u{1F50C} " + solved;
+        solvedEl.textContent = "\u{26A1} " + solved;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
@@ -7241,6 +7221,7 @@ window.MINIGAMES = {};
       }
       .mg-green-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size. */
@@ -7314,8 +7295,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-green-score">\u{1F331} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-green-timebar";
@@ -7386,7 +7367,7 @@ window.MINIGAMES = {};
     }
 
     function updateScore() {
-      scoreEl.textContent = "\u{1F95A} " + Math.max(0, score);
+      scoreEl.textContent = "\u{1F331} " + Math.max(0, score);
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 
@@ -7569,6 +7550,7 @@ window.MINIGAMES = {};
       }
       .mg-mine-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size (em is relative to the
@@ -7636,8 +7618,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-mine-count">⛏️ 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-mine-timebar";
@@ -7765,7 +7747,7 @@ window.MINIGAMES = {};
       if (progress >= hitsNeeded) {
         shattering = true;
         broken++;
-        countEl.textContent = "⛏️ " + broken;
+        countEl.textContent = "\u{1F48E} " + broken;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();
@@ -8006,9 +7988,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-forest-count">\u{1F332} 0</span>` +
-      `<span class="mg-pill" id="mg-forest-task">${STEPS[0].icon} ${STEPS[0].label}</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-forest-timebar";
@@ -8039,7 +8020,6 @@ window.MINIGAMES = {};
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
-    const taskEl = hud.querySelector("#mg-forest-task");
     const diceEl = hud.querySelector("#mg-forest-dice");
     const dotEls = () => Array.from(stepsRow.querySelectorAll(".mg-forest-step-dot"));
 
@@ -8108,7 +8088,6 @@ window.MINIGAMES = {};
         greenHalfDeg = Math.max(GREEN_HALF_DEG_MIN, GREEN_HALF_DEG_START - treesPlanted * GREEN_HALF_DEG_STEP);
         drawGauge();
       }
-      taskEl.innerHTML = `${STEPS[stepIndex].icon} ${STEPS[stepIndex].label}`;
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
       refreshDots();
       stepStart = Date.now();
@@ -8242,7 +8221,9 @@ window.MINIGAMES = {};
         display:flex; justify-content:space-between; align-items:center; padding:20px 28px 0;
         font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:28px;
       }
-      .mg-bakery-hud .mg-pill{ background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; }
+      .mg-bakery-hud .mg-pill{
+        background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; white-space:nowrap;
+      }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size (em is relative to the
          parent's own font-size, so this scales correctly whatever that
@@ -8377,8 +8358,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-bakery-timebar";
@@ -8525,7 +8506,7 @@ window.MINIGAMES = {};
 
       if (isMatch) {
         matched++;
-        countEl.textContent = "\u{1F382} " + matched;
+        countEl.textContent = "\u{1F35E} " + matched;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();
@@ -8647,6 +8628,7 @@ window.MINIGAMES = {};
       }
       .mg-city-hud .mg-pill{
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
@@ -8690,7 +8672,7 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-city-count">\u{1FAA8} 0</span><span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -8798,7 +8780,7 @@ window.MINIGAMES = {};
       if (right > overlapRight) spawnChip(overlapRight, right - overlapRight, rowIndex);
 
       stonesPlaced++;
-      countEl.textContent = "\u{1FAA8} " + stonesPlaced;
+      countEl.textContent = "\u{1F3D7}\u{FE0F} " + stonesPlaced;
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
@@ -8968,6 +8950,7 @@ window.MINIGAMES = {};
       }
       .mg-obs-hud .mg-pill{
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       .mg-obs-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
       .mg-obs-timebar{position:absolute; top:0; left:0; height:4px; background:#7ea8ff; z-index:4;
@@ -9031,8 +9014,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-obs-time">\u{1F680} 0.0s</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-obs-timebar";
@@ -9186,7 +9169,7 @@ window.MINIGAMES = {};
         if (rock.y > stageH + rock.r * 2) { rock.el.remove(); rocks.splice(i, 1); }
       }
 
-      timeEl.textContent = "\u{1F680} " + (elapsed / 1000).toFixed(1) + "s";
+      timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(elapsed / TARGET_SURVIVE_MS));
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }

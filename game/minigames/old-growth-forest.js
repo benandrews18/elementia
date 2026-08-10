@@ -181,9 +181,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-forest-count">\u{1F332} 0</span>` +
-      `<span class="mg-pill" id="mg-forest-task">${STEPS[0].icon} ${STEPS[0].label}</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-forest-timebar";
@@ -214,7 +213,6 @@
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
-    const taskEl = hud.querySelector("#mg-forest-task");
     const diceEl = hud.querySelector("#mg-forest-dice");
     const dotEls = () => Array.from(stepsRow.querySelectorAll(".mg-forest-step-dot"));
 
@@ -283,7 +281,6 @@
         greenHalfDeg = Math.max(GREEN_HALF_DEG_MIN, GREEN_HALF_DEG_START - treesPlanted * GREEN_HALF_DEG_STEP);
         drawGauge();
       }
-      taskEl.innerHTML = `${STEPS[stepIndex].icon} ${STEPS[stepIndex].label}`;
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
       refreshDots();
       stepStart = Date.now();

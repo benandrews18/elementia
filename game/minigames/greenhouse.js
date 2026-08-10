@@ -91,6 +91,7 @@
       }
       .mg-green-hud .mg-pill{
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size. */
@@ -164,8 +165,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-green-score">\u{1F95A} 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-green-score">\u{1F331} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-green-timebar";
@@ -236,7 +237,7 @@
     }
 
     function updateScore() {
-      scoreEl.textContent = "\u{1F95A} " + Math.max(0, score);
+      scoreEl.textContent = "\u{1F331} " + Math.max(0, score);
       diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 

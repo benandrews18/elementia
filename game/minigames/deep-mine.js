@@ -79,6 +79,7 @@
       }
       .mg-mine-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
+        white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size (em is relative to the
@@ -146,8 +147,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-mine-count">⛏️ 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-mine-timebar";
@@ -275,7 +276,7 @@
       if (progress >= hitsNeeded) {
         shattering = true;
         broken++;
-        countEl.textContent = "⛏️ " + broken;
+        countEl.textContent = "\u{1F48E} " + broken;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();

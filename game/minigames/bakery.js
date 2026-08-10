@@ -82,7 +82,9 @@
         display:flex; justify-content:space-between; align-items:center; padding:20px 28px 0;
         font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:28px;
       }
-      .mg-bakery-hud .mg-pill{ background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; }
+      .mg-bakery-hud .mg-pill{
+        background:rgba(255,255,255,.13); border-radius:999px; padding:8px 24px; white-space:nowrap;
+      }
       /* Dice earned shown as that many die-face emojis in a row, not a
          number -- 3x the surrounding HUD text size (em is relative to the
          parent's own font-size, so this scales correctly whatever that
@@ -217,8 +219,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-bakery-count">\u{1F382} 0</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-bakery-timebar";
@@ -365,7 +367,7 @@
 
       if (isMatch) {
         matched++;
-        countEl.textContent = "\u{1F382} " + matched;
+        countEl.textContent = "\u{1F35E} " + matched;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();

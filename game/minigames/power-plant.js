@@ -76,7 +76,6 @@
         white-space:nowrap;
       }
       .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
-      .mg-power-hud .mg-pill.mg-power-clear{ background:rgba(95,207,106,.35); }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-power-handle{ cursor:grab; transition:filter .12s ease; }
@@ -141,9 +140,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
-    hud.innerHTML = `<span class="mg-pill" id="mg-power-solved">\u{1F50C} 0</span>` +
-      `<span class="mg-pill" id="mg-power-status">Drag to untangle</span>` +
-      `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-power-timebar";
@@ -157,7 +155,6 @@
     container.appendChild(stage);
 
     const solvedEl = hud.querySelector("#mg-power-solved");
-    const statusEl = hud.querySelector("#mg-power-status");
     const diceEl = hud.querySelector("#mg-power-dice");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
@@ -193,18 +190,6 @@
         for (let j = i + 1; j < wireCount; j++) {
           if ((top[i] - top[j]) * (bot[i] - bot[j]) < 0) c++;
         }
-      }
-      return c;
-    }
-
-    function updateStatus(top, bot) {
-      const c = crossingsOf(top, bot);
-      if (c === 0) {
-        statusEl.textContent = "Untangled!";
-        statusEl.classList.add("mg-power-clear");
-      } else {
-        statusEl.textContent = c + (c === 1 ? " crossing" : " crossings");
-        statusEl.classList.remove("mg-power-clear");
       }
       return c;
     }
@@ -278,7 +263,6 @@
         };
         hitHandles.push({ top: mkHit(topX[i], TOP_Y, "top"), bot: mkHit(botX[i], BOTTOM_Y, "bot") });
       }
-      updateStatus(topSlot, botSlot);
     }
     buildPuzzle();
 
@@ -299,13 +283,6 @@
       const x = Math.max(MARGIN, Math.min(stageW - MARGIN, e.clientX - rect.left));
       (drag.end === "top" ? topX : botX)[drag.wire] = x;
       positionsToDom();
-      // Live feedback only -- move the dragged end's slot in a scratch copy
-      // so the crossing count previews where it would land, without touching
-      // the authoritative permutation until it's actually dropped.
-      const provisional = (drag.end === "top" ? topSlot : botSlot).slice();
-      provisional[drag.wire] = nearestSlot(x);
-      updateStatus(drag.end === "top" ? provisional : topSlot,
-                   drag.end === "top" ? botSlot : provisional);
     }
     function onUp() {
       if (!drag) return;
@@ -329,10 +306,10 @@
       positionsToDom();
       drag = null;
 
-      const c = updateStatus(topSlot, botSlot);
+      const c = crossingsOf(topSlot, botSlot);
       if (c === 0) {
         solved++;
-        solvedEl.textContent = "\u{1F50C} " + solved;
+        solvedEl.textContent = "\u{26A1} " + solved;
         diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
