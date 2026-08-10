@@ -250,22 +250,22 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    "elements go in (red), converted result comes out (green)" wherever
    the button appears, no label needed. */
 #quickConvertBtn::before, #quickConvertBtn::after{
-  content:""; position:absolute; top:50%; width:8px; height:8px; border-radius:50%;
+  content:""; position:absolute; top:50%; width:16px; height:16px; border-radius:50%;
   transform:translateY(-50%); box-shadow:0 0 0 1.5px rgba(0,0,0,.25);
 }
-#quickConvertBtn::before{left:-2px; background:var(--bad)}
-#quickConvertBtn::after{right:-2px; background:var(--ok)}
+#quickConvertBtn::before{left:-6px; background:var(--bad)}
+#quickConvertBtn::after{right:-6px; background:var(--ok)}
 
 /* Pinned-items tray -- rests just above the hub already (same bottom
-   offset #jobSheet uses). Same low-30s z-index band as #topbar/.floatbtn
-   (see #topbar's comment) -- above ordinary screen content, below every
-   real window; #hub itself is z-index 72, so it still sits above the
-   tray too regardless. Closed state is translateY(100%) off its own
-   resting spot rather than display:none -- that shift lands it exactly
-   behind the hub bar, so opening it visibly slides the tray up from
-   behind the hub instead of just fading a panel in. */
+   offset #jobSheet uses). z-index 33, ABOVE .floatbtn's 32 -- when the
+   tray opens it should cover the pins/convert buttons, not sit behind
+   them; #hub itself is z-index 72, so it still sits above the tray too
+   regardless. Closed state is translateY(100%) off its own resting spot
+   rather than display:none -- that shift lands it exactly behind the hub
+   bar, so opening it visibly slides the tray up from behind the hub
+   instead of just fading a panel in. */
 #pinsTray{
-  position:fixed; left:0; right:0; z-index:31;
+  position:fixed; left:0; right:0; z-index:33;
   bottom:var(--hub-h, 67px);
   max-height:45vh; background:var(--card); border-top:1.5px solid var(--line);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
@@ -273,10 +273,11 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
   display:flex; flex-direction:column; overflow:hidden;
 }
 #pinsTray.open{transform:translateY(0)}
-/* Extra bottom padding keeps chip content clear of the floating pins/
-   convert buttons, which sit in that same bottom band (see .floatbtn) --
-   z-index puts them above the tray, so anything rendered under them would
-   otherwise be covered rather than just visually crowded. */
+/* Extra bottom padding leaves breathing room in that bottom band where
+   the floating pins/convert buttons live (see .floatbtn) -- the tray now
+   sits above them (z-index 33 vs 32) and covers them outright while open,
+   but the padding still keeps the last row of content from crowding
+   right up against the hub's own top edge. */
 #pinsTray .dbody{overflow-y:auto; padding:14px 16px 74px}
 
 /* Tracked-item readout riding alongside #pinsBtn. Same white border and
@@ -1116,6 +1117,14 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
   font-size:15px; font-weight:800; color:inherit; text-align:center; padding:0 6px;
 }
 .convert-arrow{font-size:26px; color:var(--mute); font-weight:800; flex:none}
+/* Wraps each side of the row (and the arrow between them) in an identical
+   label-then-content column -- the arrow's own wrapper carries a hidden
+   "1x" spacer of the same size as the real labels, so all three columns
+   share one top edge and .convert-row's align-items:center lands the
+   arrow level with the boxes' own vertical middle instead of the middle
+   of the taller (label + box) columns beside it. */
+.convert-col{display:flex; flex-direction:column; align-items:center; gap:8px}
+.convert-qty{font-size:24px; font-weight:800; color:#fff; line-height:1}
 /* FROM box: 3 diagonally-stacked squares (matches the "trade 3 of these"
    reference). The 2 ghosts are real sibling elements placed BEFORE the
    real box in the DOM, not ::before/::after on the box itself -- a
@@ -1367,9 +1376,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Convert tray -- same slide-up-from-behind-the-hub language as #pinsTray
    (no scrim, shop/map stays visible and scrollable underneath), just
    anchored bottom-full-width like that tray rather than centered like the
-   dialogs it used to share styling with. */
+   dialogs it used to share styling with. Same z-index 33 as #pinsTray --
+   above .floatbtn's 32, so it covers the pins/convert buttons while open
+   instead of sitting behind them. */
 #convert{
-  position:fixed; left:0; right:0; z-index:31;
+  position:fixed; left:0; right:0; z-index:33;
   bottom:var(--hub-h, 67px);
   max-height:60vh; background:var(--card); border-top:1.5px solid var(--line);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
@@ -1990,19 +2001,28 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <div class="dbody">
     <p>Trade 3 of one element for 1 of any other.</p>
     <div class="convert-row">
-      <div class="convert-stack" id="convFromStack">
-        <span class="convert-ghost"></span>
-        <span class="convert-ghost"></span>
-        <button class="convert-box" id="convFromBox">
-          <span class="convert-sym" id="convFromSym">+</span>
-          <span class="convert-label" id="convFromLabel">Pick element</span>
+      <div class="convert-col">
+        <div class="convert-qty">3x</div>
+        <div class="convert-stack" id="convFromStack">
+          <span class="convert-ghost"></span>
+          <span class="convert-ghost"></span>
+          <button class="convert-box" id="convFromBox">
+            <span class="convert-sym" id="convFromSym">+</span>
+            <span class="convert-label" id="convFromLabel">Pick element</span>
+          </button>
+        </div>
+      </div>
+      <div class="convert-col">
+        <div class="convert-qty" aria-hidden="true" style="visibility:hidden">1x</div>
+        <span class="convert-arrow">➜</span>
+      </div>
+      <div class="convert-col">
+        <div class="convert-qty">1x</div>
+        <button class="convert-box" id="convToBox">
+          <span class="convert-sym" id="convToSym">+</span>
+          <span class="convert-label" id="convToLabel">Pick element</span>
         </button>
       </div>
-      <span class="convert-arrow">➜</span>
-      <button class="convert-box" id="convToBox">
-        <span class="convert-sym" id="convToSym">+</span>
-        <span class="convert-label" id="convToLabel">Pick element</span>
-      </button>
     </div>
     <div class="btnrow">
       <button class="bigbtn" id="convertGo" disabled>Convert</button>
@@ -3712,6 +3732,7 @@ function freshState(){
                         // (not current stock -- items get spent, this never decrements).
                         // Drives the tiered card-popup border (see craftTier()).
     collapseCraftedItems: false, // global "Collapse crafted" toggle for every station shop
+    convertRevealed: false, // true forever once the floating Convert button has appeared once
   };
 }
 
@@ -4818,13 +4839,20 @@ function updateHub(){
   setHubBadge("pinsBtn", hasUnselectedPin ? "!" : null);
   const canConvert = [...ELEMENTS].some(sym => count(sym) >= 3);
   setHubBadge("quickConvertBtn", canConvert ? "!" : null);
+  // Once revealed, Convert stays on-screen for good -- even after the
+  // player spends their 3rd of an element back down to 0/1/2, the button
+  // shouldn't vanish again and force them to rediscover it. state.jobs'
+  // own length already gives Pins this same "never take it back" behavior
+  // for free (see below); Convert needs its own persisted flag since
+  // "3+ of some element" can become false again.
+  if (canConvert) state.convertRevealed = true;
 
   // Both floating buttons stay off their own edge of the screen until
   // there's something to do with them -- Pins needs at least one job ever
   // taken (state.jobs is never trimmed, so its length alone tells us
-  // that), Convert needs 3+ of some element on hand right now.
+  // that), Convert needs to have been revealed at least once.
   document.getElementById("pinsBtn").classList.toggle("offscreen", state.jobs.length === 0);
-  document.getElementById("quickConvertBtn").classList.toggle("offscreen", !canConvert);
+  document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
   // Home doubles as "close whatever's open" -- swap its icon/label to a
   // plain back arrow whenever that's what a tap will actually do.
@@ -5967,7 +5995,17 @@ function playConvertAnimation(toSym){
     convertFrom = null; convertTo = null;
     updateConvertUI();
     toBox.style.visibility = "";
-    fromPop.cancel(); // release the pop-out effect now that fromBox is already showing "empty"
+    // fromPop finished (opacity 0, scale .2) well before this fires and has
+    // been holding there via fill:forwards -- .cancel() would drop that
+    // hold and snap the stack instantly back to its full-opacity resting
+    // state (no "opacity" in .convert-box's own transition list), reading
+    // as a flash of the (already-reset, empty) stack popping back into
+    // existence. Play the reverse instead so it eases back in.
+    fromPop.cancel();
+    fromStack.animate(
+      [{ transform: "scale(.2)", opacity: 0 }, { transform: "scale(1)", opacity: 1 }],
+      { duration: 260, easing: "cubic-bezier(.3,1.4,.4,1)" }
+    );
     render();
   };
 }
