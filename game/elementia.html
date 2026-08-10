@@ -161,6 +161,14 @@ main{max-width:1180px; margin:0 auto; padding:22px 18px calc(var(--hub-h, 67px) 
    (see below) reaches the literal top of the viewport instead of leaving
    a gap above it -- every other screen keeps the normal breathing room. */
 body[data-screen="map"] main{padding-top:0}
+/* The map's own art already carries real margin below the lowest node
+   (the diamond source image doesn't place any node flush with its bottom
+   edge), so the generic +80px clearance above stacks a second, redundant
+   gap on top of that and reads as a big dead zone below "You are here" --
+   shrink it to just what the floating pins button/tracked pill actually
+   need to clear (52px button + 14px own offset from the hub, + a little
+   breathing room) rather than the shop-card-sized default. */
+body[data-screen="map"] main{padding-bottom:calc(var(--hub-h, 67px) + 40px)}
 /* Item Reference is plain static content with no z-index of its own, so
    without this it would stack BELOW the floating pills/pins/convert
    buttons (any positioned z-index element beats non-positioned static
