@@ -905,25 +905,30 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 .tok.have{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
 .tok.need{background:var(--bad-soft); border-color:var(--bad); color:var(--bad); cursor:help}
 .tok.need:hover{filter:brightness(1.08)}
-/* Element tokens: same boxed-white-face-with-suit-colored-border language
-   as the station preview's own element legend (see .gchip) instead of the
-   plain have/need pill above -- a recipe's element cost should read using
-   the exact same visual vocabulary as "here's what this station offers".
-   Must follow .tok.have/.tok.need -- equal specificity, so source order
+/* Element tokens: same size/shape/border-weight as the plain item pill
+   above (border:1.5px, same padding/radius/font-size, inherited from
+   .tok) -- elements should stand out from item ingredients by COLOR
+   alone, not by a bulkier border or a taller box. The suit still sets the
+   token's own identity, but as a dark fill (see ELEMENT_COLOR_DARK) with
+   the border matching it by default, so that once the element is owned
+   and the border switches to a bright green (.tok.el.have below) it
+   actually pops against that dark fill instead of blending into a
+   similarly-dark "owned" green (which the plain --ok-line border used by
+   .tok.have would have, sitting right next to a dark suit color). Must
+   follow .tok.have/.tok.need -- equal specificity, so source order
    decides, and this needs to win over both (element tokens open a card
    rather than a "where do I get this" hint too, so plain pointer not
-   help). have/need still reads via the qty badge's own color. */
+   help). */
 .tok.el{
-  cursor:pointer; flex-direction:column; gap:0; padding:3px 9px 2px;
-  background:#fff; color:#221f1a; border-width:5px; border-color:var(--suit, #8a94a6);
-  border-radius:9px; font-size:15px;
+  cursor:pointer; background:var(--suit, #4a4f5c); border-color:var(--suit, #4a4f5c); color:#fff;
 }
+.tok.el.have{border-color:var(--ok)}
 .tok .qty{font-size:11px; opacity:.8; font-weight:800}
 .tok.el .qty{opacity:1}
-.tok.el.have .qty{color:var(--ok-line)}
+.tok.el.have .qty{color:var(--ok)}
 .tok.el.need .qty{color:var(--bad)}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
-.tok.el .cat{color:var(--ink2)}
+.tok.el .cat{color:#fff; opacity:.75}
 .craftbtn{
   flex:none; align-self:center; border:1.5px solid var(--line); border-radius:10px;
   padding:8px 15px; font-size:14px; font-weight:800; background:var(--card); white-space:nowrap;
@@ -3214,6 +3219,21 @@ const ELEMENT_COLOR = {
   Si:"#e2a83e", Al:"#e2a83e", Mg:"#e2a83e", Ni:"#e2a83e",
   Fe:"#4d7cf2", Ti:"#4d7cf2", Cu:"#4d7cf2", Ag:"#4d7cf2",
 };
+/* Darker variant of the suit palette above, used only for element tokens
+   inside a recipe's ingredient list (see tokenHTML()) -- everywhere else
+   (dice-pool chips, inventory boxes, element cards) keeps the brighter
+   ELEMENT_COLOR, since those exist to identify a suit at a glance. Here
+   the goal is different: the color sits as a token's own fill, and needs
+   to stay dark enough that the bright green border a token grows once its
+   element is owned (see .tok.el.have) still reads clearly against it --
+   including organic's, shifted toward olive/moss rather than sharing the
+   same green family as that "owned" green. */
+const ELEMENT_COLOR_DARK = {
+  C:"#3d4a1f", H:"#3d4a1f", N:"#3d4a1f", O:"#3d4a1f",
+  S:"#6b2338", K:"#6b2338", Ca:"#6b2338", P:"#6b2338",
+  Si:"#6b4518", Al:"#6b4518", Mg:"#6b4518", Ni:"#6b4518",
+  Fe:"#22366b", Ti:"#22366b", Cu:"#22366b", Ag:"#22366b",
+};
 /* Applies (or, with no sym, clears) an element's color to an element's own
    background+border -- used anywhere a box represents one specific
    element (Convert screen boxes and its element picker grid). */
@@ -3772,7 +3792,7 @@ function tokenHTML(r, groupedEls){
   if (r.kind === "element"){
     const need = groupedEls[r.name], have = count(r.name);
     const ok = have >= need;
-    const suit = ELEMENT_COLOR[r.name] || "#8a94a6";
+    const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
     return `<button class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
       `${esc(r.name)}<span class="qty">${have}/${need}</span>` +
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
