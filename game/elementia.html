@@ -5036,6 +5036,11 @@ function closeOverlay(id){
   document.getElementById(id).classList.remove("open");
   if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
   if (id === "settings") document.getElementById("tour").classList.remove("behind-settings");
+  // showSummary() forces #backdrop on against state.lastStation's art even
+  // when the current screen isn't "station" (see its own comment) -- put
+  // that back under updateBackdrop()'s normal screen-driven control once
+  // the summary closes, rather than leaving a stale station image behind.
+  if (id === "summary") updateBackdrop();
   updateHub();
 }
 const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
@@ -5066,6 +5071,19 @@ function showSummary(){
          `<span class="sumcap">${em(ITEM_EMOJI[n])} ${esc(n)}</span>`).join("")}</div>`
     : `<p class="empty" style="margin-top:14px">No capstones this time — they need
        materials from several stations, so plan your route next run!</p>`;
+
+  // Show against the last station's own backdrop art, not a flat dark
+  // scrim -- updateBackdrop() only turns #backdrop on for an actual
+  // station SCREEN, but the summary can appear from the map (out of
+  // visits) or Settings' review button, so drive it directly off
+  // state.lastStation here instead. closeOverlay() hands #backdrop back
+  // to updateBackdrop()'s normal screen-driven control once this closes.
+  const bg = STATION_BG[state.lastStation];
+  if (bg){
+    const bgEl = document.getElementById("backdrop");
+    bgEl.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${bg}")`;
+    bgEl.classList.add("show");
+  }
 
   openOverlay("summary");
 }
@@ -5371,7 +5389,12 @@ function launchMinigame(){
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         window.removeEventListener("scroll", mgScrollGuard);
-        doRoll(diceCount);
+        // Half-second beat on the bare station screen after the dice-pool
+        // reveal closes, before the roll itself starts -- doRoll() used to
+        // fire in the same instant the overlay disappeared, so the roll
+        // animation felt like it was already running underneath the
+        // results screen rather than a new thing starting.
+        setTimeout(() => doRoll(diceCount), 500);
       }, 1400);
     });
   }
