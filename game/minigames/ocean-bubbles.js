@@ -23,8 +23,8 @@
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
   const DURATION_MS = 21000;      // total round length
-  const SPAWN_MIN_MS = 160;       // gap between bubble spawns
-  const SPAWN_MAX_MS = 700;
+  const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
+  const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
   const SIZE_MAX_PX = 110;
   // Rise time is INVERSE speed: the floor is the FASTEST bubble. 1700ms
@@ -32,7 +32,7 @@
   // lazy drifters with ones that streak past in well under two seconds.
   const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
   const RISE_MAX_MS = 6000;
-  const TARGET_POPS = 40;         // popping this many => score 1.0
+  const TARGET_POPS = 24;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble
   // and the one furthest from the bubbles still low on screen wins, so a
@@ -83,9 +83,10 @@
         position:absolute; bottom:-10%; border-radius:50%; cursor:pointer;
         background:radial-gradient(circle at 30% 26%, rgba(255,255,255,.95), rgba(255,255,255,.18) 42%,
           rgba(140,215,255,.35) 70%, rgba(70,170,225,.55) 100%);
-        border:1px solid rgba(255,255,255,.65);
+        border:2.5px solid rgba(8,40,60,.65);
         box-shadow:0 0 10px rgba(255,255,255,.25) inset, 0 2px 6px rgba(10,60,90,.25);
         will-change:transform, opacity;
+        box-sizing:border-box;
       }
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
@@ -216,6 +217,19 @@
       // pointerUP, not pointerdown -- popping on first contact means a tap
       // that lands on a bubble mid-scroll/mid-drag pops it before intent is
       // even clear, which read as bubbles popping themselves unprompted.
+      // Capturing the pointer on down is what makes that reliable rather
+      // than flaky: without it, the up event fires on whatever element the
+      // finger is physically over when it lifts, and any tiny drift between
+      // down and up (extremely common with fast/imprecise mobile taps)
+      // lands the up on a neighboring bubble or empty water instead of this
+      // one -- reading as the game just not responding to a tap that
+      // visually landed dead-center. Capture pins the up event to THIS
+      // bubble regardless of where the finger ends up, and since capture is
+      // per pointerId, simultaneous multi-finger tapping across several
+      // bubbles works independently with no cross-talk.
+      b.addEventListener("pointerdown", e => {
+        try { b.setPointerCapture(e.pointerId); } catch (err) { /* unsupported -- fall back to normal hit-testing */ }
+      });
       b.addEventListener("pointerup", pop);
 
       scheduleSpawn();

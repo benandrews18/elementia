@@ -1360,6 +1360,35 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:var(--mute); margin-bottom:9px}
 .pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
 
+/* Hard Mode tiered re-craft borders (see craftTier()) -- only ever applied
+   here, on the tap-to-inspect popup, never on the item's icon anywhere
+   else it appears. border-top is deliberately left alone (still the
+   suit color, set inline) -- these add a frame on the other 3 sides
+   rather than replacing that accent. */
+.pc-card.tier-silver{
+  border-left:3px solid #c9ced8; border-right:3px solid #c9ced8; border-bottom:3px solid #c9ced8;
+  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 18px rgba(201,206,216,.45);
+}
+.pc-card.tier-gold{
+  border-left:3px solid var(--gold); border-right:3px solid var(--gold); border-bottom:3px solid var(--gold);
+  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 20px rgba(226,178,90,.5);
+}
+.pc-card.tier-diamond{
+  border-left:3px solid #2dd4c8; border-right:3px solid #2dd4c8; border-bottom:3px solid #2dd4c8;
+  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 24px rgba(45,212,200,.55);
+  overflow:hidden;
+}
+.pc-card.tier-diamond::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+  transform:translateX(-120%);
+  animation:pc-shine 3.2s ease-in-out infinite;
+}
+@keyframes pc-shine{
+  0%, 55%{transform:translateX(-120%)}
+  85%, 100%{transform:translateX(120%)}
+}
+
 /* element card popup -- same locked design as the printed cards (white
    face, thick suit-colored border, number bubble straddling the corner,
    suit pill pinned to the bottom edge). --suit is set inline per element
@@ -3542,6 +3571,9 @@ function freshState(){
     seenItems: {},     // {itemName: true} -- every item ever actually shown to the player
                         // (shop row, map preview icon, capstone card) this run -- Item
                         // Reference only lists these plus job-card component closures.
+    craftCounts: {},   // {itemName: N} -- Hard Mode only, times ever successfully crafted
+                        // (not current stock -- items get spent, this never decrements).
+                        // Drives the tiered card-popup border (see craftTier()).
   };
 }
 
@@ -3718,11 +3750,27 @@ function craft(entry){
   }
 
   state.items.push(entry.name);
+  if (state.mode === "hard"){
+    state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
+  }
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
   if (isPinned(entry.name)) togglePin(entry.name);
   save();
   return true;
+}
+/* Hard Mode's shiny tap-to-inspect border tiers: 2 crafts = silver, 3 =
+   gold, 4+ = diamond (with an idle shine sweep). Only ever read by
+   showCardPop() -- deliberately nowhere else the item appears (shop
+   list, inventory grid, map preview) so it stays a "look closer" reward
+   rather than cluttering every icon in the game. */
+function craftTier(name){
+  if (state.mode !== "hard") return null;
+  const n = state.craftCounts[name] || 0;
+  if (n >= 4) return "diamond";
+  if (n === 3) return "gold";
+  if (n === 2) return "silver";
+  return null;
 }
 
 /* =====================================================================
@@ -4713,7 +4761,11 @@ let cardPopTimer;
    the inventory, where it should just sit there until dismissed. */
 function showCardPop(entry, autoDismiss = true){
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
-  document.getElementById("cpCard").style.setProperty("--suit", su.color);
+  const cpCard = document.getElementById("cpCard");
+  cpCard.style.setProperty("--suit", su.color);
+  cpCard.classList.remove("tier-silver", "tier-gold", "tier-diamond");
+  const tier = craftTier(entry.name);
+  if (tier) cpCard.classList.add("tier-" + tier);
   document.getElementById("cpName").textContent = entry.name;
   document.getElementById("cpIcon").innerHTML = em(entry.emoji);
   document.getElementById("cpPts").textContent = entry.points;
@@ -5840,8 +5892,8 @@ window.MINIGAMES = {};
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
   const DURATION_MS = 21000;      // total round length
-  const SPAWN_MIN_MS = 160;       // gap between bubble spawns
-  const SPAWN_MAX_MS = 700;
+  const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
+  const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
   const SIZE_MAX_PX = 110;
   // Rise time is INVERSE speed: the floor is the FASTEST bubble. 1700ms
@@ -5849,7 +5901,7 @@ window.MINIGAMES = {};
   // lazy drifters with ones that streak past in well under two seconds.
   const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
   const RISE_MAX_MS = 6000;
-  const TARGET_POPS = 40;         // popping this many => score 1.0
+  const TARGET_POPS = 24;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble
   // and the one furthest from the bubbles still low on screen wins, so a
@@ -5900,9 +5952,10 @@ window.MINIGAMES = {};
         position:absolute; bottom:-10%; border-radius:50%; cursor:pointer;
         background:radial-gradient(circle at 30% 26%, rgba(255,255,255,.95), rgba(255,255,255,.18) 42%,
           rgba(140,215,255,.35) 70%, rgba(70,170,225,.55) 100%);
-        border:1px solid rgba(255,255,255,.65);
+        border:2.5px solid rgba(8,40,60,.65);
         box-shadow:0 0 10px rgba(255,255,255,.25) inset, 0 2px 6px rgba(10,60,90,.25);
         will-change:transform, opacity;
+        box-sizing:border-box;
       }
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
@@ -6033,6 +6086,19 @@ window.MINIGAMES = {};
       // pointerUP, not pointerdown -- popping on first contact means a tap
       // that lands on a bubble mid-scroll/mid-drag pops it before intent is
       // even clear, which read as bubbles popping themselves unprompted.
+      // Capturing the pointer on down is what makes that reliable rather
+      // than flaky: without it, the up event fires on whatever element the
+      // finger is physically over when it lifts, and any tiny drift between
+      // down and up (extremely common with fast/imprecise mobile taps)
+      // lands the up on a neighboring bubble or empty water instead of this
+      // one -- reading as the game just not responding to a tap that
+      // visually landed dead-center. Capture pins the up event to THIS
+      // bubble regardless of where the finger ends up, and since capture is
+      // per pointerId, simultaneous multi-finger tapping across several
+      // bubbles works independently with no cross-talk.
+      b.addEventListener("pointerdown", e => {
+        try { b.setPointerCapture(e.pointerId); } catch (err) { /* unsupported -- fall back to normal hit-testing */ }
+      });
       b.addEventListener("pointerup", pop);
 
       scheduleSpawn();
