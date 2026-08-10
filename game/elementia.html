@@ -368,15 +368,6 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
   min-height:250px;
 }
 .job-card.turned-in{opacity:.6}
-/* Turned-in jobs are a running record, not something to act on any more
-   -- collapsed into a small peeking deck (top card fully visible, each
-   one behind it shifted up so only its own top edge shows) in the
-   section's top-left corner rather than full cards of their own. */
-.job-stack{position:relative; width:190px; height:230px; margin:16px 0 40px}
-.job-card-stacked{position:absolute; top:0; left:0; width:190px}
-.job-card-stacked .job-card{
-  min-height:210px; transform:scale(.72); transform-origin:top left; width:264px;
-}
 .job-badge{
   position:absolute; top:-15px; left:-8px; width:38px; height:38px; border-radius:50%;
   background:var(--gold-soft); border:2.5px solid var(--gold); color:#fff;
@@ -4482,44 +4473,38 @@ function jobCardBodyHTML(items, bonus){
 function jobBoardHTML(){
   // No cap on how many jobs can be held at once -- every not-yet-turned-in
   // job gets its own card in a grid (same "Take this job" card shape the
-  // board itself uses). Turned-in jobs are a running record, not something
-  // to act on any more, so they collapse into a small peeking deck instead
-  // of full cards of their own.
+  // board itself uses). Turned-in jobs get their own separate section
+  // below in the same grid format, just dimmed (.job-card.turned-in) --
+  // they used to collapse into a small stacked deck inside "My Jobs"
+  // itself, but that stack's own negative top/left offsets (each card
+  // shifted up to peek out above the one in front of it) crept upward
+  // into whatever sat above it in the section.
   const activeJobs = state.jobs.filter(j => !j.turnedIn);
   const completedJobs = state.jobs.filter(j => j.turnedIn);
 
-  const activeGridHTML = activeJobs.length ? `<div class="job-grid">${
-    activeJobs.map(job => {
+  const jobGridHTML = (jobs, turnedIn) => `<div class="job-grid">${
+    jobs.map(job => {
       const i = state.jobs.indexOf(job);
       const bonus = jobBonus(job);
-      const action = jobDone(job)
+      const action = !turnedIn && jobDone(job)
         ? `<button class="bigbtn job-turnin" data-turnin="${i}">Turn In</button>` : "";
       return `<div class="job-card-wrap">
-        <div class="job-card">
+        <div class="job-card${turnedIn ? " turned-in" : ""}">
           ${jobCardBodyHTML(job.items, bonus)}
         </div>
         ${action}
       </div>`;
     }).join("")
-  }</div>` : "";
+  }</div>`;
 
-  // Stack order: oldest at the back, most recently turned in on top --
-  // each card further back sits progressively higher, so its own top
-  // edge peeks out above the one in front of it (see .job-card-stacked).
-  const stackHTML = completedJobs.length ? `<div class="job-stack">${
-    completedJobs.map((job, i) => {
-      const fromFront = completedJobs.length - 1 - i;
-      return `<div class="job-card-stacked" style="z-index:${i + 1}; top:${-fromFront * 14}px; left:${-fromFront * 4}px">
-        <div class="job-card turned-in">${jobCardBodyHTML(job.items, jobBonus(job))}</div>
-      </div>`;
-    }).join("")
-  }</div>` : "";
-
-  const activeHTML = activeGridHTML || stackHTML
-    ? `${activeGridHTML}${stackHTML}`
+  const activeHTML = activeJobs.length
+    ? jobGridHTML(activeJobs, false)
     : `<p class="empty">No job taken yet -- pick one from the board above.</p>`;
   const activeSection = (activeJobs.length || completedJobs.length)
     ? `<details class="job-section" open><summary class="job-board-heading">📋 My Jobs</summary>${activeHTML}</details>` : "";
+
+  const completedSection = completedJobs.length
+    ? `<details class="job-section" open><summary class="job-board-heading">✅ Completed Jobs</summary>${jobGridHTML(completedJobs, true)}</details>` : "";
 
   // One NEW job per station visit (see state.jobBoard.taken/takeJob()) --
   // no limit on how many can be held at once, so this only locks THIS
@@ -4544,10 +4529,11 @@ function jobBoardHTML(){
     boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">Job Board — ${esc(current)}</summary>${boardBody}</details>`;
   }
 
-  // Available offers first, accepted jobs below -- the board is what a
-  // player's actively deciding on; My Jobs is a running record they check
-  // less often, once they've already taken something.
-  return boardSection + activeSection;
+  // Available offers first, accepted jobs below, completed jobs last --
+  // the board is what a player's actively deciding on; My Jobs is a
+  // running record they check less often, once they've already taken
+  // something; Completed Jobs is history they check less often still.
+  return boardSection + activeSection + completedSection;
 }
 
 /* --------------------------------------------------- pinned items --- */
