@@ -268,19 +268,15 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    its own resting spot
    rather than display:none -- that shift lands it exactly behind the hub
    bar, so opening it visibly slides the tray up from behind the hub
-   instead of just fading a panel in. Duration bumped from .3s to .45s
-   (same bump applied to #jobSheet/#drawer/#convert, all four sharing this
-   exact transition) -- the overshoot bounce in the easing curve below was
-   barely legible at .3s, over almost before the eye caught it; slowing it
-   down is what actually lets the tray's own far edge read as bouncing
-   past its resting spot and settling back, rather than just snapping into
-   place with a faint wobble. */
+   instead of just fading a panel in. .3s duration, shared by
+   #jobSheet/#drawer/#convert too -- a slower .45s was tried but read as
+   bouncing too far/too slow; back to the original pace. */
 #pinsTray{
   position:fixed; left:0; right:0; z-index:33;
   bottom:var(--hub-h, 67px);
   max-height:45vh; background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
-  transform:translateY(100%); transition:transform .45s cubic-bezier(.34,1.56,.64,1);
+  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column; overflow:hidden;
 }
 #pinsTray.open{transform:translateY(0)}
@@ -334,12 +330,20 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    both, rather than the Job Board switching between a shallow bottom
    sheet and a full-screen takeover depending on whether any jobs were
    taken yet (that jump read as two different UIs, not one). */
+/* left:-24px + 24px added to width -- the panel is wider than the screen
+   and its own edge overhangs 24px past the true left edge (where it
+   slides in from) at rest, rather than sitting perfectly flush.
+   padding-left:24px on the box itself shifts every child (.dhead/.dbody)
+   back by that same amount, so the visible content edge lands in exactly
+   the spot a plain min(400px,92vw) box would have put it -- only the
+   box's own (now off-screen) far edge moved. */
 #jobSheet{
-  position:fixed; top:0; left:0; width:min(400px,92vw); z-index:69;
+  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  padding-left:24px; box-sizing:border-box;
   bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
   background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
   border-radius:0 0 14px 0; transform:translateX(-100%);
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
 
@@ -1051,12 +1055,16 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    than running the full height behind it -- bottom:0 let the hub's higher
    z-index paint over the drawer's own last stretch of content, so the
    final inventory rows were there but unreadable. */
+/* Mirror of #jobSheet's own overhang note (right:-24px + 24px added to
+   width, compensating padding-right so visible content lands unchanged)
+   -- this one hangs over the right edge, where it slides in from. */
 #drawer{
-  position:fixed; top:0; right:0; width:min(400px,92vw); z-index:60;
+  position:fixed; top:0; right:-24px; width:calc(min(400px,92vw) + 24px); z-index:60;
+  padding-right:24px; box-sizing:border-box;
   bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
   background:var(--card); border-left:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
   border-radius:0 0 0 14px; transform:translateX(100%);
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #drawer.open{transform:none}
 .dhead{display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line)}
@@ -1398,7 +1406,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   bottom:var(--hub-h, 67px);
   max-height:60vh; background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
-  transform:translateY(100%); transition:transform .45s cubic-bezier(.34,1.56,.64,1);
+  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column; overflow:hidden;
 }
 #convert.open{transform:translateY(0)}
