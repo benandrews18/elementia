@@ -263,13 +263,19 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
    regardless. Closed state is translateY(100%) off its own resting spot
    rather than display:none -- that shift lands it exactly behind the hub
    bar, so opening it visibly slides the tray up from behind the hub
-   instead of just fading a panel in. */
+   instead of just fading a panel in. Duration bumped from .3s to .45s
+   (same bump applied to #jobSheet/#drawer/#convert, all four sharing this
+   exact transition) -- the overshoot bounce in the easing curve below was
+   barely legible at .3s, over almost before the eye caught it; slowing it
+   down is what actually lets the tray's own far edge read as bouncing
+   past its resting spot and settling back, rather than just snapping into
+   place with a faint wobble. */
 #pinsTray{
   position:fixed; left:0; right:0; z-index:33;
   bottom:var(--hub-h, 67px);
-  max-height:45vh; background:var(--card); border-top:1.5px solid var(--line);
+  max-height:45vh; background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
-  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  transform:translateY(100%); transition:transform .45s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column; overflow:hidden;
 }
 #pinsTray.open{transform:translateY(0)}
@@ -327,9 +333,9 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 #jobSheet{
   position:fixed; top:0; left:0; width:min(400px,92vw); z-index:69;
   bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
-  background:var(--card); border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
   border-radius:0 0 14px 0; transform:translateX(-100%);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
 
@@ -1048,9 +1054,9 @@ body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{d
 #drawer{
   position:fixed; top:0; right:0; width:min(400px,92vw); z-index:60;
   bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
-  background:var(--card); border-left:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:var(--card); border-left:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
   border-radius:0 0 0 14px; transform:translateX(100%);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #drawer.open{transform:none}
 .dhead{display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line)}
@@ -1358,9 +1364,14 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .jtp-badge .l{font-size:7.5px; font-weight:800; letter-spacing:.4px; margin-top:1px}
 .jtp-title{font-size:16px; font-weight:800; color:#fff; margin-top:12px}
 .jtp-icons{display:flex; justify-content:center; gap:10px; margin-top:14px; font-size:32px; line-height:1}
+/* Gold border, same design language as the map screen's reachable-node
+   rings (.map-node.reachable) and the job-turn-in/capstone-celebration
+   cards that already borrowed it (.jtp-card, #celebrate .sheetbox) --
+   extended here to the base dialog shell so every overlay in the game
+   reads as part of one consistent "important floating panel" family. */
 .sheetbox{
   background:var(--card); border-radius:20px; padding:26px 28px; max-width:560px; width:100%;
-  border:1px solid var(--line); box-shadow:0 18px 50px rgba(0,0,0,.35); position:relative; z-index:2;
+  border:2.5px solid var(--gold); box-shadow:0 18px 50px rgba(0,0,0,.35); position:relative; z-index:2;
   /* margin:auto (not align-items:center on the parent) does the vertical
      centering: auto margins can only eat *positive* free space, so when a
      sheetbox is taller than the viewport they collapse to 0 instead of
@@ -1382,9 +1393,9 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #convert{
   position:fixed; left:0; right:0; z-index:33;
   bottom:var(--hub-h, 67px);
-  max-height:60vh; background:var(--card); border-top:1.5px solid var(--line);
+  max-height:60vh; background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
-  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  transform:translateY(100%); transition:transform .45s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column; overflow:hidden;
 }
 #convert.open{transform:translateY(0)}
@@ -3915,6 +3926,14 @@ function craft(entry){
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
   if (isPinned(entry.name)) togglePin(entry.name);
+  // If the just-completed item was itself the one actively tracked (not
+  // just pinned), clear that too -- otherwise updateHub()'s
+  // hasUnselectedPin check ("pins exist AND none is selected") stays
+  // false forever, since selectedJobItem is still truthy even though it
+  // now points at something no longer in prefs.pinnedItems at all. That
+  // silently suppresses the Pins button's "!" badge exactly when the
+  // player most needs the nudge to go pick their next target.
+  if (selectedJobItem === entry.name) selectedJobItem = null;
   save();
   return true;
 }
