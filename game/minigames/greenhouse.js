@@ -26,8 +26,11 @@
   const DURATION_MS = 24000;         // total round length
   const TARGET_GOOD = 14;            // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
-  const BASKET_W = 24;
-  const BASKET_H = 60;
+  // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
+  // able to comfortably cover it regardless of device width. Height keeps
+  // the same 2.5:1 proportion the old fixed 60x24 basket had.
+  const BASKET_W_FRAC = 0.25;        // basket width, as a fraction of stage width
+  const BASKET_ASPECT = 2.5;         // basket height = width * this
   const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
   // ~0.71 w:h is what actually reads as an egg rather than a small oval --
   // the shape comes from the border-radius in .mg-green-egg, but it needs
@@ -167,8 +170,6 @@
 
     const basket = document.createElement("div");
     basket.className = "mg-green-basket";
-    basket.style.width = BASKET_W + "px";
-    basket.style.height = BASKET_H + "px";
 
     stage.appendChild(hud);
     stage.appendChild(timebar);
@@ -181,9 +182,14 @@
     // round starts (e.g. entering the CSS-only fullscreen overlay resizes
     // the stage element itself without firing a window "resize" event), so
     // a value read right here can be stale for the rest of the round. Kept
-    // in sync every frame (see tick()) instead.
+    // in sync every frame (see tick()) instead. BASKET_W/H ride along with
+    // it since they're stage-relative now too.
     let stageW = stage.clientWidth || 320;
     let stageH = stage.clientHeight || 420;
+    let BASKET_W = stageW * BASKET_W_FRAC;
+    let BASKET_H = BASKET_W * BASKET_ASPECT;
+    basket.style.width = BASKET_W + "px";
+    basket.style.height = BASKET_H + "px";
     let basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
     basket.style.top = basketTop + "px";
 
@@ -264,6 +270,10 @@
       const liveH = stage.clientHeight || stageH;
       if (liveW !== stageW || liveH !== stageH) {
         stageW = liveW; stageH = liveH;
+        BASKET_W = stageW * BASKET_W_FRAC;
+        BASKET_H = BASKET_W * BASKET_ASPECT;
+        basket.style.width = BASKET_W + "px";
+        basket.style.height = BASKET_H + "px";
         basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
         basket.style.top = basketTop + "px";
         basketX = Math.max(0, Math.min(stageW - BASKET_W, basketX));
