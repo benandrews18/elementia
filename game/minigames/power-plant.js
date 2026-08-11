@@ -24,7 +24,7 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
   const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
@@ -51,6 +51,10 @@
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -75,7 +79,11 @@
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-power-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-power-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-power-handle{ cursor:grab; transition:filter .12s ease; }
@@ -140,7 +148,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-power-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -156,9 +165,12 @@
 
     const solvedEl = hud.querySelector("#mg-power-solved");
     const diceEl = hud.querySelector("#mg-power-dice");
+    const timerEl = hud.querySelector("#mg-power-timer");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
-    const TOP_Y = 46, BOTTOM_Y = stageH - 46;
+    // Clears the full HUD row (dice/timer/score pills) -- was 46, which let
+    // the handles' top edge creep up under the HUD text.
+    const TOP_Y = 84, BOTTOM_Y = stageH - 46;
 
     let running = true;
     let solved = 0;
@@ -310,7 +322,7 @@
       if (c === 0) {
         solved++;
         solvedEl.textContent = "\u{26A1} " + solved;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
+        diceEl.innerHTML = diceGridHTML(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
         stage.classList.add("mg-power-solved");
@@ -331,6 +343,7 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

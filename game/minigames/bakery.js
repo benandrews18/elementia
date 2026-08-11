@@ -22,7 +22,7 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
   const TARGET_CAKES = 3;         // matching this many orders => score 1.0
   const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
@@ -40,10 +40,14 @@
     { key: "vanilla", label: "Vanilla", color: "#e8b94f" },
     { key: "straw", label: "Strawberry", color: "#d43d5c" },
   ];
+  // Icing is shown as one of the 3 real "cake middle" photos dropped into
+  // game/minigames/ (see build_minigames.py's ASSETS map) instead of a CSS
+  // swatch -- both on the option buttons and on the cake itself, so the
+  // picture the player matches genuinely looks like the thing they tap.
   const FROSTINGS = [
-    { key: "white", label: "White", color: "#fdfaf3" },
-    { key: "choc", label: "Chocolate", color: "#2e1a0d" },
-    { key: "pink", label: "Pink", color: "#ff4fa0" },
+    { key: "white", label: "White", img: "cake-middle-white.webp" },
+    { key: "choc", label: "Chocolate", img: "cake-middle-brown.webp" },
+    { key: "pink", label: "Pink", img: "cake-middle-pink.webp" },
   ];
   const FRUITS = [
     { key: "cherry", emoji: "\u{1F352}" },
@@ -60,10 +64,20 @@
     return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[f]) ||
            ((global.MINIGAME_BACKDROP_BASE || "../backdrops/") + f);
   }
+  /* Same overridable-base trick as backdropURL(), for the cake-middle
+     sprite photos (see deep-mine.js's spriteURL() for the same pattern). */
+  function spriteURL(name) {
+    return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[name]) ||
+           ((global.MINIGAME_ASSET_BASE || "./") + name);
+  }
   /* Dice this run has earned so far -- shown live in the HUD so effort in
      the mini-game visibly feeds the roll it pays out into. */
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
   }
 
   let styleInjected = false;
@@ -85,11 +99,15 @@
       .mg-bakery-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:5px 16px; white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size (em is relative to the
-         parent's own font-size, so this scales correctly whatever that
-         happens to be per game). */
-      .mg-dice-pill{ font-size:3em; padding:2px 10px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid (wraps automatically once a 4th die is earned), not a single
+         line -- half the old single-line size so 6 dice stay compact in
+         the corner. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-bakery-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-bakery-timebar{ height:6px; background:#e0a23d; margin:9px 0 0; transition:width .1s linear; width:100%; }
       /* Orders are compact cards showing the FINISHED cake, not a row of
          swatches -- the player is matching a picture, so the brief should
@@ -132,28 +150,19 @@
         position:relative; z-index:1;
       }
       .mg-bakery-cake{ position:relative; width:100px; height:88px; }
-      /* Base and icing layers, on the plate AND in the order-card preview,
-         now use the exact same swirl-cone silhouette as the option buttons
-         below (see .mg-bakery-opt[data-category] further down) -- four
-         tapering radial blobs filled with the layer's own color via
-         --swatch, set inline per layer instead of a flat background-color.
-         The picture the player is matching now genuinely looks like the
-         buttons they're tapping, not a plain striped rectangle standing
-         in for it. */
-      .mg-bakery-layer-base, .mg-bakery-layer-frosting{
-        background-image:
-          radial-gradient(circle at 50% 10%, var(--swatch) 0 18%, transparent 19%),
-          radial-gradient(circle at 42% 30%, var(--swatch) 0 26%, transparent 27%),
-          radial-gradient(circle at 58% 52%, var(--swatch) 0 34%, transparent 35%),
-          radial-gradient(circle at 50% 80%, var(--swatch) 0 46%, transparent 47%);
-      }
+      /* Base layer: a plain coloured rectangle (matches the base option
+         buttons below -- see .mg-bakery-opt[data-category="base"]), not a
+         swirl silhouette. */
       .mg-bakery-layer-base{
         position:absolute; left:0; right:0; bottom:0; height:50px; border-radius:16px 16px 8px 8px;
-        box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
+        background:var(--swatch); box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
       }
+      /* Icing layer: the real cake-middle photo (img element when a flavor
+         is selected -- see cakeInnerHTML()), same box the swirl div used
+         to occupy. */
       .mg-bakery-layer-frosting{
         position:absolute; left:3px; right:3px; bottom:41px; height:25px; border-radius:16px 16px 6px 6px;
-        box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+        display:block; object-fit:cover;
       }
       .mg-bakery-layer-fruit{
         position:absolute; left:50%; bottom:59px; transform:translateX(-50%); font-size:31px;
@@ -180,21 +189,21 @@
         position:relative; overflow:hidden; background:rgba(255,255,255,.06);
       }
       .mg-bakery-opt.mg-bakery-selected{ border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35) inset; }
-      /* Base and icing swatches: the silhouette of a soft-serve swirl (the
-         same reference shape as \u{1F4A9}, just the swirl-cone body -- no
-         face) built from four tapering stacked blobs, filled in the
-         topping's own color. Same shape language for both rows now,
-         instead of a cylinder for base and a wider dollop-cluster for
-         icing, so "this is a topping" reads consistently either way. Same
-         gradient stack as .mg-bakery-layer-base/-frosting above, just
-         layered over the button's own translucent rest-state fill. */
-      .mg-bakery-opt[data-category="base"], .mg-bakery-opt[data-category="frosting"]{
-        background:
-          radial-gradient(circle at 50% 12%, var(--swatch) 0 15%, transparent 16%),
-          radial-gradient(circle at 45% 30%, var(--swatch) 0 23%, transparent 24%),
-          radial-gradient(circle at 55% 50%, var(--swatch) 0 31%, transparent 32%),
-          radial-gradient(circle at 50% 76%, var(--swatch) 0 42%, transparent 43%),
-          rgba(255,255,255,.06);
+      /* Base: a plain coloured rectangle, matching the shape of the cake
+         base it builds (see .mg-bakery-layer-base). */
+      .mg-bakery-opt[data-category="base"]{ background:var(--swatch); border-radius:16px 16px 8px 8px; }
+      /* Icing: no button chrome at all -- just the cake-middle photo
+         (see FROSTINGS/spriteURL()), object-fit:contain so its own drawn
+         outline reads as the button's whole silhouette. */
+      .mg-bakery-opt[data-category="frosting"]{ border:none; background:transparent; padding:2px; }
+      .mg-bakery-opt[data-category="frosting"] img{ width:100%; height:100%; object-fit:contain; }
+      .mg-bakery-opt[data-category="frosting"].mg-bakery-selected{
+        box-shadow:0 0 0 3px #fff; border-radius:14px;
+      }
+      /* Fruit: large emoji, no button border. */
+      .mg-bakery-opt[data-category="fruit"]{ border:none; background:transparent; }
+      .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
+        box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
       .mg-bakery-sendwrap{ padding:0 20px 14px; }
       .mg-bakery-send{
@@ -222,10 +231,13 @@
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  function cakeInnerHTML(baseColor, frostingColor, fruitEmoji) {
+  function cakeInnerHTML(baseColor, frostingImg, fruitEmoji) {
+    const frostingHTML = frostingImg
+      ? `<img class="mg-bakery-layer-frosting" src="${spriteURL(frostingImg)}" alt="">`
+      : `<div class="mg-bakery-layer-frosting"></div>`;
     return `
       <div class="mg-bakery-layer-base" style="--swatch:${baseColor}"></div>
-      <div class="mg-bakery-layer-frosting" style="--swatch:${frostingColor}"></div>
+      ${frostingHTML}
       <div class="mg-bakery-layer-fruit">${fruitEmoji}</div>`;
   }
 
@@ -239,7 +251,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -275,8 +288,16 @@
         btn.className = "mg-bakery-opt";
         btn.dataset.category = category;
         btn.dataset.key = item.key;
-        if (item.color) { btn.style.setProperty("--swatch", item.color); }
-        else { btn.textContent = item.emoji; btn.style.background = "rgba(255,255,255,.06)"; }
+        if (item.color) {
+          btn.style.setProperty("--swatch", item.color);
+        } else if (item.img) {
+          const img = document.createElement("img");
+          img.src = spriteURL(item.img);
+          img.alt = item.label || "";
+          btn.appendChild(img);
+        } else {
+          btn.textContent = item.emoji;
+        }
         row.appendChild(btn);
       });
       return row;
@@ -305,6 +326,7 @@
 
     const countEl = hud.querySelector("#mg-bakery-count");
     const diceEl = hud.querySelector("#mg-bakery-dice");
+    const timerEl = hud.querySelector("#mg-bakery-timer");
 
     let running = true;
     let matched = 0;
@@ -325,7 +347,7 @@
       orderRow.innerHTML = queue.map((o, i) => `
         <div class="mg-bakery-ordercard ${i === 0 ? "mg-bakery-live" : ""}">
           ${i === 0 ? '<span class="mg-bakery-ordertag">Now</span>' : ""}
-          <div class="mg-bakery-cake">${cakeInnerHTML(o.base.color, o.frosting.color, o.fruit.emoji)}</div>
+          <div class="mg-bakery-cake">${cakeInnerHTML(o.base.color, o.frosting.img, o.fruit.emoji)}</div>
         </div>`).join("");
     }
 
@@ -346,7 +368,7 @@
       const b = selected.base, f = selected.frosting, u = selected.fruit;
       cake.innerHTML = cakeInnerHTML(
         b ? b.color : "transparent",
-        f ? f.color : "transparent",
+        f ? f.img : "",
         u ? u.emoji : ""
       );
       sendBtn.disabled = !(b && f && u);
@@ -388,7 +410,7 @@
       if (isMatch) {
         matched++;
         countEl.textContent = "\u{1F35E} " + matched;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
+        diceEl.innerHTML = diceGridHTML(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();
       advanceOrder();
@@ -403,6 +425,7 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

@@ -57,6 +57,10 @@
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -78,7 +82,11 @@
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-ocean-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-ocean-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-ocean-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-ocean-timebar{position:absolute; top:0; left:0; height:4px; background:#ff8a3d; z-index:3;
         transition:width .1s linear}
       .mg-bubble{
@@ -122,7 +130,9 @@
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
     timebar.style.width = "100%";
@@ -132,6 +142,7 @@
 
     const popCountEl = hud.querySelector("#mg-pop-count");
     const diceEl = hud.querySelector("#mg-dice");
+    const timerEl = hud.querySelector("#mg-ocean-timer");
     let popped = 0;
     let spawnTimer = null;
     let running = true;
@@ -212,7 +223,7 @@
         anim.cancel();
         popped++;
         popCountEl.textContent = "\u{1F30A} " + popped;
-        diceEl.textContent = "🎲".repeat(diceFor(popped / TARGET_POPS));
+        diceEl.innerHTML = diceGridHTML(diceFor(popped / TARGET_POPS));
         b.classList.add("mg-pop");
         setTimeout(() => b.remove(), 250);
       };
@@ -247,6 +258,7 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

@@ -25,8 +25,8 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;         // absolute round cap (standardized across all 8 games)
-  const TARGET_SURVIVE_MS = 15000;   // surviving this long => score 1.0 (== DURATION_MS: a full
+  const DURATION_MS = 30000;         // absolute round cap (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const TARGET_SURVIVE_MS = 30000;   // surviving this long => score 1.0 (== DURATION_MS: a full
                                       // clean run should actually be able to hit max score)
   const THRUST_ACCEL = 800;          // px/s^2 sideways while a side is held
   const DRIFT_DECEL = 300;           // px/s^2 bleeding speed off when released
@@ -63,6 +63,10 @@
      the mini-game visibly feeds the roll it pays out into. */
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
   }
 
   let styleInjected = false;
@@ -118,7 +122,11 @@
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-obs-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-obs-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-obs-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-obs-timebar{position:absolute; top:0; left:0; height:4px; background:#7ea8ff; z-index:4;
         transition:width .1s linear}
       /* Faint tap zones so it's discoverable that the halves steer. */
@@ -180,7 +188,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
@@ -207,6 +216,7 @@
 
     const timeEl = hud.querySelector("#mg-obs-time");
     const diceEl = hud.querySelector("#mg-obs-dice");
+    const timerEl = hud.querySelector("#mg-obs-timer");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
 
@@ -336,7 +346,8 @@
       }
 
       timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(elapsed / TARGET_SURVIVE_MS));
+      diceEl.innerHTML = diceGridHTML(diceFor(elapsed / TARGET_SURVIVE_MS));
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }
       rafId = requestAnimationFrame(tick);

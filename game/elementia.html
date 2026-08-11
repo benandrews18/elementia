@@ -1302,6 +1302,11 @@ body[data-screen="codex"] #trackedPill{display:none}
 .bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
+/* A shop item newly revealed by the craft that just happened (see
+   flushPendingReveal()) -- opted in per-card rather than folded into the
+   blanket .item selector above, since ordinary re-renders of already-
+   visible shop items shouldn't replay this every time. */
+.item.item-pop-in{ animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both; }
 /* Every ordinary button gets a quick press-in bounce on tap unless it
    already defines its own :active transform elsewhere (those are more
    specific, e.g. class selectors, and still win the cascade). */
@@ -1527,6 +1532,10 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-title{font-size:24px; font-weight:800; line-height:1.15; padding-right:72px}
 .pc-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center; min-height:0}
 .pc-icon{font-size:100px; line-height:1}
+/* Gemstone Collection's custom icon is too visually small at the shared
+   100px size everywhere else it's used (shop cards, reference list) --
+   doubled here, on the card inspection popup only (see showCardPop()). */
+.pc-icon.pc-icon-xl{font-size:200px}
 .pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.alcan{width:1em; height:1em}
 .pc-tag{align-self:center; font-size:12px; font-weight:800; letter-spacing:.5px; color:#fff;
   border-radius:999px; padding:4px 13px; margin-bottom:8px}
@@ -3212,109 +3221,109 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Farm": 7.9,
-  "Furnace": 4.9,
-  "Geothermal Pump": 9.9,
-  "Star": 16.9,
-  "Sand": 3.1,
   "Concrete": 5.6,
-  "Wire": 3.8,
-  "Library": 14.1,
-  "Plastic": 8.7,
-  "Windmill": 15.9,
-  "Homestead": 14.9,
-  "Natural Gas": 3.0,
-  "Cake": 12.3,
-  "Water Turbine": 15.7,
-  "Renewable Grid": 22.6,
-  "Soil": 4.8,
-  "Clay": 2.9,
-  "Sunflower": 10.6,
-  "Central Station": 25.1,
-  "Rubber": 5.4,
-  "Bicycle": 15.2,
-  "Fireworks": 4.3,
-  "Grand Banquet": 23.5,
-  "Rocket": 21.1,
-  "Computer": 15.7,
-  "Tractor": 10.1,
-  "Wheel": 11.0,
-  "Metropolis": 23.0,
+  "Solar Cell": 5.0,
+  "Farm": 7.9,
   "Clock": 8.2,
-  "Sushi Restaurant": 19.4,
-  "Volcano": 14.5,
-  "Fruit Cake": 19.8,
-  "Deer": 6.8,
-  "Coral Reef": 17.5,
-  "Ecosystem": 24.3,
-  "Sailboat": 9.3,
-  "Bridge": 7.6,
+  "Sand": 3.1,
+  "Chicken": 11.0,
+  "Steel": 3.0,
+  "Wheel": 11.0,
+  "Central Station": 25.1,
   "Egg": 5.8,
-  "Rainbow": 17.3,
-  "Biofuel": 11.9,
-  "Light Bulb": 7.7,
+  "Ecosystem": 24.3,
+  "Sushi Restaurant": 19.4,
+  "Fruit Cake": 19.8,
+  "Planet": 9.0,
+  "Furnace": 4.9,
+  "Bicycle": 15.2,
+  "Deer": 6.8,
+  "Bone": 4.9,
+  "Beach Town": 26.5,
+  "Orca": 13.6,
+  "Rocket": 21.1,
+  "Yeast": 5.2,
+  "Natural Gas": 3.0,
+  "Fabric": 8.5,
+  "Diamond": 12.7,
+  "Fruit": 6.9,
+  "Flour": 9.4,
+  "Homestead": 14.9,
+  "Maglev Train": 19.1,
+  "Speedboat": 16.8,
+  "Tractor": 10.1,
+  "Grain": 8.4,
+  "Turquoise": 14.9,
+  "Geothermal Pump": 9.9,
+  "Library": 14.1,
+  "Windmill": 15.9,
+  "Bridge": 7.6,
+  "Book": 11.3,
+  "DNA": 4.0,
+  "Plastic": 8.7,
+  "Clay": 2.9,
+  "Dough": 9.6,
+  "Opal": 11.3,
+  "Building": 8.7,
+  "Soil": 4.8,
+  "Car": 17.9,
   "Ruby": 13.5,
-  "Glass": 5.4,
+  "Museum": 20.7,
+  "Banana": 7.7,
+  "Solar System": 18.3,
+  "Space Station": 23.3,
+  "Log Cabin": 7.7,
+  "Rubber": 5.4,
+  "Water": 2.6,
+  "Star": 16.9,
+  "Tools": 3.7,
+  "Bread": 11.1,
+  "Life": 19.4,
+  "Satellite Dish": 11.7,
+  "Computer": 15.7,
+  "Water Turbine": 15.7,
+  "Sunflower": 10.6,
+  "Statue": 6.5,
+  "Wire": 3.8,
+  "Cloud": 5.3,
   "Motorcycle": 17.4,
   "Fertilizer": 3.4,
-  "Museum": 20.7,
-  "Compass": 11.5,
-  "Chicken": 11.0,
-  "Stainless Steel": 5.4,
-  "DNA": 4.0,
-  "Solar System": 18.3,
-  "Airplane": 14.8,
-  "Steel": 3.0,
-  "Gemstone Collection": 19.5,
-  "Seaweed": 5.2,
-  "Canoe": 6.2,
-  "Battery": 4.8,
-  "Dough": 9.6,
-  "Maglev Train": 19.1,
-  "Life": 19.4,
-  "Limestone": 3.0,
-  "Salmon": 12.0,
-  "Diamond": 12.7,
-  "Lighthouse": 13.8,
-  "Book": 11.3,
-  "Grain": 8.4,
-  "Robot": 17.7,
-  "Bread": 11.1,
-  "Water": 2.6,
-  "Amber": 11.0,
-  "Fabric": 8.5,
-  "Sugar": 3.2,
-  "Aluminum Alloy": 5.5,
-  "Banana": 7.7,
-  "Building": 8.7,
-  "Beach Town": 26.5,
-  "Magnet": 9.1,
-  "Plant Fiber": 7.3,
-  "Opal": 11.3,
-  "Pearl": 14.1,
-  "Orca": 13.6,
-  "Log Cabin": 7.7,
-  "Space Station": 23.3,
-  "Telescope": 12.4,
-  "Satellite Dish": 11.7,
-  "Bone": 4.9,
-  "Solar Cell": 5.0,
-  "Dinosaur": 12.8,
   "Engine": 7.1,
-  "Tools": 3.7,
-  "Titanium Alloy": 6.0,
+  "Plant Fiber": 7.3,
+  "Light Bulb": 7.7,
+  "Sugar": 3.2,
+  "Volcano": 14.5,
+  "Gemstone Collection": 19.5,
   "Skyscraper": 16.7,
-  "Car": 17.9,
-  "Yeast": 5.2,
-  "Turquoise": 14.9,
-  "Speedboat": 16.8,
-  "Statue": 6.5,
-  "Flour": 9.4,
-  "Cloud": 5.3,
-  "Tree": 5.2,
-  "Fruit": 6.9,
+  "Compass": 11.5,
+  "Limestone": 3.0,
+  "Lighthouse": 13.8,
+  "Magnet": 9.1,
+  "Stainless Steel": 5.4,
+  "Metropolis": 23.0,
+  "Cake": 12.3,
+  "Sailboat": 9.3,
+  "Coral Reef": 17.5,
+  "Aluminum Alloy": 5.5,
+  "Telescope": 12.4,
+  "Canoe": 6.2,
+  "Grand Banquet": 23.5,
+  "Salmon": 12.0,
+  "Airplane": 14.8,
   "Microchip": 8.8,
-  "Planet": 9.0
+  "Seaweed": 5.2,
+  "Biofuel": 11.9,
+  "Glass": 5.4,
+  "Dinosaur": 12.8,
+  "Battery": 4.8,
+  "Tree": 5.2,
+  "Rainbow": 17.3,
+  "Pearl": 14.1,
+  "Amber": 11.0,
+  "Renewable Grid": 22.6,
+  "Titanium Alloy": 6.0,
+  "Fireworks": 4.3,
+  "Robot": 17.7
  }
 }/*__GAME_DATA_END__*/;
 
@@ -3791,6 +3800,11 @@ const HISTORY_MAX = 50;
 
 let state, screen = "map", current = null;
 let selectedMapStation = null; // ephemeral: which node's card is showing on the map
+// Shop items newly unlocked by the craft that just happened, held back from
+// the shop grid (see renderStation()'s shopEntries) until the resulting
+// card-inspection popup closes -- see the craft click handler and
+// flushPendingReveal().
+let pendingRevealNames = null, pendingRevealStation = null;
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[]};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
@@ -3857,6 +3871,7 @@ function freshState(){
     priorStation: null,  // where they were BEFORE lastStation -- the "no repeat" rule now
                           // blocks A->B->A oscillation on the path map, not same-station-twice
     rolledHere: false, // one PLAY per visit
+    pendingRoll: null, // dice count earned from the minigame, waiting on a manual Roll tap
     lastRoll: null,
     noRepeat: true,    // default on: blocks immediately backtracking to priorStation
     ended: false,      // session summary already shown for this run
@@ -4201,13 +4216,18 @@ function craftedIconsHTML(entries){
    still tracks the job's component closure, see itemHTML()). An item can
    be both, either, or neither. */
 function stationItemIconsHTML(stationName){
+  // Tracked job item + its full ingredient closure get the green ring here
+  // (see .station-item-icon.job-highlight and the .station-items comment
+  // above it) -- restored after being accidentally stripped alongside the
+  // same border's removal from the full in-station shop list.
+  const jobTree = selectedJobItem ? new Set([selectedJobItem, ...componentClosure(selectedJobItem)]) : null;
   const icons = entriesAt(stationName)
     .filter(e => e.tier !== "CAPSTONE" && isRevealed(e))
     .map(e => {
       markSeen(e.name);
       const cls = ["station-item-icon"];
       if (owns(e.name)) cls.push("owned");
-      if (!owns(e.name) && canCraft(e)) cls.push("job-highlight");
+      if ((jobTree && jobTree.has(e.name)) || (!owns(e.name) && canCraft(e))) cls.push("job-highlight");
       return `<span class="${cls.join(" ")}" title="${esc(e.name)}">${em(e.emoji)}</span>`;
     });
   // Hard-wraps onto a new row every 10 icons regardless of the card's own
@@ -4795,7 +4815,12 @@ function renderStation(name){
   const s = STATION_BY_NAME[name], su = DATA.suits[s.suit];
   const all = entriesAt(name);
   const allShop     = all.filter(e => e.tier !== "CAPSTONE");
-  const shopEntries = allShop.filter(isRevealed);
+  // Items newly unlocked by a craft that just happened stay hidden until
+  // the resulting card-inspection popup is dismissed (see craft's click
+  // handler / flushPendingReveal()) -- they shouldn't materialize in the
+  // shop grid underneath a popup the player hasn't closed yet.
+  const shopEntries = allShop.filter(isRevealed)
+    .filter(e => !(pendingRevealStation === name && pendingRevealNames && pendingRevealNames.includes(e.name)));
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
   const idx = e => ENTRIES.indexOf(e);
   shopEntries.forEach(e => markSeen(e.name));
@@ -4811,7 +4836,7 @@ function renderStation(name){
   // a static re-render (e.g. coming back to this station later) should
   // simply not include the playbar at all.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar">
-      <button class="playbtn" id="playBtn">▶ PLAY</button>
+      <button class="playbtn" id="playBtn">${state.pendingRoll ? `\u{1F3B2} Roll x ${state.pendingRoll}` : "▶ PLAY"}</button>
     </div>`;
 
   const bg = STATION_BG[s.name];
@@ -5151,7 +5176,9 @@ function showCardPop(entry, autoDismiss = true){
   const tier = craftTier(entry.name);
   if (tier) cpCard.classList.add("tier-" + tier);
   document.getElementById("cpName").textContent = entry.name;
-  document.getElementById("cpIcon").innerHTML = em(entry.emoji);
+  const cpIconEl = document.getElementById("cpIcon");
+  cpIconEl.innerHTML = em(entry.emoji);
+  cpIconEl.classList.toggle("pc-icon-xl", entry.name === "Gemstone Collection");
   document.getElementById("cpPts").textContent = entry.points;
   const tagEl = document.getElementById("cpTag");
   tagEl.textContent = entry.tier;
@@ -5169,11 +5196,29 @@ function showCardPop(entry, autoDismiss = true){
   ).join("");
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
-  if (autoDismiss) cardPopTimer = setTimeout(() => closeOverlay("cardPop"), 3800);
+  if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
+}
+/* Reveals any shop item(s) a craft unlocked but held back while its own
+   card-inspection popup was open (see the craft click handler) -- no-op
+   when nothing is pending, so safe to call from every cardPop dismissal
+   path regardless of why that popup was open. */
+function flushPendingReveal(){
+  if (!pendingRevealNames || !pendingRevealNames.length) return;
+  const justRevealed = pendingRevealNames;
+  pendingRevealNames = null; pendingRevealStation = null;
+  render();
+  requestAnimationFrame(() => {
+    justRevealed.forEach(nm => {
+      const idx = ENTRIES.findIndex(e => e.name === nm);
+      const el = document.querySelector(`[data-item-card="${idx}"]`);
+      if (el) el.classList.add("item-pop-in");
+    });
+  });
 }
 document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
+  flushPendingReveal();
 });
 
 /* --------------------------------------------- job turn-in feedback --- */
@@ -5275,7 +5320,7 @@ function applyInvFilter(){
 function goStation(name){
   if (sessionOver()){ showSummary(); return; }
   current = name; screen = "station";
-  state.visits++; state.rolledHere = false; state.lastRoll = null;
+  state.visits++; state.rolledHere = false; state.pendingRoll = null; state.lastRoll = null;
   state.visitedStations[name] = true;
   // A fresh 3-card board for THIS station, rolled once on arrival -- it
   // stays put (see takeJob()) for the whole stay and only rerolls the
@@ -5417,12 +5462,12 @@ function launchMinigame(){
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         window.removeEventListener("scroll", mgScrollGuard);
-        // Half-second beat on the bare station screen after the dice-pool
-        // reveal closes, before the roll itself starts -- doRoll() used to
-        // fire in the same instant the overlay disappeared, so the roll
-        // animation felt like it was already running underneath the
-        // results screen rather than a new thing starting.
-        setTimeout(() => doRoll(diceCount), 500);
+        // No more auto-roll: the dice earned sit on the PLAY button (now
+        // relabeled "Roll x N") until the player taps it themselves -- see
+        // the #playBtn click handler.
+        state.pendingRoll = diceCount;
+        save();
+        render();
       }, 1400);
     });
   }
@@ -5489,7 +5534,15 @@ function playRollAnimation(out){
   // CSS) so the box's footprint is identical before AND after the
   // die->symbol swap -- it must not shrink when the symbol appears.
   const gchipEl = document.querySelector(".gchip");
-  const dieSize = gchipEl ? gchipEl.getBoundingClientRect().width : 64;
+  const maxDieSize = gchipEl ? gchipEl.getBoundingClientRect().width : 64;
+  // Slightly smaller than the gather-row chip so the maximum roll (6 dice)
+  // always fits across the screen on one line instead of wrapping to a
+  // second row -- sized to the available width divided 6 ways, but never
+  // bigger than the old gchip-matched size on rolls smaller than that.
+  const rowGap = 10;
+  const availW = playBar.clientWidth || rolled.clientWidth || (maxDieSize * 6 + rowGap * 5);
+  const fitSize = (availW - rowGap * 5) / 6;
+  const dieSize = Math.max(28, Math.min(maxDieSize, fitSize));
   const symFontSize = Math.round(dieSize * 0.42);
 
   const STAGGER_MS = 90, TUMBLE_MS = 500, PAUSE_MS = 350;
@@ -5649,7 +5702,16 @@ document.getElementById("screen").addEventListener("click", ev => {
     return;
   }
 
-  if (ev.target.closest("#playBtn")){ launchMinigame(); return; }
+  if (ev.target.closest("#playBtn")){
+    if (state.pendingRoll){
+      const n = state.pendingRoll;
+      state.pendingRoll = null;
+      doRoll(n);
+    } else {
+      launchMinigame();
+    }
+    return;
+  }
 
   if (ev.target.closest("#collapseCraftedBtn")){
     state.collapseCraftedItems = !state.collapseCraftedItems;
@@ -5661,7 +5723,17 @@ document.getElementById("screen").addEventListener("click", ev => {
   const cBtn = ev.target.closest("[data-craft]");
   if (cBtn){
     const entry = ENTRIES[+cBtn.dataset.craft];
+    const beforeRevealed = new Set(
+      entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
+    );
     if (craft(entry)){
+      const newlyRevealed = entriesAt(current)
+        .filter(e => e.tier !== "CAPSTONE" && isRevealed(e) && !beforeRevealed.has(e.name) && e.name !== entry.name)
+        .map(e => e.name);
+      if (newlyRevealed.length){
+        pendingRevealNames = newlyRevealed;
+        pendingRevealStation = current;
+      }
       render();
       if (entry.tier === "CAPSTONE") celebrate(entry);
       else showCardPop(entry);
@@ -6535,6 +6607,9 @@ window.MINIGAME_ASSETS = {
   "quarry.webp": "backdrops/quarry.webp",
   "observatory.webp": "backdrops/observatory.webp",
   "deep-mine-rock.webp": "minigames/deep-mine-rock.webp",
+  "cake-middle-brown.webp": "minigames/cake-middle-brown.webp",
+  "cake-middle-pink.webp": "minigames/cake-middle-pink.webp",
+  "cake-middle-white.webp": "minigames/cake-middle-white.webp",
 };
 window.MINIGAMES = {};
 </script>
@@ -6598,6 +6673,10 @@ window.MINIGAMES = {};
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -6619,7 +6698,11 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-ocean-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-ocean-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-ocean-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-ocean-timebar{position:absolute; top:0; left:0; height:4px; background:#ff8a3d; z-index:3;
         transition:width .1s linear}
       .mg-bubble{
@@ -6663,7 +6746,9 @@ window.MINIGAMES = {};
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
     timebar.style.width = "100%";
@@ -6673,6 +6758,7 @@ window.MINIGAMES = {};
 
     const popCountEl = hud.querySelector("#mg-pop-count");
     const diceEl = hud.querySelector("#mg-dice");
+    const timerEl = hud.querySelector("#mg-ocean-timer");
     let popped = 0;
     let spawnTimer = null;
     let running = true;
@@ -6753,7 +6839,7 @@ window.MINIGAMES = {};
         anim.cancel();
         popped++;
         popCountEl.textContent = "\u{1F30A} " + popped;
-        diceEl.textContent = "🎲".repeat(diceFor(popped / TARGET_POPS));
+        diceEl.innerHTML = diceGridHTML(diceFor(popped / TARGET_POPS));
         b.classList.add("mg-pop");
         setTimeout(() => b.remove(), 250);
       };
@@ -6788,6 +6874,7 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -6847,7 +6934,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
   const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
@@ -6874,6 +6961,10 @@ window.MINIGAMES = {};
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -6898,7 +6989,11 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-power-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-power-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-power-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-power-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-power-handle{ cursor:grab; transition:filter .12s ease; }
@@ -6963,7 +7058,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-power-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -6979,9 +7075,12 @@ window.MINIGAMES = {};
 
     const solvedEl = hud.querySelector("#mg-power-solved");
     const diceEl = hud.querySelector("#mg-power-dice");
+    const timerEl = hud.querySelector("#mg-power-timer");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
-    const TOP_Y = 46, BOTTOM_Y = stageH - 46;
+    // Clears the full HUD row (dice/timer/score pills) -- was 46, which let
+    // the handles' top edge creep up under the HUD text.
+    const TOP_Y = 84, BOTTOM_Y = stageH - 46;
 
     let running = true;
     let solved = 0;
@@ -7133,7 +7232,7 @@ window.MINIGAMES = {};
       if (c === 0) {
         solved++;
         solvedEl.textContent = "\u{26A1} " + solved;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(solved / TARGET_SOLVES));
+        diceEl.innerHTML = diceGridHTML(diceFor(solved / TARGET_SOLVES));
         stage.classList.remove("mg-power-solved");
         void stage.offsetWidth;
         stage.classList.add("mg-power-solved");
@@ -7154,6 +7253,7 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -7214,10 +7314,11 @@ window.MINIGAMES = {};
   const TARGET_GOOD = 9;             // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
   // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
-  // able to comfortably cover it regardless of device width. Height keeps
-  // the same 2.5:1 proportion the old fixed 60x24 basket had.
-  const BASKET_W_FRAC = 0.25;        // basket width, as a fraction of stage width
-  const BASKET_ASPECT = 2.5;         // basket height = width * this
+  // able to comfortably cover it regardless of device width. 50% wider and
+  // much shorter than the old CSS-drawn basket -- matches the 🧺 emoji's
+  // own low, wide proportions instead of the tall narrow box it replaced.
+  const BASKET_W_FRAC = 0.375;       // basket width, as a fraction of stage width
+  const BASKET_ASPECT = 0.65;        // basket height = width * this
   const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
   // ~0.71 w:h is what actually reads as an egg rather than a small oval --
   // the shape comes from the border-radius in .mg-green-egg, but it needs
@@ -7259,6 +7360,10 @@ window.MINIGAMES = {};
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -7280,9 +7385,13 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size. */
-      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid, half the old single-line size. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 8px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-green-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-green-timebar{position:absolute; top:0; left:0; height:4px; background:#4c9a3f; z-index:3;
         transition:width .1s linear}
       /* The classic CSS egg: equal horizontal radii, but a much taller
@@ -7310,14 +7419,13 @@ window.MINIGAMES = {};
       }
       .mg-green-egg.mg-green-pop{ animation:mg-green-pop-anim .22s ease-out forwards; }
       @keyframes mg-green-pop-anim{ 0%{transform:scale(1); opacity:1} 100%{transform:scale(1.5); opacity:0} }
+      /* Real 🧺 emoji instead of a CSS-drawn box -- font-size (set per stage
+         size in JS) drives its rendered size, so the div's own width/height
+         here just define the (shorter) catch hit-box; overflow:visible lets
+         the glyph render at its own natural proportions above/around it. */
       .mg-green-basket{
-        position:absolute; z-index:3; border-radius:0 0 12px 12px; box-sizing:border-box;
-        background:linear-gradient(180deg,#b9834a,#8a5d31); box-shadow:0 3px 6px rgba(0,0,0,.25);
-        border:3px solid rgba(0,0,0,.6); border-top:none;
-      }
-      .mg-green-basket::before{
-        content:""; position:absolute; left:-4px; right:-4px; top:-6px; height:8px; border-radius:6px;
-        background:#a3703e; box-shadow:0 2px 3px rgba(0,0,0,.2); border:2px solid rgba(0,0,0,.6);
+        position:absolute; z-index:3; display:flex; align-items:center; justify-content:center;
+        overflow:visible; line-height:1; pointer-events:none;
       }
       .mg-green-stage.mg-green-bad-flash{ animation:mg-green-flash .3s ease; }
       @keyframes mg-green-flash{
@@ -7352,7 +7460,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-green-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-green-score">\u{1F331} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -7361,6 +7470,7 @@ window.MINIGAMES = {};
 
     const basket = document.createElement("div");
     basket.className = "mg-green-basket";
+    basket.textContent = "\u{1F9FA}";
 
     stage.appendChild(hud);
     stage.appendChild(timebar);
@@ -7369,6 +7479,7 @@ window.MINIGAMES = {};
 
     const scoreEl = hud.querySelector("#mg-green-score");
     const diceEl = hud.querySelector("#mg-green-dice");
+    const timerEl = hud.querySelector("#mg-green-timer");
     // Live, not captured once -- the stage can still be resizing when the
     // round starts (e.g. entering the CSS-only fullscreen overlay resizes
     // the stage element itself without firing a window "resize" event), so
@@ -7381,6 +7492,7 @@ window.MINIGAMES = {};
     let BASKET_H = BASKET_W * BASKET_ASPECT;
     basket.style.width = BASKET_W + "px";
     basket.style.height = BASKET_H + "px";
+    basket.style.fontSize = (BASKET_W * 0.9) + "px";
     let basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
     basket.style.top = basketTop + "px";
 
@@ -7425,7 +7537,7 @@ window.MINIGAMES = {};
 
     function updateScore() {
       scoreEl.textContent = "\u{1F331} " + Math.max(0, score);
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
+      diceEl.innerHTML = diceGridHTML(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 
     function flashBad() {
@@ -7465,6 +7577,7 @@ window.MINIGAMES = {};
         BASKET_H = BASKET_W * BASKET_ASPECT;
         basket.style.width = BASKET_W + "px";
         basket.style.height = BASKET_H + "px";
+        basket.style.fontSize = (BASKET_W * 0.9) + "px";
         basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
         basket.style.top = basketTop + "px";
         basketX = Math.max(0, Math.min(stageW - BASKET_W, basketX));
@@ -7494,6 +7607,7 @@ window.MINIGAMES = {};
 
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -7558,8 +7672,8 @@ window.MINIGAMES = {};
   const SHATTER_MS = 560;           // full frames 7-24 explosion before the next rock
   const RESULT_HOLD_MS = 1300;
   const GEMS_PER_ROCK = 5;          // diamonds that burst out of each broken rock
-  const GEM_BURST_MS = 260;         // outward scatter before they home to the tray
-  const GEM_FLY_MS = 460;           // scatter point -> corner tray
+  const GEM_BURST_MS = 260;         // outward scatter before they home to the HUD counter
+  const GEM_FLY_MS = 460;           // scatter point -> HUD diamond counter
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
   const BACKDROP = "deep-mine";     // backdrops/<BACKDROP>.webp
@@ -7588,6 +7702,10 @@ window.MINIGAMES = {};
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -7609,16 +7727,20 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size (em is relative to the
-         parent's own font-size). */
-      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid, half the old single-line size. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 8px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-mine-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-mine-timebar{position:absolute; top:0; left:0; height:4px; background:#e0a23d; z-index:3;
         transition:width .1s linear}
       /* Finer-grained than the 6 sprite frames can show -- with up to 12
-         taps per rock the bar is what tells you a tap actually landed. */
+         taps per rock the bar is what tells you a tap actually landed.
+         Anchored to the bottom of the screen, clear of the HUD. */
       .mg-mine-crackbar-wrap{
-        position:absolute; left:16px; right:16px; top:42px; z-index:3; height:8px; border-radius:5px;
+        position:absolute; left:16px; right:16px; bottom:16px; z-index:3; height:8px; border-radius:5px;
         background:rgba(255,255,255,.12); overflow:hidden;
       }
       .mg-mine-crackbar{ height:100%; width:0%; background:linear-gradient(90deg,#e0a23d,#f4c860);
@@ -7634,14 +7756,10 @@ window.MINIGAMES = {};
         background-size:${FRAMES * 100}% 100%;
         background-position-x:0%;
       }
-      /* Diamond tray: where the gems from every broken rock pile up. */
-      .mg-mine-tray{
-        position:absolute; right:12px; bottom:12px; z-index:4; display:flex; align-items:center; gap:6px;
-        padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.14);
-        backdrop-filter:blur(2px); color:#eaf6ff; font-weight:800; font-size:15px; pointer-events:none;
-        text-shadow:0 1px 2px rgba(0,0,0,.5);
-      }
-      .mg-mine-tray.mg-mine-tray-pop{ animation:mg-mine-tray-anim .28s ease; }
+      /* Diamond count lives only in the HUD's own score pill now (see
+         countEl) -- gems fly there instead of to a separate bottom-right
+         tray. */
+      .mg-mine-hud .mg-score-pill.mg-mine-count-pop{ animation:mg-mine-tray-anim .28s ease; }
       @keyframes mg-mine-tray-anim{ 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
       .mg-mine-gem{
         position:absolute; z-index:5; font-size:20px; line-height:1; pointer-events:none;
@@ -7675,7 +7793,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -7692,20 +7811,15 @@ window.MINIGAMES = {};
     rockWrap.className = "mg-mine-rockwrap";
     rockWrap.style.setProperty("--mg-sprite", `url('${spriteURL()}')`);
 
-    const tray = document.createElement("div");
-    tray.className = "mg-mine-tray";
-    tray.innerHTML = `\u{1F48E} <span id="mg-mine-gems">0</span>`;
-
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(crackbarWrap);
     stage.appendChild(rockWrap);
-    stage.appendChild(tray);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-mine-count");
     const diceEl = hud.querySelector("#mg-mine-dice");
-    const gemsEl = tray.querySelector("#mg-mine-gems");
+    const timerEl = hud.querySelector("#mg-mine-timer");
 
     let running = true;
     let broken = 0;
@@ -7738,9 +7852,9 @@ window.MINIGAMES = {};
       const rockRect = rockWrap.getBoundingClientRect();
       const ox = rockRect.left - stageRect.left + rockRect.width / 2;
       const oy = rockRect.top - stageRect.top + rockRect.height / 2;
-      const trayRect = tray.getBoundingClientRect();
-      const tx = trayRect.left - stageRect.left + trayRect.width / 2;
-      const ty = trayRect.top - stageRect.top + trayRect.height / 2;
+      const countRect = countEl.getBoundingClientRect();
+      const tx = countRect.left - stageRect.left + countRect.width / 2;
+      const ty = countRect.top - stageRect.top + countRect.height / 2;
 
       for (let i = 0; i < GEMS_PER_ROCK; i++) {
         const gem = document.createElement("div");
@@ -7766,10 +7880,10 @@ window.MINIGAMES = {};
           gem.remove();
           if (!running) return;
           gems++;
-          gemsEl.textContent = gems;
-          tray.classList.remove("mg-mine-tray-pop");
-          void tray.offsetWidth;
-          tray.classList.add("mg-mine-tray-pop");
+          countEl.textContent = "\u{1F48E} " + gems;
+          countEl.classList.remove("mg-mine-count-pop");
+          void countEl.offsetWidth;
+          countEl.classList.add("mg-mine-count-pop");
         };
       }
     }
@@ -7804,8 +7918,7 @@ window.MINIGAMES = {};
       if (progress >= hitsNeeded) {
         shattering = true;
         broken++;
-        countEl.textContent = "\u{1F48E} " + broken;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
+        diceEl.innerHTML = diceGridHTML(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();
         playShatter();
@@ -7830,6 +7943,7 @@ window.MINIGAMES = {};
       const elapsed = now - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -7911,6 +8025,10 @@ window.MINIGAMES = {};
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   const STEPS = [
     { key: "dig", icon: "\u{1FA8F}", label: "Dig the hole" },
@@ -7938,7 +8056,11 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-forest-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-forest-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-forest-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-forest-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-forest-steps{
@@ -7955,6 +8077,13 @@ window.MINIGAMES = {};
       .mg-forest-gauge-wrap{
         position:absolute; left:50%; top:60%; transform:translate(-50%,-50%);
         width:96%; height:170px;
+      }
+      /* Rotating "Dig a hole / Plant the tree / Water it" instruction,
+         between the big step image and the target gauge below it. */
+      .mg-forest-steplabel{
+        position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); z-index:2;
+        font-size:16px; font-weight:800; color:#eafff0; text-shadow:0 1px 3px rgba(0,0,0,.5);
+        text-align:center; white-space:nowrap; pointer-events:none;
       }
       /* Large step image -- swaps instantly on each successful hit (see
          onTap()), planted above the gauge so the shovel/tree/water
@@ -8018,8 +8147,8 @@ window.MINIGAMES = {};
     return `M ${p1.x.toFixed(2)},${p1.y.toFixed(2)} A ${radius},${radius} 0 0,1 ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
   }
 
-  function gaugeSVG(greenHalfDeg) {
-    const gStart = 90 - greenHalfDeg, gEnd = 90 + greenHalfDeg;
+  function gaugeSVG(greenHalfDeg, greenCenter) {
+    const gStart = greenCenter - greenHalfDeg, gEnd = greenCenter + greenHalfDeg;
     return `
       <svg viewBox="0 0 220 132" width="100%" height="100%" preserveAspectRatio="none" style="overflow:visible">
         <path d="${arcPath(0, gStart, R)}" stroke="#e6564f" stroke-width="${TRACK_W}" fill="none" stroke-linecap="round"/>
@@ -8045,7 +8174,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -8065,6 +8195,10 @@ window.MINIGAMES = {};
     bigIcon.className = "mg-forest-bigicon";
     bigIcon.textContent = STEPS[0].icon;
 
+    const stepLabel = document.createElement("div");
+    stepLabel.className = "mg-forest-steplabel";
+    stepLabel.textContent = STEPS[0].label;
+
     const toast = document.createElement("div");
     toast.className = "mg-forest-toast";
 
@@ -8072,12 +8206,14 @@ window.MINIGAMES = {};
     stage.appendChild(timebar);
     stage.appendChild(stepsRow);
     stage.appendChild(bigIcon);
+    stage.appendChild(stepLabel);
     stage.appendChild(gaugeWrap);
     stage.appendChild(toast);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
     const diceEl = hud.querySelector("#mg-forest-dice");
+    const timerEl = hud.querySelector("#mg-forest-timer");
     const dotEls = () => Array.from(stepsRow.querySelectorAll(".mg-forest-step-dot"));
 
     let treesPlanted = 0;
@@ -8085,12 +8221,13 @@ window.MINIGAMES = {};
     let running = true;
     let sweepMs = SWEEP_MS_START;
     let greenHalfDeg = GREEN_HALF_DEG_START;
+    let greenCenter = 90; // target zone starts centered; re-rolled every tree planted (see onTap)
     let stepStart = Date.now();
     let sweepFromRight = Math.random() < 0.5;
     let needleEl = null, tipEl = null;
 
     function drawGauge() {
-      gaugeWrap.innerHTML = gaugeSVG(greenHalfDeg);
+      gaugeWrap.innerHTML = gaugeSVG(greenHalfDeg, greenCenter);
       needleEl = gaugeWrap.querySelector("#mg-forest-needle");
       tipEl = gaugeWrap.querySelector("#mg-forest-tip");
     }
@@ -8130,7 +8267,7 @@ window.MINIGAMES = {};
     function onTap() {
       if (!running) return;
       const angle = currentAngle();
-      const hitGreen = angle >= 90 - greenHalfDeg && angle <= 90 + greenHalfDeg;
+      const hitGreen = angle >= greenCenter - greenHalfDeg && angle <= greenCenter + greenHalfDeg;
       flash(hitGreen);
       if (!hitGreen) return;
 
@@ -8138,14 +8275,18 @@ window.MINIGAMES = {};
       if (stepIndex >= STEPS.length) {
         treesPlanted++;
         countEl.textContent = "\u{1F332} " + treesPlanted;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(treesPlanted / TARGET_TREES));
+        diceEl.innerHTML = diceGridHTML(diceFor(treesPlanted / TARGET_TREES));
         showToast("\u{1F333} Tree planted!");
         stepIndex = 0;
         sweepMs = Math.max(SWEEP_MS_MIN, SWEEP_MS_START - treesPlanted * SWEEP_MS_STEP);
         greenHalfDeg = Math.max(GREEN_HALF_DEG_MIN, GREEN_HALF_DEG_START - treesPlanted * GREEN_HALF_DEG_STEP);
+        // New target position along the arc every tree planted (every 3
+        // successful taps), kept fully inside 0-180 with a small margin.
+        greenCenter = rand(greenHalfDeg + 8, 180 - greenHalfDeg - 8);
         drawGauge();
       }
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
+      stepLabel.textContent = STEPS[stepIndex].label;
       refreshDots();
       stepStart = Date.now();
       sweepFromRight = Math.random() < 0.5;
@@ -8164,6 +8305,7 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -8218,7 +8360,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
   const TARGET_CAKES = 3;         // matching this many orders => score 1.0
   const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
@@ -8236,10 +8378,14 @@ window.MINIGAMES = {};
     { key: "vanilla", label: "Vanilla", color: "#e8b94f" },
     { key: "straw", label: "Strawberry", color: "#d43d5c" },
   ];
+  // Icing is shown as one of the 3 real "cake middle" photos dropped into
+  // game/minigames/ (see build_minigames.py's ASSETS map) instead of a CSS
+  // swatch -- both on the option buttons and on the cake itself, so the
+  // picture the player matches genuinely looks like the thing they tap.
   const FROSTINGS = [
-    { key: "white", label: "White", color: "#fdfaf3" },
-    { key: "choc", label: "Chocolate", color: "#2e1a0d" },
-    { key: "pink", label: "Pink", color: "#ff4fa0" },
+    { key: "white", label: "White", img: "cake-middle-white.webp" },
+    { key: "choc", label: "Chocolate", img: "cake-middle-brown.webp" },
+    { key: "pink", label: "Pink", img: "cake-middle-pink.webp" },
   ];
   const FRUITS = [
     { key: "cherry", emoji: "\u{1F352}" },
@@ -8256,10 +8402,20 @@ window.MINIGAMES = {};
     return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[f]) ||
            ((global.MINIGAME_BACKDROP_BASE || "../backdrops/") + f);
   }
+  /* Same overridable-base trick as backdropURL(), for the cake-middle
+     sprite photos (see deep-mine.js's spriteURL() for the same pattern). */
+  function spriteURL(name) {
+    return (global.MINIGAME_ASSETS && global.MINIGAME_ASSETS[name]) ||
+           ((global.MINIGAME_ASSET_BASE || "./") + name);
+  }
   /* Dice this run has earned so far -- shown live in the HUD so effort in
      the mini-game visibly feeds the roll it pays out into. */
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
   }
 
   let styleInjected = false;
@@ -8281,11 +8437,15 @@ window.MINIGAMES = {};
       .mg-bakery-hud .mg-pill{
         background:rgba(255,255,255,.13); border-radius:999px; padding:5px 16px; white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size (em is relative to the
-         parent's own font-size, so this scales correctly whatever that
-         happens to be per game). */
-      .mg-dice-pill{ font-size:3em; padding:2px 10px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid (wraps automatically once a 4th die is earned), not a single
+         line -- half the old single-line size so 6 dice stay compact in
+         the corner. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-bakery-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-bakery-timebar{ height:6px; background:#e0a23d; margin:9px 0 0; transition:width .1s linear; width:100%; }
       /* Orders are compact cards showing the FINISHED cake, not a row of
          swatches -- the player is matching a picture, so the brief should
@@ -8328,28 +8488,19 @@ window.MINIGAMES = {};
         position:relative; z-index:1;
       }
       .mg-bakery-cake{ position:relative; width:100px; height:88px; }
-      /* Base and icing layers, on the plate AND in the order-card preview,
-         now use the exact same swirl-cone silhouette as the option buttons
-         below (see .mg-bakery-opt[data-category] further down) -- four
-         tapering radial blobs filled with the layer's own color via
-         --swatch, set inline per layer instead of a flat background-color.
-         The picture the player is matching now genuinely looks like the
-         buttons they're tapping, not a plain striped rectangle standing
-         in for it. */
-      .mg-bakery-layer-base, .mg-bakery-layer-frosting{
-        background-image:
-          radial-gradient(circle at 50% 10%, var(--swatch) 0 18%, transparent 19%),
-          radial-gradient(circle at 42% 30%, var(--swatch) 0 26%, transparent 27%),
-          radial-gradient(circle at 58% 52%, var(--swatch) 0 34%, transparent 35%),
-          radial-gradient(circle at 50% 80%, var(--swatch) 0 46%, transparent 47%);
-      }
+      /* Base layer: a plain coloured rectangle (matches the base option
+         buttons below -- see .mg-bakery-opt[data-category="base"]), not a
+         swirl silhouette. */
       .mg-bakery-layer-base{
         position:absolute; left:0; right:0; bottom:0; height:50px; border-radius:16px 16px 8px 8px;
-        box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
+        background:var(--swatch); box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
       }
+      /* Icing layer: the real cake-middle photo (img element when a flavor
+         is selected -- see cakeInnerHTML()), same box the swirl div used
+         to occupy. */
       .mg-bakery-layer-frosting{
         position:absolute; left:3px; right:3px; bottom:41px; height:25px; border-radius:16px 16px 6px 6px;
-        box-shadow:inset 0 0 0 2px rgba(0,0,0,.12);
+        display:block; object-fit:cover;
       }
       .mg-bakery-layer-fruit{
         position:absolute; left:50%; bottom:59px; transform:translateX(-50%); font-size:31px;
@@ -8376,21 +8527,21 @@ window.MINIGAMES = {};
         position:relative; overflow:hidden; background:rgba(255,255,255,.06);
       }
       .mg-bakery-opt.mg-bakery-selected{ border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.35) inset; }
-      /* Base and icing swatches: the silhouette of a soft-serve swirl (the
-         same reference shape as \u{1F4A9}, just the swirl-cone body -- no
-         face) built from four tapering stacked blobs, filled in the
-         topping's own color. Same shape language for both rows now,
-         instead of a cylinder for base and a wider dollop-cluster for
-         icing, so "this is a topping" reads consistently either way. Same
-         gradient stack as .mg-bakery-layer-base/-frosting above, just
-         layered over the button's own translucent rest-state fill. */
-      .mg-bakery-opt[data-category="base"], .mg-bakery-opt[data-category="frosting"]{
-        background:
-          radial-gradient(circle at 50% 12%, var(--swatch) 0 15%, transparent 16%),
-          radial-gradient(circle at 45% 30%, var(--swatch) 0 23%, transparent 24%),
-          radial-gradient(circle at 55% 50%, var(--swatch) 0 31%, transparent 32%),
-          radial-gradient(circle at 50% 76%, var(--swatch) 0 42%, transparent 43%),
-          rgba(255,255,255,.06);
+      /* Base: a plain coloured rectangle, matching the shape of the cake
+         base it builds (see .mg-bakery-layer-base). */
+      .mg-bakery-opt[data-category="base"]{ background:var(--swatch); border-radius:16px 16px 8px 8px; }
+      /* Icing: no button chrome at all -- just the cake-middle photo
+         (see FROSTINGS/spriteURL()), object-fit:contain so its own drawn
+         outline reads as the button's whole silhouette. */
+      .mg-bakery-opt[data-category="frosting"]{ border:none; background:transparent; padding:2px; }
+      .mg-bakery-opt[data-category="frosting"] img{ width:100%; height:100%; object-fit:contain; }
+      .mg-bakery-opt[data-category="frosting"].mg-bakery-selected{
+        box-shadow:0 0 0 3px #fff; border-radius:14px;
+      }
+      /* Fruit: large emoji, no button border. */
+      .mg-bakery-opt[data-category="fruit"]{ border:none; background:transparent; }
+      .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
+        box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
       .mg-bakery-sendwrap{ padding:0 20px 14px; }
       .mg-bakery-send{
@@ -8418,10 +8569,13 @@ window.MINIGAMES = {};
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
-  function cakeInnerHTML(baseColor, frostingColor, fruitEmoji) {
+  function cakeInnerHTML(baseColor, frostingImg, fruitEmoji) {
+    const frostingHTML = frostingImg
+      ? `<img class="mg-bakery-layer-frosting" src="${spriteURL(frostingImg)}" alt="">`
+      : `<div class="mg-bakery-layer-frosting"></div>`;
     return `
       <div class="mg-bakery-layer-base" style="--swatch:${baseColor}"></div>
-      <div class="mg-bakery-layer-frosting" style="--swatch:${frostingColor}"></div>
+      ${frostingHTML}
       <div class="mg-bakery-layer-fruit">${fruitEmoji}</div>`;
   }
 
@@ -8435,7 +8589,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -8471,8 +8626,16 @@ window.MINIGAMES = {};
         btn.className = "mg-bakery-opt";
         btn.dataset.category = category;
         btn.dataset.key = item.key;
-        if (item.color) { btn.style.setProperty("--swatch", item.color); }
-        else { btn.textContent = item.emoji; btn.style.background = "rgba(255,255,255,.06)"; }
+        if (item.color) {
+          btn.style.setProperty("--swatch", item.color);
+        } else if (item.img) {
+          const img = document.createElement("img");
+          img.src = spriteURL(item.img);
+          img.alt = item.label || "";
+          btn.appendChild(img);
+        } else {
+          btn.textContent = item.emoji;
+        }
         row.appendChild(btn);
       });
       return row;
@@ -8501,6 +8664,7 @@ window.MINIGAMES = {};
 
     const countEl = hud.querySelector("#mg-bakery-count");
     const diceEl = hud.querySelector("#mg-bakery-dice");
+    const timerEl = hud.querySelector("#mg-bakery-timer");
 
     let running = true;
     let matched = 0;
@@ -8521,7 +8685,7 @@ window.MINIGAMES = {};
       orderRow.innerHTML = queue.map((o, i) => `
         <div class="mg-bakery-ordercard ${i === 0 ? "mg-bakery-live" : ""}">
           ${i === 0 ? '<span class="mg-bakery-ordertag">Now</span>' : ""}
-          <div class="mg-bakery-cake">${cakeInnerHTML(o.base.color, o.frosting.color, o.fruit.emoji)}</div>
+          <div class="mg-bakery-cake">${cakeInnerHTML(o.base.color, o.frosting.img, o.fruit.emoji)}</div>
         </div>`).join("");
     }
 
@@ -8542,7 +8706,7 @@ window.MINIGAMES = {};
       const b = selected.base, f = selected.frosting, u = selected.fruit;
       cake.innerHTML = cakeInnerHTML(
         b ? b.color : "transparent",
-        f ? f.color : "transparent",
+        f ? f.img : "",
         u ? u.emoji : ""
       );
       sendBtn.disabled = !(b && f && u);
@@ -8584,7 +8748,7 @@ window.MINIGAMES = {};
       if (isMatch) {
         matched++;
         countEl.textContent = "\u{1F35E} " + matched;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(matched / TARGET_CAKES));
+        diceEl.innerHTML = diceGridHTML(diceFor(matched / TARGET_CAKES));
       }
       resetPlate();
       advanceOrder();
@@ -8599,6 +8763,7 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -8686,6 +8851,10 @@ window.MINIGAMES = {};
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -8707,7 +8876,11 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-city-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-city-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
         transition:width .1s linear}
       .mg-city-track{ position:absolute; left:0; right:0; top:0; height:100%; will-change:transform; }
@@ -8749,7 +8922,9 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-city-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -8765,6 +8940,7 @@ window.MINIGAMES = {};
 
     const countEl = hud.querySelector("#mg-city-count");
     const diceEl = hud.querySelector("#mg-city-dice");
+    const timerEl = hud.querySelector("#mg-city-timer");
     const stageW = stage.clientWidth || 320;
 
     let running = true;
@@ -8858,7 +9034,7 @@ window.MINIGAMES = {};
 
       stonesPlaced++;
       countEl.textContent = "\u{1F3D7}\u{FE0F} " + stonesPlaced;
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
+      diceEl.innerHTML = diceGridHTML(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
       prevRight = overlapLeft + curWidth;
@@ -8879,6 +9055,7 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       if (running) rafId = requestAnimationFrame(tick);
     }
@@ -8936,8 +9113,8 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;         // absolute round cap (standardized across all 8 games)
-  const TARGET_SURVIVE_MS = 15000;   // surviving this long => score 1.0 (== DURATION_MS: a full
+  const DURATION_MS = 30000;         // absolute round cap (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const TARGET_SURVIVE_MS = 30000;   // surviving this long => score 1.0 (== DURATION_MS: a full
                                       // clean run should actually be able to hit max score)
   const THRUST_ACCEL = 800;          // px/s^2 sideways while a side is held
   const DRIFT_DECEL = 300;           // px/s^2 bleeding speed off when released
@@ -8974,6 +9151,10 @@ window.MINIGAMES = {};
      the mini-game visibly feeds the roll it pays out into. */
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
+  }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
   }
 
   let styleInjected = false;
@@ -9029,7 +9210,11 @@ window.MINIGAMES = {};
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-obs-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-obs-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-obs-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-obs-timebar{position:absolute; top:0; left:0; height:4px; background:#7ea8ff; z-index:4;
         transition:width .1s linear}
       /* Faint tap zones so it's discoverable that the halves steer. */
@@ -9091,7 +9276,8 @@ window.MINIGAMES = {};
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
@@ -9118,6 +9304,7 @@ window.MINIGAMES = {};
 
     const timeEl = hud.querySelector("#mg-obs-time");
     const diceEl = hud.querySelector("#mg-obs-dice");
+    const timerEl = hud.querySelector("#mg-obs-timer");
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
 
@@ -9247,7 +9434,8 @@ window.MINIGAMES = {};
       }
 
       timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(elapsed / TARGET_SURVIVE_MS));
+      diceEl.innerHTML = diceGridHTML(diceFor(elapsed / TARGET_SURVIVE_MS));
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }
       rafId = requestAnimationFrame(tick);

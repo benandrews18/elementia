@@ -47,6 +47,10 @@
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   const STEPS = [
     { key: "dig", icon: "\u{1FA8F}", label: "Dig the hole" },
@@ -74,7 +78,11 @@
         background:rgba(255,255,255,.14); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-forest-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-forest-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-forest-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-forest-timebar{position:absolute; top:0; left:0; height:4px; background:#ffb648; z-index:3;
         transition:width .1s linear}
       .mg-forest-steps{
@@ -91,6 +99,13 @@
       .mg-forest-gauge-wrap{
         position:absolute; left:50%; top:60%; transform:translate(-50%,-50%);
         width:96%; height:170px;
+      }
+      /* Rotating "Dig a hole / Plant the tree / Water it" instruction,
+         between the big step image and the target gauge below it. */
+      .mg-forest-steplabel{
+        position:absolute; left:50%; top:45%; transform:translate(-50%,-50%); z-index:2;
+        font-size:16px; font-weight:800; color:#eafff0; text-shadow:0 1px 3px rgba(0,0,0,.5);
+        text-align:center; white-space:nowrap; pointer-events:none;
       }
       /* Large step image -- swaps instantly on each successful hit (see
          onTap()), planted above the gauge so the shovel/tree/water
@@ -154,8 +169,8 @@
     return `M ${p1.x.toFixed(2)},${p1.y.toFixed(2)} A ${radius},${radius} 0 0,1 ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
   }
 
-  function gaugeSVG(greenHalfDeg) {
-    const gStart = 90 - greenHalfDeg, gEnd = 90 + greenHalfDeg;
+  function gaugeSVG(greenHalfDeg, greenCenter) {
+    const gStart = greenCenter - greenHalfDeg, gEnd = greenCenter + greenHalfDeg;
     return `
       <svg viewBox="0 0 220 132" width="100%" height="100%" preserveAspectRatio="none" style="overflow:visible">
         <path d="${arcPath(0, gStart, R)}" stroke="#e6564f" stroke-width="${TRACK_W}" fill="none" stroke-linecap="round"/>
@@ -181,7 +196,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -201,6 +217,10 @@
     bigIcon.className = "mg-forest-bigicon";
     bigIcon.textContent = STEPS[0].icon;
 
+    const stepLabel = document.createElement("div");
+    stepLabel.className = "mg-forest-steplabel";
+    stepLabel.textContent = STEPS[0].label;
+
     const toast = document.createElement("div");
     toast.className = "mg-forest-toast";
 
@@ -208,12 +228,14 @@
     stage.appendChild(timebar);
     stage.appendChild(stepsRow);
     stage.appendChild(bigIcon);
+    stage.appendChild(stepLabel);
     stage.appendChild(gaugeWrap);
     stage.appendChild(toast);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
     const diceEl = hud.querySelector("#mg-forest-dice");
+    const timerEl = hud.querySelector("#mg-forest-timer");
     const dotEls = () => Array.from(stepsRow.querySelectorAll(".mg-forest-step-dot"));
 
     let treesPlanted = 0;
@@ -221,12 +243,13 @@
     let running = true;
     let sweepMs = SWEEP_MS_START;
     let greenHalfDeg = GREEN_HALF_DEG_START;
+    let greenCenter = 90; // target zone starts centered; re-rolled every tree planted (see onTap)
     let stepStart = Date.now();
     let sweepFromRight = Math.random() < 0.5;
     let needleEl = null, tipEl = null;
 
     function drawGauge() {
-      gaugeWrap.innerHTML = gaugeSVG(greenHalfDeg);
+      gaugeWrap.innerHTML = gaugeSVG(greenHalfDeg, greenCenter);
       needleEl = gaugeWrap.querySelector("#mg-forest-needle");
       tipEl = gaugeWrap.querySelector("#mg-forest-tip");
     }
@@ -266,7 +289,7 @@
     function onTap() {
       if (!running) return;
       const angle = currentAngle();
-      const hitGreen = angle >= 90 - greenHalfDeg && angle <= 90 + greenHalfDeg;
+      const hitGreen = angle >= greenCenter - greenHalfDeg && angle <= greenCenter + greenHalfDeg;
       flash(hitGreen);
       if (!hitGreen) return;
 
@@ -274,14 +297,18 @@
       if (stepIndex >= STEPS.length) {
         treesPlanted++;
         countEl.textContent = "\u{1F332} " + treesPlanted;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(treesPlanted / TARGET_TREES));
+        diceEl.innerHTML = diceGridHTML(diceFor(treesPlanted / TARGET_TREES));
         showToast("\u{1F333} Tree planted!");
         stepIndex = 0;
         sweepMs = Math.max(SWEEP_MS_MIN, SWEEP_MS_START - treesPlanted * SWEEP_MS_STEP);
         greenHalfDeg = Math.max(GREEN_HALF_DEG_MIN, GREEN_HALF_DEG_START - treesPlanted * GREEN_HALF_DEG_STEP);
+        // New target position along the arc every tree planted (every 3
+        // successful taps), kept fully inside 0-180 with a small margin.
+        greenCenter = rand(greenHalfDeg + 8, 180 - greenHalfDeg - 8);
         drawGauge();
       }
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
+      stepLabel.textContent = STEPS[stepIndex].label;
       refreshDots();
       stepStart = Date.now();
       sweepFromRight = Math.random() < 0.5;
@@ -300,6 +327,7 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

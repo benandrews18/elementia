@@ -27,10 +27,11 @@
   const TARGET_GOOD = 9;             // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
   // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
-  // able to comfortably cover it regardless of device width. Height keeps
-  // the same 2.5:1 proportion the old fixed 60x24 basket had.
-  const BASKET_W_FRAC = 0.25;        // basket width, as a fraction of stage width
-  const BASKET_ASPECT = 2.5;         // basket height = width * this
+  // able to comfortably cover it regardless of device width. 50% wider and
+  // much shorter than the old CSS-drawn basket -- matches the 🧺 emoji's
+  // own low, wide proportions instead of the tall narrow box it replaced.
+  const BASKET_W_FRAC = 0.375;       // basket width, as a fraction of stage width
+  const BASKET_ASPECT = 0.65;        // basket height = width * this
   const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
   // ~0.71 w:h is what actually reads as an egg rather than a small oval --
   // the shape comes from the border-radius in .mg-green-egg, but it needs
@@ -72,6 +73,10 @@
   function diceFor(s) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, s)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -93,9 +98,13 @@
         background:rgba(255,255,255,.55); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size. */
-      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid, half the old single-line size. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 8px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-green-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-green-timebar{position:absolute; top:0; left:0; height:4px; background:#4c9a3f; z-index:3;
         transition:width .1s linear}
       /* The classic CSS egg: equal horizontal radii, but a much taller
@@ -123,14 +132,13 @@
       }
       .mg-green-egg.mg-green-pop{ animation:mg-green-pop-anim .22s ease-out forwards; }
       @keyframes mg-green-pop-anim{ 0%{transform:scale(1); opacity:1} 100%{transform:scale(1.5); opacity:0} }
+      /* Real 🧺 emoji instead of a CSS-drawn box -- font-size (set per stage
+         size in JS) drives its rendered size, so the div's own width/height
+         here just define the (shorter) catch hit-box; overflow:visible lets
+         the glyph render at its own natural proportions above/around it. */
       .mg-green-basket{
-        position:absolute; z-index:3; border-radius:0 0 12px 12px; box-sizing:border-box;
-        background:linear-gradient(180deg,#b9834a,#8a5d31); box-shadow:0 3px 6px rgba(0,0,0,.25);
-        border:3px solid rgba(0,0,0,.6); border-top:none;
-      }
-      .mg-green-basket::before{
-        content:""; position:absolute; left:-4px; right:-4px; top:-6px; height:8px; border-radius:6px;
-        background:#a3703e; box-shadow:0 2px 3px rgba(0,0,0,.2); border:2px solid rgba(0,0,0,.6);
+        position:absolute; z-index:3; display:flex; align-items:center; justify-content:center;
+        overflow:visible; line-height:1; pointer-events:none;
       }
       .mg-green-stage.mg-green-bad-flash{ animation:mg-green-flash .3s ease; }
       @keyframes mg-green-flash{
@@ -165,7 +173,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-green-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-green-score">\u{1F331} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -174,6 +183,7 @@
 
     const basket = document.createElement("div");
     basket.className = "mg-green-basket";
+    basket.textContent = "\u{1F9FA}";
 
     stage.appendChild(hud);
     stage.appendChild(timebar);
@@ -182,6 +192,7 @@
 
     const scoreEl = hud.querySelector("#mg-green-score");
     const diceEl = hud.querySelector("#mg-green-dice");
+    const timerEl = hud.querySelector("#mg-green-timer");
     // Live, not captured once -- the stage can still be resizing when the
     // round starts (e.g. entering the CSS-only fullscreen overlay resizes
     // the stage element itself without firing a window "resize" event), so
@@ -194,6 +205,7 @@
     let BASKET_H = BASKET_W * BASKET_ASPECT;
     basket.style.width = BASKET_W + "px";
     basket.style.height = BASKET_H + "px";
+    basket.style.fontSize = (BASKET_W * 0.9) + "px";
     let basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
     basket.style.top = basketTop + "px";
 
@@ -238,7 +250,7 @@
 
     function updateScore() {
       scoreEl.textContent = "\u{1F331} " + Math.max(0, score);
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(Math.max(0, score) / TARGET_GOOD));
+      diceEl.innerHTML = diceGridHTML(diceFor(Math.max(0, score) / TARGET_GOOD));
     }
 
     function flashBad() {
@@ -278,6 +290,7 @@
         BASKET_H = BASKET_W * BASKET_ASPECT;
         basket.style.width = BASKET_W + "px";
         basket.style.height = BASKET_H + "px";
+        basket.style.fontSize = (BASKET_W * 0.9) + "px";
         basketTop = stageH - BASKET_H - BASKET_BOTTOM_GAP;
         basket.style.top = basketTop + "px";
         basketX = Math.max(0, Math.min(stageW - BASKET_W, basketX));
@@ -307,6 +320,7 @@
 
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

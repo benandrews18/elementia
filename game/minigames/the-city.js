@@ -56,6 +56,10 @@
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -77,7 +81,11 @@
         background:rgba(255,255,255,.5); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      .mg-city-hud .mg-dice-pill{ font-size:3em; padding:1px 10px; line-height:1; }
+      .mg-city-hud .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 10px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-city-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-city-timebar{position:absolute; top:0; left:0; height:4px; background:#e08a3d; z-index:3;
         transition:width .1s linear}
       .mg-city-track{ position:absolute; left:0; right:0; top:0; height:100%; will-change:transform; }
@@ -119,7 +127,9 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span><span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-city-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
 
     const timebar = document.createElement("div");
     timebar.className = "mg-city-timebar";
@@ -135,6 +145,7 @@
 
     const countEl = hud.querySelector("#mg-city-count");
     const diceEl = hud.querySelector("#mg-city-dice");
+    const timerEl = hud.querySelector("#mg-city-timer");
     const stageW = stage.clientWidth || 320;
 
     let running = true;
@@ -228,7 +239,7 @@
 
       stonesPlaced++;
       countEl.textContent = "\u{1F3D7}\u{FE0F} " + stonesPlaced;
-      diceEl.textContent = "\u{1F3B2}".repeat(diceFor(stonesPlaced / TARGET_STONES));
+      diceEl.innerHTML = diceGridHTML(diceFor(stonesPlaced / TARGET_STONES));
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
       prevRight = overlapLeft + curWidth;
@@ -249,6 +260,7 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       if (running) rafId = requestAnimationFrame(tick);
     }

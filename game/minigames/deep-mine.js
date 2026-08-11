@@ -30,8 +30,8 @@
   const SHATTER_MS = 560;           // full frames 7-24 explosion before the next rock
   const RESULT_HOLD_MS = 1300;
   const GEMS_PER_ROCK = 5;          // diamonds that burst out of each broken rock
-  const GEM_BURST_MS = 260;         // outward scatter before they home to the tray
-  const GEM_FLY_MS = 460;           // scatter point -> corner tray
+  const GEM_BURST_MS = 260;         // outward scatter before they home to the HUD counter
+  const GEM_FLY_MS = 460;           // scatter point -> HUD diamond counter
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
   const BACKDROP = "deep-mine";     // backdrops/<BACKDROP>.webp
@@ -60,6 +60,10 @@
   function diceFor(score) {
     return Math.round(DICE_MIN + (DICE_MAX - DICE_MIN) * Math.max(0, Math.min(1, score)));
   }
+  /* 2-row-of-3 dice grid (see .mg-dice-pill), half the old single-line size. */
+  function diceGridHTML(n) {
+    return "<span class=\"mg-die\">\u{1F3B2}</span>".repeat(n);
+  }
 
   let styleInjected = false;
   function injectStyle() {
@@ -81,16 +85,20 @@
         background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; backdrop-filter:blur(2px);
         white-space:nowrap;
       }
-      /* Dice earned shown as that many die-face emojis in a row, not a
-         number -- 3x the surrounding HUD text size (em is relative to the
-         parent's own font-size). */
-      .mg-dice-pill{ font-size:3em; padding:1px 8px; line-height:1; }
+      /* Dice earned shown as that many die-face emojis in a 2-row-by-3
+         grid, half the old single-line size. */
+      .mg-dice-pill{
+        display:grid; grid-template-columns:repeat(3,1fr); gap:0 4px; padding:3px 8px;
+        font-size:1.5em; line-height:1.1;
+      }
+      .mg-mine-hud .mg-timer-pill{ font-variant-numeric:tabular-nums; }
       .mg-mine-timebar{position:absolute; top:0; left:0; height:4px; background:#e0a23d; z-index:3;
         transition:width .1s linear}
       /* Finer-grained than the 6 sprite frames can show -- with up to 12
-         taps per rock the bar is what tells you a tap actually landed. */
+         taps per rock the bar is what tells you a tap actually landed.
+         Anchored to the bottom of the screen, clear of the HUD. */
       .mg-mine-crackbar-wrap{
-        position:absolute; left:16px; right:16px; top:42px; z-index:3; height:8px; border-radius:5px;
+        position:absolute; left:16px; right:16px; bottom:16px; z-index:3; height:8px; border-radius:5px;
         background:rgba(255,255,255,.12); overflow:hidden;
       }
       .mg-mine-crackbar{ height:100%; width:0%; background:linear-gradient(90deg,#e0a23d,#f4c860);
@@ -106,14 +114,10 @@
         background-size:${FRAMES * 100}% 100%;
         background-position-x:0%;
       }
-      /* Diamond tray: where the gems from every broken rock pile up. */
-      .mg-mine-tray{
-        position:absolute; right:12px; bottom:12px; z-index:4; display:flex; align-items:center; gap:6px;
-        padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.14);
-        backdrop-filter:blur(2px); color:#eaf6ff; font-weight:800; font-size:15px; pointer-events:none;
-        text-shadow:0 1px 2px rgba(0,0,0,.5);
-      }
-      .mg-mine-tray.mg-mine-tray-pop{ animation:mg-mine-tray-anim .28s ease; }
+      /* Diamond count lives only in the HUD's own score pill now (see
+         countEl) -- gems fly there instead of to a separate bottom-right
+         tray. */
+      .mg-mine-hud .mg-score-pill.mg-mine-count-pop{ animation:mg-mine-tray-anim .28s ease; }
       @keyframes mg-mine-tray-anim{ 0%{transform:scale(1)} 45%{transform:scale(1.18)} 100%{transform:scale(1)} }
       .mg-mine-gem{
         position:absolute; z-index:5; font-size:20px; line-height:1; pointer-events:none;
@@ -147,7 +151,8 @@
 
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
-    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${"\u{1F3B2}".repeat(DICE_MIN)}</span>` +
+    hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${diceGridHTML(DICE_MIN)}</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
       `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -164,20 +169,15 @@
     rockWrap.className = "mg-mine-rockwrap";
     rockWrap.style.setProperty("--mg-sprite", `url('${spriteURL()}')`);
 
-    const tray = document.createElement("div");
-    tray.className = "mg-mine-tray";
-    tray.innerHTML = `\u{1F48E} <span id="mg-mine-gems">0</span>`;
-
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(crackbarWrap);
     stage.appendChild(rockWrap);
-    stage.appendChild(tray);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-mine-count");
     const diceEl = hud.querySelector("#mg-mine-dice");
-    const gemsEl = tray.querySelector("#mg-mine-gems");
+    const timerEl = hud.querySelector("#mg-mine-timer");
 
     let running = true;
     let broken = 0;
@@ -210,9 +210,9 @@
       const rockRect = rockWrap.getBoundingClientRect();
       const ox = rockRect.left - stageRect.left + rockRect.width / 2;
       const oy = rockRect.top - stageRect.top + rockRect.height / 2;
-      const trayRect = tray.getBoundingClientRect();
-      const tx = trayRect.left - stageRect.left + trayRect.width / 2;
-      const ty = trayRect.top - stageRect.top + trayRect.height / 2;
+      const countRect = countEl.getBoundingClientRect();
+      const tx = countRect.left - stageRect.left + countRect.width / 2;
+      const ty = countRect.top - stageRect.top + countRect.height / 2;
 
       for (let i = 0; i < GEMS_PER_ROCK; i++) {
         const gem = document.createElement("div");
@@ -238,10 +238,10 @@
           gem.remove();
           if (!running) return;
           gems++;
-          gemsEl.textContent = gems;
-          tray.classList.remove("mg-mine-tray-pop");
-          void tray.offsetWidth;
-          tray.classList.add("mg-mine-tray-pop");
+          countEl.textContent = "\u{1F48E} " + gems;
+          countEl.classList.remove("mg-mine-count-pop");
+          void countEl.offsetWidth;
+          countEl.classList.add("mg-mine-count-pop");
         };
       }
     }
@@ -276,8 +276,7 @@
       if (progress >= hitsNeeded) {
         shattering = true;
         broken++;
-        countEl.textContent = "\u{1F48E} " + broken;
-        diceEl.textContent = "\u{1F3B2}".repeat(diceFor(broken / TARGET_ROCKS));
+        diceEl.innerHTML = diceGridHTML(diceFor(broken / TARGET_ROCKS));
         hitsNeeded = Math.min(HITS_MAX, HITS_START + broken * HITS_STEP);
         burstGems();
         playShatter();
@@ -302,6 +301,7 @@
       const elapsed = now - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
+      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
