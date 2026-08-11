@@ -184,9 +184,18 @@ body[data-screen="map"] main{padding-bottom:var(--hub-h, 67px)}
 body[data-screen="codex"] #screen{position:relative; z-index:33}
 /* The pins/convert floating buttons sit in the same bottom band as the
    Item Reference list's own content and read as stray controls hovering
-   over it -- hide both while that screen is open (the hub bar itself
-   stays, so Items/Map/etc. remain reachable). */
-body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn{display:none}
+   over it -- hide all three (the tracked-item pill included) while that
+   screen is open (the hub bar itself stays, so Items/Map/etc. remain
+   reachable). */
+body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn,
+body[data-screen="codex"] #trackedPill{display:none}
+/* Cross-hide: Convert's own button hides while the Pins tray is open, and
+   Pins' button + tracked-item pill hide while the Convert tray is open
+   (see updateHub()) -- keeps one tray's controls from competing for the
+   same bottom-corner screen space as the other tray's own trigger. ID
+   selectors (not just .cross-hide) so this reliably beats .floatbtn's own
+   display:flex regardless of source order between the two rules. */
+#pinsBtn.cross-hide, #quickConvertBtn.cross-hide, #trackedPill.cross-hide{display:none}
 
 /* ------------------------------------------------------------- map --- */
 .map-head{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:6px}
@@ -2218,7 +2227,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 5,
- "version": "2026.08.09",
+ "version": "2026.08.10",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -2247,8 +2256,8 @@ const DATA = /*__GAME_DATA_START__*/{
   },
   "bakery": {
    "label": "BAKERY",
-   "color": "#d9a838",
-   "soft": "#f8f0d8"
+   "color": "#8cb43e",
+   "soft": "#eef4dc"
   },
   "city": {
    "label": "THE CITY",
@@ -2487,7 +2496,7 @@ const DATA = /*__GAME_DATA_START__*/{
      18
     ],
     [
-     "🌍",
+     "🌐",
      "Renewable Grid",
      "CREATION",
      "🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
@@ -3203,109 +3212,109 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Computer": 15.7,
-  "Bone": 4.9,
-  "Solar Cell": 5.0,
   "Farm": 7.9,
-  "Banana": 7.7,
-  "Homestead": 14.9,
-  "Maglev Train": 19.1,
-  "Metropolis": 23.0,
-  "Plant Fiber": 7.3,
-  "Ruby": 13.5,
-  "Robot": 17.7,
-  "Central Station": 25.1,
-  "Life": 19.4,
-  "Salmon": 12.0,
-  "Dough": 9.6,
-  "Light Bulb": 7.7,
-  "Plastic": 8.7,
-  "Tree": 5.2,
-  "Clock": 8.2,
-  "DNA": 4.0,
+  "Furnace": 4.9,
+  "Geothermal Pump": 9.9,
+  "Star": 16.9,
   "Sand": 3.1,
-  "Log Cabin": 7.7,
+  "Concrete": 5.6,
+  "Wire": 3.8,
+  "Library": 14.1,
+  "Plastic": 8.7,
+  "Windmill": 15.9,
+  "Homestead": 14.9,
+  "Natural Gas": 3.0,
+  "Cake": 12.3,
+  "Water Turbine": 15.7,
+  "Renewable Grid": 22.6,
+  "Soil": 4.8,
+  "Clay": 2.9,
+  "Sunflower": 10.6,
+  "Central Station": 25.1,
+  "Rubber": 5.4,
+  "Bicycle": 15.2,
+  "Fireworks": 4.3,
+  "Grand Banquet": 23.5,
+  "Rocket": 21.1,
+  "Computer": 15.7,
+  "Tractor": 10.1,
+  "Wheel": 11.0,
+  "Metropolis": 23.0,
+  "Clock": 8.2,
+  "Sushi Restaurant": 19.4,
+  "Volcano": 14.5,
+  "Fruit Cake": 19.8,
+  "Deer": 6.8,
+  "Coral Reef": 17.5,
+  "Ecosystem": 24.3,
+  "Sailboat": 9.3,
+  "Bridge": 7.6,
+  "Egg": 5.8,
+  "Rainbow": 17.3,
+  "Biofuel": 11.9,
+  "Light Bulb": 7.7,
+  "Ruby": 13.5,
+  "Glass": 5.4,
+  "Motorcycle": 17.4,
   "Fertilizer": 3.4,
   "Museum": 20.7,
-  "Wheel": 11.0,
-  "Bread": 11.1,
-  "Aluminum Alloy": 5.5,
-  "Space Station": 23.3,
-  "Turquoise": 14.9,
-  "Seaweed": 5.2,
-  "Planet": 9.0,
-  "Car": 17.9,
-  "Cloud": 5.3,
-  "Sushi Restaurant": 19.4,
-  "Wire": 3.8,
-  "Water": 2.6,
-  "Water Turbine": 15.7,
-  "Furnace": 4.9,
-  "Engine": 7.1,
-  "Amber": 11.0,
-  "Sunflower": 10.6,
-  "Microchip": 8.8,
-  "Deer": 6.8,
-  "Star": 16.9,
-  "Glass": 5.4,
-  "Tractor": 10.1,
-  "Chicken": 11.0,
-  "Sailboat": 9.3,
-  "Stainless Steel": 5.4,
-  "Telescope": 12.4,
-  "Clay": 2.9,
-  "Concrete": 5.6,
-  "Magnet": 9.1,
-  "Fabric": 8.5,
-  "Battery": 4.8,
-  "Rubber": 5.4,
-  "Steel": 3.0,
-  "Beach Town": 26.5,
-  "Fruit Cake": 19.8,
-  "Yeast": 5.2,
-  "Geothermal Pump": 9.9,
-  "Satellite Dish": 11.7,
-  "Grand Banquet": 23.5,
-  "Flour": 9.4,
-  "Bridge": 7.6,
-  "Opal": 11.3,
-  "Cake": 12.3,
-  "Biofuel": 11.9,
-  "Egg": 5.8,
-  "Ecosystem": 24.3,
-  "Lighthouse": 13.8,
-  "Statue": 6.5,
-  "Renewable Grid": 22.6,
-  "Pearl": 14.1,
-  "Titanium Alloy": 6.0,
   "Compass": 11.5,
-  "Windmill": 15.9,
-  "Speedboat": 16.8,
-  "Skyscraper": 16.7,
-  "Limestone": 3.0,
-  "Rainbow": 17.3,
-  "Bicycle": 15.2,
-  "Dinosaur": 12.8,
-  "Motorcycle": 17.4,
-  "Grain": 8.4,
-  "Building": 8.7,
+  "Chicken": 11.0,
+  "Stainless Steel": 5.4,
+  "DNA": 4.0,
   "Solar System": 18.3,
-  "Rocket": 21.1,
-  "Coral Reef": 17.5,
-  "Orca": 13.6,
-  "Tools": 3.7,
-  "Fruit": 6.9,
-  "Volcano": 14.5,
-  "Library": 14.1,
-  "Sugar": 3.2,
-  "Fireworks": 4.3,
-  "Natural Gas": 3.0,
-  "Gemstone Collection": 19.5,
-  "Book": 11.3,
-  "Canoe": 6.2,
   "Airplane": 14.8,
-  "Soil": 4.8,
-  "Diamond": 12.7
+  "Steel": 3.0,
+  "Gemstone Collection": 19.5,
+  "Seaweed": 5.2,
+  "Canoe": 6.2,
+  "Battery": 4.8,
+  "Dough": 9.6,
+  "Maglev Train": 19.1,
+  "Life": 19.4,
+  "Limestone": 3.0,
+  "Salmon": 12.0,
+  "Diamond": 12.7,
+  "Lighthouse": 13.8,
+  "Book": 11.3,
+  "Grain": 8.4,
+  "Robot": 17.7,
+  "Bread": 11.1,
+  "Water": 2.6,
+  "Amber": 11.0,
+  "Fabric": 8.5,
+  "Sugar": 3.2,
+  "Aluminum Alloy": 5.5,
+  "Banana": 7.7,
+  "Building": 8.7,
+  "Beach Town": 26.5,
+  "Magnet": 9.1,
+  "Plant Fiber": 7.3,
+  "Opal": 11.3,
+  "Pearl": 14.1,
+  "Orca": 13.6,
+  "Log Cabin": 7.7,
+  "Space Station": 23.3,
+  "Telescope": 12.4,
+  "Satellite Dish": 11.7,
+  "Bone": 4.9,
+  "Solar Cell": 5.0,
+  "Dinosaur": 12.8,
+  "Engine": 7.1,
+  "Tools": 3.7,
+  "Titanium Alloy": 6.0,
+  "Skyscraper": 16.7,
+  "Car": 17.9,
+  "Yeast": 5.2,
+  "Turquoise": 14.9,
+  "Speedboat": 16.8,
+  "Statue": 6.5,
+  "Flour": 9.4,
+  "Cloud": 5.3,
+  "Tree": 5.2,
+  "Fruit": 6.9,
+  "Microchip": 8.8,
+  "Planet": 9.0
  }
 }/*__GAME_DATA_END__*/;
 
@@ -4525,7 +4534,7 @@ function jobBoardHTML(){
     ? `<details class="job-section" open><summary class="job-board-heading">📋 My Jobs</summary>${activeHTML}</details>` : "";
 
   const completedSection = completedJobs.length
-    ? `<details class="job-section" open><summary class="job-board-heading">✅ Completed Jobs</summary>${jobGridHTML(completedJobs, true)}</details>` : "";
+    ? `<details class="job-section"><summary class="job-board-heading">✅ Completed Jobs</summary>${jobGridHTML(completedJobs, true)}</details>` : "";
 
   // One NEW job per station visit (see state.jobBoard.taken/takeJob()) --
   // no limit on how many can be held at once, so this only locks THIS
@@ -4970,8 +4979,18 @@ function updateHub(){
   document.getElementById("hubInv").classList.toggle("active", drawer.classList.contains("open"));
   document.getElementById("hubJobs").classList.toggle("active", jobSheet.classList.contains("open"));
   document.getElementById("hubSettings").classList.toggle("active", document.getElementById("settings").classList.contains("open"));
-  document.getElementById("pinsBtn").classList.toggle("active", pinsTray.classList.contains("open"));
-  document.getElementById("quickConvertBtn").classList.toggle("active", document.getElementById("convert").classList.contains("open"));
+  const pinsOpen = pinsTray.classList.contains("open");
+  const convertOpen = document.getElementById("convert").classList.contains("open");
+  document.getElementById("pinsBtn").classList.toggle("active", pinsOpen);
+  document.getElementById("quickConvertBtn").classList.toggle("active", convertOpen);
+  // Each floating trigger (and Pins' own tracked-item pill) hides while
+  // the OTHER one's tray is open -- Convert's tray already covers its own
+  // button, and Pins' button/pill float above its own tray (see their
+  // z-index notes), so this is only about the two trays not stepping on
+  // each other's controls, not about a tray covering its own trigger.
+  document.getElementById("quickConvertBtn").classList.toggle("cross-hide", pinsOpen);
+  document.getElementById("pinsBtn").classList.toggle("cross-hide", convertOpen);
+  document.getElementById("trackedPill").classList.toggle("cross-hide", convertOpen);
 
   // Attention badges: pins button flags "you've got pinned items but
   // haven't picked one to track yet", convert button flags "you're
@@ -6219,8 +6238,13 @@ function renderConvertPicker(){
   let syms = isFrom
     ? Object.keys(state.elements).filter(s => count(s) > 0)
     : Object.keys(ATOMIC_NUMBER);
+  // Grouped by suit (ELEMENT_SUIT's own key order already is: organic,
+  // reactive, earth, metal), not real atomic number -- Nickel's actual
+  // atomic number (28) would otherwise sort it in among the metals, away
+  // from Si/Al/Mg, the rest of its (reassigned) earth suit.
+  const ELEMENT_DISPLAY_ORDER = Object.keys(ELEMENT_SUIT);
   syms = syms.filter(s => s !== (isFrom ? convertTo : convertFrom))
-    .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
+    .sort((a, b) => ELEMENT_DISPLAY_ORDER.indexOf(a) - ELEMENT_DISPLAY_ORDER.indexOf(b));
 
   const grid = document.getElementById("convertPickerGrid");
   if (!syms.length){

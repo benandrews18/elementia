@@ -22,7 +22,7 @@ SUITS = {
     "greenhouse": {"label": "GREENHOUSE",  "color": "#3aab6d", "soft": "#e2f1e7"},
     "mine":       {"label": "DEEP MINE",   "color": "#e2a83e", "soft": "#f8ecd7"},
     "forest":     {"label": "OLD GROWTH",  "color": "#e2823a", "soft": "#f8e4d5"},
-    "bakery":     {"label": "BAKERY",      "color": "#d9a838", "soft": "#f8f0d8"},
+    "bakery":     {"label": "BAKERY",      "color": "#8cb43e", "soft": "#eef4dc"},
     "city":       {"label": "THE CITY",    "color": "#e2543b", "soft": "#f8e6e1"},
     "observatory":{"label": "OBSERVATORY", "color": "#4d7cf2", "soft": "#e3ebfb"},
 }
@@ -32,7 +32,7 @@ SUITS = {
 # the published Artifact link) stamps this value so it's possible to tell
 # at a glance whether a given PDF/game/link reflects the current content
 # without diffing bytes. See CHANGELOG.md for what changed at each version.
-CONTENT_VERSION = "2026.08.09"
+CONTENT_VERSION = "2026.08.10"
 
 # Table rules printed on every station page. These were previously hardcoded
 # into the header string, which is how the guide came to say "TAKE 3" while
@@ -76,7 +76,7 @@ STATIONS = [
              ("🔆","Solar Cell","COMPONENT","🔌 Wire + 🔋 Battery",8),
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
-             ("🌍","Renewable Grid","CREATION","🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
+             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
