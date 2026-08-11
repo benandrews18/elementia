@@ -861,15 +861,20 @@ body[data-screen="codex"] #trackedPill{display:none}
    above it always do, rather than a JS pixel estimate that has to keep
    re-guessing the available width. */
 .rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
-/* flex:1 1 0 + max-width mirrors .gcol exactly; aspect-ratio:1 replaces
-   the old JS-computed fixed width/height, and stays fixed across the
-   die->symbol swap below since aspect-ratio pins both dimensions to
-   whatever width flex resolves to -- box-sizing:border-box so the box
-   never grows/shrinks by its own padding+border either. */
+/* flex:0 0 <fixed-basis> instead of flex:1 1 0 -- a fixed size computed as
+   if the row always held the maximum 6 dice (100% minus 5 10px gaps,
+   divided 6 ways), applied whether 3, 4, or 6 actually rolled, so a
+   smaller roll doesn't stretch to fill the row -- it just leaves the
+   unused width to justify-content:center on .rolled. max-width mirrors
+   .gcol's own cap. aspect-ratio:1 replaces the old JS-computed fixed
+   width/height, and stays fixed across the die->symbol swap below since
+   aspect-ratio pins both dimensions to whatever width flex resolves to --
+   box-sizing:border-box so the box never grows/shrinks by its own
+   padding+border either. */
 .rollcard{
   display:flex; align-items:center; justify-content:center; padding:8px;
-  flex:1 1 0; min-width:0; max-width:104px; aspect-ratio:1; container-type:inline-size;
-  box-sizing:border-box; background:var(--ok-soft); border:1.5px solid var(--ok-line); border-radius:12px;
+  flex:0 0 calc((100% - 50px) / 6); max-width:104px; aspect-ratio:1; container-type:inline-size;
+  box-sizing:border-box; background:var(--ok-soft); border:1.5px solid var(--ok-line); border-radius:9px;
   animation:pop .28s cubic-bezier(.2,1.4,.4,1) both;
   transition:background .2s, border-color .2s, border-width .2s;
 }
@@ -880,12 +885,14 @@ body[data-screen="codex"] #trackedPill{display:none}
    fixed box, see .rollcard above), with the card's own border switching
    to the rolled element's suit color -- "the dice turn into their
    element," not two things shown at once, and the box itself never
-   changes size. Font-size is set inline in JS to scale with the box. */
+   changes size. Same font-weight/color/size formula as .gchip .gsym (the
+   station's own element chips) so a rolled element reads identically to
+   its dice-legend counterpart. */
 .rollcard .sym{
   display:none; width:100%; height:100%; align-items:center; justify-content:center;
   font-weight:800; color:#221f1a; font-size:min(26px, 40cqw);
 }
-.rollcard.revealed{background:#fff; border-color:var(--suit); border-width:3px}
+.rollcard.revealed{background:#fff; border-color:var(--suit); border-width:5px}
 .rollcard.revealed .die{display:none}
 .rollcard.revealed .sym{display:flex; animation:sym-pop .3s cubic-bezier(.3,1.4,.4,1)}
 @keyframes sym-pop{from{opacity:0; transform:scale(.5) rotate(-8deg)}to{opacity:1; transform:none}}
