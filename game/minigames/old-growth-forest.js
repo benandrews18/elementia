@@ -32,6 +32,7 @@
   const RESULT_HOLD_MS = 1300;      // how long the "time's up" card sits before onComplete
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;      // timer pill stays hidden until this much time remains
   const BACKDROP = "old-growth-forest"; // backdrops/<BACKDROP>.webp
 
   /* Station art behind the stage. The base is overridable so one file works
@@ -197,7 +198,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -320,14 +321,25 @@
     function tick() {
       if (needleEl) {
         const angle = currentAngle();
-        const rot = `rotate(${90 - angle} ${CX} ${CY})`;
+        // Was `90 - angle`, the mirror-image rotation -- invisible while the
+        // target zone always sat at the symmetric 90 degree center (its own
+        // mirror), but with the zone now free to land anywhere on the arc
+        // (see the greenCenter re-roll above) the needle visibly swung to
+        // the wrong side of the gauge relative to where a hit actually
+        // registers. `angle - 90` is the rotation that actually places the
+        // needle tip at pointAt(angle), matching arcPath()'s own geometry.
+        const rot = `rotate(${angle - 90} ${CX} ${CY})`;
         needleEl.setAttribute("transform", rot);
         if (tipEl) tipEl.setAttribute("transform", rot);
       }
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

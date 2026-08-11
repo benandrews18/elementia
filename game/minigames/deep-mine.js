@@ -34,6 +34,7 @@
   const GEM_FLY_MS = 460;           // scatter point -> HUD diamond counter
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;      // timer pill stays hidden until this much time remains
   const BACKDROP = "deep-mine";     // backdrops/<BACKDROP>.webp
 
   /* Sprite strip geometry: 24 frames laid out left-to-right in one row. */
@@ -152,7 +153,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -301,7 +302,11 @@
       const elapsed = now - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

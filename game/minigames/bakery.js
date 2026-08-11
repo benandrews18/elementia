@@ -29,6 +29,7 @@
   const ORDER_QUEUE = 3;          // order cards shown: the live one + look-ahead
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "bakery";      // backdrops/<BACKDROP>.webp
 
   // Darker/more saturated than the original pastel set -- close pairs like
@@ -93,11 +94,11 @@
         display:flex; flex-direction:column;
       }
       .mg-bakery-hud{
-        display:flex; justify-content:space-between; align-items:center; padding:12px 20px 0;
-        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:20px;
+        display:flex; justify-content:space-between; align-items:center; padding:10px 20px 0;
+        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:15px;
       }
       .mg-bakery-hud .mg-pill{
-        background:rgba(255,255,255,.13); border-radius:999px; padding:5px 16px; white-space:nowrap;
+        background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a 2-row-by-3
          grid (wraps automatically once a 4th die is earned), not a single
@@ -121,12 +122,11 @@
       }
       .mg-bakery-ordercard{
         flex:1; height:60px; border-radius:16px; position:relative;
-        background:rgba(255,255,255,.10); border:3px solid rgba(255,255,255,.16);
-        display:flex; align-items:center; justify-content:center; overflow:hidden;
+        background:rgba(255,255,255,.10);
+        display:flex; align-items:center; justify-content:center; overflow:visible;
       }
       .mg-bakery-ordercard.mg-bakery-live{
-        background:rgba(255,255,255,.17); border-color:#e0a23d;
-        box-shadow:0 0 0 3px rgba(224,162,61,.35);
+        background:rgba(255,255,255,.17); box-shadow:0 0 16px 3px rgba(224,162,61,.5);
       }
       .mg-bakery-ordercard:not(.mg-bakery-live){ opacity:.55; }
       .mg-bakery-ordercard .mg-bakery-cake{ transform:scale(.62); }
@@ -149,7 +149,7 @@
         display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,0,0,.4);
         position:relative; z-index:1;
       }
-      .mg-bakery-cake{ position:relative; width:100px; height:88px; }
+      .mg-bakery-cake{ position:relative; width:100px; height:104px; }
       /* Base layer: a plain coloured rectangle (matches the base option
          buttons below -- see .mg-bakery-opt[data-category="base"]), not a
          swirl silhouette. */
@@ -158,14 +158,17 @@
         background:var(--swatch); box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
       }
       /* Icing layer: the real cake-middle photo (img element when a flavor
-         is selected -- see cakeInnerHTML()), same box the swirl div used
-         to occupy. */
+         is selected -- see cakeInnerHTML()), sized at the photo's own near-
+         square aspect (matching the option button's object-fit:contain --
+         see .mg-bakery-opt[data-category="frosting"] img) instead of being
+         stretched into a thin band, and centered horizontally over the
+         base with enough overlap to read as sitting on it. */
       .mg-bakery-layer-frosting{
-        position:absolute; left:3px; right:3px; bottom:41px; height:25px; border-radius:16px 16px 6px 6px;
-        display:block; object-fit:cover;
+        position:absolute; left:50%; bottom:34px; width:62px; height:58px;
+        transform:translateX(-50%); display:block; object-fit:contain;
       }
       .mg-bakery-layer-fruit{
-        position:absolute; left:50%; bottom:59px; transform:translateX(-50%); font-size:31px;
+        position:absolute; left:50%; bottom:82px; transform:translateX(-50%); font-size:31px;
       }
       /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
          .mg-bakery-cake above), which would otherwise shrink the fruit
@@ -176,7 +179,7 @@
          carrying the cake out of the kitchen, so it simply leaves the frame.
          --fly is the full stage width plus a margin, set per cake in JS. */
       .mg-bakery-cake.mg-bakery-flying{
-        position:absolute; left:50%; top:50%; margin-left:-50px; margin-top:-44px;
+        position:absolute; left:50%; top:50%; margin-left:-50px; margin-top:-52px;
         transition:transform ${SEND_ANIM_MS}ms linear; z-index:5;
       }
       .mg-bakery-cake.mg-bakery-flying.mg-bakery-go{ transform:translateX(var(--fly,120vw)); }
@@ -218,8 +221,8 @@
         justify-content:center; gap:12px; background:rgba(20,12,6,.62); color:#fff; text-align:center;
         opacity:0; animation:mg-bakery-fade-in .25s ease forwards;
       }
-      .mg-bakery-result .mg-big{font-size:60px; font-weight:800}
-      .mg-bakery-result .mg-sub{font-size:28px; font-weight:700; opacity:.9}
+      .mg-bakery-result .mg-big{font-size:30px; font-weight:800}
+      .mg-bakery-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-bakery-fade-in{ to{opacity:1} }
     `;
     const style = document.createElement("style");
@@ -252,7 +255,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -425,7 +428,11 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

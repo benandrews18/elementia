@@ -45,6 +45,7 @@
   const RESULT_HOLD_MS = 1300;       // how long the result card sits before onComplete
   const DICE_MIN = 3;                // dice awarded at score 0
   const DICE_MAX = 6;                // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;       // timer pill stays hidden until this much time remains
   const BACKDROP = "observatory";    // backdrops/<BACKDROP>.webp
 
   // Purely decorative scenery, drifting slower than the asteroids so the
@@ -189,7 +190,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
@@ -347,7 +348,11 @@
 
       timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
       diceEl.innerHTML = diceGridHTML(diceFor(elapsed / TARGET_SURVIVE_MS));
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }
       rafId = requestAnimationFrame(tick);

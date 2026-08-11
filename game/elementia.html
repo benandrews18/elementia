@@ -842,6 +842,9 @@ body[data-screen="codex"] #trackedPill{display:none}
 .playbtn:hover:not(:disabled){filter:brightness(1.06)}
 .playbtn:active:not(:disabled){transform:translateY(2px); box-shadow:0 1px 0 #24774a}
 .playbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
+/* "Roll 🎲 x N" state: bigger text to fill the button, padding trimmed to
+   compensate so the button's own footprint doesn't grow along with it. */
+.playbtn.roll-ready{ font-size:22px; padding:10px 24px; }
 @keyframes btnpop{
   0%{transform:scale(1); opacity:1} 55%{transform:scale(1.1); opacity:1}
   100%{transform:scale(.2); opacity:0}
@@ -852,13 +855,20 @@ body[data-screen="codex"] #trackedPill{display:none}
    underneath it (see flyToInventory()). */
 .rollcard.flying{position:fixed; z-index:150; pointer-events:none}
 .playnote{font-size:13.5px; color:var(--mute); font-weight:600}
-.rolled{display:flex; gap:10px; flex-wrap:wrap; width:100%}
-/* Width/height are set inline in JS (playRollAnimation()), matched to the
-   gather row's own gchip size, and stay FIXED across the die->symbol
-   swap below -- box-sizing:border-box so the box never grows/shrinks by
-   its own padding+border either. */
+/* nowrap + equal-share flex columns, same mechanism as the gather row's
+   own .gather/.gcol (see there) -- guarantees the max 6-dice roll always
+   fits one line by construction, the same way the 6 element-legend chips
+   above it always do, rather than a JS pixel estimate that has to keep
+   re-guessing the available width. */
+.rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
+/* flex:1 1 0 + max-width mirrors .gcol exactly; aspect-ratio:1 replaces
+   the old JS-computed fixed width/height, and stays fixed across the
+   die->symbol swap below since aspect-ratio pins both dimensions to
+   whatever width flex resolves to -- box-sizing:border-box so the box
+   never grows/shrinks by its own padding+border either. */
 .rollcard{
-  display:flex; align-items:center; justify-content:center; padding:8px; flex:none;
+  display:flex; align-items:center; justify-content:center; padding:8px;
+  flex:1 1 0; min-width:0; max-width:104px; aspect-ratio:1; container-type:inline-size;
   box-sizing:border-box; background:var(--ok-soft); border:1.5px solid var(--ok-line); border-radius:12px;
   animation:pop .28s cubic-bezier(.2,1.4,.4,1) both;
   transition:background .2s, border-color .2s, border-width .2s;
@@ -873,7 +883,7 @@ body[data-screen="codex"] #trackedPill{display:none}
    changes size. Font-size is set inline in JS to scale with the box. */
 .rollcard .sym{
   display:none; width:100%; height:100%; align-items:center; justify-content:center;
-  font-weight:800; color:#221f1a;
+  font-weight:800; color:#221f1a; font-size:min(26px, 40cqw);
 }
 .rollcard.revealed{background:#fff; border-color:var(--suit); border-width:3px}
 .rollcard.revealed .die{display:none}
@@ -1298,7 +1308,7 @@ body[data-screen="codex"] #trackedPill{display:none}
   80%{transform:scale(.97)}
   100%{transform:scale(1); opacity:1}
 }
-.sheetbox, .pc-card, .jtp-card, .mode-card, .job-grid .job-card, .el-pop-bubble,
+.sheetbox, .pc-card, .jtp-card, .mode-card, .el-pop-bubble,
 .bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
@@ -1486,21 +1496,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   opacity:.8; animation:mg-intro-pulse 1.4s ease-in-out infinite;
 }
 @keyframes mg-intro-pulse{ 0%,100%{opacity:.5} 50%{opacity:1} }
-
-/* Big countdown, only shown for the back half of the round (see
-   launchMinigame()) -- independent of any individual game's own HUD, so
-   it works the same across all 8 without touching their own code. */
-#mgCountdown{
-  position:absolute; top:14px; left:0; right:0; z-index:3; display:none;
-  justify-content:center; pointer-events:none;
-}
-#mgCountdown.show{ display:flex; }
-#mgCountdown .n{
-  font-size:44px; font-weight:800; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.7);
-  background:rgba(0,0,0,.35); border-radius:999px; width:64px; height:64px;
-  display:flex; align-items:center; justify-content:center; animation:mg-count-pop .5s cubic-bezier(.25,1,.4,1) both;
-}
-@keyframes mg-count-pop{ 0%{transform:scale(1.35); opacity:0} 100%{transform:scale(1); opacity:1} }
 
 /* Results beat between the round ending and the dice roll: station icon,
    dice earned, and the same die-emoji-row language the in-round HUD now
@@ -2212,7 +2207,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="mgOverlay" role="dialog" aria-modal="true" aria-label="Station mini-game">
   <div id="mgStage"></div>
   <div id="mgIntro"></div>
-  <div id="mgCountdown"></div>
   <div id="mgResults"></div>
 </div>
 
@@ -4836,7 +4830,7 @@ function renderStation(name){
   // a static re-render (e.g. coming back to this station later) should
   // simply not include the playbar at all.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar">
-      <button class="playbtn" id="playBtn">${state.pendingRoll ? `\u{1F3B2} Roll x ${state.pendingRoll}` : "▶ PLAY"}</button>
+      <button class="playbtn${state.pendingRoll ? " roll-ready" : ""}" id="playBtn">${state.pendingRoll ? `Roll \u{1F3B2} x ${state.pendingRoll}` : "▶ PLAY"}</button>
     </div>`;
 
   const bg = STATION_BG[s.name];
@@ -5360,12 +5354,6 @@ const MG_DICE_MIN = 3, MG_DICE_MAX = 6;
 function minigameDiceFor(score){
   return Math.round(MG_DICE_MIN + (MG_DICE_MAX - MG_DICE_MIN) * Math.max(0, Math.min(1, score)));
 }
-// Every game's own DURATION_MS is standardized to this; the countdown is
-// driven independently off wall-clock time from when the round actually
-// starts (after the intro card is dismissed), not from anything inside
-// the game files themselves, so this needs to stay in sync with them by
-// hand if that ever changes.
-const MG_ROUND_MS = 15000, MG_COUNTDOWN_AT_MS = 5000;
 // One line of "what is this" + "how do I play it" per station, shown on
 // the pre-round intro card. Deliberately terse -- this is a "tap to
 // continue" beat, not a rules page.
@@ -5386,11 +5374,9 @@ function launchMinigame(){
   const overlay = document.getElementById("mgOverlay");
   const stage = document.getElementById("mgStage");
   const introEl = document.getElementById("mgIntro");
-  const countdownEl = document.getElementById("mgCountdown");
   const resultsEl = document.getElementById("mgResults");
   stage.innerHTML = "";
   resultsEl.classList.remove("show");
-  countdownEl.classList.remove("show");
 
   // Cropped to start below the real station title/icon banner (left
   // showing through above it) rather than covering the whole viewport --
@@ -5427,28 +5413,12 @@ function launchMinigame(){
     introEl.classList.remove("show");
     introEl.removeEventListener("click", startRound);
 
-    const roundStart = Date.now();
-    let countdownRaf = null;
-    function tickCountdown(){
-      const elapsed = Date.now() - roundStart;
-      const remainingMs = MG_ROUND_MS - elapsed;
-      if (elapsed >= MG_COUNTDOWN_AT_MS && remainingMs > 0){
-        const secs = Math.ceil(remainingMs / 1000);
-        if (countdownEl.dataset.n !== String(secs)){
-          countdownEl.dataset.n = String(secs);
-          countdownEl.innerHTML = `<span class="n">${secs}</span>`;
-        }
-        countdownEl.classList.add("show");
-      } else {
-        countdownEl.classList.remove("show");
-      }
-      if (remainingMs > -1000) countdownRaf = requestAnimationFrame(tickCountdown);
-    }
-    countdownRaf = requestAnimationFrame(tickCountdown);
-
+    // The countdown itself lives in each game's own HUD timer pill now (see
+    // TIMER_SHOW_MS in any game/minigames/*.js), correctly matching that
+    // game's own DURATION_MS instead of a shared value here that couldn't
+    // track per-game round lengths (15s for most, 30s for Bakery/Power
+    // Plant/Observatory).
     run(stage, (score) => {
-      if (countdownRaf) cancelAnimationFrame(countdownRaf);
-      countdownEl.classList.remove("show");
       const diceCount = minigameDiceFor(score);
       const s = STATION_BY_NAME[current];
       stage.innerHTML = "";
@@ -5527,33 +5497,13 @@ function playRollAnimation(out){
   rolled.className = "rolled";
   playBar.appendChild(rolled);
 
-  // Match the gather row's own gchip size exactly (not a separate fixed
-  // die size) -- "the dice should be the same size as the element pool
-  // borders." Falls back to a sane default if for some reason no gchip is
-  // on screen. Set via inline width/height (see .rollcard/.rollcard .sym
-  // CSS) so the box's footprint is identical before AND after the
-  // die->symbol swap -- it must not shrink when the symbol appears.
-  const gchipEl = document.querySelector(".gchip");
-  const maxDieSize = gchipEl ? gchipEl.getBoundingClientRect().width : 64;
-  // Slightly smaller than the gather-row chip so the maximum roll (6 dice)
-  // always fits across the screen on one line instead of wrapping to a
-  // second row -- sized to the available width divided 6 ways, but never
-  // bigger than the old gchip-matched size on rolls smaller than that.
-  const rowGap = 10;
-  const availW = playBar.clientWidth || rolled.clientWidth || (maxDieSize * 6 + rowGap * 5);
-  const fitSize = (availW - rowGap * 5) / 6;
-  const dieSize = Math.max(28, Math.min(maxDieSize, fitSize));
-  const symFontSize = Math.round(dieSize * 0.42);
-
   const STAGGER_MS = 90, TUMBLE_MS = 500, PAUSE_MS = 350;
   const cards = out.map((r, i) => {
     const card = document.createElement("div");
     card.className = "rollcard";
-    card.style.width = dieSize + "px";
-    card.style.height = dieSize + "px";
     card.style.setProperty("--suit", ELEMENT_COLOR[r.sym] || "#8a94a6");
     card.style.animationDelay = (i * STAGGER_MS) + "ms";
-    card.innerHTML = `${dieFace(r.face)}<span class="sym" style="font-size:${symFontSize}px">${esc(r.sym)}</span>`;
+    card.innerHTML = `${dieFace(r.face)}<span class="sym">${esc(r.sym)}</span>`;
     rolled.appendChild(card);
     const die = card.querySelector(".die");
     die.classList.add("tumbling");
@@ -6657,6 +6607,7 @@ window.MINIGAMES = {};
   const SPREAD_RECENT_MS = 900;   // a bubble only "blocks" a slot this long
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "ocean";       // backdrops/<BACKDROP>.webp
 
   /* Station art behind the stage. The base is overridable so one file works
@@ -6747,7 +6698,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
@@ -6874,7 +6825,11 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -6944,6 +6899,7 @@ window.MINIGAMES = {};
   const RESULT_HOLD_MS = 1300;
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "power-plant"; // backdrops/<BACKDROP>.webp
 
   const WIRE_COLORS = ["#e6564f", "#eb9a3c", "#e8d24c", "#5fcf6a", "#4ea8de", "#8b6fe0", "#e06fc0"];
@@ -7059,7 +7015,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-power-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-power-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -7253,7 +7209,11 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -7336,6 +7296,7 @@ window.MINIGAMES = {};
   const RESULT_HOLD_MS = 1300;
   const DICE_MIN = 3;                // dice awarded at score 0
   const DICE_MAX = 6;                // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;       // timer pill stays hidden until this much time remains
   const BACKDROP = "greenhouse";     // backdrops/<BACKDROP>.webp
 
   /* Good eggs run through the rainbow; bad ones are deliberately OUTSIDE
@@ -7461,7 +7422,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-green-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-green-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-green-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-green-score">\u{1F331} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -7607,7 +7568,11 @@ window.MINIGAMES = {};
 
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -7676,6 +7641,7 @@ window.MINIGAMES = {};
   const GEM_FLY_MS = 460;           // scatter point -> HUD diamond counter
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;      // timer pill stays hidden until this much time remains
   const BACKDROP = "deep-mine";     // backdrops/<BACKDROP>.webp
 
   /* Sprite strip geometry: 24 frames laid out left-to-right in one row. */
@@ -7794,7 +7760,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-mine-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-mine-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-mine-count">\u{1F48E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -7943,7 +7909,11 @@ window.MINIGAMES = {};
       const elapsed = now - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -8010,6 +7980,7 @@ window.MINIGAMES = {};
   const RESULT_HOLD_MS = 1300;      // how long the "time's up" card sits before onComplete
   const DICE_MIN = 3;               // dice awarded at score 0
   const DICE_MAX = 6;               // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;      // timer pill stays hidden until this much time remains
   const BACKDROP = "old-growth-forest"; // backdrops/<BACKDROP>.webp
 
   /* Station art behind the stage. The base is overridable so one file works
@@ -8175,7 +8146,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-forest-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-forest-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-forest-count">\u{1F332} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -8298,14 +8269,25 @@ window.MINIGAMES = {};
     function tick() {
       if (needleEl) {
         const angle = currentAngle();
-        const rot = `rotate(${90 - angle} ${CX} ${CY})`;
+        // Was `90 - angle`, the mirror-image rotation -- invisible while the
+        // target zone always sat at the symmetric 90 degree center (its own
+        // mirror), but with the zone now free to land anywhere on the arc
+        // (see the greenCenter re-roll above) the needle visibly swung to
+        // the wrong side of the gauge relative to where a hit actually
+        // registers. `angle - 90` is the rotation that actually places the
+        // needle tip at pointAt(angle), matching arcPath()'s own geometry.
+        const rot = `rotate(${angle - 90} ${CX} ${CY})`;
         needleEl.setAttribute("transform", rot);
         if (tipEl) tipEl.setAttribute("transform", rot);
       }
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -8367,6 +8349,7 @@ window.MINIGAMES = {};
   const ORDER_QUEUE = 3;          // order cards shown: the live one + look-ahead
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "bakery";      // backdrops/<BACKDROP>.webp
 
   // Darker/more saturated than the original pastel set -- close pairs like
@@ -8431,11 +8414,11 @@ window.MINIGAMES = {};
         display:flex; flex-direction:column;
       }
       .mg-bakery-hud{
-        display:flex; justify-content:space-between; align-items:center; padding:12px 20px 0;
-        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:20px;
+        display:flex; justify-content:space-between; align-items:center; padding:10px 20px 0;
+        font-weight:800; color:#fbead9; text-shadow:0 2px 4px rgba(0,0,0,.5); font-size:15px;
       }
       .mg-bakery-hud .mg-pill{
-        background:rgba(255,255,255,.13); border-radius:999px; padding:5px 16px; white-space:nowrap;
+        background:rgba(255,255,255,.13); border-radius:999px; padding:4px 12px; white-space:nowrap;
       }
       /* Dice earned shown as that many die-face emojis in a 2-row-by-3
          grid (wraps automatically once a 4th die is earned), not a single
@@ -8459,12 +8442,11 @@ window.MINIGAMES = {};
       }
       .mg-bakery-ordercard{
         flex:1; height:60px; border-radius:16px; position:relative;
-        background:rgba(255,255,255,.10); border:3px solid rgba(255,255,255,.16);
-        display:flex; align-items:center; justify-content:center; overflow:hidden;
+        background:rgba(255,255,255,.10);
+        display:flex; align-items:center; justify-content:center; overflow:visible;
       }
       .mg-bakery-ordercard.mg-bakery-live{
-        background:rgba(255,255,255,.17); border-color:#e0a23d;
-        box-shadow:0 0 0 3px rgba(224,162,61,.35);
+        background:rgba(255,255,255,.17); box-shadow:0 0 16px 3px rgba(224,162,61,.5);
       }
       .mg-bakery-ordercard:not(.mg-bakery-live){ opacity:.55; }
       .mg-bakery-ordercard .mg-bakery-cake{ transform:scale(.62); }
@@ -8487,7 +8469,7 @@ window.MINIGAMES = {};
         display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,0,0,.4);
         position:relative; z-index:1;
       }
-      .mg-bakery-cake{ position:relative; width:100px; height:88px; }
+      .mg-bakery-cake{ position:relative; width:100px; height:104px; }
       /* Base layer: a plain coloured rectangle (matches the base option
          buttons below -- see .mg-bakery-opt[data-category="base"]), not a
          swirl silhouette. */
@@ -8496,14 +8478,17 @@ window.MINIGAMES = {};
         background:var(--swatch); box-shadow:inset 0 0 0 2px rgba(0,0,0,.15);
       }
       /* Icing layer: the real cake-middle photo (img element when a flavor
-         is selected -- see cakeInnerHTML()), same box the swirl div used
-         to occupy. */
+         is selected -- see cakeInnerHTML()), sized at the photo's own near-
+         square aspect (matching the option button's object-fit:contain --
+         see .mg-bakery-opt[data-category="frosting"] img) instead of being
+         stretched into a thin band, and centered horizontally over the
+         base with enough overlap to read as sitting on it. */
       .mg-bakery-layer-frosting{
-        position:absolute; left:3px; right:3px; bottom:41px; height:25px; border-radius:16px 16px 6px 6px;
-        display:block; object-fit:cover;
+        position:absolute; left:50%; bottom:34px; width:62px; height:58px;
+        transform:translateX(-50%); display:block; object-fit:contain;
       }
       .mg-bakery-layer-fruit{
-        position:absolute; left:50%; bottom:59px; transform:translateX(-50%); font-size:31px;
+        position:absolute; left:50%; bottom:82px; transform:translateX(-50%); font-size:31px;
       }
       /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
          .mg-bakery-cake above), which would otherwise shrink the fruit
@@ -8514,7 +8499,7 @@ window.MINIGAMES = {};
          carrying the cake out of the kitchen, so it simply leaves the frame.
          --fly is the full stage width plus a margin, set per cake in JS. */
       .mg-bakery-cake.mg-bakery-flying{
-        position:absolute; left:50%; top:50%; margin-left:-50px; margin-top:-44px;
+        position:absolute; left:50%; top:50%; margin-left:-50px; margin-top:-52px;
         transition:transform ${SEND_ANIM_MS}ms linear; z-index:5;
       }
       .mg-bakery-cake.mg-bakery-flying.mg-bakery-go{ transform:translateX(var(--fly,120vw)); }
@@ -8556,8 +8541,8 @@ window.MINIGAMES = {};
         justify-content:center; gap:12px; background:rgba(20,12,6,.62); color:#fff; text-align:center;
         opacity:0; animation:mg-bakery-fade-in .25s ease forwards;
       }
-      .mg-bakery-result .mg-big{font-size:60px; font-weight:800}
-      .mg-bakery-result .mg-sub{font-size:28px; font-weight:700; opacity:.9}
+      .mg-bakery-result .mg-big{font-size:30px; font-weight:800}
+      .mg-bakery-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-bakery-fade-in{ to{opacity:1} }
     `;
     const style = document.createElement("style");
@@ -8590,7 +8575,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-bakery-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-bakery-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-bakery-count">\u{1F35E} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -8763,7 +8748,11 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
@@ -8831,6 +8820,7 @@ window.MINIGAMES = {};
   const RESULT_HOLD_MS = 1300;       // how long the result card sits before onComplete
   const DICE_MIN = 3;                // dice awarded at score 0
   const DICE_MAX = 6;                // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;       // timer pill stays hidden until this much time remains
   const BACKDROP = "quarry";         // backdrops/<BACKDROP>.webp -- art is still the quarry piece
 
   // Darker and clearly distinct from each other (not four shades of the
@@ -8923,7 +8913,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-city-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-city-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-city-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-city-count">\u{1F3D7}\u{FE0F} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -9055,7 +9045,11 @@ window.MINIGAMES = {};
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       if (running) rafId = requestAnimationFrame(tick);
     }
@@ -9133,6 +9127,7 @@ window.MINIGAMES = {};
   const RESULT_HOLD_MS = 1300;       // how long the result card sits before onComplete
   const DICE_MIN = 3;                // dice awarded at score 0
   const DICE_MAX = 6;                // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;       // timer pill stays hidden until this much time remains
   const BACKDROP = "observatory";    // backdrops/<BACKDROP>.webp
 
   // Purely decorative scenery, drifting slower than the asteroids so the
@@ -9277,7 +9272,7 @@ window.MINIGAMES = {};
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-obs-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-obs-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-obs-time">\u{1F52D} 0.0s</span>`;
 
     const timebar = document.createElement("div");
@@ -9435,7 +9430,11 @@ window.MINIGAMES = {};
 
       timeEl.textContent = "\u{1F52D} " + (elapsed / 1000).toFixed(1) + "s";
       diceEl.innerHTML = diceGridHTML(diceFor(elapsed / TARGET_SURVIVE_MS));
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       timebar.style.width = Math.max(0, 1 - elapsed / DURATION_MS) * 100 + "%";
       if (elapsed >= DURATION_MS) { endRound(elapsed, false); return; }
       rafId = requestAnimationFrame(tick);

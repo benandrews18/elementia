@@ -41,6 +41,7 @@
   const SPREAD_RECENT_MS = 900;   // a bubble only "blocks" a slot this long
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "ocean";       // backdrops/<BACKDROP>.webp
 
   /* Station art behind the stage. The base is overridable so one file works
@@ -131,7 +132,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-ocean-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-pop-count">\u{1F30A} 0</span>`;
     const timebar = document.createElement("div");
     timebar.className = "mg-ocean-timebar";
@@ -258,7 +259,11 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }

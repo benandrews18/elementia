@@ -34,6 +34,7 @@
   const RESULT_HOLD_MS = 1300;
   const DICE_MIN = 3;             // dice awarded at score 0
   const DICE_MAX = 6;             // dice awarded at score 1
+  const TIMER_SHOW_MS = 10000;    // timer pill stays hidden until this much time remains
   const BACKDROP = "power-plant"; // backdrops/<BACKDROP>.webp
 
   const WIRE_COLORS = ["#e6564f", "#eb9a3c", "#e8d24c", "#5fcf6a", "#4ea8de", "#8b6fe0", "#e06fc0"];
@@ -149,7 +150,7 @@
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-power-dice">${diceGridHTML(DICE_MIN)}</span>` +
-      `<span class="mg-pill mg-timer-pill" id="mg-power-timer">${Math.ceil(DURATION_MS / 1000)}s</span>` +
+      `<span class="mg-pill mg-timer-pill" id="mg-power-timer" style="display:none"></span>` +
       `<span class="mg-pill mg-score-pill" id="mg-power-solved">\u{26A1} 0</span>`;
 
     const timebar = document.createElement("div");
@@ -343,7 +344,11 @@
       const elapsed = Date.now() - start;
       const left = Math.max(0, 1 - elapsed / DURATION_MS);
       timebar.style.width = (left * 100) + "%";
-      timerEl.textContent = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000)) + "s";
+      const remainMs = DURATION_MS - elapsed;
+      if (remainMs <= TIMER_SHOW_MS) {
+        timerEl.style.display = "";
+        timerEl.textContent = Math.max(0, Math.ceil(remainMs / 1000)) + "s";
+      }
       if (elapsed >= DURATION_MS) { endRound(); return; }
       rafId = requestAnimationFrame(tick);
     }
