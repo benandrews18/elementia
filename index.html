@@ -384,6 +384,11 @@ body[data-screen="codex"] #trackedPill{display:none}
   min-height:250px;
 }
 .job-card.turned-in{opacity:.6}
+/* The one board card per station guaranteed to be craftable AT that
+   station (see pickStationJobOptions()'s `special` card) -- a thick
+   station-colored border, --suit set inline same as .job-suit-badge,
+   distinguishes it from the other, fully-random cards at a glance. */
+.job-card.special{border-width:5px; border-color:var(--suit, var(--gold))}
 .job-badge{
   position:absolute; top:-15px; left:-8px; width:38px; height:38px; border-radius:50%;
   background:var(--gold-soft); border:2.5px solid var(--gold); color:#fff;
@@ -433,6 +438,7 @@ body[data-screen="codex"] #trackedPill{display:none}
    so tapping the pin never counts as tapping through to Item Reference. */
 .ji-nameline{display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:0 2px}
 .ji-name{font-weight:700; font-size:12.5px; line-height:1.25; min-width:0; overflow:hidden; text-overflow:ellipsis}
+.ji-progress{font-size:10.5px; font-weight:700; color:var(--mute); letter-spacing:.2px; font-variant-numeric:tabular-nums}
 .job-item.have .ji-icon-wrap::after{
   content:"\2713"; position:absolute; bottom:-2px; left:-2px; width:17px; height:17px; border-radius:50%;
   background:var(--ok); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;
@@ -1360,6 +1366,24 @@ body[data-screen="codex"] #trackedPill{display:none}
    blanket .item selector above, since ordinary re-renders of already-
    visible shop items shouldn't replay this every time. */
 .item.item-pop-in{ animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both; }
+/* Item-unlock reveal overlay (see #itemReveal/flushPendingReveal()) -- the
+   newly unlocked card(s) reuse the real shop's own .item markup (itemHTML())
+   so they look identical to how they'll sit in the list once the overlay
+   closes, just gold-bordered and forced to full brightness (.item.owned
+   normally dims to .62 opacity -- specifically NOT wanted here, see the
+   user-facing spec: "full colour," not darkened like the rest of the
+   screen). */
+#itemReveal{flex-direction:column; align-items:center; justify-content:center}
+.item-reveal-list{display:flex; flex-direction:column; gap:16px; width:100%; max-width:440px; margin:auto}
+.item-reveal-list .item{
+  border:3px solid var(--gold); border-radius:12px; opacity:1 !important;
+  box-shadow:0 0 26px rgba(226,178,90,.55), 0 10px 26px rgba(0,0,0,.45);
+  animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both;
+}
+.item-reveal-caption{
+  margin-top:24px; font-size:15px; font-weight:800; letter-spacing:1.2px; color:var(--gold);
+  text-shadow:0 2px 10px rgba(0,0,0,.6); text-align:center; width:100%;
+}
 /* Every ordinary button gets a quick press-in bounce on tap unless it
    already defines its own :active transform elsewhere (those are more
    specific, e.g. class selectors, and still win the cascade). */
@@ -1699,11 +1723,33 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    narrow fixed grid columns (which is also what forced the old mobile
    breakpoint to stack everything vertically; this layout doesn't need one). */
 .reftable{background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden}
-.refrow{display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line2)}
+.refrow{position:relative; display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line2)}
 .refrow:last-child{border-bottom:none}
 .refrow:hover{background:var(--bg-soft)}
 .refrow.owned{background:var(--ok-soft)}
 .refrow.owned:hover{filter:brightness(.98)}
+/* Hard Mode tiered re-craft borders (see craftTier()) -- same colors as the
+   card-inspection popup's .pc-card.tier-* (silver/gold/diamond+shine), just
+   framed as a full rounded border since a reference row has no suit-colored
+   edge of its own to leave alone. */
+.refrow.tier-silver{
+  border:3px solid #c9ced8; border-radius:12px; margin:4px 8px;
+  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 14px rgba(201,206,216,.35);
+}
+.refrow.tier-gold{
+  border:3px solid var(--gold); border-radius:12px; margin:4px 8px;
+  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 16px rgba(226,178,90,.4);
+}
+.refrow.tier-diamond{
+  border:3px solid #2dd4c8; border-radius:12px; margin:4px 8px; overflow:hidden;
+  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 18px rgba(45,212,200,.45);
+}
+.refrow.tier-diamond::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.45) 50%, transparent 60%);
+  transform:translateX(-120%);
+  animation:pc-shine 3.2s ease-in-out infinite;
+}
 .refem{font-size:42px; line-height:1; width:54px; flex:none; text-align:center; padding-top:3px}
 .refbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
 .reftop{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
@@ -1997,6 +2043,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="pc-label">MADE FROM</div>
     <div class="pc-ingredients" id="cpIngredients"></div>
   </div>
+</div>
+
+<!-- item-unlock reveal: opens (screen darkens) the instant the crafted-card
+     popup above is dismissed, if that craft unlocked new shop items; stays
+     dark and empty for 1s (see flushPendingReveal()), then the newly
+     unlocked item(s) pop in with gold borders over the darkened backdrop.
+     Tap anywhere to dismiss once shown -- see closeItemReveal(). -->
+<div class="overlay item-reveal" id="itemReveal" role="dialog" aria-modal="true" aria-labelledby="itemRevealCaption">
+  <div class="item-reveal-list" id="itemRevealList"></div>
+  <div class="item-reveal-caption" id="itemRevealCaption" hidden>✨ NEW ITEMS UNLOCKED</div>
 </div>
 
 <!-- job turn-in feedback: same trading-card look as the Job Board's own
@@ -3686,6 +3742,10 @@ const STATION_BG = {
    enough points to feel like a real "big item" rather than a stepping
    stone. */
 const JOB_MIN_CREATION_POINTS = 13;
+/* At most this many jobs can be held (taken, not-yet-turned-in) at once --
+   turning one in frees a slot. See takeJob()/jobBoardHTML(). */
+const MAX_ACTIVE_JOBS = 4;
+const activeJobCount = () => state.jobs.filter(j => !j.turnedIn).length;
 function jobEligibleItems(){
   const names = ENTRIES
     .filter(e => e.tier === "CAPSTONE" || (e.tier === "CREATION" && e.points >= JOB_MIN_CREATION_POINTS))
@@ -3700,110 +3760,37 @@ function shuffle(arr){
   return arr;
 }
 
-/* Every station this item's ingredient chain still touches, counting only
-   what isn't already sitting in inventory (componentClosure() covers
-   everything below it, recursively -- so as the player builds up toward a
-   capstone, its remaining required-station set naturally shrinks). Nearly
-   every capstone's FULL closure eventually touches most of the map (that's
-   the point of the item web), which is why this filters to un-owned items
-   rather than the raw closure -- otherwise every big item would look
-   equally "far" from anywhere. */
-function itemRequiredStations(name){
-  const entry = ENTRIES.find(e => e.name === name);
-  if (!entry) return [];
-  const stations = new Set();
-  if (!owns(name)) stations.add(entry.station);
-  componentClosure(name).filter(n => !owns(n)).forEach(n => {
-    const e = ENTRIES.find(x => x.name === n);
-    if (e) stations.add(e.station);
-  });
-  return [...stations];
-}
-/* Total hop-count from `from` to every station this item still needs --
-   sum rather than bottleneck, so both "how many stops" and "how far each
-   one is" count against feasibility. Only used as pickStationJobOptions()'s
-   fallback ranking, for the rare station with zero real jobOfferScore()
-   connection to anything left in the pool. */
-function jobFeasibility(name, from){
-  const stations = itemRequiredStations(name);
-  if (!stations.length) return 0;
-  return stations.reduce((sum, s) => sum + ((STATION_DIST[from] && STATION_DIST[from][s]) ?? 99), 0);
-}
-
-/* Every raw-element need across an item's FULL recipe tree (recursive,
-   unlike needsOf() which only looks one level down) -- the "how much does
-   this item actually run on what a given station rolls" signal that
-   jobOfferScore() below is built on. */
-function itemFullElementNeeds(name){
-  const elems = {};
-  const seen = new Set();
-  function walk(n){
-    if (seen.has(n)) return;
-    seen.add(n);
-    const entry = ENTRIES.find(e => e.name === n);
-    if (!entry) return;
-    const {els, items} = needsOf(entry.reqs);
-    Object.keys(els).forEach(sym => { elems[sym] = (elems[sym] || 0) + els[sym]; });
-    items.forEach(i => walk(i.name));
-  }
-  walk(name);
-  return elems;
-}
-
-/* How well item `name` fits being offered as a job AT `station` -- higher
-   is better. This is the "connection to the station" the Job Board is
-   supposed to reflect: not just "is it literally sold here" (some credit
-   for that, but not the whole story), but does this station's own dice
-   and shop genuinely feed the item's full build, even indirectly. A small
-   bonus for ingredients the player already has is included too (an
-   offered job that's already partway done reads as achievable, not just
-   aspirational) -- separate from, and lighter-weight than, the
-   station-connection signal itself. */
-function jobOfferScore(name, station){
-  const entry = ENTRIES.find(e => e.name === name);
-  const st = STATION_BY_NAME[station];
-  if (!entry || !st) return 0;
-  let score = entry.station === station ? 3 : 0;
-  const stDice = new Set(st.dice);
-  const elemNeeds = itemFullElementNeeds(name);
-  Object.keys(elemNeeds).forEach(sym => {
-    if (stDice.has(sym)) score += 2;
-    if (count(sym) > 0) score += 0.5;
-  });
-  componentClosure(name).forEach(n => {
-    const e = ENTRIES.find(x => x.name === n);
-    if (e && e.station === station) score += 1;
-    if (owns(n)) score += 1;
-  });
-  return score;
-}
-
 /* The board offered AT a given station -- up to 4 cards (1-2 items each),
    drawn from whatever's still eligible and not already claimed by an
-   earlier job this session, ranked by jobOfferScore() so what's on offer
-   actually relates to this station rather than being a random slice of
-   every big item in the game. Falls back to the old hop-distance ranking
-   (jobFeasibility()) if literally nothing scores above 0 here (a station
-   with zero real connection to anything left in the pool -- shouldn't
-   normally happen, but better than an empty board). Called once per
-   station ARRIVAL (see goStation()), not on every board-panel open, so
-   the same 4 cards stay put for the whole stay -- see the caller. */
+   earlier job this session. Cards are completely random EXCEPT the first
+   (top-left in the 2-column grid, see .mp-options) -- that one is
+   guaranteed to contain item(s) actually sold/craftable at THIS station
+   (entry.station === station), so every board has at least one offer that
+   visibly belongs here; the rest are an unweighted random slice of the
+   whole eligible pool, station-relevance and all. Called once per station
+   ARRIVAL (see goStation()), not on every board-panel open, so the same
+   cards stay put for the whole stay -- see the caller. Each card is
+   {items, special} -- special marks the guaranteed-local card so
+   jobBoardHTML() can give it its thick station-colored border. */
 function pickStationJobOptions(station){
   const taken = new Set(state.jobs.flatMap(j => j.items));
-  let pool = jobEligibleItems().filter(n => !taken.has(n));
-  let ranked = pool.map(n => ({n, s: jobOfferScore(n, station)}))
-                    .sort((a, b) => b.s - a.s);
-  if (!ranked.some(x => x.s > 0)){
-    ranked = pool.map(n => ({n, s: -jobFeasibility(n, station)}))
-                 .sort((a, b) => b.s - a.s);
-  }
-  const top = ranked.slice(0, Math.max(6, Math.ceil(ranked.length / 2))).map(x => x.n);
-  const rest = ranked.slice(top.length).map(x => x.n);
-  const names = shuffle(top).concat(shuffle(rest));
+  const pool = shuffle(jobEligibleItems().filter(n => !taken.has(n)));
   const cards = [];
-  for (let k = 0; k < 4 && names.length; k++){
-    const size = names.length >= 2 && Math.random() < 0.6 ? 2 : 1;
-    cards.push(names.splice(0, size));
+
+  const localIdx = pool.findIndex(n => {
+    const e = ENTRIES.find(x => x.name === n);
+    return e && e.station === station;
+  });
+  if (localIdx !== -1){
+    const [first] = pool.splice(localIdx, 1);
+    const size = pool.length && Math.random() < 0.6 ? 2 : 1;
+    const items = [first, ...pool.splice(0, size - 1)];
+    cards.push({items, special:true});
+  }
+
+  while (cards.length < 4 && pool.length){
+    const size = pool.length >= 2 && Math.random() < 0.6 ? 2 : 1;
+    cards.push({items: pool.splice(0, size), special:false});
   }
   return cards;
 }
@@ -3812,12 +3799,13 @@ function pickStationJobOptions(station){
    button copy is the confirmation). Only removes THIS card from the
    station's board -- the other (up to) 2 stay put; the board as a whole
    doesn't refresh until the player actually leaves the station (see
-   goStation()). No cap on how many jobs can be held at once -- the only
-   limit is state.jobBoard.taken, one NEW job per station visit, which
-   resets automatically every time a fresh board is rolled on arrival. */
+   goStation()). Held jobs are capped at MAX_ACTIVE_JOBS -- see
+   jobBoardHTML(), which collapses and fades the whole board once the cap
+   is hit so there's nothing left to (mistakenly) tap. */
 function takeJob(cardIndex){
   if (!state.jobBoard || state.jobBoard.taken || !state.jobBoard.cards[cardIndex]) return;
-  const items = state.jobBoard.cards[cardIndex];
+  if (activeJobCount() >= MAX_ACTIVE_JOBS) return;
+  const items = state.jobBoard.cards[cardIndex].items;
   state.jobs.push({items, turnedIn:false});
   state.jobBoard.cards.splice(cardIndex, 1);
   state.jobBoard.taken = true;
@@ -3863,6 +3851,7 @@ let selectedMapStation = null; // ephemeral: which node's card is showing on the
 // card-inspection popup closes -- see the craft click handler and
 // flushPendingReveal().
 let pendingRevealNames = null, pendingRevealStation = null;
+let itemRevealTimer = null, itemRevealShown = false;
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
@@ -3995,25 +3984,6 @@ function edgeUnlocked(a, b){
    for picking a starting station as for normal in-run movement). */
 const isMapConnected = (a,b) => a === null ? !!b :
   !!(a && b && MAP_ADJ[a] && MAP_ADJ[a].has(b) && edgeUnlocked(a,b));
-
-/* All-pairs shortest hop-count between stations, via BFS over MAP_ADJ --
-   the graph is tiny (8 nodes) so this is cheap to precompute once. Powers
-   the Job Board's station-aware card offering (see jobFeasibility()). */
-const STATION_DIST = (() => {
-  const dist = {};
-  Object.keys(MAP_ADJ).forEach(start => {
-    const d = {[start]: 0};
-    const queue = [start];
-    while (queue.length){
-      const cur = queue.shift();
-      (MAP_ADJ[cur] || new Set()).forEach(nb => {
-        if (!(nb in d)){ d[nb] = d[cur] + 1; queue.push(nb); }
-      });
-    }
-    dist[start] = d;
-  });
-  return dist;
-})();
 
 const MAP_NODE_POS = {
   "The Observatory":    [49.7,  9.1],
@@ -4543,13 +4513,27 @@ function jobNodeHTML(name, kind, path, seen){
    ingredient tree (see jobBoardHTML()); tapping the icon/name sends the
    player to Item Reference instead, which is the one place that tree still
    lives. Progress reads via a small checkmark badge on the icon (see
-   .job-item.have .ji-icon-wrap::after), not a status line -- this card's
-   compact centered layout has no room for one. */
+   .job-item.have .ji-icon-wrap::after) AND a build-progress fraction below
+   the name (see jobItemProgressFraction()) -- the checkmark is just "do I
+   have THIS item," the fraction is "how far along its whole build is." */
+/* x/N build-progress fraction for a job item -- N is the item itself plus
+   every item anywhere in its ingredient chain (componentClosure(), which
+   already excludes the item itself), x is how many of that full set the
+   player currently owns. Unlike stillNeededClosure() (which prunes already-
+   satisfied branches to answer "what do I still need to buy"), this
+   deliberately wants the FULL static tree as the denominator -- it's a
+   progress meter over the whole build, not a shopping list. */
+function jobItemProgressFraction(name){
+  const all = [name, ...componentClosure(name)];
+  const have = all.filter(owns).length;
+  return {have, total: all.length};
+}
 function jobItemChipHTML(name){
   const entry = ENTRIES.find(e => e.name === name);
   if (!entry) return "";
   const has = owns(name);
   const pinned = isPinned(name);
+  const {have, total} = jobItemProgressFraction(name);
   // The suit badge belongs to THIS item's section (see .job-suit-badge) --
   // .job-item is the positioning context, so on a 2-item card the second
   // badge lands inside the lower half rather than on the card's own edge.
@@ -4563,6 +4547,7 @@ function jobItemChipHTML(name){
         title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
       <span class="ji-name">${esc(name)}</span>
     </span>
+    <span class="ji-progress">${have}/${total}</span>
   </div>`;
 }
 
@@ -4603,10 +4588,10 @@ function jobCardBodyHTML(items, bonus){
    still matches the station it was rolled for -- nothing is offered from
    the map screen (current === null), only the player's own held jobs. */
 function jobBoardHTML(){
-  // No cap on how many jobs can be held at once -- every not-yet-turned-in
-  // job gets its own card in a grid (same "Take this job" card shape the
-  // board itself uses). Turned-in jobs get their own separate section
-  // below in the same grid format, just dimmed (.job-card.turned-in) --
+  // Up to MAX_ACTIVE_JOBS held at once -- every not-yet-turned-in job gets
+  // its own card in a grid (same "Take this job" card shape the board
+  // itself uses). Turned-in jobs get their own separate section below in
+  // the same grid format, just dimmed (.job-card.turned-in) --
   // they used to collapse into a small stacked deck inside "My Jobs"
   // itself, but that stack's own negative top/left offsets (each card
   // shifted up to peek out above the one in front of it) crept upward
@@ -4638,27 +4623,32 @@ function jobBoardHTML(){
   const completedSection = completedJobs.length
     ? `<details class="job-section"><summary class="job-board-heading">✅ Completed Jobs</summary>${jobGridHTML(completedJobs, true)}</details>` : "";
 
-  // One NEW job per station visit (see state.jobBoard.taken/takeJob()) --
-  // no limit on how many can be held at once, so this only locks THIS
-  // visit's board once its one pick is spent; a fresh visit (even to the
-  // same station again) rolls a fresh board with its own fresh pick.
-  const locked = !!(state.jobBoard && state.jobBoard.station === current && state.jobBoard.taken);
+  // Locked (collapsed, faded, untappable -- see .mp-options.locked) for
+  // either of two reasons: this visit's one pick is already spent (see
+  // state.jobBoard.taken/takeJob()), or the player's already holding
+  // MAX_ACTIVE_JOBS jobs and needs to turn one in before taking another.
+  // A fresh visit rolls a fresh board with its own fresh pick either way.
+  const atCap = activeJobs.length >= MAX_ACTIVE_JOBS;
+  const locked = atCap || !!(state.jobBoard && state.jobBoard.station === current && state.jobBoard.taken);
 
   let boardSection;
   if (current === null){
     boardSection = `<p class="empty">🗺️ Job offers are specific to whatever station you're standing in -- visit one to see its board.</p>`;
   } else {
     const cards = (state.jobBoard && state.jobBoard.station === current) ? state.jobBoard.cards : [];
+    const st = STATION_BY_NAME[current];
+    const suitColor = st ? DATA.suits[st.suit].color : null;
     const boardBody = cards.length
-      ? `<div class="mp-options ${locked ? "locked" : ""}">${cards.map((items, i) => `
+      ? `<div class="mp-options ${locked ? "locked" : ""}">${cards.map((card, i) => `
           <div class="job-card-wrap">
-            <div class="job-card">
-              ${jobCardBodyHTML(items, jobBonus({items}))}
+            <div class="job-card ${card.special ? "special" : ""}" ${card.special && suitColor ? `style="--suit:${suitColor}"` : ""}>
+              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}))}
             </div>
             <button class="bigbtn mp-pick" data-take="${i}" ${locked ? "disabled" : ""}>Take this job</button>
           </div>`).join("")}</div>`
       : `<p class="empty">No more jobs on offer here this visit -- check back next time you stop by.</p>`;
-    boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">Job Board — ${esc(current)}</summary>${boardBody}</details>`;
+    const capNote = atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
+    boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">Job Board — ${esc(current)}</summary>${capNote}${boardBody}</details>`;
   }
 
   // Available offers first, accepted jobs below, completed jobs last --
@@ -4890,7 +4880,11 @@ function renderCodex(){
     const has = owns(e.name);
     const pinned = isPinned(e.name);
     const open = jobExpanded.has("refroot/" + e.name);
-    return `<div class="refrow ${has ? "owned" : ""}" data-refname="${esc(e.name)}" data-ref="${esc(e.name.toLowerCase())} ${esc(e.tier.toLowerCase())} ${esc(e.homes.join(" ").toLowerCase())} ${esc(e.recipe.toLowerCase())}">
+    // Hard Mode's tiered re-craft borders (see craftTier()) reused here so
+    // "how many times have I built this" reads at a glance across the whole
+    // catalog too, not just on the one-off card-inspection popup.
+    const tier = craftTier(e.name);
+    return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(e.name)}" data-ref="${esc(e.name.toLowerCase())} ${esc(e.tier.toLowerCase())} ${esc(e.homes.join(" ").toLowerCase())} ${esc(e.recipe.toLowerCase())}">
       <div class="refem">${em(e.emoji)}</div>
       <div class="refbody">
         <div class="reftop">
@@ -5316,20 +5310,51 @@ function showCardPop(entry, autoDismiss = true){
 /* Reveals any shop item(s) a craft unlocked but held back while its own
    card-inspection popup was open (see the craft click handler) -- no-op
    when nothing is pending, so safe to call from every cardPop dismissal
-   path regardless of why that popup was open. */
+   path regardless of why that popup was open. Runs the full "item unlock"
+   sequence: the #itemReveal overlay opens dark and empty, stays that way
+   for 1s (see showRevealedItems()'s setTimeout below), then the newly
+   unlocked item(s) pop in gold-bordered and at full brightness with a
+   caption, and wait for a tap to dismiss (see closeItemReveal()). */
 function flushPendingReveal(){
-  if (!pendingRevealNames || !pendingRevealNames.length) return;
-  const justRevealed = pendingRevealNames;
+  if (!pendingRevealNames || !pendingRevealNames.length){
+    pendingRevealNames = null; pendingRevealStation = null;
+    return;
+  }
+  itemRevealShown = false;
+  document.getElementById("itemRevealList").innerHTML = "";
+  document.getElementById("itemRevealCaption").hidden = true;
+  openOverlay("itemReveal");
+  clearTimeout(itemRevealTimer);
+  itemRevealTimer = setTimeout(showRevealedItems, 1000);
+}
+/* The 1s dark beat is over -- render the real station shop with these
+   items now included (still hidden behind the still-open, still-dark
+   overlay), then populate the overlay itself with the same item cards
+   (reusing itemHTML(), so they're pixel-identical to how they'll sit in
+   the real list once the overlay closes) plus the "NEW ITEMS UNLOCKED"
+   caption. */
+function showRevealedItems(){
+  const names = pendingRevealNames, station = pendingRevealStation;
   pendingRevealNames = null; pendingRevealStation = null;
   render();
-  requestAnimationFrame(() => {
-    justRevealed.forEach(nm => {
-      const idx = ENTRIES.findIndex(e => e.name === nm);
-      const el = document.querySelector(`[data-item-card="${idx}"]`);
-      if (el) el.classList.add("item-pop-in");
-    });
-  });
+  const entries = names.map(n => ENTRIES.find(e => e.name === n && e.station === station)).filter(Boolean);
+  document.getElementById("itemRevealList").innerHTML =
+    entries.map(e => itemHTML(e, ENTRIES.indexOf(e))).join("");
+  document.getElementById("itemRevealCaption").hidden = false;
+  itemRevealShown = true;
 }
+/* Tap-anywhere dismiss -- only once the items have actually appeared (see
+   itemRevealShown); a tap during the 1s dark beat, before there's anything
+   to look at, does nothing rather than skipping the reveal entirely. The
+   real shop underneath was already re-rendered with these items in
+   showRevealedItems(), so closing just uncovers it -- no further animation
+   needed for the "settle into the normal list" part of the spec. */
+function closeItemReveal(){
+  if (!itemRevealShown) return;
+  itemRevealShown = false;
+  closeOverlay("itemReveal");
+}
+document.getElementById("itemReveal").addEventListener("click", closeItemReveal);
 document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
@@ -7180,8 +7205,9 @@ window.MINIGAMES = {};
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
     // Clears the full HUD row (dice/timer/score pills) -- was 46, which let
-    // the handles' top edge creep up under the HUD text.
-    const TOP_Y = 84, BOTTOM_Y = stageH - 46;
+    // the handles' top edge creep up under the HUD text. Bottom row lifted
+    // another 100px off the stage floor per user request.
+    const TOP_Y = 84, BOTTOM_Y = stageH - 146;
 
     let running = true;
     let solved = 0;
@@ -7424,7 +7450,7 @@ window.MINIGAMES = {};
   // own low, wide proportions instead of the tall narrow box it replaced.
   const BASKET_W_FRAC = 0.375;       // basket width, as a fraction of stage width
   const BASKET_ASPECT = 0.65;        // basket height = width * this
-  const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
+  const BASKET_BOTTOM_GAP = 104;     // px from stage floor to basket bottom
   // ~0.71 w:h is what actually reads as an egg rather than a small oval --
   // the shape comes from the border-radius in .mg-green-egg, but it needs
   // both the ratio AND enough pixels to be legible while falling.
@@ -9259,7 +9285,7 @@ window.MINIGAMES = {};
   const DRIFT_DECEL = 300;           // px/s^2 bleeding speed off when released
   const MAX_VX = 1190;               // px/s, terminal sideways speed
   const ROCKET_SIZE = 66;            // px, square hit-box side
-  const ROCKET_BOTTOM = 92;          // px, fixed distance from the stage floor
+  const ROCKET_BOTTOM = 192;         // px, fixed distance from the stage floor (lifted 100px per user request)
   const OOB_SLACK = 0.8;             // fraction of the rocket allowed off-edge
   const ROCK_SPAWN_MS_START = 1250;  // ms between asteroid spawns at t=0
   const ROCK_SPAWN_MS_MIN = 700;     // floor as difficulty ramps
