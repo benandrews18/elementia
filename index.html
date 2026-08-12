@@ -4785,6 +4785,19 @@ function capstoneClosureRevealsItem(name){
     return s && componentClosure(s.capstone[1]).includes(name);
   });
 }
+/* Once an item's actually been SEEN (state.seenItems -- shown in a shop,
+   a map preview icon, or a capstone card), every item anywhere in ITS OWN
+   full ingredient tree is revealed too, unconditionally -- seeing
+   "Ecosystem" naturally previews everything it's built from (Soil,
+   Telescope, Clock, ...), so hiding those afterward would just be
+   frustrating rather than mysterious. Job-tracked items get the identical
+   treatment via jobCoversItem() (same componentClosure() walk, rooted at
+   job.items instead of state.seenItems) -- taking a job for something
+   should preview its whole build the same way actually seeing it would. */
+function seenClosureRevealsItem(name){
+  return Object.keys(state.seenItems).some(seenName =>
+    seenName !== name && componentClosure(seenName).includes(name));
+}
 /* An item with item-type ingredients (MATERIAL/COMPONENT pieces sold at
    OTHER stations, not raw elements) stays hidden until the player has
    actually visited every one of those ingredients' home stations -- no
@@ -4813,29 +4826,33 @@ function isRevealed(entry){
   // populates state.seenItems in the first place.
   if (state.seenItems[entry.name]) return true;
   if (!DATA.avgVisits) return true; // fail open if the sync data is missing
+
+  // Exemption to every gate below (including the visited-station one right
+  // after this): a job-tracked item, or anything already visibly sitting
+  // in some OTHER seen item's own ingredient tree, is revealed no matter
+  // what -- see seenClosureRevealsItem()/jobCoversItem() above. Checked
+  // this early specifically so it isn't itself blocked by
+  // itemIngredientStationsVisited() -- part of the whole point is
+  // previewing pieces from stations the player hasn't reached yet.
+  if (jobCoversItem(entry.name) || seenClosureRevealsItem(entry.name)) return true;
+
   if (!itemIngredientStationsVisited(entry)) return false;
 
   // Planet: only once the player holds at least 1 of every element (i.e.
-  // can actually craft it) or a job calls for it -- its own AvgVisits
-  // would otherwise auto-reveal it far too early.
-  if (entry.name === "Planet") return canCraft(entry) || jobCoversItem(entry.name);
+  // can actually craft it) -- its own AvgVisits would otherwise auto-reveal
+  // it far too early. (jobCoversItem already handled above.)
+  if (entry.name === "Planet") return canCraft(entry);
 
-  // Job coverage bypasses the Furnace+Clock secret too -- taking a job for
-  // Gemstone Collection (or anything else whose closure runs through a
-  // gemstone) should reveal every station that sells one of its pieces,
-  // not just wait for the player to stumble onto Furnace+Clock ownership
-  // first.
-  if (GEMSTONE_SECRET.has(entry.name)) return (owns("Furnace") && owns("Clock")) || jobCoversItem(entry.name);
-  if (FURNACE_GATED_ALLOYS.has(entry.name)) return owns("Furnace") || jobCoversItem(entry.name) || canCraft(entry);
+  if (GEMSTONE_SECRET.has(entry.name)) return owns("Furnace") && owns("Clock");
+  if (FURNACE_GATED_ALLOYS.has(entry.name)) return owns("Furnace") || canCraft(entry);
 
   if (Object.prototype.hasOwnProperty.call(FORCED_VISIT_THRESHOLD, entry.name)){
-    return canCraft(entry) || jobCoversItem(entry.name) || state.visits >= FORCED_VISIT_THRESHOLD[entry.name];
+    return canCraft(entry) || state.visits >= FORCED_VISIT_THRESHOLD[entry.name];
   }
 
   const avg = DATA.avgVisits[entry.name];
   if (avg == null || avg < REVEAL_HOP_THRESHOLD) return true;
-  return jobCoversItem(entry.name)
-      || canCraft(entry)
+  return canCraft(entry)
       || state.visits >= Math.ceil(avg) + 1
       || capstoneClosureRevealsItem(entry.name);
 }
