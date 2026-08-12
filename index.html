@@ -817,8 +817,16 @@ body[data-screen="codex"] #trackedPill{display:none}
   width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
   text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
   display:flex; align-items:center; justify-content:center;
+  /* Outer ring in the STATION's own color -- --suit here is reassigned
+     per-chip to the ELEMENT's color (see renderStation()'s gather map), so
+     this needs its own separate variable (--station-suit, set once on the
+     outer .sheet) to reach the station color without being shadowed. Ring
+     sits just outside the existing element-colored border rather than
+     replacing it -- "obtainable at this station" layered on top of "this
+     element specifically," not swapping one meaning for the other. */
+  box-shadow:0 0 0 2px var(--station-suit, transparent);
 }
-.gchip .gsym{line-height:1; font-size:min(26px, 40cqw)}
+.gchip .gsym{line-height:1; font-size:min(32px, 55cqw)}
 /* Base grid layout shared by both dice contexts below -- sizing/border
    are context-specific (legend vs. roll), see each. */
 .die{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
@@ -907,7 +915,7 @@ body[data-screen="codex"] #trackedPill{display:none}
    its dice-legend counterpart. */
 .rollcard .sym{
   display:none; width:100%; height:100%; align-items:center; justify-content:center;
-  font-weight:800; color:#221f1a; font-size:min(26px, 40cqw);
+  font-weight:800; color:#221f1a; font-size:min(32px, 55cqw);
 }
 .rollcard.revealed{background:#fff; border-color:var(--suit); border-width:5px}
 .rollcard.revealed .die{display:none}
@@ -1358,7 +1366,7 @@ body[data-screen="codex"] #trackedPill{display:none}
   100%{transform:scale(1); opacity:1}
 }
 .sheetbox, .pc-card, .jtp-card, .mode-card, .el-pop-bubble,
-.bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row{
+.bigbtn, .tbtn:not(.ghost), .map-travel-btn, button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
 /* A shop item newly revealed by the craft that just happened (see
@@ -1904,9 +1912,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   box-shadow:0 1px 4px rgba(0,0,0,.3);
 }
 .arr-swatch.active{border-color:#fff; box-shadow:0 0 0 2px var(--gold)}
-/* Sticker toolbar -- appears only once a sticker is selected (tapping the
-   canvas background clears the selection and hides it again), floating
-   just above the tray rather than overlapping the canvas itself. */
+/* Sticker toolbar -- always present now (was previously shown only once a
+   sticker was selected), floating just above the tray rather than
+   overlapping the canvas itself. Its own click handler no-ops when
+   nothing's selected, so the buttons just sit inert until then. */
 .arr-toolbar{
   flex:none; display:none; align-items:center; justify-content:center; gap:10px;
   padding:8px 14px; background:var(--sunken); border-top:1px solid var(--line);
@@ -1920,21 +1929,24 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Tray of "sticker" cards, 33% of the screen's height per spec -- same
    card shape/gold border as the job-board turn-in cards (.jtp-card),
    reused here so this reads as another "pick a card" surface rather than
-   inventing a third card language for the same underlying data. */
+   inventing a third card language for the same underlying data. Rows of 3,
+   scrolling vertically (was a single horizontal-scrolling row) -- a fixed
+   3-column grid rather than flex, so cards keep a consistent width
+   regardless of how many are in the tray. */
 .arr-tray{
-  flex:none; height:33vh; overflow-x:auto; overflow-y:hidden;
-  display:flex; gap:10px; align-items:center; padding:12px 14px;
-  background:var(--card); border-top:2.5px solid var(--gold);
+  flex:none; height:33vh; overflow-x:hidden; overflow-y:auto;
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; align-content:start;
+  padding:12px 14px; background:var(--card); border-top:2.5px solid var(--gold);
 }
 .arr-tray-card{
-  flex:none; width:104px; height:calc(33vh - 24px); max-height:150px;
+  width:100%; aspect-ratio:1; max-height:150px;
   background:var(--jobcard-bg); border:2.5px solid var(--gold); border-radius:14px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   padding:8px; text-align:center;
 }
 .arr-tray-card .em{font-size:38px; line-height:1}
 .arr-tray-card .nm{font-size:12px; font-weight:800; color:#fff; line-height:1.2}
-.arr-empty{margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
+.arr-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important;
@@ -2148,7 +2160,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🗺️</span>
       <span class="setting-body">
         <span class="setting-label">Station visits per session</span>
-        <span class="setting-sub">How many stations you can visit before the session ends</span>
+        <span class="setting-sub" id="setVisitsSub">How many stations you can visit before the session ends</span>
         <label class="mini-toggle"><input type="checkbox" id="setUnlimited" class="switch"> Unlimited</label>
       </span>
       <input id="setVisits" class="setnum" type="number" min="1" step="1" inputmode="numeric" aria-label="Station visits per session">
@@ -2622,7 +2634,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🌐",
      "Renewable Grid",
      "CREATION",
-     "🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
+     "🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
      22
     ]
    ],
@@ -2739,7 +2751,7 @@ const DATA = /*__GAME_DATA_START__*/{
      15
     ],
     [
-     "🌬️",
+     "𖣘",
      "Windmill",
      "CREATION",
      "☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
@@ -3335,109 +3347,109 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Concrete": 5.6,
-  "Solar Cell": 5.0,
-  "Farm": 7.9,
-  "Clock": 8.2,
-  "Sand": 3.1,
-  "Chicken": 11.0,
-  "Steel": 3.0,
-  "Wheel": 11.0,
-  "Central Station": 25.1,
-  "Egg": 5.8,
-  "Ecosystem": 24.3,
-  "Sushi Restaurant": 19.4,
-  "Fruit Cake": 19.8,
-  "Planet": 9.0,
-  "Furnace": 4.9,
-  "Bicycle": 15.2,
-  "Deer": 6.8,
-  "Bone": 4.9,
-  "Beach Town": 26.5,
-  "Orca": 13.6,
-  "Rocket": 21.1,
-  "Yeast": 5.2,
-  "Natural Gas": 3.0,
-  "Fabric": 8.5,
-  "Diamond": 12.7,
-  "Fruit": 6.9,
-  "Flour": 9.4,
-  "Homestead": 14.9,
-  "Maglev Train": 19.1,
-  "Speedboat": 16.8,
-  "Tractor": 10.1,
-  "Grain": 8.4,
-  "Turquoise": 14.9,
-  "Geothermal Pump": 9.9,
-  "Library": 14.1,
-  "Windmill": 15.9,
-  "Bridge": 7.6,
-  "Book": 11.3,
-  "DNA": 4.0,
-  "Plastic": 8.7,
-  "Clay": 2.9,
-  "Dough": 9.6,
-  "Opal": 11.3,
-  "Building": 8.7,
-  "Soil": 4.8,
-  "Car": 17.9,
-  "Ruby": 13.5,
-  "Museum": 20.7,
-  "Banana": 7.7,
-  "Solar System": 18.3,
-  "Space Station": 23.3,
-  "Log Cabin": 7.7,
-  "Rubber": 5.4,
-  "Water": 2.6,
-  "Star": 16.9,
-  "Tools": 3.7,
-  "Bread": 11.1,
-  "Life": 19.4,
-  "Satellite Dish": 11.7,
-  "Computer": 15.7,
-  "Water Turbine": 15.7,
-  "Sunflower": 10.6,
-  "Statue": 6.5,
-  "Wire": 3.8,
-  "Cloud": 5.3,
-  "Motorcycle": 17.4,
-  "Fertilizer": 3.4,
-  "Engine": 7.1,
-  "Plant Fiber": 7.3,
-  "Light Bulb": 7.7,
-  "Sugar": 3.2,
-  "Volcano": 14.5,
-  "Gemstone Collection": 19.5,
-  "Skyscraper": 16.7,
-  "Compass": 11.5,
   "Limestone": 3.0,
-  "Lighthouse": 13.8,
-  "Magnet": 9.1,
-  "Stainless Steel": 5.4,
-  "Metropolis": 23.0,
-  "Cake": 12.3,
-  "Sailboat": 9.3,
-  "Coral Reef": 17.5,
-  "Aluminum Alloy": 5.5,
-  "Telescope": 12.4,
-  "Canoe": 6.2,
-  "Grand Banquet": 23.5,
-  "Salmon": 12.0,
-  "Airplane": 14.8,
   "Microchip": 8.8,
-  "Seaweed": 5.2,
-  "Biofuel": 11.9,
-  "Glass": 5.4,
-  "Dinosaur": 12.8,
-  "Battery": 4.8,
-  "Tree": 5.2,
-  "Rainbow": 17.3,
+  "Volcano": 14.5,
+  "Engine": 7.1,
+  "Rocket": 21.1,
+  "Clock": 8.2,
+  "Plastic": 8.7,
+  "Sushi Restaurant": 19.4,
+  "Cake": 12.3,
+  "Turquoise": 14.9,
+  "Building": 8.7,
+  "Central Station": 25.1,
+  "Canoe": 6.2,
+  "Banana": 7.7,
+  "Chicken": 11.0,
   "Pearl": 14.1,
-  "Amber": 11.0,
-  "Renewable Grid": 22.6,
+  "Fabric": 8.5,
+  "Glass": 5.4,
+  "Grand Banquet": 23.5,
+  "Motorcycle": 17.4,
+  "Planet": 9.0,
+  "Clay": 2.9,
+  "Sand": 3.1,
+  "Yeast": 5.2,
+  "Lighthouse": 13.8,
+  "Dinosaur": 12.8,
+  "Windmill": 15.9,
+  "Museum": 20.7,
+  "Maglev Train": 19.1,
+  "Sugar": 3.2,
+  "Steel": 3.0,
   "Titanium Alloy": 6.0,
+  "Speedboat": 16.8,
+  "Ruby": 13.5,
+  "Rubber": 5.4,
+  "Bone": 4.9,
+  "Log Cabin": 7.7,
+  "Bread": 11.1,
+  "Bridge": 7.6,
+  "Skyscraper": 16.7,
+  "Cloud": 5.3,
+  "Deer": 6.8,
+  "Fruit Cake": 19.8,
+  "Coral Reef": 17.5,
+  "Soil": 4.8,
+  "Tree": 5.2,
+  "Bicycle": 15.2,
+  "Concrete": 5.6,
+  "DNA": 4.0,
+  "Battery": 4.8,
+  "Solar Cell": 5.0,
+  "Flour": 9.4,
+  "Star": 16.9,
+  "Fertilizer": 3.4,
+  "Biofuel": 11.9,
+  "Orca": 13.6,
   "Fireworks": 4.3,
-  "Robot": 17.7
+  "Sailboat": 9.3,
+  "Tractor": 10.1,
+  "Wire": 3.8,
+  "Opal": 11.3,
+  "Homestead": 14.9,
+  "Wheel": 11.0,
+  "Amber": 11.0,
+  "Furnace": 4.9,
+  "Geothermal Pump": 9.9,
+  "Light Bulb": 7.7,
+  "Stainless Steel": 5.4,
+  "Book": 11.3,
+  "Sunflower": 10.6,
+  "Solar System": 18.3,
+  "Tools": 3.7,
+  "Natural Gas": 3.0,
+  "Dough": 9.6,
+  "Water Turbine": 15.7,
+  "Satellite Dish": 11.7,
+  "Plant Fiber": 7.3,
+  "Aluminum Alloy": 5.5,
+  "Metropolis": 23.0,
+  "Fruit": 6.9,
+  "Telescope": 12.4,
+  "Seaweed": 5.2,
+  "Car": 17.9,
+  "Airplane": 14.8,
+  "Computer": 15.7,
+  "Statue": 6.5,
+  "Diamond": 12.7,
+  "Renewable Grid": 22.6,
+  "Egg": 5.8,
+  "Farm": 7.9,
+  "Ecosystem": 24.3,
+  "Rainbow": 17.3,
+  "Beach Town": 26.5,
+  "Library": 14.1,
+  "Life": 19.4,
+  "Salmon": 12.0,
+  "Grain": 8.4,
+  "Water": 2.6,
+  "Robot": 17.7,
+  "Magnet": 9.1,
+  "Space Station": 23.3,
+  "Gemstone Collection": 19.5,
+  "Compass": 11.5
  }
 }/*__GAME_DATA_END__*/;
 
@@ -3851,7 +3863,7 @@ let selectedMapStation = null; // ephemeral: which node's card is showing on the
 // card-inspection popup closes -- see the craft click handler and
 // flushPendingReveal().
 let pendingRevealNames = null, pendingRevealStation = null;
-let itemRevealTimer = null, itemRevealShown = false;
+let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = false, itemRevealDismissTimer = null;
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
@@ -3929,6 +3941,11 @@ function freshState(){
                        // left; taken flips true the moment this visit's one job pick is spent
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // progressive shop reveal's capstone-closure rule (see isRevealed()).
+    craftedAtStation: {}, // {stationName: {itemName: true}} -- every item actually crafted
+                           // while standing at that specific station (not just owns() --
+                           // a couple of items are sold at 2 stations under the same name, and
+                           // the "Crafted Items" toggle (see shopBodyHTML()) means "crafted
+                           // HERE," not "owned somewhere").
     seenItems: {},     // {itemName: true} -- every item ever actually shown to the player
                         // (shop row, map preview icon, capstone card) this run -- Item
                         // Reference only lists these plus job-card component closures.
@@ -4098,6 +4115,8 @@ function craft(entry){
   if (state.mode === "hard"){
     state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
   }
+  if (!state.craftedAtStation[current]) state.craftedAtStation[current] = {};
+  state.craftedAtStation[current][entry.name] = true;
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
   if (isPinned(entry.name)) togglePin(entry.name);
@@ -4766,16 +4785,47 @@ function capstoneClosureRevealsItem(name){
     return s && componentClosure(s.capstone[1]).includes(name);
   });
 }
+/* An item with item-type ingredients (MATERIAL/COMPONENT pieces sold at
+   OTHER stations, not raw elements) stays hidden until the player has
+   actually visited every one of those ingredients' home stations -- no
+   point showing e.g. a City item that needs a Deep Mine part before the
+   player's ever set foot in Deep Mine. Recipes built entirely from raw
+   elements have nothing to gate on and are exempt outright (checked one
+   level down, not the full recursive tree -- this is about the item's OWN
+   direct ingredients, not everything further down their own chains). */
+function itemIngredientStationsVisited(entry){
+  const {items} = needsOf(entry.reqs);
+  if (!items.length) return true;
+  return items.every(it => {
+    const ingEntry = ENTRIES.find(e => e.name === it.name);
+    return ingEntry && state.visitedStations[ingEntry.station];
+  });
+}
 function isRevealed(entry){
   if (entry.tier === "CAPSTONE") return true;
+  // Sticky: once an item has actually been shown, it stays shown forever,
+  // even if whatever made it visible (canCraft, an active job, owning a
+  // gate item like Furnace) later stops being true -- Hard Mode especially
+  // can un-craft its way back into "not currently craftable" (e.g. Furnace
+  // gets spent as an ingredient elsewhere), and a shop item disappearing
+  // after the player already knows it exists reads as a bug, not a
+  // mystery. markSeen() (called on every shopEntries pass below) is what
+  // populates state.seenItems in the first place.
+  if (state.seenItems[entry.name]) return true;
   if (!DATA.avgVisits) return true; // fail open if the sync data is missing
+  if (!itemIngredientStationsVisited(entry)) return false;
 
   // Planet: only once the player holds at least 1 of every element (i.e.
   // can actually craft it) or a job calls for it -- its own AvgVisits
   // would otherwise auto-reveal it far too early.
   if (entry.name === "Planet") return canCraft(entry) || jobCoversItem(entry.name);
 
-  if (GEMSTONE_SECRET.has(entry.name)) return owns("Furnace") && owns("Clock");
+  // Job coverage bypasses the Furnace+Clock secret too -- taking a job for
+  // Gemstone Collection (or anything else whose closure runs through a
+  // gemstone) should reveal every station that sells one of its pieces,
+  // not just wait for the player to stumble onto Furnace+Clock ownership
+  // first.
+  if (GEMSTONE_SECRET.has(entry.name)) return (owns("Furnace") && owns("Clock")) || jobCoversItem(entry.name);
   if (FURNACE_GATED_ALLOYS.has(entry.name)) return owns("Furnace") || jobCoversItem(entry.name) || canCraft(entry);
 
   if (Object.prototype.hasOwnProperty.call(FORCED_VISIT_THRESHOLD, entry.name)){
@@ -4955,7 +5005,7 @@ function renderStation(name){
   // rows instead of staying put with only the gaps between them showing it.
   const bgStyle = bg ? `background-image:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url('${bg}'); background-attachment:fixed;` : "";
 
-  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft};${bgStyle}">
+  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft};--station-suit:${su.color};${bgStyle}">
     <div class="stationhead">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
@@ -4984,14 +5034,25 @@ function renderStation(name){
    normal spot mixed into the full list when expanded -- so it's never
    stranded with no way back to the other state. */
 function shopBodyHTML(shopEntries, idx){
+  // "Crafted Items" means crafted AT THIS STATION specifically (see
+  // state.craftedAtStation, set in craft()) -- NOT owns(), which is global
+  // and would also catch items bought elsewhere that happen to share a
+  // name with something sold here (a couple of items are sold at 2
+  // stations under the same name). No toggle/pill at all until that's
+  // actually happened here at least once.
+  const craftedHere = state.craftedAtStation[current] || {};
+  const hasCraftedHere = shopEntries.some(e => craftedHere[e.name]);
+  if (!hasCraftedHere){
+    return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  }
   const toggle = `<button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
       <span class="collapse-chevron"></span>Crafted Items
     </button>`;
   if (!state.collapseCraftedItems){
     return toggle + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
-  const owned = shopEntries.filter(e => owns(e.name));
-  const rest = shopEntries.filter(e => !owns(e.name));
+  const owned = shopEntries.filter(e => craftedHere[e.name]);
+  const rest = shopEntries.filter(e => !craftedHere[e.name]);
   const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
   return toggle + row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
@@ -5321,10 +5382,12 @@ function flushPendingReveal(){
     return;
   }
   itemRevealShown = false;
+  itemRevealDismissable = false;
   document.getElementById("itemRevealList").innerHTML = "";
   document.getElementById("itemRevealCaption").hidden = true;
   openOverlay("itemReveal");
   clearTimeout(itemRevealTimer);
+  clearTimeout(itemRevealDismissTimer);
   itemRevealTimer = setTimeout(showRevealedItems, 1000);
 }
 /* The 1s dark beat is over -- render the real station shop with these
@@ -5342,16 +5405,25 @@ function showRevealedItems(){
     entries.map(e => itemHTML(e, ENTRIES.indexOf(e))).join("");
   document.getElementById("itemRevealCaption").hidden = false;
   itemRevealShown = true;
+  // A second, separate 1s grace period once the items are actually up --
+  // without it, a tap that happened to land right as they popped in (e.g.
+  // the same tap that dismissed the crafted-card popup a moment earlier)
+  // could close this before the player ever really saw it.
+  itemRevealDismissable = false;
+  clearTimeout(itemRevealDismissTimer);
+  itemRevealDismissTimer = setTimeout(() => { itemRevealDismissable = true; }, 1000);
 }
-/* Tap-anywhere dismiss -- only once the items have actually appeared (see
-   itemRevealShown); a tap during the 1s dark beat, before there's anything
-   to look at, does nothing rather than skipping the reveal entirely. The
-   real shop underneath was already re-rendered with these items in
+/* Tap-anywhere dismiss -- only once the items have appeared AND that
+   second 1s grace period has elapsed (see itemRevealDismissable); a tap
+   before then (during the dark beat, or in the first second after the
+   items pop in) does nothing rather than skipping the reveal entirely.
+   The real shop underneath was already re-rendered with these items in
    showRevealedItems(), so closing just uncovers it -- no further animation
    needed for the "settle into the normal list" part of the spec. */
 function closeItemReveal(){
-  if (!itemRevealShown) return;
+  if (!itemRevealShown || !itemRevealDismissable) return;
   itemRevealShown = false;
+  itemRevealDismissable = false;
   closeOverlay("itemReveal");
 }
 document.getElementById("itemReveal").addEventListener("click", closeItemReveal);
@@ -5516,11 +5588,18 @@ const MINIGAME_INTRO = {
 function launchMinigame(){
   if (state.rolledHere) return;
   const run = window.MINIGAMES && window.MINIGAMES[current];
-  // Settings > Mini-games off: skip the whole overlay/intro/results
-  // choreography and go straight back to the old flat roll, using
-  // whatever TAKE (Dice rolls per visit) is currently configured -- same
-  // as when a station has no minigame registered at all.
-  if (!run || !prefs.minigamesEnabled){ doRoll(); return; }
+  // Settings > Mini-games off (or a station with no minigame registered):
+  // skip the whole overlay/intro/results choreography, but still require
+  // an explicit tap to roll -- same "Roll 🎲 x N" button the minigame
+  // path hands off to (see the #playBtn click handler), just reached
+  // directly instead of via a results screen, using whatever TAKE (Dice
+  // rolls per visit) is currently configured.
+  if (!run || !prefs.minigamesEnabled){
+    state.pendingRoll = TAKE;
+    save();
+    render();
+    return;
+  }
   const overlay = document.getElementById("mgOverlay");
   const stage = document.getElementById("mgStage");
   const introEl = document.getElementById("mgIntro");
@@ -6216,8 +6295,13 @@ function renderArrangeCanvas(){
   canvas.querySelectorAll("[data-sticker]").forEach(attachStickerDrag);
   updateArrangeToolbar();
 }
+// Always visible now (was previously only shown while a sticker was
+// selected) -- the toolbar's own click handler already no-ops safely
+// when nothing's selected (see `if (!s) return;` below), so there's
+// nothing unsafe about leaving the buttons up as a constant, if inert
+// until then, part of the screen.
 function updateArrangeToolbar(){
-  document.getElementById("arrToolbar").classList.toggle("show", !!selectedStickerId);
+  document.getElementById("arrToolbar").classList.add("show");
 }
 function findSticker(id){ return state.arrangement.stickers.find(s => s.id === id); }
 
@@ -6347,10 +6431,20 @@ const setUnlimitedBox = document.getElementById("setUnlimited");
 const setDiceInput = document.getElementById("setDice");
 const setMinigamesBox = document.getElementById("setMinigames");
 function openSettings(){
-  const unlimited = prefs.maxVisits === "unlimited";
+  // Zen/Hard already force MAX_VISITS to Infinity regardless of this pref
+  // (see applyVisitLimit()) -- showing an editable "25" here while that's
+  // true would silently do nothing if changed, which reads as a bug, not
+  // a setting. So for those two modes the control just reflects reality:
+  // locked to Unlimited, both inputs disabled, with a note explaining why.
+  const modeForcesUnlimited = state && (state.mode === "zen" || state.mode === "hard");
+  const unlimited = modeForcesUnlimited || prefs.maxVisits === "unlimited";
   setUnlimitedBox.checked = unlimited;
+  setUnlimitedBox.disabled = modeForcesUnlimited;
   setVisitsInput.value = unlimited ? DEFAULT_MAX_VISITS : prefs.maxVisits;
   setVisitsInput.disabled = unlimited;
+  document.getElementById("setVisitsSub").textContent = modeForcesUnlimited
+    ? "Zen and Hard Mode are always unlimited"
+    : "How many stations you can visit before the session ends";
   setDiceInput.value = TAKE;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   openOverlay("settings");
@@ -6360,7 +6454,13 @@ setUnlimitedBox.addEventListener("change", () => {
 });
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 document.getElementById("setSave").addEventListener("click", () => {
-  if (setUnlimitedBox.checked){
+  // Zen/Hard's forced-unlimited display (see openSettings()) is read-only
+  // -- don't let merely opening Settings while in one of those modes
+  // silently overwrite whatever visit limit the player actually has
+  // configured for Classic mode.
+  if (setUnlimitedBox.disabled){
+    // leave prefs.maxVisits untouched
+  } else if (setUnlimitedBox.checked){
     prefs.maxVisits = "unlimited";
   } else {
     const n = Math.max(1, Math.round(Number(setVisitsInput.value)) || DEFAULT_MAX_VISITS);
