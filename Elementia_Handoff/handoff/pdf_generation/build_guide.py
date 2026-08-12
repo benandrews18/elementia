@@ -76,7 +76,7 @@ STATIONS = [
              ("🔆","Solar Cell","COMPONENT","🔌 Wire + 🔋 Battery",8),
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
-             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 🌬️ Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
+             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
@@ -94,7 +94,7 @@ STATIONS = [
              ("__OPAL__","Opal","COMPONENT","Si + O + 🔥 Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",11),
              ("🚲","Bicycle","CREATION","🦾 Aluminum Alloy + 🔘 Wheel + __RUBBER__ Rubber",15),
-             ("🌬️","Windmill","CREATION","☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",16)],
+             ("𖣘","Windmill","CREATION","☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",16)],
      "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin",19)},
 
     {"emoji":"💎","name":"Deep Mine","suit":"mine",
