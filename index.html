@@ -4221,14 +4221,19 @@ function itemHTML(entry, idx){
   // from job tracking, which used to also light the ring for anything in
   // the tracked item's component closure even when it wasn't actually
   // buildable yet (that was confusing: a green ring that didn't mean
-  // "go"). The corner badge below still tracks the job's closure
-  // separately -- it repeats the SELECTED item's own icon (not this
-  // card's icon), so it reads as "this feeds into [that pinned item]" at
-  // a glance regardless of whether it's craftable yet.
+  // "go"). The corner badge below still tracks the job's remaining
+  // closure separately -- it repeats the SELECTED item's own icon (not
+  // this card's icon), so it reads as "this feeds into [that pinned
+  // item]" at a glance regardless of whether it's craftable yet.
+  // stillNeededClosure() (not the plain componentClosure()) so that once
+  // an intermediate is actually done -- crafted, and in Hard Mode spent
+  // on whatever needed it -- its own ingredients stop being flagged too;
+  // a sibling branch still needing the same ingredient keeps it flagged
+  // on its own.
   if (can && !has) cls.push("job-highlight");
   let pinBadge = "";
   if (selectedJobItem){
-    const jobTree = new Set([selectedJobItem, ...componentClosure(selectedJobItem)]);
+    const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
     if (jobTree.has(entry.name)){
       const selEntry = ENTRIES.find(e => e.name === selectedJobItem);
       if (selEntry) pinBadge = `<span class="item-pin-badge" title="Needed for ${esc(selectedJobItem)}">${em(selEntry.emoji)}</span>`;
@@ -4274,11 +4279,15 @@ function craftedIconsHTML(entries){
    still tracks the job's component closure, see itemHTML()). An item can
    be both, either, or neither. */
 function stationItemIconsHTML(stationName){
-  // Tracked job item + its full ingredient closure get the green ring here
-  // (see .station-item-icon.job-highlight and the .station-items comment
-  // above it) -- restored after being accidentally stripped alongside the
-  // same border's removal from the full in-station shop list.
-  const jobTree = selectedJobItem ? new Set([selectedJobItem, ...componentClosure(selectedJobItem)]) : null;
+  // Tracked job item + whatever's still outstanding in its closure get the
+  // green ring here (see .station-item-icon.job-highlight and the
+  // .station-items comment above it) -- restored after being accidentally
+  // stripped alongside the same border's removal from the full in-station
+  // shop list. stillNeededClosure() (not componentClosure()), so an
+  // ingredient already spent on a finished intermediate stops lighting up
+  // once nothing else still needs it -- see stillNeededClosure()'s own
+  // comment.
+  const jobTree = selectedJobItem ? new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]) : null;
   const icons = entriesAt(stationName)
     .filter(e => e.tier !== "CAPSTONE" && isRevealed(e))
     .map(e => {
@@ -4694,6 +4703,39 @@ function componentClosure(name){
   const {items} = needsOf(rootEntry.reqs);
   items.forEach(i => walk(i.name));
   return [...seen];
+}
+
+/* Like componentClosure(), but stops descending into anything already
+   owned -- an owned item's own sub-ingredients don't need to be crafted
+   again, so they shouldn't keep flagging the tracked-item badge/ring.
+   This is the difference that matters in Hard Mode: an intermediate gets
+   consumed the instant it's spent on something bigger, so the plain
+   static closure (componentClosure()) kept flagging it as still-needed
+   forever after, even once its actual job was already done. If a SIBLING
+   branch still needs the same item, it stays flagged -- e.g. two
+   different components both needing Wire still shows Wire as needed
+   until BOTH are done, not just the first. Only used for the "you still
+   need this" badge/ring (itemHTML()/stationItemIconsHTML()) -- every
+   other componentClosure() use (shop reveal, Item Reference lookups, Job
+   Board scoring) deliberately wants the full static tree regardless of
+   ownership, so those are left alone. */
+function stillNeededClosure(name){
+  const seen = new Set();
+  const needed = new Set();
+  function visit(items){
+    items.forEach(it => {
+      if (owns(it.name)) return; // already satisfied -- nothing further down this branch is needed
+      needed.add(it.name);
+      if (seen.has(it.name)) return;
+      seen.add(it.name);
+      const entry = ENTRIES.find(e => e.name === it.name);
+      if (entry) visit(needsOf(entry.reqs).items);
+    });
+  }
+  const rootEntry = ENTRIES.find(e => e.name === name);
+  if (!rootEntry) return [];
+  visit(needsOf(rootEntry.reqs).items);
+  return [...needed];
 }
 
 /* =====================================================================
