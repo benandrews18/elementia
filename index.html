@@ -753,6 +753,20 @@ body[data-screen="codex"] #trackedPill{display:none}
   border:1px solid var(--line); border-top:16px solid var(--suit);
   border-radius:18px; overflow:hidden;
 }
+/* background-attachment:fixed (set inline per station, see shopBodyHTML())
+   is a well-known source of scroll-frame repaint jank on real mobile
+   browser tabs -- worse still combined with the collapsing/expanding
+   address bar in Safari/Chrome, which is why this reads fine inside an
+   embedded app webview (Claude's own artifact viewer) but visibly glitches
+   once the exact same page loads as an actual standalone mobile tab (e.g.
+   GitHub Pages). Touch devices fall back to normal scroll-following
+   background instead -- costs the "art stays pinned as a long shop list
+   scrolls past it" parallax touch specifically there, trading it for a
+   smooth scroll. !important is required: this is overriding a dynamically
+   generated inline style, not fighting our own cascade. */
+@media (hover:none), (pointer:coarse){
+  .sheet{ background-attachment:scroll !important; }
+}
 /* Title bar + dice-gather section are one continuous dark card (fixed dark
    tone, not theme-dependent -- this header always reads as "dark surface"
    even in light theme, so the bright suit-colored gchips and white die
