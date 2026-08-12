@@ -1266,6 +1266,27 @@ body[data-screen="codex"] #trackedPill{display:none}
    machinery needed; it's a stack of tap zones over an <img>. */
 #tour{position:fixed; inset:0; z-index:200; display:none; background:#000}
 #tour.open{display:flex; align-items:center; justify-content:center}
+/* Mini-Games mode: same full-screen-takeover shape as #tour, own z-index
+   slot so it can sit under #mgOverlay (220) but doesn't need to coexist
+   with #tour itself (mutually exclusive entry points from the welcome
+   screen). */
+#arcade{
+  position:fixed; inset:0; z-index:200; display:none; flex-direction:column;
+  background:var(--bg); color:var(--ink);
+}
+#arcade.open{display:flex}
+.arcade-head{
+  flex:none; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:calc(16px + env(safe-area-inset-top)) 18px 14px;
+  background:linear-gradient(180deg,#1c2430 0%,#161d26 100%); color:#fff;
+}
+.arcade-head h1{font-size:20px; font-weight:800; letter-spacing:-.2px}
+.arcade-body{flex:1; overflow-y:auto; padding:16px 18px calc(24px + env(safe-area-inset-bottom))}
+.arcade-hint{text-align:center; margin:0 0 12px}
+/* .map-canvas/.map-node etc are the real map's own classes (see
+   renderArcadeMap()) -- reused as-is so the background art/node layout
+   are identical, just every node is uniformly tappable instead of
+   reflecting session progress. */
 /* Settings opened from the welcome screen shows ON TOP of it rather than
    replacing it -- see the tourSettingsBtn handler. */
 #tour.behind-settings{z-index:10}
@@ -1293,12 +1314,16 @@ body[data-screen="codex"] #trackedPill{display:none}
    of the guided tour, this slide is a true full-bleed background image
    (no border/frame/padding) with the two buttons floating over it. */
 .tour-welcome-actions{
-  display:none; gap:12px; width:100%; max-width:400px;
+  display:none; flex-wrap:wrap; gap:10px; width:100%; max-width:400px;
   position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:2;
   padding:24px 20px calc(24px + env(safe-area-inset-bottom));
   background:linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,0));
 }
-.tour-welcome-actions .bigbtn{flex:1}
+/* Play stands alone on its own row (the primary action); Mini-Games and
+   Settings share the row below it -- three equal-width buttons in one row
+   left "Mini-Games" cramped/wrapping against the other two shorter labels. */
+.tour-welcome-actions .bigbtn{flex:1 1 auto}
+.tour-welcome-actions #tourPlayBtn{flex-basis:100%}
 #tour.welcome .tour-panel{padding:0}
 #tour.welcome .tour-kicker{display:none}
 #tour.welcome .tour-frame{
@@ -2080,6 +2105,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <input id="setDice" class="setnum" type="number" min="1" max="10" step="1" inputmode="numeric" aria-label="Dice rolls per visit">
     </div>
+    <div class="setting-row">
+      <span class="setting-ico">🎮</span>
+      <span class="setting-body">
+        <span class="setting-label">Mini-games</span>
+        <span class="setting-sub">Play a quick game at each station before rolling. Off rolls dice straight away.</span>
+      </span>
+      <input type="checkbox" id="setMinigames" class="switch" aria-label="Enable mini-games">
+    </div>
 
     <div class="btnrow">
       <button class="bigbtn" id="setSave">Save</button>
@@ -2209,6 +2242,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="tour-frame"><img id="tourImg" alt="Guided tour slide"></div>
     <div class="tour-welcome-actions">
       <button id="tourPlayBtn" class="bigbtn">▶ Play</button>
+      <button id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
       <button id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
@@ -2216,6 +2250,21 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <button id="tourNext" aria-label="Next slide"></button>
 </div>
 
+<!-- Mini-Games mode: map + mini-games only, no shop/items/points. A
+     separate full-screen takeover (same shape as #tour) rather than a
+     real session -- picking a station here calls launchArcadeGame()
+     directly, never goStation()/render(), so state/inventory/score are
+     never touched. -->
+<div id="arcade" role="dialog" aria-modal="true" aria-label="Mini-Games">
+  <div class="arcade-head">
+    <h1>🎮 Mini-Games</h1>
+    <button id="arcadeExit" class="tbtn" aria-label="Exit Mini-Games">✕ Exit</button>
+  </div>
+  <div class="arcade-body">
+    <p class="map-sub arcade-hint">Tap a station to play its mini-game.</p>
+    <div id="arcadeMap"></div>
+  </div>
+</div>
 
 <!-- station mini-game overlay: runMinigame(container, onComplete) runs
      fullscreen here on PLAY; see launchMinigame() -->
@@ -3814,7 +3863,7 @@ let selectedMapStation = null; // ephemeral: which node's card is showing on the
 // card-inspection popup closes -- see the craft click handler and
 // flushPendingReveal().
 let pendingRevealNames = null, pendingRevealStation = null;
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[]};
+let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -4359,6 +4408,21 @@ function renderMap(){
     ${banner}
     ${hint}
     <div class="map-canvas" data-map-bg>${pathsHTML}<div class="map-nodes">${nodesHTML}</div></div>`;
+}
+
+/* Mini-Games mode's own map: same node positions/art as the real map
+   (MAP_NODE_POS/.map-canvas), but every node is uniformly tappable --
+   there's no session, no "here", no locked paths, since Mini-Games mode
+   never sets state.lastStation or touches state at all. */
+function renderArcadeMap(){
+  const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
+    const [x, y] = MAP_NODE_POS[name];
+    const s = STATION_BY_NAME[name];
+    return `<button class="map-node reachable" style="left:${x}%;top:${y}%" data-arcade-node="${esc(name)}" aria-label="${esc(name)}">
+      <span class="mn-em">${em(s.emoji)}</span>
+    </button>`;
+  }).join("");
+  return `<div class="map-canvas" data-map-bg><div class="map-nodes">${nodesHTML}</div></div>`;
 }
 
 /* The job-tracking chip row lives in the pins tray now (see #pinsTray),
@@ -5385,7 +5449,11 @@ const MINIGAME_INTRO = {
 function launchMinigame(){
   if (state.rolledHere) return;
   const run = window.MINIGAMES && window.MINIGAMES[current];
-  if (!run){ doRoll(); return; }
+  // Settings > Mini-games off: skip the whole overlay/intro/results
+  // choreography and go straight back to the old flat roll, using
+  // whatever TAKE (Dice rolls per visit) is currently configured -- same
+  // as when a station has no minigame registered at all.
+  if (!run || !prefs.minigamesEnabled){ doRoll(); return; }
   const overlay = document.getElementById("mgOverlay");
   const stage = document.getElementById("mgStage");
   const introEl = document.getElementById("mgIntro");
@@ -5458,6 +5526,72 @@ function launchMinigame(){
   }
   introEl.addEventListener("click", startRound);
 }
+
+/* ------------------------------------------------------ Mini-Games --- */
+/* Entirely separate from the real session -- never reads or writes
+   `state`, never calls goStation()/doRoll()/save(). Shares the same
+   #mgOverlay/#mgIntro/#mgStage/#mgResults DOM with the real
+   launchMinigame() (only one can ever be running at a time either way),
+   but its own completion tail just closes back to the arcade map instead
+   of feeding a roll into an inventory that doesn't exist here. */
+function openArcade(){
+  document.getElementById("arcadeMap").innerHTML = renderArcadeMap();
+  document.getElementById("arcade").classList.add("open");
+}
+function closeArcade(){
+  document.getElementById("arcade").classList.remove("open");
+}
+function launchArcadeGame(name){
+  const run = window.MINIGAMES && window.MINIGAMES[name];
+  if (!run) return;
+  const overlay = document.getElementById("mgOverlay");
+  const stage = document.getElementById("mgStage");
+  const introEl = document.getElementById("mgIntro");
+  const resultsEl = document.getElementById("mgResults");
+  stage.innerHTML = "";
+  resultsEl.classList.remove("show");
+  // No station shop banner to crop below here -- #arcade already covers
+  // the full viewport on its own, so the overlay just covers all of it.
+  overlay.style.top = "0";
+
+  const info = MINIGAME_INTRO[name] || {title: name, blurb: "Do your best before time runs out."};
+  introEl.innerHTML = `<div class="mg-intro-title">${esc(info.title)}</div>` +
+    `<div class="mg-intro-blurb">${esc(info.blurb)}</div>` +
+    `<div class="mg-intro-tap">Tap to Continue</div>`;
+  overlay.classList.add("show");
+  introEl.classList.add("show");
+
+  function startRound(){
+    introEl.classList.remove("show");
+    introEl.removeEventListener("click", startRound);
+    run(stage, (score) => {
+      const diceCount = minigameDiceFor(score);
+      const s = STATION_BY_NAME[name];
+      stage.innerHTML = "";
+      resultsEl.innerHTML = `<div class="mg-results-icon">${em(s.emoji)}</div>` +
+        `<div class="mg-results-pts">+${diceCount} dice earned</div>` +
+        `<div class="mg-results-dice">${"\u{1F3B2}".repeat(diceCount)}</div>`;
+      resultsEl.classList.add("show");
+      setTimeout(() => {
+        resultsEl.classList.remove("show");
+        overlay.classList.remove("show");
+        // Back to the arcade station grid -- no state/save/render() of the
+        // real session at all.
+      }, 1400);
+    });
+  }
+  introEl.addEventListener("click", startRound);
+}
+document.getElementById("arcade").addEventListener("click", ev => {
+  const node = ev.target.closest("[data-arcade-node]");
+  if (node) launchArcadeGame(node.dataset.arcadeNode);
+});
+document.getElementById("arcadeExit").addEventListener("click", closeArcade);
+document.getElementById("tourArcadeBtn").addEventListener("click", () => {
+  endTour();
+  openArcade();
+});
+
 function doRoll(rollCount){
   if (state.rolledHere) return;
   const s = STATION_BY_NAME[current], out = [];
@@ -6144,12 +6278,14 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
 const setVisitsInput = document.getElementById("setVisits");
 const setUnlimitedBox = document.getElementById("setUnlimited");
 const setDiceInput = document.getElementById("setDice");
+const setMinigamesBox = document.getElementById("setMinigames");
 function openSettings(){
   const unlimited = prefs.maxVisits === "unlimited";
   setUnlimitedBox.checked = unlimited;
   setVisitsInput.value = unlimited ? DEFAULT_MAX_VISITS : prefs.maxVisits;
   setVisitsInput.disabled = unlimited;
   setDiceInput.value = TAKE;
+  setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   openOverlay("settings");
 }
 setUnlimitedBox.addEventListener("change", () => {
@@ -6164,6 +6300,7 @@ document.getElementById("setSave").addEventListener("click", () => {
     prefs.maxVisits = n;
   }
   prefs.diceCount = Math.max(1, Math.min(10, Math.round(Number(setDiceInput.value)) || DATA.take));
+  prefs.minigamesEnabled = setMinigamesBox.checked;
   savePrefs();
   applyVisitLimit();
   applyDiceCount();
