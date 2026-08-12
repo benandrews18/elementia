@@ -4815,7 +4815,16 @@ function itemIngredientStationsVisited(entry){
   });
 }
 function isRevealed(entry){
-  if (entry.tier === "CAPSTONE") return true;
+  // Hard Mode only: capstones lose their free pass and are gated exactly
+  // like every other item -- their own AvgVisits is comfortably above
+  // REVEAL_HOP_THRESHOLD (see DATA.avgVisits), so in practice a job (or
+  // seeing something else whose closure runs through it -- neither of
+  // which normally applies to a capstone itself, since componentClosure()
+  // excludes its own root) or canCraft is what ends up revealing one; the
+  // player just wandering around long enough still can too, same as any
+  // other deep item, but taking a job for it is the direct route. Every
+  // other mode keeps capstones' original unconditional free pass.
+  if (entry.tier === "CAPSTONE" && state.mode !== "hard") return true;
   // Sticky: once an item has actually been shown, it stays shown forever,
   // even if whatever made it visible (canCraft, an active job, owning a
   // gate item like Furnace) later stops being true -- Hard Mode especially
@@ -4998,9 +5007,13 @@ function renderStation(name){
   const shopEntries = allShop.filter(isRevealed)
     .filter(e => !(pendingRevealStation === name && pendingRevealNames && pendingRevealNames.includes(e.name)));
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
+  // Hard Mode only: capstones now go through isRevealed() same as any
+  // other item (see its own comment) -- everywhere else they're an
+  // unconditional true, so this is a no-op outside Hard Mode.
+  const capRevealed = !!capEntry && isRevealed(capEntry);
   const idx = e => ENTRIES.indexOf(e);
   shopEntries.forEach(e => markSeen(e.name));
-  if (capEntry) markSeen(capEntry.name);
+  if (capRevealed) markSeen(capEntry.name);
 
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().
@@ -5035,9 +5048,9 @@ function renderStation(name){
     <div class="makewrap">
       <div class="col-label shop-label">ITEM SHOP</div>
       ${shopBodyHTML(shopEntries, idx)}
-      <div class="capbox ${capEntry && !owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
+      ${capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
         ${itemHTML(capEntry, idx(capEntry))}
-      </div>
+      </div>` : ""}
     </div>
   </div>`;
 }
