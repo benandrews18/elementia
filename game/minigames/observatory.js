@@ -32,7 +32,7 @@
   const DRIFT_DECEL = 300;           // px/s^2 bleeding speed off when released
   const MAX_VX = 1190;               // px/s, terminal sideways speed
   const ROCKET_SIZE = 66;            // px, square hit-box side
-  const ROCKET_BOTTOM = 92;          // px, fixed distance from the stage floor
+  const ROCKET_BOTTOM = 192;         // px, fixed distance from the stage floor (lifted 100px per user request)
   const OOB_SLACK = 0.8;             // fraction of the rocket allowed off-edge
   const ROCK_SPAWN_MS_START = 1250;  // ms between asteroid spawns at t=0
   const ROCK_SPAWN_MS_MIN = 700;     // floor as difficulty ramps

@@ -170,8 +170,9 @@
     const stageW = stage.clientWidth || 320;
     const stageH = stage.clientHeight || 420;
     // Clears the full HUD row (dice/timer/score pills) -- was 46, which let
-    // the handles' top edge creep up under the HUD text.
-    const TOP_Y = 84, BOTTOM_Y = stageH - 46;
+    // the handles' top edge creep up under the HUD text. Bottom row lifted
+    // another 100px off the stage floor per user request.
+    const TOP_Y = 84, BOTTOM_Y = stageH - 146;
 
     let running = true;
     let solved = 0;

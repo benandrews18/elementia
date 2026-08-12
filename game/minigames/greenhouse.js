@@ -32,7 +32,7 @@
   // own low, wide proportions instead of the tall narrow box it replaced.
   const BASKET_W_FRAC = 0.375;       // basket width, as a fraction of stage width
   const BASKET_ASPECT = 0.65;        // basket height = width * this
-  const BASKET_BOTTOM_GAP = 4;       // px from stage floor to basket bottom
+  const BASKET_BOTTOM_GAP = 104;     // px from stage floor to basket bottom
   // ~0.71 w:h is what actually reads as an egg rather than a small oval --
   // the shape comes from the border-radius in .mg-green-egg, but it needs
   // both the ratio AND enough pixels to be legible while falling.
