@@ -2090,7 +2090,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div id="drawerScore" title="Total score" aria-label="Total score">
       <span class="n" id="drawerScoreCount">0</span><span class="l">PTS</span>
     </div>
-    <button class="tbtn ghost" id="closeDrawer" aria-label="Close inventory">✕</button>
+    <button type="button" class="tbtn ghost" id="closeDrawer" aria-label="Close inventory">✕</button>
   </div>
   <div class="dbody">
     <input id="invFilter" type="search" placeholder="Filter items…" aria-label="Filter inventory">
@@ -2100,22 +2100,22 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- bottom hub: every global action, reachable from every screen -->
 <nav id="hub" aria-label="Main actions">
-  <button class="hubbtn" id="hubJobs"><span class="hi">📋</span><span class="hl">Jobs</span></button>
-  <button class="hubbtn" id="hubInv"><span class="hi">🎒</span><span class="hl">Inventory</span></button>
-  <button class="hubbtn" id="hubHome"><span class="hi">🗺️</span><span class="hl">Map</span></button>
-  <button class="hubbtn" id="hubCodex"><span class="hi">📖</span><span class="hl">Items</span></button>
-  <button class="hubbtn" id="hubSettings"><span class="hi">⚙️</span><span class="hl">Settings</span></button>
+  <button type="button" class="hubbtn" id="hubJobs"><span class="hi">📋</span><span class="hl">Jobs</span></button>
+  <button type="button" class="hubbtn" id="hubInv"><span class="hi">🎒</span><span class="hl">Inventory</span></button>
+  <button type="button" class="hubbtn" id="hubHome"><span class="hi">🗺️</span><span class="hl">Map</span></button>
+  <button type="button" class="hubbtn" id="hubCodex"><span class="hi">📖</span><span class="hl">Items</span></button>
+  <button type="button" class="hubbtn" id="hubSettings"><span class="hi">⚙️</span><span class="hl">Settings</span></button>
 </nav>
 
 <!-- floating pins + convert buttons, sitting just above the hub -->
-<button class="floatbtn" id="pinsBtn" title="Pinned items" aria-label="Pinned items" aria-expanded="false">📌</button>
-<button class="floatbtn" id="quickConvertBtn" title="Convert Elements" aria-label="Convert Elements">🔄</button>
+<button type="button" class="floatbtn" id="pinsBtn" title="Pinned items" aria-label="Pinned items" aria-expanded="false">📌</button>
+<button type="button" class="floatbtn" id="quickConvertBtn" title="Convert Elements" aria-label="Convert Elements">🔄</button>
 
 <!-- pinned-items tray, slides up from behind the hub (see #pinsTray CSS) -->
 <aside id="pinsTray" aria-label="Pinned items" aria-hidden="true">
   <div class="dhead">
     <h2>📌 Pinned</h2>
-    <button class="tbtn ghost" id="pinsTrayClose" aria-label="Close pinned items">✕</button>
+    <button type="button" class="tbtn ghost" id="pinsTrayClose" aria-label="Close pinned items">✕</button>
   </div>
   <div class="dbody" id="pinsTrayBody"></div>
 </aside>
@@ -2138,7 +2138,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="celeb-name" id="celebName"></div>
     <p id="celebSub"></p>
     <div class="btnrow" style="justify-content:center">
-      <button class="bigbtn" id="celebClose">Keep building</button>
+      <button type="button" class="bigbtn" id="celebClose">Keep building</button>
     </div>
   </div>
 </div>
@@ -2206,8 +2206,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="sumgrid" id="sumGrid"></div>
     <div id="sumCapsWrap"></div>
     <div class="btnrow">
-      <button class="bigbtn" id="sumNew">Start a new session</button>
-      <button class="bigbtn sec" id="sumReview">Review my collection</button>
+      <button type="button" class="bigbtn" id="sumNew">Start a new session</button>
+      <button type="button" class="bigbtn sec" id="sumReview">Review my collection</button>
     </div>
   </div>
 </div>
@@ -2220,8 +2220,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <h2 id="confirmTitle">Are you sure?</h2>
     <p id="confirmMsg"></p>
     <div class="btnrow">
-      <button class="bigbtn" id="confirmYes">Yes, do it</button>
-      <button class="bigbtn sec" id="confirmNo">Cancel</button>
+      <button type="button" class="bigbtn" id="confirmYes">Yes, do it</button>
+      <button type="button" class="bigbtn sec" id="confirmNo">Cancel</button>
     </div>
   </div>
 </div>
@@ -2286,8 +2286,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     </div>
 
     <div class="btnrow">
-      <button class="bigbtn" id="setSave">Save</button>
-      <button class="bigbtn sec" id="setClose">Cancel</button>
+      <button type="button" class="bigbtn" id="setSave">Save</button>
+      <button type="button" class="bigbtn sec" id="setClose">Cancel</button>
     </div>
     <p class="setversion" id="setVersion"></p>
   </div>
@@ -2299,7 +2299,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <h2 id="historyTitle">🕓 History</h2>
     <p>Past runs on this device, most recent first.</p>
     <div id="historyList"></div>
-    <div class="btnrow"><button class="bigbtn sec" id="historyClose">Close</button></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="historyClose">Close</button></div>
   </div>
 </div>
 
@@ -2311,17 +2311,17 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <h2 id="modeTitle">Choose a Game Mode</h2>
     <p>This sets the rules for your whole session.</p>
     <div class="mode-options">
-      <button class="mode-card" data-mode="zen">
+      <button type="button" class="mode-card" data-mode="zen">
         <span class="mode-emoji">🌿</span>
         <span class="mode-name">Zen Mode</span>
         <span class="mode-desc">Unlimited station visits, no Job Board -- just explore and build.</span>
       </button>
-      <button class="mode-card" data-mode="classic">
+      <button type="button" class="mode-card" data-mode="classic">
         <span class="mode-emoji">🗺️</span>
         <span class="mode-name">Classic Mode</span>
         <span class="mode-desc">Take on Job Board cards with a limited number of station visits.</span>
       </button>
-      <button class="mode-card" data-mode="hard">
+      <button type="button" class="mode-card" data-mode="hard">
         <span class="mode-emoji">🔥</span>
         <span class="mode-name">Hard Mode</span>
         <span class="mode-desc">A campaign, not a session -- unlimited visits, everything gets used up the moment you craft with it, and your progress is always there to continue.</span>
@@ -2337,7 +2337,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <aside id="convert" aria-label="Convert Elements" aria-hidden="true">
   <div class="dhead">
     <h2 id="convertTitle">🔄 Convert Elements</h2>
-    <button class="tbtn ghost" id="convertClose" aria-label="Close Convert Elements">✕</button>
+    <button type="button" class="tbtn ghost" id="convertClose" aria-label="Close Convert Elements">✕</button>
   </div>
   <div class="dbody">
     <p>Trade 3 of one element for 1 of any other.</p>
@@ -2347,7 +2347,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <div class="convert-stack" id="convFromStack">
           <span class="convert-ghost"></span>
           <span class="convert-ghost"></span>
-          <button class="convert-box" id="convFromBox">
+          <button type="button" class="convert-box" id="convFromBox">
             <span class="convert-sym" id="convFromSym">+</span>
             <span class="convert-label" id="convFromLabel">Pick element</span>
           </button>
@@ -2359,14 +2359,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </div>
       <div class="convert-col">
         <div class="convert-qty">1x</div>
-        <button class="convert-box" id="convToBox">
+        <button type="button" class="convert-box" id="convToBox">
           <span class="convert-sym" id="convToSym">+</span>
           <span class="convert-label" id="convToLabel">Pick element</span>
         </button>
       </div>
     </div>
     <div class="btnrow">
-      <button class="bigbtn" id="convertGo" disabled>Convert</button>
+      <button type="button" class="bigbtn" id="convertGo" disabled>Convert</button>
     </div>
   </div>
 </aside>
@@ -2378,7 +2378,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="convert-picker-kicker" id="convertPickerKicker">Inventory</div>
     <p class="convert-picker-sub" id="convertPickerSub"></p>
     <div class="convert-picker-grid" id="convertPickerGrid"></div>
-    <div class="btnrow"><button class="bigbtn sec" id="convertPickerClose">Cancel</button></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="convertPickerClose">Cancel</button></div>
   </div>
 </div>
 
@@ -2388,7 +2388,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="arrangeScreen" role="dialog" aria-modal="true" aria-label="Arrange Items">
   <div class="arr-head">
     <h2>🎨 Arrange Items</h2>
-    <button class="tbtn ghost" id="arrangeClose" aria-label="Close Arrange Items">✕</button>
+    <button type="button" class="tbtn ghost" id="arrangeClose" aria-label="Close Arrange Items">✕</button>
   </div>
   <div class="arr-body">
     <div class="arr-canvas" id="arrCanvas"></div>
@@ -2397,11 +2397,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="arr-tray-chevron"></span>
       </button>
       <div class="arr-toolbar" id="arrToolbar">
-        <button class="arr-tool-btn" id="arrRotL" title="Rotate left">↺</button>
-        <button class="arr-tool-btn" id="arrSmaller" title="Smaller">－</button>
-        <button class="arr-tool-btn" id="arrBigger" title="Bigger">＋</button>
-        <button class="arr-tool-btn" id="arrRotR" title="Rotate right">↻</button>
-        <button class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
+        <button type="button" class="arr-tool-btn" id="arrRotL" title="Rotate left">↺</button>
+        <button type="button" class="arr-tool-btn" id="arrSmaller" title="Smaller">－</button>
+        <button type="button" class="arr-tool-btn" id="arrBigger" title="Bigger">＋</button>
+        <button type="button" class="arr-tool-btn" id="arrRotR" title="Rotate right">↻</button>
+        <button type="button" class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
       </div>
       <div class="arr-bgpicker" id="arrBgPicker"></div>
       <div class="arr-tray" id="arrTray"></div>
@@ -2419,13 +2419,13 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     </div>
     <div class="tour-frame"><img id="tourImg" alt="Guided tour slide"></div>
     <div class="tour-welcome-actions">
-      <button id="tourPlayBtn" class="bigbtn">▶ Play</button>
-      <button id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
-      <button id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
+      <button type="button" id="tourPlayBtn" class="bigbtn">▶ Play</button>
+      <button type="button" id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
+      <button type="button" id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
-  <button id="tourPrev" aria-label="Previous slide"></button>
-  <button id="tourNext" aria-label="Next slide"></button>
+  <button type="button" id="tourPrev" aria-label="Previous slide"></button>
+  <button type="button" id="tourNext" aria-label="Next slide"></button>
 </div>
 
 <!-- Mini-Games mode: map + mini-games only, no shop/items/points. A
@@ -2436,7 +2436,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="arcade" role="dialog" aria-modal="true" aria-label="Mini-Games">
   <div class="arcade-head">
     <h1>🎮 Mini-Games</h1>
-    <button id="arcadeExit" class="tbtn" aria-label="Exit Mini-Games">✕ Exit</button>
+    <button type="button" id="arcadeExit" class="tbtn" aria-label="Exit Mini-Games">✕ Exit</button>
   </div>
   <div class="arcade-body">
     <p class="map-sub arcade-hint">Tap a station to play its mini-game.</p>
@@ -2460,7 +2460,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <aside id="jobSheet" aria-label="Jobs" aria-hidden="true">
   <div class="dhead">
     <h2 id="jobTitle">📋 Jobs</h2>
-    <button class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
+    <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
   </div>
   <div class="dbody" id="jobSheetBody"></div>
 </aside>
@@ -4329,7 +4329,7 @@ function tokenHTML(r, groupedEls){
     const need = groupedEls[r.name], have = count(r.name);
     const ok = have >= need;
     const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
-    return `<button class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
+    return `<button type="button" class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
       `${esc(r.name)}` +
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
   }
@@ -4377,7 +4377,7 @@ function itemHTML(entry, idx){
   }
   const btn = has
     ? '<span class="craftbtn done">✓ Owned</span>'
-    : `<button class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" ${can ? "" : "disabled"}>Craft</button>`;
+    : `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" ${can ? "" : "disabled"}>Craft</button>`;
   // Tier (MATERIAL/COMPONENT/CREATION) no longer shown -- the CAPSTONE tag
   // stays, since that one's a meaningful "this is the big one" signal
   // rather than a classification most players never cared about. UTILITY
@@ -4515,9 +4515,9 @@ function mapCardHTML(name){
     </div>`;
   return `<div class="map-card" style="--suit:${su.color}">
     <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${esc(name)}</h2>${trackedPill}</div>
-    <div class="pool">${sortedDice(s).map(d => `<button class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>
+    <div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>
     ${itemsHTML}
-    <button class="map-travel-btn" data-travel="${esc(name)}" ${canTravel ? "" : "disabled"}>${esc(statusLabel)}</button>
+    <button type="button" class="map-travel-btn" data-travel="${esc(name)}" ${canTravel ? "" : "disabled"}>${esc(statusLabel)}</button>
   </div>`;
 }
 
@@ -4542,7 +4542,7 @@ function renderMap(){
     // The dice pool stays visible either way -- that's public knowledge
     // regardless of visit history.
     const unvisited = !state.visitedStations[name];
-    return `<button class="${cls.join(" ")}" style="left:${x}%;top:${y}%" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+    return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${unvisited ? "❓" : em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
@@ -4551,7 +4551,7 @@ function renderMap(){
   const banner = over
     ? `<p class="map-sub" style="color:var(--bad);font-weight:700">
          All ${visitLimitLabel()} visits used — this session is complete.
-         <button class="tbtn" id="showSummaryBtn" style="margin-left:8px">See results</button></p>`
+         <button type="button" class="tbtn" id="showSummaryBtn" style="margin-left:8px">See results</button></p>`
     : "";
 
   const hint = state.lastStation === null
@@ -4583,7 +4583,7 @@ function renderArcadeMap(){
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
     const [x, y] = MAP_NODE_POS[name];
     const s = STATION_BY_NAME[name];
-    return `<button class="map-node reachable" style="left:${x}%;top:${y}%" data-arcade-node="${esc(name)}" aria-label="${esc(name)}">
+    return `<button type="button" class="map-node reachable" style="left:${x}%;top:${y}%" data-arcade-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${em(s.emoji)}</span>
     </button>`;
   }).join("");
@@ -4602,7 +4602,7 @@ function renderPinsTray(){
     ? names.map(name => {
         const entry = ENTRIES.find(e => e.name === name);
         const sel = selectedJobItem === name;
-        return `<button class="map-job-chip ${sel ? "selected" : ""}" data-select-job="${esc(name)}" aria-pressed="${sel}">
+        return `<button type="button" class="map-job-chip ${sel ? "selected" : ""}" data-select-job="${esc(name)}" aria-pressed="${sel}">
           <span class="mj-em">${em(entry.emoji)}</span><span class="mj-name">${esc(name)}</span>
         </button>`;
       }).join("")
@@ -4682,14 +4682,14 @@ function jobNodeHTML(name, kind, path, seen){
   // spot deep in a breakdown without backing out to find its own row.
   return `<div class="mission-node ${has ? "done" : ""}">
     <div class="mn-row">
-      <button class="mn-head${open ? " open" : ""}" data-toggle="${esc(path)}" aria-expanded="${open}">
+      <button type="button" class="mn-head${open ? " open" : ""}" data-toggle="${esc(path)}" aria-expanded="${open}">
         <span class="mn-arrow">▸</span>
         <span class="mn-emoji">${em(entry.emoji)}</span>
         <span class="mn-name">${esc(name)}</span>
         <span class="mn-where">${whereEmoji(name, "item")}</span>
       </button>
       ${has ? '<span class="mn-tick">✓</span>' : ""}
-      <button class="refpin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
+      <button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
         title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
     </div>
     <div class="mn-children" ${open ? "" : "hidden"}>${childrenHTML}</div>
@@ -4731,11 +4731,11 @@ function jobItemChipHTML(name){
   // badge lands inside the lower half rather than on the card's own edge.
   return `<div class="job-item ${has ? "have" : ""}">
     ${jobSuitBadgeHTML(name)}
-    <button class="ji-goto" data-goto-ref="${esc(name)}">
+    <button type="button" class="ji-goto" data-goto-ref="${esc(name)}">
       <span class="ji-icon-wrap"><span class="ji-em">${em(entry.emoji)}</span></span>
     </button>
     <span class="ji-nameline">
-      <button class="ji-pin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
+      <button type="button" class="ji-pin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
         title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
       <span class="ji-name">${esc(name)}</span>
     </span>
@@ -4796,7 +4796,7 @@ function jobBoardHTML(){
       const i = state.jobs.indexOf(job);
       const bonus = jobBonus(job);
       const action = !turnedIn && jobDone(job)
-        ? `<button class="bigbtn job-turnin" data-turnin="${i}">Turn In</button>` : "";
+        ? `<button type="button" class="bigbtn job-turnin" data-turnin="${i}">Turn In</button>` : "";
       return `<div class="job-card-wrap">
         <div class="job-card${turnedIn ? " turned-in" : ""}">
           ${jobCardBodyHTML(job.items, bonus)}
@@ -4836,7 +4836,7 @@ function jobBoardHTML(){
             <div class="job-card ${card.special ? "special" : ""}" ${card.special && suitColor ? `style="--suit:${suitColor}"` : ""}>
               ${jobCardBodyHTML(card.items, jobBonus({items: card.items}))}
             </div>
-            <button class="bigbtn mp-pick" data-take="${i}" ${locked ? "disabled" : ""}>Take this job</button>
+            <button type="button" class="bigbtn mp-pick" data-take="${i}" ${locked ? "disabled" : ""}>Take this job</button>
           </div>`).join("")}</div>`
       : `<p class="empty">No more jobs on offer here this visit -- check back next time you stop by.</p>`;
     const capNote = atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
@@ -5143,12 +5143,12 @@ function renderCodex(){
         </div>
         <div class="refwhere">${e.homes.map(h =>
           `<span>${em(STATION_BY_NAME[h].emoji)} ${esc(h)}</span>`).join("")}</div>
-        <button class="refexpand" data-toggle="refroot/${esc(e.name)}" aria-expanded="${open}">
+        <button type="button" class="refexpand" data-toggle="refroot/${esc(e.name)}" aria-expanded="${open}">
           ${open ? "▾ Hide full breakdown" : "▸ Full breakdown"}
         </button>
         <div class="ref-tree" ${open ? "" : "hidden"}>${open ? refExpandHTML(e) : ""}</div>
       </div>
-      <button class="refpin ${pinned ? "active" : ""}" data-pin="${esc(e.name)}"
+      <button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(e.name)}"
         title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(e.name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
     </div>`;
   };
@@ -5191,14 +5191,14 @@ function renderStation(name){
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().
   const gather = sortedDice(s).map((sym, i) =>
-    `<div class="gcol"><button class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gsym">${esc(sym)}</span></button>${dieFace(i + 1)}</div>`).join("");
+    `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gsym">${esc(sym)}</span></button>${dieFace(i + 1)}</div>`).join("");
 
   // No PLAY button (and no leftover rolled-dice row) once this visit's
   // roll is spent -- playRollAnimation() consumes them via animation, so
   // a static re-render (e.g. coming back to this station later) should
   // simply not include the playbar at all.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar">
-      <button class="playbtn${state.pendingRoll ? " roll-ready" : ""}" id="playBtn">${state.pendingRoll ? `Roll \u{1F3B2} x ${state.pendingRoll}` : "▶ PLAY"}</button>
+      <button type="button" class="playbtn${state.pendingRoll ? " roll-ready" : ""}" id="playBtn">${state.pendingRoll ? `Roll \u{1F3B2} x ${state.pendingRoll}` : "▶ PLAY"}</button>
     </div>`;
 
   const bg = STATION_BG[s.name];
@@ -5246,7 +5246,7 @@ function shopBodyHTML(shopEntries, idx){
   if (!hasCraftedHere){
     return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
-  const toggle = `<button class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
+  const toggle = `<button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
       <span class="collapse-chevron"></span>Crafted Items
     </button>`;
   if (!state.collapseCraftedItems){
@@ -5263,7 +5263,7 @@ function renderDrawer(){
     .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
   const elHTML = syms.length
     ? `<div class="elgrid">${syms.map(s =>
-        `<button class="elbox" data-elem="${esc(s)}" style="--suit:${ELEMENT_COLOR[s]}"><span class="elsym">${esc(s)}</span><span class="elqty">${state.elements[s]}</span></button>`).join("")}</div>`
+        `<button type="button" class="elbox" data-elem="${esc(s)}" style="--suit:${ELEMENT_COLOR[s]}"><span class="elsym">${esc(s)}</span><span class="elqty">${state.elements[s]}</span></button>`).join("")}</div>`
     : '<p class="empty">No loose elements — visit a station and hit PLAY.</p>';
 
   const tiers = ["MATERIAL","COMPONENT","CREATION","CAPSTONE"];
@@ -5274,16 +5274,16 @@ function renderDrawer(){
     names.forEach(n => counts[n] = (counts[n] || 0) + 1);
     const unique = [...new Set(names)];
     return `<div class="sec-label">${t} · ${names.length}</div><div class="itemlist">${
-      unique.map(n => `<button class="ientry" data-item="${esc(n)}"><span class="iem">${em(ITEM_EMOJI[n])}</span>${esc(n)}${
+      unique.map(n => `<button type="button" class="ientry" data-item="${esc(n)}"><span class="iem">${em(ITEM_EMOJI[n])}</span>${esc(n)}${
         counts[n] > 1 ? `<span class="iqty">×${counts[n]}</span>` : ""}</button>`).join("")
     }</div>`;
   }).join("");
 
   const arrangeBtn = state.items.length
-    ? `<button class="convert-trigger arrange-trigger" id="openArrangeBtn">🎨 Arrange Items</button>`
+    ? `<button type="button" class="convert-trigger arrange-trigger" id="openArrangeBtn">🎨 Arrange Items</button>`
     : "";
   return `<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
-    <button class="convert-trigger" id="openConvertBtn">🔄 Convert Elements</button>
+    <button type="button" class="convert-trigger" id="openConvertBtn">🔄 Convert Elements</button>
     ${arrangeBtn}
     ${itemHTMLs || '<div class="sec-label">CRAFTED · kept forever</div><p class="empty">Nothing crafted yet.</p>'}`;
 }
@@ -6502,7 +6502,7 @@ function renderArrangeTray(){
   }
   tray.innerHTML = unique.map(name => {
     const emoji = ITEM_EMOJI[name];
-    return `<button class="arr-tray-card" data-add="${esc(name)}">
+    return `<button type="button" class="arr-tray-card" data-add="${esc(name)}">
       <span class="em">${em(emoji)}</span>
       <span class="nm">${esc(name)}</span>
     </button>`;
@@ -6518,7 +6518,7 @@ function renderArrangeBgPicker(){
   const picker = document.getElementById("arrBgPicker");
   const bg = state.arrangement.bg;
   picker.innerHTML = '<span class="arr-bg-label">BACKGROUND</span>' +
-    ARRANGE_COLORS.map(c => `<button class="arr-swatch${c === bg ? " active" : ""}" data-bg="${esc(c)}" style="background:${esc(c)}" aria-label="Background color"></button>`).join("");
+    ARRANGE_COLORS.map(c => `<button type="button" class="arr-swatch${c === bg ? " active" : ""}" data-bg="${esc(c)}" style="background:${esc(c)}" aria-label="Background color"></button>`).join("");
 }
 document.getElementById("arrBgPicker").addEventListener("click", ev => {
   const sw = ev.target.closest("[data-bg]");
@@ -6870,12 +6870,12 @@ function renderConvertPicker(){
     // base rule builds its border out of var(--suit) -- same inline-custom-
     // property pattern as .gchip/.pchip/the drawer's .elbox use already.
     const suitStyle = `style="--suit:${ELEMENT_COLOR[s] || "#8a94a6"}"`;
-    if (!isFrom) return `<button class="convert-pick" data-sym="${esc(s)}" title="${esc(ELEMENT_NAMES[s] || s)}">
+    if (!isFrom) return `<button type="button" class="convert-pick" data-sym="${esc(s)}" title="${esc(ELEMENT_NAMES[s] || s)}">
         <span class="elsym" ${suitStyle}>${esc(s)}</span>
         <span class="pickqty">×${count(s)}</span>
       </button>`;
     const valid = count(s) >= 3;
-    return `<button class="convert-pick ${valid ? "" : "invalid"}" data-sym="${esc(s)}" ${valid ? "" : "disabled"} title="${esc(ELEMENT_NAMES[s] || s)}">
+    return `<button type="button" class="convert-pick ${valid ? "" : "invalid"}" data-sym="${esc(s)}" ${valid ? "" : "disabled"} title="${esc(ELEMENT_NAMES[s] || s)}">
         <span class="elsym" ${suitStyle}>${esc(s)}</span>
         <span class="pickqty">×${count(s)}</span>
       </button>`;
