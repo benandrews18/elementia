@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Story Mode Simulator</title>
+<style>
+  :root{ --ink:#e8edf4; --mute:#8a97a8; --bg:#0e1218; --card:#171d26; --line:#2b3442;
+         --ok:#3fb46c; --warn:#e0b23f; --bad:#e05a4a; --accent:#4d7cf2; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink);
+    height:100vh; overflow:hidden; display:flex; flex-direction:column;
+  }
+  header{
+    padding:10px 16px; border-bottom:1.5px solid var(--line); display:flex; align-items:baseline;
+    gap:14px; flex-wrap:wrap; flex:0 0 auto;
+  }
+  header h1{font-size:15px; font-weight:800; margin:0; letter-spacing:.3px}
+  header .sub{font-size:11.5px; color:var(--mute)}
+  header .spacer{flex:1}
+  .btnrow{display:flex; gap:6px; flex-wrap:wrap}
+  button{
+    font:inherit; font-weight:700; font-size:12px; padding:6px 11px; border-radius:8px;
+    border:1.5px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;
+  }
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  button:hover{filter:brightness(1.15)}
+  button:disabled{opacity:.4; cursor:default; filter:none}
+  button.small{padding:3px 7px; font-size:11px; border-radius:6px}
+  main{flex:1; display:flex; min-height:0}
+  #graphPane{flex:1 1 60%; position:relative; overflow:auto; background:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,.05) 1px, transparent 0) 0 0/18px 18px, var(--bg);}
+  #graphSvg{display:block}
+  .node-label{font-size:9.5px; font-weight:700; fill:var(--ink); pointer-events:none; text-anchor:middle}
+  .node-emoji{font-size:15px; text-anchor:middle; pointer-events:none}
+  .edge{stroke:rgba(255,255,255,.10); stroke-width:1.3; fill:none}
+  .edge.hi{stroke:var(--warn); stroke-width:2.2; opacity:.9}
+  .node-circ{stroke-width:2; cursor:pointer}
+  .node-circ.unrevealed{fill:#1c2330; stroke:#333d4d}
+  .node-circ.revealed{stroke:var(--suit,#4d7cf2)}
+  .node-circ.just{stroke:var(--warn); stroke-width:3.5}
+  .node-circ.selected{stroke:#fff; stroke-width:3}
+  #sidePane{
+    flex:0 0 340px; border-left:1.5px solid var(--line); display:flex; flex-direction:column;
+    min-height:0; background:var(--card);
+  }
+  .side-section{padding:10px 14px; border-bottom:1.5px solid var(--line)}
+  .side-section h2{font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--mute);
+    font-weight:800; margin:0 0 8px}
+  .scrub-row{display:flex; align-items:center; gap:8px}
+  input[type=range]{flex:1}
+  .stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px}
+  .stat{background:#12161f; border:1px solid var(--line); border-radius:8px; padding:6px 8px}
+  .stat .n{font-size:16px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .l{font-size:9px; color:var(--mute); text-transform:uppercase; letter-spacing:.3px}
+  #missionList{flex:1; overflow-y:auto; padding:6px 10px}
+  .mrow{
+    display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:7px; font-size:12px;
+    border:1px solid transparent; cursor:pointer;
+  }
+  .mrow:hover{background:#1e2632}
+  .mrow.current{border-color:var(--warn); background:#241f14}
+  .mrow.done{opacity:.5}
+  .mrow .idx{width:22px; color:var(--mute); font-variant-numeric:tabular-nums; font-size:10.5px}
+  .mrow .em{width:18px; text-align:center}
+  .mrow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .mrow .av{color:var(--mute); font-size:10px; font-variant-numeric:tabular-nums}
+  .mrow .mbtns{display:none; gap:2px}
+  .mrow:hover .mbtns{display:flex}
+  .orphans{font-size:11px; color:var(--bad); padding:0 14px 10px; line-height:1.6}
+  select, input[type=text]{
+    font:inherit; font-size:12px; background:#12161f; color:var(--ink); border:1.5px solid var(--line);
+    border-radius:7px; padding:5px 7px; width:100%;
+  }
+  .hint{font-size:10.5px; color:var(--mute); line-height:1.5; margin-top:6px}
+  #detailPane{padding:8px 14px; font-size:11.5px; line-height:1.7; max-height:140px; overflow-y:auto}
+  #detailPane b{color:var(--ink)}
+  #detailPane .rec{color:var(--mute)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ Elementia — Story Mode Simulator</h1>
+  <span class="sub">experiment with mission reveal order &amp; watch item coverage grow</span>
+  <div class="spacer"></div>
+  <div class="btnrow">
+    <button id="exportBtn">⬇ Export order</button>
+    <button id="importBtn">⬆ Import order</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+    <button id="resetOrderBtn">↺ Reset to default (AvgVisits)</button>
+  </div>
+</header>
+
+<main>
+  <div id="graphPane"><svg id="graphSvg"></svg></div>
+  <div id="sidePane">
+    <div class="side-section">
+      <h2>Simulate</h2>
+      <div class="scrub-row">
+        <button class="small" id="stepBackBtn">⏮</button>
+        <input type="range" id="scrubber" min="0" max="0" value="0">
+        <button class="small" id="stepFwdBtn">⏭</button>
+      </div>
+      <div class="btnrow" style="margin-top:6px">
+        <button id="playBtn" class="primary">▶ Play</button>
+        <button id="resetSimBtn">↺ Reset</button>
+      </div>
+    </div>
+    <div class="side-section">
+      <h2>Coverage</h2>
+      <div class="stats">
+        <div class="stat"><div class="n" id="statRevealed">0</div><div class="l">Revealed</div></div>
+        <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total items</div></div>
+        <div class="stat"><div class="n" id="statOrphans">0</div><div class="l">Never covered</div></div>
+      </div>
+    </div>
+    <div class="side-section" style="border-bottom:none; flex:0 0 auto">
+      <h2>Mission order <span id="missionCount" style="color:var(--mute);font-weight:400"></span></h2>
+      <select id="addMissionSelect"><option value="">+ add item back to the order…</option></select>
+    </div>
+    <div id="missionList"></div>
+    <div id="orphanBox" class="orphans" style="display:none"></div>
+    <div id="detailPane" class="side-section"><span style="color:var(--mute)">Click a node in the graph for details.</span></div>
+  </div>
+</main>
+
+<script>
+const DATA = /*__STORY_DATA_START__*/{
+ "version": "2026.08.13",
+ "suits": {
+  "ocean": {
+   "label": "OCEAN",
+   "color": "#3aa9a0",
+   "soft": "#e1f2f0"
+  },
+  "power": {
+   "label": "POWER PLANT",
+   "color": "#8a5ce0",
+   "soft": "#ece3f9"
+  },
+  "greenhouse": {
+   "label": "GREENHOUSE",
+   "color": "#3aab6d",
+   "soft": "#e2f1e7"
+  },
+  "mine": {
+   "label": "DEEP MINE",
+   "color": "#e2a83e",
+   "soft": "#f8ecd7"
+  },
+  "forest": {
+   "label": "OLD GROWTH",
+   "color": "#e2823a",
+   "soft": "#f8e4d5"
+  },
+  "bakery": {
+   "label": "BAKERY",
+   "color": "#8cb43e",
+   "soft": "#eef4dc"
+  },
+  "city": {
+   "label": "THE CITY",
+   "color": "#e2543b",
+   "soft": "#f8e6e1"
+  },
+  "observatory": {
+   "label": "OBSERVATORY",
+   "color": "#4d7cf2",
+   "soft": "#e3ebfb"
+  }
+ },
+ "stations": [
+  {
+   "emoji": "🌊",
+   "name": "The Ocean",
+   "suit": "ocean",
+   "dice": [
+    "C",
+    "O",
+    "H",
+    "Si",
+    "N",
+    "Ca"
+   ],
+   "shop": [
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "⏳",
+     "Sand",
+     "MATERIAL",
+     "Si + O",
+     2
+    ],
+    [
+     "🌿",
+     "Seaweed",
+     "MATERIAL",
+     "C + H + O",
+     4
+    ],
+    [
+     "☁️",
+     "Cloud",
+     "COMPONENT",
+     "💧 Water + N + C",
+     5
+    ],
+    [
+     "🍌",
+     "Banana",
+     "CREATION",
+     "🌳 Tree + 💧 Water + K",
+     8
+    ],
+    [
+     "🧵",
+     "Fabric",
+     "COMPONENT",
+     "🧶 Plant Fiber",
+     9
+    ],
+    [
+     "⛵",
+     "Sailboat",
+     "CREATION",
+     "🛶 Canoe + 🧵 Fabric",
+     10
+    ],
+    [
+     "🧪",
+     "Biofuel",
+     "CREATION",
+     "🌿 Seaweed + 🦴 Bone + 🌱 Soil + 🔋 Battery",
+     11
+    ],
+    [
+     "__PEARL__",
+     "Pearl",
+     "COMPONENT",
+     "Ca + O + 🔥 Furnace + 🕐 Clock",
+     13
+    ],
+    [
+     "__LIGHTHOUSE__",
+     "Lighthouse",
+     "CREATION",
+     "💡 Light Bulb + ⬜ Concrete",
+     13
+    ],
+    [
+     "__ORCA__",
+     "Orca",
+     "CREATION",
+     "🌿 Seaweed + 🐟 Salmon + 🦴 Bone",
+     14
+    ],
+    [
+     "__LIFE__",
+     "Life",
+     "CREATION",
+     "🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",
+     14
+    ],
+    [
+     "🌊",
+     "Water Turbine",
+     "CREATION",
+     "💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
+     16
+    ],
+    [
+     "🚤",
+     "Speedboat",
+     "CREATION",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass",
+     17
+    ],
+    [
+     "🏖️",
+     "Beach Town",
+     "CREATION",
+     "__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",
+     25
+    ]
+   ],
+   "capstone": [
+    "__CORAL__",
+    "Coral Reef",
+    "CAPSTONE",
+    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",
+    22
+   ]
+  },
+  {
+   "emoji": "⚡",
+   "name": "The Power Plant",
+   "suit": "power",
+   "dice": [
+    "Si",
+    "Al",
+    "Ag",
+    "Ni",
+    "Cu",
+    "Fe"
+   ],
+   "shop": [
+    [
+     "🔌",
+     "Wire",
+     "MATERIAL",
+     "Cu + Al",
+     3
+    ],
+    [
+     "🔋",
+     "Battery",
+     "MATERIAL",
+     "Ni + Fe + K",
+     4
+    ],
+    [
+     "🎆",
+     "Fireworks",
+     "MATERIAL",
+     "C + S + K",
+     4
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     5
+    ],
+    [
+     "⚙️",
+     "Engine",
+     "COMPONENT",
+     "🛠️ Tools + 🛢️ Natural Gas",
+     7
+    ],
+    [
+     "💡",
+     "Light Bulb",
+     "COMPONENT",
+     "🪟 Glass + 🔌 Wire",
+     7
+    ],
+    [
+     "🕐",
+     "Clock",
+     "COMPONENT",
+     "🔋 Battery + 🛠️ Tools",
+     8
+    ],
+    [
+     "🥤",
+     "Plastic",
+     "COMPONENT",
+     "🛢️ Natural Gas + 🔥 Furnace",
+     8
+    ],
+    [
+     "🔆",
+     "Solar Cell",
+     "COMPONENT",
+     "🔌 Wire + 🔋 Battery",
+     8
+    ],
+    [
+     "💻",
+     "Computer",
+     "COMPONENT",
+     "🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",
+     15
+    ],
+    [
+     "🚗",
+     "Car",
+     "CREATION",
+     "⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",
+     18
+    ],
+    [
+     "🌐",
+     "Renewable Grid",
+     "CREATION",
+     "🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
+     22
+    ]
+   ],
+   "capstone": [
+    "🤖",
+    "Robot",
+    "CAPSTONE",
+    "💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",
+    21
+   ]
+  },
+  {
+   "emoji": "🌱",
+   "name": "Greenhouse",
+   "suit": "greenhouse",
+   "dice": [
+    "C",
+    "H",
+    "O",
+    "K",
+    "N",
+    "P"
+   ],
+   "shop": [
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "♻️",
+     "Fertilizer",
+     "MATERIAL",
+     "N + P + K",
+     3
+    ],
+    [
+     "🍬",
+     "Sugar",
+     "MATERIAL",
+     "C + H + O",
+     3
+    ],
+    [
+     "🧬",
+     "DNA",
+     "MATERIAL",
+     "🍬 Sugar + P + N",
+     4
+    ],
+    [
+     "🌱",
+     "Soil",
+     "COMPONENT",
+     "🏺 Clay + ⏳ Sand",
+     4
+    ],
+    [
+     "🍎",
+     "Apple",
+     "CREATION",
+     "🌳 Tree + 💧 Water",
+     7
+    ],
+    [
+     "🧑‍🌾",
+     "Farm",
+     "CREATION",
+     "🌱 Soil + 🛠️ Tools + 💧 Water",
+     7
+    ],
+    [
+     "🌾",
+     "Grain",
+     "COMPONENT",
+     "🧑‍🌾 Farm + ♻️ Fertilizer",
+     8
+    ],
+    [
+     "🌻",
+     "Sunflower",
+     "CREATION",
+     "🔆 Solar Cell + 🌾 Grain",
+     9
+    ],
+    [
+     "🚜",
+     "Tractor",
+     "CREATION",
+     "🧑‍🌾 Farm + ⚙️ Engine",
+     10
+    ],
+    [
+     "__OPAL__",
+     "Opal",
+     "COMPONENT",
+     "Si + O + 🔥 Furnace + 🕐 Clock",
+     11
+    ],
+    [
+     "🐔",
+     "Chicken",
+     "CREATION",
+     "🧑‍🌾 Farm + 🥚 Egg",
+     11
+    ],
+    [
+     "🐄",
+     "Cow",
+     "CREATION",
+     "🧑‍🌾 Farm + 🌾 Grain",
+     9
+    ],
+    [
+     "🚲",
+     "Bicycle",
+     "CREATION",
+     "🦾 Aluminum Alloy + 🔘 Wheel + __RUBBER__ Rubber",
+     15
+    ],
+    [
+     "𖣘",
+     "Windmill",
+     "CREATION",
+     "☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
+     16
+    ]
+   ],
+   "capstone": [
+    "🏡",
+    "Homestead",
+    "CAPSTONE",
+    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin",
+    19
+   ]
+  },
+  {
+   "emoji": "💎",
+   "name": "Deep Mine",
+   "suit": "mine",
+   "dice": [
+    "Ni",
+    "Si",
+    "Al",
+    "Fe",
+    "C",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "🛢️",
+     "Natural Gas",
+     "MATERIAL",
+     "C + H",
+     2
+    ],
+    [
+     "🔩",
+     "Steel",
+     "MATERIAL",
+     "Fe + C",
+     2
+    ],
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     2
+    ],
+    [
+     "🛠️",
+     "Tools",
+     "CREATION",
+     "Fe + Ti + Al",
+     3
+    ],
+    [
+     "🔥",
+     "Furnace",
+     "CREATION",
+     "🏺 Clay + C",
+     5
+    ],
+    [
+     "__RUBBER__",
+     "Rubber",
+     "COMPONENT",
+     "🛢️ Natural Gas + S",
+     5
+    ],
+    [
+     "🔩",
+     "Stainless Steel",
+     "MATERIAL",
+     "🔩 Steel + Ni + 🔥 Furnace",
+     5
+    ],
+    [
+     "🦾",
+     "Aluminum Alloy",
+     "MATERIAL",
+     "Al + Mg + 🔥 Furnace",
+     6
+    ],
+    [
+     "🛡️",
+     "Titanium Alloy",
+     "MATERIAL",
+     "Ti + Al + 🔥 Furnace",
+     6
+    ],
+    [
+     "♨️",
+     "Geothermal Pump",
+     "CREATION",
+     "🔥 Furnace + 💧 Water + 🔋 Battery",
+     10
+    ],
+    [
+     "__DIAMOND__",
+     "Diamond",
+     "COMPONENT",
+     "C + 🔥 Furnace + 🕐 Clock",
+     12
+    ],
+    [
+     "🌋",
+     "Volcano",
+     "CREATION",
+     "🌎 Planet + 🔥 Furnace",
+     14
+    ],
+    [
+     "__GEMCOLLECTION__",
+     "Gemstone Collection",
+     "CREATION",
+     "__PEARL__ Pearl + __RUBY__ Ruby + __OPAL__ Opal + __TURQUOISE__ Turquoise + __AMBER__ Amber + __DIAMOND__ Diamond",
+     19
+    ]
+   ],
+   "capstone": [
+    "🚄",
+    "Maglev Train",
+    "CAPSTONE",
+    "⚙️ Engine + 🪟 Glass + 🧲 Magnet + 🌉 Bridge + 🦾 Aluminum Alloy",
+    22
+   ]
+  },
+  {
+   "emoji": "🌲",
+   "name": "Old Growth Forest",
+   "suit": "forest",
+   "dice": [
+    "C",
+    "O",
+    "Si",
+    "Al",
+    "Mg",
+    "S"
+   ],
+   "shop": [
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "⏳",
+     "Sand",
+     "MATERIAL",
+     "Si + O",
+     2
+    ],
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     2
+    ],
+    [
+     "🦴",
+     "Bone",
+     "MATERIAL",
+     "C + Ca + S",
+     4
+    ],
+    [
+     "🌱",
+     "Soil",
+     "COMPONENT",
+     "🏺 Clay + ⏳ Sand",
+     4
+    ],
+    [
+     "🍓",
+     "Strawberries",
+     "MATERIAL",
+     "C + H + O + Ca",
+     4
+    ],
+    [
+     "🌳",
+     "Tree",
+     "COMPONENT",
+     "🌱 Soil + C + O",
+     6
+    ],
+    [
+     "🛶",
+     "Canoe",
+     "COMPONENT",
+     "🌳 Tree + 💧 Water",
+     6
+    ],
+    [
+     "🦌",
+     "Deer",
+     "CREATION",
+     "🌳 Tree + 💧 Water + 🦴 Bone",
+     7
+    ],
+    [
+     "🧶",
+     "Plant Fiber",
+     "MATERIAL",
+     "🌳 Tree + 🛠️ Tools",
+     8
+    ],
+    [
+     "🛖",
+     "Log Cabin",
+     "CREATION",
+     "🌳 Tree + 🛠️ Tools + 🔥 Furnace",
+     8
+    ],
+    [
+     "__AMBER__",
+     "Amber",
+     "COMPONENT",
+     "🌳 Tree + C + 🕐 Clock",
+     11
+    ],
+    [
+     "🐟",
+     "Salmon",
+     "CREATION",
+     "🌿 Seaweed + 💧 Water + 🥚 Egg",
+     12
+    ],
+    [
+     "🦖",
+     "Dinosaur",
+     "CREATION",
+     "🦴 Bone + __AMBER__ Amber + 🧬 DNA",
+     13
+    ]
+   ],
+   "capstone": [
+    "__ECOSYSTEM__",
+    "Ecosystem",
+    "CAPSTONE",
+    "🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow",
+    28
+   ]
+  },
+  {
+   "emoji": "🍞",
+   "name": "The Bakery",
+   "suit": "bakery",
+   "dice": [
+    "O",
+    "H",
+    "P",
+    "S",
+    "Ca",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "💧",
+     "Water",
+     "MATERIAL",
+     "H + O",
+     2
+    ],
+    [
+     "🛢️",
+     "Natural Gas",
+     "MATERIAL",
+     "C + H",
+     2
+    ],
+    [
+     "🍬",
+     "Sugar",
+     "MATERIAL",
+     "C + H + O",
+     3
+    ],
+    [
+     "🦠",
+     "Yeast",
+     "COMPONENT",
+     "🍬 Sugar + 💧 Water",
+     5
+    ],
+    [
+     "🥚",
+     "Egg",
+     "COMPONENT",
+     "🧬 DNA + Ca + O",
+     6
+    ],
+    [
+     "🍫",
+     "Chocolate",
+     "COMPONENT",
+     "🍬 Sugar + 🔥 Furnace",
+     9
+    ],
+    [
+     "__FLOUR__",
+     "Flour",
+     "COMPONENT",
+     "🌾 Grain + 🛠️ Tools",
+     10
+    ],
+    [
+     "🥛",
+     "Milk",
+     "COMPONENT",
+     "🐄 Cow + 💧 Water",
+     10
+    ],
+    [
+     "🫓",
+     "Dough",
+     "COMPONENT",
+     "__FLOUR__ Flour + 💧 Water",
+     11
+    ],
+    [
+     "🥨",
+     "Pretzel",
+     "CREATION",
+     "🫓 Dough + K + 🔥 Furnace",
+     11
+    ],
+    [
+     "🍞",
+     "Bread",
+     "CREATION",
+     "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
+     12
+    ],
+    [
+     "🍰",
+     "Cake",
+     "CREATION",
+     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
+     13
+    ],
+    [
+     "🍶",
+     "Cream",
+     "COMPONENT",
+     "🥛 Milk + 🕐 Clock",
+     13
+    ],
+    [
+     "🧈",
+     "Butter",
+     "MATERIAL",
+     "🍶 Cream + 🛠️ Tools",
+     13
+    ],
+    [
+     "🥧",
+     "Apple Pie",
+     "CREATION",
+     "🫓 Dough + 🍎 Apple + 🔥 Furnace",
+     13
+    ],
+    [
+     "🍰",
+     "Chocolate Cake",
+     "CREATION",
+     "🍰 Cake + 🍫 Chocolate",
+     14
+    ],
+    [
+     "🥐",
+     "Croissant",
+     "CREATION",
+     "🫓 Dough + 🧈 Butter + 🔥 Furnace",
+     14
+    ],
+    [
+     "🧀",
+     "Cheesecake",
+     "CREATION",
+     "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",
+     15
+    ],
+    [
+     "🍩",
+     "Éclair",
+     "CREATION",
+     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",
+     16
+    ],
+    [
+     "🍞",
+     "Banana Bread",
+     "CREATION",
+     "🍞 Bread + 🍌 Banana",
+     17
+    ],
+    [
+     "🧁",
+     "Berry Cupcakes",
+     "CREATION",
+     "🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",
+     19
+    ],
+    [
+     "🍽️",
+     "Grand Banquet",
+     "CREATION",
+     "🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",
+     24
+    ]
+   ],
+   "capstone": [
+    "🎂",
+    "Fruit Cake",
+    "CAPSTONE",
+    "🍞 Bread + 🍰 Cake + 🍎 Apple + 🕐 Clock + 🍌 Banana",
+    25
+   ]
+  },
+  {
+   "emoji": "🏗️",
+   "name": "The City",
+   "suit": "city",
+   "dice": [
+    "Ca",
+    "C",
+    "O",
+    "Al",
+    "Si",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "🪨",
+     "Limestone",
+     "MATERIAL",
+     "Ca + C + O",
+     2
+    ],
+    [
+     "🔩",
+     "Steel",
+     "MATERIAL",
+     "Fe + C",
+     2
+    ],
+    [
+     "🏺",
+     "Clay",
+     "MATERIAL",
+     "Al + Si + Mg",
+     2
+    ],
+    [
+     "🍇",
+     "Blackberries",
+     "MATERIAL",
+     "C + H + O + Mg",
+     4
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     5
+    ],
+    [
+     "⬜",
+     "Concrete",
+     "COMPONENT",
+     "🏺 Clay + 🪨 Limestone",
+     5
+    ],
+    [
+     "🗿",
+     "Statue",
+     "COMPONENT",
+     "🪨 Limestone + 🛠️ Tools",
+     6
+    ],
+    [
+     "🌉",
+     "Bridge",
+     "CREATION",
+     "🔩 Steel + ⬜ Concrete + 💧 Water",
+     8
+    ],
+    [
+     "🏢",
+     "Building",
+     "CREATION",
+     "⬜ Concrete + 🪟 Glass + 🔩 Steel",
+     8
+    ],
+    [
+     "📕",
+     "Book",
+     "COMPONENT",
+     "🧶 Plant Fiber",
+     12
+    ],
+    [
+     "__RUBY__",
+     "Ruby",
+     "COMPONENT",
+     "Al + O + 🔥 Furnace + 🕐 Clock",
+     13
+    ],
+    [
+     "📚",
+     "Library",
+     "CREATION",
+     "🏢 Building + 📕 Book",
+     15
+    ],
+    [
+     "✈️",
+     "Airplane",
+     "CREATION",
+     "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",
+     15
+    ],
+    [
+     "🗼",
+     "Skyscraper",
+     "CREATION",
+     "🏢 Building + ☁️ Cloud + 📡 Satellite Dish",
+     16
+    ],
+    [
+     "🏍️",
+     "Motorcycle",
+     "CREATION",
+     "🚲 Bicycle + ⚙️ Engine",
+     18
+    ],
+    [
+     "🍣",
+     "Sushi Restaurant",
+     "CREATION",
+     "🌿 Seaweed + 🐟 Salmon + 🏢 Building",
+     19
+    ],
+    [
+     "🏛️",
+     "Museum",
+     "CREATION",
+     "🏢 Building + 🦖 Dinosaur + 🔭 Telescope + 🗿 Statue",
+     21
+    ],
+    [
+     "🚉",
+     "Central Station",
+     "CREATION",
+     "✈️ Airplane + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",
+     25
+    ]
+   ],
+   "capstone": [
+    "🌆",
+    "Metropolis",
+    "CAPSTONE",
+    "🌉 Bridge + 🗼 Skyscraper + ✈️ Airplane + 🚗 Car + 💡 Light Bulb",
+    23
+   ]
+  },
+  {
+   "emoji": "🔭",
+   "name": "The Observatory",
+   "suit": "observatory",
+   "dice": [
+    "Ni",
+    "Al",
+    "Fe",
+    "Ag",
+    "Ti",
+    "Si"
+   ],
+   "shop": [
+    [
+     "🛠️",
+     "Tools",
+     "CREATION",
+     "Fe + Ti + Al",
+     3
+    ],
+    [
+     "🪟",
+     "Glass",
+     "COMPONENT",
+     "⏳ Sand + 🪨 Limestone",
+     5
+    ],
+    [
+     "🫐",
+     "Blueberries",
+     "MATERIAL",
+     "C + H + O + K",
+     5
+    ],
+    [
+     "__MICROCHIP__",
+     "Microchip",
+     "COMPONENT",
+     "🔌 Wire + Si + Ag",
+     8
+    ],
+    [
+     "🌎",
+     "Planet",
+     "CREATION",
+     "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
+     8
+    ],
+    [
+     "🧲",
+     "Magnet",
+     "COMPONENT",
+     "Fe + 🔋 Battery",
+     9
+    ],
+    [
+     "🧭",
+     "Compass",
+     "COMPONENT",
+     "🧲 Magnet + 💧 Water + 🪟 Glass",
+     10
+    ],
+    [
+     "🔘",
+     "Wheel",
+     "MATERIAL",
+     "🌳 Tree + 🛠️ Tools",
+     11
+    ],
+    [
+     "📡",
+     "Satellite Dish",
+     "COMPONENT",
+     "🦾 Aluminum Alloy + 🔌 Wire",
+     12
+    ],
+    [
+     "🔭",
+     "Telescope",
+     "CREATION",
+     "🪟 Glass + 🦾 Aluminum Alloy + Ag",
+     12
+    ],
+    [
+     "__TURQUOISE__",
+     "Turquoise",
+     "COMPONENT",
+     "Cu + Al + P + 🔥 Furnace + 🕐 Clock",
+     14
+    ],
+    [
+     "⭐",
+     "Star",
+     "CREATION",
+     "🔭 Telescope + H + 🕐 Clock",
+     16
+    ],
+    [
+     "🌈",
+     "Rainbow",
+     "CREATION",
+     "☁️ Cloud + ⭐ Star",
+     17
+    ],
+    [
+     "☀️",
+     "Solar System",
+     "CREATION",
+     "⭐ Star + 🌎 Planet",
+     18
+    ],
+    [
+     "🚀",
+     "Rocket",
+     "CREATION",
+     "💻 Computer + 🔆 Solar Cell + 🛡️ Titanium Alloy",
+     21
+    ]
+   ],
+   "capstone": [
+    "🛰️",
+    "Space Station",
+    "CAPSTONE",
+    "🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",
+    28
+   ]
+  }
+ ],
+ "avgVisits": {
+  "Engine": 7.2,
+  "Windmill": 15.7,
+  "Plant Fiber": 7.4,
+  "Butter": 11.6,
+  "Pearl": 13.7,
+  "Airplane": 15.2,
+  "Apple": 7.1,
+  "Battery": 4.9,
+  "Tree": 5.3,
+  "Lighthouse": 13.6,
+  "DNA": 4.0,
+  "Grain": 8.4,
+  "Opal": 11.2,
+  "Library": 13.9,
+  "Clay": 2.7,
+  "Wheel": 10.6,
+  "Solar System": 18.7,
+  "Water": 2.5,
+  "Sailboat": 9.5,
+  "Book": 11.3,
+  "Canoe": 6.2,
+  "Bridge": 7.6,
+  "Cream": 11.5,
+  "Chicken": 11.0,
+  "Cheesecake": 13.9,
+  "Central Station": 25.2,
+  "Geothermal Pump": 10.3,
+  "Robot": 17.6,
+  "Seaweed": 5.5,
+  "Orca": 13.6,
+  "Bicycle": 14.9,
+  "Star": 16.6,
+  "Strawberries": 4.9,
+  "Yeast": 5.4,
+  "Fabric": 8.6,
+  "Log Cabin": 7.8,
+  "Blackberries": 5.1,
+  "Space Station": 24.5,
+  "Life": 19.2,
+  "Rocket": 20.8,
+  "Metropolis": 23.1,
+  "Clock": 8.3,
+  "Ruby": 13.2,
+  "Cake": 11.8,
+  "Steel": 3.1,
+  "Sand": 3.1,
+  "Fireworks": 4.2,
+  "Banana": 7.7,
+  "Egg": 5.8,
+  "Tools": 3.6,
+  "Chocolate Cake": 12.1,
+  "Deer": 6.8,
+  "Motorcycle": 17.3,
+  "Sushi Restaurant": 19.4,
+  "Planet": 9.1,
+  "Rubber": 5.5,
+  "Fruit Cake": 19.8,
+  "Berry Cupcakes": 17.9,
+  "Turquoise": 14.3,
+  "Homestead": 14.9,
+  "Milk": 9.6,
+  "Microchip": 8.7,
+  "Rainbow": 17.2,
+  "Dinosaur": 12.7,
+  "Chocolate": 9.3,
+  "Flour": 9.4,
+  "Volcano": 14.3,
+  "Concrete": 5.7,
+  "Natural Gas": 3.0,
+  "Solar Cell": 5.0,
+  "Titanium Alloy": 5.8,
+  "Tractor": 10.2,
+  "Blueberries": 6.4,
+  "Maglev Train": 19.3,
+  "Apple Pie": 11.4,
+  "Amber": 11.2,
+  "Aluminum Alloy": 5.7,
+  "Cloud": 5.3,
+  "Building": 8.5,
+  "Renewable Grid": 22.7,
+  "Ecosystem": 24.2,
+  "Satellite Dish": 11.9,
+  "Computer": 15.5,
+  "Banana Bread": 16.2,
+  "Coral Reef": 17.2,
+  "Cow": 8.3,
+  "Furnace": 4.8,
+  "Limestone": 2.9,
+  "Salmon": 12.1,
+  "Skyscraper": 16.3,
+  "Sugar": 3.2,
+  "Pretzel": 10.1,
+  "Croissant": 12.2,
+  "Biofuel": 11.9,
+  "Compass": 11.5,
+  "Soil": 4.8,
+  "Bone": 4.7,
+  "Water Turbine": 15.8,
+  "Telescope": 12.3,
+  "Gemstone Collection": 19.6,
+  "Farm": 7.9,
+  "Plastic": 8.2,
+  "Fertilizer": 3.5,
+  "Car": 18.3,
+  "Grand Banquet": 23.5,
+  "Beach Town": 26.9,
+  "Bread": 10.9,
+  "Sunflower": 10.8,
+  "Diamond": 12.8,
+  "Museum": 21.3,
+  "Éclair": 14.4,
+  "Magnet": 9.1,
+  "Speedboat": 16.7,
+  "Statue": 6.6,
+  "Dough": 9.5,
+  "Light Bulb": 7.4,
+  "Wire": 4.0,
+  "Glass": 5.5,
+  "Stainless Steel": 5.5
+ }
+}/*__STORY_DATA_END__*/;
+</script>
+<script>
+(function(){
+  const ELEMENTS = new Set(["C","H","O","N","Ca","Si","Al","Ag","Ni","Cu","Fe","K","P","S","Mg","Ti"]);
+
+  // ---- flatten catalog -----------------------------------------------------
+  const items = []; // {name, emoji, tier, station, suit, points, recipe, itemDeps:[names], avgVisits}
+  const byName = {};
+  DATA.stations.forEach(st => {
+    const suit = DATA.suits[st.suit] || {color:"#8a94a6"};
+    function add(emoji, name, tier, recipe, points) {
+      // A handful of MATERIAL items (Water, Clay, Sand, ...) are sold at
+      // 2-3 stations with an identical recipe -- one graph node per NAME,
+      // not one per shop listing, or the graph and mission list would show
+      // the same item duplicated 2-3x. Just record every station it's
+      // available at on the node we already have.
+      if (byName[name]) { byName[name].stations.push(st.name); return; }
+      const deps = recipe.split(" + ").map(t => t.trim()).filter(tok => {
+        return !ELEMENTS.has(tok);
+      }).map(tok => {
+        const sp = tok.indexOf(" ");
+        return sp < 0 ? tok : tok.slice(sp + 1);
+      });
+      const it = { name, emoji, tier, station: st.name, stations: [st.name], suitColor: suit.color,
+        points, recipe, itemDeps: deps, avgVisits: DATA.avgVisits[name] };
+      items.push(it);
+      byName[name] = it;
+    }
+    st.shop.forEach(([e,n,tag,rec,pt]) => add(e,n,tag,rec,pt));
+    const [ce,cn,ct,cr,cpt] = st.capstone;
+    add(ce,cn,ct,cr,cpt);
+  });
+
+  // depth = 1 + max(depth of item deps), 0 if no item deps
+  const depthCache = {};
+  function depthOf(name, seen) {
+    if (depthCache[name] != null) return depthCache[name];
+    seen = seen || new Set();
+    if (seen.has(name)) return 0; // guard against accidental cycles
+    seen.add(name);
+    const it = byName[name];
+    if (!it || !it.itemDeps.length) return depthCache[name] = 0;
+    const d = 1 + Math.max(...it.itemDeps.map(d => depthOf(d, seen)));
+    return depthCache[name] = d;
+  }
+  items.forEach(it => depthOf(it.name));
+
+  // full recursive component closure (every item ancestor, excluding self)
+  const closureCache = {};
+  function closureOf(name) {
+    if (closureCache[name]) return closureCache[name];
+    const seen = new Set();
+    (function visit(n){
+      const it = byName[n];
+      if (!it) return;
+      it.itemDeps.forEach(d => { if (!seen.has(d)) { seen.add(d); visit(d); } });
+    })(name);
+    return closureCache[name] = seen;
+  }
+
+  // ---- layout ---------------------------------------------------------------
+  const byDepth = {};
+  items.forEach(it => { (byDepth[depthOf(it.name)] = byDepth[depthOf(it.name)] || []).push(it); });
+  const maxDepth = Math.max(...Object.keys(byDepth).map(Number));
+  const COL_W = 118, ROW_H = 46, PAD = 40, R = 15;
+  Object.keys(byDepth).forEach(d => {
+    byDepth[d].sort((a,b) => (a.avgVisits||0) - (b.avgVisits||0));
+    byDepth[d].forEach((it, i) => {
+      it.x = PAD + Number(d) * COL_W;
+      it.y = PAD + i * ROW_H;
+    });
+  });
+  const svgW = PAD * 2 + (maxDepth + 1) * COL_W;
+  const svgH = PAD * 2 + Math.max(...Object.values(byDepth).map(a => a.length)) * ROW_H;
+
+  const svg = document.getElementById("graphSvg");
+  svg.setAttribute("width", svgW);
+  svg.setAttribute("height", svgH);
+  svg.setAttribute("viewBox", `0 0 ${svgW} ${svgH}`);
+
+  const edgesG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  const nodesG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  svg.appendChild(edgesG);
+  svg.appendChild(nodesG);
+
+  const edgeEls = []; // {el, from, to}
+  items.forEach(it => {
+    it.itemDeps.forEach(dep => {
+      const from = byName[dep];
+      if (!from) return;
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const dx = (from.x + R + 6), dy = from.y, ex = (it.x - R - 6), ey = it.y;
+      const mx = (dx + ex) / 2;
+      path.setAttribute("d", `M ${dx} ${dy} C ${mx} ${dy}, ${mx} ${ey}, ${ex} ${ey}`);
+      path.setAttribute("class", "edge");
+      edgesG.appendChild(path);
+      edgeEls.push({ el: path, from: dep, to: it.name });
+    });
+  });
+
+  const nodeEls = {};
+  items.forEach(it => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("transform", `translate(${it.x},${it.y})`);
+    const circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circ.setAttribute("r", R);
+    circ.setAttribute("class", "node-circ unrevealed");
+    circ.style.setProperty("--suit", it.suitColor);
+    const em = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    em.setAttribute("class", "node-emoji");
+    em.setAttribute("y", 5);
+    em.textContent = it.emoji.replace(/^(__).*(__)$/, "⭐");
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("class", "node-label");
+    label.setAttribute("y", R + 11);
+    label.textContent = it.name.length > 14 ? it.name.slice(0,13) + "…" : it.name;
+    g.appendChild(circ); g.appendChild(em); g.appendChild(label);
+    g.addEventListener("click", () => selectNode(it.name));
+    nodesG.appendChild(g);
+    nodeEls[it.name] = { g, circ };
+  });
+
+  // ---- mission state ----------------------------------------------------
+  const DEFAULT_ORDER = items.slice().sort((a,b) => (a.avgVisits||0) - (b.avgVisits||0))
+    .filter(it => it.tier !== "CAPSTONE").map(it => it.name);
+  let order = DEFAULT_ORDER.slice();
+  let cursor = 0; // number of missions "applied" so far
+  let selected = null;
+  let playTimer = null;
+
+  const scrubber = document.getElementById("scrubber");
+  const missionListEl = document.getElementById("missionList");
+  const addSelect = document.getElementById("addMissionSelect");
+  const missionCountEl = document.getElementById("missionCount");
+  const orphanBox = document.getElementById("orphanBox");
+
+  function revealedSet(uptoIdx) {
+    const revealed = new Set();
+    items.filter(it => it.tier === "CAPSTONE").forEach(it => revealed.add(it.name)); // always visible
+    for (let i = 0; i < uptoIdx; i++) {
+      const n = order[i];
+      revealed.add(n);
+      closureOf(n).forEach(d => revealed.add(d));
+    }
+    return revealed;
+  }
+
+  function firstRevealSteps() {
+    const firstStep = {};
+    for (let i = 0; i < order.length; i++) {
+      const n = order[i];
+      if (firstStep[n] == null) firstStep[n] = i + 1;
+      closureOf(n).forEach(d => { if (firstStep[d] == null) firstStep[d] = i + 1; });
+    }
+    return firstStep;
+  }
+
+  function render() {
+    scrubber.max = order.length;
+    scrubber.value = cursor;
+    const revealed = revealedSet(cursor);
+    const justName = cursor > 0 ? order[cursor - 1] : null;
+    items.forEach(it => {
+      const { circ } = nodeEls[it.name];
+      circ.classList.toggle("unrevealed", !revealed.has(it.name));
+      circ.classList.toggle("revealed", revealed.has(it.name));
+      circ.classList.toggle("just", it.name === justName);
+      circ.classList.toggle("selected", it.name === selected);
+    });
+    edgeEls.forEach(e => {
+      e.el.classList.toggle("hi", selected && (e.to === selected || e.from === selected));
+    });
+
+    document.getElementById("statRevealed").textContent = revealed.size;
+    document.getElementById("statTotal").textContent = items.length;
+    const orphans = items.filter(it => !order.includes(it.name) && !closureCoveredByOrder(it.name) && it.tier !== "CAPSTONE");
+    document.getElementById("statOrphans").textContent = orphans.length;
+    if (orphans.length) {
+      orphanBox.style.display = "block";
+      orphanBox.textContent = "Never revealed by this order: " + orphans.map(o => o.name).join(", ");
+    } else {
+      orphanBox.style.display = "none";
+    }
+
+    renderMissionList();
+  }
+
+  function closureCoveredByOrder(name) {
+    return order.some(n => n === name || closureOf(n).has(name));
+  }
+
+  function renderMissionList() {
+    missionCountEl.textContent = `(${order.length})`;
+    const firstStep = firstRevealSteps();
+    missionListEl.innerHTML = "";
+    order.forEach((name, i) => {
+      const it = byName[name];
+      const row = document.createElement("div");
+      row.className = "mrow" + (i === cursor - 1 ? " current" : "") + (i < cursor ? " done" : "");
+      row.innerHTML = `
+        <span class="idx">${i + 1}</span>
+        <span class="em">${it.emoji.replace(/^(__).*(__)$/, "⭐")}</span>
+        <span class="nm">${it.name}</span>
+        <span class="av">${it.avgVisits != null ? it.avgVisits.toFixed(1) : "--"}</span>
+        <span class="mbtns">
+          <button class="small" data-act="up" data-i="${i}">↑</button>
+          <button class="small" data-act="down" data-i="${i}">↓</button>
+          <button class="small" data-act="rm" data-i="${i}">✕</button>
+        </span>`;
+      row.addEventListener("click", (e) => { if (!e.target.closest("button")) selectNode(name); });
+      missionListEl.appendChild(row);
+    });
+    missionListEl.querySelectorAll("button[data-act]").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const i = Number(btn.dataset.i), act = btn.dataset.act;
+        if (act === "up" && i > 0) { [order[i-1],order[i]] = [order[i],order[i-1]]; }
+        if (act === "down" && i < order.length - 1) { [order[i+1],order[i]] = [order[i],order[i+1]]; }
+        if (act === "rm") { order.splice(i, 1); }
+        cursor = Math.min(cursor, order.length);
+        rebuildAddSelect();
+        render();
+      });
+    });
+    const cur = missionListEl.querySelector(".mrow.current");
+    if (cur) cur.scrollIntoView({ block: "nearest" });
+  }
+
+  function rebuildAddSelect() {
+    addSelect.innerHTML = '<option value="">+ add item back to the order…</option>';
+    items.filter(it => it.tier !== "CAPSTONE" && !order.includes(it.name))
+      .sort((a,b) => a.name.localeCompare(b.name))
+      .forEach(it => {
+        const opt = document.createElement("option");
+        opt.value = it.name; opt.textContent = `${it.emoji} ${it.name}`;
+        addSelect.appendChild(opt);
+      });
+  }
+  addSelect.addEventListener("change", () => {
+    if (addSelect.value) { order.push(addSelect.value); rebuildAddSelect(); render(); addSelect.value = ""; }
+  });
+
+  function selectNode(name) {
+    selected = selected === name ? null : name;
+    const it = byName[name];
+    const dp = document.getElementById("detailPane");
+    if (!selected) { dp.innerHTML = '<span style="color:var(--mute)">Click a node in the graph for details.</span>'; }
+    else {
+      const chain = Array.from(closureOf(name));
+      dp.innerHTML = `<b>${it.emoji} ${it.name}</b> — ${it.stations.join(", ")}, ${it.points}pt, avgVisits=${it.avgVisits != null ? it.avgVisits.toFixed(1) : "?"}<br>
+        <span class="rec">${it.recipe}</span><br>
+        ${chain.length ? `Depends on ${chain.length} item${chain.length===1?"":"s"}: ${chain.join(", ")}` : "No item-level dependencies (built directly from elements)."}`;
+    }
+    render();
+  }
+
+  // ---- controls -----------------------------------------------------------
+  scrubber.addEventListener("input", () => { cursor = Number(scrubber.value); stopPlay(); render(); });
+  document.getElementById("stepFwdBtn").addEventListener("click", () => { cursor = Math.min(order.length, cursor + 1); stopPlay(); render(); });
+  document.getElementById("stepBackBtn").addEventListener("click", () => { cursor = Math.max(0, cursor - 1); stopPlay(); render(); });
+  document.getElementById("resetSimBtn").addEventListener("click", () => { cursor = 0; stopPlay(); render(); });
+  document.getElementById("resetOrderBtn").addEventListener("click", () => {
+    order = DEFAULT_ORDER.slice(); cursor = 0; stopPlay(); rebuildAddSelect(); render();
+  });
+
+  const playBtn = document.getElementById("playBtn");
+  function stopPlay() { clearInterval(playTimer); playTimer = null; playBtn.textContent = "▶ Play"; }
+  playBtn.addEventListener("click", () => {
+    if (playTimer) { stopPlay(); return; }
+    playBtn.textContent = "⏸ Pause";
+    playTimer = setInterval(() => {
+      cursor++;
+      if (cursor > order.length) { stopPlay(); cursor = order.length; }
+      render();
+    }, 220);
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ order }, null, 1)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "story_mission_order.json";
+    a.click();
+  });
+  document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        const incoming = Array.isArray(parsed) ? parsed : parsed.order;
+        if (!Array.isArray(incoming)) throw new Error("expected {order:[...]} or [...]");
+        order = incoming.filter(n => byName[n] && byName[n].tier !== "CAPSTONE");
+        cursor = Math.min(cursor, order.length);
+        rebuildAddSelect();
+        render();
+      } catch (err) { alert("Could not import: " + err.message); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  });
+
+  rebuildAddSelect();
+  render();
+})();
+</script>
+</body>
+</html>
