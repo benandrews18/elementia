@@ -54,10 +54,13 @@ def literals_from(path, names):
 
 
 def item_emoji():
-    """Every distinct real (non-__MARKER__) emoji used as an item icon."""
+    """Every distinct real (non-__MARKER__) emoji used as an item icon, plus
+    each station's own header emoji -- both render through the same em()
+    helper in elementia.html, so both belong in the same generated set."""
     src = literals_from(GUIDE, {"STATIONS"})
     out = set()
     for s in src["STATIONS"]:
+        out.add(s["emoji"])
         for e, n, tag, rec, pt in s["shop"]:
             if not e.startswith("__"):
                 out.add(e)
