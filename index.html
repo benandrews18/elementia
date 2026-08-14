@@ -4632,7 +4632,8 @@ function mapCardHTML(name){
   // hidden entirely (a real spoiler otherwise) -- the dice pool is the one
   // exception, shown either way since it's public knowledge regardless of
   // visit history (see renderMap()'s own node icon for the same rule).
-  const unvisited = !state.visitedStations[name];
+  // Zen Mode skips this masking entirely -- full sandbox, nothing hidden.
+  const unvisited = state.mode !== "zen" && !state.visitedStations[name];
   const itemsHTML = unvisited
     ? `<p class="mc-unvisited">Visit to see what's made here.</p>`
     : `<div class="station-items">${stationItemIconsHTML(name)}</div>
@@ -4668,8 +4669,8 @@ function renderMap(){
     // players shouldn't get a free preview of a station's identity (or its
     // item shop, see mapCardHTML()) before actually setting foot there.
     // The dice pool stays visible either way -- that's public knowledge
-    // regardless of visit history.
-    const unvisited = !state.visitedStations[name];
+    // regardless of visit history. Zen Mode skips this masking entirely.
+    const unvisited = state.mode !== "zen" && !state.visitedStations[name];
     return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${unvisited ? "❓" : em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
@@ -5116,6 +5117,9 @@ function itemIngredientStationsVisited(entry){
   });
 }
 function isRevealed(entry){
+  // Zen Mode: no progressive reveal at all -- every item at every station
+  // is visible from the very first frame, full sandbox, nothing gated.
+  if (state.mode === "zen") return true;
   // Hard Mode only: capstones lose their free pass and are gated exactly
   // like every other item -- their own AvgVisits is comfortably above
   // REVEAL_HOP_THRESHOLD (see DATA.avgVisits), so in practice a job (or
@@ -5247,7 +5251,10 @@ function renderCodex(){
     jobRefNames.add(n);
     componentClosure(n).forEach(c => jobRefNames.add(c));
   }));
-  const rows = allRows.filter(e => state.seenItems[e.name] || jobRefNames.has(e.name));
+  // Zen Mode: the reference is complete from the start, same as every
+  // other progressive-reveal gate this mode skips (see isRevealed()).
+  const rows = state.mode === "zen" ? allRows
+    : allRows.filter(e => state.seenItems[e.name] || jobRefNames.has(e.name));
 
   const TIER_ORDER = {MATERIAL:0, COMPONENT:1, CREATION:2, CAPSTONE:3};
   rows.sort((a, b) =>
