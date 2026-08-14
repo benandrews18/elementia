@@ -234,7 +234,7 @@ body[data-screen="codex"] #trackedPill{display:none}
 .floatbtn{
   position:fixed; z-index:32; bottom:calc(var(--hub-h, 67px) + 14px);
   width:52px; height:52px; border-radius:50%; padding:0;
-  background:var(--card); border:2px solid #fff; color:var(--ink);
+  background:var(--card); border:2px solid var(--gold); color:var(--ink);
   box-shadow:0 4px 14px rgba(0,0,0,.28); display:flex; align-items:center; justify-content:center;
   font-size:22px; transition:background .2s ease, color .2s ease, border-color .2s ease,
     transform .32s cubic-bezier(.34,1.56,.64,1);
@@ -303,19 +303,21 @@ body[data-screen="codex"] #trackedPill{display:none}
    52px, so it visibly rides low against the button instead of matching
    its height. Closed state slides it back behind the button rather than
    fading, so showing it looks like the pill sliding out from underneath.
-   Never interactive -- pointer-events:none also keeps it from swallowing
-   taps meant for the button it overlaps. */
+   Tappable (opens the tracked item's Card Inspection, see the click
+   listener near renderTrackedPill()) whenever shown -- pointer-events
+   toggles with .show so it doesn't swallow taps meant for the button it
+   overlaps while hidden/translated off it. */
 #trackedPill{
   position:fixed; z-index:34; pointer-events:none;
   bottom:calc(var(--hub-h, 67px) + 14px);
   left:56px; height:34px; max-width:calc(100vw - 140px);
   display:flex; align-items:center; gap:6px; padding:0 13px 0 20px;
-  background:var(--card); border:2px solid #fff;
+  background:var(--card); border:2px solid var(--gold);
   border-radius:17px; box-shadow:0 4px 14px rgba(0,0,0,.28);
   transform:translateX(-100%); opacity:0;
   transition:transform .28s cubic-bezier(.3,.8,.4,1), opacity .18s ease;
 }
-#trackedPill.show{transform:translateX(0); opacity:1}
+#trackedPill.show{transform:translateX(0); opacity:1; pointer-events:auto; cursor:pointer}
 #trackedPill .tp-em{font-size:16px; line-height:1; flex:none}
 #trackedPill .tp-em img, #trackedPill .tp-em svg{width:1em; height:1em}
 #trackedPill .tp-name{
@@ -522,7 +524,6 @@ body[data-screen="codex"] #trackedPill{display:none}
    naturally through normal nesting -- no depth-tracking CSS needed. */
 .mission-tree{display:flex; flex-direction:column; gap:10px}
 .mission-node{margin-left:2px}
-.mission-node .mission-node{margin-left:16px; margin-top:6px}
 .mn-row{display:flex; align-items:center; gap:8px}
 .mn-head{
   display:flex; align-items:center; gap:8px; flex:1; min-width:0; text-align:left;
@@ -537,9 +538,17 @@ body[data-screen="codex"] #trackedPill{display:none}
 /* where to get it -- station emoji only, no text */
 .mn-where{flex:none; display:flex; align-items:center; gap:3px; font-size:14px; line-height:1}
 .mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .tunnel,.mn-where .rubbertire,.mn-where .rubbersq,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .gemcollectionicon,.mn-where .pearlicon,.mn-where .rubyicon,.mn-where .opalicon,.mn-where .turquoiseicon,.mn-where .ambericon,.mn-where .diamondicon,.alcan{width:1em; height:1em}
-.mn-children{padding-left:2px}
+/* Vertical guide line down the left side of every child group, tracing
+   which components belong to the node expanded directly above -- a dashed
+   .border-left on the children WRAPPER itself (rather than indenting each
+   child individually) so the line runs continuously past any gaps between
+   sibling rows instead of breaking into disconnected segments. */
+.mn-children{
+  display:flex; flex-direction:column; gap:6px; margin-top:6px;
+  padding-left:16px; margin-left:8px; border-left:2px dashed var(--line2);
+}
 .mn-leaf{
-  display:flex; align-items:center; gap:8px; margin-left:16px; margin-top:6px; padding:7px 11px;
+  display:flex; align-items:center; gap:8px; padding:7px 11px;
   border-radius:9px; border:1.5px solid var(--line2); font-size:13px; font-weight:700;
 }
 .mn-leaf.have{border-color:var(--ok-line); background:var(--ok-soft); color:var(--ok)}
@@ -666,12 +675,12 @@ body[data-screen="codex"] #trackedPill{display:none}
 .map-card .row1{display:flex; align-items:center; gap:11px}
 .map-card .em{font-size:31px; line-height:1; filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
 .map-card h2{font-size:19px; font-weight:800; letter-spacing:-.3px; flex:1}
-/* Same ring colour and 3px weight as .station-item-icon.job-highlight in
-   the item row below -- this pill names what those rings are marking. */
+/* Same gold ring colour and 3px weight as .station-item-icon.job-highlight
+   in the item row below -- this pill names what those rings are marking. */
 .mc-tracked{
   flex:none; max-width:45%; display:inline-flex; align-items:center; gap:6px;
-  padding:3px 10px; border-radius:999px; border:3px solid var(--ok);
-  background:rgba(63,180,108,.18); font-size:12.5px; font-weight:800; color:var(--ink);
+  padding:3px 10px; border-radius:999px; border:3px solid var(--gold);
+  background:var(--gold-soft); font-size:12.5px; font-weight:800; color:var(--ink);
 }
 .mct-em{font-size:15px; line-height:1; flex:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
@@ -722,14 +731,21 @@ body[data-screen="codex"] #trackedPill{display:none}
    A touch of background + a soft glow keep the ring readable over busy
    station art, not just relying on the ring color alone. */
 .station-item-icon.job-highlight{
-  box-shadow:0 0 0 3px var(--ok), 0 0 10px rgba(63,180,108,.55);
-  background:rgba(63,180,108,.18);
+  box-shadow:0 0 0 3px var(--gold), 0 0 10px rgba(226,178,90,.55);
+  background:var(--gold-soft);
 }
 /* Dashed rule sits above the capstone line, same as it always did --
    capstone info is the last thing on the card now. */
 .capline{
   display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink2);
   border-top:1px dashed var(--line); padding-top:10px; margin-top:2px;
+}
+/* Never-visited station preview (see mapCardHTML()) -- stands in for the
+   whole .station-items/.capline block, so it gets that block's own
+   top border/spacing instead of just floating loose. */
+.mc-unvisited{
+  font-size:13px; color:var(--mute); font-style:italic; text-align:center;
+  border-top:1px dashed var(--line); padding-top:10px; margin:0 0 2px;
 }
 .cap-em{font-size:19px; line-height:1}
 .cap-name{color:#fff; font-weight:700}
@@ -817,14 +833,6 @@ body[data-screen="codex"] #trackedPill{display:none}
   width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
   text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
   display:flex; align-items:center; justify-content:center;
-  /* Outer ring in the STATION's own color -- --suit here is reassigned
-     per-chip to the ELEMENT's color (see renderStation()'s gather map), so
-     this needs its own separate variable (--station-suit, set once on the
-     outer .sheet) to reach the station color without being shadowed. Ring
-     sits just outside the existing element-colored border rather than
-     replacing it -- "obtainable at this station" layered on top of "this
-     element specifically," not swapping one meaning for the other. */
-  box-shadow:0 0 0 2px var(--station-suit, transparent);
 }
 .gchip .gsym{line-height:1; font-size:min(32px, 55cqw)}
 /* Base grid layout shared by both dice contexts below -- sizing/border
@@ -1098,6 +1106,11 @@ body[data-screen="codex"] #trackedPill{display:none}
 .capbox .item.job-highlight{box-shadow:none}
 .cap-tag{font-size:10px; font-weight:800; letter-spacing:.8px; color:var(--gold);
   background:var(--gold-soft); padding:2px 7px; border-radius:5px}
+/* Hard Mode only (see UTILITY_ITEMS) -- teal rather than gold so it doesn't
+   compete with the CAPSTONE tag's "this is the big one" signal; this one
+   means "this never gets spent," a much smaller/quieter fact. */
+.utility-tag{font-size:10px; font-weight:800; letter-spacing:.8px; color:#2dd4c8;
+  background:rgba(45,212,200,.15); padding:2px 7px; border-radius:5px}
 
 /* ------------------------------------------------------- inventory --- */
 #scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
@@ -1586,11 +1599,14 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .mg-results-dice{ font-size:34px; letter-spacing:4px; }
 
 /* crafted-card popup */
+.pc-card-wrap{
+  width:100%; max-width:300px; margin:auto; display:flex; flex-direction:column; gap:12px;
+  /* same top-clip-safe centering as .sheetbox -- see its comment */
+}
 .pc-card{
-  width:100%; max-width:300px; aspect-ratio:5/7; background:var(--card); border-radius:22px;
+  width:100%; aspect-ratio:5/7; background:var(--card); border-radius:22px;
   border-top:16px solid var(--suit); padding:20px 20px 16px; display:flex; flex-direction:column;
   position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
-  margin:auto;  /* same top-clip-safe centering as .sheetbox -- see its comment */
 }
 .pc-badge{
   position:absolute; top:16px; right:16px; width:64px; height:64px; border-radius:50%;
@@ -1599,7 +1615,17 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .pc-badge .n{font-size:22px; font-weight:800}
 .pc-badge .l{font-size:8px; font-weight:800; letter-spacing:.5px; margin-top:1px}
-.pc-title{font-size:24px; font-weight:800; line-height:1.15; padding-right:72px}
+/* Top-left twin of .pc-badge -- the station this card was made at, same
+   circle language as the points badge on the other corner. */
+.pc-station-badge{
+  position:absolute; top:16px; left:16px; width:64px; height:64px; border-radius:50%;
+  background:var(--gold-soft); border:2px solid var(--gold-line); color:var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1;
+}
+.pc-station-badge img, .pc-station-badge svg{width:1em; height:1em}
+/* Centered, with symmetric side padding clearing BOTH corner circles now
+   (was right-only, back when only the points badge existed). */
+.pc-title{font-size:24px; font-weight:800; line-height:1.15; text-align:center; padding:0 72px}
 .pc-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center; min-height:0}
 .pc-icon{font-size:100px; line-height:1}
 /* Gemstone Collection's custom icon is too visually small at the shared
@@ -1612,6 +1638,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-divider{border-top:1.5px dashed var(--line2); margin:2px 0 10px}
 .pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:var(--mute); margin-bottom:9px}
 .pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+/* Sits below the card itself (see .pc-card-wrap), not inside it -- its own
+   tap target, so it can stopPropagation away from the card's tap-anywhere-
+   to-dismiss behavior without fighting the card's own click handling. */
+.pc-tree-btn{
+  width:100%; padding:12px; border-radius:12px; border:2px solid var(--gold);
+  background:var(--gold-soft); color:var(--gold); font-size:14px; font-weight:800;
+  letter-spacing:.2px; cursor:pointer;
+}
+.pc-tree-btn:hover{background:var(--gold); color:#241a0c}
 
 /* Hard Mode tiered re-craft borders (see craftTier()) -- only ever applied
    here, on the tap-to-inspect popup, never on the item's icon anywhere
@@ -1619,15 +1654,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    suit color, set inline) -- these add a frame on the other 3 sides
    rather than replacing that accent. */
 .pc-card.tier-silver{
-  border-left:3px solid #c9ced8; border-right:3px solid #c9ced8; border-bottom:3px solid #c9ced8;
+  border-left:6px solid #c9ced8; border-right:6px solid #c9ced8; border-bottom:6px solid #c9ced8;
   box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 18px rgba(201,206,216,.45);
 }
 .pc-card.tier-gold{
-  border-left:3px solid var(--gold); border-right:3px solid var(--gold); border-bottom:3px solid var(--gold);
+  border-left:6px solid var(--gold); border-right:6px solid var(--gold); border-bottom:6px solid var(--gold);
   box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 20px rgba(226,178,90,.5);
 }
 .pc-card.tier-diamond{
-  border-left:3px solid #2dd4c8; border-right:3px solid #2dd4c8; border-bottom:3px solid #2dd4c8;
+  border-left:6px solid #2dd4c8; border-right:6px solid #2dd4c8; border-bottom:6px solid #2dd4c8;
   box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 24px rgba(45,212,200,.55);
   overflow:hidden;
 }
@@ -1741,15 +1776,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    framed as a full rounded border since a reference row has no suit-colored
    edge of its own to leave alone. */
 .refrow.tier-silver{
-  border:3px solid #c9ced8; border-radius:12px; margin:4px 8px;
+  border:6px solid #c9ced8; border-radius:12px; margin:4px 8px;
   box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 14px rgba(201,206,216,.35);
 }
 .refrow.tier-gold{
-  border:3px solid var(--gold); border-radius:12px; margin:4px 8px;
+  border:6px solid var(--gold); border-radius:12px; margin:4px 8px;
   box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 16px rgba(226,178,90,.4);
 }
 .refrow.tier-diamond{
-  border:3px solid #2dd4c8; border-radius:12px; margin:4px 8px; overflow:hidden;
+  border:6px solid #2dd4c8; border-radius:12px; margin:4px 8px; overflow:hidden;
   box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 18px rgba(45,212,200,.45);
 }
 .refrow.tier-diamond::after{
@@ -1875,11 +1910,17 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   border-bottom:2.5px solid var(--gold); background:var(--card);
 }
 .arr-head h2{font-size:18px; font-weight:800; color:#fff; flex:1}
+/* Canvas fills the whole remaining screen and never resizes -- the tray
+   panel below is an OVERLAY on top of it (position:absolute, its own
+   stacking layer), not a flex sibling competing for space, so
+   expanding/collapsing it never pushes the canvas around or changes its
+   own dimensions (see .arr-tray-panel). */
+.arr-body{flex:1; position:relative; min-height:0; overflow:hidden}
 /* The scene itself -- background color is a plain inline style (state.
    arrangement.bg), not a CSS class, since it's one of 12 arbitrary swatch
    values rather than a fixed design token. touch-action:none stops the
    browser's own scroll/zoom gestures from fighting a sticker drag. */
-.arr-canvas{flex:1; position:relative; overflow:hidden; touch-action:none; min-height:0}
+.arr-canvas{position:absolute; inset:0; touch-action:none}
 /* left/top (percentage of the canvas) are set inline per-sticker in JS;
    the -50%/-50% centering, rotation, and scale all live together in that
    same inline transform (see renderArrangeCanvas()/attachStickerDrag())
@@ -1902,6 +1943,29 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   content:""; position:absolute; inset:-8px; border-radius:14px;
   border:3px dashed var(--gold); pointer-events:none;
 }
+/* Overlay panel, NOT a flex sibling of .arr-canvas -- sits absolutely
+   positioned on top of it (see .arr-body), so expanding/collapsing (see
+   .arr-tray-panel.collapsed below) only slides this panel itself; the
+   canvas underneath never resizes or shifts. Same slide-via-transform
+   pattern as #pinsTray/#convert elsewhere in the game. */
+.arr-tray-panel{
+  position:absolute; left:0; right:0; bottom:0; z-index:5; max-height:70vh;
+  display:flex; flex-direction:column;
+  background:var(--card); border-top:2.5px solid var(--gold); border-radius:16px 16px 0 0;
+  box-shadow:0 -8px 20px rgba(0,0,0,.3);
+  transform:translateY(0); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+/* Collapsed: slide down until only the handle's own height still pokes
+   above the screen's bottom edge, same "peek" language as a native bottom
+   sheet -- everything below the handle (toolbar/bgpicker/tray) rides along
+   off-screen with it rather than needing its own separate hide logic. */
+.arr-tray-panel.collapsed{transform:translateY(calc(100% - 34px))}
+.arr-tray-handle{
+  flex:none; width:100%; height:34px; display:flex; align-items:center; justify-content:center;
+  background:none; border:none; cursor:pointer;
+}
+.arr-tray-chevron{width:36px; height:5px; border-radius:3px; background:var(--line2)}
+.arr-tray-handle:hover .arr-tray-chevron{background:var(--gold)}
 .arr-bgpicker{
   flex:none; display:flex; gap:9px; align-items:center; padding:10px 14px;
   overflow-x:auto; background:var(--card); border-top:1px solid var(--line);
@@ -1913,9 +1977,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .arr-swatch.active{border-color:#fff; box-shadow:0 0 0 2px var(--gold)}
 /* Sticker toolbar -- always present now (was previously shown only once a
-   sticker was selected), floating just above the tray rather than
-   overlapping the canvas itself. Its own click handler no-ops when
-   nothing's selected, so the buttons just sit inert until then. */
+   sticker was selected). Its own click handler no-ops when nothing's
+   selected, so the buttons just sit inert until then. */
 .arr-toolbar{
   flex:none; display:none; align-items:center; justify-content:center; gap:10px;
   padding:8px 14px; background:var(--sunken); border-top:1px solid var(--line);
@@ -1926,17 +1989,17 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   background:var(--card); border:1.5px solid var(--line); color:var(--ink);
 }
 .arr-tool-btn.danger{color:var(--bad); border-color:var(--bad)}
-/* Tray of "sticker" cards, 33% of the screen's height per spec -- same
-   card shape/gold border as the job-board turn-in cards (.jtp-card),
-   reused here so this reads as another "pick a card" surface rather than
-   inventing a third card language for the same underlying data. Rows of 3,
-   scrolling vertically (was a single horizontal-scrolling row) -- a fixed
-   3-column grid rather than flex, so cards keep a consistent width
-   regardless of how many are in the tray. */
+/* Tray of "sticker" cards -- same card shape/gold border as the job-board
+   turn-in cards (.jtp-card), reused here so this reads as another "pick a
+   card" surface rather than inventing a third card language for the same
+   underlying data. Rows of 3, scrolling vertically within whatever space
+   is left inside the panel's own max-height (see .arr-tray-panel) --
+   min-height:0 lets a flex child actually shrink to fit instead of
+   forcing the panel taller than its cap. */
 .arr-tray{
-  flex:none; height:33vh; overflow-x:hidden; overflow-y:auto;
+  flex:1; min-height:0; overflow-x:hidden; overflow-y:auto;
   display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; align-content:start;
-  padding:12px 14px; background:var(--card); border-top:2.5px solid var(--gold);
+  padding:12px 14px; background:var(--card);
 }
 .arr-tray-card{
   width:100%; aspect-ratio:1; max-height:150px;
@@ -1948,6 +2011,42 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .arr-tray-card .nm{font-size:12px; font-weight:800; color:#fff; line-height:1.2}
 .arr-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
 
+/* Forces an iPad-portrait-width frame on desktop browsers -- this whole UI
+   was built mobile-first, and left unconstrained on a wide window it just
+   stretches full-bleed, which is both ugly and not what testing against an
+   iPad's actual proportions needs. 768px is the iPad's own CSS/logical
+   portrait width (classic iPad and iPad mini both report this exactly).
+   Deliberately NOT done by putting a transform on <body> to make it the
+   containing block for its position:fixed descendants (the standard
+   "device frame" trick) -- that would also make body the thing that
+   scrolls instead of the window, and this whole app calls
+   window.scrollTo()/scrollIntoView() throughout (render(), goToRefItem(),
+   goMap(), ...) expecting the WINDOW itself to be the scrollable box.
+   Instead, body just gets a max-width (constrains ordinary in-flow content
+   like #screen), and every position:fixed element that currently spans
+   the full viewport width gets individually re-centered to the same
+   768px column via left/right + margin -- composes fine alongside their
+   own existing transform-based slide/fade animations (transform and
+   left/margin are independent properties), so none of those needed
+   touching. #jobSheet/#drawer keep their original -24px edge overhang
+   (hides a border-radius corner off-screen), just measured from the
+   frame's own edge instead of the real viewport's. */
+@media (min-width:769px){
+  html{background:#0a0d12}
+  body{
+    max-width:768px; margin:0 auto;
+    box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
+  }
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #scrim,
+  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
+    left:50%; right:auto; width:768px; margin-left:-384px;
+  }
+  #jobSheet{left:calc(50% - 408px)}
+  #drawer{left:auto; right:calc(50% - 408px)}
+  #pinsBtn{left:calc(50% - 368px)}
+  #quickConvertBtn{right:calc(50% - 368px)}
+  #trackedPill{left:calc(50% - 328px)}
+}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important;
     transition-duration:.01ms !important}
@@ -2046,14 +2145,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- crafted-card popup: shows the item's printed-card art, tap anywhere to dismiss -->
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
-  <div class="pc-card" id="cpCard">
-    <div class="pc-badge"><span class="n" id="cpPts"></span><span class="l">PTS</span></div>
-    <div class="pc-title" id="cpName"></div>
-    <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
-    <div class="pc-tag" id="cpTag"></div>
-    <div class="pc-divider"></div>
-    <div class="pc-label">MADE FROM</div>
-    <div class="pc-ingredients" id="cpIngredients"></div>
+  <div class="pc-card-wrap">
+    <div class="pc-card" id="cpCard">
+      <div class="pc-station-badge" id="cpStationBadge"></div>
+      <div class="pc-badge"><span class="n" id="cpPts"></span><span class="l">PTS</span></div>
+      <div class="pc-title" id="cpName"></div>
+      <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
+      <div class="pc-tag" id="cpTag"></div>
+      <div class="pc-divider"></div>
+      <div class="pc-label">MADE FROM</div>
+      <div class="pc-ingredients" id="cpIngredients"></div>
+    </div>
+    <button type="button" class="pc-tree-btn" id="cpTreeBtn">🌳 View Item Tree</button>
   </div>
 </div>
 
@@ -2287,16 +2390,23 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <h2>🎨 Arrange Items</h2>
     <button class="tbtn ghost" id="arrangeClose" aria-label="Close Arrange Items">✕</button>
   </div>
-  <div class="arr-canvas" id="arrCanvas"></div>
-  <div class="arr-toolbar" id="arrToolbar">
-    <button class="arr-tool-btn" id="arrRotL" title="Rotate left">↺</button>
-    <button class="arr-tool-btn" id="arrSmaller" title="Smaller">－</button>
-    <button class="arr-tool-btn" id="arrBigger" title="Bigger">＋</button>
-    <button class="arr-tool-btn" id="arrRotR" title="Rotate right">↻</button>
-    <button class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
+  <div class="arr-body">
+    <div class="arr-canvas" id="arrCanvas"></div>
+    <div class="arr-tray-panel" id="arrTrayPanel">
+      <button type="button" class="arr-tray-handle" id="arrTrayHandle" aria-expanded="true" aria-label="Collapse item tray">
+        <span class="arr-tray-chevron"></span>
+      </button>
+      <div class="arr-toolbar" id="arrToolbar">
+        <button class="arr-tool-btn" id="arrRotL" title="Rotate left">↺</button>
+        <button class="arr-tool-btn" id="arrSmaller" title="Smaller">－</button>
+        <button class="arr-tool-btn" id="arrBigger" title="Bigger">＋</button>
+        <button class="arr-tool-btn" id="arrRotR" title="Rotate right">↻</button>
+        <button class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
+      </div>
+      <div class="arr-bgpicker" id="arrBgPicker"></div>
+      <div class="arr-tray" id="arrTray"></div>
+    </div>
   </div>
-  <div class="arr-bgpicker" id="arrBgPicker"></div>
-  <div class="arr-tray" id="arrTray"></div>
 </div>
 
 <!-- guided tour: an image slideshow of the designer's own annotated
@@ -3708,6 +3818,14 @@ function parseRecipe(str){
   });
 }
 
+/* Hard Mode only -- these never get spent as an ingredient (see craft()'s
+   consumption loop), same exemption CAPSTONEs and explicit `*` catalysts
+   already get. Furnace/Farm for now; the eventual goal is one utility item
+   per station, but only these two exist yet. Also drives the "UTILITY" tag
+   shown in place of the normal tier tag wherever one of these renders (see
+   itemHTML()/showCardPop()). */
+const UTILITY_ITEMS = new Set(["Furnace", "Farm"]);
+
 /* Flatten every station into a list of craftable entries. */
 const ENTRIES = [];       // {station, emoji, name, tier, recipe, points, reqs, farm}
 const ITEM_EMOJI = {};    // name -> emoji, for inventory display
@@ -3758,9 +3876,15 @@ const JOB_MIN_CREATION_POINTS = 13;
    turning one in frees a slot. See takeJob()/jobBoardHTML(). */
 const MAX_ACTIVE_JOBS = 4;
 const activeJobCount = () => state.jobs.filter(j => !j.turnedIn).length;
+// Gemstone Collection is a deliberately hidden mission -- the only way to
+// it is stumbling onto Furnace+Clock ownership or its own component
+// closure (see GEMSTONE_SECRET/isRevealed()), never a job offer handing
+// it to the player outright.
+const JOB_HIDDEN_ITEMS = new Set(["Gemstone Collection"]);
 function jobEligibleItems(){
   const names = ENTRIES
-    .filter(e => e.tier === "CAPSTONE" || (e.tier === "CREATION" && e.points >= JOB_MIN_CREATION_POINTS))
+    .filter(e => (e.tier === "CAPSTONE" || (e.tier === "CREATION" && e.points >= JOB_MIN_CREATION_POINTS))
+      && !JOB_HIDDEN_ITEMS.has(e.name))
     .map(e => e.name);
   return [...new Set(names)]; // a couple of items are sold at 2 stations under the same name
 }
@@ -3784,10 +3908,36 @@ function shuffle(arr){
    cards stay put for the whole stay -- see the caller. Each card is
    {items, special} -- special marks the guaranteed-local card so
    jobBoardHTML() can give it its thick station-colored border. */
+/* Progressive job depth -- the pool is gated to items whose AvgVisits sits
+   at or below a ceiling that grows with state.visits, so a fresh session
+   sees only the shallowest "big items" and the full eligible pool only
+   opens back up once the game's actually deep enough for a 20+-move
+   capstone to be a reasonable ask. Tuned so the ceiling clears every
+   current item's AvgVisits (~25 at the deepest) right around Classic's own
+   15-20 visit average, not before. */
+const JOB_DEPTH_BASE = 12;
+const JOB_DEPTH_GROWTH = 0.8;
+function jobDepthCeiling(){
+  return JOB_DEPTH_BASE + state.visits * JOB_DEPTH_GROWTH;
+}
+// Two-item cards only start appearing once the game has some runway behind
+// it -- asking for two separate big builds before the player's even seen
+// most of the map reads as a wall, not a goal.
+const JOB_MULTI_ITEM_VISITS = 10;
 function pickStationJobOptions(station){
   const taken = new Set(state.jobs.flatMap(j => j.items));
-  const pool = shuffle(jobEligibleItems().filter(n => !taken.has(n)));
+  const eligible = jobEligibleItems().filter(n => !taken.has(n));
+  const ceiling = jobDepthCeiling();
+  let gated = eligible.filter(n => (DATA.avgVisits[n] ?? 0) <= ceiling);
+  // Extreme early game (visit 0-1) can gate out literally everything --
+  // fall back to the single shallowest eligible item rather than an empty
+  // board.
+  if (!gated.length && eligible.length){
+    gated = [eligible.slice().sort((a, b) => (DATA.avgVisits[a] ?? 0) - (DATA.avgVisits[b] ?? 0))[0]];
+  }
+  const pool = shuffle(gated);
   const cards = [];
+  const allowMultiItem = state.visits >= JOB_MULTI_ITEM_VISITS;
 
   const localIdx = pool.findIndex(n => {
     const e = ENTRIES.find(x => x.name === n);
@@ -3795,13 +3945,13 @@ function pickStationJobOptions(station){
   });
   if (localIdx !== -1){
     const [first] = pool.splice(localIdx, 1);
-    const size = pool.length && Math.random() < 0.6 ? 2 : 1;
+    const size = allowMultiItem && pool.length && Math.random() < 0.6 ? 2 : 1;
     const items = [first, ...pool.splice(0, size - 1)];
     cards.push({items, special:true});
   }
 
   while (cards.length < 4 && pool.length){
-    const size = pool.length >= 2 && Math.random() < 0.6 ? 2 : 1;
+    const size = allowMultiItem && pool.length >= 2 && Math.random() < 0.6 ? 2 : 1;
     cards.push({items: pool.splice(0, size), special:false});
   }
   return cards;
@@ -3941,11 +4091,10 @@ function freshState(){
                        // left; taken flips true the moment this visit's one job pick is spent
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // progressive shop reveal's capstone-closure rule (see isRevealed()).
-    craftedAtStation: {}, // {stationName: {itemName: true}} -- every item actually crafted
-                           // while standing at that specific station (not just owns() --
-                           // a couple of items are sold at 2 stations under the same name, and
-                           // the "Crafted Items" toggle (see shopBodyHTML()) means "crafted
-                           // HERE," not "owned somewhere").
+    stationLastSeen: {}, // {stationName: [itemName, ...]} -- the revealed non-capstone shop
+                          // set as of the player's last visit to that station, so goStation()
+                          // can detect "new since last time" arrivals (see its own comment)
+                          // separately from the craft-triggered path.
     seenItems: {},     // {itemName: true} -- every item ever actually shown to the player
                         // (shop row, map preview icon, capstone card) this run -- Item
                         // Reference only lists these plus job-card component closures.
@@ -4105,7 +4254,7 @@ function craft(entry){
   // and the UI (see renderDrawer()) both already handle that.
   if (state.mode === "hard"){
     for (const it of items){
-      if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE") continue;
+      if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE" || UTILITY_ITEMS.has(it.name)) continue;
       const idx = state.items.indexOf(it.name);
       if (idx !== -1) state.items.splice(idx, 1);
     }
@@ -4115,8 +4264,6 @@ function craft(entry){
   if (state.mode === "hard"){
     state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
   }
-  if (!state.craftedAtStation[current]) state.craftedAtStation[current] = {};
-  state.craftedAtStation[current][entry.name] = true;
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
   if (isPinned(entry.name)) togglePin(entry.name);
@@ -4233,8 +4380,11 @@ function itemHTML(entry, idx){
     : `<button class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" ${can ? "" : "disabled"}>Craft</button>`;
   // Tier (MATERIAL/COMPONENT/CREATION) no longer shown -- the CAPSTONE tag
   // stays, since that one's a meaningful "this is the big one" signal
-  // rather than a classification most players never cared about.
-  const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>' : "";
+  // rather than a classification most players never cared about. UTILITY
+  // (Hard Mode only, see UTILITY_ITEMS) is the same kind of exception --
+  // "this never gets spent" changes how you play around it.
+  const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>'
+    : (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
     ${pinBadge}
     <div class="irow">
@@ -4269,13 +4419,16 @@ function craftedIconsHTML(entries){
    be both, either, or neither. */
 function stationItemIconsHTML(stationName){
   // Tracked job item + whatever's still outstanding in its closure get the
-  // green ring here (see .station-item-icon.job-highlight and the
-  // .station-items comment above it) -- restored after being accidentally
-  // stripped alongside the same border's removal from the full in-station
-  // shop list. stillNeededClosure() (not componentClosure()), so an
-  // ingredient already spent on a finished intermediate stops lighting up
-  // once nothing else still needs it -- see stillNeededClosure()'s own
-  // comment.
+  // gold ring here (see .station-item-icon.job-highlight and the
+  // .station-items comment above it) -- and ONLY that; this used to also
+  // light up anything craftable right now regardless of job tracking, but
+  // that read as "here's everything you could make" rather than "here's
+  // what still feeds your tracked item," which is what the ring is
+  // supposed to mean on this specific screen (the shop list's own cards
+  // still get their own separate "you can craft this" treatment).
+  // stillNeededClosure() (not componentClosure()), so an ingredient
+  // already spent on a finished intermediate stops lighting up once
+  // nothing else still needs it -- see stillNeededClosure()'s own comment.
   const jobTree = selectedJobItem ? new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]) : null;
   const icons = entriesAt(stationName)
     .filter(e => e.tier !== "CAPSTONE" && isRevealed(e))
@@ -4283,8 +4436,8 @@ function stationItemIconsHTML(stationName){
       markSeen(e.name);
       const cls = ["station-item-icon"];
       if (owns(e.name)) cls.push("owned");
-      if ((jobTree && jobTree.has(e.name)) || (!owns(e.name) && canCraft(e))) cls.push("job-highlight");
-      return `<span class="${cls.join(" ")}" title="${esc(e.name)}">${em(e.emoji)}</span>`;
+      if (jobTree && jobTree.has(e.name)) cls.push("job-highlight");
+      return `<span class="${cls.join(" ")}" title="${esc(e.name)}" data-item-card="${ENTRIES.indexOf(e)}">${em(e.emoji)}</span>`;
     });
   // Hard-wraps onto a new row every 10 icons regardless of the card's own
   // pixel width (see .station-items-break in the CSS) -- a flex-basis:100%
@@ -4347,15 +4500,23 @@ function mapCardHTML(name){
   const trackedPill = trackedEntry
     ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
     : "";
-  return `<div class="map-card" style="--suit:${su.color}">
-    <div class="row1"><span class="em">${em(s.emoji)}</span><h2>${esc(name)}</h2>${trackedPill}</div>
-    <div class="pool">${sortedDice(s).map(d => `<button class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>
-    <div class="station-items">${stationItemIconsHTML(name)}</div>
+  // Never-visited: icon becomes "?" and the item shop/capstone preview stay
+  // hidden entirely (a real spoiler otherwise) -- the dice pool is the one
+  // exception, shown either way since it's public knowledge regardless of
+  // visit history (see renderMap()'s own node icon for the same rule).
+  const unvisited = !state.visitedStations[name];
+  const itemsHTML = unvisited
+    ? `<p class="mc-unvisited">Visit to see what's made here.</p>`
+    : `<div class="station-items">${stationItemIconsHTML(name)}</div>
     <div class="capline ${done ? "done" : ""}">
       <span class="cap-em">${em(s.capstone[0])}</span>
       <span class="cap-name">${esc(capName)}</span>
       ${done ? "<span>✓</span>" : ""}
-    </div>
+    </div>`;
+  return `<div class="map-card" style="--suit:${su.color}">
+    <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${esc(name)}</h2>${trackedPill}</div>
+    <div class="pool">${sortedDice(s).map(d => `<button class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>
+    ${itemsHTML}
     <button class="map-travel-btn" data-travel="${esc(name)}" ${canTravel ? "" : "disabled"}>${esc(statusLabel)}</button>
   </div>`;
 }
@@ -4375,8 +4536,14 @@ function renderMap(){
     const reachable = !isHere && !over && (forcedStart ? name === "The Ocean" : isMapConnected(here, name));
     const cls = ["map-node", isHere ? "here" : reachable ? "reachable" : "unreachable"];
     if (selectedMapStation === name) cls.push("selected");
+    // Never-visited stations show a "?" instead of their own icon --
+    // players shouldn't get a free preview of a station's identity (or its
+    // item shop, see mapCardHTML()) before actually setting foot there.
+    // The dice pool stays visible either way -- that's public knowledge
+    // regardless of visit history.
+    const unvisited = !state.visitedStations[name];
     return `<button class="${cls.join(" ")}" style="left:${x}%;top:${y}%" data-map-node="${esc(name)}" aria-label="${esc(name)}">
-      <span class="mn-em">${em(s.emoji)}</span>
+      <span class="mn-em">${unvisited ? "❓" : em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
   }).join("");
@@ -4456,6 +4623,12 @@ function renderTrackedPill(){
   }
   el.classList.toggle("show", !!entry);
 }
+// Sits outside #screen (see its own comment above its HTML), so it needs
+// its own click listener rather than going through #screen's delegation.
+document.getElementById("trackedPill").addEventListener("click", () => {
+  const entry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
+  if (entry) showCardPop(entry, false);
+});
 
 /* Which node paths are currently expanded, e.g. "City/Bridge/Concrete".
    Source of truth for the recursive tree below -- the tree is re-rendered
@@ -5035,7 +5208,7 @@ function renderStation(name){
   // rows instead of staying put with only the gaps between them showing it.
   const bgStyle = bg ? `background-image:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url('${bg}'); background-attachment:fixed;` : "";
 
-  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft};--station-suit:${su.color};${bgStyle}">
+  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft};${bgStyle}">
     <div class="stationhead">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
@@ -5064,14 +5237,12 @@ function renderStation(name){
    normal spot mixed into the full list when expanded -- so it's never
    stranded with no way back to the other state. */
 function shopBodyHTML(shopEntries, idx){
-  // "Crafted Items" means crafted AT THIS STATION specifically (see
-  // state.craftedAtStation, set in craft()) -- NOT owns(), which is global
-  // and would also catch items bought elsewhere that happen to share a
-  // name with something sold here (a couple of items are sold at 2
-  // stations under the same name). No toggle/pill at all until that's
-  // actually happened here at least once.
-  const craftedHere = state.craftedAtStation[current] || {};
-  const hasCraftedHere = shopEntries.some(e => craftedHere[e.name]);
+  // "Crafted Items" -- owns() IS "crafted," full stop (there's no separate
+  // buy mechanic in this game), so an item crafted at any station shows up
+  // here at every OTHER station that also happens to sell it under the
+  // same name, not just the one it was actually made at. No toggle/pill at
+  // all until at least one item sold here has actually been crafted.
+  const hasCraftedHere = shopEntries.some(e => owns(e.name));
   if (!hasCraftedHere){
     return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
@@ -5081,8 +5252,8 @@ function shopBodyHTML(shopEntries, idx){
   if (!state.collapseCraftedItems){
     return toggle + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
-  const owned = shopEntries.filter(e => craftedHere[e.name]);
-  const rest = shopEntries.filter(e => !craftedHere[e.name]);
+  const owned = shopEntries.filter(e => owns(e.name));
+  const rest = shopEntries.filter(e => !owns(e.name));
   const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
   return toggle + row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
@@ -5365,24 +5536,33 @@ function fireConfetti(){
 /* -------------------------------------------------- crafted-card popup --- */
 const TAG_COLORS = {MATERIAL:"#8a94a6", COMPONENT:"#3b7fc4", CREATION:"#3fa66b", CAPSTONE:"#c79a2e"};
 let cardPopTimer;
+// Tracks whatever's currently shown so #cpTreeBtn (added after the card,
+// see its own click handler below) knows what to jump to in Item Reference
+// without needing to re-derive it from the DOM.
+let cardPopEntry = null;
 /* autoDismiss: true for the "just crafted this" popup after a purchase
    (existing behavior, unchanged); false when opened by tapping an item in
    the inventory, where it should just sit there until dismissed. */
 function showCardPop(entry, autoDismiss = true){
+  cardPopEntry = entry;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
   cpCard.style.setProperty("--suit", su.color);
   cpCard.classList.remove("tier-silver", "tier-gold", "tier-diamond");
   const tier = craftTier(entry.name);
   if (tier) cpCard.classList.add("tier-" + tier);
+  // Top-left corner circle: the station this item is made at (matches the
+  // top-right points circle's own size/shape -- see .pc-station-badge).
+  document.getElementById("cpStationBadge").innerHTML = em(STATION_BY_NAME[entry.station].emoji);
   document.getElementById("cpName").textContent = entry.name;
   const cpIconEl = document.getElementById("cpIcon");
   cpIconEl.innerHTML = em(entry.emoji);
   cpIconEl.classList.toggle("pc-icon-xl", entry.name === "Gemstone Collection");
   document.getElementById("cpPts").textContent = entry.points;
   const tagEl = document.getElementById("cpTag");
-  tagEl.textContent = entry.tier;
-  tagEl.style.background = TAG_COLORS[entry.tier] || "#8a94a6";
+  const isUtility = state.mode === "hard" && UTILITY_ITEMS.has(entry.name);
+  tagEl.textContent = isUtility ? "UTILITY" : entry.tier;
+  tagEl.style.background = isUtility ? "#2dd4c8" : (TAG_COLORS[entry.tier] || "#8a94a6");
   const seen = new Set();
   const toks = entry.reqs.filter(r => {
     const k = r.kind + ":" + r.name;
@@ -5427,6 +5607,12 @@ function flushPendingReveal(){
    the real list once the overlay closes) plus the "NEW ITEMS UNLOCKED"
    caption. */
 function showRevealedItems(){
+  // Defensive: pendingRevealNames could in principle have been cleared out
+  // from under this scheduled timer (see flushPendingReveal()) by the time
+  // it actually fires -- nothing legitimate does that today, but silently
+  // no-op'ing here costs nothing and is a lot better than a null.map()
+  // crash if some future change ever does.
+  if (!pendingRevealNames){ itemRevealShown = false; return; }
   const names = pendingRevealNames, station = pendingRevealStation;
   pendingRevealNames = null; pendingRevealStation = null;
   render();
@@ -5461,6 +5647,20 @@ document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
   flushPendingReveal();
+});
+/* "View Item Tree" -- jumps to this same item's row in Item Reference,
+   one level of its own breakdown already expanded (see goToRefItem()).
+   stopPropagation so the click doesn't ALSO fall through to #cardPop's own
+   tap-anywhere-to-dismiss listener above (harmless either way since both
+   paths close the popup, but no reason to run it twice). */
+document.getElementById("cpTreeBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopEntry) return;
+  const name = cardPopEntry.name;
+  clearTimeout(cardPopTimer);
+  closeOverlay("cardPop");
+  flushPendingReveal();
+  goToRefItem(name);
 });
 
 /* --------------------------------------------- job turn-in feedback --- */
@@ -5563,7 +5763,28 @@ function goStation(name){
   if (sessionOver()){ showSummary(); return; }
   current = name; screen = "station";
   state.visits++; state.rolledHere = false; state.pendingRoll = null; state.lastRoll = null;
+  const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
+
+  // "New Items Unlocked" can now trigger on plain arrival too, not just
+  // right after a craft (see flushPendingReveal()) -- if the shop's own
+  // revealed set grew since the player's last visit here (a visit
+  // threshold crossed, a job taken elsewhere, Furnace/Clock picked up in
+  // the meantime, ...), that's worth the same "new since last time you
+  // were here" celebration. Never on a station's first-ever visit though
+  // -- there's no "last time" to compare against yet, and nothing here
+  // reads as "new" on a first look.
+  const nowRevealed = entriesAt(name).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
+  if (alreadyVisited && state.stationLastSeen[name]){
+    const prevSeen = new Set(state.stationLastSeen[name]);
+    const newlyAppeared = nowRevealed.filter(n => !prevSeen.has(n));
+    if (newlyAppeared.length){
+      pendingRevealNames = newlyAppeared;
+      pendingRevealStation = name;
+    }
+  }
+  state.stationLastSeen[name] = nowRevealed;
+
   // A fresh 3-card board for THIS station, rolled once on arrival -- it
   // stays put (see takeJob()) for the whole stay and only rerolls the
   // next time a station is entered (including re-entering this same one
@@ -5574,10 +5795,15 @@ function goStation(name){
   // The mini-game is the very first thing a player does at a station --
   // launched immediately, before they ever see the shop or roll any dice,
   // rather than waiting on a manual PLAY tap. It fully covers the screen
-  // (see #mgOverlay's z-index) so the shop underneath is never visible
+  // (see #mgOverlay's z-index, well above the reveal overlay's own) so the
+  // shop underneath -- and any pending reveal from above -- isn't visible
   // until the round's score has already turned into a roll (see
-  // launchMinigame()/doRoll()).
+  // launchMinigame()/doRoll()). If a reveal did get queued above, its own
+  // 1s dark-beat timer starts now regardless, ticking away harmlessly
+  // behind the minigame; by the time that closes the items are typically
+  // already popped in and waiting on a tap to dismiss.
   launchMinigame();
+  if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
   if (current){ state.priorStation = state.lastStation; state.lastStation = current; }
@@ -6246,6 +6472,8 @@ let selectedStickerId = null;
 
 function openArrangeScreen(){
   document.getElementById("arrangeScreen").classList.add("open");
+  document.getElementById("arrTrayPanel").classList.remove("collapsed");
+  document.getElementById("arrTrayHandle").setAttribute("aria-expanded", "true");
   renderArrangeTray();
   renderArrangeBgPicker();
   renderArrangeCanvas();
@@ -6255,6 +6483,15 @@ function closeArrangeScreen(){
   selectedStickerId = null;
 }
 document.getElementById("arrangeClose").addEventListener("click", closeArrangeScreen);
+// Collapses/expands the tray panel as an overlay slide (see
+// .arr-tray-panel.collapsed) -- the canvas underneath is a separate,
+// absolutely-positioned layer (see .arr-body) that never resizes because
+// of this.
+document.getElementById("arrTrayHandle").addEventListener("click", () => {
+  const panel = document.getElementById("arrTrayPanel");
+  const collapsed = panel.classList.toggle("collapsed");
+  document.getElementById("arrTrayHandle").setAttribute("aria-expanded", String(!collapsed));
+});
 
 function renderArrangeTray(){
   const tray = document.getElementById("arrTray");
@@ -6434,10 +6671,16 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     return;
   }
 
-  // Tapping an item chip jumps straight to it in Item Reference -- that's
-  // the only place to see how to build it now, see goToRefItem().
+  // Tapping an item chip opens its Card Inspection -- same as tapping an
+  // item anywhere else in the game now (station preview, shop list). Item
+  // Reference is still one tap further away, via the card's own "View Item
+  // Tree" button (see showCardPop()).
   const gotoBtn = ev.target.closest("[data-goto-ref]");
-  if (gotoBtn){ goToRefItem(gotoBtn.dataset.gotoRef); return; }
+  if (gotoBtn){
+    const entry = ENTRIES.find(e => e.name === gotoBtn.dataset.gotoRef);
+    if (entry) showCardPop(entry, false);
+    return;
+  }
 
   const pinBtn = ev.target.closest("[data-pin]");
   if (pinBtn){
