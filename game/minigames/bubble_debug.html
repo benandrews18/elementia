@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Bubble Pop Tap Diagnostics</title>
+<style>
+  :root{ --ink:#e8edf4; --mute:#8a97a8; --bg:#12171f; --card:#1a212b; --line:#2b3442;
+         --ok:#3fb46c; --warn:#e0b23f; --bad:#e05a4a; }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{ display:flex; gap:18px; padding:20px; max-width:1100px; margin:0 auto; flex-wrap:wrap; }
+  h1{font-size:14px; letter-spacing:.5px; color:var(--mute); font-weight:800; text-transform:uppercase; margin:0 0 2px}
+  h2{font-size:20px; font-weight:800; margin:0 0 10px}
+  .col-left{ flex:0 0 auto; }
+  .col-right{ flex:1 1 320px; min-width:300px; }
+  .stage-wrap{
+    position:relative; width:360px; aspect-ratio:3/4; border:1.5px solid var(--line); border-radius:18px;
+    overflow:hidden; background:var(--card); box-shadow:0 12px 40px rgba(0,0,0,.4);
+  }
+  #stage{width:100%; height:100%; position:relative}
+  #overlay{position:absolute; inset:0; z-index:5; pointer-events:none}
+  .controls{display:flex; gap:10px; margin-top:14px; flex-wrap:wrap}
+  button{
+    font:inherit; font-weight:800; font-size:13px; padding:10px 16px; border-radius:11px;
+    border:1.5px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;
+  }
+  button.primary{background:var(--ok); border-color:var(--ok); color:#08210f}
+  button:hover{filter:brightness(1.08)}
+  button:disabled{opacity:.5; cursor:default; filter:none}
+  .legend{margin-top:12px; font-size:11.5px; color:var(--mute); line-height:1.9}
+  .legend span{display:inline-flex; align-items:center; gap:5px; margin-right:14px}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block}
+  .dot.hit{background:var(--ok)} .dot.ghost{background:var(--warn)} .dot.miss{background:var(--bad)}
+  .stats{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;
+  }
+  .stat{ background:var(--card); border:1.5px solid var(--line); border-radius:11px; padding:9px 10px; }
+  .stat .n{font-size:19px; font-weight:800; font-variant-numeric:tabular-nums}
+  .stat .n.ok{color:var(--ok)} .stat .n.warn{color:var(--warn)} .stat .n.bad{color:var(--bad)}
+  .stat .l{font-size:10px; color:var(--mute); font-weight:700; letter-spacing:.3px; text-transform:uppercase; margin-top:1px}
+  .log{
+    background:var(--card); border:1.5px solid var(--line); border-radius:11px; padding:8px 10px;
+    height:420px; overflow-y:auto; font-family:'Cascadia Code','Consolas',monospace; font-size:11.5px;
+    line-height:1.55;
+  }
+  .log .row{ border-bottom:1px solid rgba(255,255,255,.05); padding:3px 0; white-space:pre-wrap; }
+  .log .row.hit{color:#a9e8bf} .log .row.ghost{color:#f0d488} .log .row.miss{color:#f0a89c}
+  .log .row .tag{font-weight:800; display:inline-block; width:56px}
+  .hint{margin-top:16px; font-size:12px; color:var(--mute); line-height:1.6; max-width:340px}
+  code{background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="col-left">
+    <h1>Elementia — Mini-game Debug</h1>
+    <h2>🌊 Bubble Pop: Tap Diagnostics</h2>
+    <div class="stage-wrap">
+      <div id="stage"></div>
+      <svg id="overlay"></svg>
+    </div>
+    <div class="controls">
+      <button class="primary" id="startBtn">▶ Start round</button>
+      <button id="clearBtn">🗑 Clear log</button>
+      <button id="copyBtn">📋 Copy log as JSON</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot hit"></i>hit (live, armed bubble)</span>
+      <span><i class="dot ghost"></i>ghost (visually inside a bubble, but not armed yet / routed elsewhere)</span>
+      <span><i class="dot miss"></i>miss (open water)</span>
+    </div>
+    <p class="hint">
+      Runs the real, unmodified <code>ocean-bubbles.js</code> — nothing here changes how the shipped
+      game behaves. This just watches from outside: every tap is classified against the bubbles'
+      actual DOM hit-boxes and their armed/unarmed state, so you can see exactly what the game
+      "saw" versus what you visually tapped. Bubble outlines are solid when tappable, dashed while
+      still rising through the no-tap safety zone near the bottom.
+    </p>
+  </div>
+
+  <div class="col-right">
+    <div class="stats" id="stats"></div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script src="ocean-bubbles.js"></script>
+<script>
+(function(){
+  const stage = document.getElementById("stage");
+  const overlay = document.getElementById("overlay");
+  const startBtn = document.getElementById("startBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const copyBtn = document.getElementById("copyBtn");
+  const logEl = document.getElementById("log");
+  const statsEl = document.getElementById("stats");
+
+  let events = [];   // full tap log, newest last (rendered newest-first)
+  let roundStart = null;
+  let running = false;
+  let rafId = null;
+
+  function fmt(n, d) { return (Math.round(n * Math.pow(10, d || 0)) / Math.pow(10, d || 0)); }
+
+  // ---- geometry helpers ---------------------------------------------------
+  function stageRect() { return stage.getBoundingClientRect(); }
+
+  function liveBubbleEls() { return Array.from(stage.querySelectorAll(".mg-bubble")); }
+
+  function bubbleCircle(el, sRect) {
+    const r = el.getBoundingClientRect();
+    return {
+      el,
+      cx: r.left + r.width / 2 - sRect.left,
+      cy: r.top + r.height / 2 - sRect.top,
+      radius: r.width / 2,
+      armed: getComputedStyle(el).pointerEvents !== "none",
+      popped: el.classList.contains("mg-pop"),
+    };
+  }
+
+  // Which live bubble (if any) visually contains a stage-local point,
+  // regardless of its armed/pointer-events state.
+  function bubbleAtPoint(x, y, sRect) {
+    let best = null, bestD = Infinity;
+    liveBubbleEls().forEach(el => {
+      if (el.classList.contains("mg-pop")) return;
+      const c = bubbleCircle(el, sRect);
+      const d = Math.hypot(x - c.cx, y - c.cy);
+      if (d <= c.radius && d < bestD) { best = c; bestD = d; }
+    });
+    return best ? { circle: best, dist: bestD } : null;
+  }
+
+  function bubbleIndex(el) {
+    if (!el.__dbgId) el.__dbgId = (bubbleIndex.n = (bubbleIndex.n || 0) + 1);
+    return el.__dbgId;
+  }
+
+  // ---- overlay drawing (boundaries + fading tap ripples) ------------------
+  let ripples = []; // {x,y,cls,t}
+  function drawOverlay() {
+    const sRect = stageRect();
+    overlay.setAttribute("viewBox", `0 0 ${sRect.width} ${sRect.height}`);
+    const parts = [];
+    liveBubbleEls().forEach(el => {
+      if (el.classList.contains("mg-pop")) return;
+      const c = bubbleCircle(el, sRect);
+      parts.push(
+        `<circle cx="${c.cx}" cy="${c.cy}" r="${c.radius}" fill="none" ` +
+        `stroke="${c.armed ? "#3fb46c" : "#e0b23f"}" stroke-width="2" ` +
+        `stroke-dasharray="${c.armed ? "none" : "5,4"}" opacity="0.85"/>`
+      );
+    });
+    const now = performance.now();
+    ripples = ripples.filter(rp => now - rp.t < 650);
+    ripples.forEach(rp => {
+      const age = (now - rp.t) / 650;
+      const r = 8 + age * 26;
+      const op = Math.max(0, 1 - age);
+      const color = rp.cls === "hit" ? "#3fb46c" : rp.cls === "ghost" ? "#e0b23f" : "#e05a4a";
+      parts.push(`<circle cx="${rp.x}" cy="${rp.y}" r="${r}" fill="none" stroke="${color}" stroke-width="3" opacity="${op}"/>`);
+      parts.push(`<circle cx="${rp.x}" cy="${rp.y}" r="3" fill="${color}" opacity="${op}"/>`);
+    });
+    overlay.innerHTML = parts.join("");
+    rafId = requestAnimationFrame(drawOverlay);
+  }
+
+  // ---- tap capture ----------------------------------------------------------
+  function classify(type, e) {
+    const sRect = stageRect();
+    const x = e.clientX - sRect.left, y = e.clientY - sRect.top;
+    const target = e.target;
+    const targetBubble = target.closest && target.closest(".mg-bubble");
+    const visual = bubbleAtPoint(x, y, sRect);
+
+    let cls, detail;
+    if (targetBubble && !targetBubble.classList.contains("mg-pop")) {
+      // Browser actually routed this event to a live bubble (armed + hit,
+      // or captured from a prior pointerdown).
+      const c = bubbleCircle(targetBubble, sRect);
+      cls = "hit";
+      detail = {
+        bubbleId: bubbleIndex(targetBubble),
+        bubbleRadius: fmt(c.radius, 1),
+        distFromCenter: fmt(Math.hypot(x - c.cx, y - c.cy), 1),
+        armedAtEventTime: c.armed,
+        viaCapture: !c.armed || (visual && visual.circle.el !== targetBubble),
+      };
+    } else if (visual) {
+      // Finger was visually over a bubble's circle, but the DOM event
+      // landed elsewhere (stage/water) -- almost always the bubble hasn't
+      // armed yet (still inside the bottom safety zone), so pointer-events
+      // is "none" and the browser hit-tests straight through it.
+      cls = "ghost";
+      detail = {
+        bubbleId: bubbleIndex(visual.circle.el),
+        bubbleRadius: fmt(visual.circle.radius, 1),
+        distFromCenter: fmt(visual.dist, 1),
+        armedAtEventTime: visual.circle.armed,
+      };
+    } else {
+      cls = "miss";
+      detail = null;
+    }
+
+    const rec = {
+      t: roundStart ? fmt(performance.now() - roundStart) : 0,
+      type, x: fmt(x, 1), y: fmt(y, 1), cls, detail,
+    };
+    events.push(rec);
+    ripples.push({ x, y, cls, t: performance.now() });
+    renderLogRow(rec);
+    renderStats();
+  }
+
+  // Capture phase on the stage: fires before the bubble's own bubble-phase
+  // listeners (which is where popping and setPointerCapture happen), so we
+  // observe the browser's real hit-test / capture routing without altering
+  // it -- no stopPropagation, no preventDefault, game behavior is untouched.
+  stage.addEventListener("pointerdown", e => classify("down", e), { capture: true });
+  stage.addEventListener("pointerup", e => classify("up", e), { capture: true });
+
+  // ---- log + stats rendering -----------------------------------------------
+  function renderLogRow(rec) {
+    const row = document.createElement("div");
+    row.className = "row " + rec.cls;
+    let line = `t=${rec.t}ms  ${rec.type === "down" ? "DOWN" : "UP  "}  (${rec.x},${rec.y})  → `;
+    if (rec.cls === "hit") {
+      line += `HIT bubble#${rec.detail.bubbleId}` + (rec.detail.viaCapture ? " (via capture)" : "") +
+        `  Δcenter=${rec.detail.distFromCenter}px  r=${rec.detail.bubbleRadius}px  armed=${rec.detail.armedAtEventTime}`;
+    } else if (rec.cls === "ghost") {
+      line += `GHOST -- inside bubble#${rec.detail.bubbleId} but not armed  Δcenter=${rec.detail.distFromCenter}px  r=${rec.detail.bubbleRadius}px`;
+    } else {
+      line += `MISS -- open water`;
+    }
+    row.textContent = line;
+    logEl.insertBefore(row, logEl.firstChild);
+  }
+
+  function renderStats() {
+    const downs = events.filter(e => e.type === "down");
+    const hits = downs.filter(e => e.cls === "hit").length;
+    const ghosts = downs.filter(e => e.cls === "ghost").length;
+    const misses = downs.filter(e => e.cls === "miss").length;
+    const total = downs.length;
+    const rate = total ? fmt((hits / total) * 100, 1) : 0;
+    const hitDists = downs.filter(e => e.cls === "hit").map(e => e.detail.distFromCenter);
+    const avgDist = hitDists.length ? fmt(hitDists.reduce((a, b) => a + b, 0) / hitDists.length, 1) : "--";
+
+    statsEl.innerHTML = `
+      <div class="stat"><div class="n">${total}</div><div class="l">Taps</div></div>
+      <div class="stat"><div class="n ok">${hits}</div><div class="l">Hits</div></div>
+      <div class="stat"><div class="n warn">${ghosts}</div><div class="l">Ghost taps</div></div>
+      <div class="stat"><div class="n bad">${misses}</div><div class="l">Misses</div></div>
+      <div class="stat"><div class="n">${rate}%</div><div class="l">Hit rate</div></div>
+      <div class="stat"><div class="n">${avgDist}px</div><div class="l">Avg Δcenter on hits</div></div>
+    `;
+  }
+
+  function clearLog() {
+    events = [];
+    logEl.innerHTML = "";
+    renderStats();
+  }
+
+  copyBtn.addEventListener("click", () => {
+    const payload = { events, summary: statsEl.textContent.trim() };
+    navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
+      copyBtn.textContent = "✅ Copied";
+      setTimeout(() => { copyBtn.textContent = "📋 Copy log as JSON"; }, 1200);
+    });
+  });
+  clearBtn.addEventListener("click", clearLog);
+
+  startBtn.addEventListener("click", () => {
+    if (running) return;
+    running = true;
+    roundStart = performance.now();
+    startBtn.disabled = true;
+    startBtn.textContent = "Playing…";
+    window.runMinigame(stage, score => {
+      running = false;
+      startBtn.disabled = false;
+      startBtn.textContent = "▶ Play again";
+    });
+  });
+
+  renderStats();
+  rafId = requestAnimationFrame(drawOverlay);
+})();
+</script>
+</body>
+</html>
