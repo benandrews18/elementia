@@ -354,6 +354,50 @@ body[data-screen="codex"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
+/* Marketplace: identical shape/motion language to #jobSheet (same gold
+   border, same slide-from-left), just a second instance -- only one of
+   the two is ever open at a time (see openPanelName()), so there's no
+   need to differentiate the container itself, only its contents. */
+#marketScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
+#marketScrim.open{display:block}
+#marketSheet{
+  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  padding-left:24px; box-sizing:border-box;
+  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
+  background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
+  border-radius:0 0 14px 0; transform:translateX(-100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+}
+#marketSheet.open{transform:none}
+.market-row{
+  display:flex; align-items:center; gap:14px; width:100%; padding:14px 12px; margin-bottom:10px;
+  background:var(--sunken); border:1.5px solid var(--line); border-radius:13px; text-align:left;
+}
+.market-row .mr-em{font-size:28px; line-height:1; flex:none}
+.market-row .mr-body{flex:1; min-width:0}
+.market-row .mr-title{font-size:15px; font-weight:800; color:var(--ink)}
+.market-row .mr-sub{font-size:12px; color:var(--mute); margin-top:2px}
+.market-row:not(:disabled):hover{border-color:var(--gold-line)}
+.market-row:disabled{opacity:.55; cursor:default}
+.market-row:disabled .mr-title{color:var(--mute)}
+.market-row .mr-soon{
+  flex:none; font-size:10px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+  color:var(--mute); background:var(--card); border:1px solid var(--line); border-radius:999px;
+  padding:3px 9px;
+}
+/* Coin-flip: only played on the Home button's icon+label when it swaps
+   specifically between the Map and Marketplace faces (see
+   setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
+   the emoji is never shown mirrored. Content is swapped by JS at the
+   midpoint, while the element is edge-on and invisible either way. */
+@keyframes hubCoinFlip{
+  0%{transform:rotateY(0deg)}
+  50%{transform:rotateY(90deg)}
+  100%{transform:rotateY(0deg)}
+}
+#hubHome.coinflip .hi, #hubHome.coinflip .hl{
+  animation:hubCoinFlip .4s ease-in-out; backface-visibility:hidden;
+}
 
 .mp-sub{font-size:14px; color:var(--ink2); margin-bottom:16px; line-height:1.5}
 /* "Trading card" job cards -- a deliberately different card stock (dark
@@ -2035,6 +2079,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
+  #marketSheet{left:calc(50% - 408px)}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -2456,6 +2501,19 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
   </div>
   <div class="dbody" id="jobSheetBody"></div>
+</aside>
+
+<!-- Marketplace: the map-screen hub reached by the Home button's coin-flip
+     (see setHubHomeFace()) -- a directory of the Job Board plus three not-
+     yet-built systems (Quest Log, Trade Market, Community Center), each a
+     clearly-labeled "coming soon" row rather than a fake working panel. -->
+<div id="marketScrim"></div>
+<aside id="marketSheet" aria-label="Marketplace" aria-hidden="true">
+  <div class="dhead">
+    <h2 id="marketTitle">🏪 Marketplace</h2>
+    <button type="button" class="tbtn ghost" id="marketSheetClose" aria-label="Close marketplace">✕</button>
+  </div>
+  <div class="dbody" id="marketSheetBody"></div>
 </aside>
 
 <script>
@@ -5582,6 +5640,33 @@ function updateBackdrop(){
 
 /* Hub button states: job board progress, active screen, and the
    roll-before-you-leave lock on Home. */
+/* Tracks which of Home's three faces (see updateHub()) is currently
+   showing, so the coin-flip only plays for the specific transition it's
+   meant for -- Map<->Market -- and not for either one swapping to/from
+   the unrelated "close this panel" arrow. */
+let hubHomeState = null;
+function setHubHomeFace(face){
+  const home = document.getElementById("hubHome");
+  const FACES = {
+    map:    { hi: "🗺️", hl: "Map" },
+    market: { hi: "🏪", hl: "Market" },
+    close:  { hi: "⬅️", hl: "Close" },
+  };
+  const target = FACES[face];
+  const isCoinPair = (hubHomeState === "map" && face === "market") || (hubHomeState === "market" && face === "map");
+  const apply = () => {
+    home.querySelector(".hi").textContent = target.hi;
+    home.querySelector(".hl").textContent = target.hl;
+  };
+  if (isCoinPair && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+    home.classList.add("coinflip");
+    setTimeout(apply, 200); // midpoint of the .4s hubCoinFlip animation, edge-on and invisible
+    setTimeout(() => home.classList.remove("coinflip"), 400);
+  } else {
+    apply();
+  }
+  hubHomeState = face;
+}
 function updateHub(){
   // Zen has no Job Board at all -- grey the slot out (real disabled state,
   // not display:none) so the hub's own layout/spacing never shifts between
@@ -5650,10 +5735,11 @@ function updateHub(){
   document.getElementById("pinsBtn").classList.toggle("offscreen", state.jobs.length === 0);
   document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
-  // Home doubles as "close whatever's open" -- swap its icon/label to a
-  // plain back arrow whenever that's what a tap will actually do.
-  home.querySelector(".hi").textContent = anyOpen ? "⬅️" : "🗺️";
-  home.querySelector(".hl").textContent = anyOpen ? "Close" : "Map";
+  // Home has three faces: a plain back arrow whenever a panel is open (a
+  // tap will close it), Marketplace when already ON the map (a tap opens
+  // the new hub instead, since "go to the map" has nothing left to do),
+  // and Map everywhere else (see setHubHomeFace()).
+  setHubHomeFace(anyOpen ? "close" : (screen === "map" ? "market" : "map"));
 
   /* Not a real <button disabled> -- a disabled button swallows the click
      event entirely, and touch devices have no hover state to reveal the
@@ -6607,6 +6693,7 @@ function goHome(){
 function openPanelName(){
   if (drawer.classList.contains("open")) return "drawer";
   if (jobSheet.classList.contains("open")) return "jobs";
+  if (marketSheet.classList.contains("open")) return "market";
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("settings").classList.contains("open")) return "settings";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
@@ -6616,6 +6703,7 @@ function openPanelName(){
 function closePanelByName(name){
   if (name === "drawer") closeDrawer();
   else if (name === "jobs") closeJobBoard();
+  else if (name === "market") closeMarket();
   else if (name === "pins") closePinsTray();
   else if (name === "settings") closeOverlay("settings");
   else if (name === "convert") closeOverlay("convert");
@@ -6646,7 +6734,11 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     showTextHint(ev.currentTarget, "Tap <b>PLAY</b> before returning to the map.");
     return;
   }
-  goHome();
+  // Already on the map -- "go to the map" has nothing left to do, so this
+  // is exactly the moment Home's other face (see setHubHomeFace()) takes
+  // over instead. Off the map, unchanged: goes home as it always has.
+  if (screen === "map") openMarket();
+  else goHome();
 });
 document.getElementById("hubInv").addEventListener("click", () => hubPanelClick("drawer", openDrawer));
 document.getElementById("hubCodex").addEventListener("click", () => hubPanelClick("codex", () => { screen = "codex"; render(true); }));
@@ -6900,6 +6992,55 @@ function closeJobBoard(){
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
   updateHub();
 }
+
+/* Marketplace directory -- tapping the Job Board row hands off to the
+   real, already-built Job Board (closing this sheet first, same as any
+   other hub-panel handoff via hubPanelClick()). The other three rows have
+   no system behind them yet, so they're real disabled buttons with a
+   "Coming soon" tag rather than dead-looking active ones -- honest about
+   what's actually here today. */
+function renderMarketBody(){
+  const marketSheetBody = document.getElementById("marketSheetBody");
+  const zen = state.mode === "zen"; // Zen has no Job Board at all, see updateHub()'s own hubJobs.disabled
+  marketSheetBody.innerHTML = `
+    <button type="button" class="market-row" id="marketToJobs" ${zen ? "disabled" : ""}>
+      <span class="mr-em">📋</span>
+      <span class="mr-body"><div class="mr-title">Job Board</div><div class="mr-sub">${zen ? "Not available in Zen Mode" : "Take jobs, turn in finished items"}</div></span>
+    </button>
+    <button type="button" class="market-row" disabled>
+      <span class="mr-em">📜</span>
+      <span class="mr-body"><div class="mr-title">Quest Log</div><div class="mr-sub">Multi-step storylines</div></span>
+      <span class="mr-soon">Coming soon</span>
+    </button>
+    <button type="button" class="market-row" disabled>
+      <span class="mr-em">🔄</span>
+      <span class="mr-body"><div class="mr-title">Trade Market</div><div class="mr-sub">Swap items with other traders</div></span>
+      <span class="mr-soon">Coming soon</span>
+    </button>
+    <button type="button" class="market-row" disabled>
+      <span class="mr-em">🏛️</span>
+      <span class="mr-body"><div class="mr-title">Community Center</div><div class="mr-sub">Bundles, milestones, rewards</div></span>
+      <span class="mr-soon">Coming soon</span>
+    </button>`;
+}
+function openMarket(){
+  renderMarketBody();
+  marketSheet.classList.add("open"); marketScrim.classList.add("open");
+  marketSheet.setAttribute("aria-hidden", "false");
+  updateHub();
+}
+function closeMarket(){
+  marketSheet.classList.remove("open"); marketScrim.classList.remove("open");
+  marketSheet.setAttribute("aria-hidden", "true");
+  updateHub();
+}
+const marketSheet = document.getElementById("marketSheet");
+const marketScrim = document.getElementById("marketScrim");
+document.getElementById("marketSheetClose").addEventListener("click", closeMarket);
+marketScrim.addEventListener("click", closeMarket);
+document.getElementById("marketSheetBody").addEventListener("click", ev => {
+  if (ev.target.closest("#marketToJobs")){ closeMarket(); openJobBoard(); }
+});
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
