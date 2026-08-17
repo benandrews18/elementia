@@ -360,15 +360,21 @@ body[data-screen="codex"] #trackedPill{display:none}
    need to differentiate the container itself, only its contents. */
 #marketScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
 #marketScrim.open{display:block}
+/* Drops from the top rather than sliding in from the left like #jobSheet
+   -- left:50%+translate(-50%,...) centers it regardless of viewport width
+   (works the same whether the containing block is the true viewport or
+   the iPad-frame wrapper on desktop, so no separate wide-viewport rule
+   is needed the way #jobSheet's left-anchored version still requires). */
 #marketSheet{
-  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
-  padding-left:24px; box-sizing:border-box;
-  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
-  background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
-  border-radius:0 0 14px 0; transform:translateX(-100%);
+  position:fixed; top:0; left:50%; width:min(400px,92vw); z-index:69;
+  padding-top:24px; margin-top:-24px; box-sizing:border-box;
+  max-height:min(560px, 78vh);
+  background:var(--card); border:2.5px solid var(--gold); border-top:none;
+  border-radius:0 0 16px 16px;
+  transform:translate(-50%, -100%);
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
-#marketSheet.open{transform:none}
+#marketSheet.open{transform:translate(-50%, 0)}
 .market-row{
   display:flex; align-items:center; gap:14px; width:100%; padding:14px 12px; margin-bottom:10px;
   background:var(--sunken); border:1.5px solid var(--line); border-radius:13px; text-align:left;
@@ -395,7 +401,13 @@ body[data-screen="codex"] #trackedPill{display:none}
   50%{transform:rotateY(90deg)}
   100%{transform:rotateY(0deg)}
 }
-#hubHome.coinflip .hi, #hubHome.coinflip .hl{
+/* The whole green circle flips, not just its icon/label text -- applying
+   the same rotation to the button itself (rather than just .hi/.hl)
+   means the children rotate along with it for free as part of their
+   rotating parent, so this fully replaces the old children-only version
+   rather than combining with it (that would have compounded into a
+   double rotation). */
+#hubHome.coinflip{
   animation:hubCoinFlip .4s ease-in-out; backface-visibility:hidden;
 }
 
@@ -1397,6 +1409,45 @@ body[data-screen="codex"] #trackedPill{display:none}
 #tour.welcome .tour-welcome-actions{display:flex}
 #tour.welcome #tourPrev, #tour.welcome #tourNext{display:none}
 
+/* -------------------------------------------- "how to play" tutorial --- */
+.tut-el-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(90px, 1fr)); gap:10px;
+  max-height:52vh; overflow-y:auto; padding:2px 2px 4px;
+}
+.tut-el-card{
+  background:#fff; border:4px solid var(--suit, #4a4f5c); border-radius:12px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:10px 4px; gap:2px; text-align:center;
+}
+.tut-el-num{font-size:9px; font-weight:800; color:#8a8478}
+.tut-el-sym{font-size:22px; font-weight:800; color:#2b2822; line-height:1.1}
+.tut-el-name{font-size:10px; font-weight:700; color:#5a5548}
+/* Cutout spotlight: a box-shadow spread far past the element's own tiny
+   rect paints the dark backdrop everywhere EXCEPT inside that rect --
+   the "hole" is just the absence of shadow, not an actual cut mask, so
+   the real button underneath stays exactly as clickable as it always was. */
+#tutCoach{position:fixed; inset:0; z-index:9997; pointer-events:none}
+#tutCoach.open{display:block}
+#tutCoach:not(.open){display:none}
+.tut-coach-spot{
+  position:fixed; z-index:9998; border-radius:14px;
+  box-shadow:0 0 0 9999px rgba(8,10,14,.74);
+  transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease;
+  pointer-events:none;
+}
+.tut-coach-spot.hidden{box-shadow:0 0 0 9999px rgba(8,10,14,.74); left:50%; top:50%; width:0; height:0}
+.tut-coach-box{
+  position:fixed; z-index:9999; max-width:320px; background:var(--card);
+  border:2px solid var(--gold); border-radius:14px; padding:16px 18px;
+  box-shadow:0 12px 30px rgba(0,0,0,.4); pointer-events:auto;
+  transition:top .3s ease, bottom .3s ease;
+}
+.tut-coach-title{font-size:16px; font-weight:800; margin-bottom:6px}
+.tut-coach-text{font-size:13.5px; color:var(--ink2); line-height:1.5}
+.tut-coach-actions{display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px}
+.tut-coach-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
+.tut-coach-actions .bigbtn{padding:9px 18px; font-size:13px}
+
 /* --------------------------------------------------------- feedback --- */
 /* One shared bounce language used throughout: a quick overshoot-then-
    settle for anything appearing on screen (dialogs, cards, popups), and a
@@ -2095,12 +2146,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
-  #marketSheet{left:calc(50% - 408px)}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -2513,6 +2563,50 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
   <button type="button" id="tourPrev" aria-label="Previous slide"></button>
   <button type="button" id="tourNext" aria-label="Next slide"></button>
+</div>
+
+<!-- "How to Play" tutorial -- dynamic, not more illustrated slides: a
+     periodic-table framing, the real 16-element roster, then a coachmark
+     walkthrough of the actual live UI (not screenshots of it). Separate
+     from #tour above (which stays exactly as it was, still the welcome/
+     title slide only) -- see tourBtn's click handler. -->
+<div class="overlay" id="tutIntro" role="dialog" aria-modal="true" aria-labelledby="tutIntroTitle">
+  <div class="sheetbox" style="max-width:440px; text-align:center">
+    <div style="font-size:52px; line-height:1; margin-bottom:6px">🔬</div>
+    <h2 id="tutIntroTitle">The Periodic Table</h2>
+    <p class="setnote" style="font-size:15px; line-height:1.6; margin-top:10px">
+      The periodic table lists every element in the universe. Just <b>16</b> of them make up
+      nearly everything you'll see and craft in Elementia.
+    </p>
+    <div class="btnrow">
+      <button type="button" class="bigbtn" id="tutIntroNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="tutElements" role="dialog" aria-modal="true" aria-labelledby="tutElementsTitle">
+  <div class="sheetbox" style="max-width:480px">
+    <h2 id="tutElementsTitle">The 16 Elements</h2>
+    <div class="tut-el-grid" id="tutElGrid"></div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn" id="tutElementsNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Coachmark walkthrough: NOT an .overlay (no dark full-screen backdrop
+     of its own) -- the real UI underneath stays visible and untouched,
+     see .tut-coach-spot's box-shadow cutout technique. -->
+<div id="tutCoach" role="dialog" aria-modal="true" aria-label="Guided walkthrough">
+  <div class="tut-coach-spot" id="tutCoachSpot"></div>
+  <div class="tut-coach-box" id="tutCoachBox">
+    <div class="tut-coach-title" id="tutCoachTitle"></div>
+    <div class="tut-coach-text" id="tutCoachText"></div>
+    <div class="tut-coach-actions">
+      <span class="tut-coach-step" id="tutCoachStep"></span>
+      <button type="button" class="bigbtn" id="tutCoachNext">Next</button>
+    </div>
+  </div>
 </div>
 
 <!-- Mini-Games mode: map + mini-games only, no shop/items/points. A
@@ -6514,57 +6608,134 @@ function flyToInventory(cards, playBar){
   playBar.style.marginTop = "0px";
 }
 
-/* First-ever craft of an item: its recipe's own ingredient chips (already
-   sitting right there in the shop card, see recipeHTML()/tokenHTML())
-   fly up into a stack at screen-center and shrink away, THEN the card
-   popup opens -- reads as "these ingredients became this card" instead of
-   the card just appearing. Every re-craft after the first stays exactly
-   as immediate as it always was (see the [data-craft] handler below) --
-   this is a first-sight moment, not a per-craft tax.
-   Same WAAPI measure-then-fly technique as flyToInventory() above, for
-   the same reason: convert each token to position:fixed against its OWN
-   pre-mutation rect (captured by the caller, before craft()'s render()
-   would otherwise wipe the shop card out from under it), then defer
-   render()/showCardPop() to the LAST token's animation finishing instead
-   of firing immediately -- otherwise render() would yank these nodes out
-   of the DOM mid-flight. */
-function flyIngredientsAndReveal(tokens, rects, entry){
-  const tx = innerWidth / 2, ty = innerHeight / 2;
-  const FLY_MS = 520, FLY_STAGGER_MS = 60, CONTACT_FRACTION = .78;
-
-  // Belt-and-suspenders: onfinish is the real trigger, but it only fires
-  // if the element survives to the end of its own animation, and a stuck
-  // "the ingredients flew away and then nothing happened, my item never
-  // showed up" is a much worse failure than a redundant timer -- so a
-  // plain setTimeout backs it up, guarded so whichever fires first is the
-  // only one that actually runs the reveal.
-  let revealed = false;
-  function revealOnce(){
-    if (revealed) return;
-    revealed = true;
-    render();
-    if (entry.tier === "CAPSTONE") celebrate(entry); else showCardPop(entry);
+/* First-ever craft of an item: real inspection-style mini cards -- one per
+   distinct ingredient, elements styled like the element-card popup, items
+   styled like the item-card popup, not the small recipe-line chips -- rise
+   from the bottom of the screen one at a time, fan into a stack at
+   screen-center, then the whole stack bursts like a firework and the new
+   item's own real card is what's left standing in the aftermath. Every
+   re-craft after the first stays exactly as immediate as it always was
+   (see the [data-craft] handler below) -- this is a first-sight moment,
+   not a per-craft tax. */
+function miniIngredientCardHTML(req){
+  if (req.kind === "element"){
+    const suit = ELEMENT_COLOR[req.name] || "#4a4f5c";
+    return `<div class="fc-card fc-el" style="--suit:${suit}">
+      <div class="fc-sym">${esc(req.name)}</div>
+      <div class="fc-name">${esc(ELEMENT_NAMES[req.name] || req.name)}</div>
+    </div>`;
   }
-
-  tokens.forEach((tok, i) => {
-    const r = rects[i];
-    tok.style.position = "fixed";
-    tok.style.left = r.left + "px";
-    tok.style.top = r.top + "px";
-    tok.style.width = r.width + "px";
-    tok.style.height = r.height + "px";
-    tok.style.margin = "0";
-    tok.style.zIndex = "500";
-    tok.style.pointerEvents = "none";
-    const dx = tx - (r.left + r.width / 2), dy = ty - (r.top + r.height / 2);
-    const anim = tok.animate([
-      { transform: "translate(0,0) scale(1)", opacity: 1, offset: 0 },
-      { transform: `translate(${dx}px, ${dy}px) scale(.7)`, opacity: 1, offset: CONTACT_FRACTION },
-      { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0, offset: 1 },
-    ], { duration: FLY_MS, delay: i * FLY_STAGGER_MS, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" });
-    if (i === tokens.length - 1) anim.onfinish = revealOnce;
+  const ing = ENTRIES.find(e => e.name === req.name);
+  const suit = ing ? DATA.suits[STATION_BY_NAME[ing.station].suit].color : "#4a4f5c";
+  return `<div class="fc-card fc-item" style="--suit:${suit}">
+    <div class="fc-icon">${em(req.emoji || (ing && ing.emoji) || "")}</div>
+    <div class="fc-name">${esc(req.name)}</div>
+  </div>`;
+}
+/* Radial burst of small sparks from a single point -- the "pop like a
+   firework" moment once the ingredient stack is fully assembled. Plain
+   WAAPI + throwaway DOM nodes (removed on their own finish), same
+   disposable-particle technique as fireConfetti() uses for the capstone
+   celebration, just radiating from a point instead of falling from the
+   top of the screen. */
+function fireworkBurst(x, y){
+  const colors = ["#2e9e5b", "#d9432b", "#b7791f", "#3b7fc4", "#a16a34", "#e2b25a", "#fff"];
+  const N = 26;
+  for (let i = 0; i < N; i++){
+    const p = document.createElement("div");
+    p.style.cssText = `position:fixed; left:${x}px; top:${y}px; width:7px; height:7px; ` +
+      `border-radius:50%; z-index:600; pointer-events:none; background:${colors[(Math.random() * colors.length) | 0]};`;
+    document.body.appendChild(p);
+    const angle = (i / N) * Math.PI * 2 + Math.random() * 0.35;
+    const dist = 80 + Math.random() * 110;
+    const dx = Math.cos(angle) * dist, dy = Math.sin(angle) * dist;
+    const anim = p.animate([
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+      { transform: `translate(${dx - 3.5}px, ${dy - 3.5}px) scale(.25)`, opacity: 0 },
+    ], { duration: 550 + Math.random() * 220, easing: "cubic-bezier(.2,.6,.4,1)", fill: "forwards" });
+    anim.onfinish = () => p.remove();
+  }
+}
+function flyIngredientsAndReveal(entry){
+  const seen = new Set();
+  const reqs = entry.reqs.filter(r => {
+    const k = r.kind + ":" + r.name;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
   });
-  setTimeout(revealOnce, FLY_MS + FLY_STAGGER_MS * tokens.length + 150);
+
+  const tx = innerWidth / 2, ty = innerHeight / 2;
+  const RISE_MS = 560, RISE_STAGGER_MS = 220, FAN_STEP_PX = 7, FAN_STEP_DEG = 5;
+  // WAAPI's fill:"forwards" composites the animated end state visually but
+  // never writes it back into card.style.transform -- so the exact resting
+  // transform each card lands on has to be tracked here explicitly (not
+  // read back off the DOM later) for the fade-out below to start from
+  // where the card actually is instead of snapping from its pre-rise
+  // position.
+  const finalTransforms = [];
+  const cards = reqs.map((r, i) => {
+    const el = document.createElement("div");
+    el.innerHTML = miniIngredientCardHTML(r);
+    const card = el.firstElementChild;
+    card.style.position = "fixed";
+    card.style.zIndex = "500";
+    card.style.pointerEvents = "none";
+    // Start just below the bottom edge, spread across the width so a
+    // multi-ingredient recipe doesn't launch every card from one spot.
+    const startX = innerWidth / 2 + (i - (reqs.length - 1) / 2) * 70;
+    const startY = innerHeight + 90;
+    card.style.left = startX + "px";
+    card.style.top = startY + "px";
+    card.style.transform = "translate(-50%,-50%)";
+    document.body.appendChild(card);
+    return card;
+  });
+
+  const lastIdx = cards.length - 1;
+  const lastArrivesAt = lastIdx * RISE_STAGGER_MS + RISE_MS;
+
+  cards.forEach((card, i) => {
+    // Fanned resting spot in the stack, not a dead-on overlap -- reads as
+    // a pile of distinct cards, matching how a hand of real cards fans.
+    const fanX = tx + (i - (reqs.length - 1) / 2) * FAN_STEP_PX;
+    const fanY = ty + (i - (reqs.length - 1) / 2) * FAN_STEP_PX;
+    const fanRot = (i - (reqs.length - 1) / 2) * FAN_STEP_DEG;
+    const startX = innerWidth / 2 + (i - (reqs.length - 1) / 2) * 70;
+    const startY = innerHeight + 90;
+    const dx = fanX - startX, dy = fanY - startY;
+    const finalTransform = `translate(-50%,-50%) translate(${dx}px, ${dy}px) rotate(${fanRot}deg) scale(1)`;
+    finalTransforms.push(finalTransform);
+    card.animate([
+      { transform: "translate(-50%,-50%) translate(0,0) rotate(0deg) scale(.9)", opacity: 0, offset: 0 },
+      { transform: "translate(-50%,-50%) translate(0,0) rotate(0deg) scale(1)", opacity: 1, offset: .12 },
+      { transform: finalTransform, opacity: 1, offset: 1 },
+    ], { duration: RISE_MS, delay: i * RISE_STAGGER_MS, easing: "cubic-bezier(.25,.7,.3,1.1)", fill: "forwards" });
+  });
+
+  // A short beat once the stack is fully assembled ("look, it's all
+  // here"), then the burst consumes the stack and the real card takes its
+  // place in the aftermath. setTimeout, not onfinish -- with multiple
+  // staggered animations only the LAST one's finish matters, and a plain
+  // timer keyed off that same total duration is simpler and just as
+  // reliable than tracking which Animation object is actually last.
+  setTimeout(() => {
+    fireworkBurst(tx, ty);
+    cards.forEach((card, i) => {
+      card.style.transform = finalTransforms[i]; // lock in the resting pose WAAPI never wrote back
+      card.animate([
+        { transform: finalTransforms[i].replace(/scale\([^)]*\)/, "scale(1)"), opacity: 1 },
+        { transform: finalTransforms[i].replace(/scale\([^)]*\)/, "scale(.2)"), opacity: 0 },
+      ], { duration: 260, easing: "ease-in", fill: "forwards" }).onfinish = () => card.remove();
+    });
+    // Same belt-and-suspenders as the reveal itself below -- onfinish is
+    // the real cleanup, this is just insurance against a dropped frame
+    // leaving stray cards stuck in the DOM forever.
+    setTimeout(() => cards.forEach(c => { if (c.parentNode) c.remove(); }), 400);
+    setTimeout(() => {
+      render();
+      if (entry.tier === "CAPSTONE") celebrate(entry); else showCardPop(entry);
+    }, 260);
+  }, lastArrivesAt + 220);
 }
 function punchInventory(){
   document.getElementById("hubInv").animate([
@@ -6650,14 +6821,11 @@ document.getElementById("screen").addEventListener("click", ev => {
   if (cBtn){
     const entry = ENTRIES[+cBtn.dataset.craft];
     // First-ever craft gets the ingredient fly-and-stack reveal (see
-    // flyIngredientsAndReveal()) -- captured before craft()/render() can
-    // touch the DOM these rects/nodes describe. Every re-craft after the
-    // first (wasOwnedBefore already true) skips straight to the existing
-    // immediate reveal, unchanged.
+    // flyIngredientsAndReveal()) -- checked before craft() changes what
+    // owns() would report. Every re-craft after the first (wasOwnedBefore
+    // already true) skips straight to the existing immediate reveal,
+    // unchanged.
     const wasOwnedBefore = owns(entry.name);
-    const card = cBtn.closest(".item");
-    const ingredientTokens = card ? Array.from(card.querySelectorAll(".recipe .tok")) : [];
-    const tokenRects = ingredientTokens.map(t => t.getBoundingClientRect());
     const beforeRevealed = new Set(
       entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
     );
@@ -6678,10 +6846,10 @@ document.getElementById("screen").addEventListener("click", ev => {
       // second surprise.
       state.stationLastSeen[current] = afterRevealed;
 
-      const firstCraftReveal = !wasOwnedBefore && ingredientTokens.length &&
+      const firstCraftReveal = !wasOwnedBefore &&
         !matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (firstCraftReveal){
-        flyIngredientsAndReveal(ingredientTokens, tokenRects, entry);
+        flyIngredientsAndReveal(entry);
       } else {
         render();
         if (entry.tier === "CAPSTONE") celebrate(entry);
@@ -7615,9 +7783,104 @@ document.addEventListener("keydown", ev => {
   if (ev.key === "ArrowRight" || ev.key === " ") tourNext();
   else if (ev.key === "ArrowLeft") tourPrev();
 });
+/* "How to Play": periodic-table framing -> the real 16-element roster
+   (reusing the same ELEMENT_SUIT/ELEMENT_COLOR/ATOMIC_NUMBER data the
+   element-card popup uses, see showElCardPop()) -> a coachmark
+   walkthrough of the actual live hub buttons (see .tut-coach-spot's
+   cutout technique). Targets only the persistent bottom hub, which is
+   present on every screen regardless of where "How to Play" gets opened
+   from, so no screen navigation is ever needed mid-walkthrough. */
+function renderTutElementsGrid(){
+  const syms = Object.keys(ATOMIC_NUMBER).sort((a, b) => ATOMIC_NUMBER[a] - ATOMIC_NUMBER[b]);
+  document.getElementById("tutElGrid").innerHTML = syms.map(sym => {
+    return `<div class="tut-el-card" style="--suit:${ELEMENT_COLOR[sym] || "#4a4f5c"}">
+      <span class="tut-el-num">${ATOMIC_NUMBER[sym]}</span>
+      <span class="tut-el-sym">${esc(sym)}</span>
+      <span class="tut-el-name">${esc(ELEMENT_NAMES[sym] || sym)}</span>
+    </div>`;
+  }).join("");
+}
+
+const TUT_COACH_STEPS = [
+  { sel: "#hubHome", title: "Home", text: "Takes you to the map. Once you're already there, it flips into the Marketplace instead." },
+  { sel: "#hubJobs", title: "Job Board", text: "Take on jobs for bonus points, then turn them in once you've made what they ask for." },
+  { sel: "#hubInv", title: "Inventory", text: "Everything you've collected and crafted so far, all in one place." },
+  { sel: "#hubCodex", title: "Item Reference", text: "Look up any item's recipe -- even ones you haven't discovered yet." },
+  { sel: "#hubSettings", title: "Settings", text: "Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
+  { sel: null, title: "You're ready!", text: "\u{1F3AF} The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
+];
+let tutCoachIdx = 0;
+
+function positionTutCoach(){
+  const spot = document.getElementById("tutCoachSpot");
+  const box = document.getElementById("tutCoachBox");
+  const step = TUT_COACH_STEPS[tutCoachIdx];
+  const target = step.sel && document.querySelector(step.sel);
+  if (!target){
+    spot.classList.add("hidden");
+    box.style.top = "50%"; box.style.bottom = ""; box.style.left = "50%";
+    box.style.transform = "translate(-50%,-50%)";
+    return;
+  }
+  spot.classList.remove("hidden");
+  const r = target.getBoundingClientRect();
+  const pad = 8;
+  spot.style.left = (r.left - pad) + "px";
+  spot.style.top = (r.top - pad) + "px";
+  spot.style.width = (r.width + pad * 2) + "px";
+  spot.style.height = (r.height + pad * 2) + "px";
+  // Caption box goes above the target when there's not enough room below
+  // (the bottom hub sits at the screen's own bottom edge, so most steps
+  // take this branch) -- centered horizontally either way.
+  const spaceBelow = innerHeight - r.bottom;
+  box.style.left = "50%"; box.style.transform = "translateX(-50%)";
+  if (spaceBelow > 180){
+    box.style.top = (r.bottom + pad + 10) + "px"; box.style.bottom = "";
+  } else {
+    box.style.bottom = (innerHeight - r.top + pad + 10) + "px"; box.style.top = "";
+  }
+}
+function renderTutCoach(){
+  const step = TUT_COACH_STEPS[tutCoachIdx];
+  document.getElementById("tutCoachTitle").textContent = step.title;
+  document.getElementById("tutCoachText").textContent = step.text;
+  document.getElementById("tutCoachStep").textContent = `${tutCoachIdx + 1} / ${TUT_COACH_STEPS.length}`;
+  document.getElementById("tutCoachNext").textContent =
+    tutCoachIdx === TUT_COACH_STEPS.length - 1 ? "Start Playing" : "Next";
+  positionTutCoach();
+}
+function startNewTutorial(){
+  openOverlay("tutIntro");
+}
+document.getElementById("tutIntroNext").addEventListener("click", () => {
+  closeOverlay("tutIntro");
+  renderTutElementsGrid();
+  openOverlay("tutElements");
+});
+document.getElementById("tutElementsNext").addEventListener("click", () => {
+  closeOverlay("tutElements");
+  tutCoachIdx = 0;
+  document.getElementById("tutCoach").classList.add("open");
+  renderTutCoach();
+});
+document.getElementById("tutCoachNext").addEventListener("click", () => {
+  if (tutCoachIdx >= TUT_COACH_STEPS.length - 1){
+    document.getElementById("tutCoach").classList.remove("open");
+    return;
+  }
+  tutCoachIdx++;
+  renderTutCoach();
+});
+// The spotlight/caption follow the live button's real position -- so if
+// the viewport resizes mid-walkthrough (rotation, etc.), it doesn't end
+// up pointing at empty space.
+window.addEventListener("resize", () => {
+  if (document.getElementById("tutCoach").classList.contains("open")) positionTutCoach();
+});
+
 document.getElementById("tourBtn").addEventListener("click", () => {
   closeOverlay("settings");
-  startTour();
+  startNewTutorial();
 });
 document.getElementById("tourPlayBtn").addEventListener("click", tourNext);
 document.getElementById("tourSettingsBtn").addEventListener("click", () => {
