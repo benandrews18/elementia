@@ -179,8 +179,15 @@ const DATA = /*__GAME_DATA_START__*/{
      "🧵",
      "Fabric",
      "COMPONENT",
-     "🧶 Plant Fiber",
+     "🍂 Plant Fiber + 🛠️ Tools",
      9
+    ],
+    [
+     "🟡",
+     "Yellow Dye",
+     "COMPONENT",
+     "🍌 Banana + 🍷 Alcohol",
+     13
     ],
     [
      "⛵",
@@ -228,8 +235,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🌊",
      "Water Turbine",
      "CREATION",
-     "💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
-     16
+     "💧 Water + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",
+     22
     ],
     [
      "🚤",
@@ -329,6 +336,20 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",
      8
+    ],
+    [
+     "🔷",
+     "Fiberglass",
+     "COMPONENT",
+     "🪟 Glass + 🥤 Plastic",
+     11
+    ],
+    [
+     "🌀",
+     "Turbine Blade",
+     "COMPONENT",
+     "🔘 Wheel + 🔷 Fiberglass",
+     17
     ],
     [
      "💻",
@@ -465,6 +486,41 @@ const DATA = /*__GAME_DATA_START__*/{
      9
     ],
     [
+     "🐑",
+     "Sheep",
+     "CREATION",
+     "🧑‍🌾 Farm + 💧 Water",
+     8
+    ],
+    [
+     "🐝",
+     "Bee",
+     "CREATION",
+     "🧑‍🌾 Farm + 🍬 Sugar",
+     8
+    ],
+    [
+     "🧺",
+     "Basket",
+     "COMPONENT",
+     "🍂 Plant Fiber + 🛠️ Tools",
+     9
+    ],
+    [
+     "🤍",
+     "Wool",
+     "COMPONENT",
+     "🐑 Sheep + 🛠️ Tools",
+     8
+    ],
+    [
+     "🍯",
+     "Honey",
+     "COMPONENT",
+     "🐝 Bee + 🍬 Sugar",
+     9
+    ],
+    [
      "🚲",
      "Bicycle",
      "CREATION",
@@ -475,8 +531,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "𖣘",
      "Windmill",
      "CREATION",
-     "☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
-     16
+     "☁️ Cloud + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",
+     20
     ]
    ],
    "capstone": [
@@ -652,8 +708,15 @@ const DATA = /*__GAME_DATA_START__*/{
      "🍓",
      "Strawberries",
      "MATERIAL",
-     "C + H + O + Ca",
-     4
+     "🍬 Sugar + Ca + 🧺 Basket",
+     11
+    ],
+    [
+     "🍄",
+     "Mushroom",
+     "COMPONENT",
+     "🌱 Soil + 💧 Water",
+     5
     ],
     [
      "🌳",
@@ -677,10 +740,17 @@ const DATA = /*__GAME_DATA_START__*/{
      7
     ],
     [
-     "🧶",
+     "🍂",
      "Plant Fiber",
      "MATERIAL",
      "🌳 Tree + 🛠️ Tools",
+     7
+    ],
+    [
+     "🪢",
+     "Rope",
+     "COMPONENT",
+     "🍂 Plant Fiber + 🛠️ Tools",
      8
     ],
     [
@@ -698,6 +768,13 @@ const DATA = /*__GAME_DATA_START__*/{
      11
     ],
     [
+     "🔴",
+     "Red Dye",
+     "COMPONENT",
+     "🍓 Strawberries + 🍷 Alcohol",
+     15
+    ],
+    [
      "🐟",
      "Salmon",
      "CREATION",
@@ -705,10 +782,17 @@ const DATA = /*__GAME_DATA_START__*/{
      12
     ],
     [
+     "🦕",
+     "Fossil",
+     "COMPONENT",
+     "🏺 Clay + 🦴 Bone + 🕐 Clock",
+     10
+    ],
+    [
      "🦖",
      "Dinosaur",
      "CREATION",
-     "🦴 Bone + __AMBER__ Amber + 🧬 DNA",
+     "__AMBER__ Amber + 🧬 DNA + 🦕 Fossil",
      13
     ]
    ],
@@ -776,11 +860,18 @@ const DATA = /*__GAME_DATA_START__*/{
      9
     ],
     [
+     "🍷",
+     "Alcohol",
+     "COMPONENT",
+     "🦠 Yeast + 🍬 Sugar + 💧 Water",
+     5
+    ],
+    [
      "__FLOUR__",
      "Flour",
      "COMPONENT",
-     "🌾 Grain + 🛠️ Tools",
-     10
+     "🌾 Grain + 𖣘 Windmill",
+     21
     ],
     [
      "🥛",
@@ -794,28 +885,28 @@ const DATA = /*__GAME_DATA_START__*/{
      "Dough",
      "COMPONENT",
      "__FLOUR__ Flour + 💧 Water",
-     11
+     22
     ],
     [
      "🥨",
      "Pretzel",
      "CREATION",
      "🫓 Dough + K + 🔥 Furnace",
-     11
+     23
     ],
     [
      "🍞",
      "Bread",
      "CREATION",
      "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
-     12
+     24
     ],
     [
      "🍰",
      "Cake",
      "CREATION",
      "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
-     13
+     24
     ],
     [
      "🍶",
@@ -836,56 +927,56 @@ const DATA = /*__GAME_DATA_START__*/{
      "Apple Pie",
      "CREATION",
      "🫓 Dough + 🍎 Apple + 🔥 Furnace",
-     13
+     23
     ],
     [
      "🍰",
      "Chocolate Cake",
      "CREATION",
      "🍰 Cake + 🍫 Chocolate",
-     14
+     25
     ],
     [
      "🥐",
      "Croissant",
      "CREATION",
      "🫓 Dough + 🧈 Butter + 🔥 Furnace",
-     14
+     23
     ],
     [
      "🧀",
      "Cheesecake",
      "CREATION",
      "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",
-     15
+     25
     ],
     [
      "🍩",
      "Éclair",
      "CREATION",
      "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",
-     16
+     24
     ],
     [
      "🍞",
      "Banana Bread",
      "CREATION",
      "🍞 Bread + 🍌 Banana",
-     17
+     24
     ],
     [
      "🧁",
      "Berry Cupcakes",
      "CREATION",
      "🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",
-     19
+     26
     ],
     [
      "🍽️",
      "Grand Banquet",
      "CREATION",
      "🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",
-     24
+     28
     ]
    ],
    "capstone": [
@@ -934,8 +1025,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🍇",
      "Blackberries",
      "MATERIAL",
-     "C + H + O + Mg",
-     4
+     "🍬 Sugar + Mg + 🧺 Basket",
+     12
     ],
     [
      "🪟",
@@ -959,6 +1050,20 @@ const DATA = /*__GAME_DATA_START__*/{
      6
     ],
     [
+     "📄",
+     "Paper",
+     "COMPONENT",
+     "🍂 Plant Fiber + 💧 Water",
+     12
+    ],
+    [
+     "⚫",
+     "Black Dye",
+     "COMPONENT",
+     "🍇 Blackberries + 🍷 Alcohol",
+     14
+    ],
+    [
      "🌉",
      "Bridge",
      "CREATION",
@@ -976,8 +1081,50 @@ const DATA = /*__GAME_DATA_START__*/{
      "📕",
      "Book",
      "COMPONENT",
-     "🧶 Plant Fiber",
-     12
+     "📄 Paper + 🛠️ Tools",
+     13
+    ],
+    [
+     "🧶",
+     "Yarn",
+     "COMPONENT",
+     "🤍 Wool + 🔘 Wheel",
+     14
+    ],
+    [
+     "🟥",
+     "Red Colored Yarn",
+     "COMPONENT",
+     "🧶 Yarn + 🔴 Red Dye",
+     21
+    ],
+    [
+     "🟦",
+     "Blue Colored Yarn",
+     "COMPONENT",
+     "🧶 Yarn + 🔵 Blue Dye",
+     16
+    ],
+    [
+     "⬛",
+     "Black Colored Yarn",
+     "COMPONENT",
+     "🧶 Yarn + ⚫ Black Dye",
+     16
+    ],
+    [
+     "🟨",
+     "Yellow Colored Yarn",
+     "COMPONENT",
+     "🧶 Yarn + 🟡 Yellow Dye",
+     18
+    ],
+    [
+     "🧣",
+     "Yarn Store",
+     "CREATION",
+     "🟥 Red Colored Yarn + 🟦 Blue Colored Yarn + ⬛ Black Colored Yarn + 🟨 Yellow Colored Yarn + 🏢 Building",
+     24
     ],
     [
      "__RUBY__",
@@ -1075,8 +1222,15 @@ const DATA = /*__GAME_DATA_START__*/{
      "🫐",
      "Blueberries",
      "MATERIAL",
-     "C + H + O + K",
-     5
+     "🍬 Sugar + K + 🧺 Basket",
+     14
+    ],
+    [
+     "🔵",
+     "Blue Dye",
+     "COMPONENT",
+     "🫐 Blueberries + 🍷 Alcohol",
+     15
     ],
     [
      "__MICROCHIP__",
@@ -1160,7 +1314,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Rocket",
      "CREATION",
      "💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",
-     22
+     21
     ]
    ],
    "capstone": [
@@ -1173,125 +1327,147 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Book": 11.4,
-  "Limestone": 3.0,
-  "Statue": 6.4,
-  "Battery": 4.8,
-  "Chocolate Cake": 12.2,
-  "Fabric": 8.5,
-  "Concrete": 5.7,
-  "Coral Reef": 17.4,
-  "Banana Bread": 16.4,
-  "Titanium Alloy": 5.9,
-  "Microchip": 8.8,
-  "Amber": 11.1,
-  "Apple Pie": 11.5,
-  "Sailboat": 9.3,
-  "Cloud": 5.3,
-  "Salmon": 12.1,
-  "Plant Fiber": 7.3,
-  "Farm": 7.9,
-  "Sand": 3.1,
-  "DNA": 4.0,
-  "Stainless Steel": 5.6,
-  "Sugar": 3.3,
-  "Blueberries": 6.1,
-  "Rocket": 22.2,
-  "Egg": 5.9,
-  "Magnet": 4.8,
-  "Bread": 10.8,
-  "Library": 14.0,
-  "Bridge": 7.8,
-  "Engine": 7.3,
-  "Chocolate": 9.4,
-  "Furnace": 4.8,
-  "Apple": 7.1,
-  "Beach Town": 27.4,
-  "Pretzel": 10.0,
-  "Robot": 17.4,
-  "Homestead": 15.0,
-  "Cream": 11.5,
-  "Airplane": 15.1,
-  "Rainbow": 17.2,
-  "Banana": 7.5,
-  "Croissant": 12.3,
-  "Lighthouse": 13.8,
-  "Geothermal Pump": 9.9,
-  "Gemstone Collection": 19.6,
-  "Opal": 11.4,
-  "Speedboat": 15.6,
-  "Cake": 11.7,
-  "Flour": 9.4,
-  "Tools": 3.6,
-  "Bone": 5.5,
-  "Rubber": 5.4,
-  "Steel": 3.1,
-  "Natural Gas": 3.1,
-  "Cow": 8.4,
-  "Windmill": 16.2,
-  "Tree": 5.4,
-  "Grand Banquet": 23.1,
-  "Life": 19.4,
-  "Strawberries": 4.9,
-  "Turquoise": 15.0,
-  "Satellite Dish": 11.5,
-  "Butter": 11.6,
-  "Chicken": 11.1,
-  "Volcano": 14.5,
-  "Solar System": 18.4,
-  "Metropolis": 23.4,
-  "Computer": 15.7,
-  "Sunflower": 19.6,
-  "Seaweed": 5.1,
-  "Plastic": 8.4,
-  "Dough": 9.6,
-  "Skyscraper": 16.2,
-  "Light Bulb": 7.6,
-  "Solar Panel": 8.2,
-  "Dinosaur": 12.7,
-  "Yeast": 5.2,
-  "Soil": 4.9,
-  "Maglev Train": 16.8,
-  "Fruit Cake": 20.2,
-  "Fireworks": 4.2,
-  "Berry Cupcakes": 18.1,
-  "Cheesecake": 14.4,
-  "Clock": 8.2,
-  "Tractor": 10.2,
-  "Éclair": 13.9,
-  "Canoe": 6.3,
-  "Pearl": 14.3,
-  "Sushi Restaurant": 19.7,
-  "Planet": 9.2,
-  "Car": 17.8,
-  "Compass": 8.1,
-  "Motorcycle": 17.2,
-  "Water Turbine": 16.0,
-  "Clay": 2.7,
-  "Milk": 9.5,
-  "Wire": 4.1,
-  "Blackberries": 4.9,
-  "Ruby": 13.3,
-  "Deer": 6.9,
-  "Biofuel": 11.3,
-  "Orca": 13.8,
-  "Water": 2.7,
-  "Glass": 5.5,
   "Ecosystem": 24.2,
-  "Wheel": 11.0,
+  "Computer": 16.2,
+  "Dinosaur": 12.5,
+  "Building": 8.6,
+  "Salmon": 12.1,
+  "Yellow Dye": 12.6,
+  "Yeast": 5.5,
+  "Canoe": 6.1,
+  "Limestone": 2.9,
+  "Apple": 7.3,
+  "Farm": 7.9,
+  "Plastic": 8.4,
+  "Furnace": 4.8,
+  "Airplane": 15.2,
+  "Book": 12.4,
+  "Egg": 6.1,
+  "Chocolate Cake": 23.4,
+  "Chicken": 11.1,
+  "Rainbow": 17.5,
+  "Space Station": 24.1,
+  "Titanium Alloy": 6.0,
+  "Robot": 17.7,
   "Aluminum Alloy": 5.6,
-  "Renewable Grid": 24.3,
+  "Red Colored Yarn": 19.6,
+  "Orca": 13.6,
+  "DNA": 4.1,
+  "Satellite Dish": 11.2,
+  "Star": 16.9,
+  "Concrete": 5.9,
+  "Bee": 8.3,
+  "Croissant": 21.7,
+  "Bridge": 8.0,
+  "Grand Banquet": 26.4,
+  "Motorcycle": 17.4,
+  "Glass": 5.6,
+  "Wool": 7.8,
+  "Clock": 8.3,
+  "Alcohol": 5.3,
+  "Berry Cupcakes": 24.9,
+  "Rubber": 5.7,
+  "Maglev Train": 16.9,
+  "Steel": 3.0,
+  "Clay": 2.8,
+  "Apple Pie": 21.6,
+  "Car": 17.9,
+  "Blue Dye": 14.2,
+  "Telescope": 12.8,
+  "Wire": 3.8,
+  "Black Dye": 12.9,
+  "Biofuel": 11.7,
+  "Fabric": 8.6,
+  "Pearl": 13.9,
+  "Blueberries": 13.9,
+  "Rope": 7.3,
+  "Chocolate": 9.4,
+  "Yarn": 13.2,
+  "Turbine Blade": 17.0,
+  "Geothermal Pump": 10.1,
+  "Strawberries": 10.7,
+  "Cheesecake": 24.0,
+  "Grain": 8.4,
+  "Solar Panel": 7.9,
+  "Sheep": 7.8,
+  "Paper": 12.0,
+  "Pretzel": 21.3,
+  "Bread": 22.4,
+  "Red Dye": 13.6,
+  "Homestead": 15.1,
+  "Sailboat": 9.4,
+  "Statue": 6.7,
+  "Stainless Steel": 5.2,
+  "Windmill": 19.8,
+  "Solar System": 18.3,
+  "Ruby": 13.7,
+  "Light Bulb": 7.4,
+  "Water Turbine": 22.7,
+  "Banana Bread": 22.1,
+  "Amber": 11.2,
+  "Blackberries": 11.0,
+  "Compass": 8.2,
+  "Cake": 22.6,
+  "Planet": 9.2,
+  "Dough": 21.4,
+  "Mushroom": 5.7,
+  "Central Station": 25.0,
+  "Honey": 8.3,
+  "Lighthouse": 13.6,
+  "Beach Town": 27.0,
+  "Seaweed": 5.2,
+  "Black Colored Yarn": 14.2,
+  "Fossil": 11.0,
+  "Tree": 5.3,
+  "Opal": 11.0,
+  "Sand": 3.0,
+  "Yellow Colored Yarn": 17.8,
+  "Library": 14.2,
+  "Water": 2.6,
+  "Basket": 8.3,
+  "Cow": 8.4,
+  "Fireworks": 4.3,
+  "Skyscraper": 16.4,
+  "Speedboat": 15.4,
+  "Soil": 4.8,
+  "Engine": 7.3,
+  "Volcano": 14.6,
+  "Cloud": 5.5,
+  "Battery": 4.8,
+  "Rocket": 21.7,
+  "Fiberglass": 10.8,
+  "Tractor": 10.2,
   "Diamond": 12.7,
-  "Grain": 8.3,
-  "Central Station": 24.9,
-  "Telescope": 12.2,
-  "Space Station": 23.7,
-  "Museum": 20.6,
+  "Blue Colored Yarn": 15.2,
+  "Bone": 5.3,
+  "Butter": 11.6,
+  "Yarn Store": 23.4,
+  "Sunflower": 19.6,
+  "Gemstone Collection": 19.5,
+  "Deer": 7.0,
+  "Fruit Cake": 23.2,
+  "Museum": 20.8,
+  "Life": 19.6,
+  "Fertilizer": 3.5,
+  "Renewable Grid": 29.6,
+  "Coral Reef": 17.8,
+  "Banana": 7.6,
+  "Microchip": 8.6,
+  "Cream": 11.8,
+  "Turquoise": 14.4,
+  "Tools": 3.6,
+  "Flour": 21.1,
+  "Metropolis": 23.4,
+  "Sushi Restaurant": 19.6,
+  "Natural Gas": 3.0,
+  "Plant Fiber": 7.4,
+  "Milk": 9.5,
+  "Log Cabin": 7.7,
+  "Sugar": 3.2,
   "Bicycle": 14.9,
-  "Star": 16.5,
-  "Building": 8.5,
-  "Fertilizer": 3.4,
-  "Log Cabin": 7.7
+  "Wheel": 10.7,
+  "Éclair": 23.4,
+  "Magnet": 5.3
  }
 }/*__GAME_DATA_END__*/;
 </script>

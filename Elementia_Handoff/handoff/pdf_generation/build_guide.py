@@ -51,14 +51,18 @@ STATIONS = [
              ("🌿","Seaweed","MATERIAL","C + H + O",4),
              ("☁️","Cloud","COMPONENT","💧 Water + N + C",5),
              ("🍌","Banana","CREATION","🌳 Tree + 💧 Water + K",8),
-             ("🧵","Fabric","COMPONENT","🧶 Plant Fiber",9),
+             ("🧵","Fabric","COMPONENT","🍂 Plant Fiber + 🛠️ Tools",9),
+
+             ("🟡","Yellow Dye","COMPONENT","🍌 Banana + 🍷 Alcohol",13),
+
              ("⛵","Sailboat","CREATION","🛶 Canoe + 🧵 Fabric",10),
              ("🧪","Biofuel","CREATION","🌿 Seaweed + 🦴 Bone + 🌱 Soil + 🔋 Battery",11),
              ("__PEARL__","Pearl","COMPONENT","Ca + C + O + 🔥 Furnace + 🕐 Clock",13),
              ("__LIGHTHOUSE__","Lighthouse","CREATION","💡 Light Bulb + ⬜ Concrete",13),
              ("__ORCA__","Orca","CREATION","🌿 Seaweed + 🐟 Salmon + 🦴 Bone",14),
              ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",14),
-             ("🌊","Water Turbine","CREATION","💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",16),
+             ("🌊","Water Turbine","CREATION","💧 Water + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",22),
+
              ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",17),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",22)},
@@ -74,6 +78,10 @@ STATIONS = [
              ("🕐","Clock","COMPONENT","🔋 Battery + 🛠️ Tools",8),
              ("🥤","Plastic","COMPONENT","🛢️ Natural Gas + 🔥 Furnace",8),
              ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",8),
+             ("🔷","Fiberglass","COMPONENT","🪟 Glass + 🥤 Plastic",11),
+
+             ("🌀","Turbine Blade","COMPONENT","🔘 Wheel + 🔷 Fiberglass",17),
+
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
              ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",24)],
@@ -94,8 +102,17 @@ STATIONS = [
              ("__OPAL__","Opal","COMPONENT","Si + O + 🔥 Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",11),
              ("🐄","Cow","CREATION","🧑‍🌾 Farm + 🌾 Grain",9),
+             ("🐑","Sheep","CREATION","🧑‍🌾 Farm + 💧 Water",8),
+
+             ("🐝","Bee","CREATION","🧑‍🌾 Farm + 🍬 Sugar",8),
+             ("🧺","Basket","COMPONENT","🍂 Plant Fiber + 🛠️ Tools",9),
+
+             ("🤍","Wool","COMPONENT","🐑 Sheep + 🛠️ Tools",8),
+
+             ("🍯","Honey","COMPONENT","🐝 Bee + 🍬 Sugar",9),
+
              ("🚲","Bicycle","CREATION","🦾 Aluminum Alloy + 🔘 Wheel + __RUBBER__ Rubber",15),
-             ("𖣘","Windmill","CREATION","☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",16)],
+             ("𖣘","Windmill","CREATION","☁️ Cloud + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",20)],
      "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin",19)},
 
     {"emoji":"💎","name":"Deep Mine","suit":"mine",
@@ -122,15 +139,24 @@ STATIONS = [
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
              ("🦴","Bone","MATERIAL","C + Ca + P",4),
              ("🌱","Soil","COMPONENT","🏺 Clay + ⏳ Sand",4),
-             ("🍓","Strawberries","MATERIAL","C + H + O + Ca",4),
+             ("🍓","Strawberries","MATERIAL","🍬 Sugar + Ca + 🧺 Basket",11),
+
+             ("🍄","Mushroom","COMPONENT","🌱 Soil + 💧 Water",5),
              ("🌳","Tree","COMPONENT","🌱 Soil + C + O",6),
              ("🛶","Canoe","COMPONENT","🌳 Tree + 💧 Water",6),
              ("🦌","Deer","CREATION","🌳 Tree + 💧 Water + 🦴 Bone",7),
-             ("🧶","Plant Fiber","MATERIAL","🌳 Tree + 🛠️ Tools",8),
+             ("🍂","Plant Fiber","MATERIAL","🌳 Tree + 🛠️ Tools",7),
+
+             ("🪢","Rope","COMPONENT","🍂 Plant Fiber + 🛠️ Tools",8),
+
              ("🛖","Log Cabin","CREATION","🌳 Tree + 🛠️ Tools + 🔥 Furnace",8),
              ("__AMBER__","Amber","COMPONENT","🌳 Tree + C + 🕐 Clock",11),
+             ("🔴","Red Dye","COMPONENT","🍓 Strawberries + 🍷 Alcohol",15),
+
              ("🐟","Salmon","CREATION","🌿 Seaweed + 💧 Water + 🥚 Egg",12),
-             ("🦖","Dinosaur","CREATION","🦴 Bone + __AMBER__ Amber + 🧬 DNA",13)],
+             ("🦕","Fossil","COMPONENT","🏺 Clay + 🦴 Bone + 🕐 Clock",10),
+
+             ("🦖","Dinosaur","CREATION","__AMBER__ Amber + 🧬 DNA + 🦕 Fossil",13)],
      "capstone":("__ECOSYSTEM__","Ecosystem","CAPSTONE","🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow",28)},
 
     {"emoji":"🍞","name":"The Bakery","suit":"bakery",
@@ -141,22 +167,36 @@ STATIONS = [
              ("🦠","Yeast","COMPONENT","🍬 Sugar + 💧 Water",5),
              ("🥚","Egg","COMPONENT","🧬 DNA + Ca + C + O",6),
              ("🍫","Chocolate","COMPONENT","🍬 Sugar + 🔥 Furnace",9),
-             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 🛠️ Tools",10),
+             ("🍷","Alcohol","COMPONENT","🦠 Yeast + 🍬 Sugar + 💧 Water",5),
+
+             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 𖣘 Windmill",21),
+
              ("🥛","Milk","COMPONENT","🐄 Cow + 💧 Water",10),
-             ("🫓","Dough","COMPONENT","__FLOUR__ Flour + 💧 Water",11),
-             ("🥨","Pretzel","CREATION","🫓 Dough + K + 🔥 Furnace",11),
-             ("🍞","Bread","CREATION","🫓 Dough + 🦠 Yeast + 🔥 Furnace",12),
-             ("🍰","Cake","CREATION","🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",13),
+             ("🫓","Dough","COMPONENT","__FLOUR__ Flour + 💧 Water",22),
+
+             ("🥨","Pretzel","CREATION","🫓 Dough + K + 🔥 Furnace",23),
+
+             ("🍞","Bread","CREATION","🫓 Dough + 🦠 Yeast + 🔥 Furnace",24),
+
+             ("🍰","Cake","CREATION","🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",24),
+
              ("🍶","Cream","COMPONENT","🥛 Milk + 🕐 Clock",13),
              ("🧈","Butter","MATERIAL","🍶 Cream + 🛠️ Tools",13),
-             ("🥧","Apple Pie","CREATION","🫓 Dough + 🍎 Apple + 🔥 Furnace",13),
-             ("🍰","Chocolate Cake","CREATION","🍰 Cake + 🍫 Chocolate",14),
-             ("🥐","Croissant","CREATION","🫓 Dough + 🧈 Butter + 🔥 Furnace",14),
-             ("🧀","Cheesecake","CREATION","🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",15),
-             ("🍩","Éclair","CREATION","🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",16),
-             ("🍞","Banana Bread","CREATION","🍞 Bread + 🍌 Banana",17),
-             ("🧁","Berry Cupcakes","CREATION","🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",19),
-             ("🍽️","Grand Banquet","CREATION","🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",24)],
+             ("🥧","Apple Pie","CREATION","🫓 Dough + 🍎 Apple + 🔥 Furnace",23),
+
+             ("🍰","Chocolate Cake","CREATION","🍰 Cake + 🍫 Chocolate",25),
+
+             ("🥐","Croissant","CREATION","🫓 Dough + 🧈 Butter + 🔥 Furnace",23),
+
+             ("🧀","Cheesecake","CREATION","🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",25),
+
+             ("🍩","Éclair","CREATION","🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",24),
+
+             ("🍞","Banana Bread","CREATION","🍞 Bread + 🍌 Banana",24),
+
+             ("🧁","Berry Cupcakes","CREATION","🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",26),
+
+             ("🍽️","Grand Banquet","CREATION","🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",28)],
      "capstone":("🎂","Fruit Cake","CAPSTONE","🍞 Bread + 🍰 Cake + 🍎 Apple + 🕐 Clock + 🍌 Banana",25)},
 
     {"emoji":"🏗️","name":"The City","suit":"city",
@@ -164,13 +204,30 @@ STATIONS = [
      "shop":[("🪨","Limestone","MATERIAL","Ca + C + O",2),
              ("🔩","Steel","MATERIAL","Fe + C",2),
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
-             ("🍇","Blackberries","MATERIAL","C + H + O + Mg",4),
+             ("🍇","Blackberries","MATERIAL","🍬 Sugar + Mg + 🧺 Basket",12),
+
              ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
              ("⬜","Concrete","COMPONENT","🏺 Clay + 🪨 Limestone",5),
              ("🗿","Statue","COMPONENT","🪨 Limestone + 🛠️ Tools",6),
+             ("📄","Paper","COMPONENT","🍂 Plant Fiber + 💧 Water",12),
+
+             ("⚫","Black Dye","COMPONENT","🍇 Blackberries + 🍷 Alcohol",14),
+
              ("🌉","Bridge","CREATION","🔩 Steel + ⬜ Concrete + 💧 Water",8),
              ("🏢","Building","CREATION","⬜ Concrete + 🪟 Glass + 🔩 Steel",8),
-             ("📕","Book","COMPONENT","🧶 Plant Fiber",12),
+             ("📕","Book","COMPONENT","📄 Paper + 🛠️ Tools",13),
+             ("🧶","Yarn","COMPONENT","🤍 Wool + 🔘 Wheel",14),
+
+             ("🟥","Red Colored Yarn","COMPONENT","🧶 Yarn + 🔴 Red Dye",21),
+
+             ("🟦","Blue Colored Yarn","COMPONENT","🧶 Yarn + 🔵 Blue Dye",16),
+
+             ("⬛","Black Colored Yarn","COMPONENT","🧶 Yarn + ⚫ Black Dye",16),
+
+             ("🟨","Yellow Colored Yarn","COMPONENT","🧶 Yarn + 🟡 Yellow Dye",18),
+
+             ("🧣","Yarn Store","CREATION","🟥 Red Colored Yarn + 🟦 Blue Colored Yarn + ⬛ Black Colored Yarn + 🟨 Yellow Colored Yarn + 🏢 Building",24),
+
              ("__RUBY__","Ruby","COMPONENT","Al + O + 🔥 Furnace + 🕐 Clock",13),
              ("📚","Library","CREATION","🏢 Building + 📕 Book",15),
              ("✈️","Airplane","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",15),
@@ -185,7 +242,10 @@ STATIONS = [
      "dice":["Ni", "Al", "Fe", "Ag", "Ti", "Si"],
      "shop":[("🛠️","Tools","CREATION","Fe + Ti + Al",3),
              ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
-             ("🫐","Blueberries","MATERIAL","C + H + O + K",5),
+             ("🫐","Blueberries","MATERIAL","🍬 Sugar + K + 🧺 Basket",14),
+
+             ("🔵","Blue Dye","COMPONENT","🫐 Blueberries + 🍷 Alcohol",15),
+
              ("__MICROCHIP__","Microchip","COMPONENT","🔌 Wire + Si + Ag",8),
              ("🌎","Planet","CREATION","C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",8),
              ("🧲","Magnet","COMPONENT","Fe + Ni",4),
@@ -197,7 +257,7 @@ STATIONS = [
              ("⭐","Star","CREATION","🔭 Telescope + H + 🕐 Clock",16),
              ("🌈","Rainbow","CREATION","☁️ Cloud + ⭐ Star",17),
              ("☀️","Solar System","CREATION","⭐ Star + 🌎 Planet",18),
-             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",22)],
+             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",21)],
      "capstone":("🛰️","Space Station","CAPSTONE","🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",28)},
 ]
 
