@@ -32,7 +32,7 @@ SUITS = {
 # the published Artifact link) stamps this value so it's possible to tell
 # at a glance whether a given PDF/game/link reflects the current content
 # without diffing bytes. See CHANGELOG.md for what changed at each version.
-CONTENT_VERSION = "2026.08.13"
+CONTENT_VERSION = "2026.08.16"
 
 # Table rules printed on every station page. These were previously hardcoded
 # into the header string, which is how the guide came to say "TAKE 3" while
@@ -54,7 +54,7 @@ STATIONS = [
              ("🧵","Fabric","COMPONENT","🧶 Plant Fiber",9),
              ("⛵","Sailboat","CREATION","🛶 Canoe + 🧵 Fabric",10),
              ("🧪","Biofuel","CREATION","🌿 Seaweed + 🦴 Bone + 🌱 Soil + 🔋 Battery",11),
-             ("__PEARL__","Pearl","COMPONENT","Ca + O + 🔥 Furnace + 🕐 Clock",13),
+             ("__PEARL__","Pearl","COMPONENT","Ca + C + O + 🔥 Furnace + 🕐 Clock",13),
              ("__LIGHTHOUSE__","Lighthouse","CREATION","💡 Light Bulb + ⬜ Concrete",13),
              ("__ORCA__","Orca","CREATION","🌿 Seaweed + 🐟 Salmon + 🦴 Bone",14),
              ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",14),
@@ -73,10 +73,10 @@ STATIONS = [
              ("💡","Light Bulb","COMPONENT","🪟 Glass + 🔌 Wire",7),
              ("🕐","Clock","COMPONENT","🔋 Battery + 🛠️ Tools",8),
              ("🥤","Plastic","COMPONENT","🛢️ Natural Gas + 🔥 Furnace",8),
-             ("🔆","Solar Cell","COMPONENT","🔌 Wire + 🔋 Battery",8),
+             ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",8),
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
-             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",22)],
+             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",24)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
@@ -89,7 +89,7 @@ STATIONS = [
              ("🍎","Apple","CREATION","🌳 Tree + 💧 Water",7),
              ("🧑‍🌾","Farm","CREATION","🌱 Soil + 🛠️ Tools + 💧 Water",7),
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",8),
-             ("🌻","Sunflower","CREATION","🔆 Solar Cell + 🌾 Grain",9),
+             ("🌻","Sunflower","CREATION","⭐ Star + 🌾 Grain",20),
              ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine",10),
              ("__OPAL__","Opal","COMPONENT","Si + O + 🔥 Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",11),
@@ -120,7 +120,7 @@ STATIONS = [
      "shop":[("💧","Water","MATERIAL","H + O",2),
              ("⏳","Sand","MATERIAL","Si + O",2),
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
-             ("🦴","Bone","MATERIAL","C + Ca + S",4),
+             ("🦴","Bone","MATERIAL","C + Ca + P",4),
              ("🌱","Soil","COMPONENT","🏺 Clay + ⏳ Sand",4),
              ("🍓","Strawberries","MATERIAL","C + H + O + Ca",4),
              ("🌳","Tree","COMPONENT","🌱 Soil + C + O",6),
@@ -139,7 +139,7 @@ STATIONS = [
              ("🛢️","Natural Gas","MATERIAL","C + H",2),
              ("🍬","Sugar","MATERIAL","C + H + O",3),
              ("🦠","Yeast","COMPONENT","🍬 Sugar + 💧 Water",5),
-             ("🥚","Egg","COMPONENT","🧬 DNA + Ca + O",6),
+             ("🥚","Egg","COMPONENT","🧬 DNA + Ca + C + O",6),
              ("🍫","Chocolate","COMPONENT","🍬 Sugar + 🔥 Furnace",9),
              ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 🛠️ Tools",10),
              ("🥛","Milk","COMPONENT","🐄 Cow + 💧 Water",10),
@@ -188,8 +188,8 @@ STATIONS = [
              ("🫐","Blueberries","MATERIAL","C + H + O + K",5),
              ("__MICROCHIP__","Microchip","COMPONENT","🔌 Wire + Si + Ag",8),
              ("🌎","Planet","CREATION","C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",8),
-             ("🧲","Magnet","COMPONENT","Fe + 🔋 Battery",9),
-             ("🧭","Compass","COMPONENT","🧲 Magnet + 💧 Water + 🪟 Glass",10),
+             ("🧲","Magnet","COMPONENT","Fe + Ni",4),
+             ("🧭","Compass","COMPONENT","🧲 Magnet + 💧 Water + 🪟 Glass",8),
              ("🔘","Wheel","MATERIAL","🌳 Tree + 🛠️ Tools",11),
              ("📡","Satellite Dish","COMPONENT","🦾 Aluminum Alloy + 🔌 Wire",12),
              ("🔭","Telescope","CREATION","🪟 Glass + 🦾 Aluminum Alloy + Ag",12),
@@ -197,7 +197,7 @@ STATIONS = [
              ("⭐","Star","CREATION","🔭 Telescope + H + 🕐 Clock",16),
              ("🌈","Rainbow","CREATION","☁️ Cloud + ⭐ Star",17),
              ("☀️","Solar System","CREATION","⭐ Star + 🌎 Planet",18),
-             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Cell + 🛡️ Titanium Alloy",21)],
+             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",22)],
      "capstone":("🛰️","Space Station","CAPSTONE","🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",28)},
 ]
 
