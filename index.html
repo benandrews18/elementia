@@ -1734,6 +1734,28 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   background:var(--gold-soft); color:var(--gold); font-size:14px; font-weight:800;
   letter-spacing:.2px; cursor:pointer;
 }
+/* First-craft fly-and-stack mini cards (see flyIngredientsAndReveal()) --
+   same visual language as the real inspection cards, just smaller: .fc-item
+   mirrors .pc-card (dark face, thick suit-colored top stripe), .fc-el
+   mirrors .el-pop-card (white face, thick suit-colored border all round).
+   Position/size are set inline per-card in JS (start point, fan offsets);
+   this only owns the fixed "what a card of this kind looks like" shape. */
+.fc-card{
+  width:92px; aspect-ratio:5/7; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.45);
+  gap:4px; padding:10px 6px 8px; text-align:center; box-sizing:border-box;
+}
+.fc-item{
+  background:var(--card); border-radius:14px; border:2px solid var(--suit, #4a4f5c);
+  border-top-width:12px;
+}
+.fc-item .fc-icon{font-size:32px; line-height:1}
+.fc-item .fc-name{font-size:10.5px; font-weight:800; color:#fff; line-height:1.2}
+.fc-el{
+  background:#fff; border-radius:14px; border:7px solid var(--suit, #4a4f5c);
+}
+.fc-el .fc-sym{font-size:26px; font-weight:800; color:#2b2822; line-height:1}
+.fc-el .fc-name{font-size:9.5px; font-weight:700; color:#5a5548; line-height:1.2}
 .pc-tree-btn:hover{background:var(--gold); color:#241a0c}
 
 /* Hard Mode tiered re-craft borders (see craftTier()) -- only ever applied
