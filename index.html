@@ -4735,23 +4735,26 @@ function mapCardHTML(name){
   const trackedPill = trackedEntry
     ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
     : "";
-  // Never-visited: icon becomes "?" and the item shop/capstone preview stay
-  // hidden entirely (a real spoiler otherwise) -- the dice pool is the one
-  // exception, shown either way since it's public knowledge regardless of
-  // visit history (see renderMap()'s own node icon for the same rule).
-  // Zen Mode skips this masking entirely -- full sandbox, nothing hidden.
+  // Never-visited: icon becomes "?", the station's own name, its dice pool,
+  // and the item shop/capstone preview all stay hidden -- nothing about a
+  // station is public knowledge until the player has actually set foot
+  // there (see renderMap()'s own node icon for the matching rule on the
+  // map pin itself). Zen Mode skips this masking entirely -- full sandbox,
+  // nothing hidden.
   const unvisited = state.mode !== "zen" && !state.visitedStations[name];
   const itemsHTML = unvisited
-    ? `<p class="mc-unvisited">Visit to see what's made here.</p>`
+    ? `<p class="mc-unvisited">Visit this station to discover what is available!</p>`
     : `<div class="station-items">${stationItemIconsHTML(name)}</div>
     <div class="capline ${done ? "done" : ""}">
       <span class="cap-em">${em(s.capstone[0])}</span>
       <span class="cap-name">${esc(capName)}</span>
       ${done ? "<span>✓</span>" : ""}
     </div>`;
+  const poolHTML = unvisited ? "" :
+    `<div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>`;
   return `<div class="map-card" style="--suit:${su.color}">
-    <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${esc(name)}</h2>${trackedPill}</div>
-    <div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>
+    <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${unvisited ? "???" : esc(name)}</h2>${trackedPill}</div>
+    ${poolHTML}
     ${itemsHTML}
     <button type="button" class="map-travel-btn" data-travel="${esc(name)}" ${canTravel ? "" : "disabled"}>${esc(statusLabel)}</button>
   </div>`;
@@ -6470,13 +6473,21 @@ document.getElementById("screen").addEventListener("click", ev => {
       entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
     );
     if (craft(entry)){
-      const newlyRevealed = entriesAt(current)
-        .filter(e => e.tier !== "CAPSTONE" && isRevealed(e) && !beforeRevealed.has(e.name) && e.name !== entry.name)
-        .map(e => e.name);
+      const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
+      const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name);
       if (newlyRevealed.length){
         pendingRevealNames = newlyRevealed;
         pendingRevealStation = current;
       }
+      // Without this, goStation()'s own "newly appeared since last visit"
+      // check (which only ever updates stationLastSeen on ARRIVAL, not
+      // here) would compare against a stale snapshot from before this
+      // craft next time the player re-enters this station -- so an item
+      // the player just watched get celebrated above would immediately
+      // re-trigger the exact same "New Items Unlocked" splash a second
+      // time on the very next arrival, reading as a bug rather than a
+      // second surprise.
+      state.stationLastSeen[current] = afterRevealed;
       render();
       if (entry.tier === "CAPSTONE") celebrate(entry);
       else showCardPop(entry);
