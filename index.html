@@ -1047,29 +1047,18 @@ body[data-screen="codex"] #trackedPill{display:none}
 .tok{display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:7px;
   font-weight:700; font-size:13.5px; border:1.5px solid}
 .tok.el{font-weight:800}
-.tok.have{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+/* Border uses the full-strength --ok, not a muted line variant, so the
+   "owned" green reads with the same weight/brightness as .tok.need's
+   border below rather than looking washed out next to it. */
+.tok.have{background:var(--ok-soft); border-color:var(--ok); color:var(--ok)}
 .tok.need{background:var(--bad-soft); border-color:var(--bad); color:var(--bad); cursor:help}
 .tok.need:hover{filter:brightness(1.08)}
-/* Element tokens: same size/shape/border-weight as the plain item pill
-   above (border:1.5px, same padding/radius/font-size, inherited from
-   .tok) -- elements should stand out from item ingredients by COLOR
-   alone, not by a bulkier border or a taller box. The suit still sets the
-   token's own identity, but as a dark fill (see ELEMENT_COLOR_DARK) with
-   the border matching it by default, so that once the element is owned
-   and the border switches to a bright green (.tok.el.have below) it
-   actually pops against that dark fill instead of blending into a
-   similarly-dark "owned" green (which the plain --ok-line border used by
-   .tok.have would have, sitting right next to a dark suit color). Must
-   follow .tok.have/.tok.need -- equal specificity, so source order
-   decides, and this needs to win over both (element tokens open a card
-   rather than a "where do I get this" hint too, so plain pointer not
-   help). */
-.tok.el{
-  cursor:pointer; background:var(--suit, #4a4f5c); border-color:var(--suit, #4a4f5c); color:#fff;
-}
-.tok.el.have{border-color:var(--ok)}
+/* Element tokens color by owned/missing status exactly like item tokens
+   now (plain .tok.have/.tok.need above) -- no separate suit-colored fill.
+   Only the cursor stays element-specific (opens a card rather than a
+   "where do I get this" hint). */
+.tok.el{cursor:pointer}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
-.tok.el .cat{color:#fff; opacity:.75}
 /* Fills the entire end of the card, edge-to-edge top-to-bottom (see
    .item/.irow above) -- a flush panel rather than a pill-shaped button, so
    it reads as part of the card's own structure. Its own right corners
@@ -1605,11 +1594,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .pc-card{
   width:100%; aspect-ratio:5/7; background:var(--card); border-radius:22px;
-  border-top:16px solid var(--suit); padding:20px 20px 16px; display:flex; flex-direction:column;
+  border:2px solid var(--suit); border-top-width:16px; padding:20px 20px 16px; display:flex; flex-direction:column;
   position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
 }
+/* Straddles the card's own corner rather than sitting inset from it --
+   same overhang language as .el-pop-bubble on the element card popup
+   (negative offset, not a width/height change, so the badge can grow
+   without affecting how far it hangs past the edge). */
 .pc-badge{
-  position:absolute; top:16px; right:16px; width:64px; height:64px; border-radius:50%;
+  position:absolute; top:-14px; right:-14px; width:64px; height:64px; border-radius:50%;
   background:var(--gold-soft); border:2px solid var(--gold-line); color:var(--gold);
   display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
 }
@@ -1618,7 +1611,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Top-left twin of .pc-badge -- the station this card was made at, same
    circle language as the points badge on the other corner. */
 .pc-station-badge{
-  position:absolute; top:16px; left:16px; width:64px; height:64px; border-radius:50%;
+  position:absolute; top:-14px; left:-14px; width:64px; height:64px; border-radius:50%;
   background:var(--gold-soft); border:2px solid var(--gold-line); color:var(--gold);
   display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1;
 }
