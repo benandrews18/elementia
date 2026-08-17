@@ -2047,6 +2047,27 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .arr-tray-card .em{font-size:38px; line-height:1}
 .arr-tray-card .nm{font-size:12px; font-weight:800; color:#fff; line-height:1.2}
 .arr-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
+/* Switches which source list #arrTray shows -- items you've crafted, or
+   raw elements you're currently holding -- same "only what you actually
+   have" rule as the item tab already used, so Elements isn't a spoiler
+   list of the whole periodic table. */
+.arr-tray-tabs{display:flex; gap:8px; padding:10px 14px 0; background:var(--card)}
+.arr-tray-tab{
+  flex:1; font:inherit; font-weight:800; font-size:13px; padding:8px; border-radius:9px;
+  border:1.5px solid var(--line); background:var(--sunken); color:var(--mute);
+}
+.arr-tray-tab.active{background:var(--gold-soft); border-color:var(--gold-line); color:var(--gold)}
+/* Element tray/canvas stickers use the suit-colored symbol box language
+   from everywhere else in the game (dice chips, ingredient tokens) rather
+   than an emoji -- elements were never emoji to begin with. */
+.arr-tray-card.el{background:var(--suit, #4a4f5c); border-color:var(--suit, #4a4f5c)}
+.arr-tray-card.el .nm{font-size:34px; font-weight:800}
+/* Same 72x72/position/cursor box as the base .arr-sticker (deliberately
+   not redeclared here) -- only the fill differs. */
+.arr-sticker.el{
+  border-radius:14px; font-size:32px; font-weight:800; color:#fff;
+  background:var(--suit, #4a4f5c); border:2.5px solid rgba(255,255,255,.4);
+}
 
 /* Forces an iPad-portrait-width frame on desktop browsers -- this whole UI
    was built mobile-first, and left unconstrained on a wide window it just
@@ -2466,6 +2487,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <button type="button" class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
       </div>
       <div class="arr-bgpicker" id="arrBgPicker"></div>
+      <div class="arr-tray-tabs" id="arrTrayTabs">
+        <button type="button" class="arr-tray-tab active" data-tab="items">Items</button>
+        <button type="button" class="arr-tray-tab" data-tab="elements">Elements</button>
+      </div>
       <div class="arr-tray" id="arrTray"></div>
     </div>
   </div>
@@ -6832,10 +6857,13 @@ const ARRANGE_COLORS = (() => {
 
 let selectedStickerId = null;
 
+let arrTrayTab = "items"; // "items" | "elements" -- which source list #arrTray shows
 function openArrangeScreen(){
   document.getElementById("arrangeScreen").classList.add("open");
   document.getElementById("arrTrayPanel").classList.remove("collapsed");
   document.getElementById("arrTrayHandle").setAttribute("aria-expanded", "true");
+  arrTrayTab = "items";
+  document.querySelectorAll(".arr-tray-tab").forEach(t => t.classList.toggle("active", t.dataset.tab === "items"));
   renderArrangeTray();
   renderArrangeBgPicker();
   renderArrangeCanvas();
@@ -6857,6 +6885,23 @@ document.getElementById("arrTrayHandle").addEventListener("click", () => {
 
 function renderArrangeTray(){
   const tray = document.getElementById("arrTray");
+  if (arrTrayTab === "elements"){
+    // Same "only what you actually have" rule as the item tab -- every
+    // element currently sitting at 1+ in state.elements, not the full
+    // 16-element roster regardless of ownership.
+    const owned = Object.keys(state.elements || {}).filter(sym => state.elements[sym] > 0).sort();
+    if (!owned.length){
+      tray.innerHTML = '<div class="arr-empty">Collect some elements first, then come back to arrange them.</div>';
+      return;
+    }
+    tray.innerHTML = owned.map(sym => {
+      const suit = ELEMENT_COLOR[sym] || "#8a94a6";
+      return `<button type="button" class="arr-tray-card el" style="--suit:${suit}" data-add-el="${esc(sym)}">
+        <span class="nm">${esc(sym)}</span>
+      </button>`;
+    }).join("");
+    return;
+  }
   const unique = [...new Set(state.items)];
   if (!unique.length){
     tray.innerHTML = '<div class="arr-empty">Craft some items first, then come back to arrange them.</div>';
@@ -6871,9 +6916,17 @@ function renderArrangeTray(){
   }).join("");
 }
 document.getElementById("arrTray").addEventListener("click", ev => {
-  const btn = ev.target.closest("[data-add]");
-  if (!btn) return;
-  addSticker(btn.dataset.add);
+  const itemBtn = ev.target.closest("[data-add]");
+  if (itemBtn){ addSticker(itemBtn.dataset.add, "item"); return; }
+  const elBtn = ev.target.closest("[data-add-el]");
+  if (elBtn) addSticker(elBtn.dataset.addEl, "element");
+});
+document.getElementById("arrTrayTabs").addEventListener("click", ev => {
+  const tab = ev.target.closest("[data-tab]");
+  if (!tab) return;
+  arrTrayTab = tab.dataset.tab;
+  document.querySelectorAll(".arr-tray-tab").forEach(t => t.classList.toggle("active", t === tab));
+  renderArrangeTray();
 });
 
 function renderArrangeBgPicker(){
@@ -6900,10 +6953,10 @@ function applyArrangeBg(){
    percentage of the canvas's own size, not px -- keeps a saved scene
    valid across window sizes/orientations instead of pinning stickers to
    whatever pixel grid happened to be onscreen when they were placed. */
-function addSticker(name){
+function addSticker(name, kind){
   const id = "s" + Date.now() + Math.random().toString(36).slice(2, 7);
   state.arrangement.stickers.push({
-    id, name,
+    id, name, kind: kind || "item", // kind is new -- see renderArrangeCanvas()'s fallback for stickers saved before this existed
     x: 42 + Math.random() * 16,
     y: 42 + Math.random() * 16,
     rot: 0,
@@ -6917,10 +6970,17 @@ function addSticker(name){
 function renderArrangeCanvas(){
   const canvas = document.getElementById("arrCanvas");
   applyArrangeBg();
-  canvas.innerHTML = state.arrangement.stickers.map(s =>
-    `<div class="arr-sticker${s.id === selectedStickerId ? " selected" : ""}" data-sticker="${esc(s.id)}"` +
-    ` style="left:${s.x}%; top:${s.y}%; transform:translate(-50%,-50%) rotate(${s.rot}deg) scale(${s.scale})">${em(ITEM_EMOJI[s.name])}</div>`
-  ).join("");
+  canvas.innerHTML = state.arrangement.stickers.map(s => {
+    // kind is undefined on any sticker saved before Elements existed --
+    // those were always items, so the fallback keeps old scenes rendering
+    // exactly as they did before this.
+    const isEl = s.kind === "element";
+    const cls = "arr-sticker" + (isEl ? " el" : "") + (s.id === selectedStickerId ? " selected" : "");
+    const suitStyle = isEl ? `--suit:${ELEMENT_COLOR[s.name] || "#8a94a6"};` : "";
+    const content = isEl ? esc(s.name) : em(ITEM_EMOJI[s.name]);
+    return `<div class="${cls}" data-sticker="${esc(s.id)}"` +
+      ` style="${suitStyle}left:${s.x}%; top:${s.y}%; transform:translate(-50%,-50%) rotate(${s.rot}deg) scale(${s.scale})">${content}</div>`;
+  }).join("");
   canvas.querySelectorAll("[data-sticker]").forEach(attachStickerDrag);
   updateArrangeToolbar();
 }
