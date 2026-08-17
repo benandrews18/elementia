@@ -2264,6 +2264,22 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
+<!-- Main Menu: a lightweight fork, not a rebuilt welcome screen -- Continue
+     just closes this (the run underneath is untouched, still sitting
+     exactly where it was), Reset routes through the exact same
+     askConfirm()+startNewSession() path the old direct Reset button always
+     used (see mainMenuBtn/resetBtn in Settings). -->
+<div class="overlay" id="mainMenuBox" role="dialog" aria-modal="true" aria-labelledby="mainMenuTitle">
+  <div class="sheetbox" style="max-width:420px">
+    <h2 id="mainMenuTitle">🏠 Main Menu</h2>
+    <p id="mainMenuSub" class="setnote"></p>
+    <div class="btnrow" style="flex-direction:column">
+      <button type="button" class="bigbtn" id="mainMenuContinue">▶️ Continue</button>
+      <button type="button" class="bigbtn sec" id="mainMenuReset">↺ Start a brand new session</button>
+    </div>
+  </div>
+</div>
+
 <!-- settings -->
 <div class="overlay" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="sheetbox">
@@ -2285,6 +2301,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="setting-sub">See your past runs</span>
       </span>
       <span class="setbtn">View</span>
+    </button>
+    <button type="button" class="setting-row" id="mainMenuBtn">
+      <span class="setting-ico">🏠</span>
+      <span class="setting-body">
+        <span class="setting-label">Main Menu</span>
+        <span class="setting-sub">Leave without resetting -- come back and continue anytime</span>
+      </span>
+      <span class="setbtn">Open</span>
     </button>
     <button type="button" class="setting-row warn" id="resetBtn">
       <span class="setting-ico">↺</span>
@@ -7182,6 +7206,26 @@ document.querySelectorAll(".overlay").forEach(ov => {
 document.getElementById("resetBtn").addEventListener("click", () => {
   askConfirm("Start a brand new session? Your inventory, visits and job board will be cleared.", () => {
     closeOverlay("settings");
+    startNewSession();
+  });
+});
+
+/* Main Menu: Continue is a pure no-op close -- the run underneath was
+   never touched, so there's nothing to restore. Reset reuses the exact
+   same confirm+startNewSession path resetBtn already used, just entered
+   from here instead. */
+const MODE_LABEL = { zen: "Zen", classic: "Classic", hard: "Hard" };
+document.getElementById("mainMenuBtn").addEventListener("click", () => {
+  const modeName = MODE_LABEL[state.mode] || "Current";
+  document.getElementById("mainMenuSub").textContent =
+    `${modeName} Mode -- visit ${state.visits} of ${visitLimitLabel()}. Continue where you left off, or start over.`;
+  closeOverlay("settings");
+  openOverlay("mainMenuBox");
+});
+document.getElementById("mainMenuContinue").addEventListener("click", () => closeOverlay("mainMenuBox"));
+document.getElementById("mainMenuReset").addEventListener("click", () => {
+  askConfirm("Start a brand new session? Your inventory, visits and job board will be cleared.", () => {
+    closeOverlay("mainMenuBox");
     startNewSession();
   });
 });
