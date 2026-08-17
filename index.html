@@ -1786,6 +1786,17 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   0%, 55%{transform:translateX(-120%)}
   85%, 100%{transform:translateX(120%)}
 }
+/* Diamond tier's own icon animates too, not just the card's shine sweep --
+   a slow glowing pulse, tasteful rather than distracting since this plays
+   continuously for as long as the card/row is on screen. Shared between
+   the card popup's big icon and Item Reference's smaller row icon. */
+@keyframes diamond-icon-pulse{
+  0%, 100%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(45,212,200,0))}
+  50%{transform:scale(1.09); filter:drop-shadow(0 0 9px rgba(45,212,200,.75))}
+}
+.pc-card.tier-diamond .pc-icon, .refrow.tier-diamond .refem{
+  animation:diamond-icon-pulse 1.9s ease-in-out infinite;
+}
 
 /* element card popup -- same locked design as the printed cards (white
    face, thick suit-colored border, number bubble straddling the corner,
@@ -4627,12 +4638,30 @@ function craft(entry){
    showCardPop() -- deliberately nowhere else the item appears (shop
    list, inventory grid, map preview) so it stays a "look closer" reward
    rather than cluttering every icon in the game. */
+/* Repeat-craft thresholds scale INVERSELY with an item's own AvgVisits
+   (from the reachability simulation, same DATA.avgVisits everything
+   else's difficulty already derives from) -- a flat "craft it 4 times"
+   trivializes a rare capstone and never means anything for Water, which
+   gets crafted dozens of times over a real run regardless. Deep/rare
+   items (high avg) need only a couple of repeat-crafts to feel mastered;
+   shallow/common ones (low avg) need meaningfully more. factor shrinks
+   from 1 (at avg<=8) down to 0.15 as avg grows, so the three tiers
+   compress together for genuinely deep items instead of ballooning. */
+function tierThresholds(avg){
+  if (avg == null) avg = 6;
+  const factor = Math.max(.15, Math.min(1, 8 / avg));
+  const silver = Math.max(2, Math.round(6 * factor));
+  const gold = silver + Math.max(1, Math.round(4 * factor));
+  const diamond = gold + Math.max(1, Math.round(5 * factor));
+  return { silver, gold, diamond };
+}
 function craftTier(name){
   if (state.mode !== "hard") return null;
   const n = state.craftCounts[name] || 0;
-  if (n >= 4) return "diamond";
-  if (n === 3) return "gold";
-  if (n === 2) return "silver";
+  const t = tierThresholds(DATA.avgVisits && DATA.avgVisits[name]);
+  if (n >= t.diamond) return "diamond";
+  if (n >= t.gold) return "gold";
+  if (n >= t.silver) return "silver";
   return null;
 }
 
