@@ -22,6 +22,7 @@
   --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c;
   --bad:#f0674c; --bad-soft:#371913;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
+  --hub-map:#4d7cf2;
   --jobcard-bg:#2a1a30;
   --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
   --farm-bg:#2b2317; --farm-line:#7a5a2c; --farm-ink:#d9a15c;
@@ -137,16 +138,23 @@ body[data-picking] #topbar{display:none}
   border:3px solid var(--card); box-shadow:0 4px 14px rgba(0,0,0,.24);
   transition:background .25s ease, color .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
-#hubHome:hover{background:var(--ok); filter:brightness(1.06)}
+#hubHome:hover{filter:brightness(1.06)}
 #hubHome .hi{font-size:37px}
 #hubHome .hl{font-size:10px}
-/* At a station you must roll before you can leave -- the dice are the
-   whole point of the visit, so Home is inert until PLAY is used. */
-#hubHome.locked{
-  background:var(--sunken); color:var(--mute); box-shadow:none; cursor:not-allowed;
-  border-color:var(--card);
-}
-#hubHome.locked:hover{background:var(--sunken); filter:none}
+/* Home's four resting faces (see setHubHomeFace()) -- each gets its own
+   color so the coin-flip between them reads as "something changed"
+   rather than the same green disc relabeling itself. Roll keeps the
+   game's established green "go" color since that's exactly what it
+   still means here; Map is a neutral blue untied to any one station's
+   suit (a global action, not a zone); Market reuses the gold already
+   used for the Job Board/Trade Market elsewhere; Close stays the
+   deliberately inert grey it always was. */
+#hubHome.face-roll{background:var(--ok); color:#fff}
+#hubHome.face-map{background:var(--hub-map); color:#fff}
+#hubHome.face-market{background:var(--gold); color:#2a2110}
+#hubHome.face-close{background:var(--sunken); color:var(--mute); box-shadow:none}
+#hubHome.face-close:hover{filter:none}
+#hubHome .hub-badge{top:-2px; right:-2px}
 .hub-badge{
   position:absolute; top:2px; right:calc(50% - 22px); min-width:17px; height:17px; padding:0 4px;
   border-radius:999px; background:var(--bad); color:#fff; font-size:10px; font-weight:800;
@@ -157,6 +165,13 @@ body[data-picking] #topbar{display:none}
    hub slot -- plain corner placement rather than the hub's own
    width-relative centering math. */
 .floatbtn .hub-badge{top:-4px; right:-4px}
+/* Convert's badge carries an actual count (how many 3-for-1 conversions
+   are available right now, see updateHub()) rather than a plain "!", so
+   it gets extra room to stay legible instead of squeezing a 2+ digit
+   number into the same small dot every other hub badge uses. */
+#quickConvertBtn .hub-badge{
+  top:-7px; right:-7px; min-width:24px; height:24px; padding:0 6px; font-size:13px;
+}
 
 /* Bottom padding clears the floating pins/convert buttons (see .floatbtn),
    which float ABOVE the hub bar at z-index 32 -- without this, whatever's
@@ -1065,27 +1080,13 @@ body[data-screen="codex"] #trackedPill{display:none}
 }
 .die.tumbling{animation:tumble .5s ease-in-out}
 
-/* play -- .playbar holds either the button or (once rolled) the dice row,
-   never both in flow at once, so it can FLIP its own height between the
-   two and back to 0. See doRoll()/playRollAnimation() for the
-   choreography. overflow:hidden clips cleanly during that height tween;
-   harmless the rest of the time since height is auto by default. */
+/* play -- .playbar sits empty until a roll happens, then holds the
+   rolled-dice row just long enough to fly to the inventory icon, so it
+   can FLIP its own height from 0 to the row's height and back to 0. See
+   triggerRoll()/playRollAnimation() for the choreography. overflow:hidden
+   clips cleanly during that height tween; harmless the rest of the time
+   since height is auto by default. */
 .playbar{margin:16px 26px 0; display:flex; align-items:center; gap:16px; flex-wrap:wrap; overflow:hidden}
-.playbtn{
-  background:var(--ok); color:#fff; font-size:17px; font-weight:800; letter-spacing:.3px;
-  padding:14px 28px; border-radius:12px; box-shadow:0 3px 0 #24774a;
-}
-.playbtn:hover:not(:disabled){filter:brightness(1.06)}
-.playbtn:active:not(:disabled){transform:translateY(2px); box-shadow:0 1px 0 #24774a}
-.playbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
-/* "Roll 🎲 x N" state: bigger text to fill the button, padding trimmed to
-   compensate so the button's own footprint doesn't grow along with it. */
-.playbtn.roll-ready{ font-size:22px; padding:10px 24px; }
-@keyframes btnpop{
-  0%{transform:scale(1); opacity:1} 55%{transform:scale(1.1); opacity:1}
-  100%{transform:scale(.2); opacity:0}
-}
-.playbtn.popping{animation:btnpop .32s cubic-bezier(.3,.6,.4,1) forwards; pointer-events:none}
 /* Mid-flight state: pulled out of normal flow so it can travel to the
    inventory hub icon in a straight line regardless of what's reflowing
    underneath it (see flyToInventory()). */
@@ -1662,8 +1663,8 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
    -- get a solid offset "ledge" shadow on top of the shared bounce/scale
    above: raised at rest, and the button visibly sinks into it on press
    (translateY replacing the ledge's own depth) rather than just scaling
-   down in place. Same trick .playbtn already used just for PLAY,
-   generalized here to read as one consistent "this is pushable" language
+   down in place. Same "pushable" language the old standalone PLAY button
+   used to carry alone, generalized here to read as one consistent feel
    game-wide. Convert Elements' own buttons are deliberately left out --
    that UI was already tuned by hand, button-by-button, and doesn't need
    a second, competing treatment layered on top (see the #convert
@@ -6335,13 +6336,13 @@ function renderStation(name){
   const gather = sortedDice(s).map((sym, i) =>
     `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gsym">${esc(sym)}</span></button>${dieFace(i + 1)}</div>`).join("");
 
-  // No PLAY button (and no leftover rolled-dice row) once this visit's
-  // roll is spent -- playRollAnimation() consumes them via animation, so
-  // a static re-render (e.g. coming back to this station later) should
-  // simply not include the playbar at all.
-  const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar">
-      <button type="button" class="playbtn${state.pendingRoll ? " roll-ready" : ""}" id="playBtn">${state.pendingRoll ? `Roll \u{1F3B2} x ${state.pendingRoll}` : "▶ PLAY"}</button>
-    </div>`;
+  // Empty placeholder, not a button -- rolling now happens via Home's own
+  // Roll face in the bottom hub (see triggerRoll()). This div just stays
+  // ready to receive the rolled-dice row and FLIP its height open (see
+  // playRollAnimation()); no leftover rolled-dice row once this visit's
+  // roll is spent, so a static re-render (e.g. coming back to this
+  // station later) should simply not include the playbar at all.
+  const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
   const bg = STATION_BG[s.name];
   // Pinned to the viewport (not the card's own, content-height box) --
@@ -6495,25 +6496,33 @@ function updateBackdrop(){
   }
 }
 
-/* Hub button states: job board progress, active screen, and the
-   roll-before-you-leave lock on Home. */
-/* Tracks which of Home's three faces (see updateHub()) is currently
-   showing, so the coin-flip only plays for the specific transition it's
-   meant for -- Map<->Market -- and not for either one swapping to/from
-   the unrelated "close this panel" arrow. */
+/* Hub button states: job board progress, active screen, and Home's own
+   rotation through its four faces. */
+/* Tracks which of Home's four faces (see updateHub()) is currently
+   showing, so the coin-flip only plays for the two transitions that
+   represent real progress -- Roll->Map (you just rolled) and
+   Map<->Market (you just reached/left the map screen) -- and not for
+   either one swapping to/from the unrelated "close this panel" arrow,
+   which stays instant since panels open and close far too often for a
+   flip there to read as meaningful rather than just noisy. */
 let hubHomeState = null;
+const HUB_COIN_PAIRS = [["roll", "map"], ["map", "market"]];
 function setHubHomeFace(face){
   const home = document.getElementById("hubHome");
   const FACES = {
+    roll:   { hi: "🎲", hl: "Roll" },
     map:    { hi: "🗺️", hl: "Map" },
     market: { hi: "🏪", hl: "Market" },
     close:  { hi: "⬅️", hl: "Close" },
   };
   const target = FACES[face];
-  const isCoinPair = (hubHomeState === "map" && face === "market") || (hubHomeState === "market" && face === "map");
+  const isCoinPair = HUB_COIN_PAIRS.some(([a, b]) =>
+    (hubHomeState === a && face === b) || (hubHomeState === b && face === a));
   const apply = () => {
     home.querySelector(".hi").textContent = target.hi;
     home.querySelector(".hl").textContent = target.hl;
+    home.classList.remove("face-roll", "face-map", "face-market", "face-close");
+    home.classList.add("face-" + face);
   };
   if (isCoinPair && !matchMedia("(prefers-reduced-motion: reduce)").matches){
     home.classList.add("coinflip");
@@ -6575,8 +6584,13 @@ function updateHub(){
   // how many".
   const hasUnselectedPin = prefs.pinnedItems.length > 0 && !selectedJobItem;
   setHubBadge("pinsBtn", hasUnselectedPin ? "!" : null);
-  const canConvert = [...ELEMENTS].some(sym => count(sym) >= 3);
-  setHubBadge("quickConvertBtn", canConvert ? "!" : null);
+  // Total conversions currently possible across every element (each one
+  // independently good for floor(count/3) 3-for-1 conversions, see
+  // convertGo's own handler) -- not just "you have enough of something",
+  // the actual number the player could cash in right now.
+  const totalConvertible = [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / 3), 0);
+  const canConvert = totalConvertible > 0;
+  setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
   // Once revealed, Convert stays on-screen for good -- even after the
   // player spends their 3rd of an element back down to 0/1/2, the button
   // shouldn't vanish again and force them to rediscover it. state.jobs'
@@ -6592,23 +6606,20 @@ function updateHub(){
   document.getElementById("pinsBtn").classList.toggle("offscreen", state.jobs.length === 0);
   document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
-  // Home has three faces: a plain back arrow whenever a panel is open (a
-  // tap will close it), Marketplace when already ON the map (a tap opens
-  // the new hub instead, since "go to the map" has nothing left to do),
-  // and Map everywhere else (see setHubHomeFace()).
-  setHubHomeFace(anyOpen ? "close" : (screen === "map" ? "market" : "map"));
-
-  /* Not a real <button disabled> -- a disabled button swallows the click
-     event entirely, and touch devices have no hover state to reveal the
-     title tooltip, so a locked tap would give zero feedback. Left
-     clickable (see the hubHome listener) so tapping it while locked can
-     surface the "tap PLAY first" hint instead. The lock itself only
-     matters when a tap would actually try to navigate to the map -- with
-     a panel open, a tap just closes it, so it's never actually locked. */
-  const locked = mapLocked() && !anyOpen;
-  home.classList.toggle("locked", locked);
-  home.setAttribute("aria-disabled", locked ? "true" : "false");
-  home.title = anyOpen ? "Close" : locked ? "Roll the dice before leaving this station" : "Back to the station map";
+  // Home rotates through four faces: a plain back arrow whenever a panel
+  // is open (a tap will close it); Roll at a station before this visit's
+  // dice are rolled (a tap rolls them -- see the hubHome listener); once
+  // rolled, Map everywhere off the map screen; and Marketplace once
+  // already ON the map (a tap opens the new hub instead, since "go to
+  // the map" has nothing left to do). See setHubHomeFace() for the actual
+  // face styling and which of these transitions coin-flip.
+  const rollReady = mapLocked() && !anyOpen;
+  const face = anyOpen ? "close" : rollReady ? "roll" : (screen === "map" ? "market" : "map");
+  setHubHomeFace(face);
+  home.setAttribute("aria-disabled", "false");
+  home.title = anyOpen ? "Close" : rollReady ? "Roll the dice" :
+    screen === "map" ? "Open the Marketplace" : "Back to the station map";
+  setHubBadge("hubHome", rollReady && state.pendingRoll ? String(state.pendingRoll) : null, true);
 }
 
 /* At a station, leaving is blocked until the visit's dice are rolled --
@@ -7027,10 +7038,10 @@ function launchMinigame(){
   const run = window.MINIGAMES && window.MINIGAMES[current];
   // Settings > Mini-games off (or a station with no minigame registered):
   // skip the whole overlay/intro/results choreography, but still require
-  // an explicit tap to roll -- same "Roll 🎲 x N" button the minigame
-  // path hands off to (see the #playBtn click handler), just reached
-  // directly instead of via a results screen, using whatever TAKE (Dice
-  // rolls per visit) is currently configured.
+  // an explicit tap to roll -- same "Roll 🎲 x N" hub badge the minigame
+  // path hands off to (see triggerRoll()), just reached directly instead
+  // of via a results screen, using whatever TAKE (Dice rolls per visit)
+  // is currently configured.
   if (!run || !prefs.minigamesEnabled){
     state.pendingRoll = TAKE;
     save();
@@ -7098,9 +7109,9 @@ function launchMinigame(){
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         window.removeEventListener("scroll", mgScrollGuard);
-        // No more auto-roll: the dice earned sit on the PLAY button (now
-        // relabeled "Roll x N") until the player taps it themselves -- see
-        // the #playBtn click handler.
+        // No more auto-roll: the dice earned sit on Home's Roll badge (see
+        // updateHub()) until the player taps it themselves -- see
+        // triggerRoll().
         state.pendingRoll = diceCount;
         save();
         render();
@@ -7196,34 +7207,25 @@ function doRoll(rollCount){
   playRollAnimation(out);
 }
 
-/* Play-button choreography, three phases in the one .playbar element:
-     1. EXPAND -- the button pops out in place (and is pulled out of flow
-        so it doesn't push anything), while the rolled dice take its slot
-        and the bar grows from button-height to row-height (FLIP).
+/* Dice-reveal choreography, two phases in the one (empty, zero-height)
+   .playbar element -- rolling itself is now triggered from Home's Roll
+   face in the bottom hub (see triggerRoll()), not from anything inside
+   this bar:
+     1. EXPAND -- the rolled dice are appended and the bar FLIPs its
+        height from 0 to the row's full height.
      2. FLY -- after a short hold, the dice fly to the inventory hub icon
         (one punch, on the last landing) while the bar simultaneously
         CONTRACTS back to 0 -- concurrent with the flight, not after it,
         so the shop visibly slides up while the dice are still in the air.
-     3. Reaching 0 height IS "disappear" -- no separate step needed.
+        Reaching 0 height IS "disappear" -- no separate step needed.
    Runs entirely against the live DOM; render() only runs once at the very
    end to settle into the final state (renderStation() already omits the
    playbar entirely once state.rolledHere is true). */
 function playRollAnimation(out){
-  const playBtn = document.getElementById("playBtn");
   const playBar = document.getElementById("playBar");
-  if (!playBtn || !playBar){ render(); return; } // safety net -- shouldn't happen
+  if (!playBar){ render(); return; } // safety net -- shouldn't happen
 
-  const barRect = playBar.getBoundingClientRect();
-  const btnRect = playBtn.getBoundingClientRect();
-  const startH = barRect.height;
-
-  // Pop the button in place, then pull it out of flow immediately so the
-  // rolled row can reclaim its exact slot rather than being pushed below.
-  playBar.style.position = "relative";
-  playBtn.style.position = "absolute";
-  playBtn.style.left = (btnRect.left - barRect.left) + "px";
-  playBtn.style.top = (btnRect.top - barRect.top) + "px";
-  playBtn.classList.add("popping");
+  const startH = playBar.getBoundingClientRect().height;
 
   const rolled = document.createElement("div");
   rolled.className = "rolled";
@@ -7529,17 +7531,6 @@ document.getElementById("screen").addEventListener("click", ev => {
     return;
   }
 
-  if (ev.target.closest("#playBtn")){
-    if (state.pendingRoll){
-      const n = state.pendingRoll;
-      state.pendingRoll = null;
-      doRoll(n);
-    } else {
-      launchMinigame();
-    }
-    return;
-  }
-
   if (ev.target.closest("#collapseCraftedBtn")){
     state.collapseCraftedItems = !state.collapseCraftedItems;
     save();
@@ -7741,18 +7732,26 @@ function hubPanelClick(name, openFn){
   if (open) closePanelByName(open);
   openFn();
 }
+/* Rolls this visit's dice (or launches the minigame that hands off to a
+   roll) -- the same action the old standalone PLAY button used to
+   perform, now reached through Home's own Roll face instead. */
+function triggerRoll(){
+  if (state.pendingRoll){
+    const n = state.pendingRoll;
+    state.pendingRoll = null;
+    doRoll(n);
+  } else {
+    launchMinigame();
+  }
+}
 /* While any panel/screen is open, Home turns into a plain "close whatever
    this is" button (see updateHub()) -- closing takes priority over both
-   the roll-lock and Home's own map navigation, since dismissing a panel
-   never leaves the station the way actually going to the map would. */
+   rolling and Home's own map navigation, since dismissing a panel never
+   leaves the station the way actually going to the map would. */
 document.getElementById("hubHome").addEventListener("click", ev => {
   const open = openPanelName();
   if (open){ closePanelByName(open); return; }
-  if (mapLocked()){
-    ev.stopPropagation();  // otherwise the global click->hideHint below closes it instantly
-    showTextHint(ev.currentTarget, "Tap <b>PLAY</b> before returning to the map.");
-    return;
-  }
+  if (mapLocked()){ triggerRoll(); return; }
   // Already on the map -- "go to the map" has nothing left to do, so this
   // is exactly the moment Home's other face (see setHubHomeFace()) takes
   // over instead. Off the map, unchanged: goes home as it always has.
