@@ -3000,8 +3000,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🟡",
      "Yellow Dye",
      "COMPONENT",
-     "🍌 Banana + 🍷 Alcohol",
-     13
+     "🍌 Banana + 💧 Water + 🫙 Glass Vial",
+     16
     ],
     [
      "⛵",
@@ -3065,6 +3065,13 @@ const DATA = /*__GAME_DATA_START__*/{
      "CREATION",
      "__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",
      25
+    ],
+    [
+     "🛳️",
+     "Cruise Ship",
+     "CREATION",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet",
+     34
     ]
    ],
    "capstone": [
@@ -3143,6 +3150,13 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "🛢️ Natural Gas + 🔥 Furnace",
      8
+    ],
+    [
+     "🫙",
+     "Glass Vial",
+     "COMPONENT",
+     "🪟 Glass + 🔥 Furnace",
+     10
     ],
     [
      "🔷",
@@ -3585,8 +3599,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔴",
      "Red Dye",
      "COMPONENT",
-     "🍓 Strawberries + 🍷 Alcohol",
-     15
+     "🍓 Strawberries + 💧 Water + 🫙 Glass Vial",
+     16
     ],
     [
      "🐟",
@@ -3674,13 +3688,6 @@ const DATA = /*__GAME_DATA_START__*/{
      9
     ],
     [
-     "🍷",
-     "Alcohol",
-     "COMPONENT",
-     "🦠 Yeast + 🍬 Sugar + 💧 Water",
-     5
-    ],
-    [
      "__FLOUR__",
      "Flour",
      "COMPONENT",
@@ -3702,24 +3709,31 @@ const DATA = /*__GAME_DATA_START__*/{
      22
     ],
     [
+     "🍳",
+     "Oven",
+     "CREATION",
+     "🔥 Furnace + 🕐 Clock",
+     11
+    ],
+    [
      "🥨",
      "Pretzel",
      "CREATION",
-     "🫓 Dough + K + 🔥 Furnace",
+     "🫓 Dough + K + 🍳 Oven",
      23
     ],
     [
      "🍞",
      "Bread",
      "CREATION",
-     "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
+     "🫓 Dough + 🦠 Yeast + 🍳 Oven",
      24
     ],
     [
      "🍰",
      "Cake",
      "CREATION",
-     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
+     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🍳 Oven",
      24
     ],
     [
@@ -3740,7 +3754,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🥧",
      "Apple Pie",
      "CREATION",
-     "🫓 Dough + 🍎 Apple + 🔥 Furnace",
+     "🫓 Dough + 🍎 Apple + 🍳 Oven",
      23
     ],
     [
@@ -3754,22 +3768,22 @@ const DATA = /*__GAME_DATA_START__*/{
      "🥐",
      "Croissant",
      "CREATION",
-     "🫓 Dough + 🧈 Butter + 🔥 Furnace",
-     23
+     "🫓 Dough + 🧈 Butter + 🍳 Oven",
+     24
     ],
     [
      "🧀",
      "Cheesecake",
      "CREATION",
-     "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",
+     "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🍳 Oven",
      25
     ],
     [
      "🍩",
      "Éclair",
      "CREATION",
-     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",
-     24
+     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🍳 Oven",
+     25
     ],
     [
      "🍞",
@@ -3783,7 +3797,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Berry Cupcakes",
      "CREATION",
      "🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",
-     26
+     28
     ],
     [
      "🍽️",
@@ -3874,8 +3888,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "⚫",
      "Black Dye",
      "COMPONENT",
-     "🍇 Blackberries + 🍷 Alcohol",
-     14
+     "🍇 Blackberries + 💧 Water + 🫙 Glass Vial",
+     18
     ],
     [
      "🌉",
@@ -3906,39 +3920,11 @@ const DATA = /*__GAME_DATA_START__*/{
      14
     ],
     [
-     "🟥",
-     "Red Colored Yarn",
-     "COMPONENT",
-     "🧶 Yarn + 🔴 Red Dye",
-     21
-    ],
-    [
-     "🟦",
-     "Blue Colored Yarn",
-     "COMPONENT",
-     "🧶 Yarn + 🔵 Blue Dye",
-     16
-    ],
-    [
-     "⬛",
-     "Black Colored Yarn",
-     "COMPONENT",
-     "🧶 Yarn + ⚫ Black Dye",
-     16
-    ],
-    [
-     "🟨",
-     "Yellow Colored Yarn",
-     "COMPONENT",
-     "🧶 Yarn + 🟡 Yellow Dye",
-     18
-    ],
-    [
      "🧣",
-     "Yarn Store",
+     "Knit Scarf",
      "CREATION",
-     "🟥 Red Colored Yarn + 🟦 Blue Colored Yarn + ⬛ Black Colored Yarn + 🟨 Yellow Colored Yarn + 🏢 Building",
-     24
+     "🧶 Yarn + 🔴 Red Dye + 🔵 Blue Dye",
+     22
     ],
     [
      "__RUBY__",
@@ -4043,8 +4029,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔵",
      "Blue Dye",
      "COMPONENT",
-     "🫐 Blueberries + 🍷 Alcohol",
-     15
+     "🫐 Blueberries + 💧 Water + 🫙 Glass Vial",
+     19
     ],
     [
      "__MICROCHIP__",
@@ -4141,147 +4127,145 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Grand Banquet": 26.9,
-  "Limestone": 3.0,
-  "Banana": 7.6,
-  "Rubber": 5.3,
-  "Stainless Steel": 5.5,
-  "Soil": 4.8,
-  "Yarn Store": 23.6,
-  "Water Turbine": 22.6,
-  "Bone": 5.2,
-  "Computer": 15.4,
-  "Engine": 8.3,
-  "Cake": 22.6,
-  "Apple Pie": 22.1,
-  "Blackberries": 10.9,
-  "Book": 12.1,
-  "Yeast": 5.2,
-  "Turbine Blade": 17.0,
-  "Steel": 3.1,
-  "Wheel": 10.8,
-  "Strawberries": 10.9,
-  "Black Colored Yarn": 14.5,
-  "Plastic": 8.5,
-  "Rocket": 21.8,
-  "Pretzel": 21.3,
-  "Diamond": 12.6,
-  "Renewable Grid": 29.2,
-  "Milk": 9.5,
-  "Wire": 3.9,
-  "Fossil": 10.7,
-  "Sheep": 8.0,
-  "Banana Bread": 21.6,
-  "Water": 2.6,
-  "Statue": 6.4,
-  "Central Station": 25.2,
-  "Sushi Restaurant": 19.7,
-  "Honey": 8.3,
-  "Seaweed": 5.5,
-  "Furnace": 4.8,
-  "Paper": 12.0,
-  "Magnet": 5.1,
-  "Bee": 8.4,
-  "Planet": 9.0,
-  "Speedboat": 16.6,
-  "Bicycle": 14.9,
-  "Chocolate Cake": 23.0,
-  "Microchip": 8.9,
-  "Compass": 7.9,
-  "Dough": 21.3,
-  "Concrete": 5.5,
-  "Battery": 4.7,
-  "Natural Gas": 3.0,
-  "Helicopter": 21.4,
-  "Apple": 7.1,
-  "Biofuel": 11.7,
-  "Sunflower": 19.8,
-  "Volcano": 14.5,
-  "Black Dye": 12.7,
-  "Metropolis": 23.8,
-  "Chicken": 11.2,
-  "Canoe": 6.0,
-  "Satellite Dish": 11.7,
-  "Basket": 8.6,
-  "Blue Dye": 14.2,
-  "Pearl": 13.9,
-  "Butter": 11.4,
-  "Motorcycle": 17.8,
-  "Alcohol": 5.3,
-  "Museum": 21.2,
-  "Rainbow": 17.3,
-  "Life": 19.3,
-  "Fertilizer": 3.5,
-  "Bread": 22.2,
-  "Fruit Cake": 23.1,
-  "Tree": 5.3,
-  "Log Cabin": 7.7,
-  "Clay": 2.8,
-  "Orca": 13.7,
-  "Ruby": 13.5,
-  "Fireworks": 4.2,
-  "Blueberries": 14.3,
-  "Turquoise": 14.8,
-  "Star": 16.8,
-  "Clock": 8.2,
-  "Ecosystem": 24.4,
-  "Croissant": 21.8,
-  "Éclair": 24.1,
-  "Yarn": 13.2,
-  "Coral Reef": 17.7,
-  "Space Station": 24.4,
-  "Berry Cupcakes": 25.2,
-  "Cheesecake": 23.9,
-  "Cloud": 5.6,
-  "Windmill": 19.9,
-  "Sailboat": 9.5,
-  "Egg": 6.1,
-  "Cow": 8.2,
-  "Yellow Dye": 12.5,
-  "Car": 17.6,
-  "Sand": 3.0,
-  "DNA": 4.0,
-  "Beach Town": 26.9,
-  "Fiberglass": 11.1,
-  "Sugar": 3.3,
-  "Telescope": 11.9,
-  "Cream": 11.7,
-  "Wool": 8.0,
-  "Flour": 21.3,
-  "Geothermal Pump": 9.8,
-  "Blue Colored Yarn": 15.4,
-  "Fabric": 8.7,
-  "Tractor": 11.2,
-  "Red Colored Yarn": 19.7,
-  "Solar Panel": 8.7,
-  "Robot": 18.1,
-  "Tools": 3.7,
-  "Titanium Alloy": 6.0,
   "Glass": 5.6,
-  "Yellow Colored Yarn": 17.7,
-  "Solar System": 18.1,
-  "Rope": 7.4,
-  "Red Dye": 14.4,
-  "Opal": 11.2,
+  "Sand": 3.2,
+  "Butter": 11.6,
+  "Speedboat": 16.4,
+  "Egg": 6.3,
+  "Bone": 5.2,
+  "Solar Panel": 8.8,
+  "Museum": 20.6,
+  "Wheel": 10.8,
+  "Water": 2.6,
+  "Chocolate": 9.4,
+  "Cake": 23.0,
+  "Battery": 4.8,
+  "Basket": 8.5,
+  "Mushroom": 5.5,
+  "Life": 19.7,
+  "Gemstone Collection": 19.6,
+  "Chicken": 11.0,
+  "Windmill": 19.6,
+  "Skyscraper": 16.3,
+  "Sailboat": 9.2,
+  "Pretzel": 21.5,
+  "Blueberries": 14.1,
+  "DNA": 4.0,
+  "Titanium Alloy": 6.0,
+  "Aluminum Alloy": 5.5,
+  "Furnace": 4.9,
+  "Fabric": 8.5,
+  "Red Dye": 15.0,
   "Grain": 8.4,
-  "Building": 8.7,
-  "Chocolate": 9.0,
-  "Skyscraper": 16.7,
-  "Farm": 7.9,
-  "Gemstone Collection": 19.4,
-  "Plant Fiber": 7.4,
-  "Aluminum Alloy": 5.8,
-  "Light Bulb": 7.5,
-  "Library": 14.7,
-  "Homestead": 15.6,
+  "Apple Pie": 22.1,
+  "Clock": 8.3,
+  "Fruit Cake": 23.6,
+  "Soil": 4.9,
+  "Oven": 11.3,
+  "Tools": 3.5,
+  "Space Station": 24.5,
+  "Beach Town": 26.6,
+  "Car": 18.1,
+  "Milk": 9.4,
+  "Limestone": 2.9,
+  "Robot": 18.0,
+  "Apple": 7.1,
+  "Bicycle": 14.9,
+  "Banana Bread": 22.3,
+  "Dough": 21.4,
+  "Statue": 6.7,
+  "Microchip": 8.8,
+  "Fireworks": 4.3,
+  "Banana": 7.8,
+  "Yarn": 13.1,
+  "Sunflower": 19.3,
+  "Canoe": 6.2,
+  "Motorcycle": 17.8,
+  "Planet": 9.1,
   "Dinosaur": 12.4,
-  "Amber": 11.1,
-  "Bridge": 7.7,
-  "Lighthouse": 13.8,
-  "Salmon": 12.2,
-  "Deer": 6.9,
+  "Glass Vial": 10.7,
+  "Biofuel": 11.5,
+  "Book": 11.8,
+  "Sushi Restaurant": 19.8,
+  "Library": 14.8,
+  "Satellite Dish": 11.5,
+  "Diamond": 12.4,
+  "Steel": 3.0,
   "Maglev Train": 17.2,
-  "Mushroom": 5.7
+  "Yeast": 5.4,
+  "Volcano": 14.6,
+  "Amber": 11.1,
+  "Berry Cupcakes": 26.6,
+  "Black Dye": 16.9,
+  "Telescope": 12.1,
+  "Croissant": 22.6,
+  "Computer": 15.7,
+  "Bee": 8.4,
+  "Wire": 4.1,
+  "Natural Gas": 3.0,
+  "Blue Dye": 18.1,
+  "Plastic": 8.8,
+  "Turbine Blade": 16.8,
+  "Seaweed": 5.1,
+  "Grand Banquet": 27.0,
+  "Éclair": 23.8,
+  "Rope": 7.3,
+  "Water Turbine": 22.3,
+  "Cheesecake": 24.3,
+  "Sugar": 3.3,
+  "Strawberries": 10.9,
+  "Bread": 22.5,
+  "Bridge": 7.8,
+  "Log Cabin": 7.8,
+  "Concrete": 5.5,
+  "Lighthouse": 13.8,
+  "Clay": 2.8,
+  "Turquoise": 14.6,
+  "Stainless Steel": 5.4,
+  "Blackberries": 11.1,
+  "Rainbow": 17.3,
+  "Building": 8.7,
+  "Star": 17.0,
+  "Ruby": 13.4,
+  "Cruise Ship": 32.5,
+  "Sheep": 8.0,
+  "Honey": 8.2,
+  "Wool": 7.9,
+  "Knit Scarf": 21.1,
+  "Flour": 21.3,
+  "Magnet": 5.0,
+  "Fertilizer": 3.5,
+  "Plant Fiber": 7.2,
+  "Fiberglass": 10.6,
+  "Pearl": 14.1,
+  "Metropolis": 23.3,
+  "Coral Reef": 17.8,
+  "Rocket": 22.2,
+  "Engine": 8.3,
+  "Chocolate Cake": 23.5,
+  "Opal": 11.1,
+  "Cream": 11.6,
+  "Renewable Grid": 29.6,
+  "Ecosystem": 24.7,
+  "Solar System": 18.2,
+  "Tractor": 11.0,
+  "Yellow Dye": 16.5,
+  "Homestead": 15.4,
+  "Central Station": 25.0,
+  "Geothermal Pump": 10.0,
+  "Orca": 13.7,
+  "Deer": 7.0,
+  "Cow": 8.4,
+  "Fossil": 10.9,
+  "Compass": 8.6,
+  "Salmon": 12.1,
+  "Farm": 7.8,
+  "Rubber": 5.5,
+  "Tree": 5.2,
+  "Cloud": 5.5,
+  "Helicopter": 21.5,
+  "Paper": 12.2,
+  "Light Bulb": 7.8
  }
 }/*__GAME_DATA_END__*/;
 
@@ -4604,10 +4588,14 @@ const CORE_SET = new Set([
   "Old Growth Forest|Soil","Old Growth Forest|Salmon","Old Growth Forest|Tree",
   "Old Growth Forest|Canoe","Old Growth Forest|Deer","Old Growth Forest|Log Cabin",
   "Old Growth Forest|Fossil","Old Growth Forest|Ecosystem",
-  // The Bakery (9 + capstone)
-  "The Bakery|Natural Gas","The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
-  "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Bread",
-  "The Bakery|Cake","The Bakery|Fruit Cake",
+  // The Bakery (10 + capstone). Natural Gas dropped here (still core at
+  // Deep Mine, its other real home -- nothing within Bakery's own chain
+  // actually consumes it locally, only Engine/Rubber/Plastic elsewhere
+  // do) to make room for Oven, needed once Banana Bread (via Bread) and
+  // Cake both switched from Furnace to Oven as their heat source.
+  "The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
+  "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Oven",
+  "The Bakery|Bread","The Bakery|Cake","The Bakery|Banana Bread","The Bakery|Fruit Cake",
   // The City (10 + capstone). Statue cut outright (nothing else in core
   // depended on it); Glass's core listing moved in from Power Plant to
   // fill the slot instead, net zero change to City's own count.
@@ -4722,7 +4710,7 @@ const SUBZONES = [
   // "Space Ship" became Rocket).
   {id:"Fictional World", emoji:"📖", suit:"city", dice:["Ca","C","O","Al","Si","Mg"], shop:[
     ["👻","Ghost","CREATION","🦴 Bone + ☁️ Cloud",10],
-    ["🧙‍♀️","Witch","CREATION","🍷 Alcohol + 🍄 Mushroom",11],
+    ["🧙‍♀️","Witch","CREATION","💧 Water + 🍄 Mushroom",11],
     ["🔥","Phoenix","CREATION","🎆 Fireworks + 🥚 Egg",11],
     ["🗺️","Treasure Map","COMPONENT","📄 Paper + ⚫ Black Dye",16],
     ["🗿","Golem","CREATION","🗿 Statue + 🔥 Furnace",12],
@@ -6039,36 +6027,41 @@ function stillNeededClosure(name){
    plausibly reach it, or they've visited a station whose capstone chain
    passes through it (a preview of "here's where that capstone hunt goes").
    Capstones themselves are always shown, per the original spec. */
-const REVEAL_HOP_THRESHOLD = 10;
 // Furnace+Clock gated, per spec -- Amber is a gemstone by name but its own
-// recipe doesn't involve either, so it's deliberately excluded and falls
-// through to the normal AvgVisits-based reveal instead.
+// recipe doesn't involve either, so it's deliberately excluded. The one
+// compound (two-item) breakpoint -- everything else below is single-
+// trigger, see BREAKPOINT_REVEALS.
 const GEMSTONE_SECRET = new Set(["Pearl","Ruby","Opal","Turquoise","Diamond"]);
-// Only need the Furnace crafted (not consumed by owning it, and not the
-// full recipe) to know these alloys exist -- job coverage/canCraft still
-// reveal them too, same as everything else.
-const FURNACE_GATED_ALLOYS = new Set(["Stainless Steel","Aluminum Alloy","Titanium Alloy"]);
-// Items whose AvgVisits would otherwise auto-reveal them early (shallow
-// recipe), but which should instead wait for a flat visit count -- job
-// coverage and canCraft still short-circuit these too.
-const FORCED_VISIT_THRESHOLD = {
-  "Sailboat": 10,
-  "Log Cabin": 10,
-  "Solar Farm": 15,
-  "Fireworks": 10,
+/* Hard Mode's whole reveal rule (see isRevealed()): an item stays hidden
+   until either (a) the player could craft it RIGHT NOW -- canCraft(),
+   every ingredient already in hand -- or (b) it's on the reveal list for
+   some OTHER item the player already owns: a curated "breakpoint" moment
+   where owning one thing obviously previews a whole category, rather than
+   needing every other ingredient in hand too. Farm previews every farm
+   animal; Furnace previews the alloys it tempers (but deliberately NOT
+   Diamond -- that needs Furnace AND Clock together, see GEMSTONE_SECRET,
+   a narrower reveal on purpose); Basket previews every berry it lets you
+   forage; Plant Fiber previews everything woven from it; Oven previews
+   the Bakery's whole baked-goods lineup the same way Furnace does the
+   alloys. Replaces an earlier, much more layered system (a flat visit-
+   count fallback, a "must have visited every ingredient's home station"
+   gate, an AvgVisits-derived auto-reveal threshold) with this single
+   rule, per the 2026-08 session's explicit request to simplify. */
+const BREAKPOINT_REVEALS = {
+  "Farm": ["Cow","Sheep","Bee","Chicken"],
+  "Furnace": ["Aluminum Alloy","Titanium Alloy","Stainless Steel"],
+  "Basket": ["Strawberries","Blueberries","Blackberries"],
+  "Plant Fiber": ["Fabric","Rope","Basket","Paper"],
+  "Oven": ["Pretzel","Bread","Cake","Apple Pie","Croissant","Cheesecake","Éclair"],
 };
+function breakpointReveals(name){
+  return Object.entries(BREAKPOINT_REVEALS).some(([trigger, list]) =>
+    owns(trigger) && list.includes(name));
+}
 
 function jobCoversItem(name){
   return state.jobs.some(job => job.items.some(itemName =>
     itemName === name || componentClosure(itemName).includes(name)));
-}
-function capstoneClosureRevealsItem(name){
-  return Object.keys(state.visitedStations).some(stationName => {
-    const s = STATION_BY_NAME[stationName];
-    // Most sub-zones (see SUBZONES) have no capstone at all -- s.capstone
-    // is explicitly null there, not just a real station's usual 5-tuple.
-    return s && s.capstone && componentClosure(s.capstone[1]).includes(name);
-  });
 }
 /* Once an item's actually been SEEN (state.seenItems -- shown in a shop,
    a map preview icon, or a capstone card), every item anywhere in ITS OWN
@@ -6083,22 +6076,6 @@ function seenClosureRevealsItem(name){
   return Object.keys(state.seenItems).some(seenName =>
     seenName !== name && componentClosure(seenName).includes(name));
 }
-/* An item with item-type ingredients (MATERIAL/COMPONENT pieces sold at
-   OTHER stations, not raw elements) stays hidden until the player has
-   actually visited every one of those ingredients' home stations -- no
-   point showing e.g. a City item that needs a Deep Mine part before the
-   player's ever set foot in Deep Mine. Recipes built entirely from raw
-   elements have nothing to gate on and are exempt outright (checked one
-   level down, not the full recursive tree -- this is about the item's OWN
-   direct ingredients, not everything further down their own chains). */
-function itemIngredientStationsVisited(entry){
-  const {items} = needsOf(entry.reqs);
-  if (!items.length) return true;
-  return items.every(it => {
-    const ingEntry = ENTRIES.find(e => e.name === it.name);
-    return ingEntry && state.visitedStations[ingEntry.station];
-  });
-}
 function isRevealed(entry){
   // Classic Mode: curated ~76-item catalog (see CORE_SET) -- anything
   // outside it is never offered here, unconditionally, regardless of any
@@ -6112,15 +6089,10 @@ function isRevealed(entry){
   // reveal at all -- every item at every station is visible from the very
   // first frame, full sandbox, nothing gated.
   if (state.mode === "zen" || state.mode === "classic") return true;
-  // Hard Mode only: capstones lose their free pass and are gated exactly
-  // like every other item -- their own AvgVisits is comfortably above
-  // REVEAL_HOP_THRESHOLD (see DATA.avgVisits), so in practice a job (or
-  // seeing something else whose closure runs through it -- neither of
-  // which normally applies to a capstone itself, since componentClosure()
-  // excludes its own root) or canCraft is what ends up revealing one; the
-  // player just wandering around long enough still can too, same as any
-  // other deep item, but taking a job for it is the direct route. Every
-  // other mode keeps capstones' original unconditional free pass.
+  // Hard Mode only: capstones lose their free pass and are gated by the
+  // exact same "have everything, or hit a breakpoint" rule as any other
+  // item below. Every other mode keeps capstones' original unconditional
+  // free pass.
   if (entry.tier === "CAPSTONE" && state.mode !== "hard") return true;
   // Sticky: once an item has actually been shown, it stays shown forever,
   // even if whatever made it visible (canCraft, an active job, owning a
@@ -6131,36 +6103,14 @@ function isRevealed(entry){
   // mystery. markSeen() (called on every shopEntries pass below) is what
   // populates state.seenItems in the first place.
   if (state.seenItems[entry.name]) return true;
-  if (!DATA.avgVisits) return true; // fail open if the sync data is missing
-
-  // Exemption to every gate below (including the visited-station one right
-  // after this): a job-tracked item, or anything already visibly sitting
-  // in some OTHER seen item's own ingredient tree, is revealed no matter
-  // what -- see seenClosureRevealsItem()/jobCoversItem() above. Checked
-  // this early specifically so it isn't itself blocked by
-  // itemIngredientStationsVisited() -- part of the whole point is
-  // previewing pieces from stations the player hasn't reached yet.
+  // A job-tracked item, or anything already visibly sitting in some OTHER
+  // seen item's own ingredient tree, is revealed no matter what -- see
+  // seenClosureRevealsItem()/jobCoversItem() above.
   if (jobCoversItem(entry.name) || seenClosureRevealsItem(entry.name)) return true;
-
-  if (!itemIngredientStationsVisited(entry)) return false;
-
-  // Planet: only once the player holds at least 1 of every element (i.e.
-  // can actually craft it) -- its own AvgVisits would otherwise auto-reveal
-  // it far too early. (jobCoversItem already handled above.)
-  if (entry.name === "Planet") return canCraft(entry);
-
   if (GEMSTONE_SECRET.has(entry.name)) return owns("Furnace") && owns("Clock");
-  if (FURNACE_GATED_ALLOYS.has(entry.name)) return owns("Furnace") || canCraft(entry);
-
-  if (Object.prototype.hasOwnProperty.call(FORCED_VISIT_THRESHOLD, entry.name)){
-    return canCraft(entry) || state.visits >= FORCED_VISIT_THRESHOLD[entry.name];
-  }
-
-  const avg = DATA.avgVisits[entry.name];
-  if (avg == null || avg < REVEAL_HOP_THRESHOLD) return true;
-  return canCraft(entry)
-      || state.visits >= Math.ceil(avg) + 1
-      || capstoneClosureRevealsItem(entry.name);
+  if (breakpointReveals(entry.name)) return true;
+  // Default: hidden until the player could craft it right now.
+  return canCraft(entry);
 }
 
 /* Item Reference is a running record of what THIS run has actually shown
