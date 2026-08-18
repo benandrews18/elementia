@@ -191,19 +191,21 @@ body[data-screen="map"] main{padding-top:0}
    node, so the generic +80px clearance the base main{} rule uses was
    redundant on top of that regardless). */
 body[data-screen="map"] main{padding-bottom:var(--hub-h, 67px)}
-/* Item Reference is plain static content with no z-index of its own, so
-   without this it would stack BELOW the floating pills/pins/convert
-   buttons (any positioned z-index element beats non-positioned static
-   content, however low that z-index is) wherever they overlap -- this
-   puts it back above them, same band as the other real windows. */
-body[data-screen="codex"] #screen{position:relative; z-index:33}
-/* The pins/convert floating buttons sit in the same bottom band as the
-   Item Reference list's own content and read as stray controls hovering
-   over it -- hide all three (the tracked-item pill included) while that
-   screen is open (the hub bar itself stays, so Items/Map/etc. remain
-   reachable). */
+/* Item Reference and Marketplace are both plain static content with no
+   z-index of their own, so without this they'd stack BELOW the floating
+   pills/pins/convert buttons (any positioned z-index element beats
+   non-positioned static content, however low that z-index is) wherever
+   they overlap -- this puts them back above, same band as the other
+   real windows. */
+body[data-screen="codex"] #screen, body[data-screen="market"] #screen{position:relative; z-index:33}
+/* The pins/convert floating buttons sit in the same bottom band as
+   these screens' own content and read as stray controls hovering over
+   it -- hide all three (the tracked-item pill included) while either is
+   open (the hub bar itself stays, so Items/Map/etc. remain reachable). */
 body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn,
-body[data-screen="codex"] #trackedPill{display:none}
+body[data-screen="codex"] #trackedPill,
+body[data-screen="market"] #pinsBtn, body[data-screen="market"] #quickConvertBtn,
+body[data-screen="market"] #trackedPill{display:none}
 /* Cross-hide: Convert's own button hides while the Pins tray is open, and
    Pins' button + tracked-item pill hide while the Convert tray is open
    (see updateHub()) -- keeps one tray's controls from competing for the
@@ -415,39 +417,39 @@ body[data-screen="codex"] #trackedPill{display:none}
 }
 #collectionsSheet.open{transform:none}
 #collectionsSheet .dhead h2{color:var(--collection)}
-/* Marketplace: identical shape/motion language to #jobSheet (same gold
-   border, same slide-from-left), just a second instance -- only one of
-   the two is ever open at a time (see openPanelName()), so there's no
-   need to differentiate the container itself, only its contents. */
-#marketScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
-#marketScrim.open{display:block}
-/* Drops from the top rather than sliding in from the left like #jobSheet
-   -- left:50%+translate(-50%,...) centers it regardless of viewport width
-   (works the same whether the containing block is the true viewport or
-   the iPad-frame wrapper on desktop, so no separate wide-viewport rule
-   is needed the way #jobSheet's left-anchored version still requires). */
-#marketSheet{
-  position:fixed; top:0; left:50%; width:min(400px,92vw); z-index:69;
-  padding-top:24px; margin-top:-24px; box-sizing:border-box;
-  max-height:min(560px, 78vh);
-  background:var(--card); border:2.5px solid var(--gold); border-top:none;
-  border-radius:0 0 16px 16px;
-  transform:translate(-50%, -100%);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+/* Marketplace: a real screen (screen === "market", see render()) reached
+   through Home's own Market face, not an overlay sheet -- same tier as
+   Codex (see openPanelName()/closePanelByName()'s "market" case), so
+   Jobs/Trade/Collections still layer on top of it as sheets exactly the
+   way they already do on top of Codex or a station. */
+.market-screen{max-width:520px; margin:0 auto}
+.market-hero{
+  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+  padding:30px 20px 24px; margin-bottom:20px; border-radius:20px;
+  background:linear-gradient(160deg, var(--gold-soft), var(--card) 72%);
+  border:2px solid var(--gold-line);
 }
-#marketSheet.open{transform:translate(-50%, 0)}
-.market-row{
-  display:flex; align-items:center; gap:14px; width:100%; padding:14px 12px; margin-bottom:10px;
-  background:var(--sunken); border:1.5px solid var(--line); border-radius:13px; text-align:left;
+.market-hero-em{font-size:52px; line-height:1}
+.market-hero h1{font-size:23px; font-weight:800; margin-top:4px}
+.market-hero p{font-size:13.5px; color:var(--ink2); max-width:340px}
+.market-tiles{display:flex; flex-direction:column; gap:12px}
+.market-tile{
+  display:flex; align-items:center; gap:14px; width:100%; padding:16px; text-align:left;
+  background:var(--bg-soft); border:2px solid var(--line); border-radius:16px;
 }
-.market-row .mr-em{font-size:28px; line-height:1; flex:none}
-.market-row .mr-body{flex:1; min-width:0}
-.market-row .mr-title{font-size:15px; font-weight:800; color:var(--ink)}
-.market-row .mr-sub{font-size:12px; color:var(--mute); margin-top:2px}
-.market-row:not(:disabled):hover{border-color:var(--gold-line)}
-.market-row:disabled{opacity:.55; cursor:default}
-.market-row:disabled .mr-title{color:var(--mute)}
-.market-row .mr-soon{
+.market-tile:not(:disabled):hover{border-color:var(--tile-accent, var(--gold-line))}
+.market-tile:disabled{opacity:.55; cursor:default}
+.market-tile:disabled .mt-title{color:var(--mute)}
+.mt-icon{
+  flex:none; width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  font-size:26px; background:color-mix(in srgb, var(--tile-accent, var(--gold)) 18%, var(--sunken));
+  border:1.5px solid var(--tile-accent, var(--gold-line));
+}
+.mt-body{flex:1; min-width:0}
+.mt-title{font-size:16px; font-weight:800; color:var(--ink)}
+.mt-sub{font-size:12.5px; color:var(--mute); margin-top:2px}
+.mt-arrow{flex:none; font-size:20px; color:var(--mute)}
+.mt-soon{
   flex:none; font-size:10px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
   color:var(--mute); background:var(--card); border:1px solid var(--line); border-radius:999px;
   padding:3px 9px;
@@ -1681,14 +1683,14 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
    that UI was already tuned by hand, button-by-button, and doesn't need
    a second, competing treatment layered on top (see the #convert
    overrides at the very end of this block). */
-.bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row, .mode-card{
+.bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row, .mode-card, .market-tile{
   box-shadow:0 3px 0 rgba(0,0,0,.22);
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1),
     filter .15s ease, background .12s, border-color .12s;
 }
 .bigbtn:not(:disabled):active, .tbtn:not(.ghost):not(:disabled):active,
 .craftbtn:not(:disabled):active, .map-travel-btn:not(:disabled):active,
-button.setting-row:not(:disabled):active, .mode-card:active{
+button.setting-row:not(:disabled):active, .mode-card:active, .market-tile:not(:disabled):active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
 /* Craft button opt-out from the shared ledge/lift look (see the block just
@@ -2354,7 +2356,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #tradeScrim, #collectionsScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #tradeScrim, #collectionsScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
@@ -2867,19 +2869,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
   </div>
   <div class="dbody" id="jobSheetBody"></div>
-</aside>
-
-<!-- Marketplace: the map-screen hub reached by the Home button's coin-flip
-     (see setHubHomeFace()) -- a directory of the Job Board plus three not-
-     yet-built systems (Quest Log, Trade Market, Community Center), each a
-     clearly-labeled "coming soon" row rather than a fake working panel. -->
-<div id="marketScrim"></div>
-<aside id="marketSheet" aria-label="Marketplace" aria-hidden="true">
-  <div class="dhead">
-    <h2 id="marketTitle">🏪 Marketplace</h2>
-    <button type="button" class="tbtn ghost" id="marketSheetClose" aria-label="Close marketplace">✕</button>
-  </div>
-  <div class="dbody" id="marketSheetBody"></div>
 </aside>
 
 <!-- Trade Market: Hard Mode only (see renderTradeBody()) -- crafted items
@@ -6467,6 +6456,7 @@ function render(resetScroll){
   const screenEl = document.getElementById("screen");
   screenEl.innerHTML = screen === "map" ? renderMap()
     : screen === "codex" ? renderCodex()
+    : screen === "market" ? renderMarketScreen()
     : renderStation(current);
   document.getElementById("visitCount").textContent = state.visits;
   document.getElementById("visitMax").textContent = visitLimitLabel();
@@ -7555,6 +7545,16 @@ document.getElementById("screen").addEventListener("click", ev => {
     return;
   }
 
+  const marketNavBtn = ev.target.closest("[data-market-nav]");
+  if (marketNavBtn){
+    if (marketNavBtn.disabled) return;
+    const target = marketNavBtn.dataset.marketNav;
+    if (target === "jobs") openJobBoard();
+    else if (target === "trade" && state.mode === "hard") openTradeMarket();
+    else if (target === "collections" && state.mode !== "classic") openCollections();
+    return;
+  }
+
   const subzoneOpenBtn = ev.target.closest("[data-subzone-open]");
   if (subzoneOpenBtn){
     const target = subzoneOpenBtn.dataset.subzoneOpen;
@@ -7761,25 +7761,27 @@ function goHome(){
 function openPanelName(){
   if (drawer.classList.contains("open")) return "drawer";
   if (jobSheet.classList.contains("open")) return "jobs";
-  if (marketSheet.classList.contains("open")) return "market";
   if (tradeSheet.classList.contains("open")) return "trade";
   if (collectionsSheet.classList.contains("open")) return "collections";
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("settings").classList.contains("open")) return "settings";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
   if (screen === "codex") return "codex";
+  // Market is a real screen (screen === "market"), same tier as Codex --
+  // checked last so Jobs/Trade/Collections sheets still report themselves
+  // when open on top of it, exactly like they already do on top of Codex.
+  if (screen === "market") return "market";
   return null;
 }
 function closePanelByName(name){
   if (name === "drawer") closeDrawer();
   else if (name === "jobs") closeJobBoard();
-  else if (name === "market") closeMarket();
   else if (name === "trade") closeTradeMarket();
   else if (name === "collections") closeCollections();
   else if (name === "pins") closePinsTray();
   else if (name === "settings") closeOverlay("settings");
   else if (name === "convert") closeOverlay("convert");
-  else if (name === "codex"){
+  else if (name === "codex" || name === "market"){
     // Same "return where you opened it from" rule as hubCodex's own toggle.
     screen = current ? "station" : "map";
     render(true);
@@ -8111,49 +8113,50 @@ function closeJobBoard(){
    no system behind them yet, so they're real disabled buttons with a
    "Coming soon" tag rather than dead-looking active ones -- honest about
    what's actually here today. */
-function renderMarketBody(){
-  const marketSheetBody = document.getElementById("marketSheetBody");
+/* Marketplace screen -- a directory of the Job Board plus two not-yet-
+   built systems (Quest Log, Trade Market's Hard-only gate) and
+   Collections, each tile its own accent color rather than one uniform
+   list row (see .market-tile/.mt-icon). Jobs/Trade/Collections stay
+   sheets layered on top when picked (see the click handler below), not
+   navigation away from this screen -- closing one of those returns you
+   right back here. */
+function renderMarketScreen(){
   const zen = state.mode === "zen"; // Zen has no Job Board at all, see updateHub()'s own hubJobs.disabled
-  marketSheetBody.innerHTML = `
-    <button type="button" class="market-row" id="marketToJobs" ${zen ? "disabled" : ""}>
-      <span class="mr-em">📋</span>
-      <span class="mr-body"><div class="mr-title">Job Board</div><div class="mr-sub">${zen ? "Not available in Zen Mode" : "Take jobs, turn in finished items"}</div></span>
-    </button>
-    <button type="button" class="market-row" disabled>
-      <span class="mr-em">📜</span>
-      <span class="mr-body"><div class="mr-title">Quest Log</div><div class="mr-sub">Multi-step storylines</div></span>
-      <span class="mr-soon">Coming soon</span>
-    </button>
-    <button type="button" class="market-row" id="marketToTrade" ${state.mode === "hard" ? "" : "disabled"}>
-      <span class="mr-em">🔄</span>
-      <span class="mr-body"><div class="mr-title">Trade Market</div><div class="mr-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
-    </button>
-    <button type="button" class="market-row" id="marketToCollections" ${state.mode === "classic" ? "disabled" : ""}>
-      <span class="mr-em">🏆</span>
-      <span class="mr-body"><div class="mr-title">Collections</div><div class="mr-sub">${state.mode === "classic" ? "Not available in Classic Mode" : `${state.collectionsCompleted.length}/${COLLECTIONS.length} complete`}</div></span>
-    </button>`;
+  return `<div class="market-screen">
+    <div class="market-hero">
+      <div class="market-hero-em">🏪</div>
+      <h1>Marketplace</h1>
+      <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
+    </div>
+    <div class="market-tiles">
+      <button type="button" class="market-tile" data-market-nav="jobs" style="--tile-accent:var(--gold)" ${zen ? "disabled" : ""}>
+        <span class="mt-icon">📋</span>
+        <span class="mt-body"><div class="mt-title">Job Board</div><div class="mt-sub">${zen ? "Not available in Zen Mode" : "Take jobs, turn in finished items"}</div></span>
+        <span class="mt-arrow">›</span>
+      </button>
+      <button type="button" class="market-tile" disabled>
+        <span class="mt-icon">📜</span>
+        <span class="mt-body"><div class="mt-title">Quest Log</div><div class="mt-sub">Multi-step storylines</div></span>
+        <span class="mt-soon">Coming soon</span>
+      </button>
+      <button type="button" class="market-tile" data-market-nav="trade" style="--tile-accent:var(--hub-travel)" ${state.mode === "hard" ? "" : "disabled"}>
+        <span class="mt-icon">🔄</span>
+        <span class="mt-body"><div class="mt-title">Trade Market</div><div class="mt-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
+        <span class="mt-arrow">›</span>
+      </button>
+      <button type="button" class="market-tile" data-market-nav="collections" style="--tile-accent:var(--collection)" ${state.mode === "classic" ? "disabled" : ""}>
+        <span class="mt-icon">🏆</span>
+        <span class="mt-body"><div class="mt-title">Collections</div><div class="mt-sub">${state.mode === "classic" ? "Not available in Classic Mode" : `${state.collectionsCompleted.length}/${COLLECTIONS.length} complete`}</div></span>
+        <span class="mt-arrow">›</span>
+      </button>
+    </div>
+  </div>`;
 }
 function openMarket(){
   state.marketVisitedTrip = true;
-  renderMarketBody();
-  marketSheet.classList.add("open"); marketScrim.classList.add("open");
-  marketSheet.setAttribute("aria-hidden", "false");
-  updateHub();
+  screen = "market";
+  render(true);
 }
-function closeMarket(){
-  marketSheet.classList.remove("open"); marketScrim.classList.remove("open");
-  marketSheet.setAttribute("aria-hidden", "true");
-  updateHub();
-}
-const marketSheet = document.getElementById("marketSheet");
-const marketScrim = document.getElementById("marketScrim");
-document.getElementById("marketSheetClose").addEventListener("click", closeMarket);
-marketScrim.addEventListener("click", closeMarket);
-document.getElementById("marketSheetBody").addEventListener("click", ev => {
-  if (ev.target.closest("#marketToJobs")){ closeMarket(); openJobBoard(); }
-  if (ev.target.closest("#marketToTrade") && state.mode === "hard"){ closeMarket(); openTradeMarket(); }
-  if (ev.target.closest("#marketToCollections") && state.mode !== "classic"){ closeMarket(); openCollections(); }
-});
 
 /* ----------------------------------------------------- trade market --- */
 /* Hard Mode only -- see renderTradeBody(). state.items there is a real
