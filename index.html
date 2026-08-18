@@ -22,7 +22,7 @@
   --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c;
   --bad:#f0674c; --bad-soft:#371913;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
-  --hub-map:#4d7cf2;
+  --hub-map:#4d7cf2; --hub-travel:#3aa9a0;
   --jobcard-bg:#2a1a30;
   --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
   --farm-bg:#2b2317; --farm-line:#7a5a2c; --farm-ink:#d9a15c;
@@ -141,17 +141,19 @@ body[data-picking] #topbar{display:none}
 #hubHome:hover{filter:brightness(1.06)}
 #hubHome .hi{font-size:37px}
 #hubHome .hl{font-size:10px}
-/* Home's four resting faces (see setHubHomeFace()) -- each gets its own
+/* Home's five resting faces (see hubHomeFace()) -- each gets its own
    color so the coin-flip between them reads as "something changed"
    rather than the same green disc relabeling itself. Roll keeps the
    game's established green "go" color since that's exactly what it
-   still means here; Map is a neutral blue untied to any one station's
-   suit (a global action, not a zone); Market reuses the gold already
-   used for the Job Board/Trade Market elsewhere; Close stays the
-   deliberately inert grey it always was. */
+   still means here; Market reuses the gold already used for the Job
+   Board/Trade Market elsewhere; Travel reuses Ocean's teal (Helicopter's
+   own fast-travel already reads as a "journey" color game-wide); Map is
+   a neutral blue untied to any one station's suit (a global action, not
+   a zone); Close stays the deliberately inert grey it always was. */
 #hubHome.face-roll{background:var(--ok); color:#fff}
-#hubHome.face-map{background:var(--hub-map); color:#fff}
 #hubHome.face-market{background:var(--gold); color:#2a2110}
+#hubHome.face-travel{background:var(--hub-travel); color:#fff}
+#hubHome.face-map{background:var(--hub-map); color:#fff}
 #hubHome.face-close{background:var(--sunken); color:var(--mute); box-shadow:none}
 #hubHome.face-close:hover{filter:none}
 #hubHome .hub-badge{top:-2px; right:-2px}
@@ -5028,6 +5030,7 @@ function freshState(){
     priorStation: null,  // where they were BEFORE lastStation -- the "no repeat" rule now
                           // blocks A->B->A oscillation on the path map, not same-station-twice
     rolledHere: false, // one PLAY per visit
+    marketVisitedTrip: false, // Market opened since this visit's roll -- gates Home's Market/Map order, see hubHomeFace()
     pendingRoll: null, // dice count earned from the minigame, waiting on a manual Roll tap
     lastRoll: null,
     noRepeat: true,    // default on: blocks immediately backtracking to priorStation
@@ -6497,31 +6500,30 @@ function updateBackdrop(){
 }
 
 /* Hub button states: job board progress, active screen, and Home's own
-   rotation through its four faces. */
-/* Tracks which of Home's four faces (see updateHub()) is currently
-   showing, so the coin-flip only plays for the two transitions that
-   represent real progress -- Roll->Map (you just rolled) and
-   Map<->Market (you just reached/left the map screen) -- and not for
-   either one swapping to/from the unrelated "close this panel" arrow,
-   which stays instant since panels open and close far too often for a
-   flip there to read as meaningful rather than just noisy. */
+   rotation through its five faces. */
+/* Tracks which of Home's five faces (see hubHomeFace()) is currently
+   showing, so the coin-flip only plays between two of the four "doing
+   something" faces (Roll/Market/Travel/Map -- each one a real step of
+   progress through a visit) and not to/from the unrelated "close this
+   panel" arrow, which stays instant since panels open and close far too
+   often for a flip there to read as meaningful rather than just noisy. */
 let hubHomeState = null;
-const HUB_COIN_PAIRS = [["roll", "map"], ["map", "market"]];
 function setHubHomeFace(face){
   const home = document.getElementById("hubHome");
   const FACES = {
     roll:   { hi: "🎲", hl: "Roll" },
-    map:    { hi: "🗺️", hl: "Map" },
     market: { hi: "🏪", hl: "Market" },
+    travel: { hi: "🚁", hl: "Travel" },
+    map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
   };
   const target = FACES[face];
-  const isCoinPair = HUB_COIN_PAIRS.some(([a, b]) =>
-    (hubHomeState === a && face === b) || (hubHomeState === b && face === a));
+  const isCoinPair = hubHomeState !== null && hubHomeState !== face &&
+    hubHomeState !== "close" && face !== "close";
   const apply = () => {
     home.querySelector(".hi").textContent = target.hi;
     home.querySelector(".hl").textContent = target.hl;
-    home.classList.remove("face-roll", "face-map", "face-market", "face-close");
+    home.classList.remove("face-roll", "face-market", "face-travel", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
   if (isCoinPair && !matchMedia("(prefers-reduced-motion: reduce)").matches){
@@ -6606,20 +6608,47 @@ function updateHub(){
   document.getElementById("pinsBtn").classList.toggle("offscreen", state.jobs.length === 0);
   document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
-  // Home rotates through four faces: a plain back arrow whenever a panel
-  // is open (a tap will close it); Roll at a station before this visit's
-  // dice are rolled (a tap rolls them -- see the hubHome listener); once
-  // rolled, Map everywhere off the map screen; and Marketplace once
-  // already ON the map (a tap opens the new hub instead, since "go to
-  // the map" has nothing left to do). See setHubHomeFace() for the actual
-  // face styling and which of these transitions coin-flip.
-  const rollReady = mapLocked() && !anyOpen;
-  const face = anyOpen ? "close" : rollReady ? "roll" : (screen === "map" ? "market" : "map");
+  const face = hubHomeFace();
   setHubHomeFace(face);
   home.setAttribute("aria-disabled", "false");
-  home.title = anyOpen ? "Close" : rollReady ? "Roll the dice" :
-    screen === "map" ? "Open the Marketplace" : "Back to the station map";
-  setHubBadge("hubHome", rollReady && state.pendingRoll ? String(state.pendingRoll) : null, true);
+  home.title = face === "close" ? "Close"
+    : face === "roll" ? "Roll the dice"
+    : face === "market" ? "Open the Marketplace"
+    : face === "travel" ? `Travel to ${selectedMapStation}`
+    : "Back to the station map";
+  setHubBadge("hubHome", face === "roll" && state.pendingRoll ? String(state.pendingRoll) : null, true);
+}
+
+/* Whichever station card is showing on the map screen, can the player
+   actually travel there right now -- same rule mapCardHTML()'s own
+   Travel/Fly button uses (not-already-here, reachable, session not
+   over), reused here so Home's Travel face only appears when tapping it
+   would actually do something. */
+function canTravelTo(name){
+  return !!name && name !== state.lastStation && canReachStation(state.lastStation, name) && !sessionOver();
+}
+/* Single source of truth for which of Home's five faces is showing right
+   now. Both updateHub() (styling, see setHubHomeFace()) and the hubHome
+   click handler (behavior) read this, so the two can never drift out of
+   sync with each other.
+     close  -- a panel is open; tap closes it.
+     roll   -- at a station, this visit's dice not yet rolled.
+     market -- either just rolled at a station and haven't stopped by the
+               Marketplace yet this trip (a deliberate stop-off on the
+               way out, not skippable), or standing on the map screen
+               with no station selected -- Market stays reachable from
+               home base any time after that first stop.
+     travel -- on the map screen with a reachable station selected; tap
+               travels there (see canTravelTo()).
+     map    -- rolled, Market already visited this trip, still off the
+               map screen -- time to leave.
+   See goStation()/openMarket() for where marketVisitedTrip flips. */
+function hubHomeFace(){
+  if (openPanelName()) return "close";
+  if (mapLocked()) return "roll";
+  if (current !== null && state.rolledHere && !state.marketVisitedTrip) return "market";
+  if (screen === "map") return (selectedMapStation && canTravelTo(selectedMapStation)) ? "travel" : "market";
+  return "map";
 }
 
 /* At a station, leaving is blocked until the visit's dice are rolled --
@@ -6954,7 +6983,8 @@ function applyInvFilter(){
 function goStation(name){
   if (sessionOver()){ showSummary(); return; }
   current = name; screen = "station";
-  state.visits++; state.rolledHere = false; state.pendingRoll = null; state.lastRoll = null;
+  state.visits++; state.rolledHere = false; state.marketVisitedTrip = false;
+  state.pendingRoll = null; state.lastRoll = null;
   const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
 
@@ -7744,19 +7774,16 @@ function triggerRoll(){
     launchMinigame();
   }
 }
-/* While any panel/screen is open, Home turns into a plain "close whatever
-   this is" button (see updateHub()) -- closing takes priority over both
-   rolling and Home's own map navigation, since dismissing a panel never
-   leaves the station the way actually going to the map would. */
+/* Home's action always matches whichever face it's currently showing (see
+   hubHomeFace()) -- the two can never drift apart since both read the
+   same function. */
 document.getElementById("hubHome").addEventListener("click", ev => {
-  const open = openPanelName();
-  if (open){ closePanelByName(open); return; }
-  if (mapLocked()){ triggerRoll(); return; }
-  // Already on the map -- "go to the map" has nothing left to do, so this
-  // is exactly the moment Home's other face (see setHubHomeFace()) takes
-  // over instead. Off the map, unchanged: goes home as it always has.
-  if (screen === "map") openMarket();
-  else goHome();
+  const face = hubHomeFace();
+  if (face === "close"){ closePanelByName(openPanelName()); return; }
+  if (face === "roll"){ triggerRoll(); return; }
+  if (face === "market"){ openMarket(); return; }
+  if (face === "travel"){ goStation(selectedMapStation); return; }
+  goHome(); // face === "map"
 });
 document.getElementById("hubInv").addEventListener("click", () => hubPanelClick("drawer", openDrawer));
 document.getElementById("hubCodex").addEventListener("click", () => hubPanelClick("codex", () => { screen = "codex"; render(true); }));
@@ -8075,6 +8102,7 @@ function renderMarketBody(){
     </button>`;
 }
 function openMarket(){
+  state.marketVisitedTrip = true;
   renderMarketBody();
   marketSheet.classList.add("open"); marketScrim.classList.add("open");
   marketSheet.setAttribute("aria-hidden", "false");
