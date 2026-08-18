@@ -424,60 +424,47 @@ body[data-screen="market"] #trackedPill{display:none}
    through Home's own Market face, not an overlay sheet -- same tier as
    Codex (see openPanelName()/closePanelByName()'s "market" case), so
    Jobs/Trade/Collections still layer on top of it as sheets exactly the
-   way they already do on top of Codex or a station. */
-.market-screen{max-width:520px; margin:0 auto}
-/* Deliberately warmer/brighter than every other (neutral dark) screen --
-   a sunlit-bazaar glow instead of the game's usual flat dark card, so
-   Marketplace reads as its own distinct place rather than another grey
-   panel. Still within the dark-only palette (no light theme exists), so
-   "bright" here means a saturated gold glow, not a literal light bg. */
-.market-hero{
-  position:relative; overflow:hidden;
-  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
-  padding:34px 20px 26px; margin-bottom:20px; border-radius:20px;
-  background:radial-gradient(120% 160% at 50% -20%, rgba(226,178,90,.4), transparent 62%),
-    linear-gradient(160deg, #4a3a1a, #2c2414 78%);
-  border:2px solid var(--gold);
-  box-shadow:0 0 46px rgba(226,178,90,.22), inset 0 1px 0 rgba(255,255,255,.08);
-}
-.market-hero-em{font-size:52px; line-height:1; filter:drop-shadow(0 0 18px rgba(226,178,90,.6))}
-.market-hero h1{font-size:23px; font-weight:800; margin-top:4px}
-.market-hero p{font-size:13.5px; color:var(--ink2); max-width:340px}
-.market-tiles{display:flex; flex-direction:column; gap:14px}
-/* Exactly the same chunky raised "arcade menu" bevel recipe as #settings
-   .setting-row -- same neutral slate gradient/edge/shadow values, not
-   per-tile accent tinting, so the two screens read as one consistent
-   visual language rather than Marketplace being its own colorful
-   variant. Tiles differentiate by icon/text only, same as Settings rows
-   do (see .mt-icon). */
-.market-tile{
-  position:relative; display:flex; align-items:center; gap:14px; width:100%; padding:16px; text-align:left;
+   way they already do on top of Codex or a station. Its own backdrop art
+   (see updateBackdrop()) shows through behind it, same #backdrop/wash
+   mechanic a station uses -- .market-hero is deliberately just floating
+   title text over that art, same convention .sheet-head uses for a
+   station's own header, rather than a boxed panel competing with it. */
+.market-screen{max-width:520px; margin:0 auto; text-align:center; padding-top:12px}
+.market-hero-em{font-size:52px; line-height:1; filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
+.market-hero h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.market-hero p{font-size:13.5px; color:rgba(255,255,255,.82); max-width:340px; margin:4px auto 0; text-shadow:0 2px 6px rgba(0,0,0,.6)}
+/* The four options are now the icon-circle arc around the hub's center
+   button (see #marketArc/.market-arc-btn below) instead of a list here --
+   this leftover space just carries the title over the backdrop art. */
+
+/* Marketplace's arc menu -- #marketArc is a zero-size anchor point
+   positioned exactly on #hubHome's live center (see positionMarketArc(),
+   called on every render() and on resize/orientation change), not a
+   real box; each button fans out from that single point via
+   rotate+translateY+counter-rotate, a standard CSS radial-menu trick
+   (the outer rotate places the button at its angle around the anchor,
+   translateY carries it out to --radius, the inner counter-rotate
+   undoes the outer one so the icon itself stays upright). Hidden
+   entirely outside the Marketplace screen (see render()'s own toggle),
+   not just visually -- inert to clicks/tab order everywhere else. */
+#marketArc{position:fixed; left:0; top:0; width:0; height:0; z-index:73; pointer-events:none; display:none}
+#marketArc.show{display:block}
+.market-arc-btn{
+  position:absolute; left:0; top:0; width:66px; height:66px; margin:-33px 0 0 -33px;
+  border-radius:50%; pointer-events:auto;
+  transform:rotate(var(--ang)) translateY(calc(-1 * var(--radius))) rotate(calc(-1 * var(--ang)));
+  display:flex; align-items:center; justify-content:center; font-size:28px;
   background:linear-gradient(180deg, #38445a, #202836 62%);
-  border:2px solid #10141b; border-radius:16px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 8px 16px rgba(0,0,0,.38);
+  border:2.5px solid #10141b; color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 8px 16px rgba(0,0,0,.45);
   transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
 }
-.market-tile:not(:disabled):hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
-.market-tile:not(:disabled):active{
-  transform:translateY(4px);
+.market-arc-btn:not(:disabled):hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
+.market-arc-btn:not(:disabled):active{
+  transform:rotate(var(--ang)) translateY(calc(-1 * var(--radius))) rotate(calc(-1 * var(--ang))) translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
 }
-.market-tile:disabled{opacity:.5; cursor:default; filter:grayscale(.3)}
-.market-tile:disabled .mt-title{color:var(--mute)}
-.mt-icon{
-  flex:none; width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-  font-size:26px; background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.16);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 rgba(0,0,0,.3);
-}
-.mt-body{flex:1; min-width:0}
-.mt-title{font-size:16px; font-weight:800; color:#fff}
-.mt-sub{font-size:12.5px; color:rgba(255,255,255,.65); margin-top:2px}
-.mt-arrow{flex:none; font-size:20px; color:rgba(255,255,255,.55)}
-.mt-soon{
-  flex:none; font-size:10px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
-  color:var(--mute); background:var(--card); border:1px solid var(--line); border-radius:999px;
-  padding:3px 9px;
-}
+.market-arc-btn:disabled{opacity:.5; filter:grayscale(.4); cursor:default}
 /* Trade Market: pick-an-item list reuses .itemlist/.ientry (same shape as
    the Drawer's own inventory list) with a points sub-label swapped in for
    the usual station-badge slot. Once an offer is rolled, the list is
@@ -2078,6 +2065,39 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 #hint.open{display:block}
 #hint b{font-weight:800}
 
+/* Professor Mouse companion -- see the HTML comment above #mouseTip for
+   what this is. z-index 230 clears both #tour (200, the welcome slide)
+   and #mgOverlay (220, the mini-game screen) -- the two overlays this
+   needs to float above -- while staying well under #tutCoach's
+   9997-9999 (the separate opt-in "How to Play" walkthrough, which never
+   runs at the same time as this). Centers the same way #hubHome etc. do
+   (left:50% + translateX(-50%)) rather than the width:768px/margin-left
+   trick the OTHER fixed full-width elements need for the desktop phone-
+   frame -- that trick is only for elements meant to span the frame's
+   full width; a plain centered transform already lands on the frame's
+   own center regardless of viewport width, since the frame itself is
+   centered the same way. */
+#mouseTip{
+  position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
+  transform:translateX(-50%) translateY(-14px); z-index:230;
+  display:flex; align-items:flex-end; max-width:min(420px, 92vw);
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+#mouseTip.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto}
+#mouseTipImg{
+  width:76px; height:auto; flex:none; margin-right:-16px; margin-bottom:-6px;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.5)); position:relative; z-index:2;
+}
+.mouse-bubble{
+  position:relative; background:var(--card); border:2.5px solid var(--gold); border-radius:18px 18px 18px 4px;
+  padding:13px 30px 13px 20px; box-shadow:0 10px 26px rgba(0,0,0,.5);
+}
+.mouse-bubble p{font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.42; margin:0}
+.mouse-tip-close{
+  position:absolute; top:7px; right:7px; width:20px; height:20px; border-radius:50%;
+  background:var(--sunken); color:var(--mute); font-size:10px; display:flex; align-items:center; justify-content:center;
+}
+
 /* ------------------------------------------------- reference sheet --- */
 /* Pinned just below the topbar (var(--topbar-h) -- its own measured
    height, same live-measured-chrome-height approach #hub's --hub-h uses
@@ -2528,6 +2548,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <button type="button" class="hubbtn" id="hubSettings"><span class="hi">⚙️</span><span class="hl">Settings</span></button>
 </nav>
 
+<!-- Marketplace's own menu -- icon-circle buttons fanned in an arc above
+     the hub's center button (see positionMarketArc()), only visible while
+     screen === "market" (see render()'s own toggle). A zero-size anchor
+     point positioned exactly on #hubHome's live center, not a real-sized
+     box, so each .market-arc-btn's own transform:rotate()+translateY()
+     fan-out is relative to that single point regardless of viewport. -->
+<div id="marketArc" aria-hidden="true"></div>
+
 <!-- floating pins + convert buttons, sitting just above the hub -->
 <button type="button" class="floatbtn" id="pinsBtn" title="Pinned items" aria-label="Pinned items" aria-expanded="false">📌</button>
 <button type="button" class="floatbtn" id="quickConvertBtn" title="Convert Elements" aria-label="Convert Elements">🔄</button>
@@ -2550,6 +2578,21 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="trackedPill" aria-hidden="true"></div>
 
 <div id="hint" role="tooltip"></div>
+
+<!-- Professor Mouse -- a small character + speech-bubble companion
+     guiding a brand-new player through their first rotation (welcome ->
+     mode pick -> first station roll -> first mini-game -> Marketplace ->
+     travel -> second station), see showMouseTipOnce(). Not a modal: no
+     scrim, sits on top of everything (including the welcome slide and
+     mini-game overlay) without blocking taps to whatever's underneath,
+     dismissed by its own close button or the player's next tap anywhere. -->
+<div id="mouseTip" role="status" aria-hidden="true">
+  <img id="mouseTipImg" alt="Professor Mouse">
+  <div class="mouse-bubble">
+    <button type="button" class="mouse-tip-close" aria-label="Dismiss">✕</button>
+    <p id="mouseTipText"></p>
+  </div>
+</div>
 
 <!-- capstone celebration -->
 <div class="overlay" id="celebrate" role="dialog" aria-modal="true" aria-labelledby="celebName">
@@ -4461,7 +4504,10 @@ function applyVisitLimit(){
 function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "∞"; }
 
 /* ------------------------------------------------------- game mode --- */
-function openModePicker(){ openOverlay("modeOverlay"); }
+function openModePicker(){
+  openOverlay("modeOverlay");
+  showMouseTipOnce("modepick", 2, "Pick how you'd like to play — first time? I'd start with Classic.");
+}
 /* Zen and Classic keep the free pick -- the map appears with every node
    selectable as a starting point (mapCardHTML()/isMapConnected() treat a
    null lastStation as "anywhere is a valid pick"). Hard instead forces
@@ -4508,6 +4554,7 @@ function playMapIntroScroll(){
     selectedMapStation = "The Ocean";
     window.scrollTo({top: endY, behavior: "instant"});
     render(); // no resetScroll -- keep the bottom position just set above
+    showMouseTipOnce("mapintro", 7, "Every journey starts at The Ocean — tap it, then hit the big button below to dive in!");
   };
   const tapSkip = ev => { ev.preventDefault(); ev.stopPropagation(); finish(); };
   document.addEventListener("click", tapSkip, true);
@@ -6603,14 +6650,16 @@ function render(resetScroll){
   document.documentElement.style.setProperty("--hub-h", document.getElementById("hub").offsetHeight + "px");
 }
 
-/* Station backdrop -- only visible behind an actual station screen, never
-   on the map/inventory/reference/settings. The wash is baked in here
-   (not just left to the element's own opacity) so it fades consistently
-   with the current theme rather than a flat dim over whatever colors the
-   art happens to have. */
+/* Station (and Marketplace) backdrop -- only visible behind those two
+   screens, never on the map/inventory/reference/settings. The wash is
+   baked in here (not just left to the element's own opacity) so it
+   fades consistently with the current theme rather than a flat dim over
+   whatever colors the art happens to have. */
 function updateBackdrop(){
   const el = document.getElementById("backdrop");
-  const path = screen === "station" && current ? STATION_BG[current] : null;
+  const path = screen === "station" && current ? STATION_BG[current]
+    : screen === "market" ? "backdrops/marketplace.webp"
+    : null;
   if (path){
     el.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${path}")`;
     el.classList.add("show");
@@ -6687,6 +6736,22 @@ function updateHub(){
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
   home.classList.toggle("active", screen === "map" && !anyOpen);
+
+  // Marketplace's own arc menu (see #marketArc/renderMarketArc()) --
+  // updateHub(), not render(), is the one function EVERY panel open/close
+  // path already calls (openJobBoard() etc. call updateHub() directly
+  // without a full render()), so this has to live here to react
+  // correctly when a sheet opens/closes on top of the Marketplace screen,
+  // not just when the screen itself changes.
+  const marketArc = document.getElementById("marketArc");
+  const arcVisible = openPanelName() === "market";
+  marketArc.classList.toggle("show", arcVisible);
+  // Position the anchor BEFORE creating the buttons, not after -- doing
+  // it in the other order left the very first paint's transforms
+  // computed against the anchor's stale pre-move position in some runs,
+  // since nothing forced a layout flush between moving #marketArc and
+  // inserting children that immediately transform relative to it.
+  if (arcVisible){ positionMarketArc(); renderMarketArc(); }
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   document.getElementById("hubInv").classList.toggle("active", drawer.classList.contains("open"));
   document.getElementById("hubJobs").classList.toggle("active", jobSheet.classList.contains("open"));
@@ -7102,6 +7167,54 @@ function showTextHint(target, html){
   placeHint(target);
 }
 
+/* Professor Mouse companion -- see the HTML comment above #mouseTip.
+   MOUSE_POSES spells out each path as its own literal quoted string
+   (not a template literal built from `pose`) because build_artifact.py
+   finds local images to inline via a static regex over the source text
+   -- a runtime-computed "mouse/" + pose + ".webp" would never match
+   that regex and would 404 in the single-file Artifact/site build,
+   which has no sidecar mouse/ folder to resolve a relative path against.
+   showMouseTipOnce() is the one every call site actually uses: each
+   named beat (id) only ever fires once per run, regardless of how many
+   times its call site re-renders, so a re-render triggered by something
+   unrelated (opening a panel, an unrelated click) can't re-pop a tip the
+   player already dismissed. Ephemeral, not saved -- mouseTipsShown
+   resets in startNewSession(), same lifetime as the run itself. */
+const MOUSE_POSES = {
+  1: "mouse/1.webp", 2: "mouse/2.webp", 3: "mouse/3.webp", 4: "mouse/4.webp",
+  5: "mouse/5.webp", 6: "mouse/6.webp", 7: "mouse/7.webp", 8: "mouse/8.webp",
+  9: "mouse/9.webp", 10: "mouse/10.webp", 11: "mouse/11.webp", 12: "mouse/12.webp",
+};
+let mouseTipsShown = new Set();
+function showMouseTip(pose, html){
+  document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
+  document.getElementById("mouseTipText").innerHTML = html;
+  const el = document.getElementById("mouseTip");
+  el.classList.add("show");
+  el.setAttribute("aria-hidden", "false");
+}
+function hideMouseTip(){
+  const el = document.getElementById("mouseTip");
+  el.classList.remove("show");
+  el.setAttribute("aria-hidden", "true");
+}
+function showMouseTipOnce(id, pose, html){
+  if (mouseTipsShown.has(id)) return;
+  mouseTipsShown.add(id);
+  showMouseTip(pose, html);
+}
+document.getElementById("mouseTip").addEventListener("click", ev => {
+  if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
+});
+// Dismissed by the player's next tap anywhere else too, same "got it,
+// moving on" behavior as #hint -- capture phase so it fires before
+// whatever that tap actually does, and doesn't swallow the click itself
+// (no stopPropagation/preventDefault -- taps on real buttons underneath
+// still work normally).
+document.addEventListener("click", ev => {
+  if (!ev.target.closest("#mouseTip")) hideMouseTip();
+}, true);
+
 /* Points at the hub button through a brand-new run's very first station
    visit only (state.visits === 1) -- "roll the dice" before this visit's
    roll, then "tap again to head out" once it's done -- so a first-timer's
@@ -7121,6 +7234,11 @@ function maybeShowFirstVisitHint(){
   showTextHint(home, state.rolledHere
     ? "Nice! Tap again when you're ready to head out."
     : "👉 Tap here to roll the dice!");
+  if (state.rolledHere){
+    showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.");
+  } else {
+    showMouseTipOnce("firstroll", 3, "You made it! Tap the big button down there to roll your first dice.");
+  }
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -7139,6 +7257,9 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false; state.marketVisitedTrip = false;
   state.pendingRoll = null; state.lastRoll = null;
+  if (state.visits === 2){
+    showMouseTipOnce("secondstation", 5, "A whole new station! Let's see what's here.");
+  }
   const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
 
@@ -7269,6 +7390,9 @@ function launchMinigame(){
     `<div class="mg-intro-tap">Tap to Continue</div>`;
   overlay.classList.add("show");
   introEl.classList.add("show");
+  if (state.visits === 1){
+    showMouseTipOnce("minigame1", 9, "Time for a quick challenge! Do your best — every little bit helps.");
+  }
 
   function startRound(){
     introEl.classList.remove("show");
@@ -7646,6 +7770,7 @@ function punchInventory(){
 function startNewSession(){
   recordHistory();
   state = freshState(); screen = "map"; current = null; selectedJobItem = null;
+  mouseTipsShown = new Set();
   // Pins are a "what am I working toward right now" habit, not a
   // long-term bookmark -- they shouldn't carry over into a new run where
   // none of them are relevant anymore (a fresh session owns nothing yet).
@@ -8247,41 +8372,71 @@ function closeJobBoard(){
    navigation away from this screen -- closing one of those returns you
    right back here. */
 function renderMarketScreen(){
-  const zen = state.mode === "zen"; // Zen has no Job Board at all, see updateHub()'s own hubJobs.disabled
   return `<div class="market-screen">
     <div class="market-hero">
       <div class="market-hero-em">🏪</div>
       <h1>Marketplace</h1>
       <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
     </div>
-    <div class="market-tiles">
-      <button type="button" class="market-tile" data-market-nav="jobs" ${zen ? "disabled" : ""}>
-        <span class="mt-icon">📋</span>
-        <span class="mt-body"><div class="mt-title">Job Board</div><div class="mt-sub">${zen ? "Not available in Zen Mode" : "Take jobs, turn in finished items"}</div></span>
-        <span class="mt-arrow">›</span>
-      </button>
-      <button type="button" class="market-tile" disabled>
-        <span class="mt-icon">📜</span>
-        <span class="mt-body"><div class="mt-title">Quest Log</div><div class="mt-sub">Multi-step storylines</div></span>
-        <span class="mt-soon">Coming soon</span>
-      </button>
-      <button type="button" class="market-tile" data-market-nav="trade" ${state.mode === "hard" ? "" : "disabled"}>
-        <span class="mt-icon">🔄</span>
-        <span class="mt-body"><div class="mt-title">Trade Market</div><div class="mt-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
-        <span class="mt-arrow">›</span>
-      </button>
-      <button type="button" class="market-tile" data-market-nav="collections" ${state.mode === "classic" ? "disabled" : ""}>
-        <span class="mt-icon">🏆</span>
-        <span class="mt-body"><div class="mt-title">Collections</div><div class="mt-sub">${state.mode === "classic" ? "Not available in Classic Mode" : `${state.collectionsCompleted.length}/${COLLECTIONS.length} complete`}</div></span>
-        <span class="mt-arrow">›</span>
-      </button>
-    </div>
   </div>`;
 }
+/* The four options themselves -- see #marketArc/.market-arc-btn's own
+   comment for the fan-out mechanism. Angles spread a 116deg arc evenly
+   (-58/-19/19/58deg from straight up) at a fixed radius from the hub
+   button's center; both are plain custom properties on each button
+   rather than baked into fixed selectors, so reordering or adding a
+   5th option later is just another entry in ARC_SLOTS. */
+const ARC_RADIUS = "132px";
+const ARC_SLOTS = [-58, -19, 19, 58];
+function renderMarketArc(){
+  const zen = state.mode === "zen"; // Zen has no Job Board at all, see updateHub()'s own hubJobs.disabled
+  const slots = [
+    { nav: "jobs", icon: "📋", label: "Job Board", disabled: zen,
+      title: zen ? "Job Board — not available in Zen Mode" : "Job Board — take jobs, turn in finished items" },
+    { nav: null, icon: "📜", label: "Quest Log", disabled: true, title: "Quest Log — coming soon" },
+    { nav: "trade", icon: "🔄", label: "Trade Market", disabled: state.mode !== "hard",
+      title: state.mode === "hard" ? "Trade Market — swap a spare item for a random one" : "Trade Market — Hard Mode only" },
+    { nav: "collections", icon: "🏆", label: "Collections", disabled: state.mode === "classic",
+      title: state.mode === "classic" ? "Collections — not available in Classic Mode"
+        : `Collections — ${state.collectionsCompleted.length}/${COLLECTIONS.length} complete` },
+  ];
+  document.getElementById("marketArc").innerHTML = slots.map((s, i) => `
+    <button type="button" class="market-arc-btn" style="--ang:${ARC_SLOTS[i]}deg; --radius:${ARC_RADIUS}"
+      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled ? "disabled" : ""}
+      title="${esc(s.title)}" aria-label="${esc(s.label)}">${s.icon}</button>`).join("");
+}
+/* Positions #marketArc's own anchor point exactly on #hubHome's live
+   center -- measured, not computed from CSS, so it stays correct
+   regardless of safe-area insets, viewport size, or hub layout changes
+   elsewhere (same reasoning positionTutCoach() already uses for its own
+   coachmark spotlight). Called on every render() and on resize. */
+function positionMarketArc(){
+  const arc = document.getElementById("marketArc");
+  const home = document.getElementById("hubHome");
+  if (!arc || !home) return;
+  const r = home.getBoundingClientRect();
+  arc.style.left = (r.left + r.width / 2) + "px";
+  arc.style.top = (r.top + r.height / 2) + "px";
+}
+window.addEventListener("resize", () => {
+  if (document.getElementById("marketArc").classList.contains("show")) positionMarketArc();
+});
+// Sits outside #screen (see its own comment above #mouseTip/#trackedPill
+// for the same pattern), so it needs its own click listener rather than
+// going through #screen's delegation.
+document.getElementById("marketArc").addEventListener("click", ev => {
+  const navBtn = ev.target.closest("[data-market-nav]");
+  if (!navBtn || navBtn.disabled) return;
+  const target = navBtn.dataset.marketNav;
+  if (target === "jobs") openJobBoard();
+  else if (target === "trade" && state.mode === "hard") openTradeMarket();
+  else if (target === "collections" && state.mode !== "classic") openCollections();
+});
 function openMarket(){
   state.marketVisitedTrip = true;
   screen = "market";
   render(true);
+  showMouseTipOnce("market", 10, "This is the Marketplace — jobs, trades, and collections all live here.");
 }
 
 /* ----------------------------------------------------- trade market --- */
@@ -8968,6 +9123,7 @@ function showWelcomeSlide(){
   tourIdx = 0;
   document.getElementById("tour").classList.add("open", "welcome");
   tourRender();
+  showMouseTipOnce("welcome", 1, "Welcome to Elementia! I'm Professor Mouse — tap Play when you're ready to begin.");
 }
 function endTour(){
   document.getElementById("tour").classList.remove("open", "welcome");
