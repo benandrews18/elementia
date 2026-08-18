@@ -968,13 +968,12 @@ body[data-screen="market"] #trackedPill{display:none}
 .capline.done{color:var(--ok); font-weight:700}
 .capline.done .cap-name{color:var(--ok)}
 .norepeat-note{font-size:12px; color:var(--bad); font-weight:700}
-.map-travel-btn{
-  width:100%; padding:11px; border-radius:10px; border:none; font-weight:800; font-size:14px;
-  background:var(--suit); color:#fff; cursor:pointer;
-  transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
+/* Informational only now -- confirming travel itself lives on the hub's
+   own Travel face (see mapCardHTML()'s statusNote/hubHomeFace()). */
+.map-status-note{
+  font-size:12.5px; font-weight:700; color:var(--mute); text-align:center;
+  border-top:1px dashed var(--line); padding-top:10px; margin:0;
 }
-.map-travel-btn:active:not(:disabled){transform:translateY(2px) scale(.96); box-shadow:0 1px 0 rgba(0,0,0,.28)}
-.map-travel-btn:disabled{background:var(--line2); color:var(--mute); cursor:default; box-shadow:none}
 
 /* --------------------------------------------------------- station --- */
 /* The card's own background carries the station art too (not just the
@@ -1662,7 +1661,7 @@ body[data-screen="market"] #trackedPill{display:none}
   100%{transform:scale(1); opacity:1}
 }
 .sheetbox, .pc-card, .jtp-card, .mode-card, .el-pop-bubble,
-.bigbtn, .tbtn:not(.ghost), .map-travel-btn, button.setting-row{
+.bigbtn, .tbtn:not(.ghost), button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
 /* A shop item newly revealed by the craft that just happened (see
@@ -1705,13 +1704,13 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
    that UI was already tuned by hand, button-by-button, and doesn't need
    a second, competing treatment layered on top (see the #convert
    overrides at the very end of this block). */
-.bigbtn, .tbtn:not(.ghost), .craftbtn, .map-travel-btn, button.setting-row, .mode-card, .market-tile{
+.bigbtn, .tbtn:not(.ghost), .craftbtn, button.setting-row, .mode-card, .market-tile{
   box-shadow:0 3px 0 rgba(0,0,0,.22);
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1),
     filter .15s ease, background .12s, border-color .12s;
 }
 .bigbtn:not(:disabled):active, .tbtn:not(.ghost):not(:disabled):active,
-.craftbtn:not(:disabled):active, .map-travel-btn:not(:disabled):active,
+.craftbtn:not(:disabled):active,
 button.setting-row:not(:disabled):active, .mode-card:active, .market-tile:not(:disabled):active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
@@ -5642,16 +5641,15 @@ function mapCardHTML(name){
   const over = sessionOver();
   const here = name === state.lastStation;
   const connected = canReachStation(state.lastStation, name);
-  const viaFastTravel = connected && !isMapConnected(state.lastStation, name);
-  const canTravel = !here && connected && !over;
-  const picking = state.lastStation === null;
-  const statusLabel = here ? "You are here"
+  // Confirming travel itself now happens through the hub's own Travel
+  // face (see hubHomeFace()/canTravelTo()), not a button on this card --
+  // only worth a note here for the cases where tapping that button
+  // WOULDN'T travel, so a player selecting an out-of-reach node still
+  // gets told why nothing's happening.
+  const statusNote = here ? "You are here"
     : over ? "Session complete"
     : !connected ? "Not connected to your location"
-    : (mustStartAtOcean() && name === "The Ocean") ? "Start"
-    : picking ? "Start here"
-    : viaFastTravel ? "🚁 Fly here"
-    : "Travel here";
+    : "";
   // Tracked pinned item, top-right -- ringed in the same colour/weight as
   // the matching items highlighted in the icon row below (see
   // .station-item-icon.job-highlight), so the pill reads as the label for
@@ -5681,7 +5679,7 @@ function mapCardHTML(name){
     <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${unvisited ? "???" : esc(name)}</h2>${trackedPill}</div>
     ${poolHTML}
     ${itemsHTML}
-    <button type="button" class="map-travel-btn" data-travel="${esc(name)}" ${canTravel ? "" : "disabled"}>${esc(statusLabel)}</button>
+    ${statusNote ? `<p class="map-status-note">${esc(statusNote)}</p>` : ""}
   </div>`;
 }
 
@@ -6544,10 +6542,15 @@ function updateBackdrop(){
 let hubHomeState = null;
 function setHubHomeFace(face){
   const home = document.getElementById("hubHome");
+  // Travel's own icon: the same boot used for the "Station visits" pill
+  // by default (on foot, a normal map edge), swapping to the helicopter
+  // only for a selection that's actually reachable via fast travel --
+  // map-disconnected but owned-Helicopter-reachable, see canReachStation().
+  const viaAir = selectedMapStation && !isMapConnected(state.lastStation, selectedMapStation);
   const FACES = {
     roll:   { hi: "🎲", hl: "Roll" },
     market: { hi: "🏪", hl: "Market" },
-    travel: { hi: "🚁", hl: "Travel" },
+    travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
   };
@@ -7579,12 +7582,6 @@ document.getElementById("screen").addEventListener("click", ev => {
   hideHint();
 
   if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
-
-  const travelBtn = ev.target.closest("[data-travel]");
-  if (travelBtn){
-    if (!travelBtn.disabled) goStation(travelBtn.dataset.travel);
-    return;
-  }
 
   const marketNavBtn = ev.target.closest("[data-market-nav]");
   if (marketNavBtn){
