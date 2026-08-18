@@ -237,11 +237,21 @@ body[data-screen="codex"] #trackedPill{display:none}
 .map-job-empty-note{margin-bottom:18px}
 /* The one instruction on the "choose your first station" screen -- the
    pills are hidden there (see body[data-picking]) so this owns the top
-   band outright and can be centred in it. */
+   band outright and can be centred in it. Given real banner weight (not
+   just shadowed text over the map art) since this is a brand-new run's
+   very first prompt -- the pulse is a light "look here" nudge, not
+   decoration, and dies to a single frame under prefers-reduced-motion via
+   the global animation-duration override above. */
 .map-pick-note{
-  margin:0 auto 18px; padding:0 18px; max-width:420px;
-  text-align:center; color:#fff; font-weight:800; font-size:16.5px; line-height:1.35;
-  text-shadow:0 2px 6px rgba(0,0,0,.55);
+  margin:0 auto 20px; padding:16px 22px; max-width:440px;
+  text-align:center; color:#fff; font-weight:800; font-size:19px; line-height:1.35;
+  background:rgba(15,20,28,.82); border:2px solid var(--ok); border-radius:16px;
+  box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
+  animation:pickNotePulse 2.2s ease-in-out infinite;
+}
+@keyframes pickNotePulse{
+  0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft)}
+  50%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 9px rgba(63,180,108,0)}
 }
 .pinned-empty-note{font-size:12.5px; color:var(--mute); font-weight:600}
 
@@ -6470,6 +6480,7 @@ function render(resetScroll){
   applyInvFilter();
   applyRefFilter();
   hideHint();
+  maybeShowFirstVisitHint();
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
   // The map's fixed-position station card (see .map-card-wrap) sits right
   // under the topbar -- its height is measured live (two small pills, but
@@ -6967,6 +6978,27 @@ function showHint(target, name, kind){
 function showTextHint(target, html){
   document.getElementById("hint").innerHTML = html;
   placeHint(target);
+}
+
+/* Points at the hub button through a brand-new run's very first station
+   visit only (state.visits === 1) -- "roll the dice" before this visit's
+   roll, then "tap again to head out" once it's done -- so a first-timer's
+   first couple of taps have somewhere obvious to land, without turning
+   into the full opt-in "How to Play" walkthrough. Naturally stops once
+   they leave (current becomes null) or the visit count moves past 1;
+   deliberately re-evaluated (not a one-shot flag) so it survives
+   goStation()'s own multiple internal render() calls -- see launchMinigame()
+   -- and correctly reappears if a player closes an unrelated panel while
+   still standing here, rather than getting silently consumed by the
+   first of several renders in the same tick and never shown again. Stays
+   quiet while any panel is open so it never overlaps one. Called at the
+   very end of render(), after its own hideHint(). */
+function maybeShowFirstVisitHint(){
+  if (state.visits !== 1 || current === null || openPanelName()) return;
+  const home = document.getElementById("hubHome");
+  showTextHint(home, state.rolledHere
+    ? "Nice! Tap again when you're ready to head out."
+    : "👉 Tap here to roll the dice!");
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -8852,7 +8884,7 @@ function renderTutElementsGrid(){
 }
 
 const TUT_COACH_STEPS = [
-  { sel: "#hubHome", title: "Home", text: "Takes you to the map. Once you're already there, it flips into the Marketplace instead." },
+  { sel: "#hubHome", title: "Home", text: "Your main button. Rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
   { sel: "#hubJobs", title: "Job Board", text: "Take on jobs for bonus points, then turn them in once you've made what they ask for." },
   { sel: "#hubInv", title: "Inventory", text: "Everything you've collected and crafted so far, all in one place." },
   { sel: "#hubCodex", title: "Item Reference", text: "Look up any item's recipe -- even ones you haven't discovered yet." },
