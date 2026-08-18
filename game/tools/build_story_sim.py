@@ -9,13 +9,14 @@ __STORY_DATA_START__ / __STORY_DATA_END__ markers in story_sim.html.
 Usage:  python game/tools/build_story_sim.py
 Then:   python game/tools/build_story_sim.py --check     (verify only)
 """
-import ast, csv, json, sys
+import ast, csv, json, re, sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 GUIDE = HERE.parent.parent / "Elementia_Handoff" / "handoff" / "pdf_generation" / "build_guide.py"
 REACHABILITY_CSV = HERE.parent.parent / "Elementia_Handoff" / "handoff" / "simulation" / "reachability_grid.csv"
 TARGET = HERE / "story_sim.html"
+ELEMENTIA_HTML = HERE.parent / "elementia.html"
 
 START, END = "/*__STORY_DATA_START__*/", "/*__STORY_DATA_END__*/"
 
@@ -42,35 +43,79 @@ def avg_visits_from(csv_path, item_names):
         )
     with csv_path.open(encoding="utf-8") as f:
         rows = {r["Item"]: r for r in csv.DictReader(f)}
-    missing = item_names - set(rows)
-    if missing:
-        raise SystemExit(
-            f"reachability_grid.csv is stale relative to build_guide.py -- "
-            f"missing items: {sorted(missing)}. Re-run the simulation."
-        )
     out = {}
     for name in item_names:
+        # Sub-zone items (see subzone_stations() below) are never simulated
+        # at all -- Zn-dependent items (Brass etc.) aren't even reachable
+        # in that model -- so a missing row, or a row with no AvgVisits
+        # column (build_game.py hits the same case for Brass/Trombone/
+        # Cruise Ship), both just mean "no data," not a build error.
+        row = rows.get(name)
+        val = row.get("AvgVisits") if row else None
+        if val is None or val == "":
+            out[name] = None
+            continue
         try:
-            out[name] = float(rows[name]["AvgVisits"])
+            out[name] = float(val)
         except ValueError:
-            raise SystemExit(f"reachability_grid.csv: non-numeric AvgVisits for '{name}': {rows[name]['AvgVisits']!r}")
+            raise SystemExit(f"reachability_grid.csv: non-numeric AvgVisits for '{name}': {val!r}")
     return out
+
+
+def subzone_stations():
+    """SUBZONES lives hand-written in elementia.html, not build_guide.py --
+    see its own comment there for why (not on the map, never simulated).
+    Reformatted here into the same {emoji,name,suit,dice,shop,capstone}
+    shape as a real STATIONS entry, purely so story_sim.html's existing
+    "iterate DATA.stations" graph-building code picks these up for free
+    with no JS changes -- these are graph nodes with zero AvgVisits data,
+    same treatment avg_visits_from() already gives Brass/Trombone/Cruise
+    Ship above."""
+    html = ELEMENTIA_HTML.read_text(encoding="utf-8")
+    start = html.find("const SUBZONES = [")
+    end = html.find("SUBZONES.forEach(sz =>")
+    if start < 0 or end < 0:
+        raise SystemExit("Could not find SUBZONES block in elementia.html")
+    block = html[start:end]
+
+    entry_re = re.compile(
+        r'\{id:"([^"]+)"(?:,\s*emoji:"([^"]*)")?,\s*suit:"([^"]+)",\s*dice:(\[[^\]]*\]),\s*shop:\[(.*?)\](?:,\s*capstone:(\[[^\]]*\]))?\}',
+        re.S,
+    )
+    row_re = re.compile(r'\[("(?:[^"\\]|\\.)*"(?:,"(?:[^"\\]|\\.)*"){3},\d+)\]')
+
+    stations = []
+    for m in entry_re.finditer(block):
+        sz_id, emoji, suit, dice_src, shop_src, capstone_src = m.groups()
+        dice = ast.literal_eval(dice_src)
+        shop = [ast.literal_eval(f"[{row}]") for row in row_re.findall(shop_src)]
+        # Most sub-zones (every planet, Island) have no capstone at all --
+        # capstone stays None rather than a fake placeholder tuple, see
+        # story_sim.html's own null check for st.capstone.
+        capstone = ast.literal_eval(capstone_src) if capstone_src else None
+        stations.append({
+            "emoji": emoji or "\U0001F30C", "name": sz_id, "suit": suit,
+            "dice": dice, "shop": shop, "capstone": capstone,
+        })
+    return stations
 
 
 def main():
     check_only = "--check" in sys.argv
     src = literals_from(GUIDE, {"STATIONS", "SUITS", "CONTENT_VERSION"})
+    all_stations = src["STATIONS"] + subzone_stations()
     item_names = set()
-    for s in src["STATIONS"]:
+    for s in all_stations:
         for _, name, *_ in s["shop"]:
             item_names.add(name)
-        item_names.add(s["capstone"][1])
+        if s["capstone"]:
+            item_names.add(s["capstone"][1])
     avg_visits = avg_visits_from(REACHABILITY_CSV, item_names)
 
     data = {
         "version": src["CONTENT_VERSION"],
         "suits": src["SUITS"],
-        "stations": src["STATIONS"],
+        "stations": all_stations,
         "avgVisits": avg_visits,
     }
     payload = json.dumps(data, ensure_ascii=False, indent=1)

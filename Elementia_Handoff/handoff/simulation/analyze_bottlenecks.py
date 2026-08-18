@@ -107,6 +107,16 @@ rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8")))
 avg_visits = {}
 for r in rows:
     vals = [float(r[st].split(" ")[0]) for st in ALL_STATIONS if r[st] != "DNF"]
+    if not vals:
+        # Zn-dependent items (Brass, Trombone, Cruise Ship) are DNF at every
+        # station in this model -- Zn only exists at the Island sub-zone,
+        # outside this Python pipeline by design (see SUBZONES's own comment
+        # in elementia.html). No visits data to analyze for these.
+        avg_visits[r["Item"]] = {
+            "mean": None, "min": None, "max": None, "spread": None,
+            "steps": (int(r["Steps"]) if r["Steps"] != "" else None), "tier": r["Tier"],
+        }
+        continue
     avg_visits[r["Item"]] = {
         "mean": statistics.mean(vals), "min": min(vals), "max": max(vals),
         "spread": max(vals) - min(vals), "steps": int(r["Steps"]), "tier": r["Tier"],
@@ -116,9 +126,10 @@ def section(title):
     print(f"\n=== {title} ===")
 
 section("STRUCTURAL BOTTLENECKS (used by many other items x costly to get)")
+scoreable = [it for it in items if avg_visits[it]["mean"] is not None]
 bscore = sorted(
     ((used_by[it] * avg_visits[it]["mean"], it, used_by[it], avg_visits[it]["mean"],
-      avg_visits[it]["tier"], avg_visits[it]["steps"]) for it in items),
+      avg_visits[it]["tier"], avg_visits[it]["steps"]) for it in scoreable),
     reverse=True)
 print(f"{'Item':<18}{'Tier':<11}{'Steps':<7}{'UsedBy':<8}{'AvgVisits':<10}{'Score':<8}")
 for score, it, ub, mv, tier, steps in bscore[:15]:
@@ -128,6 +139,9 @@ for score, it, ub, mv, tier, steps in bscore[:15]:
 # ---- the full ranking (not just the top 15 printed above) is sortable ----
 rank_of = {it: i + 1 for i, (score, it, ub, mv, tier, steps) in enumerate(bscore)}
 score_of = {it: score for score, it, ub, mv, tier, steps in bscore}
+unscoreable = [it for it in items if it not in rank_of]
+for i, it in enumerate(unscoreable):
+    rank_of[it] = len(bscore) + i + 1
 station_cols = ALL_STATIONS
 with CSV_PATH.open(newline="", encoding="utf-8") as f:
     orig_rows = list(csv.DictReader(f))
@@ -138,26 +152,29 @@ with CSV_PATH.open("w", newline="", encoding="utf-8") as f:
     w.writeheader()
     for r in orig_rows:
         it = r["Item"]
+        mv = avg_visits[it]["mean"]
         out = {
             "Rank": rank_of[it], "Item": it, "Tier": r["Tier"], "Steps": r["Steps"],
-            "UsedBy": used_by[it], "AvgVisits": f"{avg_visits[it]['mean']:.1f}",
-            "BottleneckScore": f"{score_of[it]:.1f}",
+            "UsedBy": used_by[it], "AvgVisits": (f"{mv:.1f}" if mv is not None else ""),
+            "BottleneckScore": (f"{score_of[it]:.1f}" if it in score_of else ""),
         }
         for st in station_cols:
             out[st] = r[st]
         w.writerow(out)
 print(f"\nWrote UsedBy/AvgVisits/BottleneckScore/Rank into {CSV_PATH.name} "
       f"({len(orig_rows)} rows, sorted by Rank -- biggest bottleneck first).")
+if unscoreable:
+    print(f"(No AvgVisits data for: {', '.join(unscoreable)} -- DNF at every station, see comment above.)")
 
 section("UNUSUALLY HARD FOR THEIR DEPTH (excl. CAPSTONE and >=19pt creations)")
 by_steps = defaultdict(list)
-for it in items:
+for it in scoreable:
     by_steps[avg_visits[it]["steps"]].append(avg_visits[it]["mean"])
 steps_mean = {k: statistics.mean(v) for k, v in by_steps.items()}
 steps_std = {k: (statistics.stdev(v) if len(v) > 1 else 1.0) for k, v in by_steps.items()}
 
 outliers = []
-for it in items:
+for it in scoreable:
     av = avg_visits[it]
     pts = ITEM_POINTS.get(it, 0)
     if av["tier"] == "CAPSTONE" or pts >= 19:
@@ -180,6 +197,6 @@ for ratio, e, ub, sc in escore:
     print(f"{e:<6}{ub:<13}{sc:<11}{ratio:<6.2f}")
 
 section("MOST STATION-SENSITIVE ITEMS (best-start vs worst-start gap)")
-for it in sorted(items, key=lambda it: -avg_visits[it]["spread"])[:12]:
+for it in sorted(scoreable, key=lambda it: -avg_visits[it]["spread"])[:12]:
     av = avg_visits[it]
     print(f"{it:<18}{av['tier']:<11}min={av['min']:<6.1f}max={av['max']:<6.1f}spread={av['spread']:<6.1f}")

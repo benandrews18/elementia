@@ -121,7 +121,7 @@ STATIONS = [
      "shop":[("🛢️","Natural Gas","MATERIAL","C + H",2),
              ("🔩","Steel","MATERIAL","Fe + C",2),
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
-             ("🛠️","Tools","CREATION","Fe + Ti + Al",3),
+             ("🛠️","Tools","CREATION","🔩 Steel + Ti + Al",4),
              ("🔥","Furnace","CREATION","🏺 Clay + C",5),
              ("__RUBBER__","Rubber","COMPONENT","🛢️ Natural Gas + S",5),
              ("🔩","Stainless Steel","MATERIAL","🔩 Steel + Ni + 🔥 Furnace",5),
@@ -241,7 +241,7 @@ STATIONS = [
 
     {"emoji":"🔭","name":"The Observatory","suit":"observatory",
      "dice":["Ni", "Al", "Fe", "Ag", "Ti", "Si"],
-     "shop":[("🛠️","Tools","CREATION","Fe + Ti + Al",3),
+     "shop":[("🛠️","Tools","CREATION","🔩 Steel + Ti + Al",4),
              ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
              ("🫐","Blueberries","MATERIAL","🍬 Sugar + K + 🧺 Basket",14),
 

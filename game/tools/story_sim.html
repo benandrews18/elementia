@@ -128,7 +128,7 @@
 
 <script>
 const DATA = /*__STORY_DATA_START__*/{
- "version": "2026.08.13",
+ "version": "2026.08.16",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -231,8 +231,15 @@ const DATA = /*__STORY_DATA_START__*/{
      "🧵",
      "Fabric",
      "COMPONENT",
-     "🧶 Plant Fiber",
+     "🍂 Plant Fiber + 🛠️ Tools",
      9
+    ],
+    [
+     "🟡",
+     "Yellow Dye",
+     "COMPONENT",
+     "🍌 Banana + 💧 Water + 🫙 Glass Vial",
+     16
     ],
     [
      "⛵",
@@ -252,7 +259,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "__PEARL__",
      "Pearl",
      "COMPONENT",
-     "Ca + O + 🔥 Furnace + 🕐 Clock",
+     "Ca + C + O + 🔥 Furnace + 🕐 Clock",
      13
     ],
     [
@@ -280,15 +287,15 @@ const DATA = /*__STORY_DATA_START__*/{
      "🌊",
      "Water Turbine",
      "CREATION",
-     "💧 Water + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
-     16
+     "💧 Water + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",
+     22
     ],
     [
      "🚤",
      "Speedboat",
      "CREATION",
      "🛶 Canoe + ⚙️ Engine + 🧭 Compass",
-     17
+     16
     ],
     [
      "🏖️",
@@ -296,6 +303,13 @@ const DATA = /*__STORY_DATA_START__*/{
      "CREATION",
      "__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",
      25
+    ],
+    [
+     "🛳️",
+     "Cruise Ship",
+     "CREATION",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎷 Trombone",
+     40
     ]
    ],
    "capstone": [
@@ -351,7 +365,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "⚙️",
      "Engine",
      "COMPONENT",
-     "🛠️ Tools + 🛢️ Natural Gas",
+     "🛠️ Tools + 🛢️ Natural Gas + 🔩 Steel",
      7
     ],
     [
@@ -376,11 +390,25 @@ const DATA = /*__STORY_DATA_START__*/{
      8
     ],
     [
-     "🔆",
-     "Solar Cell",
+     "🫙",
+     "Glass Vial",
      "COMPONENT",
-     "🔌 Wire + 🔋 Battery",
-     8
+     "🪟 Glass + 🔥 Furnace",
+     10
+    ],
+    [
+     "🔷",
+     "Fiberglass",
+     "COMPONENT",
+     "🪟 Glass + 🥤 Plastic",
+     11
+    ],
+    [
+     "🌀",
+     "Turbine Blade",
+     "COMPONENT",
+     "🔘 Wheel + 🔷 Fiberglass",
+     17
     ],
     [
      "💻",
@@ -394,14 +422,14 @@ const DATA = /*__STORY_DATA_START__*/{
      "Car",
      "CREATION",
      "⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",
-     18
+     17
     ],
     [
      "🌐",
      "Renewable Grid",
      "CREATION",
      "🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
-     22
+     29
     ]
    ],
    "capstone": [
@@ -482,18 +510,25 @@ const DATA = /*__STORY_DATA_START__*/{
      8
     ],
     [
+     "🔆",
+     "Solar Panel",
+     "COMPONENT",
+     "Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",
+     8
+    ],
+    [
      "🌻",
      "Sunflower",
      "CREATION",
-     "🔆 Solar Cell + 🌾 Grain",
-     9
+     "⭐ Star + 🌾 Grain",
+     20
     ],
     [
      "🚜",
      "Tractor",
      "CREATION",
      "🧑‍🌾 Farm + ⚙️ Engine",
-     10
+     11
     ],
     [
      "__OPAL__",
@@ -517,6 +552,41 @@ const DATA = /*__STORY_DATA_START__*/{
      9
     ],
     [
+     "🐑",
+     "Sheep",
+     "CREATION",
+     "🧑‍🌾 Farm + 💧 Water",
+     8
+    ],
+    [
+     "🐝",
+     "Bee",
+     "CREATION",
+     "🧑‍🌾 Farm + 🍬 Sugar",
+     8
+    ],
+    [
+     "🧺",
+     "Basket",
+     "COMPONENT",
+     "🍂 Plant Fiber + 🛠️ Tools",
+     9
+    ],
+    [
+     "🤍",
+     "Wool",
+     "COMPONENT",
+     "🐑 Sheep + 🛠️ Tools",
+     8
+    ],
+    [
+     "🍯",
+     "Honey",
+     "COMPONENT",
+     "🐝 Bee + 🍬 Sugar",
+     9
+    ],
+    [
      "🚲",
      "Bicycle",
      "CREATION",
@@ -527,8 +597,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "𖣘",
      "Windmill",
      "CREATION",
-     "☁️ Cloud + ⬜ Concrete + 🔘 Wheel + 🔋 Battery",
-     16
+     "☁️ Cloud + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",
+     20
     ]
    ],
    "capstone": [
@@ -577,8 +647,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "🛠️",
      "Tools",
      "CREATION",
-     "Fe + Ti + Al",
-     3
+     "🔩 Steel + Ti + Al",
+     4
     ],
     [
      "🔥",
@@ -614,6 +684,13 @@ const DATA = /*__STORY_DATA_START__*/{
      "MATERIAL",
      "Ti + Al + 🔥 Furnace",
      6
+    ],
+    [
+     "🎺",
+     "Brass",
+     "MATERIAL",
+     "Cu + Zn + 🔥 Furnace",
+     10
     ],
     [
      "♨️",
@@ -690,7 +767,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "🦴",
      "Bone",
      "MATERIAL",
-     "C + Ca + S",
+     "C + Ca + P",
      4
     ],
     [
@@ -704,8 +781,15 @@ const DATA = /*__STORY_DATA_START__*/{
      "🍓",
      "Strawberries",
      "MATERIAL",
-     "C + H + O + Ca",
-     4
+     "🍬 Sugar + Ca + 🧺 Basket",
+     11
+    ],
+    [
+     "🍄",
+     "Mushroom",
+     "COMPONENT",
+     "🌱 Soil + 💧 Water",
+     5
     ],
     [
      "🌳",
@@ -729,10 +813,17 @@ const DATA = /*__STORY_DATA_START__*/{
      7
     ],
     [
-     "🧶",
+     "🍂",
      "Plant Fiber",
      "MATERIAL",
      "🌳 Tree + 🛠️ Tools",
+     7
+    ],
+    [
+     "🪢",
+     "Rope",
+     "COMPONENT",
+     "🍂 Plant Fiber + 🛠️ Tools",
      8
     ],
     [
@@ -750,6 +841,13 @@ const DATA = /*__STORY_DATA_START__*/{
      11
     ],
     [
+     "🔴",
+     "Red Dye",
+     "COMPONENT",
+     "🍓 Strawberries + 💧 Water + 🫙 Glass Vial",
+     16
+    ],
+    [
      "🐟",
      "Salmon",
      "CREATION",
@@ -757,10 +855,17 @@ const DATA = /*__STORY_DATA_START__*/{
      12
     ],
     [
+     "🦕",
+     "Fossil",
+     "COMPONENT",
+     "🏺 Clay + 🦴 Bone + 🕐 Clock",
+     10
+    ],
+    [
      "🦖",
      "Dinosaur",
      "CREATION",
-     "🦴 Bone + __AMBER__ Amber + 🧬 DNA",
+     "__AMBER__ Amber + 🧬 DNA + 🦕 Fossil",
      13
     ]
    ],
@@ -817,7 +922,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "🥚",
      "Egg",
      "COMPONENT",
-     "🧬 DNA + Ca + O",
+     "🧬 DNA + Ca + C + O",
      6
     ],
     [
@@ -831,8 +936,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "__FLOUR__",
      "Flour",
      "COMPONENT",
-     "🌾 Grain + 🛠️ Tools",
-     10
+     "🌾 Grain + 𖣘 Windmill",
+     21
     ],
     [
      "🥛",
@@ -846,28 +951,35 @@ const DATA = /*__STORY_DATA_START__*/{
      "Dough",
      "COMPONENT",
      "__FLOUR__ Flour + 💧 Water",
+     22
+    ],
+    [
+     "🍳",
+     "Oven",
+     "CREATION",
+     "🔥 Furnace + 🕐 Clock",
      11
     ],
     [
      "🥨",
      "Pretzel",
      "CREATION",
-     "🫓 Dough + K + 🔥 Furnace",
-     11
+     "🫓 Dough + K + 🍳 Oven",
+     23
     ],
     [
      "🍞",
      "Bread",
      "CREATION",
-     "🫓 Dough + 🦠 Yeast + 🔥 Furnace",
-     12
+     "🫓 Dough + 🦠 Yeast + 🍳 Oven",
+     24
     ],
     [
      "🍰",
      "Cake",
      "CREATION",
-     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🔥 Furnace",
-     13
+     "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🍳 Oven",
+     24
     ],
     [
      "🍶",
@@ -887,57 +999,57 @@ const DATA = /*__STORY_DATA_START__*/{
      "🥧",
      "Apple Pie",
      "CREATION",
-     "🫓 Dough + 🍎 Apple + 🔥 Furnace",
-     13
+     "🫓 Dough + 🍎 Apple + 🍳 Oven",
+     23
     ],
     [
      "🍰",
      "Chocolate Cake",
      "CREATION",
      "🍰 Cake + 🍫 Chocolate",
-     14
+     25
     ],
     [
      "🥐",
      "Croissant",
      "CREATION",
-     "🫓 Dough + 🧈 Butter + 🔥 Furnace",
-     14
+     "🫓 Dough + 🧈 Butter + 🍳 Oven",
+     24
     ],
     [
      "🧀",
      "Cheesecake",
      "CREATION",
-     "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🔥 Furnace",
-     15
+     "🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🍳 Oven",
+     25
     ],
     [
      "🍩",
      "Éclair",
      "CREATION",
-     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🔥 Furnace",
-     16
+     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🍳 Oven",
+     25
     ],
     [
      "🍞",
      "Banana Bread",
      "CREATION",
      "🍞 Bread + 🍌 Banana",
-     17
+     24
     ],
     [
      "🧁",
      "Berry Cupcakes",
      "CREATION",
      "🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",
-     19
+     28
     ],
     [
      "🍽️",
      "Grand Banquet",
      "CREATION",
      "🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",
-     24
+     28
     ]
    ],
    "capstone": [
@@ -986,8 +1098,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "🍇",
      "Blackberries",
      "MATERIAL",
-     "C + H + O + Mg",
-     4
+     "🍬 Sugar + Mg + 🧺 Basket",
+     12
     ],
     [
      "🪟",
@@ -1011,6 +1123,20 @@ const DATA = /*__STORY_DATA_START__*/{
      6
     ],
     [
+     "📄",
+     "Paper",
+     "COMPONENT",
+     "🍂 Plant Fiber + 💧 Water",
+     12
+    ],
+    [
+     "⚫",
+     "Black Dye",
+     "COMPONENT",
+     "🍇 Blackberries + 💧 Water + 🫙 Glass Vial",
+     18
+    ],
+    [
      "🌉",
      "Bridge",
      "CREATION",
@@ -1028,8 +1154,29 @@ const DATA = /*__STORY_DATA_START__*/{
      "📕",
      "Book",
      "COMPONENT",
-     "🧶 Plant Fiber",
-     12
+     "📄 Paper + 🛠️ Tools",
+     13
+    ],
+    [
+     "🧶",
+     "Yarn",
+     "COMPONENT",
+     "🤍 Wool + 🔘 Wheel",
+     14
+    ],
+    [
+     "🧣",
+     "Knit Scarf",
+     "CREATION",
+     "🧶 Yarn + 🔴 Red Dye + 🔵 Blue Dye",
+     22
+    ],
+    [
+     "🎷",
+     "Trombone",
+     "CREATION",
+     "🎺 Brass + 🛠️ Tools",
+     18
     ],
     [
      "__RUBY__",
@@ -1046,11 +1193,11 @@ const DATA = /*__STORY_DATA_START__*/{
      15
     ],
     [
-     "✈️",
-     "Airplane",
+     "🚁",
+     "Helicopter",
      "CREATION",
-     "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",
-     15
+     "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + 🌀 Turbine Blade",
+     21
     ],
     [
      "🗼",
@@ -1084,7 +1231,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "🚉",
      "Central Station",
      "CREATION",
-     "✈️ Airplane + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",
+     "🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",
      25
     ]
    ],
@@ -1092,7 +1239,7 @@ const DATA = /*__STORY_DATA_START__*/{
     "🌆",
     "Metropolis",
     "CAPSTONE",
-    "🌉 Bridge + 🗼 Skyscraper + ✈️ Airplane + 🚗 Car + 💡 Light Bulb",
+    "🌉 Bridge + 🗼 Skyscraper + 🚁 Helicopter + 🚗 Car + 💡 Light Bulb",
     23
    ]
   },
@@ -1113,8 +1260,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "🛠️",
      "Tools",
      "CREATION",
-     "Fe + Ti + Al",
-     3
+     "🔩 Steel + Ti + Al",
+     4
     ],
     [
      "🪟",
@@ -1127,8 +1274,15 @@ const DATA = /*__STORY_DATA_START__*/{
      "🫐",
      "Blueberries",
      "MATERIAL",
-     "C + H + O + K",
-     5
+     "🍬 Sugar + K + 🧺 Basket",
+     14
+    ],
+    [
+     "🔵",
+     "Blue Dye",
+     "COMPONENT",
+     "🫐 Blueberries + 💧 Water + 🫙 Glass Vial",
+     19
     ],
     [
      "__MICROCHIP__",
@@ -1148,15 +1302,15 @@ const DATA = /*__STORY_DATA_START__*/{
      "🧲",
      "Magnet",
      "COMPONENT",
-     "Fe + 🔋 Battery",
-     9
+     "Fe + Ni",
+     4
     ],
     [
      "🧭",
      "Compass",
      "COMPONENT",
      "🧲 Magnet + 💧 Water + 🪟 Glass",
-     10
+     8
     ],
     [
      "🔘",
@@ -1211,8 +1365,8 @@ const DATA = /*__STORY_DATA_START__*/{
      "🚀",
      "Rocket",
      "CREATION",
-     "💻 Computer + 🔆 Solar Cell + 🛡️ Titanium Alloy",
-     21
+     "💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",
+     22
     ]
    ],
    "capstone": [
@@ -1222,128 +1376,509 @@ const DATA = /*__STORY_DATA_START__*/{
     "🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",
     28
    ]
+  },
+  {
+   "emoji": "⚪",
+   "name": "Mercury",
+   "suit": "observatory",
+   "dice": [
+    "Fe",
+    "S",
+    "Mg",
+    "Al",
+    "Ca",
+    "O"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🟡",
+   "name": "Venus",
+   "suit": "observatory",
+   "dice": [
+    "C",
+    "O",
+    "S",
+    "Si",
+    "Fe",
+    "Ca"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🔵",
+   "name": "Earth",
+   "suit": "observatory",
+   "dice": [
+    "N",
+    "O",
+    "H",
+    "Si",
+    "Fe",
+    "Ca"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🔴",
+   "name": "Mars",
+   "suit": "observatory",
+   "dice": [
+    "Fe",
+    "O",
+    "C",
+    "Si",
+    "Mg",
+    "S"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🟠",
+   "name": "Jupiter",
+   "suit": "observatory",
+   "dice": [
+    "H",
+    "C",
+    "N",
+    "S",
+    "P",
+    "O"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🟤",
+   "name": "Saturn",
+   "suit": "observatory",
+   "dice": [
+    "H",
+    "C",
+    "N",
+    "S",
+    "O",
+    "Si"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🟢",
+   "name": "Uranus",
+   "suit": "observatory",
+   "dice": [
+    "H",
+    "C",
+    "N",
+    "O",
+    "S",
+    "Mg"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🟣",
+   "name": "Neptune",
+   "suit": "observatory",
+   "dice": [
+    "H",
+    "C",
+    "N",
+    "O",
+    "S",
+    "Ni"
+   ],
+   "shop": [],
+   "capstone": null
+  },
+  {
+   "emoji": "🏝️",
+   "name": "Island",
+   "suit": "ocean",
+   "dice": [
+    "C",
+    "O",
+    "H",
+    "N",
+    "K",
+    "Zn"
+   ],
+   "shop": [
+    [
+     "🍫",
+     "Cacao Beans",
+     "MATERIAL",
+     "C + H + O",
+     3
+    ],
+    [
+     "☕",
+     "Coffee Beans",
+     "MATERIAL",
+     "C + H + N",
+     4
+    ],
+    [
+     "🥥",
+     "Coconut",
+     "CREATION",
+     "🌳 Tree + 💧 Water + Mg",
+     8
+    ],
+    [
+     "🥭",
+     "Mango",
+     "CREATION",
+     "🌳 Tree + 💧 Water + K",
+     8
+    ],
+    [
+     "🍈",
+     "Passionfruit",
+     "CREATION",
+     "🌳 Tree + 💧 Water + N",
+     8
+    ],
+    [
+     "🦜",
+     "Parrot",
+     "CREATION",
+     "🌳 Tree + 🥚 Egg",
+     10
+    ],
+    [
+     "🐦",
+     "Toucan",
+     "CREATION",
+     "🌳 Tree + ☁️ Cloud",
+     9
+    ],
+    [
+     "🐢",
+     "Sea Turtle",
+     "CREATION",
+     "💧 Water + 🥚 Egg + ⏳ Sand",
+     12
+    ]
+   ],
+   "capstone": null
+  },
+  {
+   "emoji": "📖",
+   "name": "Fictional World",
+   "suit": "city",
+   "dice": [
+    "Ca",
+    "C",
+    "O",
+    "Al",
+    "Si",
+    "Mg"
+   ],
+   "shop": [
+    [
+     "👻",
+     "Ghost",
+     "CREATION",
+     "🦴 Bone + ☁️ Cloud",
+     10
+    ],
+    [
+     "🧙‍♀️",
+     "Witch",
+     "CREATION",
+     "💧 Water + 🍄 Mushroom",
+     11
+    ],
+    [
+     "🔥",
+     "Phoenix",
+     "CREATION",
+     "🎆 Fireworks + 🥚 Egg",
+     11
+    ],
+    [
+     "🗺️",
+     "Treasure Map",
+     "COMPONENT",
+     "📄 Paper + ⚫ Black Dye",
+     16
+    ],
+    [
+     "🗿",
+     "Golem",
+     "CREATION",
+     "🗿 Statue + 🔥 Furnace",
+     12
+    ],
+    [
+     "🐎",
+     "Pegasus",
+     "CREATION",
+     "🦌 Deer + ☁️ Cloud",
+     13
+    ],
+    [
+     "💍",
+     "The One Ring",
+     "CREATION",
+     "Ag + 🌋 Volcano",
+     17
+    ],
+    [
+     "🐴",
+     "Centaur",
+     "CREATION",
+     "🦌 Deer + __LIFE__ Life",
+     19
+    ],
+    [
+     "🦄",
+     "Unicorn",
+     "CREATION",
+     "🦌 Deer + 🌈 Rainbow",
+     22
+    ],
+    [
+     "🦁",
+     "Sphinx",
+     "CREATION",
+     "🗿 Statue + 🏛️ Museum",
+     24
+    ],
+    [
+     "🛡️",
+     "Knight",
+     "CREATION",
+     "🔩 Stainless Steel + 🏛️ Museum",
+     24
+    ],
+    [
+     "🧜‍♀️",
+     "Mermaid",
+     "CREATION",
+     "🐟 Salmon + __LIFE__ Life",
+     22
+    ],
+    [
+     "🧙",
+     "Wizard",
+     "CREATION",
+     "📕 Book + ⭐ Star",
+     24
+    ],
+    [
+     "👼",
+     "Angel",
+     "CREATION",
+     "⭐ Star + __LIFE__ Life",
+     25
+    ],
+    [
+     "👽",
+     "Alien",
+     "CREATION",
+     "🚀 Rocket + 🌎 Planet",
+     24
+    ],
+    [
+     "🐉",
+     "Dragon",
+     "CREATION",
+     "🦖 Dinosaur + 🎆 Fireworks + 🌋 Volcano",
+     26
+    ],
+    [
+     "🏴‍☠️",
+     "The Black Pearl",
+     "CREATION",
+     "⚫ Black Dye + ⛵ Sailboat + __PEARL__ Pearl",
+     30
+    ]
+   ],
+   "capstone": [
+    "🚀",
+    "Millennium Falcon",
+    "CAPSTONE",
+    "🚀 Rocket + ☀️ Solar System + 🕐 Clock",
+    35
+   ]
   }
  ],
  "avgVisits": {
-  "Engine": 7.2,
-  "Windmill": 15.7,
-  "Plant Fiber": 7.4,
-  "Butter": 11.6,
-  "Pearl": 13.7,
-  "Airplane": 15.2,
-  "Apple": 7.1,
-  "Battery": 4.9,
-  "Tree": 5.3,
-  "Lighthouse": 13.6,
-  "DNA": 4.0,
-  "Grain": 8.4,
-  "Opal": 11.2,
-  "Library": 13.9,
-  "Clay": 2.7,
-  "Wheel": 10.6,
-  "Solar System": 18.7,
-  "Water": 2.5,
-  "Sailboat": 9.5,
-  "Book": 11.3,
-  "Canoe": 6.2,
-  "Bridge": 7.6,
-  "Cream": 11.5,
-  "Chicken": 11.0,
-  "Cheesecake": 13.9,
-  "Central Station": 25.2,
-  "Geothermal Pump": 10.3,
-  "Robot": 17.6,
-  "Seaweed": 5.5,
-  "Orca": 13.6,
-  "Bicycle": 14.9,
-  "Star": 16.6,
-  "Strawberries": 4.9,
-  "Yeast": 5.4,
-  "Fabric": 8.6,
-  "Log Cabin": 7.8,
-  "Blackberries": 5.1,
-  "Space Station": 24.5,
-  "Life": 19.2,
-  "Rocket": 20.8,
-  "Metropolis": 23.1,
-  "Clock": 8.3,
-  "Ruby": 13.2,
-  "Cake": 11.8,
-  "Steel": 3.1,
-  "Sand": 3.1,
-  "Fireworks": 4.2,
-  "Banana": 7.7,
-  "Egg": 5.8,
-  "Tools": 3.6,
-  "Chocolate Cake": 12.1,
-  "Deer": 6.8,
-  "Motorcycle": 17.3,
-  "Sushi Restaurant": 19.4,
-  "Planet": 9.1,
-  "Rubber": 5.5,
-  "Fruit Cake": 19.8,
-  "Berry Cupcakes": 17.9,
-  "Turquoise": 14.3,
-  "Homestead": 14.9,
-  "Milk": 9.6,
-  "Microchip": 8.7,
-  "Rainbow": 17.2,
-  "Dinosaur": 12.7,
-  "Chocolate": 9.3,
-  "Flour": 9.4,
-  "Volcano": 14.3,
-  "Concrete": 5.7,
-  "Natural Gas": 3.0,
-  "Solar Cell": 5.0,
-  "Titanium Alloy": 5.8,
-  "Tractor": 10.2,
-  "Blueberries": 6.4,
-  "Maglev Train": 19.3,
-  "Apple Pie": 11.4,
-  "Amber": 11.2,
-  "Aluminum Alloy": 5.7,
-  "Cloud": 5.3,
-  "Building": 8.5,
-  "Renewable Grid": 22.7,
-  "Ecosystem": 24.2,
-  "Satellite Dish": 11.9,
-  "Computer": 15.5,
-  "Banana Bread": 16.2,
-  "Coral Reef": 17.2,
-  "Cow": 8.3,
-  "Furnace": 4.8,
-  "Limestone": 2.9,
-  "Salmon": 12.1,
-  "Skyscraper": 16.3,
-  "Sugar": 3.2,
-  "Pretzel": 10.1,
-  "Croissant": 12.2,
-  "Biofuel": 11.9,
-  "Compass": 11.5,
+  "Oven": 11.9,
+  "Phoenix": null,
+  "Maglev Train": 17.0,
   "Soil": 4.8,
-  "Bone": 4.7,
-  "Water Turbine": 15.8,
-  "Telescope": 12.3,
-  "Gemstone Collection": 19.6,
-  "Farm": 7.9,
-  "Plastic": 8.2,
+  "Solar System": 18.6,
+  "Engine": 7.8,
+  "Space Station": 24.6,
+  "Cloud": 5.7,
+  "Basket": 8.8,
+  "Pretzel": 21.8,
+  "Toucan": null,
+  "Biofuel": 11.7,
+  "Statue": 8.0,
+  "Alien": null,
+  "Cruise Ship": null,
+  "Geothermal Pump": 10.0,
+  "Dragon": null,
+  "Sunflower": 19.9,
+  "Ruby": 13.7,
+  "Light Bulb": 7.5,
+  "Black Dye": 17.2,
+  "Sea Turtle": null,
+  "Fossil": 11.6,
+  "Concrete": 5.9,
+  "Grain": 8.6,
+  "Star": 16.9,
+  "Robot": 17.6,
+  "Car": 17.4,
+  "Solar Panel": 8.9,
+  "Cheesecake": 24.6,
+  "Paper": 12.2,
+  "Plant Fiber": 7.7,
+  "Gemstone Collection": 20.1,
+  "Life": 20.3,
+  "Seaweed": 5.3,
+  "Glass": 5.4,
+  "Parrot": null,
+  "Water Turbine": 23.6,
+  "Opal": 11.5,
+  "Blueberries": 14.3,
+  "The Black Pearl": null,
+  "Deer": 7.0,
+  "Sushi Restaurant": 19.7,
+  "Coffee Beans": null,
+  "Fruit Cake": 24.0,
+  "Knit Scarf": 21.3,
+  "Yeast": 5.3,
+  "Salmon": 11.9,
+  "Knight": null,
+  "Grand Banquet": 26.9,
+  "The One Ring": null,
+  "Milk": 10.0,
+  "Brass": null,
+  "Clay": 2.8,
+  "Museum": 20.7,
+  "Bee": 8.6,
+  "Central Station": 24.8,
+  "Bread": 22.8,
+  "Coral Reef": 18.5,
+  "Skyscraper": 16.3,
+  "Sphinx": null,
+  "Motorcycle": 17.6,
+  "Microchip": 8.6,
+  "Rainbow": 18.1,
+  "Canoe": 5.9,
+  "Turbine Blade": 17.5,
+  "Mango": null,
+  "Windmill": 19.9,
+  "Dinosaur": 13.1,
+  "Ghost": null,
   "Fertilizer": 3.5,
-  "Car": 18.3,
-  "Grand Banquet": 23.5,
-  "Beach Town": 26.9,
-  "Bread": 10.9,
-  "Sunflower": 10.8,
-  "Diamond": 12.8,
-  "Museum": 21.3,
-  "Éclair": 14.4,
-  "Magnet": 9.1,
-  "Speedboat": 16.7,
-  "Statue": 6.6,
-  "Dough": 9.5,
-  "Light Bulb": 7.4,
-  "Wire": 4.0,
-  "Glass": 5.5,
-  "Stainless Steel": 5.5
+  "Titanium Alloy": 6.1,
+  "Sheep": 8.0,
+  "Stainless Steel": 5.5,
+  "Diamond": 13.2,
+  "Book": 12.1,
+  "Witch": null,
+  "Sugar": 3.3,
+  "Sand": 3.3,
+  "Amber": 11.4,
+  "Clock": 8.7,
+  "Library": 14.7,
+  "Apple Pie": 22.1,
+  "Lighthouse": 13.7,
+  "Treasure Map": null,
+  "Coconut": null,
+  "Berry Cupcakes": 26.2,
+  "Planet": 9.5,
+  "Millennium Falcon": null,
+  "Limestone": 2.9,
+  "Golem": null,
+  "Steel": 3.1,
+  "Helicopter": 21.0,
+  "Blackberries": 11.3,
+  "Fireworks": 4.4,
+  "Croissant": 23.2,
+  "Fiberglass": 11.0,
+  "Renewable Grid": 30.1,
+  "Bridge": 7.8,
+  "Strawberries": 11.2,
+  "Cacao Beans": null,
+  "Red Dye": 15.3,
+  "DNA": 3.9,
+  "Metropolis": 23.2,
+  "Trombone": null,
+  "Pearl": 14.7,
+  "Farm": 8.1,
+  "Banana": 7.5,
+  "Blue Dye": 18.2,
+  "Wire": 3.9,
+  "Passionfruit": null,
+  "Homestead": 15.4,
+  "Building": 8.3,
+  "Aluminum Alloy": 5.7,
+  "Rubber": 5.4,
+  "Flour": 21.8,
+  "Dough": 21.5,
+  "Volcano": 14.4,
+  "Plastic": 8.6,
+  "Cream": 12.0,
+  "Magnet": 4.7,
+  "Fabric": 8.8,
+  "Natural Gas": 3.0,
+  "Angel": null,
+  "Apple": 7.1,
+  "Yellow Dye": 16.1,
+  "Chocolate": 9.4,
+  "Mermaid": null,
+  "Tools": 4.2,
+  "Wheel": 10.8,
+  "Tree": 5.3,
+  "Orca": 13.9,
+  "Compass": 8.5,
+  "Sailboat": 9.6,
+  "Bicycle": 15.4,
+  "Satellite Dish": 11.7,
+  "Telescope": 12.6,
+  "Bone": 5.2,
+  "Speedboat": 15.9,
+  "Furnace": 4.7,
+  "Wizard": null,
+  "Chicken": 11.4,
+  "Egg": 6.0,
+  "Mushroom": 5.7,
+  "Yarn": 13.6,
+  "Centaur": null,
+  "Chocolate Cake": 23.6,
+  "Log Cabin": 8.0,
+  "Glass Vial": 11.0,
+  "Computer": 16.1,
+  "Rocket": 22.0,
+  "Éclair": 25.1,
+  "Honey": 8.5,
+  "Wool": 8.2,
+  "Banana Bread": 22.3,
+  "Beach Town": 27.0,
+  "Water": 2.6,
+  "Rope": 7.6,
+  "Battery": 4.9,
+  "Cow": 8.7,
+  "Turquoise": 15.0,
+  "Tractor": 10.3,
+  "Cake": 23.4,
+  "Unicorn": null,
+  "Ecosystem": 25.2,
+  "Butter": 11.9,
+  "Pegasus": null
  }
 }/*__STORY_DATA_END__*/;
 </script>
@@ -1375,8 +1910,12 @@ const DATA = /*__STORY_DATA_START__*/{
       byName[name] = it;
     }
     st.shop.forEach(([e,n,tag,rec,pt]) => add(e,n,tag,rec,pt));
-    const [ce,cn,ct,cr,cpt] = st.capstone;
-    add(ce,cn,ct,cr,cpt);
+    // Sub-zone "stations" (see build_story_sim.py's subzone_stations())
+    // mostly have no capstone at all -- every planet, Island.
+    if (st.capstone){
+      const [ce,cn,ct,cr,cpt] = st.capstone;
+      add(ce,cn,ct,cr,cpt);
+    }
   });
 
   // depth = 1 + max(depth of item deps), 0 if no item deps
