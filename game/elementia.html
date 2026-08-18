@@ -438,29 +438,14 @@ body[data-screen="market"] #trackedPill{display:none}
    through Home's own Market face, not an overlay sheet -- same tier as
    Codex (see openPanelName()/closePanelByName()'s "market" case), so
    Jobs/Trade/Collections still layer on top of it as sheets exactly the
-   way they already do on top of Codex or a station.
-   .market-canvas carries its own backdrop art in-flow (not through the
-   shared fixed #backdrop stations use) as a real 9:16 portrait box sized
-   to fit the viewport -- width:min(100%, height-budget * 9/16) picks
-   whichever dimension is actually the binding constraint, so on a tall
-   phone it's full-width with letterboxed height, and on a wide desktop
-   frame it's full-height with letterboxed width, but it's never taller
-   than the available window: the whole point is this screen needs no
-   scroll of its own, same as the map screen never needs one sideways.
-   .market-hero sits absolutely positioned over the art itself, same
-   convention .sheet-head uses floating over a station's own backdrop,
-   rather than a boxed panel competing with it. */
-.market-screen{display:flex; justify-content:center}
-.market-canvas{
-  position:relative; overflow:hidden; border-radius:20px; aspect-ratio:9/16;
-  width:min(100%, calc((100vh - var(--hub-h, 67px) - 90px) * 9 / 16));
-  background:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("backdrops/marketplace.webp");
-  background-size:cover; background-position:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
-.market-hero{
-  position:absolute; left:0; right:0; top:28px; padding:0 22px; text-align:center;
-}
+   way they already do on top of Codex or a station. Its backdrop art
+   (see updateBackdrop()) is the shared fixed #backdrop layer stations
+   already use -- the source image is itself a real 9:16 portrait, so
+   cover-sizing it across the full viewport (a mobile screen's own
+   proportions are already close to 9:16) reads as a true background,
+   not a boxed inset. .market-hero floats directly over it, same
+   convention .sheet-head uses for a station's own header. */
+.market-screen{text-align:center; padding-top:12px}
 .market-hero-em{font-size:52px; line-height:1; filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
 .market-hero h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.6)}
 .market-hero p{font-size:13.5px; color:rgba(255,255,255,.88); max-width:320px; margin:4px auto 0; text-shadow:0 2px 6px rgba(0,0,0,.7)}
@@ -2179,7 +2164,7 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    own center regardless of viewport width, since the frame itself is
    centered the same way. */
 #mouseTip{
-  position:fixed; left:16px; bottom:max(16px, env(safe-area-inset-bottom));
+  position:fixed; left:16px; bottom:calc(var(--hub-h, 67px) + 14px);
   transform:translateY(14px); z-index:230;
   display:flex; align-items:flex-end; max-width:min(560px, 92vw);
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
@@ -6779,13 +6764,16 @@ function render(resetScroll){
    whatever colors the art happens to have. */
 function updateBackdrop(){
   const el = document.getElementById("backdrop");
-  // Marketplace carries its own art in-flow now (see .market-canvas in
-  // renderMarketScreen()) rather than through this fixed full-page
-  // layer -- a 9:16 box sized to fit the viewport without scrolling,
-  // not a cover-cropped fullscreen image, with its own hero text
-  // overlaid directly on it the same way a station's .sheet-head sits
-  // over that station's own backdrop.
-  const path = screen === "station" && current ? STATION_BG[current] : null;
+  // Marketplace shares this exact fixed full-page layer with stations --
+  // the source art is itself a real 9:16 portrait image (see
+  // backdrops/marketplace.webp), so background-size:cover on the full
+  // viewport (a mobile screen's own proportions are already close to
+  // 9:16) shows it as a true background rather than a boxed, letter-
+  // boxed inset floating in the middle of the screen the way an earlier
+  // pass at this got wrong.
+  const path = screen === "station" && current ? STATION_BG[current]
+    : screen === "market" ? "backdrops/marketplace.webp"
+    : null;
   if (path){
     el.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${path}")`;
     el.classList.add("show");
@@ -8509,12 +8497,10 @@ function closeJobBoard(){
    right back here. */
 function renderMarketScreen(){
   return `<div class="market-screen">
-    <div class="market-canvas">
-      <div class="market-hero">
-        <div class="market-hero-em">🏪</div>
-        <h1>Marketplace</h1>
-        <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
-      </div>
+    <div class="market-hero">
+      <div class="market-hero-em">🏪</div>
+      <h1>Marketplace</h1>
+      <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
     </div>
   </div>`;
 }
