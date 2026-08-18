@@ -354,6 +354,22 @@ body[data-screen="codex"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
+/* Trade Market: a third instance of the exact same slide-from-left shape
+   as #jobSheet -- reached FROM the Marketplace tray (like Job Board is),
+   so it shares that dedicated-feature-panel language rather than the
+   Marketplace tray's own top-drop shape. Only one sheet is ever open at
+   once (see openPanelName()), so no visual differentiation is needed. */
+#tradeScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
+#tradeScrim.open{display:block}
+#tradeSheet{
+  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  padding-left:24px; box-sizing:border-box;
+  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
+  background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
+  border-radius:0 0 14px 0; transform:translateX(-100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+}
+#tradeSheet.open{transform:none}
 /* Marketplace: identical shape/motion language to #jobSheet (same gold
    border, same slide-from-left), just a second instance -- only one of
    the two is ever open at a time (see openPanelName()), so there's no
@@ -391,6 +407,32 @@ body[data-screen="codex"] #trackedPill{display:none}
   color:var(--mute); background:var(--card); border:1px solid var(--line); border-radius:999px;
   padding:3px 9px;
 }
+/* Trade Market: pick-an-item list reuses .itemlist/.ientry (same shape as
+   the Drawer's own inventory list) with a points sub-label swapped in for
+   the usual station-badge slot. Once an offer is rolled, the list is
+   replaced by a give/get card pair -- .trade-card is a smaller one-item
+   sibling of .job-card (same gold-bordered "trading card" stock and
+   overhanging label pill), never two-item, so it skips .job-card's
+   min-height/justify-content tuning built for that taller 2-item case. */
+.trade-intro{font-size:13px; color:var(--ink2); margin:0 0 14px; line-height:1.5}
+.trade-offer-row{display:flex; align-items:center; gap:10px; margin-bottom:18px}
+.trade-arrow{font-size:22px; color:var(--gold); flex:none}
+.trade-card{
+  position:relative; flex:1; min-width:0; background:var(--jobcard-bg); border:2.5px solid var(--gold);
+  border-radius:14px; padding:22px 6px 12px; box-shadow:0 4px 14px var(--shadow);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  text-align:center; min-height:118px;
+}
+.trade-card-label{
+  position:absolute; top:-11px; left:50%; transform:translateX(-50%); z-index:2;
+  background:var(--gold); color:#241a0c; font-size:9px; font-weight:800; letter-spacing:.3px;
+  padding:3px 9px; border-radius:999px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.trade-card-icon{font-size:34px; line-height:1}
+.trade-card-name{font-size:12.5px; font-weight:800; color:#fff; line-height:1.2}
+.trade-card-pts{font-size:11px; font-weight:700; color:var(--mute)}
+.trade-actions{display:flex; gap:8px}
+.trade-actions .bigbtn{flex:1; padding:12px 10px; font-size:13px}
 /* Coin-flip: only played on the Home button's icon+label when it swaps
    specifically between the Map and Marketplace faces (see
    setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
@@ -2179,11 +2221,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #tradeScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
-  #jobSheet{left:calc(50% - 408px)}
+  #jobSheet, #tradeSheet{left:calc(50% - 408px)}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -2690,6 +2732,20 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="tbtn ghost" id="marketSheetClose" aria-label="Close marketplace">✕</button>
   </div>
   <div class="dbody" id="marketSheetBody"></div>
+</aside>
+
+<!-- Trade Market: Hard Mode only (see renderTradeBody()) -- crafted items
+     are real spendable stock there, so offering one up for a random item
+     of similar point value is a real trade rather than deleting something
+     from a permanent collection. Reached from the Marketplace tray, same
+     "close that, open this" pattern as Job Board. -->
+<div id="tradeScrim"></div>
+<aside id="tradeSheet" aria-label="Trade Market" aria-hidden="true">
+  <div class="dhead">
+    <h2 id="tradeTitle">🔄 Trade Market</h2>
+    <button type="button" class="tbtn ghost" id="tradeSheetClose" aria-label="Close trade market">✕</button>
+  </div>
+  <div class="dbody" id="tradeSheetBody"></div>
 </aside>
 
 <script>
@@ -7228,6 +7284,7 @@ function openPanelName(){
   if (drawer.classList.contains("open")) return "drawer";
   if (jobSheet.classList.contains("open")) return "jobs";
   if (marketSheet.classList.contains("open")) return "market";
+  if (tradeSheet.classList.contains("open")) return "trade";
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("settings").classList.contains("open")) return "settings";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
@@ -7238,6 +7295,7 @@ function closePanelByName(name){
   if (name === "drawer") closeDrawer();
   else if (name === "jobs") closeJobBoard();
   else if (name === "market") closeMarket();
+  else if (name === "trade") closeTradeMarket();
   else if (name === "pins") closePinsTray();
   else if (name === "settings") closeOverlay("settings");
   else if (name === "convert") closeOverlay("convert");
@@ -7581,10 +7639,9 @@ function renderMarketBody(){
       <span class="mr-body"><div class="mr-title">Quest Log</div><div class="mr-sub">Multi-step storylines</div></span>
       <span class="mr-soon">Coming soon</span>
     </button>
-    <button type="button" class="market-row" disabled>
+    <button type="button" class="market-row" id="marketToTrade" ${state.mode === "hard" ? "" : "disabled"}>
       <span class="mr-em">🔄</span>
-      <span class="mr-body"><div class="mr-title">Trade Market</div><div class="mr-sub">Swap items with other traders</div></span>
-      <span class="mr-soon">Coming soon</span>
+      <span class="mr-body"><div class="mr-title">Trade Market</div><div class="mr-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
     </button>
     <button type="button" class="market-row" disabled>
       <span class="mr-em">🏛️</span>
@@ -7609,6 +7666,148 @@ document.getElementById("marketSheetClose").addEventListener("click", closeMarke
 marketScrim.addEventListener("click", closeMarket);
 document.getElementById("marketSheetBody").addEventListener("click", ev => {
   if (ev.target.closest("#marketToJobs")){ closeMarket(); openJobBoard(); }
+  if (ev.target.closest("#marketToTrade") && state.mode === "hard"){ closeMarket(); openTradeMarket(); }
+});
+
+/* ----------------------------------------------------- trade market --- */
+/* Hard Mode only -- see renderTradeBody(). state.items there is a real
+   multiset (ingredients get spent, see craft()), so "give up a spare item,
+   get a random different one back" is an honest trade instead of deleting
+   something from a permanent collection the way it would in Classic/Zen. */
+const tradeSheet = document.getElementById("tradeSheet"), tradeScrim = document.getElementById("tradeScrim");
+// Ephemeral, not saved -- same category as selectedJobItem: the "offer in
+// progress" resets whenever the panel is closed or a trade completes.
+let tradeOffer = null;
+const TRADE_FREE_REROLLS = 1;
+function itemStock(name){ return state.items.filter(n => n === name).length; }
+/* Same two exclusions craft() already applies when spending ingredient
+   items (see craft()'s Hard Mode branch) -- Capstones are never meant to
+   be spent, and UTILITY_ITEMS (Furnace, Farm) are reusable tools, not
+   stock. Neither belongs on a "here's what you can trade away" list. */
+function tradeableItems(){
+  const counts = {};
+  state.items.forEach(n => counts[n] = (counts[n] || 0) + 1);
+  return Object.keys(counts)
+    .filter(n => ITEM_TIER[n] !== "CAPSTONE" && !UTILITY_ITEMS.has(n))
+    .sort((a, b) => (ITEM_POINTS[a] || 0) - (ITEM_POINTS[b] || 0))
+    .map(n => ({name: n, count: counts[n]}));
+}
+/* "Roughly equal point value" -- a band that widens with the item's own
+   points (so a 24pt item isn't held to the same +/-2 tolerance as a 2pt
+   one) but never shrinks below +/-2 (so cheap items aren't stuck matching
+   only their exact point value). Prefers not-yet-owned partners so a
+   trade usually grows the collection rather than just restocking
+   something already in hand -- falls back to the full band if the player
+   already owns everything in it. */
+function tradeBand(pts){ return Math.max(2, Math.round(pts * 0.25)); }
+function tradeEligiblePartners(offerName){
+  const offerPts = ITEM_POINTS[offerName] || 0;
+  const band = tradeBand(offerPts);
+  const names = [...new Set(ENTRIES.map(e => e.name))]; // dedupe 2-station items
+  const pool = names.filter(n => n !== offerName
+    && ITEM_TIER[n] !== "CAPSTONE" && !UTILITY_ITEMS.has(n)
+    && Math.abs((ITEM_POINTS[n] || 0) - offerPts) <= band);
+  const notOwned = pool.filter(n => !owns(n));
+  return notOwned.length ? notOwned : pool;
+}
+function rollTradePartner(offerName, exclude){
+  const pool = tradeEligiblePartners(offerName);
+  const fresh = exclude ? pool.filter(n => n !== exclude) : pool;
+  const from = fresh.length ? fresh : pool;
+  return from.length ? from[Math.floor(Math.random() * from.length)] : null;
+}
+function startTradeOffer(name){
+  if (itemStock(name) <= 0) return;
+  tradeOffer = {give: name, get: rollTradePartner(name, null), rerollsLeft: TRADE_FREE_REROLLS};
+  renderTradeBody();
+}
+function rerollTradeOffer(){
+  if (!tradeOffer || tradeOffer.rerollsLeft <= 0) return;
+  const next = rollTradePartner(tradeOffer.give, tradeOffer.get);
+  if (next) tradeOffer.get = next;
+  tradeOffer.rerollsLeft--;
+  renderTradeBody();
+}
+function cancelTradeOffer(){
+  tradeOffer = null;
+  renderTradeBody();
+}
+/* Mirrors craft()'s own item-side bookkeeping (spend one, push one,
+   bump craftCounts, clear a stale pin/tracked-item pointer) rather than
+   routing through craft() itself -- this isn't a craft (no elements are
+   touched, and the received item was never "built"), just the same
+   inventory plumbing applied to a swap instead. */
+function acceptTradeOffer(){
+  if (!tradeOffer || !tradeOffer.get || itemStock(tradeOffer.give) <= 0) return;
+  const idx = state.items.indexOf(tradeOffer.give);
+  state.items.splice(idx, 1);
+  state.items.push(tradeOffer.get);
+  state.craftCounts[tradeOffer.get] = (state.craftCounts[tradeOffer.get] || 0) + 1;
+  if (isPinned(tradeOffer.get)) togglePin(tradeOffer.get);
+  if (selectedJobItem === tradeOffer.get) selectedJobItem = null;
+  tradeOffer = null;
+  save(); render(); renderTradeBody();
+}
+function tradeCardHTML(name, label){
+  const pts = ITEM_POINTS[name] || 0;
+  return `<div class="trade-card">
+    <span class="trade-card-label">${esc(label)}</span>
+    <span class="trade-card-icon">${em(ITEM_EMOJI[name])}</span>
+    <span class="trade-card-name">${esc(name)}</span>
+    <span class="trade-card-pts">${pts} pts</span>
+  </div>`;
+}
+function renderTradeBody(){
+  const body = document.getElementById("tradeSheetBody");
+  if (state.mode !== "hard"){
+    body.innerHTML = `<p class="empty">🔄 The Trade Market only opens in Hard Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
+    return;
+  }
+  if (tradeOffer){
+    const getSlot = tradeOffer.get
+      ? tradeCardHTML(tradeOffer.get, "You'd get")
+      : `<div class="trade-card"><span class="trade-card-label">You'd get</span><p class="empty">Nothing eligible right now</p></div>`;
+    body.innerHTML = `
+      <p class="trade-intro">Offering your <b>${esc(tradeOffer.give)}</b> for a random item of similar value.</p>
+      <div class="trade-offer-row">${tradeCardHTML(tradeOffer.give, "You give")}<span class="trade-arrow">⇄</span>${getSlot}</div>
+      <div class="trade-actions">
+        <button type="button" class="bigbtn sec" id="tradeCancel">Cancel</button>
+        <button type="button" class="bigbtn sec" id="tradeReroll" ${tradeOffer.rerollsLeft > 0 ? "" : "disabled"}>🔀 Reroll (${tradeOffer.rerollsLeft})</button>
+        <button type="button" class="bigbtn" id="tradeAccept" ${tradeOffer.get ? "" : "disabled"}>Accept</button>
+      </div>`;
+    return;
+  }
+  const items = tradeableItems();
+  body.innerHTML = items.length
+    ? `<p class="trade-intro">Pick something to put up for trade — you'll get a random item back worth about the same.</p>
+       <div class="itemlist">${items.map(({name, count}) => `
+         <button type="button" class="ientry" data-trade-offer="${esc(name)}">
+           <span class="iem">${em(ITEM_EMOJI[name])}</span>${esc(name)}
+           <span class="where">${ITEM_POINTS[name] || 0} pts</span>
+           ${count > 1 ? `<span class="iqty">×${count}</span>` : ""}
+         </button>`).join("")}</div>`
+    : `<p class="empty">🎒 Nothing in stock to trade right now — craft something first.</p>`;
+}
+function openTradeMarket(){
+  tradeOffer = null;
+  renderTradeBody();
+  tradeSheet.classList.add("open"); tradeScrim.classList.add("open");
+  tradeSheet.setAttribute("aria-hidden", "false");
+  updateHub();
+}
+function closeTradeMarket(){
+  tradeSheet.classList.remove("open"); tradeScrim.classList.remove("open");
+  tradeSheet.setAttribute("aria-hidden", "true");
+  updateHub();
+}
+document.getElementById("tradeSheetClose").addEventListener("click", closeTradeMarket);
+tradeScrim.addEventListener("click", closeTradeMarket);
+document.getElementById("tradeSheetBody").addEventListener("click", ev => {
+  const offerBtn = ev.target.closest("[data-trade-offer]");
+  if (offerBtn){ startTradeOffer(offerBtn.dataset.tradeOffer); return; }
+  if (ev.target.closest("#tradeCancel")){ cancelTradeOffer(); return; }
+  if (ev.target.closest("#tradeReroll")){ rerollTradeOffer(); return; }
+  if (ev.target.closest("#tradeAccept")){ acceptTradeOffer(); return; }
 });
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
