@@ -143,7 +143,7 @@ STATIONS = [
              ("🌱","Soil","COMPONENT","🏺 Clay + ⏳ Sand",4),
              ("🍓","Strawberries","MATERIAL","🍬 Sugar + Ca + 🧺 Basket",11),
 
-             ("🍄","Mushroom","COMPONENT","🌱 Soil + 💧 Water",5),
+             ("🍄","Mushroom","COMPONENT","🌱 Soil + 💧 Water + N",6),
              ("🌳","Tree","COMPONENT","🌱 Soil + C + O",6),
              ("🛶","Canoe","COMPONENT","🌳 Tree + 💧 Water",6),
              ("🦌","Deer","CREATION","🌳 Tree + 💧 Water + 🦴 Bone",7),

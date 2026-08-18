@@ -403,6 +403,20 @@ body[data-screen="market"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #tradeSheet.open{transform:none}
+/* Quests: same slide-from-left shape as Job/Trade, gold border like
+   Trade -- Marketplace's own achievement color, no dedicated accent of
+   its own needed for a fourth instance of an already-established shape. */
+#questsScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
+#questsScrim.open{display:block}
+#questsSheet{
+  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  padding-left:24px; box-sizing:border-box;
+  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
+  background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
+  border-radius:0 0 14px 0; transform:translateX(-100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+}
+#questsSheet.open{transform:none}
 /* Collections: a fourth instance of the same slide-from-left shape, but
    with its own accent (violet, matching the Power Plant suit) instead of
    gold -- the one hub panel that works identically in all 3 modes, and
@@ -424,18 +438,36 @@ body[data-screen="market"] #trackedPill{display:none}
    through Home's own Market face, not an overlay sheet -- same tier as
    Codex (see openPanelName()/closePanelByName()'s "market" case), so
    Jobs/Trade/Collections still layer on top of it as sheets exactly the
-   way they already do on top of Codex or a station. Its own backdrop art
-   (see updateBackdrop()) shows through behind it, same #backdrop/wash
-   mechanic a station uses -- .market-hero is deliberately just floating
-   title text over that art, same convention .sheet-head uses for a
-   station's own header, rather than a boxed panel competing with it. */
-.market-screen{max-width:520px; margin:0 auto; text-align:center; padding-top:12px}
+   way they already do on top of Codex or a station.
+   .market-canvas carries its own backdrop art in-flow (not through the
+   shared fixed #backdrop stations use) as a real 9:16 portrait box sized
+   to fit the viewport -- width:min(100%, height-budget * 9/16) picks
+   whichever dimension is actually the binding constraint, so on a tall
+   phone it's full-width with letterboxed height, and on a wide desktop
+   frame it's full-height with letterboxed width, but it's never taller
+   than the available window: the whole point is this screen needs no
+   scroll of its own, same as the map screen never needs one sideways.
+   .market-hero sits absolutely positioned over the art itself, same
+   convention .sheet-head uses floating over a station's own backdrop,
+   rather than a boxed panel competing with it. */
+.market-screen{display:flex; justify-content:center}
+.market-canvas{
+  position:relative; overflow:hidden; border-radius:20px; aspect-ratio:9/16;
+  width:min(100%, calc((100vh - var(--hub-h, 67px) - 90px) * 9 / 16));
+  background:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("backdrops/marketplace.webp");
+  background-size:cover; background-position:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.market-hero{
+  position:absolute; left:0; right:0; top:28px; padding:0 22px; text-align:center;
+}
 .market-hero-em{font-size:52px; line-height:1; filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
 .market-hero h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.6)}
-.market-hero p{font-size:13.5px; color:rgba(255,255,255,.82); max-width:340px; margin:4px auto 0; text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.market-hero p{font-size:13.5px; color:rgba(255,255,255,.88); max-width:320px; margin:4px auto 0; text-shadow:0 2px 6px rgba(0,0,0,.7)}
 /* The four options are now the icon-circle arc around the hub's center
-   button (see #marketArc/.market-arc-btn below) instead of a list here --
-   this leftover space just carries the title over the backdrop art. */
+   button (see #marketArc/.market-arc-btn below), a fixed-position layer
+   independent of the canvas -- it doesn't need to fit inside this box,
+   only to visually read as belonging to it. */
 
 /* Marketplace's arc menu -- #marketArc is a zero-size anchor point
    positioned exactly on #hubHome's live center (see positionMarketArc(),
@@ -509,6 +541,40 @@ body[data-screen="market"] #trackedPill{display:none}
 .tdb-em{font-size:19px; line-height:1}
 .tdb-name{font-size:13.5px; font-weight:800; color:#fff}
 .trade-demand-btn.ok .tdb-name{color:#0a2015}
+/* Quests -- tiered like a real tree without drawing one: each
+   .quest-tier is a row of cards (a tier with more cards than the one
+   above it IS the branch point, see renderQuestsBody()'s own comment).
+   Card itself borrows the same gold "trading card" stock trade/job
+   cards already use; the accept button below reuses job cards' own
+   .jc-icon-btn/.jc-accept for the same big green-when-actionable feel,
+   just with a real label since "the quest item" isn't obvious from a
+   checkmark alone the way "accept this job" is. */
+.quest-tier-label{
+  font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  color:var(--mute); margin:20px 0 10px;
+}
+.quest-tier-label:first-of-type{margin-top:4px}
+.quest-tier{display:flex; flex-direction:column; gap:14px}
+.quest-card-wrap{display:flex; flex-direction:column; gap:10px}
+.quest-card{
+  display:flex; align-items:center; gap:14px; background:var(--jobcard-bg);
+  border:2.5px solid var(--gold); border-radius:14px; padding:16px; box-shadow:0 4px 14px var(--shadow);
+}
+.quest-card-wrap.locked .quest-card{border-color:var(--line); opacity:.6; filter:grayscale(.3)}
+.quest-card-wrap.done .quest-card{border-color:var(--ok)}
+.quest-card-em{font-size:34px; line-height:1; flex:none}
+.quest-card-body{flex:1; min-width:0}
+.quest-card-name{font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.quest-card-blurb{font-size:12.5px; color:var(--mute); line-height:1.4; margin-top:3px}
+.quest-gateway{
+  font-size:9.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase;
+  color:#2a2110; background:var(--gold); padding:2px 8px; border-radius:999px; white-space:nowrap;
+}
+.quest-locked-note, .quest-done-note{
+  font-size:12.5px; font-weight:700; text-align:center; padding:10px; border-radius:12px;
+}
+.quest-locked-note{color:var(--mute); background:var(--sunken); border:1.5px dashed var(--line)}
+.quest-done-note{color:var(--ok); background:var(--ok-soft); border:1.5px solid var(--ok-line)}
 /* Collections: each entry is a row (not a card grid like Trade Market) --
    a collection can have anywhere from 4 to 7 members, and a card grid of
    tiny per-member icons reads better as a horizontal filmstrip inside a
@@ -558,6 +624,23 @@ body[data-screen="market"] #trackedPill{display:none}
 #collectionToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--collection)}
 #collectionToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
 #collectionToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--collection)}
+/* Quest completion toast -- identical shape/motion to #collectionToast
+   right above (same .ct-em/.ct-body/.ct-title/.ct-name/.ct-bonus
+   classes, see showNextQuestToast()), gold instead of purple since
+   that's already the Marketplace/achievement color elsewhere. */
+#questToast{
+  position:fixed; top:0; left:0; right:0; z-index:90;
+  display:flex; align-items:center; gap:12px; padding:14px 18px;
+  background:var(--gold-soft); border-bottom:2.5px solid var(--gold);
+  transform:translateY(-100%); transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  cursor:pointer;
+}
+#questToast.show{transform:translateY(0)}
+#questToast .ct-em{font-size:30px; line-height:1; flex:none}
+#questToast .ct-body{flex:1; min-width:0}
+#questToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--gold)}
+#questToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
+#questToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--gold)}
 /* Coin-flip: only played on the Home button's icon+label when it swaps
    specifically between the Map and Marketplace faces (see
    setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
@@ -2096,24 +2179,24 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    own center regardless of viewport width, since the frame itself is
    centered the same way. */
 #mouseTip{
-  position:fixed; top:max(16px, env(safe-area-inset-top)); left:50%;
-  transform:translateX(-50%) translateY(-14px); z-index:230;
-  display:flex; align-items:flex-end; max-width:min(420px, 92vw);
+  position:fixed; left:16px; bottom:max(16px, env(safe-area-inset-bottom));
+  transform:translateY(14px); z-index:230;
+  display:flex; align-items:flex-end; max-width:min(560px, 92vw);
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
 }
-#mouseTip.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto}
+#mouseTip.show{opacity:1; transform:translateY(0); pointer-events:auto}
 #mouseTipImg{
-  width:76px; height:auto; flex:none; margin-right:-16px; margin-bottom:-6px;
-  filter:drop-shadow(0 6px 10px rgba(0,0,0,.5)); position:relative; z-index:2;
+  width:114px; height:auto; flex:none; margin-right:-24px; margin-bottom:-9px;
+  filter:drop-shadow(0 9px 15px rgba(0,0,0,.5)); position:relative; z-index:2;
 }
 .mouse-bubble{
-  position:relative; background:var(--card); border:2.5px solid var(--gold); border-radius:18px 18px 18px 4px;
-  padding:13px 30px 13px 20px; box-shadow:0 10px 26px rgba(0,0,0,.5);
+  position:relative; background:var(--card); border:3px solid var(--gold); border-radius:22px 22px 22px 6px;
+  padding:19px 42px 19px 28px; box-shadow:0 14px 34px rgba(0,0,0,.5);
 }
-.mouse-bubble p{font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.42; margin:0}
+.mouse-bubble p{font-size:19px; font-weight:700; color:var(--ink); line-height:1.42; margin:0}
 .mouse-tip-close{
-  position:absolute; top:7px; right:7px; width:20px; height:20px; border-radius:50%;
-  background:var(--sunken); color:var(--mute); font-size:10px; display:flex; align-items:center; justify-content:center;
+  position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
+  background:var(--sunken); color:var(--mute); font-size:14px; display:flex; align-items:center; justify-content:center;
 }
 
 /* ------------------------------------------------- reference sheet --- */
@@ -2492,12 +2575,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #tradeScrim, #collectionsScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #tradeScrim, #questsScrim, #collectionsScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
-  #jobSheet, #tradeSheet, #collectionsSheet{left:calc(50% - 408px)}
-  #collectionToast{left:50%; margin-left:-192px}
+  #jobSheet, #tradeSheet, #questsSheet, #collectionsSheet{left:calc(50% - 408px)}
+  #collectionToast, #questToast{left:50%; margin-left:-192px}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -3061,6 +3144,19 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <div class="dbody" id="collectionsSheetBody"></div>
 </aside>
 <div id="collectionToast" role="status" aria-hidden="true"></div>
+
+<!-- Quests: a branching tree of keystone-item goals, Hard Mode only --
+     see the QUESTS array's own comment for how the tree is built. Same
+     shape/motion language as Collections right above. -->
+<div id="questsScrim"></div>
+<aside id="questsSheet" aria-label="Quests" aria-hidden="true">
+  <div class="dhead">
+    <h2 id="questsTitle">📜 Quests</h2>
+    <button type="button" class="tbtn ghost" id="questsSheetClose" aria-label="Close quests">✕</button>
+  </div>
+  <div class="dbody" id="questsSheetBody"></div>
+</aside>
+<div id="questToast" role="status" aria-hidden="true"></div>
 
 <script>
 /* =====================================================================
@@ -3729,8 +3825,8 @@ const DATA = /*__GAME_DATA_START__*/{
      "🍄",
      "Mushroom",
      "COMPONENT",
-     "🌱 Soil + 💧 Water",
-     5
+     "🌱 Soil + 💧 Water + N",
+     6
     ],
     [
      "🌳",
@@ -4320,147 +4416,147 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Banana": 7.5,
-  "DNA": 3.9,
-  "Cream": 12.0,
-  "Sheep": 8.0,
-  "Apple Pie": 22.1,
-  "Wire": 3.9,
-  "Volcano": 14.4,
-  "Chocolate Cake": 23.6,
-  "Bicycle": 15.4,
-  "Fabric": 8.8,
-  "Opal": 11.5,
-  "Seaweed": 5.3,
-  "Solar Panel": 8.9,
-  "Lighthouse": 13.7,
-  "Aluminum Alloy": 5.7,
-  "Museum": 20.7,
-  "Beach Town": 27.0,
-  "Windmill": 19.9,
-  "Life": 20.3,
-  "Speedboat": 15.9,
-  "Natural Gas": 3.0,
-  "Flour": 21.8,
-  "Croissant": 23.2,
-  "Steel": 3.1,
-  "Bridge": 7.8,
-  "Honey": 8.5,
-  "Banana Bread": 22.3,
-  "Limestone": 2.9,
-  "Fossil": 11.6,
-  "Rainbow": 18.1,
-  "Water Turbine": 23.6,
-  "Helicopter": 21.0,
-  "Concrete": 5.9,
-  "Trombone": null,
-  "Central Station": 24.8,
-  "Sushi Restaurant": 19.7,
-  "Rocket": 22.0,
-  "Butter": 11.9,
-  "Orca": 13.9,
-  "Blackberries": 11.3,
-  "Computer": 16.1,
-  "Cake": 23.4,
-  "Car": 17.4,
-  "Fiberglass": 11.0,
-  "Milk": 10.0,
-  "Telescope": 12.6,
-  "Rope": 7.6,
-  "Coral Reef": 18.5,
-  "Magnet": 4.7,
-  "Cow": 8.7,
-  "Diamond": 13.2,
-  "Statue": 8.0,
-  "Biofuel": 11.7,
-  "Grand Banquet": 26.9,
-  "Log Cabin": 8.0,
-  "Clay": 2.8,
-  "Pretzel": 21.8,
-  "Library": 14.7,
-  "Deer": 7.0,
-  "Chicken": 11.4,
-  "Bread": 22.8,
-  "Tractor": 10.3,
-  "Sugar": 3.3,
-  "Éclair": 25.1,
-  "Yeast": 5.3,
-  "Maglev Train": 17.0,
-  "Ecosystem": 25.2,
-  "Cloud": 5.7,
-  "Solar System": 18.6,
-  "Pearl": 14.7,
-  "Water": 2.6,
-  "Glass": 5.4,
-  "Mushroom": 5.7,
-  "Soil": 4.8,
-  "Apple": 7.1,
-  "Cheesecake": 24.6,
-  "Yarn": 13.6,
-  "Fireworks": 4.4,
-  "Dough": 21.5,
-  "Chocolate": 9.4,
-  "Star": 16.9,
-  "Oven": 11.9,
-  "Blueberries": 14.3,
-  "Wheel": 10.8,
-  "Robot": 17.6,
-  "Yellow Dye": 16.1,
-  "Dinosaur": 13.1,
-  "Fertilizer": 3.5,
-  "Renewable Grid": 30.1,
-  "Turquoise": 15.0,
-  "Salmon": 11.9,
+  "Satellite Dish": 11.9,
+  "Bread": 22.7,
+  "Compass": 8.0,
   "Homestead": 15.4,
-  "Plant Fiber": 7.7,
-  "Engine": 7.8,
-  "Motorcycle": 17.6,
-  "Light Bulb": 7.5,
-  "Sunflower": 19.9,
-  "Black Dye": 17.2,
-  "Fruit Cake": 24.0,
-  "Cruise Ship": null,
+  "Renewable Grid": 30.1,
+  "Sushi Restaurant": 19.1,
+  "Dough": 21.5,
+  "Coral Reef": 18.3,
+  "Opal": 11.8,
+  "Computer": 15.7,
+  "Plastic": 8.2,
   "Tree": 5.3,
-  "Planet": 9.5,
-  "Basket": 8.8,
-  "Clock": 8.7,
-  "Knit Scarf": 21.3,
-  "Tools": 4.2,
-  "Paper": 12.2,
-  "Sailboat": 9.6,
-  "Glass Vial": 11.0,
+  "Cake": 24.1,
+  "Furnace": 4.8,
   "Ruby": 13.7,
-  "Building": 8.3,
-  "Amber": 11.4,
+  "Maglev Train": 16.9,
+  "Bone": 5.3,
+  "Diamond": 13.2,
+  "Yellow Dye": 15.8,
+  "Milk": 10.1,
+  "Robot": 18.1,
+  "Red Dye": 14.8,
+  "Cloud": 5.5,
   "Brass": null,
-  "Metropolis": 23.2,
-  "Geothermal Pump": 10.0,
-  "Sand": 3.3,
-  "Farm": 8.1,
-  "Skyscraper": 16.3,
-  "Gemstone Collection": 20.1,
-  "Microchip": 8.6,
-  "Strawberries": 11.2,
-  "Plastic": 8.6,
-  "Wool": 8.2,
-  "Titanium Alloy": 6.1,
-  "Egg": 6.0,
-  "Furnace": 4.7,
-  "Turbine Blade": 17.5,
-  "Red Dye": 15.3,
-  "Battery": 4.9,
-  "Bone": 5.2,
-  "Bee": 8.6,
-  "Blue Dye": 18.2,
-  "Compass": 8.5,
-  "Grain": 8.6,
-  "Berry Cupcakes": 26.2,
-  "Book": 12.1,
-  "Satellite Dish": 11.7,
-  "Rubber": 5.4,
+  "Beach Town": 27.0,
+  "Wheel": 10.8,
+  "Water Turbine": 23.2,
+  "Central Station": 24.8,
+  "Sheep": 8.2,
+  "Sand": 3.2,
+  "Berry Cupcakes": 26.5,
+  "Car": 17.9,
+  "Tractor": 10.6,
+  "Solar Panel": 8.8,
+  "Helicopter": 21.4,
+  "DNA": 4.1,
+  "Bicycle": 15.2,
+  "Rope": 7.7,
+  "Natural Gas": 3.0,
+  "Pretzel": 21.5,
+  "Wire": 3.9,
+  "Book": 12.4,
   "Stainless Steel": 5.5,
-  "Canoe": 5.9,
-  "Space Station": 24.6
+  "Chocolate Cake": 23.8,
+  "Sugar": 3.3,
+  "Butter": 11.7,
+  "Ecosystem": 25.1,
+  "Cream": 11.9,
+  "Blue Dye": 18.2,
+  "Yarn": 13.5,
+  "Water": 2.7,
+  "Planet": 9.3,
+  "Mushroom": 5.8,
+  "Light Bulb": 7.5,
+  "Cruise Ship": null,
+  "Cow": 8.7,
+  "Rubber": 5.5,
+  "Speedboat": 15.9,
+  "Black Dye": 17.4,
+  "Seaweed": 5.1,
+  "Life": 20.0,
+  "Plant Fiber": 7.7,
+  "Tools": 4.3,
+  "Trombone": null,
+  "Grand Banquet": 27.1,
+  "Metropolis": 22.9,
+  "Bee": 8.5,
+  "Fruit Cake": 24.1,
+  "Salmon": 12.1,
+  "Fabric": 8.8,
+  "Strawberries": 11.1,
+  "Blueberries": 14.3,
+  "Apple Pie": 22.0,
+  "Geothermal Pump": 10.2,
+  "Steel": 3.1,
+  "Microchip": 8.7,
+  "Skyscraper": 16.2,
+  "Statue": 7.9,
+  "Apple": 7.1,
+  "Paper": 12.8,
+  "Honey": 8.7,
+  "Building": 8.5,
+  "Rainbow": 18.0,
+  "Éclair": 24.2,
+  "Gemstone Collection": 20.4,
+  "Engine": 7.7,
+  "Solar System": 18.9,
+  "Orca": 14.2,
+  "Battery": 4.8,
+  "Biofuel": 11.6,
+  "Clay": 2.7,
+  "Basket": 8.8,
+  "Soil": 5.0,
+  "Log Cabin": 8.0,
+  "Fireworks": 4.3,
+  "Egg": 6.1,
+  "Concrete": 5.6,
+  "Telescope": 12.6,
+  "Titanium Alloy": 6.0,
+  "Banana Bread": 22.7,
+  "Knit Scarf": 21.3,
+  "Clock": 8.9,
+  "Chocolate": 9.7,
+  "Volcano": 14.5,
+  "Glass": 5.6,
+  "Lighthouse": 13.8,
+  "Museum": 20.8,
+  "Magnet": 5.1,
+  "Limestone": 2.8,
+  "Rocket": 22.1,
+  "Bridge": 7.7,
+  "Canoe": 6.2,
+  "Fossil": 11.1,
+  "Motorcycle": 17.5,
+  "Croissant": 22.9,
+  "Glass Vial": 10.7,
+  "Cheesecake": 24.1,
+  "Pearl": 14.8,
+  "Chicken": 11.6,
+  "Deer": 7.1,
+  "Flour": 21.1,
+  "Star": 17.0,
+  "Space Station": 25.1,
+  "Amber": 11.5,
+  "Fiberglass": 10.8,
+  "Fertilizer": 3.5,
+  "Farm": 8.1,
+  "Library": 14.4,
+  "Grain": 8.7,
+  "Sunflower": 19.9,
+  "Turbine Blade": 17.4,
+  "Banana": 7.7,
+  "Dinosaur": 13.0,
+  "Windmill": 20.3,
+  "Oven": 11.8,
+  "Sailboat": 9.5,
+  "Aluminum Alloy": 5.5,
+  "Blackberries": 11.3,
+  "Turquoise": 14.8,
+  "Wool": 8.2,
+  "Yeast": 5.3
  }
 }/*__GAME_DATA_END__*/;
 
@@ -5226,6 +5322,9 @@ function freshState(){
                       // openTradeMarket()/rollTradeOffers()), lazily rolled the first time it's
                       // opened and held stable after that -- accepting one just re-rolls that
                       // one slot, same "market restocks" feel as the rest staying put.
+    quests: {},       // {[questId]: {taken, completed}} -- see QUESTS/takeQuest()/
+                       // checkQuestCompletion(). Hard Mode only; absent entries just read as
+                       // "not taken yet" everywhere they're checked.
   };
 }
 
@@ -5406,6 +5505,7 @@ function craft(entry){
   // player most needs the nudge to go pick their next target.
   if (selectedJobItem === entry.name) selectedJobItem = null;
   checkCollections();
+  checkQuestCompletion();
   save();
   return true;
 }
@@ -6679,9 +6779,13 @@ function render(resetScroll){
    whatever colors the art happens to have. */
 function updateBackdrop(){
   const el = document.getElementById("backdrop");
-  const path = screen === "station" && current ? STATION_BG[current]
-    : screen === "market" ? "backdrops/marketplace.webp"
-    : null;
+  // Marketplace carries its own art in-flow now (see .market-canvas in
+  // renderMarketScreen()) rather than through this fixed full-page
+  // layer -- a 9:16 box sized to fit the viewport without scrolling,
+  // not a cover-cropped fullscreen image, with its own hero text
+  // overlaid directly on it the same way a station's .sheet-head sits
+  // over that station's own backdrop.
+  const path = screen === "station" && current ? STATION_BG[current] : null;
   if (path){
     el.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${path}")`;
     el.classList.add("show");
@@ -7296,7 +7400,12 @@ function goStation(name){
   const nowRevealed = entriesAt(name).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
   if (alreadyVisited && state.stationLastSeen[name]){
     const prevSeen = new Set(state.stationLastSeen[name]);
-    const newlyAppeared = nowRevealed.filter(n => !prevSeen.has(n));
+    // !state.seenItems[n] -- "new to this station's shop" isn't the same
+    // as "new to the player": a multi-home item they already saw at a
+    // different station (or via a job card/Item Reference) shouldn't
+    // retrigger the celebration just because it's the first time IT
+    // showed up HERE.
+    const newlyAppeared = nowRevealed.filter(n => !prevSeen.has(n) && !state.seenItems[n]);
     if (newlyAppeared.length){
       pendingRevealNames = newlyAppeared;
       pendingRevealStation = name;
@@ -7824,6 +7933,7 @@ document.getElementById("screen").addEventListener("click", ev => {
     const target = marketNavBtn.dataset.marketNav;
     if (target === "jobs") openJobBoard();
     else if (target === "trade" && state.mode === "hard") openTradeMarket();
+    else if (target === "quests" && state.mode === "hard") openQuestLog();
     else if (target === "collections" && state.mode !== "classic") openCollections();
     return;
   }
@@ -7887,7 +7997,9 @@ document.getElementById("screen").addEventListener("click", ev => {
     );
     if (craft(entry)){
       const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
-      const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name);
+      // !state.seenItems[n] -- same "new to the player, not just to this
+      // station's shop" rule goStation()'s own reveal check uses.
+      const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name && !state.seenItems[n]);
       if (newlyRevealed.length){
         pendingRevealNames = newlyRevealed;
         pendingRevealStation = current;
@@ -8035,6 +8147,7 @@ function openPanelName(){
   if (drawer.classList.contains("open")) return "drawer";
   if (jobSheet.classList.contains("open")) return "jobs";
   if (tradeSheet.classList.contains("open")) return "trade";
+  if (questsSheet.classList.contains("open")) return "quests";
   if (collectionsSheet.classList.contains("open")) return "collections";
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("settings").classList.contains("open")) return "settings";
@@ -8050,6 +8163,7 @@ function closePanelByName(name){
   if (name === "drawer") closeDrawer();
   else if (name === "jobs") closeJobBoard();
   else if (name === "trade") closeTradeMarket();
+  else if (name === "quests") closeQuestLog();
   else if (name === "collections") closeCollections();
   else if (name === "pins") closePinsTray();
   else if (name === "settings") closeOverlay("settings");
@@ -8395,10 +8509,12 @@ function closeJobBoard(){
    right back here. */
 function renderMarketScreen(){
   return `<div class="market-screen">
-    <div class="market-hero">
-      <div class="market-hero-em">🏪</div>
-      <h1>Marketplace</h1>
-      <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
+    <div class="market-canvas">
+      <div class="market-hero">
+        <div class="market-hero-em">🏪</div>
+        <h1>Marketplace</h1>
+        <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
+      </div>
     </div>
   </div>`;
 }
@@ -8415,7 +8531,8 @@ function renderMarketArc(){
   const slots = [
     { nav: "jobs", icon: "📋", label: "Job Board", disabled: zen,
       title: zen ? "Job Board — not available in Zen Mode" : "Job Board — take jobs, turn in finished items" },
-    { nav: null, icon: "📜", label: "Quest Log", disabled: true, title: "Quest Log — coming soon" },
+    { nav: "quests", icon: "📜", label: "Quest Log", disabled: state.mode !== "hard",
+      title: state.mode === "hard" ? "Quest Log — a branching tree of keystone-item goals" : "Quest Log — Hard Mode only" },
     { nav: "trade", icon: "🔄", label: "Trade Market", disabled: state.mode !== "hard",
       title: state.mode === "hard" ? "Trade Market — swap a spare item for a random one" : "Trade Market — Hard Mode only" },
     { nav: "collections", icon: "🏆", label: "Collections", disabled: state.mode === "classic",
@@ -8452,6 +8569,7 @@ document.getElementById("marketArc").addEventListener("click", ev => {
   const target = navBtn.dataset.marketNav;
   if (target === "jobs") openJobBoard();
   else if (target === "trade" && state.mode === "hard") openTradeMarket();
+  else if (target === "quests" && state.mode === "hard") openQuestLog();
   else if (target === "collections" && state.mode !== "classic") openCollections();
 });
 function openMarket(){
@@ -8533,6 +8651,7 @@ function acceptTradeOffer(i){
   const fresh = rollTradeOffer();
   if (fresh) state.tradeOffers[i] = fresh; else state.tradeOffers.splice(i, 1);
   checkCollections();
+  checkQuestCompletion();
   save(); render(); renderTradeBody();
 }
 /* Reward card + its own demand/accept button underneath, spanning the
@@ -8709,6 +8828,163 @@ const collectionsSheet = document.getElementById("collectionsSheet");
 const collectionsScrim = document.getElementById("collectionsScrim");
 document.getElementById("collectionsSheetClose").addEventListener("click", closeCollections);
 collectionsScrim.addEventListener("click", closeCollections);
+
+/* ---------------------------------------------------------- quests --- */
+/* Hard Mode only -- a branching tree of goal items, each one gated
+   behind its parent's completion rather than all open at once. The
+   roots and branch points are the item web's own "keystone" items (see
+   the centrality analysis behind this: highest transitive fan-out --
+   Tools/Furnace/Building each gate a huge share of the catalog -- plus
+   the three items that gate a whole separate region, Sailboat/Library/
+   Rocket, see SUBZONE_TRAVEL's own unlockItem values), so working
+   through the first few tiers naturally points a player at the same
+   items that matter most structurally, not an arbitrary pick.
+   parent:null quests are available from the very start; everything
+   else opens up once its own parent quest is completed -- "opens up 2
+   new quests" is just two different QUESTS entries sharing that parent.
+   gateway:<region> is display-only flavor (a badge), the actual unlock
+   is still owning the item itself, same as it already works without
+   any of this. */
+const QUESTS = [
+  { id:"tools", item:"Tools", parent:null,
+    blurb:"Nearly everything downstream of the Deep Mine and Observatory runs through a set of Tools sooner or later." },
+  { id:"furnace", item:"Furnace", parent:null,
+    blurb:"Every alloy, every gemstone, most of the Bakery's late items -- almost none of it exists without a Furnace first." },
+  { id:"building", item:"Building", parent:null,
+    blurb:"The City's whole skyline -- and everything that references it -- starts with a single Building." },
+  { id:"sailboat", item:"Sailboat", parent:null, gateway:"Island",
+    blurb:"Sets you loose past The Ocean's own shore, out to the Island and everything only found there." },
+  { id:"clock", item:"Clock", parent:"tools",
+    blurb:"Every gemstone in the game -- Pearl, Ruby, Opal, Turquoise, Amber, Diamond -- waits on a Clock." },
+  { id:"farm", item:"Farm", parent:"tools",
+    blurb:"Cows, sheep, chickens, bees -- the whole Homestead line starts the moment a Farm exists." },
+  { id:"alloy", item:"Titanium Alloy", parent:"furnace",
+    blurb:"The first real alloy out of the Furnace, and the direct road to a Rocket." },
+  { id:"stainless", item:"Stainless Steel", parent:"furnace",
+    blurb:"The Furnace's other early payoff -- structural stock for the Maglev Train and beyond." },
+  { id:"library", item:"Library", parent:"building", gateway:"Fictional World",
+    blurb:"A Building plus a Book is all it takes to open the door to somewhere far stranger than The City." },
+  { id:"rocket", item:"Rocket", parent:"alloy", gateway:"Solar System",
+    blurb:"Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
+];
+function questBonus(q){ return Math.round((ITEM_POINTS[q.item] || 0) * 0.3); }
+/* Available to accept: its parent (if any) is already completed, and it
+   isn't already taken. Not yet available (parent incomplete) and
+   already-completed are both handled separately in the render, this is
+   specifically the "show an Accept button" state. */
+function questAvailable(q){
+  const st = state.quests[q.id];
+  if (st && (st.taken || st.completed)) return false;
+  return q.parent === null || !!(state.quests[q.parent] && state.quests[q.parent].completed);
+}
+function questChildren(id){ return QUESTS.filter(q => q.parent === id); }
+/* Same "select it, auto-pin the target item" moment takeJob() already
+   uses -- see its own comment for why an already-owned item is skipped
+   (nothing left to track toward). */
+function takeQuest(id){
+  const q = QUESTS.find(x => x.id === id);
+  if (!q || !questAvailable(q)) return;
+  state.quests[id] = {taken:true, completed:false};
+  if (!owns(q.item) && !isPinned(q.item)) togglePin(q.item);
+  save(); render(); renderQuestsBody();
+}
+let questToastQueue = [];
+let questToastTimer = null;
+/* Same craft()/acceptTradeOffer() call sites as checkCollections(), same
+   queued-toast reasoning (see its own comment) -- a completion here is
+   just as likely to land in the middle of an unrelated craft/trade
+   animation. */
+function checkQuestCompletion(){
+  if (state.mode !== "hard") return;
+  QUESTS.forEach(q => {
+    const st = state.quests[q.id];
+    if (!st || !st.taken || st.completed || !owns(q.item)) return;
+    st.completed = true;
+    questToastQueue.push(q);
+  });
+  if (questToastQueue.length && !questToastTimer) showNextQuestToast();
+}
+function showNextQuestToast(){
+  const toast = document.getElementById("questToast");
+  const q = questToastQueue.shift();
+  if (!q){ questToastTimer = null; return; }
+  toast.innerHTML = `
+    <span class="ct-em">${em(ITEM_EMOJI[q.item])}</span>
+    <span class="ct-body"><div class="ct-title">Quest complete</div><div class="ct-name">${esc(q.item)}</div></span>
+    <span class="ct-bonus">+${questBonus(q)} pts</span>`;
+  toast.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => toast.classList.add("show"));
+  const dismiss = () => {
+    toast.classList.remove("show");
+    toast.setAttribute("aria-hidden", "true");
+    questToastTimer = setTimeout(showNextQuestToast, 350);
+  };
+  toast.onclick = dismiss;
+  questToastTimer = setTimeout(dismiss, 3500);
+}
+function questCardHTML(q){
+  const st = state.quests[q.id];
+  const completed = st && st.completed;
+  const available = questAvailable(q);
+  const parentQ = q.parent && QUESTS.find(x => x.id === q.parent);
+  const gatewayBadge = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
+  const action = completed
+    ? `<div class="quest-done-note">✓ Complete — +${questBonus(q)} pts</div>`
+    : available
+      ? `<button type="button" class="jc-icon-btn jc-accept" data-quest-take="${esc(q.id)}" title="Track this quest" aria-label="Track this quest">✅</button>`
+      : `<div class="quest-locked-note">🔒 Complete ${esc(parentQ ? parentQ.item : "its parent quest")} first</div>`;
+  return `<div class="quest-card-wrap ${completed ? "done" : available ? "" : "locked"}">
+    <div class="quest-card">
+      <span class="quest-card-em">${em(ITEM_EMOJI[q.item])}</span>
+      <div class="quest-card-body">
+        <div class="quest-card-name">${esc(q.item)}${gatewayBadge}</div>
+        <div class="quest-card-blurb">${esc(q.blurb)}</div>
+      </div>
+    </div>
+    ${action}
+  </div>`;
+}
+/* Tiered by depth from a root (BFS down QUESTS' own parent links), not
+   a literal drawn tree -- a plain vertical stack of "Tier N" sections
+   already shows the branching (a tier with more cards than its parent
+   tier IS the fork) without needing real connector-line layout. */
+function renderQuestsBody(){
+  const body = document.getElementById("questsSheetBody");
+  if (state.mode !== "hard"){
+    body.innerHTML = `<p class="empty">📜 Quests only track in Hard Mode, where the full item web -- and every keystone in it -- is actually in play.</p>`;
+    return;
+  }
+  const tiers = [];
+  let frontier = QUESTS.filter(q => q.parent === null).map(q => q.id);
+  while (frontier.length){
+    tiers.push(frontier);
+    frontier = frontier.flatMap(id => questChildren(id).map(q => q.id));
+  }
+  body.innerHTML = `<p class="trade-intro">Each tier opens once its parent above is complete -- the earliest ones point at the items the rest of the game leans on most.</p>` +
+    tiers.map((ids, i) => `
+      <div class="quest-tier-label">Tier ${i + 1}</div>
+      <div class="quest-tier">${ids.map(id => questCardHTML(QUESTS.find(q => q.id === id))).join("")}</div>
+    `).join("");
+}
+function openQuestLog(){
+  renderQuestsBody();
+  questsSheet.classList.add("open"); questsScrim.classList.add("open");
+  questsSheet.setAttribute("aria-hidden", "false");
+  updateHub();
+}
+function closeQuestLog(){
+  questsSheet.classList.remove("open"); questsScrim.classList.remove("open");
+  questsSheet.setAttribute("aria-hidden", "true");
+  updateHub();
+}
+const questsSheet = document.getElementById("questsSheet");
+const questsScrim = document.getElementById("questsScrim");
+document.getElementById("questsSheetClose").addEventListener("click", closeQuestLog);
+questsScrim.addEventListener("click", closeQuestLog);
+document.getElementById("questsSheetBody").addEventListener("click", ev => {
+  const takeBtn = ev.target.closest("[data-quest-take]");
+  if (takeBtn){ takeQuest(takeBtn.dataset.questTake); return; }
+});
 
 /* -------------------------------------------------------- sub-zones --- */
 /* Solar System picker -- the one "menu" kind in SUBZONE_TRAVEL (Sailboat
