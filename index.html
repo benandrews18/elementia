@@ -23,6 +23,7 @@
   --bad:#f0674c; --bad-soft:#371913;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
   --jobcard-bg:#2a1a30;
+  --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
   --farm-bg:#2b2317; --farm-line:#7a5a2c; --farm-ink:#d9a15c;
   --cap-grad:linear-gradient(90deg,#251f10,#1c1a15);
   --cap-grad-can:linear-gradient(90deg,#12281a,#151f19);
@@ -370,6 +371,23 @@ body[data-screen="codex"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #tradeSheet.open{transform:none}
+/* Collections: a fourth instance of the same slide-from-left shape, but
+   with its own accent (violet, matching the Power Plant suit) instead of
+   gold -- the one hub panel that works identically in all 3 modes, and
+   deliberately doesn't borrow the gold "trading card" language a Job/Trade
+   offer uses, since nothing here is an offer to accept or decline. */
+#collectionsScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:68; display:none}
+#collectionsScrim.open{display:block}
+#collectionsSheet{
+  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  padding-left:24px; box-sizing:border-box;
+  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
+  background:var(--card); border-right:2.5px solid var(--collection); border-bottom:2.5px solid var(--collection);
+  border-radius:0 0 14px 0; transform:translateX(-100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+}
+#collectionsSheet.open{transform:none}
+#collectionsSheet .dhead h2{color:var(--collection)}
 /* Marketplace: identical shape/motion language to #jobSheet (same gold
    border, same slide-from-left), just a second instance -- only one of
    the two is ever open at a time (see openPanelName()), so there's no
@@ -433,6 +451,55 @@ body[data-screen="codex"] #trackedPill{display:none}
 .trade-card-pts{font-size:11px; font-weight:700; color:var(--mute)}
 .trade-actions{display:flex; gap:8px}
 .trade-actions .bigbtn{flex:1; padding:12px 10px; font-size:13px}
+/* Collections: each entry is a row (not a card grid like Trade Market) --
+   a collection can have anywhere from 4 to 7 members, and a card grid of
+   tiny per-member icons reads better as a horizontal filmstrip inside a
+   labeled row than as its own card shape. Completed rows get the violet
+   treatment; incomplete ones stay neutral so the completed few actually
+   stand out in a list of ten. */
+.coll-row{
+  padding:14px; margin-bottom:10px; border-radius:13px;
+  background:var(--sunken); border:1.5px solid var(--line);
+}
+.coll-row.done{background:var(--collection-soft); border-color:var(--collection-line)}
+.coll-row-head{display:flex; align-items:center; gap:10px; margin-bottom:10px}
+.coll-em{font-size:24px; line-height:1; flex:none}
+.coll-name{font-size:15px; font-weight:800; color:var(--ink); flex:1; min-width:0}
+.coll-progress{font-size:11.5px; font-weight:800; color:var(--mute); flex:none}
+.coll-row.done .coll-progress{color:var(--collection)}
+.coll-bonus{
+  flex:none; font-size:10px; font-weight:800; letter-spacing:.3px;
+  padding:3px 8px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--mute);
+}
+.coll-row.done .coll-bonus{background:var(--collection); border-color:var(--collection); color:#fff}
+.coll-members{display:flex; flex-wrap:wrap; gap:6px}
+.coll-member{
+  display:flex; flex-direction:column; align-items:center; gap:2px; width:52px;
+  opacity:.4; filter:grayscale(1);
+}
+.coll-member.have{opacity:1; filter:none}
+.coll-member .cm-em{font-size:22px; line-height:1}
+.coll-member .cm-name{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
+/* Completion toast: a transient top-drop banner, deliberately separate
+   from #celebrate (that's a blocking full-screen overlay reserved for
+   Capstone crafts) -- Collections complete passively as a side effect of
+   an unrelated craft/trade, so announcing one shouldn't interrupt or
+   compete with whatever animation that action already triggered. Queued
+   one at a time (see collectionToastQueue) so 2 completions from the same
+   action still each get their own beat rather than overwriting mid-read. */
+#collectionToast{
+  position:fixed; top:0; left:0; right:0; z-index:90;
+  display:flex; align-items:center; gap:12px; padding:14px 18px;
+  background:var(--collection-soft); border-bottom:2.5px solid var(--collection);
+  transform:translateY(-100%); transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  cursor:pointer;
+}
+#collectionToast.show{transform:translateY(0)}
+#collectionToast .ct-em{font-size:30px; line-height:1; flex:none}
+#collectionToast .ct-body{flex:1; min-width:0}
+#collectionToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--collection)}
+#collectionToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
+#collectionToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--collection)}
 /* Coin-flip: only played on the Home button's icon+label when it swaps
    specifically between the Map and Marketplace faces (see
    setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
@@ -2221,11 +2288,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #tradeScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #marketScrim, #tradeScrim, #collectionsScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
-  #jobSheet, #tradeSheet{left:calc(50% - 408px)}
+  #jobSheet, #tradeSheet, #collectionsSheet{left:calc(50% - 408px)}
+  #collectionToast{left:50%; margin-left:-192px}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -2747,6 +2815,21 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
   <div class="dbody" id="tradeSheetBody"></div>
 </aside>
+
+<!-- Collections: a themed checklist over items the player already builds
+     naturally (Fruit, Gemstones, Vehicles, ...) -- see COLLECTIONS/
+     checkCollections(). Works in every mode, unlike Job Board (no Zen) or
+     Trade Market (Hard only), since it tracks lifetime ownership rather
+     than current stock or station-specific offers. -->
+<div id="collectionsScrim"></div>
+<aside id="collectionsSheet" aria-label="Collections" aria-hidden="true">
+  <div class="dhead">
+    <h2 id="collectionsTitle">🏆 Collections</h2>
+    <button type="button" class="tbtn ghost" id="collectionsSheetClose" aria-label="Close collections">✕</button>
+  </div>
+  <div class="dbody" id="collectionsSheetBody"></div>
+</aside>
+<div id="collectionToast" role="status" aria-hidden="true"></div>
 
 <script>
 /* =====================================================================
@@ -4421,7 +4504,11 @@ const ITEM_POINTS = {};
 function score(){
   const base = state.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
   const jobBonuses = state.jobs.filter(j => j.turnedIn).reduce((sum, j) => sum + jobBonus(j), 0);
-  return base + jobBonuses;
+  const collectionBonuses = state.collectionsCompleted.reduce((sum, id) => {
+    const col = COLLECTIONS.find(c => c.id === id);
+    return sum + (col ? collectionBonus(col) : 0);
+  }, 0);
+  return base + jobBonuses + collectionBonuses;
 }
 
 DATA.stations.forEach(s => {
@@ -4691,6 +4778,8 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
+    collectionsCompleted: [], // [collectionId, ...] -- see checkCollections()/COLLECTIONS. Lifetime,
+                               // never un-completes even if a member item is later spent in Hard Mode.
   };
 }
 
@@ -4862,6 +4951,7 @@ function craft(entry){
   // silently suppresses the Pins button's "!" badge exactly when the
   // player most needs the nudge to go pick their next target.
   if (selectedJobItem === entry.name) selectedJobItem = null;
+  checkCollections();
   save();
   return true;
 }
@@ -7285,6 +7375,7 @@ function openPanelName(){
   if (jobSheet.classList.contains("open")) return "jobs";
   if (marketSheet.classList.contains("open")) return "market";
   if (tradeSheet.classList.contains("open")) return "trade";
+  if (collectionsSheet.classList.contains("open")) return "collections";
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("settings").classList.contains("open")) return "settings";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
@@ -7296,6 +7387,7 @@ function closePanelByName(name){
   else if (name === "jobs") closeJobBoard();
   else if (name === "market") closeMarket();
   else if (name === "trade") closeTradeMarket();
+  else if (name === "collections") closeCollections();
   else if (name === "pins") closePinsTray();
   else if (name === "settings") closeOverlay("settings");
   else if (name === "convert") closeOverlay("convert");
@@ -7643,10 +7735,9 @@ function renderMarketBody(){
       <span class="mr-em">🔄</span>
       <span class="mr-body"><div class="mr-title">Trade Market</div><div class="mr-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
     </button>
-    <button type="button" class="market-row" disabled>
-      <span class="mr-em">🏛️</span>
-      <span class="mr-body"><div class="mr-title">Community Center</div><div class="mr-sub">Bundles, milestones, rewards</div></span>
-      <span class="mr-soon">Coming soon</span>
+    <button type="button" class="market-row" id="marketToCollections">
+      <span class="mr-em">🏆</span>
+      <span class="mr-body"><div class="mr-title">Collections</div><div class="mr-sub">${state.collectionsCompleted.length}/${COLLECTIONS.length} complete</div></span>
     </button>`;
 }
 function openMarket(){
@@ -7667,6 +7758,7 @@ marketScrim.addEventListener("click", closeMarket);
 document.getElementById("marketSheetBody").addEventListener("click", ev => {
   if (ev.target.closest("#marketToJobs")){ closeMarket(); openJobBoard(); }
   if (ev.target.closest("#marketToTrade") && state.mode === "hard"){ closeMarket(); openTradeMarket(); }
+  if (ev.target.closest("#marketToCollections")){ closeMarket(); openCollections(); }
 });
 
 /* ----------------------------------------------------- trade market --- */
@@ -7746,6 +7838,7 @@ function acceptTradeOffer(){
   if (isPinned(tradeOffer.get)) togglePin(tradeOffer.get);
   if (selectedJobItem === tradeOffer.get) selectedJobItem = null;
   tradeOffer = null;
+  checkCollections();
   save(); render(); renderTradeBody();
 }
 function tradeCardHTML(name, label){
@@ -7809,6 +7902,129 @@ document.getElementById("tradeSheetBody").addEventListener("click", ev => {
   if (ev.target.closest("#tradeReroll")){ rerollTradeOffer(); return; }
   if (ev.target.closest("#tradeAccept")){ acceptTradeOffer(); return; }
 });
+
+/* -------------------------------------------------------- collections --- */
+/* Themed checklists over items the player already builds naturally --
+   NOT a recipe (nothing is crafted or spent) and NOT tied to current
+   stock, unlike Trade Market -- see everOwned() below. That's what lets
+   this run in every mode and stay complete forever once finished, even
+   if a Hard Mode member item is later spent as an ingredient elsewhere
+   (e.g. Gemstone Collection at Deep Mine consumes 5 of these same 6
+   gems -- tracking live ownership would un-complete "Gemstones" the
+   moment a player crafted it, which would read as a bug, not a feature).
+   Named "Gemstones" rather than "Gemstone Collection" specifically to
+   avoid colliding with that existing craftable item -- they're
+   unrelated mechanics that just happen to share a theme. */
+const COLLECTIONS = [
+  {id:"fruit", name:"Fruit", icon:"🍎", items:["Apple","Banana","Strawberries","Blueberries","Blackberries"]},
+  {id:"gemstones", name:"Gemstones", icon:"💎", items:["Pearl","Ruby","Opal","Turquoise","Amber","Diamond"]},
+  {id:"vehicles", name:"Vehicles", icon:"🚗", items:["Sailboat","Speedboat","Car","Bicycle","Motorcycle","Airplane","Maglev Train"]},
+  {id:"farm-animals", name:"Farm Animals", icon:"🐄", items:["Cow","Sheep","Chicken","Bee"]},
+  {id:"wildlife", name:"Wildlife", icon:"🦌", items:["Deer","Salmon","Orca","Dinosaur"]},
+  {id:"textiles", name:"Textiles", icon:"🧶", items:["Wool","Yarn","Fabric","Rope","Basket","Paper"]},
+  {id:"dyes", name:"Dyes", icon:"🎨", items:["Red Dye","Blue Dye","Black Dye","Yellow Dye"]},
+  {id:"alloys", name:"Alloys & Materials", icon:"🔩", items:["Steel","Stainless Steel","Aluminum Alloy","Titanium Alloy","Fiberglass"]},
+  {id:"desserts", name:"Desserts", icon:"🍰", items:["Cake","Chocolate Cake","Cheesecake","Éclair","Berry Cupcakes","Apple Pie"]},
+  {id:"space", name:"Space", icon:"🔭", items:["Star","Planet","Telescope","Satellite Dish","Rocket","Solar System"]},
+];
+/* ~30% of the set's combined point value -- a real bonus, but well under
+   what actually building a same-sized Capstone recipe pays out, since a
+   Collection asks for breadth (own these, however you got them) rather
+   than depth (craft this one specific new thing from them). Derived from
+   ITEM_POINTS rather than hand-picked so it stays correct if points are
+   ever rebalanced. */
+function collectionBonus(col){
+  const total = col.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
+  return Math.round(total * 0.3);
+}
+/* Lifetime, not live stock: Classic/Zen's owns() is already a permanent
+   flag (craft() refuses to re-craft, see canCraft()), so it doubles as
+   "ever owned" there for free. Hard Mode's owns() reflects CURRENT stock
+   only (items get spent), so craftCounts -- a monotonic lifetime total,
+   see craft()'s own comment on it -- is the real "ever owned" signal. */
+function everOwned(name){
+  return state.mode === "hard" ? (state.craftCounts[name] || 0) > 0 : owns(name);
+}
+function collectionProgress(col){
+  return {have: col.items.filter(everOwned).length, total: col.items.length};
+}
+function collectionDone(col){ return col.items.every(everOwned); }
+
+/* Queued rather than shown immediately/inline -- craft() and
+   acceptTradeOffer() both call this mid-way through their own bookkeeping,
+   often right before an unrelated craft/trade animation of their own, so
+   a completion is queued and drained by the toast's own timer instead of
+   fighting that animation for the same moment on screen. */
+let collectionToastQueue = [];
+let collectionToastTimer = null;
+function checkCollections(){
+  COLLECTIONS.forEach(col => {
+    if (state.collectionsCompleted.includes(col.id)) return;
+    if (collectionDone(col)){
+      state.collectionsCompleted.push(col.id);
+      collectionToastQueue.push(col);
+    }
+  });
+  if (collectionToastQueue.length && !collectionToastTimer) showNextCollectionToast();
+}
+function showNextCollectionToast(){
+  const toast = document.getElementById("collectionToast");
+  const col = collectionToastQueue.shift();
+  if (!col){ collectionToastTimer = null; return; }
+  toast.innerHTML = `
+    <span class="ct-em">${col.icon}</span>
+    <span class="ct-body"><div class="ct-title">Collection complete</div><div class="ct-name">${esc(col.name)}</div></span>
+    <span class="ct-bonus">+${collectionBonus(col)} pts</span>`;
+  toast.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => toast.classList.add("show"));
+  const dismiss = () => {
+    toast.classList.remove("show");
+    toast.setAttribute("aria-hidden", "true");
+    collectionToastTimer = setTimeout(showNextCollectionToast, 350);
+  };
+  toast.onclick = dismiss;
+  collectionToastTimer = setTimeout(dismiss, 3500);
+}
+
+function collectionRowHTML(col){
+  const {have, total} = collectionProgress(col);
+  const done = have === total;
+  const members = col.items.map(n => `
+    <div class="coll-member ${everOwned(n) ? "have" : ""}">
+      <span class="cm-em">${em(ITEM_EMOJI[n] || "❔")}</span>
+      <span class="cm-name">${esc(n)}</span>
+    </div>`).join("");
+  return `<div class="coll-row ${done ? "done" : ""}">
+    <div class="coll-row-head">
+      <span class="coll-em">${col.icon}</span>
+      <span class="coll-name">${esc(col.name)}</span>
+      <span class="coll-progress">${have}/${total}</span>
+      <span class="coll-bonus">${done ? "✓ " : ""}+${collectionBonus(col)} pts</span>
+    </div>
+    <div class="coll-members">${members}</div>
+  </div>`;
+}
+function renderCollectionsBody(){
+  document.getElementById("collectionsSheetBody").innerHTML =
+    `<p class="trade-intro">Own every item in a set (however you got them) to complete it — nothing here is spent or crafted.</p>` +
+    COLLECTIONS.map(collectionRowHTML).join("");
+}
+function openCollections(){
+  renderCollectionsBody();
+  collectionsSheet.classList.add("open"); collectionsScrim.classList.add("open");
+  collectionsSheet.setAttribute("aria-hidden", "false");
+  updateHub();
+}
+function closeCollections(){
+  collectionsSheet.classList.remove("open"); collectionsScrim.classList.remove("open");
+  collectionsSheet.setAttribute("aria-hidden", "true");
+  updateHub();
+}
+const collectionsSheet = document.getElementById("collectionsSheet");
+const collectionsScrim = document.getElementById("collectionsScrim");
+document.getElementById("collectionsSheetClose").addEventListener("click", closeCollections);
+collectionsScrim.addEventListener("click", closeCollections);
+
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
