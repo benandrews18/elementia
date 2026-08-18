@@ -441,21 +441,20 @@ body[data-screen="market"] #trackedPill{display:none}
 .market-hero h1{font-size:23px; font-weight:800; margin-top:4px}
 .market-hero p{font-size:13.5px; color:var(--ink2); max-width:340px}
 .market-tiles{display:flex; flex-direction:column; gap:14px}
-/* Same chunky raised "arcade menu" bevel language as #settings .setting-
-   row (see there for the fuller comment) -- each tile's own --tile-
-   accent tints the gradient/edge instead of the neutral slate used in
-   Settings, so Job Board stays gold, Trade teal, Collections purple. */
+/* Exactly the same chunky raised "arcade menu" bevel recipe as #settings
+   .setting-row -- same neutral slate gradient/edge/shadow values, not
+   per-tile accent tinting, so the two screens read as one consistent
+   visual language rather than Marketplace being its own colorful
+   variant. Tiles differentiate by icon/text only, same as Settings rows
+   do (see .mt-icon). */
 .market-tile{
   position:relative; display:flex; align-items:center; gap:14px; width:100%; padding:16px; text-align:left;
-  background:linear-gradient(180deg,
-    color-mix(in srgb, var(--tile-accent, var(--gold)) 30%, #38445a),
-    color-mix(in srgb, var(--tile-accent, var(--gold)) 12%, #202836) 62%);
-  border:2px solid color-mix(in srgb, var(--tile-accent, var(--gold)) 55%, #10141b);
-  border-radius:16px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 color-mix(in srgb, var(--tile-accent, var(--gold)) 55%, #10141b),
-    0 8px 16px rgba(0,0,0,.38);
+  background:linear-gradient(180deg, #38445a, #202836 62%);
+  border:2px solid #10141b; border-radius:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 8px 16px rgba(0,0,0,.38);
   transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
 }
+.market-tile:not(:disabled):hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
 .market-tile:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
@@ -8242,7 +8241,7 @@ function renderMarketScreen(){
       <p>Jobs, trades, and collections -- everything outside the crafting itself lives here.</p>
     </div>
     <div class="market-tiles">
-      <button type="button" class="market-tile" data-market-nav="jobs" style="--tile-accent:var(--gold)" ${zen ? "disabled" : ""}>
+      <button type="button" class="market-tile" data-market-nav="jobs" ${zen ? "disabled" : ""}>
         <span class="mt-icon">📋</span>
         <span class="mt-body"><div class="mt-title">Job Board</div><div class="mt-sub">${zen ? "Not available in Zen Mode" : "Take jobs, turn in finished items"}</div></span>
         <span class="mt-arrow">›</span>
@@ -8252,12 +8251,12 @@ function renderMarketScreen(){
         <span class="mt-body"><div class="mt-title">Quest Log</div><div class="mt-sub">Multi-step storylines</div></span>
         <span class="mt-soon">Coming soon</span>
       </button>
-      <button type="button" class="market-tile" data-market-nav="trade" style="--tile-accent:var(--hub-travel)" ${state.mode === "hard" ? "" : "disabled"}>
+      <button type="button" class="market-tile" data-market-nav="trade" ${state.mode === "hard" ? "" : "disabled"}>
         <span class="mt-icon">🔄</span>
         <span class="mt-body"><div class="mt-title">Trade Market</div><div class="mt-sub">${state.mode === "hard" ? "Swap a spare item for a random one" : "Hard Mode only"}</div></span>
         <span class="mt-arrow">›</span>
       </button>
-      <button type="button" class="market-tile" data-market-nav="collections" style="--tile-accent:var(--collection)" ${state.mode === "classic" ? "disabled" : ""}>
+      <button type="button" class="market-tile" data-market-nav="collections" ${state.mode === "classic" ? "disabled" : ""}>
         <span class="mt-icon">🏆</span>
         <span class="mt-body"><div class="mt-title">Collections</div><div class="mt-sub">${state.mode === "classic" ? "Not available in Classic Mode" : `${state.collectionsCompleted.length}/${COLLECTIONS.length} complete`}</div></span>
         <span class="mt-arrow">›</span>
