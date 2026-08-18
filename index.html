@@ -620,15 +620,15 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--gold); color:#241a0c; font-size:9px; font-weight:800; letter-spacing:.3px;
   padding:4px 10px; border-radius:999px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
-/* Book (jump to Item Reference) + accept icon pair, overhanging the
-   card's top-right corner -- mirrors .job-badge's own overhang on the
-   top-left so the two read as a matched pair framing the card. Accept
-   only renders for a not-yet-taken board offer (see jobCardBodyHTML()),
-   so a card can show either icon alone or both together. */
-.jc-actions{position:absolute; top:-15px; right:-8px; z-index:2; display:flex; gap:6px}
+/* Book (jump to Item Reference) + accept/turn-in action row -- a SIBLING
+   below the card frame, same slot the old full-width "Take this job"
+   button used to occupy alone (see .job-card-wrap's own gap), now shared
+   evenly between whichever buttons apply (see jobCardActionsHTML()) so
+   together they always span the card's own width. */
+.jc-actions{display:flex; gap:10px; width:100%}
 .jc-icon-btn{
-  width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:15px; background:var(--card); border:2.5px solid var(--gold); box-shadow:0 2px 6px rgba(0,0,0,.3);
+  flex:1; padding:16px 10px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  font-size:28px; background:var(--card); border:2.5px solid var(--gold);
 }
 .jc-icon-btn.jc-accept{background:var(--ok-soft); border-color:var(--ok)}
 .jc-icon-btn:disabled{opacity:.5; cursor:not-allowed}
@@ -645,7 +645,7 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .jc-items{display:flex; flex-direction:column}
 .jc-divider{border-top:1.5px solid var(--gold); margin:8px 6px 0}
-.mp-pick, .job-turnin{width:100%; padding:9px 12px; white-space:nowrap}
+.job-turnin{flex:1; padding:16px 10px; white-space:nowrap}
 .job-turnedin-note{font-size:12.5px; font-weight:800; color:var(--ok); text-align:center}
 /* A single item section on a job card -- flat, not expandable (see
    jobItemChipHTML()); tapping the icon/name goes to Item Reference for the
@@ -1716,14 +1716,14 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
    that UI was already tuned by hand, button-by-button, and doesn't need
    a second, competing treatment layered on top (see the #convert
    overrides at the very end of this block). */
-.bigbtn, .tbtn:not(.ghost), .craftbtn, button.setting-row, .mode-card{
+.bigbtn, .tbtn:not(.ghost), .craftbtn, button.setting-row, .mode-card, .jc-icon-btn{
   box-shadow:0 3px 0 rgba(0,0,0,.22);
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1),
     filter .15s ease, background .12s, border-color .12s;
 }
 .bigbtn:not(:disabled):active, .tbtn:not(.ghost):not(:disabled):active,
 .craftbtn:not(:disabled):active,
-button.setting-row:not(:disabled):active, .mode-card:active{
+button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:disabled):active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
 /* Craft button opt-out from the shared ledge/lift look (see the block just
@@ -5993,28 +5993,33 @@ function jobSuitBadgeHTML(name){
 
 /* Card interior shared by an active job's card and a board offer's card
    (see .job-card) -- points badge + "Job Card" label pinned to the top
-   border, a book/accept icon pair overhanging the top-right corner (see
-   .jc-actions), then one item section per item, each preceded by its own
+   border, then one item section per item, each preceded by its own
    station-suit badge (the first overhangs the card's own border, a second
    one -- jobs are at most 2 items, see pickStationJobOptions() -- sits in
    a .jc-divider straddling the line between the two stacked sections).
-   offerIndex is only passed for a not-yet-taken board offer -- that's the
-   only context "accept" means anything, so the checkmark only renders
-   there; the book icon (jumps to Item Reference for the card's first
-   item, one level expanded, see goToRefItem()) shows on every card. */
-function jobCardBodyHTML(items, bonus, offerIndex, locked){
+   The book/accept action row is a separate sibling BELOW the card frame
+   (see jobCardActionsHTML()), not padded inside it. */
+function jobCardBodyHTML(items, bonus){
   const rest = items.slice(1).map(name =>
     `<div class="jc-divider"></div>${jobItemChipHTML(name)}`).join("");
+  return `<span class="job-badge"><span class="n">+${bonus}</span><span class="l">pts</span></span>
+    <span class="job-card-label">Job Card</span>
+    <div class="jc-items">${jobItemChipHTML(items[0])}${rest}</div>`;
+}
+/* Book (jump to Item Reference for the card's first item, one level
+   expanded, see goToRefItem()) + accept action row, sized to share the
+   card's own full width evenly (see .jc-actions/.jc-icon-btn). Accept
+   only renders for a not-yet-taken board offer -- that's the only
+   context it means anything -- so a card can show either icon alone
+   (full width) or both side by side. */
+function jobCardActionsHTML(items, offerIndex, locked){
   const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(items[0])}"
       title="View ${esc(items[0])} in Item Reference" aria-label="View ${esc(items[0])} in Item Reference">📖</button>`;
   const acceptBtn = offerIndex != null
     ? `<button type="button" class="jc-icon-btn jc-accept" data-take="${offerIndex}" ${locked ? "disabled" : ""}
         title="Accept this job" aria-label="Accept this job">✅</button>`
     : "";
-  return `<span class="job-badge"><span class="n">+${bonus}</span><span class="l">pts</span></span>
-    <span class="job-card-label">Job Card</span>
-    <div class="jc-actions">${bookBtn}${acceptBtn}</div>
-    <div class="jc-items">${jobItemChipHTML(items[0])}${rest}</div>`;
+  return `<div class="jc-actions">${bookBtn}${acceptBtn}</div>`;
 }
 
 /* Real cards (see .job-card), two per row (.job-grid/.mp-options are a
@@ -6043,13 +6048,15 @@ function jobBoardHTML(){
     jobs.map(job => {
       const i = state.jobs.indexOf(job);
       const bonus = jobBonus(job);
-      const action = !turnedIn && jobDone(job)
+      const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(job.items[0])}"
+          title="View ${esc(job.items[0])} in Item Reference" aria-label="View ${esc(job.items[0])} in Item Reference">📖</button>`;
+      const turninBtn = !turnedIn && jobDone(job)
         ? `<button type="button" class="bigbtn job-turnin" data-turnin="${i}">Turn In</button>` : "";
       return `<div class="job-card-wrap">
         <div class="job-card${turnedIn ? " turned-in" : ""}">
           ${jobCardBodyHTML(job.items, bonus)}
         </div>
-        ${action}
+        <div class="jc-actions">${bookBtn}${turninBtn}</div>
       </div>`;
     }).join("")
   }</div>`;
@@ -6082,8 +6089,9 @@ function jobBoardHTML(){
       ? `<div class="mp-options ${locked ? "locked" : ""}">${cards.map((card, i) => `
           <div class="job-card-wrap">
             <div class="job-card ${card.special ? "special" : ""}" ${card.special && suitColor ? `style="--suit:${suitColor}"` : ""}>
-              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}), i, locked)}
+              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}))}
             </div>
+            ${jobCardActionsHTML(card.items, i, locked)}
           </div>`).join("")}</div>`
       : `<p class="empty">No more jobs on offer here this visit -- check back next time you stop by.</p>`;
     const capNote = atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
