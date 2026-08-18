@@ -566,17 +566,18 @@ body[data-screen="market"] #trackedPill{display:none}
    badge sits on the card's own top border; a SECOND item's badge, if any,
    straddles the horizontal divider between the two stacked item sections
    -- see jobCardBodyHTML()). Two cards per row (.job-grid/.mp-options).
-   The action button (Take this job / Turn In) is a SIBLING below the
-   card, not padded inside its own frame. */
+   Turn In is a SIBLING below the card, not padded inside its own frame;
+   an offer's own accept action lives INSIDE the card instead, as the
+   checkmark half of .jc-actions. */
 .mp-options{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px}
 /* Shown once this visit's one job pick is spent -- see
    state.jobBoard.taken/takeJob(). Offers stay visible (so there's still
    something to look at/plan around) but read as inert: dimmed and
-   click-through disabled on the take button (grayscale reinforces "not
+   click-through disabled on the accept icon (grayscale reinforces "not
    right now" beyond just opacity). Clears on the next visit, even to the
    same station, once a fresh board is rolled. */
 .mp-options.locked{opacity:.5; filter:grayscale(.4)}
-.mp-options.locked .mp-pick{cursor:not-allowed}
+.mp-options.locked .jc-accept{cursor:not-allowed}
 .job-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; margin-bottom:22px}
 .job-card-wrap{display:flex; flex-direction:column; gap:20px}
 .job-card{
@@ -607,6 +608,18 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--gold); color:#241a0c; font-size:9px; font-weight:800; letter-spacing:.3px;
   padding:4px 10px; border-radius:999px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
+/* Book (jump to Item Reference) + accept icon pair, overhanging the
+   card's top-right corner -- mirrors .job-badge's own overhang on the
+   top-left so the two read as a matched pair framing the card. Accept
+   only renders for a not-yet-taken board offer (see jobCardBodyHTML()),
+   so a card can show either icon alone or both together. */
+.jc-actions{position:absolute; top:-15px; right:-8px; z-index:2; display:flex; gap:6px}
+.jc-icon-btn{
+  width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:15px; background:var(--card); border:2.5px solid var(--gold); box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.jc-icon-btn.jc-accept{background:var(--ok-soft); border-color:var(--ok)}
+.jc-icon-btn:disabled{opacity:.5; cursor:not-allowed}
 /* Station-suit badge -- same gold-circle language as .job-badge, but sitting
    INSIDE the card frame rather than overhanging it, so it reads as part of
    the item it labels. Each item section owns its own badge, pinned to that
@@ -5908,15 +5921,27 @@ function jobSuitBadgeHTML(name){
 
 /* Card interior shared by an active job's card and a board offer's card
    (see .job-card) -- points badge + "Job Card" label pinned to the top
-   border, then one item section per item, each preceded by its own
+   border, a book/accept icon pair overhanging the top-right corner (see
+   .jc-actions), then one item section per item, each preceded by its own
    station-suit badge (the first overhangs the card's own border, a second
    one -- jobs are at most 2 items, see pickStationJobOptions() -- sits in
-   a .jc-divider straddling the line between the two stacked sections). */
-function jobCardBodyHTML(items, bonus){
+   a .jc-divider straddling the line between the two stacked sections).
+   offerIndex is only passed for a not-yet-taken board offer -- that's the
+   only context "accept" means anything, so the checkmark only renders
+   there; the book icon (jumps to Item Reference for the card's first
+   item, one level expanded, see goToRefItem()) shows on every card. */
+function jobCardBodyHTML(items, bonus, offerIndex, locked){
   const rest = items.slice(1).map(name =>
     `<div class="jc-divider"></div>${jobItemChipHTML(name)}`).join("");
+  const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(items[0])}"
+      title="View ${esc(items[0])} in Item Reference" aria-label="View ${esc(items[0])} in Item Reference">📖</button>`;
+  const acceptBtn = offerIndex != null
+    ? `<button type="button" class="jc-icon-btn jc-accept" data-take="${offerIndex}" ${locked ? "disabled" : ""}
+        title="Accept this job" aria-label="Accept this job">✅</button>`
+    : "";
   return `<span class="job-badge"><span class="n">+${bonus}</span><span class="l">pts</span></span>
     <span class="job-card-label">Job Card</span>
+    <div class="jc-actions">${bookBtn}${acceptBtn}</div>
     <div class="jc-items">${jobItemChipHTML(items[0])}${rest}</div>`;
 }
 
@@ -5985,9 +6010,8 @@ function jobBoardHTML(){
       ? `<div class="mp-options ${locked ? "locked" : ""}">${cards.map((card, i) => `
           <div class="job-card-wrap">
             <div class="job-card ${card.special ? "special" : ""}" ${card.special && suitColor ? `style="--suit:${suitColor}"` : ""}>
-              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}))}
+              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}), i, locked)}
             </div>
-            <button type="button" class="bigbtn mp-pick" data-take="${i}" ${locked ? "disabled" : ""}>Take this job</button>
           </div>`).join("")}</div>`
       : `<p class="empty">No more jobs on offer here this visit -- check back next time you stop by.</p>`;
     const capNote = atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
@@ -6175,20 +6199,26 @@ function markSeen(name){
   if (!state.seenItems[name]) state.seenItems[name] = true;
 }
 
-/* Jump to an item's row in Item Reference -- from a Job Board card, the
-   only place this is wired up (see #jobSheetBody's click handler). Item
-   Reference's own expanded breakdowns deliberately do NOT do this: tapping
-   a nested ingredient there just expands it in place, since jumping away
-   mid-lookup was more disorienting than useful once you're already on the
-   reference screen. Closes whatever overlay is open (the item wouldn't be
-   visible behind it), auto-expands the target's own breakdown so the trip
-   is a single tap, and briefly highlights the row so landing on a long
-   list isn't disorienting. */
+/* Jump to an item's row in Item Reference -- from a Job Board card's own
+   book-icon shortcut (see jobItemChipHTML()) or the card-pop popup's
+   "View Item Tree" button. Item Reference's own expanded breakdowns
+   deliberately do NOT do this: tapping a nested ingredient there just
+   expands it in place, since jumping away mid-lookup was more
+   disorienting than useful once you're already on the reference screen.
+   Closes whatever overlay is open (the item wouldn't be visible behind
+   it), clears any PRIOR jump's own auto-expansion before adding this
+   one -- without that, every item ever jumped to this session stays
+   expanded forever (jobExpanded is never otherwise cleaned up), which
+   compounds into the reference screen reading as permanently, entirely
+   expanded after enough jumps -- then auto-expands the target's own
+   breakdown so the trip is a single tap, and briefly highlights the row
+   so landing on a long list isn't disorienting. */
 const cssEsc = s => (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, "\\$&");
 function goToRefItem(name){
   const openPanel = openPanelName();
   if (openPanel) closePanelByName(openPanel);
   screen = "codex"; current = null;
+  jobExpanded.clear();
   jobExpanded.add("refroot/" + name);
   render(true);
   requestAnimationFrame(() => {
@@ -8475,15 +8505,19 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   }
 
   // Tapping an item chip opens its Card Inspection -- same as tapping an
-  // item anywhere else in the game now (station preview, shop list). Item
-  // Reference is still one tap further away, via the card's own "View Item
-  // Tree" button (see showCardPop()).
+  // item anywhere else in the game now (station preview, shop list). The
+  // card's own book icon (see jobCardBodyHTML()) is the direct one-tap
+  // shortcut to Item Reference; this is a separate, slower path for
+  // actually looking at the item's art/detail.
   const gotoBtn = ev.target.closest("[data-goto-ref]");
   if (gotoBtn){
     const entry = ENTRIES.find(e => e.name === gotoBtn.dataset.gotoRef);
     if (entry) showCardPop(entry, false);
     return;
   }
+
+  const refJumpBtn = ev.target.closest("[data-ref-jump]");
+  if (refJumpBtn){ goToRefItem(refJumpBtn.dataset.refJump); return; }
 
   const pinBtn = ev.target.closest("[data-pin]");
   if (pinBtn){
