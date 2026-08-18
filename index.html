@@ -423,19 +423,28 @@ body[data-screen="market"] #trackedPill{display:none}
    Jobs/Trade/Collections still layer on top of it as sheets exactly the
    way they already do on top of Codex or a station. */
 .market-screen{max-width:520px; margin:0 auto}
+/* Deliberately warmer/brighter than every other (neutral dark) screen --
+   a sunlit-bazaar glow instead of the game's usual flat dark card, so
+   Marketplace reads as its own distinct place rather than another grey
+   panel. Still within the dark-only palette (no light theme exists), so
+   "bright" here means a saturated gold glow, not a literal light bg. */
 .market-hero{
+  position:relative; overflow:hidden;
   display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
-  padding:30px 20px 24px; margin-bottom:20px; border-radius:20px;
-  background:linear-gradient(160deg, var(--gold-soft), var(--card) 72%);
-  border:2px solid var(--gold-line);
+  padding:34px 20px 26px; margin-bottom:20px; border-radius:20px;
+  background:radial-gradient(120% 160% at 50% -20%, rgba(226,178,90,.4), transparent 62%),
+    linear-gradient(160deg, #4a3a1a, #2c2414 78%);
+  border:2px solid var(--gold);
+  box-shadow:0 0 46px rgba(226,178,90,.22), inset 0 1px 0 rgba(255,255,255,.08);
 }
-.market-hero-em{font-size:52px; line-height:1}
+.market-hero-em{font-size:52px; line-height:1; filter:drop-shadow(0 0 18px rgba(226,178,90,.6))}
 .market-hero h1{font-size:23px; font-weight:800; margin-top:4px}
 .market-hero p{font-size:13.5px; color:var(--ink2); max-width:340px}
 .market-tiles{display:flex; flex-direction:column; gap:12px}
 .market-tile{
   display:flex; align-items:center; gap:14px; width:100%; padding:16px; text-align:left;
-  background:var(--bg-soft); border:2px solid var(--line); border-radius:16px;
+  background:linear-gradient(160deg, rgba(226,178,90,.09), var(--bg-soft) 65%);
+  border:2px solid var(--line); border-radius:16px;
 }
 .market-tile:not(:disabled):hover{border-color:var(--tile-accent, var(--gold-line))}
 .market-tile:disabled{opacity:.55; cursor:default}
@@ -6227,20 +6236,14 @@ function renderCodex(){
     allRows.push({...e, homes});
   });
 
-  // A running per-run record, not the full catalog -- only items the
-  // player has actually been shown (see markSeen()) plus every item
-  // reachable from something on their job board (the job item itself and
-  // its full ingredient closure), so a taken job's whole chain is always
-  // look-up-able even before any of it has appeared in a shop yet.
-  const jobRefNames = new Set();
-  state.jobs.forEach(job => job.items.forEach(n => {
-    jobRefNames.add(n);
-    componentClosure(n).forEach(c => jobRefNames.add(c));
-  }));
-  // Zen Mode: the reference is complete from the start, same as every
-  // other progressive-reveal gate this mode skips (see isRevealed()).
-  const rows = state.mode === "zen" ? allRows
-    : allRows.filter(e => state.seenItems[e.name] || jobRefNames.has(e.name));
+  // Every item in the game, every mode -- Item Reference is the one place
+  // spoilers are always fair game, regardless of Classic/Hard's normal
+  // progressive-reveal gating on what a station's own shop shows (see
+  // isRevealed()). It says as much in the "How to Play" walkthrough
+  // ("look up any item's recipe -- even ones you haven't discovered
+  // yet"), so the previous seen-items-only filter here was actually a bug
+  // relative to that promise, not a deliberate restriction.
+  const rows = allRows;
 
   const TIER_ORDER = {MATERIAL:0, COMPONENT:1, CREATION:2, CAPSTONE:3};
   rows.sort((a, b) =>
@@ -6642,10 +6645,18 @@ function canTravelTo(name){
      travel -- on the map screen with a reachable station selected; tap
                travels there (see canTravelTo()).
      map    -- rolled, Market already visited this trip, still off the
-               map screen -- time to leave.
+               map screen -- time to leave. Also the Marketplace SCREEN's
+               own resting face: standing there is itself a step of the
+               same journey (Roll -> Market -> Map), not a side lookup
+               like Codex, so tapping Home continues forward to the map
+               instead of just backing out to wherever it was opened
+               from -- see the "screen !== market" guard below, which
+               keeps a sheet (Jobs etc.) opened ON TOP of Market still
+               reporting "close" as normal.
    See goStation()/openMarket() for where marketVisitedTrip flips. */
 function hubHomeFace(){
-  if (openPanelName()) return "close";
+  const panel = openPanelName();
+  if (panel && panel !== "market") return "close";
   if (mapLocked()) return "roll";
   if (current !== null && state.rolledHere && !state.marketVisitedTrip) return "market";
   if (screen === "map") return (selectedMapStation && canTravelTo(selectedMapStation)) ? "travel" : "market";
