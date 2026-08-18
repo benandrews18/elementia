@@ -63,7 +63,7 @@ STATIONS = [
              ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",14),
              ("🌊","Water Turbine","CREATION","💧 Water + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",22),
 
-             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",17),
+             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",16),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",22)},
 
@@ -73,18 +73,15 @@ STATIONS = [
              ("🔋","Battery","MATERIAL","Ni + Fe + K",4),
              ("🎆","Fireworks","MATERIAL","C + S + K",4),
              ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
-             ("⚙️","Engine","COMPONENT","🛠️ Tools + 🛢️ Natural Gas",7),
+             ("⚙️","Engine","COMPONENT","🛠️ Tools + 🛢️ Natural Gas + 🔩 Steel",7),
              ("💡","Light Bulb","COMPONENT","🪟 Glass + 🔌 Wire",7),
              ("🕐","Clock","COMPONENT","🔋 Battery + 🛠️ Tools",8),
              ("🥤","Plastic","COMPONENT","🛢️ Natural Gas + 🔥 Furnace",8),
-             ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",8),
              ("🔷","Fiberglass","COMPONENT","🪟 Glass + 🥤 Plastic",11),
-
              ("🌀","Turbine Blade","COMPONENT","🔘 Wheel + 🔷 Fiberglass",17),
-
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
-             ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",18),
-             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",24)],
+             ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",17),
+             ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",29)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
@@ -97,8 +94,9 @@ STATIONS = [
              ("🍎","Apple","CREATION","🌳 Tree + 💧 Water",7),
              ("🧑‍🌾","Farm","CREATION","🌱 Soil + 🛠️ Tools + 💧 Water",7),
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",8),
+             ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",8),
              ("🌻","Sunflower","CREATION","⭐ Star + 🌾 Grain",20),
-             ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine",10),
+             ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine",11),
              ("__OPAL__","Opal","COMPONENT","Si + O + 🔥 Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",11),
              ("🐄","Cow","CREATION","🧑‍🌾 Farm + 🌾 Grain",9),
@@ -257,7 +255,7 @@ STATIONS = [
              ("⭐","Star","CREATION","🔭 Telescope + H + 🕐 Clock",16),
              ("🌈","Rainbow","CREATION","☁️ Cloud + ⭐ Star",17),
              ("☀️","Solar System","CREATION","⭐ Star + 🌎 Planet",18),
-             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",21)],
+             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",22)],
      "capstone":("🛰️","Space Station","CAPSTONE","🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",28)},
 ]
 
