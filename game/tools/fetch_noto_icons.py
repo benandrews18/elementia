@@ -22,7 +22,7 @@ Then:   python game/tools/fetch_noto_icons.py --check   (verify only)
 Downloaded PNGs are cached in game/icons/noto/ -- delete that folder to
 force a full re-fetch, or delete individual files to re-fetch just those.
 """
-import ast, base64, json, sys
+import ast, base64, json, re, sys
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -53,6 +53,29 @@ def literals_from(path, names):
     return found
 
 
+def subzone_emoji():
+    """SUBZONES (planets/Island/Fictional World) lives hand-written in
+    elementia.html itself, not build_guide.py -- see its own comment for
+    why (not on the map, never simulated, deliberately outside the
+    Python-round-tripped pipeline). Pulled out here with a regex instead
+    of ast.literal_eval since it's JS, not Python."""
+    html = TARGET_HTML.read_text(encoding="utf-8")
+    start = html.find("const SUBZONES = [")
+    end = html.find("SUBZONES.forEach(sz =>")
+    if start < 0 or end < 0:
+        return set()
+    block = html[start:end]
+    out = set()
+    # Top-level {id:"...", emoji:"X", ...} entries (planets/Island/Fictional World)
+    for m in re.finditer(r'emoji:"([^"]+)"', block):
+        out.add(m.group(1))
+    # Shop rows ["emoji","Name","TIER","recipe",pts] and the capstone tuple
+    for m in re.finditer(r'\["([^"]*)","[^"]+","(?:MATERIAL|COMPONENT|CREATION|CAPSTONE)"', block):
+        if not m.group(1).startswith("__"):
+            out.add(m.group(1))
+    return out
+
+
 def item_emoji():
     """Every distinct real (non-__MARKER__) emoji used as an item icon, plus
     each station's own header emoji -- both render through the same em()
@@ -67,6 +90,7 @@ def item_emoji():
         ce, cn, ct, cr, cpt = s["capstone"]
         if not ce.startswith("__"):
             out.add(ce)
+    out |= subzone_emoji()
     return sorted(out)
 
 
