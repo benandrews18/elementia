@@ -62,7 +62,18 @@ def avg_visits_from(csv_path, item_names):
         )
     avg_visits = {}
     for name in item_names:
-        val = rows[name]["AvgVisits"]
+        # Items unreachable from every station in the simulation (currently
+        # just Brass/Trombone/Cruise Ship, whose closure runs through Zn --
+        # an element that only exists at the Island sub-zone, invisible to
+        # this Python pipeline by design, see SUBZONES's own comment in
+        # elementia.html) never get an AvgVisits column written at all.
+        # None here matches how the game already treats missing avgVisits
+        # data everywhere it's read (tierThresholds() etc. fall back to a
+        # default rather than crashing).
+        val = rows[name].get("AvgVisits")
+        if val is None or val == "":
+            avg_visits[name] = None
+            continue
         try:
             avg_visits[name] = float(val)
         except ValueError:

@@ -66,7 +66,7 @@ STATIONS = [
 
              ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",16),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25),
-             ("🛳️","Cruise Ship","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet",34)],
+             ("🛳️","Cruise Ship","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎷 Trombone",40)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",22)},
 
     {"emoji":"⚡","name":"The Power Plant","suit":"power",
@@ -127,6 +127,7 @@ STATIONS = [
              ("🔩","Stainless Steel","MATERIAL","🔩 Steel + Ni + 🔥 Furnace",5),
              ("🦾","Aluminum Alloy","MATERIAL","Al + Mg + 🔥 Furnace",6),
              ("🛡️","Titanium Alloy","MATERIAL","Ti + Al + 🔥 Furnace",6),
+             ("🎺","Brass","MATERIAL","Cu + Zn + 🔥 Furnace",10),
              ("♨️","Geothermal Pump","CREATION","🔥 Furnace + 💧 Water + 🔋 Battery",10),
              ("__DIAMOND__","Diamond","COMPONENT","C + 🔥 Furnace + 🕐 Clock",12),
              ("🌋","Volcano","CREATION","🌎 Planet + 🔥 Furnace",14),
@@ -225,6 +226,7 @@ STATIONS = [
              ("📕","Book","COMPONENT","📄 Paper + 🛠️ Tools",13),
              ("🧶","Yarn","COMPONENT","🤍 Wool + 🔘 Wheel",14),
              ("🧣","Knit Scarf","CREATION","🧶 Yarn + 🔴 Red Dye + 🔵 Blue Dye",22),
+             ("🎷","Trombone","CREATION","🎺 Brass + 🛠️ Tools",18),
 
 
              ("__RUBY__","Ruby","COMPONENT","Al + O + 🔥 Furnace + 🕐 Clock",13),
