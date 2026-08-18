@@ -230,13 +230,13 @@ STATIONS = [
 
              ("__RUBY__","Ruby","COMPONENT","Al + O + 🔥 Furnace + 🕐 Clock",13),
              ("📚","Library","CREATION","🏢 Building + 📕 Book",15),
-             ("✈️","Airplane","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel",15),
+             ("🚁","Helicopter","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + 🌀 Turbine Blade",21),
              ("🗼","Skyscraper","CREATION","🏢 Building + ☁️ Cloud + 📡 Satellite Dish",16),
              ("🏍️","Motorcycle","CREATION","🚲 Bicycle + ⚙️ Engine",18),
              ("🍣","Sushi Restaurant","CREATION","🌿 Seaweed + 🐟 Salmon + 🏢 Building",19),
              ("🏛️","Museum","CREATION","🏢 Building + 🦖 Dinosaur + 🔭 Telescope + 🗿 Statue",21),
-             ("🚉","Central Station","CREATION","✈️ Airplane + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",25)],
-     "capstone":("🌆","Metropolis","CAPSTONE","🌉 Bridge + 🗼 Skyscraper + ✈️ Airplane + 🚗 Car + 💡 Light Bulb",23)},
+             ("🚉","Central Station","CREATION","🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",25)],
+     "capstone":("🌆","Metropolis","CAPSTONE","🌉 Bridge + 🗼 Skyscraper + 🚁 Helicopter + 🚗 Car + 💡 Light Bulb",23)},
 
     {"emoji":"🔭","name":"The Observatory","suit":"observatory",
      "dice":["Ni", "Al", "Fe", "Ag", "Ti", "Si"],
