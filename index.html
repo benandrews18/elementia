@@ -940,6 +940,16 @@ body[data-screen="market"] #trackedPill{display:none}
    translate(-50%,-50%) centering transform. */
 .map-node:active{transform:translate(-50%,-50%) scale(.88)}
 .map-node .mn-em{font-size:min(10vw,46px); line-height:1}
+/* Mini-Games' own best-run badge (see renderArcadeMap()) -- only ever
+   present on the arcade map's nodes (the real map's own .map-node markup
+   never sets this), so it's safe to always float it at the node's own
+   bottom edge without a mode check here. */
+.arcade-best-badge{
+  position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:#2a2110; font-size:10.5px; font-weight:800;
+  padding:1px 7px; border-radius:999px; white-space:nowrap;
+  box-shadow:0 1px 4px rgba(0,0,0,.4); border:1.5px solid var(--card);
+}
 /* "here" gets an animated pulse ring (not just a static glow) plus a
    floating label, so the player's own position reads at a glance instead
    of blending into the reachable/unreachable nodes around it. */
@@ -1970,6 +1980,11 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 .mg-results-icon{ font-size:64px; line-height:1; }
 .mg-results-pts{ font-size:20px; font-weight:800; }
 .mg-results-dice{ font-size:34px; letter-spacing:4px; }
+/* Mini-Games' own high-score line (see launchArcadeGame()) -- absent
+   entirely from a real session's own launchMinigame() results, which
+   never passes this far down into the same #mgResults markup. */
+.mg-results-raw{ font-size:15px; font-weight:800; color:var(--gold); }
+.mg-results-best{ font-size:12px; font-weight:700; opacity:.75; }
 
 /* crafted-card popup */
 .pc-card-wrap{
@@ -5345,8 +5360,15 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // question, not a per-run one. Enabled defaults on; tutorialHintsSeen
 // collects the ids of hints already shown so none of them ever repeat,
 // even across a reset or a brand new run.
+// arcadeHighScores: {[stationName]: {raw, label, score, dice}} -- the best
+// run so far per station in Mini-Games (see launchArcadeGame()), keyed off
+// each game's own onComplete(score, {raw, label}) meta rather than the
+// normalized score, since "raw" stays a meaningful, comparable number
+// (bubbles popped, seconds survived, ...) even if a game's own difficulty
+// constants get retuned later -- the whole point of tracking these at all
+// is so the player can report them back for exactly that kind of tuning.
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true,
-  guidedTutorialEnabled:true, tutorialHintsSeen:[]};
+  guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{}};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -6135,8 +6157,10 @@ function renderArcadeMap(){
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
     const [x, y] = MAP_NODE_POS[name];
     const s = STATION_BY_NAME[name];
-    return `<button type="button" class="map-node reachable" style="left:${x}%;top:${y}%" data-arcade-node="${esc(name)}" aria-label="${esc(name)}">
-      <span class="mn-em">${em(s.emoji)}</span>
+    const best = prefs.arcadeHighScores[name];
+    const badge = best ? `<span class="arcade-best-badge">🏆 ${esc(String(best.raw))}</span>` : "";
+    return `<button type="button" class="map-node reachable" style="left:${x}%;top:${y}%" data-arcade-node="${esc(name)}" aria-label="${esc(name)}${best ? `, best ${esc(String(best.raw))} ${esc(best.label)}` : ""}">
+      <span class="mn-em">${em(s.emoji)}</span>${badge}
     </button>`;
   }).join("");
   return `<div class="map-canvas" data-map-bg><div class="map-nodes">${nodesHTML}</div></div>`;
@@ -7658,7 +7682,7 @@ const MINIGAME_INTRO = {
   "Old Growth Forest": {title:"Plant the Trees", blurb:"Tap when the arm sweeps through the green zone."},
   "The Bakery":        {title:"Fill the Order", blurb:"Match the base, icing, and topping shown, then send it."},
   "The City":          {title:"Stack the Stones", blurb:"Tap to drop each stone lined up with the one below."},
-  "The Observatory":   {title:"Fly the Rocket", blurb:"Tap to thrust upward and dodge the asteroids."},
+  "The Observatory":   {title:"Fly the Rocket", blurb:"Hold left or right to steer and dodge the asteroids."},
 };
 function launchMinigame(){
   if (state.rolledHere) return;
@@ -7788,20 +7812,35 @@ function launchArcadeGame(name){
   function startRound(){
     introEl.classList.remove("show");
     introEl.removeEventListener("click", startRound);
-    run(stage, (score) => {
+    run(stage, (score, meta) => {
       const diceCount = minigameDiceFor(score);
       const s = STATION_BY_NAME[name];
+      // High score tracking, keyed on the game's own raw number (see
+      // prefs.arcadeHighScores' own comment) -- every current minigame
+      // passes meta, but the check stays defensive for anything future
+      // that doesn't bother.
+      const prevBest = prefs.arcadeHighScores[name];
+      const isNewBest = !!meta && (!prevBest || meta.raw > prevBest.raw);
+      if (isNewBest){
+        prefs.arcadeHighScores[name] = {raw: meta.raw, label: meta.label, score, dice: diceCount};
+        savePrefs();
+      }
       stage.innerHTML = "";
       resultsEl.innerHTML = `<div class="mg-results-icon">${em(s.emoji)}</div>` +
         `<div class="mg-results-pts">+${diceCount} dice earned</div>` +
-        `<div class="mg-results-dice">${"\u{1F3B2}".repeat(diceCount)}</div>`;
+        `<div class="mg-results-dice">${"\u{1F3B2}".repeat(diceCount)}</div>` +
+        (meta ? `<div class="mg-results-raw">${esc(String(meta.raw))} ${esc(meta.label)}${isNewBest ? " — 🏆 New best!" : ""}</div>` : "") +
+        (meta && !isNewBest && prevBest ? `<div class="mg-results-best">Best: ${esc(String(prevBest.raw))} ${esc(prevBest.label)}</div>` : "");
       resultsEl.classList.add("show");
       setTimeout(() => {
         resultsEl.classList.remove("show");
         overlay.classList.remove("show");
         // Back to the arcade station grid -- no state/save/render() of the
-        // real session at all.
-      }, 1400);
+        // real session at all, but the grid's own best-score badges (see
+        // renderArcadeMap()) still need a manual refresh since nothing
+        // else re-renders this screen.
+        document.getElementById("arcadeMap").innerHTML = renderArcadeMap();
+      }, 1800);
     });
   }
   introEl.addEventListener("click", startRound);
@@ -9988,9 +10027,18 @@ window.MINIGAMES = {};
        runMinigame(container, onComplete)
          container   - a DOM element to render into. Cleared and owned for
                         the duration of the run; left empty when it ends.
-         onComplete  - called once with a single number, 0..1, once the
-                        round is over. The caller decides what that becomes
-                        (e.g. bonus dice = round(score * MAX_BONUS)).
+         onComplete  - called once with (score, meta) when the round is
+                        over. score is a single number, 0..1 -- the caller
+                        decides what that becomes (e.g. bonus dice =
+                        round(score * MAX_BONUS)). meta is
+                        {raw, label} -- the same result in the game's own
+                        terms (e.g. {raw:17, label:"bubbles popped"}), for
+                        anything that wants to show or log the real number
+                        instead of the normalized score (see the Arcade's
+                        own high-score tracking in elementia.html). A
+                        caller that only reads the first argument (the
+                        real game's own launchMinigame(), which just wants
+                        a dice count) needs no changes at all.
 
    Everything else here is private. No external assets, no dependencies --
    this has to survive being pasted into a single portable HTML file later,
@@ -10090,10 +10138,21 @@ window.MINIGAMES = {};
         clip-path:circle(50%);
         -webkit-clip-path:circle(50%);
       }
+      /* --pop-origin (set in pop(), right before this class is added) is
+         the translate() commitStyles() just froze into the bubble's own
+         inline transform -- referenced here, NOT re-derived, because a
+         CSS animation's keyframes don't COMPOSE with whatever transform
+         was already on the element, they REPLACE it outright. Without
+         the variable, these keyframes' own "transform:scale(...)" would
+         overwrite the frozen translate() the instant the pop animation
+         starts, snapping the bubble back to translate(0,0) -- its literal
+         spawn point at the bottom of the stage -- a split second before
+         visibly popping there. Multiplying the scale onto --pop-origin
+         instead keeps the pop anchored exactly where the tap landed. */
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
-        0%{transform:scale(1); opacity:1}
-        100%{transform:scale(1.5); opacity:0}
+        0%{transform:var(--pop-origin, translate(0,0)) scale(1); opacity:1}
+        100%{transform:var(--pop-origin, translate(0,0)) scale(1.5); opacity:0}
       }
       .mg-ocean-result{
         position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center;
@@ -10206,7 +10265,25 @@ window.MINIGAMES = {};
       const pop = () => {
         if (!running || !liveBubbles.has(b)) return;
         liveBubbles.delete(b);
+        // commitStyles() BEFORE cancel() -- canceling a WAAPI animation on
+        // its own snaps the element straight back to its pre-animation
+        // transform (here, translate(0,0) -- literally its spawn point at
+        // the bottom of the stage), an instant before the .mg-pop scale/
+        // fade keyframes take over. That read as a SECOND bubble popping
+        // at the bottom every time, when it was actually the same one
+        // jumping there first. commitStyles() bakes the animation's
+        // CURRENT mid-flight transform into the element's own inline
+        // style, so canceling the (now-redundant) animation afterward is
+        // a no-op visually -- the pop plays exactly where the bubble
+        // already was.
+        try { anim.commitStyles(); } catch (err) { /* not connected/no effect -- fall through to cancel() alone */ }
         anim.cancel();
+        // Hand that frozen translate() to the .mg-pop keyframes via a
+        // custom property (see its own comment) -- committing it to
+        // b.style.transform alone isn't enough, since the keyframes'
+        // own "transform:scale(...)" would still clobber it outright the
+        // instant the animation class is added below.
+        b.style.setProperty("--pop-origin", b.style.transform || "translate(0px,0px)");
         popped++;
         popCountEl.textContent = "\u{1F30A} " + popped;
         diceEl.innerHTML = diceGridHTML(diceFor(popped / TARGET_POPS));
@@ -10269,7 +10346,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">🎲 ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: popped, label: "bubbles popped"}), RESULT_HOLD_MS);
     }
 
     scheduleSpawn();
@@ -10653,7 +10730,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: solved, label: "puzzles solved"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -11013,7 +11090,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(finalScore)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(finalScore), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(finalScore, {raw: net, label: "eggs caught"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -11353,7 +11430,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: broken, label: "rocks broken"}), RESULT_HOLD_MS);
     }
 
     updateCrackbar();
@@ -11514,6 +11591,26 @@ window.MINIGAMES = {};
       .mg-forest-result .mg-big{font-size:30px; font-weight:800}
       .mg-forest-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-forest-fade-in{ to{opacity:1} }
+      /* The actual tap target -- mirrors #hubHome's own look from the main
+         game exactly (76px circle, 3px card-colored ring, same green) so
+         every minigame's primary action reads as the same kind of control,
+         rather than "tap anywhere on the stage" (the old behavior here)
+         being a different, less discoverable interaction language per
+         game. Replaces the whole-stage pointerdown listener outright --
+         this is a pure timing game (WHEN you tap, never WHERE), so moving
+         the hit target to one clear button changes nothing about
+         difficulty or feel. */
+      .mg-forest-center-btn{
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
+        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
+        border:3px solid #17321f; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+      }
+      .mg-forest-center-btn:hover{filter:brightness(1.08)}
+      .mg-forest-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-forest-center-btn .mg-cb-icon{font-size:32px; line-height:1}
+      .mg-forest-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
     `;
     const style = document.createElement("style");
     style.id = "mg-forest-style";
@@ -11593,6 +11690,11 @@ window.MINIGAMES = {};
     const toast = document.createElement("div");
     toast.className = "mg-forest-toast";
 
+    const centerBtn = document.createElement("button");
+    centerBtn.type = "button";
+    centerBtn.className = "mg-forest-center-btn";
+    centerBtn.innerHTML = `<span class="mg-cb-icon">${STEPS[0].icon}</span><span class="mg-cb-label">Tap</span>`;
+
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(stepsRow);
@@ -11600,6 +11702,7 @@ window.MINIGAMES = {};
     stage.appendChild(stepLabel);
     stage.appendChild(gaugeWrap);
     stage.appendChild(toast);
+    stage.appendChild(centerBtn);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
@@ -11678,11 +11781,13 @@ window.MINIGAMES = {};
       }
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
       stepLabel.textContent = STEPS[stepIndex].label;
+      centerBtn.querySelector(".mg-cb-icon").textContent = STEPS[stepIndex].icon;
       refreshDots();
       stepStart = Date.now();
       sweepFromRight = Math.random() < 0.5;
     }
-    stage.addEventListener("pointerdown", onTap);
+    function onCenterBtnDown(e) { e.preventDefault(); onTap(); }
+    centerBtn.addEventListener("pointerdown", onCenterBtnDown);
 
     const start = Date.now();
     let rafId = null;
@@ -11715,7 +11820,7 @@ window.MINIGAMES = {};
     function endRound() {
       if (!running) return;
       running = false;
-      stage.removeEventListener("pointerdown", onTap);
+      centerBtn.removeEventListener("pointerdown", onCenterBtnDown);
       if (rafId) cancelAnimationFrame(rafId);
 
       const score = Math.max(0, Math.min(1, treesPlanted / TARGET_TREES));
@@ -11726,7 +11831,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: treesPlanted, label: "trees planted"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -11948,11 +12053,23 @@ window.MINIGAMES = {};
       .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
         box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
-      .mg-bakery-sendwrap{ padding:0 20px 14px; }
+      /* Send is the actual tap target -- mirrors #hubHome's own look from
+         the main game exactly (76px circle, 3px card-colored ring, same
+         green) so every minigame's primary action reads as the same kind
+         of control, rather than each one inventing its own button shape.
+         Was a full-width rectangular bar; the click handler/disabled logic
+         are unchanged, only the shape and the wrapper's centering are new. */
+      .mg-bakery-sendwrap{ padding:4px 20px 14px; display:flex; justify-content:center; }
       .mg-bakery-send{
-        width:100%; padding:14px; border-radius:18px; border:none; font-weight:800; font-size:22px;
-        background:#4c9a3f; color:#fff; cursor:pointer;
+        width:76px; height:76px; border-radius:50%; border:3px solid #17120c;
+        background:#3fb46c; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4); cursor:pointer;
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        transition:filter .15s ease, transform .1s ease;
       }
+      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.08); }
+      .mg-bakery-send:not(:disabled):active{ transform:scale(.94); }
+      .mg-bakery-send .mg-cb-icon{font-size:30px; line-height:1}
+      .mg-bakery-send .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
       .mg-bakery-send:disabled{ background:#4a4038; color:#8a7f70; cursor:not-allowed; }
       .mg-bakery-stage.mg-bakery-ok .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(95,207,106,.55); }
       .mg-bakery-stage.mg-bakery-bad .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(230,86,79,.55); }
@@ -12054,8 +12171,9 @@ window.MINIGAMES = {};
     const sendWrap = document.createElement("div");
     sendWrap.className = "mg-bakery-sendwrap";
     const sendBtn = document.createElement("button");
+    sendBtn.type = "button";
     sendBtn.className = "mg-bakery-send";
-    sendBtn.textContent = "▶ Send";
+    sendBtn.innerHTML = `<span class="mg-cb-icon">\u{1F4E4}</span><span class="mg-cb-label">Send</span>`;
     sendBtn.disabled = true;
     sendWrap.appendChild(sendBtn);
 
@@ -12190,7 +12308,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: matched, label: "orders filled"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -12314,6 +12432,26 @@ window.MINIGAMES = {};
       .mg-city-result .mg-big{font-size:30px; font-weight:800}
       .mg-city-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-city-fade-in{ to{opacity:1} }
+      /* The actual tap target -- mirrors #hubHome's own look from the main
+         game exactly (76px circle, 3px card-colored ring, same green) so
+         every minigame's primary action reads as the same kind of control,
+         rather than "tap anywhere on the stage" (the old behavior here)
+         being a different, less discoverable interaction language per
+         game. Replaces the whole-stage pointerdown listener outright --
+         WHERE on the slab you tap has never mattered, only WHEN, so moving
+         the hit target to one clear button changes nothing about
+         difficulty or feel. */
+      .mg-city-center-btn{
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
+        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
+        border:3px solid #17120c; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+      }
+      .mg-city-center-btn:hover{filter:brightness(1.08)}
+      .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
+      .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
     `;
     const style = document.createElement("style");
     style.id = "mg-city-style";
@@ -12343,9 +12481,15 @@ window.MINIGAMES = {};
     const track = document.createElement("div");
     track.className = "mg-city-track";
 
+    const centerBtn = document.createElement("button");
+    centerBtn.type = "button";
+    centerBtn.className = "mg-city-center-btn";
+    centerBtn.innerHTML = `<span class="mg-cb-icon">\u{1F528}</span><span class="mg-cb-label">Place</span>`;
+
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(track);
+    stage.appendChild(centerBtn);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-city-count");
@@ -12455,7 +12599,8 @@ window.MINIGAMES = {};
       slideMs = Math.max(SLIDE_MS_MIN, SLIDE_MS_START - stonesPlaced * SLIDE_MS_STEP);
       spawnActive();
     }
-    stage.addEventListener("pointerdown", onTap);
+    function onCenterBtnDown(e) { e.preventDefault(); onTap(); }
+    centerBtn.addEventListener("pointerdown", onCenterBtnDown);
 
     const start = Date.now();
     function tick() {
@@ -12477,7 +12622,7 @@ window.MINIGAMES = {};
     function endRound() {
       if (!running) return;
       running = false;
-      stage.removeEventListener("pointerdown", onTap);
+      centerBtn.removeEventListener("pointerdown", onCenterBtnDown);
       if (rafId) cancelAnimationFrame(rafId);
 
       const score = Math.max(0, Math.min(1, stonesPlaced / TARGET_STONES));
@@ -12488,7 +12633,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: stonesPlaced, label: "stones stacked"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
@@ -12640,6 +12785,21 @@ window.MINIGAMES = {};
       .mg-obs-zone.l{ left:0; background:linear-gradient(90deg, rgba(126,168,255,.22), transparent); }
       .mg-obs-zone.r{ right:0; background:linear-gradient(270deg, rgba(126,168,255,.22), transparent); }
       .mg-obs-zone.on{ opacity:1; }
+      /* The steering legend -- unlike .mg-obs-zone above (invisible until
+         you're already holding a side), these show BEFORE the player has
+         ever touched the screen, so "which half does what" isn't something
+         they have to discover by trial. Faded out for good the first time
+         either side is held (see setHold()) -- their job is done once the
+         player's shown they know the controls, and staying on any longer
+         would just clutter a screen that's otherwise all asteroids. */
+      .mg-obs-arrow{
+        position:absolute; top:50%; z-index:2; transform:translateY(-50%);
+        font-size:40px; line-height:1; color:#fff; opacity:.5; pointer-events:none;
+        text-shadow:0 2px 8px rgba(0,0,0,.5); transition:opacity .4s ease;
+      }
+      .mg-obs-arrow.l{ left:8%; }
+      .mg-obs-arrow.r{ right:8%; }
+      .mg-obs-arrow.mg-obs-arrow-hidden{ opacity:0; }
       .mg-obs-rocket{
         position:absolute; line-height:1; z-index:3;
         will-change:transform; filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));
@@ -12688,6 +12848,8 @@ window.MINIGAMES = {};
 
     const zoneL = document.createElement("div"); zoneL.className = "mg-obs-zone l";
     const zoneR = document.createElement("div"); zoneR.className = "mg-obs-zone r";
+    const arrowL = document.createElement("div"); arrowL.className = "mg-obs-arrow l"; arrowL.textContent = "⬅️";
+    const arrowR = document.createElement("div"); arrowR.className = "mg-obs-arrow r"; arrowR.textContent = "➡️";
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
@@ -12712,6 +12874,8 @@ window.MINIGAMES = {};
 
     stage.appendChild(zoneL);
     stage.appendChild(zoneR);
+    stage.appendChild(arrowL);
+    stage.appendChild(arrowR);
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(rocket);
@@ -12746,11 +12910,21 @@ window.MINIGAMES = {};
     }
     drawRocket();
 
+    let arrowsShown = true;
     function setHold(e) {
       const rect = stage.getBoundingClientRect();
       holding = (e.clientX - rect.left) < rect.width / 2 ? -1 : 1;
       zoneL.classList.toggle("on", holding === -1);
       zoneR.classList.toggle("on", holding === 1);
+      // The legend's only job is to show a first-timer which half does
+      // what -- once they've actually held a side, it's learned, so fade
+      // it out for the rest of the round rather than sitting on top of
+      // the asteroids indefinitely.
+      if (arrowsShown) {
+        arrowsShown = false;
+        arrowL.classList.add("mg-obs-arrow-hidden");
+        arrowR.classList.add("mg-obs-arrow-hidden");
+      }
     }
     function clearHold() {
       holding = 0;
@@ -12880,7 +13054,7 @@ window.MINIGAMES = {};
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: +(elapsed / 1000).toFixed(1), label: "seconds survived"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
