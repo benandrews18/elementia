@@ -35,6 +35,7 @@
   .legend span{display:inline-flex; align-items:center; gap:5px; margin-right:14px}
   .dot{width:9px; height:9px; border-radius:50%; display:inline-block}
   .dot.hit{background:var(--ok)} .dot.ghost{background:var(--warn)} .dot.miss{background:var(--bad)}
+  .dot.corner{background:#e05ad0}
   .stats{
     display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;
   }
@@ -49,6 +50,7 @@
   }
   .log .row{ border-bottom:1px solid rgba(255,255,255,.05); padding:3px 0; white-space:pre-wrap; }
   .log .row.hit{color:#a9e8bf} .log .row.ghost{color:#f0d488} .log .row.miss{color:#f0a89c}
+  .log .row.corner{color:#f0a8e8}
   .log .row .tag{font-weight:800; display:inline-block; width:56px}
   .hint{margin-top:16px; font-size:12px; color:var(--mute); line-height:1.6; max-width:340px}
   code{background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:11px}
@@ -70,16 +72,19 @@
       <button id="copyBtn">📋 Copy log as JSON</button>
     </div>
     <div class="legend">
-      <span><i class="dot hit"></i>hit (live, armed bubble)</span>
-      <span><i class="dot ghost"></i>ghost (visually inside a bubble, but not armed yet / routed elsewhere)</span>
+      <span><i class="dot hit"></i>hit (inside the tapped bubble's own visible circle)</span>
+      <span><i class="dot corner"></i>corner steal (tap landed OUTSIDE the bubble's circle, in its invisible square hit-box)</span>
+      <span><i class="dot ghost"></i>ghost (a bubble's circle visually contains this point, but no live bubble was the actual event target)</span>
       <span><i class="dot miss"></i>miss (open water)</span>
     </div>
     <p class="hint">
       Runs the real, unmodified <code>ocean-bubbles.js</code> — nothing here changes how the shipped
       game behaves. This just watches from outside: every tap is classified against the bubbles'
-      actual DOM hit-boxes and their armed/unarmed state, so you can see exactly what the game
-      "saw" versus what you visually tapped. Bubble outlines are solid when tappable, dashed while
-      still rising through the no-tap safety zone near the bottom.
+      actual DOM hit-boxes, so you can see exactly what the game "saw" versus what you visually
+      tapped. <b>Corner steal</b> is the "wrong bubble popped" bug: <code>border-radius</code> only
+      rounds the paint, not the hit-test area, so a bubble's true click region is its full square
+      bounding box -- a newer, still-low bubble sitting on top in stacking order can silently catch
+      a tap meant for a different bubble nearby, via a corner well outside its own visible circle.
     </p>
   </div>
 
@@ -181,22 +186,28 @@
 
     let cls, detail;
     if (targetBubble && !targetBubble.classList.contains("mg-pop")) {
-      // Browser actually routed this event to a live bubble (armed + hit,
-      // or captured from a prior pointerdown).
+      // Browser actually routed this event to a live bubble's DOM element.
+      // Whether that's a genuine "hit" or a "corner steal" depends on
+      // whether the tap point is actually INSIDE that bubble's own visible
+      // circle -- border-radius only rounds the paint, the hit-test area
+      // is still the full square unless clip-path restricts it.
       const c = bubbleCircle(targetBubble, sRect);
-      cls = "hit";
+      const dist = Math.hypot(x - c.cx, y - c.cy);
+      const isCornerSteal = dist > c.radius;
+      const stolenFrom = isCornerSteal && visual && visual.circle.el !== targetBubble ? visual.circle.el : null;
+      cls = isCornerSteal ? "corner" : "hit";
       detail = {
         bubbleId: bubbleIndex(targetBubble),
         bubbleRadius: fmt(c.radius, 1),
-        distFromCenter: fmt(Math.hypot(x - c.cx, y - c.cy), 1),
+        distFromCenter: fmt(dist, 1),
         armedAtEventTime: c.armed,
-        viaCapture: !c.armed || (visual && visual.circle.el !== targetBubble),
+        viaCapture: !c.armed,
+        stolenFromBubbleId: stolenFrom ? bubbleIndex(stolenFrom) : null,
       };
     } else if (visual) {
-      // Finger was visually over a bubble's circle, but the DOM event
-      // landed elsewhere (stage/water) -- almost always the bubble hasn't
-      // armed yet (still inside the bottom safety zone), so pointer-events
-      // is "none" and the browser hit-tests straight through it.
+      // A bubble's circle visually contains this point, but the DOM event
+      // didn't land on ANY live bubble at all (e.g. pointer-events:none
+      // during an arm delay, if one's ever reintroduced).
       cls = "ghost";
       detail = {
         bubbleId: bubbleIndex(visual.circle.el),
@@ -234,8 +245,12 @@
     if (rec.cls === "hit") {
       line += `HIT bubble#${rec.detail.bubbleId}` + (rec.detail.viaCapture ? " (via capture)" : "") +
         `  Δcenter=${rec.detail.distFromCenter}px  r=${rec.detail.bubbleRadius}px  armed=${rec.detail.armedAtEventTime}`;
+    } else if (rec.cls === "corner") {
+      line += `CORNER STEAL -- bubble#${rec.detail.bubbleId}'s square hit-box caught this` +
+        (rec.detail.stolenFromBubbleId ? `, stealing it from bubble#${rec.detail.stolenFromBubbleId}'s visible circle` : "") +
+        `  Δcenter=${rec.detail.distFromCenter}px (> r=${rec.detail.bubbleRadius}px)`;
     } else if (rec.cls === "ghost") {
-      line += `GHOST -- inside bubble#${rec.detail.bubbleId} but not armed  Δcenter=${rec.detail.distFromCenter}px  r=${rec.detail.bubbleRadius}px`;
+      line += `GHOST -- inside bubble#${rec.detail.bubbleId}'s circle but no live bubble was the event target  Δcenter=${rec.detail.distFromCenter}px  r=${rec.detail.bubbleRadius}px`;
     } else {
       line += `MISS -- open water`;
     }
@@ -246,6 +261,7 @@
   function renderStats() {
     const downs = events.filter(e => e.type === "down");
     const hits = downs.filter(e => e.cls === "hit").length;
+    const corners = downs.filter(e => e.cls === "corner").length;
     const ghosts = downs.filter(e => e.cls === "ghost").length;
     const misses = downs.filter(e => e.cls === "miss").length;
     const total = downs.length;
@@ -256,6 +272,7 @@
     statsEl.innerHTML = `
       <div class="stat"><div class="n">${total}</div><div class="l">Taps</div></div>
       <div class="stat"><div class="n ok">${hits}</div><div class="l">Hits</div></div>
+      <div class="stat"><div class="n" style="color:#e05ad0">${corners}</div><div class="l">Corner steals</div></div>
       <div class="stat"><div class="n warn">${ghosts}</div><div class="l">Ghost taps</div></div>
       <div class="stat"><div class="n bad">${misses}</div><div class="l">Misses</div></div>
       <div class="stat"><div class="n">${rate}%</div><div class="l">Hit rate</div></div>

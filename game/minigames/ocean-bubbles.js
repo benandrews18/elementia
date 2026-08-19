@@ -98,6 +98,17 @@
         box-shadow:0 0 10px rgba(255,255,255,.25) inset, 0 2px 6px rgba(10,60,90,.25);
         will-change:transform, opacity;
         box-sizing:border-box;
+        /* border-radius only rounds the PAINT -- the actual hit-test area
+           stays the full square box unless clipped. Bubbles are appended
+           to the DOM in spawn order, so a newer bubble (often still low
+           on screen) sits on top in stacking order; without this, its
+           invisible square CORNERS -- well outside its visible circle --
+           could silently steal a tap aimed at a completely different,
+           older bubble overlapping that corner, which read as "the wrong
+           bubble popped" with no visual explanation why. clip-path makes
+           the hit-test region match the visible circle exactly. */
+        clip-path:circle(50%);
+        -webkit-clip-path:circle(50%);
       }
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
