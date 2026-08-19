@@ -485,17 +485,18 @@ body[data-screen="market"] #trackedPill{display:none}
    accept button is a plain craftbtn labeled with what it costs. */
 .trade-intro{font-size:13px; color:var(--ink2); margin:0 0 14px; line-height:1.5}
 .trade-board{display:flex; flex-direction:column; gap:14px}
-/* Quests -- tiered like a real tree without drawing one: each
-   .quest-tier is a row of cards (a tier with more cards than the one
-   above it IS the branch point, see questsBodyHTML()'s own comment).
-   Each card is a Station Shop .item (see questCardHTML()), not a
-   quest-specific shape. */
-.quest-tier-label{
-  font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-  color:var(--mute); margin:20px 0 10px;
-}
-.quest-tier-label:first-of-type{margin-top:4px}
+/* Quests -- a flat drip-fed list (see questVisible()), not a tree laid
+   out in sections: in-progress first, then whatever's newly on offer,
+   completed history last. Each card is a Station Shop .item (see
+   questCardHTML()), not a quest-specific shape. */
 .quest-tier{display:flex; flex-direction:column; gap:14px}
+/* The expandable component tree an in-progress/completed quest card
+   grows (see questCardHTML()) is the exact same .ref-tree Item Reference
+   uses, but .ref-tree's own negative-margin bleed is tuned to THAT row's
+   padding/icon-column geometry, not a quest card's -- cancel it back to a
+   plain contained block here instead of chasing a second set of magic
+   numbers for a different card shape. */
+.quest-item .ref-tree{margin:6px 0 0}
 /* Quest cards reuse the Station Shop's own .item/.craftbtn language (see
    questCardHTML()) -- only the gateway pill and the "tracking" craftbtn
    tint are quest-specific. */
@@ -614,12 +615,8 @@ body[data-screen="market"] #trackedPill{display:none}
 .job-card-wrap{display:flex; flex-direction:column; gap:20px}
 .job-card{
   position:relative; background:var(--jobcard-bg); border:3px solid var(--gold); border-radius:16px;
-  padding:20px 8px 10px; box-shadow:0 4px 14px var(--shadow);
+  padding:22px 8px 14px; box-shadow:0 4px 14px var(--shadow);
   display:flex; flex-direction:column; overflow:visible; justify-content:center;
-  /* Matches a full 2-item card's natural content height, so a 1-item card
-     (jobs are 1-2 items, see pickStationJobOptions()) renders at the same
-     size instead of shrinking to fit its shorter content. */
-  min-height:250px;
 }
 .job-card.turned-in{opacity:.6}
 /* The one board card per station guaranteed to be craftable AT that
@@ -652,19 +649,17 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .jc-icon-btn.jc-accept{background:var(--ok-soft); border-color:var(--ok)}
 .jc-icon-btn:disabled{opacity:.5; cursor:not-allowed}
-/* Station-suit badge -- same gold-circle language as .job-badge, but sitting
-   INSIDE the card frame rather than overhanging it, so it reads as part of
-   the item it labels. Each item section owns its own badge, pinned to that
-   section's top-right corner: for a second (bottom) item that puts the badge
-   below the divider, inside the lower half, not straddling the line. */
+/* Station-suit badge -- overhangs the card's own top-right corner, same
+   size/shape language as .job-badge's identical overhang on the top-left
+   (see jobCardBodyHTML()) -- the two badges read as a matched pair
+   bracketing the "Job Card" label between them. */
 .job-suit-badge{
-  position:absolute; top:6px; right:6px; z-index:2;
-  width:42px; height:42px; border-radius:50%; background:var(--gold-soft); border:4px solid var(--suit, var(--gold));
-  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
+  position:absolute; top:-15px; right:-8px; z-index:2;
+  width:38px; height:38px; border-radius:50%; background:var(--gold-soft); border:2.5px solid var(--suit, var(--gold));
+  display:flex; align-items:center; justify-content:center; font-size:18px; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 .jc-items{display:flex; flex-direction:column}
-.jc-divider{border-top:1.5px solid var(--gold); margin:8px 6px 0}
 .job-turnin{flex:1; padding:16px 10px; white-space:nowrap}
 .job-turnedin-note{font-size:12.5px; font-weight:800; color:var(--ok); text-align:center}
 /* A single item section on a job card -- flat, not expandable (see
@@ -1663,7 +1658,11 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Cutout spotlight: a box-shadow spread far past the element's own tiny
    rect paints the dark backdrop everywhere EXCEPT inside that rect --
    the "hole" is just the absence of shadow, not an actual cut mask, so
-   the real button underneath stays exactly as clickable as it always was. */
+   the real button underneath stays exactly as clickable as it always was.
+   The step's own text/Next button used to live in a caption box pinned
+   near the spotlight (.tut-coach-box) -- that's gone now, replaced by
+   Professor Mouse's own speech bubble (#mouseTip/.mouse-tip-tour, see
+   renderTutCoach()), so only the spotlight cutout itself is left here. */
 #tutCoach{position:fixed; inset:0; z-index:9997; pointer-events:none}
 #tutCoach.open{display:block}
 #tutCoach:not(.open){display:none}
@@ -1674,17 +1673,6 @@ body[data-screen="market"] #trackedPill{display:none}
   pointer-events:none;
 }
 .tut-coach-spot.hidden{box-shadow:0 0 0 9999px rgba(8,10,14,.74); left:50%; top:50%; width:0; height:0}
-.tut-coach-box{
-  position:fixed; z-index:9999; max-width:320px; background:var(--card);
-  border:2px solid var(--gold); border-radius:14px; padding:16px 18px;
-  box-shadow:0 12px 30px rgba(0,0,0,.4); pointer-events:auto;
-  transition:top .3s ease, bottom .3s ease;
-}
-.tut-coach-title{font-size:16px; font-weight:800; margin-bottom:6px}
-.tut-coach-text{font-size:13.5px; color:var(--ink2); line-height:1.5}
-.tut-coach-actions{display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px}
-.tut-coach-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
-.tut-coach-actions .bigbtn{padding:9px 18px; font-size:13px}
 
 /* --------------------------------------------------------- feedback --- */
 /* One shared bounce language used throughout: a quick overshoot-then-
@@ -2104,12 +2092,14 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 #hint b{font-weight:800}
 
 /* Professor Mouse companion -- see the HTML comment above #mouseTip for
-   what this is. z-index 230 clears both #tour (200, the welcome slide)
-   and #mgOverlay (220, the mini-game screen) -- the two overlays this
-   needs to float above -- while staying well under #tutCoach's
-   9997-9999 (the separate opt-in "How to Play" walkthrough, which never
-   runs at the same time as this). Centers the same way #hubHome etc. do
-   (left:50% + translateX(-50%)) rather than the width:768px/margin-left
+   what this is. z-index 10000 clears #tour (200, the welcome slide),
+   #mgOverlay (220, the mini-game screen), AND #tutCoach's own spotlight
+   cutout (9997-9999, see .tut-coach-spot below) -- the guided "How to
+   Play" walkthrough drives this same bubble for its own step text now
+   (see renderTutCoach()/.mouse-tip-tour), so it has to paint above that
+   spotlight's dark backdrop rather than getting dimmed out by it like an
+   ordinary bit of underlying UI would. Centers the same way #hubHome etc.
+   do (left:50% + translateX(-50%)) rather than the width:768px/margin-left
    trick the OTHER fixed full-width elements need for the desktop phone-
    frame -- that trick is only for elements meant to span the frame's
    full width; a plain centered transform already lands on the frame's
@@ -2117,7 +2107,7 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    centered the same way. */
 #mouseTip{
   position:fixed; left:16px; bottom:calc(var(--hub-h, 67px) + 14px);
-  transform:translateY(14px); z-index:230;
+  transform:translateY(14px); z-index:10000;
   display:flex; align-items:flex-end; max-width:min(560px, 92vw);
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
 }
@@ -2135,6 +2125,20 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
   position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
   background:var(--sunken); color:var(--mute); font-size:14px; display:flex; align-items:center; justify-content:center;
 }
+/* Same [hidden]-loses-to-a-class-rule specificity trap as .mn-children
+   (see its own comment) -- renderTutCoach() hides this close button for
+   the walkthrough's duration via the hidden attribute, which does nothing
+   on its own against .mouse-tip-close's unconditional display:flex above. */
+.mouse-tip-close[hidden]{display:none}
+/* Next/step-counter row for the guided walkthrough specifically (see
+   renderTutCoach()) -- hidden for every ordinary one-off tip, which just
+   dismisses via the close button above instead of advancing anywhere. */
+.mouse-tip-tour{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  margin-top:14px; padding-top:14px; border-top:1.5px solid var(--line2);
+}
+.mouse-tip-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
+.mouse-tip-tour .bigbtn{padding:9px 18px; font-size:13px}
 
 /* ------------------------------------------------- reference sheet --- */
 /* Pinned just below the topbar (var(--topbar-h) -- its own measured
@@ -2624,8 +2628,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="mouseTip" role="status" aria-hidden="true">
   <img id="mouseTipImg" alt="Professor Mouse">
   <div class="mouse-bubble">
-    <button type="button" class="mouse-tip-close" aria-label="Dismiss">✕</button>
+    <button type="button" class="mouse-tip-close" id="mouseTipClose" aria-label="Dismiss">✕</button>
     <p id="mouseTipText"></p>
+    <!-- Shown only while the guided "How to Play" walkthrough (see
+         TUT_COACH_STEPS/renderTutCoach()) is driving this same bubble --
+         hidden for every other one-off tip, which just dismisses on its
+         own close button or the player's next tap instead. -->
+    <div class="mouse-tip-tour" id="mouseTipTour" hidden>
+      <span class="mouse-tip-step" id="mouseTipStep"></span>
+      <button type="button" class="bigbtn" id="mouseTipNext">Next</button>
+    </div>
   </div>
 </div>
 
@@ -3000,17 +3012,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- Coachmark walkthrough: NOT an .overlay (no dark full-screen backdrop
      of its own) -- the real UI underneath stays visible and untouched,
-     see .tut-coach-spot's box-shadow cutout technique. -->
+     see .tut-coach-spot's box-shadow cutout technique. The step's own
+     text/Next button live in Professor Mouse's speech bubble now (see
+     #mouseTip/.mouse-tip-tour, renderTutCoach()), not a caption box here
+     -- this is just the spotlight cutout itself. -->
 <div id="tutCoach" role="dialog" aria-modal="true" aria-label="Guided walkthrough">
   <div class="tut-coach-spot" id="tutCoachSpot"></div>
-  <div class="tut-coach-box" id="tutCoachBox">
-    <div class="tut-coach-title" id="tutCoachTitle"></div>
-    <div class="tut-coach-text" id="tutCoachText"></div>
-    <div class="tut-coach-actions">
-      <span class="tut-coach-step" id="tutCoachStep"></span>
-      <button type="button" class="bigbtn" id="tutCoachNext">Next</button>
-    </div>
-  </div>
 </div>
 
 <!-- Mini-Games mode: map + mini-games only, no shop/items/points. A
@@ -5029,18 +5036,19 @@ function shuffle(arr){
   return arr;
 }
 
-/* The board offered AT a given station -- up to 4 cards (1-2 items each),
-   drawn from whatever's still eligible and not already claimed by an
-   earlier job this session. Cards are completely random EXCEPT the first
-   (top-left in the 2-column grid, see .mp-options) -- that one is
-   guaranteed to contain item(s) actually sold/craftable at THIS station
-   (entry.station === station), so every board has at least one offer that
-   visibly belongs here; the rest are an unweighted random slice of the
-   whole eligible pool, station-relevance and all. Called once per station
-   ARRIVAL (see goStation()), not on every board-panel open, so the same
-   cards stay put for the whole stay -- see the caller. Each card is
-   {items, special} -- special marks the guaranteed-local card so
-   jobBoardHTML() can give it its thick station-colored border. */
+/* The board offered AT a given station -- up to 4 cards, always exactly
+   one item each, drawn from whatever's still eligible and not already
+   claimed by an earlier job this session. Cards are completely random
+   EXCEPT the first (top-left in the 2-column grid, see .mp-options) --
+   that one is guaranteed to be an item actually sold/craftable at THIS
+   station (entry.station === station), so every board has at least one
+   offer that visibly belongs here; the rest are an unweighted random
+   slice of the whole eligible pool. Called once per station ARRIVAL (see
+   goStation()), not on every board-panel open, so the same cards stay put
+   for the whole stay -- see the caller. Each card is {items, special} --
+   items is always a 1-element array (jobDone()/jobBonus() still just
+   .every()/.reduce() over it) -- special marks the guaranteed-local card
+   so jobBoardHTML() can give it its thick station-colored border. */
 /* Progressive job depth -- the pool is gated to items whose AvgVisits sits
    at or below a ceiling that grows with state.visits, so a fresh session
    sees only the shallowest "big items" and the full eligible pool only
@@ -5053,10 +5061,6 @@ const JOB_DEPTH_GROWTH = 0.8;
 function jobDepthCeiling(){
   return JOB_DEPTH_BASE + state.visits * JOB_DEPTH_GROWTH;
 }
-// Two-item cards only start appearing once the game has some runway behind
-// it -- asking for two separate big builds before the player's even seen
-// most of the map reads as a wall, not a goal.
-const JOB_MULTI_ITEM_VISITS = 10;
 function pickStationJobOptions(station){
   const taken = new Set(state.jobs.flatMap(j => j.items));
   const eligible = jobEligibleItems().filter(n => !taken.has(n));
@@ -5070,7 +5074,6 @@ function pickStationJobOptions(station){
   }
   const pool = shuffle(gated);
   const cards = [];
-  const allowMultiItem = state.visits >= JOB_MULTI_ITEM_VISITS;
 
   const localIdx = pool.findIndex(n => {
     const e = ENTRIES.find(x => x.name === n);
@@ -5078,14 +5081,11 @@ function pickStationJobOptions(station){
   });
   if (localIdx !== -1){
     const [first] = pool.splice(localIdx, 1);
-    const size = allowMultiItem && pool.length && Math.random() < 0.6 ? 2 : 1;
-    const items = [first, ...pool.splice(0, size - 1)];
-    cards.push({items, special:true});
+    cards.push({items:[first], special:true});
   }
 
   while (cards.length < 4 && pool.length){
-    const size = allowMultiItem && pool.length >= 2 && Math.random() < 0.6 ? 2 : 1;
-    cards.push({items: pool.splice(0, size), special:false});
+    cards.push({items:[pool.shift()], special:false});
   }
   return cards;
 }
@@ -6070,11 +6070,7 @@ function jobItemChipHTML(name){
   const has = owns(name);
   const pinned = isPinned(name);
   const {have, total} = jobItemProgressFraction(name);
-  // The suit badge belongs to THIS item's section (see .job-suit-badge) --
-  // .job-item is the positioning context, so on a 2-item card the second
-  // badge lands inside the lower half rather than on the card's own edge.
   return `<div class="job-item ${has ? "have" : ""}">
-    ${jobSuitBadgeHTML(name)}
     <button type="button" class="ji-goto" data-goto-ref="${esc(name)}">
       <span class="ji-icon-wrap"><span class="ji-em">${em(entry.emoji)}</span></span>
     </button>
@@ -6087,10 +6083,11 @@ function jobItemChipHTML(name){
   </div>`;
 }
 
-/* Small gold-circle badge showing where an item is actually sold -- a card
-   offered at one station can still contain an item whose own home is
-   elsewhere (see jobOfferScore()). Rendered inside its own item's section
-   (see jobItemChipHTML()), which is what keeps it within the card frame. */
+/* Small gold-circle badge showing where an item is actually sold -- a job
+   card can still offer an item whose own home station is a different one
+   than wherever the board is currently showing it. Overhangs the card's
+   own top-right corner (see jobCardBodyHTML()), mirroring the points
+   badge's identical overhang on the top-left. */
 function jobSuitBadgeHTML(name){
   const entry = ENTRIES.find(e => e.name === name);
   const home = entry && STATION_BY_NAME[entry.station];
@@ -6100,19 +6097,18 @@ function jobSuitBadgeHTML(name){
 }
 
 /* Card interior shared by an active job's card and a board offer's card
-   (see .job-card) -- points badge + "Job Card" label pinned to the top
-   border, then one item section per item, each preceded by its own
-   station-suit badge (the first overhangs the card's own border, a second
-   one -- jobs are at most 2 items, see pickStationJobOptions() -- sits in
-   a .jc-divider straddling the line between the two stacked sections).
-   The book/accept action row is a separate sibling BELOW the card frame
-   (see jobCardActionsHTML()), not padded inside it. */
+   (see .job-card) -- points badge overhangs the top-left corner, the
+   station-suit badge mirrors it overhanging top-right (same treatment,
+   opposite corner), "Job Card" label pinned to the top border between
+   them, then the single item itself (see pickStationJobOptions() -- every
+   job card is exactly one item now). The book/accept action row is a
+   separate sibling BELOW the card frame (see jobCardActionsHTML()), not
+   padded inside it. */
 function jobCardBodyHTML(items, bonus){
-  const rest = items.slice(1).map(name =>
-    `<div class="jc-divider"></div>${jobItemChipHTML(name)}`).join("");
   return `<span class="job-badge"><span class="n">+${bonus}</span><span class="l">pts</span></span>
     <span class="job-card-label">Job Card</span>
-    <div class="jc-items">${jobItemChipHTML(items[0])}${rest}</div>`;
+    ${jobSuitBadgeHTML(items[0])}
+    <div class="jc-items">${jobItemChipHTML(items[0])}</div>`;
 }
 /* Book (jump to Item Reference for the card's first item, one level
    expanded, see goToRefItem()) + accept action row, sized to share the
@@ -7242,11 +7238,6 @@ function showHint(target, name, kind){
   document.getElementById("hint").innerHTML = body;
   placeHint(target);
 }
-function showTextHint(target, html){
-  document.getElementById("hint").innerHTML = html;
-  placeHint(target);
-}
-
 /* Professor Mouse companion -- see the HTML comment above #mouseTip.
    MOUSE_POSES spells out each path as its own literal quoted string
    (not a template literal built from `pose`) because build_artifact.py
@@ -7290,30 +7281,32 @@ document.getElementById("mouseTip").addEventListener("click", ev => {
 // moving on" behavior as #hint -- capture phase so it fires before
 // whatever that tap actually does, and doesn't swallow the click itself
 // (no stopPropagation/preventDefault -- taps on real buttons underneath
-// still work normally).
+// still work normally). Suppressed while the guided walkthrough is
+// driving this same bubble (see renderTutCoach()) -- the spotlit target
+// underneath stays genuinely clickable there too (see .tut-coach-spot's
+// own comment), but tapping it shouldn't blank out Professor Mouse's
+// explanation of the very button being tapped; the walkthrough only ever
+// advances via its own Next button (endTutCoach()).
 document.addEventListener("click", ev => {
+  if (document.getElementById("tutCoach").classList.contains("open")) return;
   if (!ev.target.closest("#mouseTip")) hideMouseTip();
 }, true);
 
-/* Points at the hub button through a brand-new run's very first station
-   visit only (state.visits === 1) -- "roll the dice" before this visit's
-   roll, then "tap again to head out" once it's done -- so a first-timer's
-   first couple of taps have somewhere obvious to land, without turning
-   into the full opt-in "How to Play" walkthrough. Naturally stops once
+/* Guides a brand-new run's very first station visit only (state.visits
+   === 1) -- "roll the dice" before this visit's roll, then "tap again to
+   head out" once it's done -- so a first-timer's first couple of taps
+   have somewhere obvious to land, without turning into the full opt-in
+   "How to Play" walkthrough. Professor Mouse's own speech bubble is the
+   ONLY thing that says this now (see showMouseTipOnce()) -- this used to
+   also pop a separate small #hint tooltip pointed at the hub button with
+   its own near-duplicate wording, which just meant the same instruction
+   said twice in two different visual styles at once. Naturally stops once
    they leave (current becomes null) or the visit count moves past 1;
-   deliberately re-evaluated (not a one-shot flag) so it survives
-   goStation()'s own multiple internal render() calls -- see launchMinigame()
-   -- and correctly reappears if a player closes an unrelated panel while
-   still standing here, rather than getting silently consumed by the
-   first of several renders in the same tick and never shown again. Stays
-   quiet while any panel is open so it never overlaps one. Called at the
-   very end of render(), after its own hideHint(). */
+   showMouseTipOnce()'s own per-id one-shot guard is what makes this safe
+   to call from every render() (see below) without re-popping a tip the
+   player already dismissed. */
 function maybeShowFirstVisitHint(){
   if (state.visits !== 1 || current === null || openPanelName()) return;
-  const home = document.getElementById("hubHome");
-  showTextHint(home, state.rolledHere
-    ? "Nice! Tap again when you're ready to head out."
-    : "👉 Tap here to roll the dice!");
   if (state.rolledHere){
     showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.");
   } else {
@@ -8816,11 +8809,16 @@ function collectionsBodyHTML(){
    Tools/Furnace/Building each gate a huge share of the catalog -- plus
    the three items that gate a whole separate region, Sailboat/Library/
    Rocket, see SUBZONE_TRAVEL's own unlockItem values), so working
-   through the first few tiers naturally points a player at the same
-   items that matter most structurally, not an arbitrary pick.
-   parent:null quests are available from the very start; everything
-   else opens up once its own parent quest is completed -- "opens up 2
-   new quests" is just two different QUESTS entries sharing that parent.
+   through the tree naturally points a player at the same items that
+   matter most structurally, not an arbitrary pick.
+   parent:null quests are structurally available from the very start;
+   everything else structurally opens up once its own parent quest is
+   completed -- "opens up 2 new quests" is just two different QUESTS
+   entries sharing that parent. But structural availability isn't the
+   same as what actually SHOWS: questVisible()/QUEST_VISIBLE_CAP throttle
+   the reveal to only 1-2 quests on offer at a time regardless of how many
+   are structurally eligible, so the tree drips out slowly instead of a
+   parent's entire set of children landing on the player all at once.
    gateway:<region> is display-only flavor (a badge), the actual unlock
    is still owning the item itself, same as it already works without
    any of this. */
@@ -8856,7 +8854,29 @@ function questAvailable(q){
   if (st && (st.taken || st.completed)) return false;
   return q.parent === null || !!(state.quests[q.parent] && state.quests[q.parent].completed);
 }
-function questChildren(id){ return QUESTS.filter(q => q.parent === id); }
+// How many not-yet-taken quests can be "on offer" at once, on top of
+// however many are already taken and in progress -- keeps the reveal to a
+// slow drip (1-2 quests to look at at a time) instead of a parent's whole
+// set of children appearing together the moment it's done. QUESTS' own
+// declaration order is the priority candidates fill this cap in.
+const QUEST_VISIBLE_CAP = 2;
+function questActiveCount(){
+  return QUESTS.filter(q => { const st = state.quests[q.id]; return st && st.taken && !st.completed; }).length;
+}
+/* Whether this quest belongs in the Quest Log at all right now -- taken
+   and completed quests always do (that's the player's own history/
+   progress), but a freshly-available candidate only gets a slot once one
+   opens up (QUEST_VISIBLE_CAP minus however many are already in
+   progress). This is what actually keeps the tree from dumping every
+   sibling on the player the instant their shared parent completes. */
+function questVisible(q){
+  const st = state.quests[q.id];
+  if (st && (st.taken || st.completed)) return true;
+  if (!questAvailable(q)) return false;
+  const candidates = QUESTS.filter(x => !state.quests[x.id] && questAvailable(x));
+  const slot = candidates.indexOf(q);
+  return slot !== -1 && slot < Math.max(0, QUEST_VISIBLE_CAP - questActiveCount());
+}
 /* Same "select it, auto-pin the target item" moment takeJob() already
    uses -- see its own comment for why an already-owned item is skipped
    (nothing left to track toward). */
@@ -8907,16 +8927,17 @@ function showNextQuestToast(){
    reads identically everywhere in the game. A quest has no station suit
    of its own, so --suit is pinned to gold throughout. completed maps onto
    the exact same .item.owned checkmark-badge treatment a crafted shop
-   item gets; available maps onto .item.can; taken-but-not-yet-done and
-   locked both fall through to the plain (neither) state, same as a shop
-   item that isn't craftable yet -- the craftbtn label is what actually
-   distinguishes "still working on it" from "can't start yet". */
+   item gets; available maps onto .item.can. Only questVisible() quests
+   ever reach this function, so there's no "locked" state left to render
+   here at all -- a quest either hasn't unlocked yet (not shown) or it has.
+   Once taken (or completed, for a look-back), the card grows the exact
+   same expandable component tree Item Reference uses (refExpandHTML()),
+   right inline -- no need to leave the Quest Log to see what's left. */
 function questCardHTML(q){
   const st = state.quests[q.id];
   const completed = st && st.completed;
   const inProgress = st && st.taken && !st.completed;
   const available = questAvailable(q);
-  const parentQ = q.parent && QUESTS.find(x => x.id === q.parent);
   const gatewayBadge = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
   const cls = ["item", "quest-item"];
   if (completed) cls.push("owned"); else if (available) cls.push("can");
@@ -8924,46 +8945,49 @@ function questCardHTML(q){
     ? `<div class="recipe">Quest complete — +${questBonus(q)} pts</div>`
     : inProgress
       ? `<div class="recipe">🎯 Craft ${esc(q.item)} to complete</div>`
-      : available
-        ? `<div class="recipe">${esc(q.blurb)}</div>`
-        : `<div class="recipe">🔒 Complete ${esc(parentQ ? parentQ.item : "its parent quest")} first</div>`;
+      : `<div class="recipe">${esc(q.blurb)}</div>`;
   const btn = completed
     ? `<span class="craftbtn done">✓ Done</span>`
     : inProgress
       ? `<span class="craftbtn tracking">Tracking</span>`
-      : available
-        ? `<button type="button" class="craftbtn go" data-quest-take="${esc(q.id)}">Accept</button>`
-        : `<span class="craftbtn" aria-disabled="true">Locked</span>`;
+      : `<button type="button" class="craftbtn go" data-quest-take="${esc(q.id)}">Accept</button>`;
+  const entry = (inProgress || completed) && ENTRIES.find(e => e.name === q.item);
+  const treePath = "quest/" + q.id;
+  const treeOpen = jobExpanded.has(treePath);
+  const tree = entry
+    ? `<button type="button" class="refexpand" data-toggle="${treePath}" aria-expanded="${treeOpen}">
+         ${treeOpen ? "▾ Hide full breakdown" : "▸ Full breakdown"}
+       </button>
+       <div class="ref-tree" ${treeOpen ? "" : "hidden"}>${treeOpen ? refExpandHTML(entry) : ""}</div>`
+    : "";
   return `<div class="${cls.join(" ")}" style="--suit:var(--gold)">
     <div class="irow">
       <div class="iem">${em(ITEM_EMOJI[q.item])}</div>
       <div class="ibody">
         <div class="itop"><span class="iname">${esc(q.item)}</span>${gatewayBadge}</div>
         ${sub}
+        ${tree}
       </div>
     </div>
     ${btn}
   </div>`;
 }
-/* Tiered by depth from a root (BFS down QUESTS' own parent links), not
-   a literal drawn tree -- a plain vertical stack of "Tier N" sections
-   already shows the branching (a tier with more cards than its parent
-   tier IS the fork) without needing real connector-line layout. */
+/* A flat, drip-fed list -- not the underlying tree structure laid bare
+   in sections (see questVisible()/QUEST_VISIBLE_CAP): in-progress quests
+   first (the most actionable), then whatever's newly on offer, completed
+   history last -- same "what you're doing, what you could do, what
+   you've done" ordering jobBoardHTML() already uses for jobs. */
 function questsBodyHTML(){
   if (state.mode !== "hard"){
     return `<p class="empty">📜 Quests only track in Hard Mode, where the full item web -- and every keystone in it -- is actually in play.</p>`;
   }
-  const tiers = [];
-  let frontier = QUESTS.filter(q => q.parent === null).map(q => q.id);
-  while (frontier.length){
-    tiers.push(frontier);
-    frontier = frontier.flatMap(id => questChildren(id).map(q => q.id));
-  }
-  return `<p class="trade-intro">Each tier opens once its parent above is complete -- the earliest ones point at the items the rest of the game leans on most.</p>` +
-    tiers.map((ids, i) => `
-      <div class="quest-tier-label">Tier ${i + 1}</div>
-      <div class="quest-tier">${ids.map(id => questCardHTML(QUESTS.find(q => q.id === id))).join("")}</div>
-    `).join("");
+  const visible = QUESTS.filter(questVisible);
+  const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken && !st.completed; });
+  const available = visible.filter(q => questAvailable(q));
+  const completed = visible.filter(q => { const st = state.quests[q.id]; return st && st.completed; });
+  const ordered = [...inProgress, ...available, ...completed];
+  return `<p class="trade-intro">Finishing a quest quietly opens up what comes next -- there's only ever a couple to focus on at a time.</p>` +
+    `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`;
 }
 
 /* -------------------------------------------------------- sub-zones --- */
@@ -9436,24 +9460,24 @@ function renderTutElementsGrid(){
 }
 
 const TUT_COACH_STEPS = [
-  { sel: "#hubHome", title: "Home", text: "Your main button. Rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
-  { sel: "#hubJobs", title: "Job Board", text: "Take on jobs for bonus points, then turn them in once you've made what they ask for." },
-  { sel: "#hubInv", title: "Inventory", text: "Everything you've collected and crafted so far, all in one place." },
-  { sel: "#hubCodex", title: "Item Reference", text: "Look up any item's recipe -- even ones you haven't discovered yet." },
-  { sel: "#hubSettings", title: "Settings", text: "Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
-  { sel: null, title: "You're ready!", text: "\u{1F3AF} The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
+  { sel: "#hubHome", text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
+  { sel: "#hubJobs", text: "This is the Job Board. Take on jobs for bonus points, then turn them in once you've made what they ask for." },
+  { sel: "#hubInv", text: "This is your Inventory -- everything you've collected and crafted so far, all in one place." },
+  { sel: "#hubCodex", text: "This is Item Reference. Look up any item's recipe -- even ones you haven't discovered yet." },
+  { sel: "#hubSettings", text: "This is Settings. Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
+  { sel: null, text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
 ];
 let tutCoachIdx = 0;
+// Same pose the mode picker greets with -- one consistent "Professor Mouse
+// is teaching you something" face for the whole walkthrough.
+const TUT_COACH_MOUSE_POSE = 2;
 
 function positionTutCoach(){
   const spot = document.getElementById("tutCoachSpot");
-  const box = document.getElementById("tutCoachBox");
   const step = TUT_COACH_STEPS[tutCoachIdx];
   const target = step.sel && document.querySelector(step.sel);
   if (!target){
     spot.classList.add("hidden");
-    box.style.top = "50%"; box.style.bottom = ""; box.style.left = "50%";
-    box.style.transform = "translate(-50%,-50%)";
     return;
   }
   spot.classList.remove("hidden");
@@ -9463,23 +9487,22 @@ function positionTutCoach(){
   spot.style.top = (r.top - pad) + "px";
   spot.style.width = (r.width + pad * 2) + "px";
   spot.style.height = (r.height + pad * 2) + "px";
-  // Caption box goes above the target when there's not enough room below
-  // (the bottom hub sits at the screen's own bottom edge, so most steps
-  // take this branch) -- centered horizontally either way.
-  const spaceBelow = innerHeight - r.bottom;
-  box.style.left = "50%"; box.style.transform = "translateX(-50%)";
-  if (spaceBelow > 180){
-    box.style.top = (r.bottom + pad + 10) + "px"; box.style.bottom = "";
-  } else {
-    box.style.bottom = (innerHeight - r.top + pad + 10) + "px"; box.style.top = "";
-  }
 }
+/* Drives Professor Mouse's own speech bubble for each step -- the
+   spotlight above shows WHICH button, this is what explains it, same "one
+   voice for every bit of tutorial text" the first-visit hub hint now uses
+   too (see maybeShowFirstVisitHint()) instead of a separate caption-box
+   UI with its own title/text styling and Next button. The close button
+   is hidden and the tour controls shown for the walkthrough's duration
+   (see endTutCoach() for putting the bubble back to its normal one-off-tip
+   shape once it's done). */
 function renderTutCoach(){
   const step = TUT_COACH_STEPS[tutCoachIdx];
-  document.getElementById("tutCoachTitle").textContent = step.title;
-  document.getElementById("tutCoachText").textContent = step.text;
-  document.getElementById("tutCoachStep").textContent = `${tutCoachIdx + 1} / ${TUT_COACH_STEPS.length}`;
-  document.getElementById("tutCoachNext").textContent =
+  showMouseTip(TUT_COACH_MOUSE_POSE, step.text);
+  document.getElementById("mouseTipClose").hidden = true;
+  document.getElementById("mouseTipTour").hidden = false;
+  document.getElementById("mouseTipStep").textContent = `${tutCoachIdx + 1} / ${TUT_COACH_STEPS.length}`;
+  document.getElementById("mouseTipNext").textContent =
     tutCoachIdx === TUT_COACH_STEPS.length - 1 ? "Start Playing" : "Next";
   positionTutCoach();
 }
@@ -9497,9 +9520,15 @@ document.getElementById("tutElementsNext").addEventListener("click", () => {
   document.getElementById("tutCoach").classList.add("open");
   renderTutCoach();
 });
-document.getElementById("tutCoachNext").addEventListener("click", () => {
+function endTutCoach(){
+  document.getElementById("tutCoach").classList.remove("open");
+  document.getElementById("mouseTipTour").hidden = true;
+  document.getElementById("mouseTipClose").hidden = false;
+  hideMouseTip();
+}
+document.getElementById("mouseTipNext").addEventListener("click", () => {
   if (tutCoachIdx >= TUT_COACH_STEPS.length - 1){
-    document.getElementById("tutCoach").classList.remove("open");
+    endTutCoach();
     return;
   }
   tutCoachIdx++;
