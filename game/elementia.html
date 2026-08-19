@@ -2156,48 +2156,59 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    spotlight's dark backdrop rather than getting dimmed out by it like an
    ordinary bit of underlying UI would.
 
-   Four ANCHOR positions, not one fixed spot -- see showMouseTip()'s own
+   FOUR CORNER anchors, never the center -- see showMouseTip()'s own
    anchor param. A single always-bottom-left bubble would routinely sit
    right on top of whatever it's actually explaining (the hub's own
    Home button is dead center; Convert/Pins are floating buttons pinned
    to the screen's right/left edges; a Craft button can be anywhere in a
-   long, scrollable shop list) -- each hint instead picks whichever of
-   these actually keeps it clear of its own target:
-     bottom-left/-right: hugs that edge, just above the hub -- for a
-       floating edge button (Convert, Pins) or a hub icon on that side.
-     bottom-center: centered above the hub -- for the Home button itself
-       or anything hub-wide (the Marketplace arc menu).
-     top: pinned near the top of the screen instead -- for anything
-       mid-screen in the (possibly long, scrolled) shop grid, so the
-       bubble never competes with the exact content it's pointing at. */
+   long, scrollable shop list) -- each hint instead picks whichever
+   corner (top-left/top-right/bottom-left/bottom-right) keeps Professor
+   Mouse himself clear of its target, with the bubble stretching wide
+   AWAY from that corner toward screen center so it stays legible instead
+   of squeezed into the corner alongside him.
+
+   The image sits at the true corner and the bubble grows away from it,
+   so the two right-side anchors run the flex row backwards
+   (flex-direction:row-reverse -- image last in source, but first/
+   outermost visually) with the image's own tuck-in margin flipped to
+   match (see #mouseTipImg's own anchor overrides below). The bubble's
+   sharp corner (its speech-tail) always points back at wherever the
+   image ends up, not a single fixed corner -- see the 4 .mouse-bubble
+   overrides after the anchor rules. */
 #mouseTip{
   position:fixed; z-index:10000;
-  display:flex; align-items:flex-end; max-width:min(560px, 92vw);
+  display:flex; max-width:min(600px, 92vw);
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
 }
 #mouseTip.show{opacity:1; pointer-events:auto}
-#mouseTip.anchor-bottom-left{ left:16px; bottom:calc(var(--hub-h, 67px) + 14px); transform:translateY(14px); }
+#mouseTip.anchor-bottom-left{ left:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; transform:translateY(14px); }
 #mouseTip.anchor-bottom-left.show{ transform:translateY(0); }
-#mouseTip.anchor-bottom-right{ right:16px; bottom:calc(var(--hub-h, 67px) + 14px); transform:translateY(14px); }
+#mouseTip.anchor-bottom-right{ right:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; flex-direction:row-reverse; transform:translateY(14px); }
 #mouseTip.anchor-bottom-right.show{ transform:translateY(0); }
-/* Same left:50% + translateX(-50%) centering #hubHome etc. use, rather
-   than the width:768px/margin-left trick the OTHER fixed full-width
-   elements need for the desktop phone-frame -- that trick is only for
-   elements meant to span the frame's full width; a plain centered
-   transform already lands on the frame's own center regardless of
-   viewport width, since the frame itself is centered the same way. */
-#mouseTip.anchor-bottom-center{ left:50%; bottom:calc(var(--hub-h, 67px) + 14px); transform:translate(-50%, 14px); }
-#mouseTip.anchor-bottom-center.show{ transform:translate(-50%, 0); }
-#mouseTip.anchor-top{ left:50%; top:14px; align-items:flex-start; transform:translate(-50%, -14px); }
-#mouseTip.anchor-top.show{ transform:translate(-50%, 0); }
+#mouseTip.anchor-top-left{ left:16px; top:14px; align-items:flex-start; transform:translateY(-14px); }
+#mouseTip.anchor-top-left.show{ transform:translateY(0); }
+#mouseTip.anchor-top-right{ right:16px; top:14px; align-items:flex-start; flex-direction:row-reverse; transform:translateY(-14px); }
+#mouseTip.anchor-top-right.show{ transform:translateY(0); }
 #mouseTipImg{
   width:114px; height:auto; flex:none; margin-right:-24px; margin-bottom:-9px;
   filter:drop-shadow(0 9px 15px rgba(0,0,0,.5)); position:relative; z-index:2;
 }
+/* Row-reverse puts the image last in visual order (right side), so its
+   tuck-in overlap with the bubble has to come from margin-LEFT instead --
+   margin-right would just open a gap against the screen's own edge. */
+#mouseTip.anchor-bottom-right #mouseTipImg, #mouseTip.anchor-top-right #mouseTipImg{
+  margin-right:0; margin-left:-24px;
+}
 .mouse-bubble{
-  position:relative; background:var(--card); border:3px solid var(--gold); border-radius:22px 22px 22px 6px;
+  position:relative; background:var(--card); border:3px solid var(--gold);
   padding:19px 42px 19px 28px; box-shadow:0 14px 34px rgba(0,0,0,.5);
 }
+/* Speech-tail corner points back at the image at ITS corner -- border-
+   radius order is top-left/top-right/bottom-right/bottom-left. */
+#mouseTip.anchor-bottom-left .mouse-bubble{ border-radius:22px 22px 22px 6px; }
+#mouseTip.anchor-bottom-right .mouse-bubble{ border-radius:22px 22px 6px 22px; }
+#mouseTip.anchor-top-left .mouse-bubble{ border-radius:6px 22px 22px 22px; }
+#mouseTip.anchor-top-right .mouse-bubble{ border-radius:22px 6px 22px 22px; }
 .mouse-bubble p{font-size:19px; font-weight:700; color:var(--ink); line-height:1.42; margin:0}
 .mouse-tip-close{
   position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
@@ -2611,11 +2622,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   #quickConvertBtn{right:calc(50% - 368px)}
   #trackedPill{left:calc(50% - 328px)}
   /* Same frame-edge correction as #pinsBtn/#quickConvertBtn above, and
-     for the same reason -- #mouseTip.anchor-bottom-left/-right otherwise
-     pin to the real viewport edge, nowhere near the phone-frame (and its
+     for the same reason -- every #mouseTip corner anchor otherwise pins
+     to the real viewport edge, nowhere near the phone-frame (and its
      buttons) on a wide screen. */
-  #mouseTip.anchor-bottom-left{left:calc(50% - 368px)}
-  #mouseTip.anchor-bottom-right{right:calc(50% - 368px)}
+  #mouseTip.anchor-bottom-left, #mouseTip.anchor-top-left{left:calc(50% - 368px)}
+  #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(50% - 368px)}
 }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important;
@@ -4630,7 +4641,7 @@ function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "
 /* ------------------------------------------------------- game mode --- */
 function openModePicker(){
   openOverlay("modeOverlay");
-  showMouseTipOnce("modepick", 2, "Pick how you'd like to play — first time? I'd start with Classic.", "top");
+  showMouseTipOnce("modepick", 2, "Pick how you'd like to play — first time? I'd start with Classic.", "top-left");
 }
 /* Zen and Classic keep the free pick -- the map appears with every node
    selectable as a starting point (mapCardHTML()/isMapConnected() treat a
@@ -4678,7 +4689,7 @@ function playMapIntroScroll(){
     selectedMapStation = "The Ocean";
     window.scrollTo({top: endY, behavior: "instant"});
     render(); // no resetScroll -- keep the bottom position just set above
-    showMouseTipOnce("mapintro", 7, "Every journey starts at The Ocean — tap it, then hit the big button below to dive in!", "bottom-center");
+    showMouseTipOnce("mapintro", 7, "Every journey starts at The Ocean — tap it, then hit the big button below to dive in!", "bottom-left");
   };
   const tapSkip = ev => { ev.preventDefault(); ev.stopPropagation(); finish(); };
   document.addEventListener("click", tapSkip, true);
@@ -7447,16 +7458,16 @@ const MOUSE_POSES = {
   9: "mouse/9.webp", 10: "mouse/10.webp", 11: "mouse/11.webp", 12: "mouse/12.webp",
 };
 let mouseTipsShown = new Set();
-const MOUSE_ANCHORS = ["bottom-left", "bottom-center", "bottom-right", "top"];
-/* anchor picks WHERE the bubble appears (see #mouseTip's own comment for
-   the 4 options and when each applies) -- defaults to bottom-center
-   (roughly "the hub in general") for any call site that doesn't care. */
+const MOUSE_ANCHORS = ["bottom-left", "bottom-right", "top-left", "top-right"];
+/* anchor picks WHICH CORNER the bubble appears in (see #mouseTip's own
+   comment for all 4 and when each applies) -- defaults to bottom-left
+   for any call site that doesn't care. */
 function showMouseTip(pose, html, anchor){
   document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
   document.getElementById("mouseTipText").innerHTML = html;
   const el = document.getElementById("mouseTip");
   MOUSE_ANCHORS.forEach(a => el.classList.remove("anchor-" + a));
-  el.classList.add("anchor-" + (MOUSE_ANCHORS.includes(anchor) ? anchor : "bottom-center"));
+  el.classList.add("anchor-" + (MOUSE_ANCHORS.includes(anchor) ? anchor : "bottom-left"));
   el.classList.add("show");
   el.setAttribute("aria-hidden", "false");
 }
@@ -7525,17 +7536,17 @@ document.addEventListener("click", ev => {
 function maybeShowFirstVisitHint(){
   if (current === null || openPanelName()) return;
   if (state.visits === 1 && !state.rolledHere){
-    showMouseTipOnce("firstroll", 3, "You made it! Tap the big button down there to roll your first dice.", "bottom-center");
+    showMouseTipOnce("firstroll", 3, "You made it! Tap the big button down there to roll your first dice.", "bottom-left");
     return;
   }
   if (!state.rolledHere) return; // nothing below applies before this visit's own roll
-  if (state.visits === 1 && showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.", "bottom-center")) return;
+  if (state.visits === 1 && showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.", "bottom-left")) return;
   // top -- a Craft button can be anywhere in a long, scrolled shop list,
   // never at a fixed screen position the way the hub/floating buttons
   // below are, so pinning near the top keeps the bubble from landing on
   // top of whichever item actually turned craftable.
   if (entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e))
-      && showTutorialHintOnce("cancraft", 9, "See a green Craft button below? That means you've got everything that item needs — tap it to build one!", "top")) return;
+      && showTutorialHintOnce("cancraft", 9, "See a green Craft button below? That means you've got everything that item needs — tap it to build one!", "top-right")) return;
   // bottom-right -- right where the floating Convert button (#quickConvertBtn) actually sits.
   if (Object.values(state.elements).some(n => n >= 3)
       && showTutorialHintOnce("canconvert", 2, "Anytime you've got 3 or more of one element, tap Convert (🔄) to trade them in for something else you need.", "bottom-right")) return;
@@ -7691,7 +7702,7 @@ function launchMinigame(){
   overlay.classList.add("show");
   introEl.classList.add("show");
   if (state.visits === 1){
-    showMouseTipOnce("minigame1", 9, "Time for a quick challenge! Do your best — every little bit helps.", "top");
+    showMouseTipOnce("minigame1", 9, "Time for a quick challenge! Do your best — every little bit helps.", "top-left");
   }
 
   function startRound(){
@@ -8847,15 +8858,15 @@ function openMarket(){
   // full explanation (see showTutorialHintOnce()); every visit after
   // that just gets a short per-run reminder instead (showMouseTipOnce(),
   // same wording every new run). Quests are Hard Mode only (see QUESTS'
-  // own comment), so Classic hears about Jobs alone. top, not a bottom
-  // anchor -- the Marketplace's own arc menu (see renderMarketArc()) sits
-  // radially around the hub button, right where a bottom-center bubble
-  // would otherwise land.
+  // own comment), so Classic hears about Jobs alone. top-left, not a
+  // bottom anchor -- the Marketplace's own arc menu (see
+  // renderMarketArc()) sits radially around the hub button, right where
+  // a bottom corner bubble's own image would otherwise land.
   const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
     ? "This is the Marketplace! Two more ways to earn points here: take Jobs for specific items you build, or start Quests toward big keystone goals -- both pay bonus points once you deliver. Have a look around!"
-    : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!", "top");
+    : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!", "top-left");
   if (!shownFirstEver){
-    showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.", "top");
+    showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.", "top-left");
   }
 }
 
@@ -9603,11 +9614,11 @@ document.getElementById("convertGo").addEventListener("click", () => {
   save();
   playConvertAnimation(convertTo);
   // Organic -- fires on the player's actual first-ever Convert, whatever
-  // it happens to be (see showTutorialHintOnce()). top, not a bottom
-  // anchor -- the #convert tray this just happened inside covers up to
-  // 60vh of the screen's own bottom, so anywhere near the hub would sit
-  // right on top of the tray the player is still looking at.
-  showTutorialHintOnce("firstconvert", 12, "Nice — that's Convert! Trade 3 of one element for 1 of whatever you actually need, anytime you've got 3 or more of something.", "top");
+  // it happens to be (see showTutorialHintOnce()). top-right, not a
+  // bottom anchor -- the #convert tray this just happened inside covers
+  // up to 60vh of the screen's own bottom, so anywhere near the hub
+  // would sit right on top of the tray the player is still looking at.
+  showTutorialHintOnce("firstconvert", 12, "Nice — that's Convert! Trade 3 of one element for 1 of whatever you actually need, anytime you've got 3 or more of something.", "top-right");
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
 
@@ -9732,7 +9743,7 @@ function showWelcomeSlide(){
   tourIdx = 0;
   document.getElementById("tour").classList.add("open", "welcome");
   tourRender();
-  showMouseTipOnce("welcome", 1, "Welcome to Elementia! I'm Professor Mouse — tap Play when you're ready to begin.", "top");
+  showMouseTipOnce("welcome", 1, "Welcome to Elementia! I'm Professor Mouse — tap Play when you're ready to begin.", "top-left");
 }
 function endTour(){
   document.getElementById("tour").classList.remove("open", "welcome");
@@ -9786,12 +9797,12 @@ function renderTutElementsGrid(){
    so the bubble never sits on top of the very button the spotlight is
    cutting out. */
 const TUT_COACH_STEPS = [
-  { sel: "#hubHome", pose: 10, anchor: "bottom-center", text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
+  { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
   { sel: "#hubJobs", pose: 2, anchor: "bottom-left", text: "This is the Job Board. Take on jobs for bonus points, then turn them in once you've made what they ask for." },
   { sel: "#hubInv", pose: 9, anchor: "bottom-left", text: "This is your Inventory -- everything you've collected and crafted so far, all in one place." },
   { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "This is Item Reference. Look up any item's recipe -- even ones you haven't discovered yet." },
   { sel: "#hubSettings", pose: 7, anchor: "bottom-right", text: "This is Settings. Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
-  { sel: null, pose: 3, anchor: "top", text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
+  { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
 ];
 let tutCoachIdx = 0;
 
