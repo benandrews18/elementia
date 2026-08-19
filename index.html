@@ -10212,19 +10212,13 @@ window.MINIGAMES = {};
       b.style.left = left + "px";
       b.__centre = left + size / 2;
       b.__t = now;
-      // Bubbles spawn BELOW the bottom edge (see .mg-bubble's bottom:-10%)
-      // and are only tappable once fully on screen. Without this, tapping
-      // near the bottom pops bubbles that were still sliding into view
-      // underneath the finger -- which reads as bubbles popping themselves.
-      const stageH = stage.clientHeight || 420;
-      b.style.pointerEvents = "none";
+      // Poppable immediately on spawn -- no arm delay. An earlier version
+      // held pointer-events:none until a bubble cleared the bottom safety
+      // zone (to stop it "popping itself" when a finger landed nearby for
+      // a DIFFERENT bubble), but that showed as a visible dashed-outline
+      // pause before every bubble turned tappable, which read as
+      // unresponsive rather than deliberate.
       b.style.touchAction = "none";
-      // Armed well clear of the bottom edge (25% of stage height, not 10%)
-      // -- at the old threshold a bubble became tappable while still mostly
-      // off the bottom of the screen, so it kept "popping itself" the
-      // instant a finger landed anywhere nearby to tap a DIFFERENT bubble.
-      const armMs = riseMs * ((stageH * 0.25 + size) / (stageH + size));
-      setTimeout(() => { if (liveBubbles.has(b)) b.style.pointerEvents = "auto"; }, armMs);
       stage.appendChild(b);
       liveBubbles.add(b);
 
