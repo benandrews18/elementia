@@ -795,6 +795,14 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; flex-direction:column; gap:6px; margin-top:6px;
   padding-left:16px; margin-left:8px; border-left:2px dashed var(--line2);
 }
+/* [hidden]'s built-in display:none loses to the class rule above -- same
+   attribute-vs-class specificity, and an author rule always wins a tie
+   against the UA stylesheet -- so collapsing a node (see jobNodeHTML(),
+   which always renders childrenHTML and relies on [hidden] alone to hide
+   it) silently did nothing visually even though the underlying toggle
+   state was flipping correctly. This is the actual fix for that; without
+   it, a closed node's children stay flex-displayed and fully visible. */
+.mn-children[hidden]{display:none}
 .mn-leaf{
   display:flex; align-items:center; gap:8px; padding:7px 11px;
   border-radius:9px; border:1.5px solid var(--line2); font-size:13px; font-weight:700;
