@@ -452,7 +452,21 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; flex-direction:column; align-items:center; gap:5px;
   transform-origin:37px 33px;
   transform:rotate(var(--ang)) translateY(calc(-1 * var(--radius))) rotate(calc(-1 * var(--ang)));
-  transition:transform .1s cubic-bezier(.3,.8,.4,1);
+  opacity:1;
+  /* Same springy overshoot .floatbtn's own offscreen toggle uses -- this
+     transform is otherwise untouched after first paint (nothing else here
+     ever changes --ang/--radius), so it's free to reuse for the retract
+     animation below without fighting anything. */
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
+}
+/* Retracts back to the hub's own center and fades out -- see
+   renderMarketArc()'s own comment on when this applies (a Jobs/Quests/
+   Trade/Collections section is expanded). translateY(0) undoes the
+   --radius fan-out entirely, so the button visually collapses back
+   under the hub button rather than just fading in place. */
+.market-arc-btn.retracted{
+  transform:rotate(var(--ang)) translateY(0) rotate(calc(-1 * var(--ang)));
+  opacity:0; pointer-events:none;
 }
 .market-arc-icon{
   width:66px; height:66px; border-radius:50%;
@@ -470,13 +484,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .market-arc-btn:not(:disabled):active .market-arc-icon{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
-}
-/* Whichever section is currently expanded inline below (see
-   marketSectionHTML()) gets its own arc button lit gold, so it's always
-   clear which of the four is open without having to scroll down and check. */
-.market-arc-btn.active .market-arc-icon{
-  background:linear-gradient(180deg, #f0c96e, var(--gold) 62%); border-color:#5c4a20; color:#241a0c;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 0 #5c4a20, 0 8px 16px rgba(0,0,0,.45);
 }
 .market-arc-btn:disabled{opacity:.5; filter:grayscale(.4); cursor:default}
 /* Trade Market: a board of TRADE_OFFER_COUNT offer cards, each reusing
@@ -780,7 +787,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .mn-tick{color:var(--ok); font-weight:800; flex:none}
 /* where to get it -- station emoji only, no text */
 .mn-where{flex:none; display:flex; align-items:center; gap:3px; font-size:14px; line-height:1}
-.mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .tunnel,.mn-where .trombone,.mn-where .rubbertire,.mn-where .rubbersq,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .gemcollectionicon,.mn-where .pearlicon,.mn-where .rubyicon,.mn-where .opalicon,.mn-where .turquoiseicon,.mn-where .ambericon,.mn-where .diamondicon,.mn-where .noto-icon,.alcan{width:1em; height:1em}
+.mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .tunnel,.mn-where .brassbar,.mn-where .rubbertire,.mn-where .rubbersq,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .gemcollectionicon,.mn-where .pearlicon,.mn-where .rubyicon,.mn-where .opalicon,.mn-where .turquoiseicon,.mn-where .ambericon,.mn-where .diamondicon,.mn-where .noto-icon,.alcan{width:1em; height:1em}
 /* Vertical guide line down the left side of every child group, tracing
    which components belong to the node expanded directly above -- a dashed
    .border-left on the children WRAPPER itself (rather than indenting each
@@ -1850,7 +1857,7 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 
 .celeb-emoji{font-size:96px; line-height:1; margin:6px 0 10px;
   animation:celebpop .6s cubic-bezier(.2,1.5,.4,1) both}
-.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .tunnel,.celeb-emoji .trombone,.celeb-emoji .rubbertire,.celeb-emoji .rubbersq,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .gemcollectionicon,.celeb-emoji .pearlicon,.celeb-emoji .rubyicon,.celeb-emoji .opalicon,.celeb-emoji .turquoiseicon,.celeb-emoji .ambericon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon,.alcan{width:1em;height:1em}
+.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .tunnel,.celeb-emoji .brassbar,.celeb-emoji .rubbertire,.celeb-emoji .rubbersq,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .gemcollectionicon,.celeb-emoji .pearlicon,.celeb-emoji .rubyicon,.celeb-emoji .opalicon,.celeb-emoji .turquoiseicon,.celeb-emoji .ambericon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon,.alcan{width:1em;height:1em}
 @keyframes celebpop{0%{opacity:0;transform:scale(.3) rotate(-20deg)}100%{opacity:1;transform:none}}
 .celeb-kicker{font-size:12px; font-weight:800; letter-spacing:2.4px; color:var(--gold)}
 .celeb-name{font-size:32px; font-weight:800; letter-spacing:-.6px; margin:2px 0 8px}
@@ -1946,7 +1953,7 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    100px size everywhere else it's used (shop cards, reference list) --
    doubled here, on the card inspection popup only (see showCardPop()). */
 .pc-icon.pc-icon-xl{font-size:200px}
-.pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .trombone,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.pc-icon .noto-icon,.alcan{width:1em; height:1em}
+.pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .brassbar,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.pc-icon .noto-icon,.alcan{width:1em; height:1em}
 .pc-tag{align-self:center; font-size:12px; font-weight:800; letter-spacing:.5px; color:#fff;
   border-radius:999px; padding:4px 13px; margin-bottom:8px}
 .pc-divider{border-top:1.5px dashed var(--line2); margin:2px 0 10px}
@@ -2345,7 +2352,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .setversion{margin-top:18px; font-size:11.5px; color:var(--mute); text-align:center}
 
 
-.orca,.coral,.flour,.lighthouse,.tunnel,.trombone,.rubbertire,.rubbersq,.microchip,.lifeicon,.ecosystemicon,.gemcollectionicon,.pearlicon,.rubyicon,.opalicon,.turquoiseicon,.ambericon,.diamondicon,.noto-icon,.alcan{width:1em; height:1em; vertical-align:-.15em; display:inline-block}
+.orca,.coral,.flour,.lighthouse,.tunnel,.brassbar,.rubbertire,.rubbersq,.microchip,.lifeicon,.ecosystemicon,.gemcollectionicon,.pearlicon,.rubyicon,.opalicon,.turquoiseicon,.ambericon,.diamondicon,.noto-icon,.alcan{width:1em; height:1em; vertical-align:-.15em; display:inline-block}
 /* Source art is a wide panel (all 6 gemstones side by side), not square
    like the other custom icons -- contain it instead of stretching it to
    the 1em square box, or it reads as visibly squashed at icon size. */
@@ -3251,7 +3258,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🛳️",
      "Cruise Ship",
      "CREATION",
-     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + __TROMBONE__ Trombone",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎺 Trumpet",
      40
     ]
    ],
@@ -3629,7 +3636,7 @@ const DATA = /*__GAME_DATA_START__*/{
      6
     ],
     [
-     "🎺",
+     "__BRASSBAR__",
      "Brass",
      "MATERIAL",
      "Cu + Zn + 🔥 Furnace",
@@ -4115,10 +4122,10 @@ const DATA = /*__GAME_DATA_START__*/{
      22
     ],
     [
-     "__TROMBONE__",
-     "Trombone",
+     "🎺",
+     "Trumpet",
      "CREATION",
-     "🎺 Brass + 🛠️ Tools",
+     "__BRASSBAR__ Brass + 🛠️ Tools",
      18
     ],
     [
@@ -4322,147 +4329,147 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Star": 17.0,
-  "Fabric": 8.8,
-  "Tractor": 10.6,
-  "Magnet": 5.1,
-  "Fertilizer": 3.5,
-  "Aluminum Alloy": 5.5,
-  "Clock": 8.9,
-  "Motorcycle": 17.5,
-  "Water Turbine": 23.2,
-  "Titanium Alloy": 6.0,
-  "Glass": 5.6,
-  "Yeast": 5.3,
-  "Glass Vial": 10.7,
-  "Butter": 11.7,
-  "Cow": 8.7,
-  "Mushroom": 5.8,
-  "Turbine Blade": 17.4,
   "Homestead": 15.4,
-  "Farm": 8.1,
-  "Trombone": null,
-  "Telescope": 12.6,
-  "Bee": 8.5,
-  "Plastic": 8.2,
-  "Solar System": 18.9,
-  "Yarn": 13.5,
-  "Oven": 11.8,
-  "Skyscraper": 16.2,
-  "Tree": 5.3,
-  "Dinosaur": 13.0,
-  "Bicycle": 15.2,
-  "Helicopter": 21.4,
-  "Turquoise": 14.8,
-  "Satellite Dish": 11.9,
-  "Grain": 8.7,
-  "Clay": 2.7,
-  "Bread": 22.7,
-  "Sunflower": 19.9,
-  "Milk": 10.1,
-  "Bridge": 7.7,
-  "Red Dye": 14.8,
-  "Canoe": 6.2,
-  "Book": 12.4,
-  "Diamond": 13.2,
-  "Rocket": 22.1,
-  "Chocolate": 9.7,
-  "Fiberglass": 10.8,
-  "Robot": 18.1,
-  "Battery": 4.8,
-  "Sushi Restaurant": 19.1,
-  "Sailboat": 9.5,
-  "Apple": 7.1,
-  "Computer": 15.7,
-  "Volcano": 14.5,
-  "Central Station": 24.8,
-  "Orca": 14.2,
-  "Opal": 11.8,
-  "Stainless Steel": 5.5,
-  "Biofuel": 11.6,
-  "Tools": 4.3,
-  "Furnace": 4.8,
-  "Brass": null,
-  "Speedboat": 15.9,
-  "Building": 8.5,
-  "Wire": 3.9,
-  "Planet": 9.3,
-  "Yellow Dye": 15.8,
-  "Bone": 5.3,
-  "Cake": 24.1,
-  "Ecosystem": 25.1,
-  "Croissant": 22.9,
-  "Sugar": 3.3,
-  "Wool": 8.2,
-  "Compass": 8.0,
-  "Deer": 7.1,
-  "Log Cabin": 8.0,
-  "Rainbow": 18.0,
-  "Sheep": 8.2,
-  "Concrete": 5.6,
-  "Berry Cupcakes": 26.5,
-  "Blackberries": 11.3,
-  "Honey": 8.7,
-  "Metropolis": 22.9,
-  "Chicken": 11.6,
-  "Solar Panel": 8.8,
-  "Banana": 7.7,
-  "Pearl": 14.8,
-  "Cream": 11.9,
-  "Life": 20.0,
-  "Windmill": 20.3,
-  "Engine": 7.7,
-  "Rubber": 5.5,
-  "Egg": 6.1,
-  "Beach Town": 27.0,
-  "Renewable Grid": 30.1,
-  "Apple Pie": 22.0,
-  "Maglev Train": 16.9,
-  "Ruby": 13.7,
-  "Wheel": 10.8,
-  "Fossil": 11.1,
-  "Cheesecake": 24.1,
-  "Flour": 21.1,
-  "Microchip": 8.7,
-  "Fruit Cake": 24.1,
-  "Blue Dye": 18.2,
-  "Natural Gas": 3.0,
-  "Cloud": 5.5,
-  "Strawberries": 11.1,
-  "Pretzel": 21.5,
-  "Lighthouse": 13.8,
-  "Car": 17.9,
-  "Sand": 3.2,
-  "Light Bulb": 7.5,
-  "Rope": 7.7,
-  "Limestone": 2.8,
-  "Plant Fiber": 7.7,
-  "Salmon": 12.1,
-  "Dough": 21.5,
-  "Library": 14.4,
-  "Blueberries": 14.3,
-  "Coral Reef": 18.3,
+  "Geothermal Pump": 10.1,
+  "Cheesecake": 24.3,
+  "Solar System": 18.6,
+  "Sunflower": 20.3,
+  "Mushroom": 5.8,
   "Steel": 3.1,
-  "Amber": 11.5,
-  "Black Dye": 17.4,
-  "Grand Banquet": 27.1,
-  "Seaweed": 5.1,
-  "DNA": 4.1,
+  "Sushi Restaurant": 19.6,
+  "Fertilizer": 3.5,
+  "Helicopter": 21.2,
+  "Glass Vial": 10.8,
+  "Rubber": 5.7,
+  "Speedboat": 16.1,
+  "Deer": 7.0,
+  "Planet": 9.2,
+  "Log Cabin": 8.1,
+  "Water": 2.5,
+  "Chicken": 11.4,
+  "Library": 14.1,
+  "Building": 8.4,
+  "Metropolis": 23.2,
+  "Water Turbine": 23.7,
+  "Maglev Train": 17.0,
   "Cruise Ship": null,
-  "Gemstone Collection": 20.4,
-  "Museum": 20.8,
-  "Banana Bread": 22.7,
+  "Honey": 8.6,
+  "Fabric": 8.7,
   "Paper": 12.8,
-  "Éclair": 24.2,
-  "Space Station": 25.1,
-  "Soil": 5.0,
-  "Water": 2.7,
+  "Titanium Alloy": 5.8,
+  "Rainbow": 17.9,
+  "Tools": 4.2,
+  "Life": 19.6,
+  "Rope": 7.7,
+  "Bee": 8.8,
+  "Compass": 8.5,
+  "Grain": 8.7,
   "Fireworks": 4.3,
-  "Basket": 8.8,
-  "Geothermal Pump": 10.2,
+  "Gemstone Collection": 19.9,
+  "Museum": 20.6,
+  "Diamond": 13.1,
+  "DNA": 4.0,
+  "Grand Banquet": 27.1,
+  "Strawberries": 11.3,
+  "Renewable Grid": 29.9,
   "Chocolate Cake": 23.8,
+  "Biofuel": 11.5,
+  "Robot": 17.8,
+  "Milk": 9.9,
+  "Black Dye": 16.9,
+  "Battery": 4.8,
+  "Opal": 11.7,
+  "Engine": 7.8,
+  "Dough": 21.5,
+  "Basket": 8.9,
+  "Wheel": 10.9,
+  "Cloud": 5.3,
+  "Yeast": 5.3,
+  "Bridge": 7.8,
+  "Red Dye": 15.2,
+  "Flour": 22.0,
+  "Clock": 8.7,
+  "Star": 17.2,
+  "Egg": 6.0,
+  "Ruby": 13.9,
+  "Beach Town": 26.5,
+  "Amber": 11.4,
+  "Furnace": 4.9,
+  "Clay": 2.7,
+  "Tractor": 10.7,
+  "Bone": 5.3,
+  "Statue": 7.6,
+  "Lighthouse": 13.7,
+  "Salmon": 12.0,
+  "Soil": 4.7,
+  "Oven": 11.9,
+  "Blueberries": 14.1,
   "Knit Scarf": 21.3,
-  "Statue": 7.9
+  "Apple": 7.2,
+  "Pearl": 14.5,
+  "Dinosaur": 12.9,
+  "Aluminum Alloy": 5.7,
+  "Apple Pie": 22.2,
+  "Computer": 15.7,
+  "Yellow Dye": 16.1,
+  "Telescope": 12.4,
+  "Cream": 11.8,
+  "Rocket": 22.1,
+  "Blackberries": 11.4,
+  "Light Bulb": 7.4,
+  "Skyscraper": 16.3,
+  "Windmill": 20.1,
+  "Limestone": 2.9,
+  "Glass": 5.5,
+  "Tree": 5.3,
+  "Farm": 8.2,
+  "Coral Reef": 18.0,
+  "Natural Gas": 3.0,
+  "Volcano": 14.5,
+  "Fruit Cake": 23.8,
+  "Sugar": 3.2,
+  "Bicycle": 15.8,
+  "Satellite Dish": 11.6,
+  "Solar Panel": 8.7,
+  "Trumpet": null,
+  "Space Station": 24.7,
+  "Blue Dye": 18.1,
+  "Cow": 8.9,
+  "Fiberglass": 10.6,
+  "Microchip": 8.8,
+  "Chocolate": 9.1,
+  "Central Station": 25.2,
+  "Magnet": 5.2,
+  "Fossil": 11.5,
+  "Seaweed": 5.3,
+  "Car": 18.2,
+  "Concrete": 5.8,
+  "Wire": 4.0,
+  "Turbine Blade": 17.8,
+  "Sheep": 8.0,
+  "Pretzel": 21.9,
+  "Turquoise": 15.2,
+  "Orca": 14.0,
+  "Canoe": 6.2,
+  "Éclair": 24.5,
+  "Plastic": 8.6,
+  "Sand": 3.1,
+  "Banana Bread": 22.2,
+  "Yarn": 13.9,
+  "Plant Fiber": 7.8,
+  "Berry Cupcakes": 26.4,
+  "Wool": 8.2,
+  "Brass": null,
+  "Ecosystem": 25.3,
+  "Cake": 23.7,
+  "Croissant": 22.9,
+  "Book": 12.6,
+  "Butter": 11.8,
+  "Motorcycle": 18.0,
+  "Banana": 7.5,
+  "Stainless Steel": 5.5,
+  "Bread": 22.5,
+  "Sailboat": 9.7
  }
 }/*__GAME_DATA_END__*/;
 
@@ -4485,8 +4492,9 @@ const RUBBER_TIRE_IMG = '<img class="rubbertire" src="data:image/png;base64,iVBO
 
 /* Custom lighthouse: no emoji covers this concept at all. */
 const LIGHTHOUSE_SVG = '<svg viewBox="0 0 128 128" class="lighthouse" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="120" rx="36" ry="7" fill="#8a8f98"/><path fill="#9aa0a8" d="M28 118 L 44 94 L 84 94 L 100 118 Z"/><path fill="#eef0f2" d="M48 94 L 55 38 L 73 38 L 80 94 Z"/><path fill="#e0483a" d="M55 38 L 58 22 L 70 22 L 73 38 Z"/><path fill="#e0483a" d="M51 62 L 77 62 L 75 74 L 53 74 Z"/><rect x="53" y="14" width="22" height="10" rx="2" fill="#30343c"/><path fill="#ffe27a" opacity="0.55" d="M64 12 L 16 4 L 64 20 Z"/><path fill="#ffe27a" opacity="0.55" d="M64 12 L 112 4 L 64 20 Z"/><circle cx="64" cy="13" r="8" fill="#ffe27a"/></svg>';
-/* Custom trombone: no unicode trombone emoji exists (only saxophone). */
-const TROMBONE_SVG = '<svg viewBox="0 0 128 128" class="trombone" xmlns="http://www.w3.org/2000/svg"><path fill="#6b5326" d="M4 64 L18 55 L18 73 Z"/><rect x="16" y="60" width="14" height="8" rx="3" fill="#9c7a30"/><path fill="#c9973a" d="M84 50 L34 50 A14 14 0 0 0 34 78 L84 78 L84 70 L42 70 A6 6 0 0 1 42 58 L84 58 Z"/><path fill="#d9a63f" d="M84 44 C 100 42, 118 50, 124 64 C 118 78, 100 86, 84 84 Z"/><ellipse cx="116" cy="64" rx="4" ry="18" fill="#f2cf7a" opacity="0.55"/></svg>';
+/* Custom brass bar: a plain metal ingot reads as the raw material Brass
+   actually is (the crafted Trumpet is what gets the real 🎺 emoji now). */
+const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http://www.w3.org/2000/svg"><path fill="#8a6d2e" d="M24 102 L104 102 L90 64 L38 64 Z"/><path fill="#d9b45c" d="M38 64 L90 64 L104 38 L52 38 Z"/><path fill="#6b5326" d="M90 64 L104 38 L118 76 L104 102 Z"/><path fill="#f2dd9a" opacity="0.55" d="M56 42 L100 42 L96 46 L60 46 Z"/></svg>';
 
 /* Custom tunnel: a bore through a mountain -- no emoji for this either. */
 const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.w3.org/2000/svg"><path fill="#8a7860" d="M6 110 L 44 8 L 64 46 L 84 8 L 122 110 Z"/><path fill="#9c8a70" d="M64 46 L 84 8 L 122 110 L 64 110 Z"/><path fill="#5c7a4a" d="M6 110 L 44 8 L 52 24 L 18 110 Z"/><path fill="#6b8a56" d="M84 8 L 76 24 L 108 110 L 122 110 Z"/><ellipse cx="64" cy="111" rx="38" ry="9" fill="#7a6a54"/><path fill="#20232a" d="M44 110 C 44 88, 54 76, 64 76 C 74 76, 84 88, 84 110 Z"/></svg>';
@@ -5396,6 +5404,19 @@ function canCraft(entry){
   for (const it of items) if (!owns(it.name)) return false;
   return true;
 }
+/* Same items-only half of canCraft() -- used by isRevealed()'s default
+   reveal gate so an item isn't hidden just because this visit's dice
+   haven't rolled the right elements yet. Elements are transient (reset
+   every visit, see doRoll()) where owned items are permanent, so gating
+   an item's very VISIBILITY on "do you happen to be holding the right
+   elements RIGHT NOW" reads as the shop randomly forgetting the item
+   exists between visits rather than a real mystery -- whether it can
+   actually be CRAFTED this instant is still exactly what canCraft()
+   itself (unchanged) continues to gate. */
+function itemReqsMet(entry){
+  const {items} = needsOf(entry.reqs);
+  return items.every(it => owns(it.name));
+}
 function craft(entry){
   if (owns(entry.name) || !canCraft(entry)) return false;
   const {els, items} = needsOf(entry.reqs);
@@ -5648,7 +5669,7 @@ const NOTO_1fad0 = '<img class="noto-icon" src="data:image/png;base64,iVBORw0KGg
 const NOTO_1fad3 = '<img class="noto-icon" src="data:image/png;base64,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">';
 const NOTO_ICONS = {"⏳": NOTO_23f3, "☀️": NOTO_2600_fe0f, "☁️": NOTO_2601_fe0f, "☕": NOTO_2615, "♨️": NOTO_2668_fe0f, "♻️": NOTO_267b_fe0f, "⚙️": NOTO_2699_fe0f, "⚡": NOTO_26a1, "⚪": NOTO_26aa, "⚫": NOTO_26ab, "⛵": NOTO_26f5, "⬛": NOTO_2b1b, "⬜": NOTO_2b1c, "⭐": NOTO_2b50, "🌀": NOTO_1f300, "🌆": NOTO_1f306, "🌈": NOTO_1f308, "🌉": NOTO_1f309, "🌊": NOTO_1f30a, "🌋": NOTO_1f30b, "🌎": NOTO_1f30e, "🌐": NOTO_1f310, "🌱": NOTO_1f331, "🌲": NOTO_1f332, "🌳": NOTO_1f333, "🌻": NOTO_1f33b, "🌾": NOTO_1f33e, "🌿": NOTO_1f33f, "🍂": NOTO_1f342, "🍄": NOTO_1f344, "🍇": NOTO_1f347, "🍈": NOTO_1f348, "🍌": NOTO_1f34c, "🍎": NOTO_1f34e, "🍓": NOTO_1f353, "🍞": NOTO_1f35e, "🍣": NOTO_1f363, "🍩": NOTO_1f369, "🍫": NOTO_1f36b, "🍬": NOTO_1f36c, "🍯": NOTO_1f36f, "🍰": NOTO_1f370, "🍶": NOTO_1f376, "🍷": NOTO_1f377, "🍽️": NOTO_1f37d_fe0f, "🎂": NOTO_1f382, "🎆": NOTO_1f386, "🏍️": NOTO_1f3cd_fe0f, "🏖️": NOTO_1f3d6_fe0f, "🏗️": NOTO_1f3d7_fe0f, "🏛️": NOTO_1f3db_fe0f, "🏝️": NOTO_1f3dd_fe0f, "🏡": NOTO_1f3e1, "🏢": NOTO_1f3e2, "🏴‍☠️": NOTO_1f3f4_200d_2620_fe0f, "🏺": NOTO_1f3fa, "🐄": NOTO_1f404, "🐉": NOTO_1f409, "🐎": NOTO_1f40e, "🐑": NOTO_1f411, "🐔": NOTO_1f414, "🐝": NOTO_1f41d, "🐟": NOTO_1f41f, "🐢": NOTO_1f422, "🐦": NOTO_1f426, "🐴": NOTO_1f434, "👻": NOTO_1f47b, "👼": NOTO_1f47c, "👽": NOTO_1f47d, "💍": NOTO_1f48d, "💎": NOTO_1f48e, "💡": NOTO_1f4a1, "💧": NOTO_1f4a7, "💻": NOTO_1f4bb, "📄": NOTO_1f4c4, "📕": NOTO_1f4d5, "📖": NOTO_1f4d6, "📚": NOTO_1f4da, "📡": NOTO_1f4e1, "🔆": NOTO_1f506, "🔋": NOTO_1f50b, "🔌": NOTO_1f50c, "🔘": NOTO_1f518, "🔥": NOTO_1f525, "🔩": NOTO_1f529, "🔭": NOTO_1f52d, "🔴": NOTO_1f534, "🔵": NOTO_1f535, "🔷": NOTO_1f537, "🕐": NOTO_1f550, "🗺️": NOTO_1f5fa_fe0f, "🗼": NOTO_1f5fc, "🗿": NOTO_1f5ff, "🚀": NOTO_1f680, "🚁": NOTO_1f681, "🚄": NOTO_1f684, "🚉": NOTO_1f689, "🚗": NOTO_1f697, "🚜": NOTO_1f69c, "🚤": NOTO_1f6a4, "🚲": NOTO_1f6b2, "🛖": NOTO_1f6d6, "🛠️": NOTO_1f6e0_fe0f, "🛡️": NOTO_1f6e1_fe0f, "🛢️": NOTO_1f6e2_fe0f, "🛰️": NOTO_1f6f0_fe0f, "🛶": NOTO_1f6f6, "🟠": NOTO_1f7e0, "🟡": NOTO_1f7e1, "🟢": NOTO_1f7e2, "🟣": NOTO_1f7e3, "🟤": NOTO_1f7e4, "🟥": NOTO_1f7e5, "🟦": NOTO_1f7e6, "🟨": NOTO_1f7e8, "🤍": NOTO_1f90d, "🤖": NOTO_1f916, "🥐": NOTO_1f950, "🥚": NOTO_1f95a, "🥛": NOTO_1f95b, "🥤": NOTO_1f964, "🥥": NOTO_1f965, "🥧": NOTO_1f967, "🥨": NOTO_1f968, "🥭": NOTO_1f96d, "🦁": NOTO_1f981, "🦄": NOTO_1f984, "🦌": NOTO_1f98c, "🦕": NOTO_1f995, "🦖": NOTO_1f996, "🦜": NOTO_1f99c, "🦠": NOTO_1f9a0, "🦴": NOTO_1f9b4, "🦾": NOTO_1f9be, "🧀": NOTO_1f9c0, "🧁": NOTO_1f9c1, "🧈": NOTO_1f9c8, "🧑‍🌾": NOTO_1f9d1_200d_1f33e, "🧙": NOTO_1f9d9, "🧙‍♀️": NOTO_1f9d9_200d_2640_fe0f, "🧜‍♀️": NOTO_1f9dc_200d_2640_fe0f, "🧣": NOTO_1f9e3, "🧪": NOTO_1f9ea, "🧬": NOTO_1f9ec, "🧭": NOTO_1f9ed, "🧲": NOTO_1f9f2, "🧵": NOTO_1f9f5, "🧶": NOTO_1f9f6, "🧺": NOTO_1f9fa, "🪟": NOTO_1fa9f, "🪢": NOTO_1faa2, "🪨": NOTO_1faa8, "🫐": NOTO_1fad0, "🫓": NOTO_1fad3};
 /*__NOTO_ICONS_END__*/
-const CUSTOM_ICONS = {...NOTO_ICONS, "__ORCA__": ORCA_SVG, "__CORAL__": CORAL_SVG, "__FLOUR__": FLOUR_SVG, "__LIGHTHOUSE__": LIGHTHOUSE_SVG, "__TUNNEL__": TUNNEL_SVG, "__ALCAN__": ALCAN_SVG, "__TROMBONE__": TROMBONE_SVG, "🔘": RUBBER_TIRE_IMG, "__RUBBER__": RUBBER_SVG, "__MICROCHIP__": MICROCHIP_IMG, "__LIFE__": LIFE_IMG, "__ECOSYSTEM__": ECOSYSTEM_IMG, "__GEMCOLLECTION__": GEMCOLLECTION_IMG, "__PEARL__": PEARL_IMG, "__RUBY__": RUBY_IMG, "__OPAL__": OPAL_IMG, "__TURQUOISE__": TURQUOISE_IMG, "__AMBER__": AMBER_IMG, "__DIAMOND__": DIAMOND_IMG};
+const CUSTOM_ICONS = {...NOTO_ICONS, "__ORCA__": ORCA_SVG, "__CORAL__": CORAL_SVG, "__FLOUR__": FLOUR_SVG, "__LIGHTHOUSE__": LIGHTHOUSE_SVG, "__TUNNEL__": TUNNEL_SVG, "__ALCAN__": ALCAN_SVG, "__BRASSBAR__": BRASS_BAR_SVG, "🔘": RUBBER_TIRE_IMG, "__RUBBER__": RUBBER_SVG, "__MICROCHIP__": MICROCHIP_IMG, "__LIFE__": LIFE_IMG, "__ECOSYSTEM__": ECOSYSTEM_IMG, "__GEMCOLLECTION__": GEMCOLLECTION_IMG, "__PEARL__": PEARL_IMG, "__RUBY__": RUBY_IMG, "__OPAL__": OPAL_IMG, "__TURQUOISE__": TURQUOISE_IMG, "__AMBER__": AMBER_IMG, "__DIAMOND__": DIAMOND_IMG};
 const em = e => CUSTOM_ICONS[e] || esc(e);
 
 function dieFace(v){
@@ -6385,8 +6406,11 @@ function isRevealed(entry){
   if (jobCoversItem(entry.name) || seenClosureRevealsItem(entry.name)) return true;
   if (GEMSTONE_SECRET.has(entry.name)) return owns("Furnace") && owns("Clock");
   if (breakpointReveals(entry.name)) return true;
-  // Default: hidden until the player could craft it right now.
-  return canCraft(entry);
+  // Default: hidden until every ITEM ingredient is in hand -- elements
+  // don't count against this (see itemReqsMet()), since they reset every
+  // visit and a player shouldn't have to happen to be holding the right
+  // dice results just to know an item exists.
+  return itemReqsMet(entry);
 }
 
 /* Item Reference is a running record of what THIS run has actually shown
@@ -6916,10 +6940,15 @@ function canTravelTo(name){
                instead of just backing out to wherever it was opened
                from -- see the "screen !== market" guard below, which
                keeps a sheet (Jobs etc.) opened ON TOP of Market still
-               reporting "close" as normal. */
+               reporting "close" as normal. Marketplace's own inline
+               Jobs/Quests/Trade/Collections section (see marketSection)
+               takes over this face too while one's expanded -- Home
+               becomes "close that section" rather than "leave the
+               Marketplace", same as it does for any other panel. */
 function hubHomeFace(){
   const panel = openPanelName();
   if (panel && panel !== "market") return "close";
+  if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
   if (screen === "map") return (selectedMapStation && canTravelTo(selectedMapStation)) ? "travel" : "market";
   return "map";
@@ -8191,7 +8220,14 @@ function triggerRoll(){
    same function. */
 document.getElementById("hubHome").addEventListener("click", ev => {
   const face = hubHomeFace();
-  if (face === "close"){ closePanelByName(openPanelName()); return; }
+  if (face === "close"){
+    // Collapsing the Marketplace's own inline section stays ON the
+    // Marketplace screen (unlike closePanelByName("market"), which backs
+    // all the way out to the map) -- see hubHomeFace()'s own comment.
+    if (screen === "market" && marketSection){ marketSection = null; render(); return; }
+    closePanelByName(openPanelName());
+    return;
+  }
   if (face === "roll"){ triggerRoll(); return; }
   if (face === "market"){ openMarket(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
@@ -8544,9 +8580,21 @@ function renderMarketArc(){
       title: state.mode === "classic" ? "Collections — not available in Classic Mode"
         : `Collections — ${state.collectionsCompleted.length}/${COLLECTIONS.length} complete` },
   ];
+  // Retracted (see .market-arc-btn.retracted) the instant ANY section is
+  // expanded -- not just the one that was tapped -- so the whole arc
+  // bounces back under the hub together rather than leaving the other
+  // three sitting around a screen that's now full of card content.
+  // Not marked [disabled] when merely retracted (only for the genuine
+  // mode-gated case) -- :disabled's own opacity:.5 (see its rule below)
+  // is equal specificity to .retracted's opacity:0 and, being LATER in
+  // the stylesheet, would win the tie and leave retracted buttons stuck
+  // at half-visible instead of actually disappearing. pointer-events:none
+  // on .retracted already fully blocks interaction on its own.
+  const retracted = !!marketSection;
   document.getElementById("marketArc").innerHTML = slots.map((s, i) => `
-    <button type="button" class="market-arc-btn ${marketSection === s.nav ? "active" : ""}" style="--ang:${ARC_SLOTS[i]}deg; --radius:${ARC_RADIUS}"
-      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled ? "disabled" : ""}
+    <button type="button" class="market-arc-btn ${retracted ? "retracted" : ""}" style="--ang:${ARC_SLOTS[i]}deg; --radius:${ARC_RADIUS}"
+      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled && !retracted ? "disabled" : ""}
+      ${retracted ? 'aria-hidden="true" tabindex="-1"' : ""}
       title="${esc(s.title)}" aria-label="${esc(s.label)}">
       <span class="market-arc-icon">${s.icon}</span>
       <span class="market-arc-label">${esc(s.label)}</span>
