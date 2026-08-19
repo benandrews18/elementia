@@ -8,9 +8,18 @@
        runMinigame(container, onComplete)
          container   - a DOM element to render into. Cleared and owned for
                         the duration of the run; left empty when it ends.
-         onComplete  - called once with a single number, 0..1, once the
-                        round is over. The caller decides what that becomes
-                        (e.g. bonus dice = round(score * MAX_BONUS)).
+         onComplete  - called once with (score, meta) when the round is
+                        over. score is a single number, 0..1 -- the caller
+                        decides what that becomes (e.g. bonus dice =
+                        round(score * MAX_BONUS)). meta is
+                        {raw, label} -- the same result in the game's own
+                        terms (e.g. {raw:17, label:"bubbles popped"}), for
+                        anything that wants to show or log the real number
+                        instead of the normalized score (see the Arcade's
+                        own high-score tracking in elementia.html). A
+                        caller that only reads the first argument (the
+                        real game's own launchMinigame(), which just wants
+                        a dice count) needs no changes at all.
 
    Everything else here is private. No external assets, no dependencies --
    this has to survive being pasted into a single portable HTML file later,
@@ -110,10 +119,21 @@
         clip-path:circle(50%);
         -webkit-clip-path:circle(50%);
       }
+      /* --pop-origin (set in pop(), right before this class is added) is
+         the translate() commitStyles() just froze into the bubble's own
+         inline transform -- referenced here, NOT re-derived, because a
+         CSS animation's keyframes don't COMPOSE with whatever transform
+         was already on the element, they REPLACE it outright. Without
+         the variable, these keyframes' own "transform:scale(...)" would
+         overwrite the frozen translate() the instant the pop animation
+         starts, snapping the bubble back to translate(0,0) -- its literal
+         spawn point at the bottom of the stage -- a split second before
+         visibly popping there. Multiplying the scale onto --pop-origin
+         instead keeps the pop anchored exactly where the tap landed. */
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
-        0%{transform:scale(1); opacity:1}
-        100%{transform:scale(1.5); opacity:0}
+        0%{transform:var(--pop-origin, translate(0,0)) scale(1); opacity:1}
+        100%{transform:var(--pop-origin, translate(0,0)) scale(1.5); opacity:0}
       }
       .mg-ocean-result{
         position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center;
@@ -226,7 +246,25 @@
       const pop = () => {
         if (!running || !liveBubbles.has(b)) return;
         liveBubbles.delete(b);
+        // commitStyles() BEFORE cancel() -- canceling a WAAPI animation on
+        // its own snaps the element straight back to its pre-animation
+        // transform (here, translate(0,0) -- literally its spawn point at
+        // the bottom of the stage), an instant before the .mg-pop scale/
+        // fade keyframes take over. That read as a SECOND bubble popping
+        // at the bottom every time, when it was actually the same one
+        // jumping there first. commitStyles() bakes the animation's
+        // CURRENT mid-flight transform into the element's own inline
+        // style, so canceling the (now-redundant) animation afterward is
+        // a no-op visually -- the pop plays exactly where the bubble
+        // already was.
+        try { anim.commitStyles(); } catch (err) { /* not connected/no effect -- fall through to cancel() alone */ }
         anim.cancel();
+        // Hand that frozen translate() to the .mg-pop keyframes via a
+        // custom property (see its own comment) -- committing it to
+        // b.style.transform alone isn't enough, since the keyframes'
+        // own "transform:scale(...)" would still clobber it outright the
+        // instant the animation class is added below.
+        b.style.setProperty("--pop-origin", b.style.transform || "translate(0px,0px)");
         popped++;
         popCountEl.textContent = "\u{1F30A} " + popped;
         diceEl.innerHTML = diceGridHTML(diceFor(popped / TARGET_POPS));
@@ -289,7 +327,7 @@
         <div class="mg-sub">🎲 ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: popped, label: "bubbles popped"}), RESULT_HOLD_MS);
     }
 
     scheduleSpawn();

@@ -110,6 +110,26 @@
       .mg-city-result .mg-big{font-size:30px; font-weight:800}
       .mg-city-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-city-fade-in{ to{opacity:1} }
+      /* The actual tap target -- mirrors #hubHome's own look from the main
+         game exactly (76px circle, 3px card-colored ring, same green) so
+         every minigame's primary action reads as the same kind of control,
+         rather than "tap anywhere on the stage" (the old behavior here)
+         being a different, less discoverable interaction language per
+         game. Replaces the whole-stage pointerdown listener outright --
+         WHERE on the slab you tap has never mattered, only WHEN, so moving
+         the hit target to one clear button changes nothing about
+         difficulty or feel. */
+      .mg-city-center-btn{
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
+        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
+        border:3px solid #17120c; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+      }
+      .mg-city-center-btn:hover{filter:brightness(1.08)}
+      .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
+      .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
     `;
     const style = document.createElement("style");
     style.id = "mg-city-style";
@@ -139,9 +159,15 @@
     const track = document.createElement("div");
     track.className = "mg-city-track";
 
+    const centerBtn = document.createElement("button");
+    centerBtn.type = "button";
+    centerBtn.className = "mg-city-center-btn";
+    centerBtn.innerHTML = `<span class="mg-cb-icon">\u{1F528}</span><span class="mg-cb-label">Place</span>`;
+
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(track);
+    stage.appendChild(centerBtn);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-city-count");
@@ -251,7 +277,8 @@
       slideMs = Math.max(SLIDE_MS_MIN, SLIDE_MS_START - stonesPlaced * SLIDE_MS_STEP);
       spawnActive();
     }
-    stage.addEventListener("pointerdown", onTap);
+    function onCenterBtnDown(e) { e.preventDefault(); onTap(); }
+    centerBtn.addEventListener("pointerdown", onCenterBtnDown);
 
     const start = Date.now();
     function tick() {
@@ -273,7 +300,7 @@
     function endRound() {
       if (!running) return;
       running = false;
-      stage.removeEventListener("pointerdown", onTap);
+      centerBtn.removeEventListener("pointerdown", onCenterBtnDown);
       if (rafId) cancelAnimationFrame(rafId);
 
       const score = Math.max(0, Math.min(1, stonesPlaced / TARGET_STONES));
@@ -284,7 +311,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: stonesPlaced, label: "stones stacked"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);

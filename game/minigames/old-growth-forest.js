@@ -146,6 +146,26 @@
       .mg-forest-result .mg-big{font-size:30px; font-weight:800}
       .mg-forest-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-forest-fade-in{ to{opacity:1} }
+      /* The actual tap target -- mirrors #hubHome's own look from the main
+         game exactly (76px circle, 3px card-colored ring, same green) so
+         every minigame's primary action reads as the same kind of control,
+         rather than "tap anywhere on the stage" (the old behavior here)
+         being a different, less discoverable interaction language per
+         game. Replaces the whole-stage pointerdown listener outright --
+         this is a pure timing game (WHEN you tap, never WHERE), so moving
+         the hit target to one clear button changes nothing about
+         difficulty or feel. */
+      .mg-forest-center-btn{
+        position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
+        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
+        border:3px solid #17321f; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+      }
+      .mg-forest-center-btn:hover{filter:brightness(1.08)}
+      .mg-forest-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-forest-center-btn .mg-cb-icon{font-size:32px; line-height:1}
+      .mg-forest-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
     `;
     const style = document.createElement("style");
     style.id = "mg-forest-style";
@@ -225,6 +245,11 @@
     const toast = document.createElement("div");
     toast.className = "mg-forest-toast";
 
+    const centerBtn = document.createElement("button");
+    centerBtn.type = "button";
+    centerBtn.className = "mg-forest-center-btn";
+    centerBtn.innerHTML = `<span class="mg-cb-icon">${STEPS[0].icon}</span><span class="mg-cb-label">Tap</span>`;
+
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(stepsRow);
@@ -232,6 +257,7 @@
     stage.appendChild(stepLabel);
     stage.appendChild(gaugeWrap);
     stage.appendChild(toast);
+    stage.appendChild(centerBtn);
     container.appendChild(stage);
 
     const countEl = hud.querySelector("#mg-forest-count");
@@ -310,11 +336,13 @@
       }
       bigIcon.textContent = STEPS[stepIndex].icon; // swap the instant the hit registers
       stepLabel.textContent = STEPS[stepIndex].label;
+      centerBtn.querySelector(".mg-cb-icon").textContent = STEPS[stepIndex].icon;
       refreshDots();
       stepStart = Date.now();
       sweepFromRight = Math.random() < 0.5;
     }
-    stage.addEventListener("pointerdown", onTap);
+    function onCenterBtnDown(e) { e.preventDefault(); onTap(); }
+    centerBtn.addEventListener("pointerdown", onCenterBtnDown);
 
     const start = Date.now();
     let rafId = null;
@@ -347,7 +375,7 @@
     function endRound() {
       if (!running) return;
       running = false;
-      stage.removeEventListener("pointerdown", onTap);
+      centerBtn.removeEventListener("pointerdown", onCenterBtnDown);
       if (rafId) cancelAnimationFrame(rafId);
 
       const score = Math.max(0, Math.min(1, treesPlanted / TARGET_TREES));
@@ -358,7 +386,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: treesPlanted, label: "trees planted"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);

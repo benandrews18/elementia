@@ -208,11 +208,23 @@
       .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
         box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
-      .mg-bakery-sendwrap{ padding:0 20px 14px; }
+      /* Send is the actual tap target -- mirrors #hubHome's own look from
+         the main game exactly (76px circle, 3px card-colored ring, same
+         green) so every minigame's primary action reads as the same kind
+         of control, rather than each one inventing its own button shape.
+         Was a full-width rectangular bar; the click handler/disabled logic
+         are unchanged, only the shape and the wrapper's centering are new. */
+      .mg-bakery-sendwrap{ padding:4px 20px 14px; display:flex; justify-content:center; }
       .mg-bakery-send{
-        width:100%; padding:14px; border-radius:18px; border:none; font-weight:800; font-size:22px;
-        background:#4c9a3f; color:#fff; cursor:pointer;
+        width:76px; height:76px; border-radius:50%; border:3px solid #17120c;
+        background:#3fb46c; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4); cursor:pointer;
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+        transition:filter .15s ease, transform .1s ease;
       }
+      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.08); }
+      .mg-bakery-send:not(:disabled):active{ transform:scale(.94); }
+      .mg-bakery-send .mg-cb-icon{font-size:30px; line-height:1}
+      .mg-bakery-send .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
       .mg-bakery-send:disabled{ background:#4a4038; color:#8a7f70; cursor:not-allowed; }
       .mg-bakery-stage.mg-bakery-ok .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(95,207,106,.55); }
       .mg-bakery-stage.mg-bakery-bad .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(230,86,79,.55); }
@@ -314,8 +326,9 @@
     const sendWrap = document.createElement("div");
     sendWrap.className = "mg-bakery-sendwrap";
     const sendBtn = document.createElement("button");
+    sendBtn.type = "button";
     sendBtn.className = "mg-bakery-send";
-    sendBtn.textContent = "▶ Send";
+    sendBtn.innerHTML = `<span class="mg-cb-icon">\u{1F4E4}</span><span class="mg-cb-label">Send</span>`;
     sendBtn.disabled = true;
     sendWrap.appendChild(sendBtn);
 
@@ -450,7 +463,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: matched, label: "orders filled"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);

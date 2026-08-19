@@ -369,7 +369,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: solved, label: "puzzles solved"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);

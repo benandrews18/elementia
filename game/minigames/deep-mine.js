@@ -326,7 +326,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: broken, label: "rocks broken"}), RESULT_HOLD_MS);
     }
 
     updateCrackbar();

@@ -138,6 +138,21 @@
       .mg-obs-zone.l{ left:0; background:linear-gradient(90deg, rgba(126,168,255,.22), transparent); }
       .mg-obs-zone.r{ right:0; background:linear-gradient(270deg, rgba(126,168,255,.22), transparent); }
       .mg-obs-zone.on{ opacity:1; }
+      /* The steering legend -- unlike .mg-obs-zone above (invisible until
+         you're already holding a side), these show BEFORE the player has
+         ever touched the screen, so "which half does what" isn't something
+         they have to discover by trial. Faded out for good the first time
+         either side is held (see setHold()) -- their job is done once the
+         player's shown they know the controls, and staying on any longer
+         would just clutter a screen that's otherwise all asteroids. */
+      .mg-obs-arrow{
+        position:absolute; top:50%; z-index:2; transform:translateY(-50%);
+        font-size:40px; line-height:1; color:#fff; opacity:.5; pointer-events:none;
+        text-shadow:0 2px 8px rgba(0,0,0,.5); transition:opacity .4s ease;
+      }
+      .mg-obs-arrow.l{ left:8%; }
+      .mg-obs-arrow.r{ right:8%; }
+      .mg-obs-arrow.mg-obs-arrow-hidden{ opacity:0; }
       .mg-obs-rocket{
         position:absolute; line-height:1; z-index:3;
         will-change:transform; filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));
@@ -186,6 +201,8 @@
 
     const zoneL = document.createElement("div"); zoneL.className = "mg-obs-zone l";
     const zoneR = document.createElement("div"); zoneR.className = "mg-obs-zone r";
+    const arrowL = document.createElement("div"); arrowL.className = "mg-obs-arrow l"; arrowL.textContent = "⬅️";
+    const arrowR = document.createElement("div"); arrowR.className = "mg-obs-arrow r"; arrowR.textContent = "➡️";
 
     const hud = document.createElement("div");
     hud.className = "mg-obs-hud";
@@ -210,6 +227,8 @@
 
     stage.appendChild(zoneL);
     stage.appendChild(zoneR);
+    stage.appendChild(arrowL);
+    stage.appendChild(arrowR);
     stage.appendChild(hud);
     stage.appendChild(timebar);
     stage.appendChild(rocket);
@@ -244,11 +263,21 @@
     }
     drawRocket();
 
+    let arrowsShown = true;
     function setHold(e) {
       const rect = stage.getBoundingClientRect();
       holding = (e.clientX - rect.left) < rect.width / 2 ? -1 : 1;
       zoneL.classList.toggle("on", holding === -1);
       zoneR.classList.toggle("on", holding === 1);
+      // The legend's only job is to show a first-timer which half does
+      // what -- once they've actually held a side, it's learned, so fade
+      // it out for the rest of the round rather than sitting on top of
+      // the asteroids indefinitely.
+      if (arrowsShown) {
+        arrowsShown = false;
+        arrowL.classList.add("mg-obs-arrow-hidden");
+        arrowR.classList.add("mg-obs-arrow-hidden");
+      }
     }
     function clearHold() {
       holding = 0;
@@ -378,7 +407,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(score)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(score), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(score, {raw: +(elapsed / 1000).toFixed(1), label: "seconds survived"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);

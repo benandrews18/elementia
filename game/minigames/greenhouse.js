@@ -346,7 +346,7 @@
         <div class="mg-sub">\u{1F3B2} ${diceFor(finalScore)} dice earned</div>`;
       stage.appendChild(resultEl);
 
-      setTimeout(() => onComplete(finalScore), RESULT_HOLD_MS);
+      setTimeout(() => onComplete(finalScore, {raw: net, label: "eggs caught"}), RESULT_HOLD_MS);
     }
 
     rafId = requestAnimationFrame(tick);
