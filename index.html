@@ -486,12 +486,68 @@ body[data-screen="market"] #trackedPill{display:none}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
 }
 .market-arc-btn:disabled{opacity:.5; filter:grayscale(.4); cursor:default}
-/* Trade Market: a board of TRADE_OFFER_COUNT offer cards, each reusing
-   the Station Shop's own .item/.craftbtn language (see tradeCardHTML())
-   -- the reward is the "item," the demand is its "recipe" line, and the
-   accept button is a plain craftbtn labeled with what it costs. */
+/* Trading Post: a board of TRADE_OFFER_COUNT offer cards, its own bespoke
+   shape (see tradeCardHTML()) rather than a reused Station Shop .item --
+   modeled on the uploaded "trading post and job board reference" art
+   (images/trading post and job board reference.png and the marketplace
+   reference screens beside it): a title, a big centered portrait of what
+   you'd walk away with, a points badge, a two-tone give/get exchange bar
+   (the reference's own colored resource-cost bar, adapted from "spend
+   materials, get a building" to "spend an item, get a different one"),
+   and a full-width footer stripe that IS the accept button -- the same
+   "footer bar doubles as the price/action strip" language that reference
+   uses for its own cost-and-build-time footer. */
 .trade-intro{font-size:13px; color:var(--ink2); margin:0 0 14px; line-height:1.5}
-.trade-board{display:flex; flex-direction:column; gap:14px}
+.trade-board{display:flex; flex-direction:column; gap:18px}
+.tp-card{
+  position:relative; background:var(--card); border:2.5px solid var(--gold-line);
+  border-radius:18px; overflow:hidden; box-shadow:0 6px 18px var(--shadow);
+  transition:border-color .2s ease;
+}
+.tp-card.can{border-color:var(--gold)}
+.tp-card-top{padding:16px 16px 14px; text-align:center}
+.tp-title{
+  font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--mute);
+}
+.tp-portrait{font-size:52px; line-height:1.3; margin:6px 0 2px}
+.tp-name{font-size:18px; font-weight:800; color:#fff}
+.tp-pts{
+  display:inline-flex; align-items:center; gap:4px; margin-top:6px;
+  background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
+  border-radius:999px; padding:3px 11px; font-size:12px; font-weight:800;
+}
+/* The give/get exchange -- two icon chips (muted red "what leaves your
+   bag" on the left, green "what you're walking away with" on the right)
+   bridged by an arrow, the same two-tone cost-bar device the reference
+   image uses for its own "1 axe -> 3 wood" build costs. */
+.tp-exchange{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:0 16px 16px;
+}
+.tp-ex-side{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  border-radius:12px; padding:9px 6px; min-width:0;
+}
+.tp-ex-give{background:var(--bad-soft); border:1.5px solid var(--bad)}
+.tp-ex-get{background:var(--ok-soft); border:1.5px solid var(--ok-line)}
+.tp-ex-em{font-size:26px; line-height:1}
+.tp-ex-name{
+  font-size:11.5px; font-weight:700; color:var(--ink2); text-align:center;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+}
+.tp-ex-arrow{font-size:20px; color:var(--gold); flex:none}
+/* Full-width footer stripe doubling as the accept button -- same "the
+   price bar IS the bottom of the card" language the reference's own
+   build-cost footer uses, just interactive here. */
+.tp-footer{
+  display:block; width:100%; padding:14px 10px; border:none; border-top:1.5px solid var(--line2);
+  background:var(--sunken); color:var(--mute); font-size:14px; font-weight:800;
+  border-radius:0 0 15.5px 15.5px;
+}
+.tp-footer.go{background:var(--ok); color:#fff; border-top-color:var(--ok-line)}
+.tp-footer.go:hover{filter:brightness(1.07)}
+.tp-footer:disabled{cursor:not-allowed}
 /* Quests -- a flat drip-fed list (see questVisible()), not a tree laid
    out in sections: in-progress first, then whatever's newly on offer,
    completed history last. Each card is a Station Shop .item (see
@@ -8530,17 +8586,19 @@ function closeJobBoard(){
    no system behind them yet, so they're real disabled buttons with a
    "Coming soon" tag rather than dead-looking active ones -- honest about
    what's actually here today. */
-/* Whichever of Jobs/Quests/Trade/Collections is picked from the arc menu
-   (see marketSection/the #marketArc click handler) expands INLINE right
-   here on the Marketplace screen, styled as its own titled section --
-   same Station Shop item-card language each body already uses (see
-   jobBoardHTML()/questsBodyHTML()/tradeBodyHTML()/collectionsBodyHTML()).
-   Not a takeover: the arc stays visible and tappable the whole time (it's
-   a sibling of #screen, see #marketArc's own comment), so switching
-   sections -- or backing all the way out -- is always one more tap away. */
+/* Whichever of Jobs/Quests/Trading Post/Collections is picked from the
+   arc menu (see marketSection/the #marketArc click handler) expands
+   INLINE right here on the Marketplace screen, styled as its own titled
+   section -- Jobs/Quests/Collections reuse the Station Shop item-card
+   language each body already uses (jobBoardHTML()/questsBodyHTML()/
+   collectionsBodyHTML()), Trading Post gets its own bespoke card (see
+   tradeCardHTML()). The arc itself retracts out from under the hub the
+   instant a section is open (see .market-arc-btn.retracted) -- Home
+   shows Close and collapses marketSection back to null, the only way
+   back to picking a different one. */
 function marketSectionHTML(){
   if (!marketSection) return "";
-  const titles = {jobs:"📋 Job Board", quests:"📜 Quest Log", trade:"🔄 Trade Market", collections:"🏆 Collections"};
+  const titles = {jobs:"📋 Job Board", quests:"📜 Quest Log", trade:"🔄 Trading Post", collections:"🏆 Collections"};
   const body = marketSection === "jobs" ? jobBoardHTML()
     : marketSection === "quests" ? questsBodyHTML()
     : marketSection === "trade" ? tradeBodyHTML()
@@ -8574,8 +8632,8 @@ function renderMarketArc(){
       title: zen ? "Job Board — not available in Zen Mode" : "Job Board — take jobs, turn in finished items" },
     { nav: "quests", icon: "📜", label: "Quest Log", disabled: state.mode !== "hard",
       title: state.mode === "hard" ? "Quest Log — a branching tree of keystone-item goals" : "Quest Log — Hard Mode only" },
-    { nav: "trade", icon: "🔄", label: "Trade Market", disabled: state.mode !== "hard",
-      title: state.mode === "hard" ? "Trade Market — swap a spare item for a random one" : "Trade Market — Hard Mode only" },
+    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: state.mode !== "hard",
+      title: state.mode === "hard" ? "Trading Post — swap a spare item for a random one" : "Trading Post — Hard Mode only" },
     { nav: "collections", icon: "🏆", label: "Collections", disabled: state.mode === "classic",
       title: state.mode === "classic" ? "Collections — not available in Classic Mode"
         : `Collections — ${state.collectionsCompleted.length}/${COLLECTIONS.length} complete` },
@@ -8711,34 +8769,45 @@ function acceptTradeOffer(i){
   checkQuestCompletion();
   save(); render();
 }
-/* Same .item/.craftbtn card shape as a Station Shop item (see
-   itemHTML()) -- the reward is the headline item, the demand it costs
-   reads as the "recipe" line underneath, and the craftbtn plays the
-   Craft button's own role: green and enabled exactly when the player is
-   actually holding the demanded item, otherwise a plain disabled state
-   (not hidden -- seeing what an out-of-reach offer WOULD cost is still
-   useful information). */
+/* Bespoke Trading Post card (see .tp-card and its own comment) -- title,
+   a big portrait of the reward, a points badge, a give/get exchange bar,
+   and a footer stripe that's the accept button itself. Green and enabled
+   exactly when the player is actually holding the demanded item,
+   otherwise a plain disabled state (not hidden -- seeing what an
+   out-of-reach offer WOULD cost is still useful information). */
 function tradeCardHTML(offer, i){
   const pts = ITEM_POINTS[offer.reward] || 0;
   const can = itemStock(offer.demand) > 0;
-  return `<div class="item trade-item ${can ? "can" : ""}" style="--suit:var(--gold)">
-    <div class="irow">
-      <div class="iem">${em(ITEM_EMOJI[offer.reward])}</div>
-      <div class="ibody">
-        <div class="itop"><span class="iname">${esc(offer.reward)}</span><span class="tier">${pts} pts</span></div>
-        <div class="recipe">Costs ${em(ITEM_EMOJI[offer.demand])} ${esc(offer.demand)}</div>
+  return `<div class="tp-card ${can ? "can" : ""}">
+    <div class="tp-card-top">
+      <div class="tp-title">Trade Offer</div>
+      <div class="tp-portrait">${em(ITEM_EMOJI[offer.reward])}</div>
+      <div class="tp-name">${esc(offer.reward)}</div>
+      <div class="tp-pts">⭐ ${pts} pts</div>
+    </div>
+    <div class="tp-exchange">
+      <div class="tp-ex-side tp-ex-give">
+        <span class="tp-ex-em">${em(ITEM_EMOJI[offer.demand])}</span>
+        <span class="tp-ex-name">${esc(offer.demand)}</span>
+      </div>
+      <span class="tp-ex-arrow">➜</span>
+      <div class="tp-ex-side tp-ex-get">
+        <span class="tp-ex-em">${em(ITEM_EMOJI[offer.reward])}</span>
+        <span class="tp-ex-name">${esc(offer.reward)}</span>
       </div>
     </div>
-    <button type="button" class="craftbtn ${can ? "go" : ""}" data-trade-accept="${i}" ${can ? "" : "disabled"}>${can ? "Trade" : "Needs"}</button>
+    <button type="button" class="tp-footer ${can ? "go" : ""}" data-trade-accept="${i}" ${can ? "" : "disabled"}>
+      ${can ? "Make the Trade" : `Needs ${esc(offer.demand)}`}
+    </button>
   </div>`;
 }
 function tradeBodyHTML(){
   if (state.mode !== "hard"){
-    return `<p class="empty">🔄 The Trade Market only opens in Hard Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
+    return `<p class="empty">🔄 The Trading Post only opens in Hard Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
   }
   if (!state.tradeOffers.length) state.tradeOffers = rollTradeOffers();
   return state.tradeOffers.length
-    ? `<p class="trade-intro">Each card is something the market's offering -- tap its demand underneath to give up what it's asking for and take it.</p>
+    ? `<p class="trade-intro">Each card is something the Post is offering -- give up what it's asking for on the left to walk away with the reward on the right.</p>
        <div class="trade-board">${state.tradeOffers.map(tradeCardHTML).join("")}</div>`
     : `<p class="empty">🎒 Nothing on offer right now -- check back once you've crafted a wider spread of items.</p>`;
 }
