@@ -53,7 +53,7 @@ import csv, random, sys
 from collections import Counter, defaultdict
 from model import RECIPES, ELEMENTS, STEPS, STATION_DICE, ALL_STATIONS, STATIONS
 
-TAKE = 5
+TAKE = 6
 TRIALS = 40
 MAX_VISITS = 150
 GOAL_AWARE_CHANCE = 0.9   # a focused player, not a wandering one -- see module docstring

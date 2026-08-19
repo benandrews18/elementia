@@ -41,6 +41,21 @@
   .node-circ.revealed{stroke:var(--suit,#4d7cf2)}
   .node-circ.just{stroke:var(--warn); stroke-width:3.5}
   .node-circ.selected{stroke:#fff; stroke-width:3}
+  .key-ring{fill:none; pointer-events:none}
+  .key-ring.key-t1{stroke:#c98a4b; stroke-width:2}
+  .key-ring.key-t2{stroke:#c7d0da; stroke-width:2.75}
+  .key-ring.key-t3{stroke:#f2c94c; stroke-width:3.5}
+  #graphPane.hide-keystones .key-ring{display:none}
+  .key-legend{display:flex; flex-direction:column; gap:5px}
+  .key-legend-row{display:flex; align-items:center; gap:8px; font-size:11px}
+  .key-swatch{width:13px; height:13px; border-radius:50%; flex:0 0 auto; border:2.5px solid; background:transparent}
+  .key-swatch.key-t3{border-color:#f2c94c}
+  .key-swatch.key-t2{border-color:#c7d0da}
+  .key-swatch.key-t1{border-color:#c98a4b}
+  .key-legend-row .lbl{color:var(--ink); font-weight:700}
+  .key-legend-row .cnt{color:var(--mute); margin-left:auto; font-variant-numeric:tabular-nums}
+  .key-legend-row .desc{color:var(--mute); font-size:10px; display:block; margin-top:-2px}
+  .key-toggle{display:flex; align-items:center; gap:6px; font-size:11px; color:var(--mute); margin-top:8px; cursor:pointer}
   #sidePane{
     flex:0 0 340px; border-left:1.5px solid var(--line); display:flex; flex-direction:column;
     min-height:0; background:var(--card);
@@ -115,6 +130,11 @@
         <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total items</div></div>
         <div class="stat"><div class="n" id="statOrphans">0</div><div class="l">Never covered</div></div>
       </div>
+    </div>
+    <div class="side-section">
+      <h2>Keystones</h2>
+      <div class="key-legend" id="keyLegend"></div>
+      <label class="key-toggle"><input type="checkbox" id="keyToggle" checked> highlight rings in graph</label>
     </div>
     <div class="side-section" style="border-bottom:none; flex:0 0 auto">
       <h2>Mission order <span id="missionCount" style="color:var(--mute);font-weight:400"></span></h2>
@@ -308,7 +328,7 @@ const DATA = /*__STORY_DATA_START__*/{
      "🛳️",
      "Cruise Ship",
      "CREATION",
-     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎷 Trombone",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎺 Trumpet",
      40
     ]
    ],
@@ -686,7 +706,7 @@ const DATA = /*__STORY_DATA_START__*/{
      6
     ],
     [
-     "🎺",
+     "__BRASSBAR__",
      "Brass",
      "MATERIAL",
      "Cu + Zn + 🔥 Furnace",
@@ -1172,10 +1192,10 @@ const DATA = /*__STORY_DATA_START__*/{
      22
     ],
     [
-     "🎷",
-     "Trombone",
+     "🎺",
+     "Trumpet",
      "CREATION",
-     "🎺 Brass + 🛠️ Tools",
+     "__BRASSBAR__ Brass + 🛠️ Tools",
      18
     ],
     [
@@ -1712,173 +1732,173 @@ const DATA = /*__STORY_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Wire": 3.9,
-  "Sugar": 3.3,
-  "Concrete": 5.6,
-  "Sphinx": null,
-  "Phoenix": null,
-  "Centaur": null,
-  "Magnet": 5.1,
-  "Basket": 8.8,
-  "Yarn": 13.5,
-  "Fireworks": 4.3,
-  "Clock": 8.9,
-  "Aluminum Alloy": 5.5,
-  "Telescope": 12.6,
-  "Solar System": 18.9,
-  "Maglev Train": 16.9,
-  "Yellow Dye": 15.8,
-  "Titanium Alloy": 6.0,
-  "Biofuel": 11.6,
-  "Sea Turtle": null,
-  "Wool": 8.2,
-  "Homestead": 15.4,
-  "Apple": 7.1,
-  "Farm": 8.1,
-  "Gemstone Collection": 20.4,
-  "Cheesecake": 24.1,
-  "Golem": null,
-  "Knit Scarf": 21.3,
-  "Satellite Dish": 11.9,
-  "Sushi Restaurant": 19.1,
-  "Book": 12.4,
-  "Blue Dye": 18.2,
-  "Chicken": 11.6,
-  "Museum": 20.8,
-  "Rainbow": 18.0,
-  "Lighthouse": 13.8,
-  "Battery": 4.8,
-  "Beach Town": 27.0,
-  "Mango": null,
-  "Dinosaur": 13.0,
-  "Metropolis": 22.9,
-  "Brass": null,
-  "Motorcycle": 17.5,
-  "Wheel": 10.8,
-  "Cacao Beans": null,
-  "Statue": 7.9,
-  "Cream": 11.9,
-  "Central Station": 24.8,
-  "Apple Pie": 22.0,
-  "Cloud": 5.5,
-  "Toucan": null,
-  "Glass Vial": 10.7,
-  "Natural Gas": 3.0,
-  "Chocolate": 9.7,
-  "Turquoise": 14.8,
-  "Passionfruit": null,
-  "Clay": 2.7,
-  "The One Ring": null,
-  "Black Dye": 17.4,
-  "Cake": 24.1,
-  "Tractor": 10.6,
-  "Sailboat": 9.5,
-  "Deer": 7.1,
-  "Red Dye": 14.8,
-  "Stainless Steel": 5.5,
-  "Opal": 11.8,
-  "Chocolate Cake": 23.8,
-  "Alien": null,
-  "Ecosystem": 25.1,
-  "Bee": 8.5,
-  "Life": 20.0,
-  "Pegasus": null,
-  "Space Station": 25.1,
-  "Honey": 8.7,
-  "Unicorn": null,
-  "Trombone": null,
-  "Butter": 11.7,
-  "Canoe": 6.2,
-  "Dragon": null,
-  "Limestone": 2.8,
-  "Light Bulb": 7.5,
-  "Amber": 11.5,
-  "Blueberries": 14.3,
-  "Water Turbine": 23.2,
-  "Grand Banquet": 27.1,
-  "Millennium Falcon": null,
-  "Paper": 12.8,
-  "Solar Panel": 8.8,
-  "Salmon": 12.1,
-  "Renewable Grid": 30.1,
-  "Pretzel": 21.5,
-  "Log Cabin": 8.0,
-  "Fossil": 11.1,
-  "Fruit Cake": 24.1,
-  "Compass": 8.0,
-  "Computer": 15.7,
-  "Tools": 4.3,
-  "Parrot": null,
-  "Plastic": 8.2,
-  "Blackberries": 11.3,
-  "Bridge": 7.7,
-  "Fiberglass": 10.8,
-  "Coral Reef": 18.3,
-  "Building": 8.5,
-  "Banana Bread": 22.7,
-  "Egg": 6.1,
-  "Robot": 18.1,
-  "Helicopter": 21.4,
-  "Orca": 14.2,
-  "Diamond": 13.2,
-  "Planet": 9.3,
-  "Bone": 5.3,
-  "Rope": 7.7,
-  "Seaweed": 5.1,
-  "Dough": 21.5,
-  "Engine": 7.7,
-  "Rubber": 5.5,
-  "Cruise Ship": null,
-  "Tree": 5.3,
-  "Steel": 3.1,
-  "Mermaid": null,
-  "Witch": null,
-  "Banana": 7.7,
-  "Treasure Map": null,
-  "Croissant": 22.9,
-  "Plant Fiber": 7.7,
-  "Milk": 10.1,
-  "Oven": 11.8,
-  "Pearl": 14.8,
-  "Angel": null,
-  "Knight": null,
-  "Flour": 21.1,
-  "Sand": 3.2,
-  "Coffee Beans": null,
-  "Éclair": 24.2,
+  "Opal": 11.0,
+  "Sand": 2.9,
+  "Apple Pie": 21.1,
+  "Yellow Dye": 15.6,
+  "Log Cabin": 7.5,
+  "Volcano": 13.8,
   "Wizard": null,
-  "Grain": 8.7,
-  "Rocket": 22.1,
-  "Soil": 5.0,
-  "Yeast": 5.3,
-  "Library": 14.4,
-  "Microchip": 8.7,
-  "Water": 2.7,
-  "Bicycle": 15.2,
-  "DNA": 4.1,
-  "Skyscraper": 16.2,
-  "Turbine Blade": 17.4,
-  "Geothermal Pump": 10.2,
-  "Furnace": 4.8,
-  "Ruby": 13.7,
-  "Berry Cupcakes": 26.5,
-  "Coconut": null,
-  "Car": 17.9,
-  "Fertilizer": 3.5,
-  "Strawberries": 11.1,
-  "Fabric": 8.8,
-  "Windmill": 20.3,
-  "Speedboat": 15.9,
-  "Ghost": null,
-  "Sunflower": 19.9,
-  "Sheep": 8.2,
-  "Cow": 8.7,
-  "Star": 17.0,
+  "Pearl": 13.8,
+  "Alien": null,
+  "Cacao Beans": null,
+  "Tree": 4.8,
+  "Clay": 2.5,
+  "Ruby": 13.3,
+  "Planet": 8.2,
+  "Rubber": 5.7,
+  "Blue Dye": 17.4,
+  "Toucan": null,
+  "Speedboat": 15.0,
+  "Egg": 5.4,
+  "Chicken": 10.6,
+  "Chocolate": 9.0,
+  "Banana Bread": 21.2,
+  "Butter": 10.9,
+  "Black Dye": 15.8,
+  "Sugar": 2.8,
+  "Bone": 5.0,
+  "Glass Vial": 10.5,
+  "Chocolate Cake": 22.6,
+  "Amber": 10.7,
   "The Black Pearl": null,
-  "Glass": 5.6,
-  "Mushroom": 5.8,
-  "Bread": 22.7,
-  "Volcano": 14.5
+  "Cake": 22.2,
+  "Blueberries": 13.2,
+  "Homestead": 14.2,
+  "Sunflower": 19.0,
+  "Yeast": 4.9,
+  "Bicycle": 14.3,
+  "Knight": null,
+  "Cruise Ship": null,
+  "Turquoise": 13.8,
+  "Glass": 5.2,
+  "Centaur": null,
+  "Microchip": 8.6,
+  "Pretzel": 20.4,
+  "Passionfruit": null,
+  "Rocket": 21.6,
+  "Paper": 11.6,
+  "Wheel": 10.5,
+  "Angel": null,
+  "Light Bulb": 7.2,
+  "Metropolis": 22.2,
+  "Sheep": 7.2,
+  "Diamond": 12.4,
+  "Berry Cupcakes": 25.6,
+  "Banana": 6.6,
+  "Magnet": 4.7,
+  "Tools": 3.8,
+  "Blackberries": 10.4,
+  "Sushi Restaurant": 18.8,
+  "Plant Fiber": 6.8,
+  "Skyscraper": 15.6,
+  "Basket": 7.9,
+  "Central Station": 23.6,
+  "Computer": 15.2,
+  "Treasure Map": null,
+  "Sailboat": 8.9,
+  "Cream": 10.9,
+  "Limestone": 2.6,
+  "Phoenix": null,
+  "Pegasus": null,
+  "Apple": 6.5,
+  "Windmill": 19.2,
+  "Tractor": 10.0,
+  "Renewable Grid": 28.5,
+  "Farm": 7.3,
+  "Honey": 7.9,
+  "Engine": 7.2,
+  "Biofuel": 10.9,
+  "Compass": 7.6,
+  "Golem": null,
+  "Mushroom": 4.9,
+  "Life": 18.2,
+  "Maglev Train": 15.6,
+  "Lighthouse": 13.3,
+  "Dough": 20.5,
+  "Cloud": 5.1,
+  "Knit Scarf": 20.3,
+  "Coral Reef": 17.1,
+  "Robot": 17.0,
+  "Salmon": 11.5,
+  "Red Dye": 14.2,
+  "Dinosaur": 12.2,
+  "Fossil": 10.5,
+  "Éclair": 23.4,
+  "Telescope": 11.7,
+  "Witch": null,
+  "Statue": 7.2,
+  "Star": 16.4,
+  "Oven": 11.2,
+  "Concrete": 5.4,
+  "Strawberries": 10.5,
+  "Wire": 3.5,
+  "Titanium Alloy": 5.3,
+  "Cheesecake": 23.2,
+  "Milk": 9.2,
+  "Plastic": 8.2,
+  "Orca": 12.7,
+  "Battery": 4.5,
+  "Steel": 2.8,
+  "Fabric": 8.1,
+  "Grand Banquet": 25.9,
+  "Trumpet": null,
+  "Helicopter": 20.2,
+  "Fiberglass": 10.3,
+  "Sphinx": null,
+  "Satellite Dish": 11.0,
+  "Water Turbine": 22.6,
+  "Bee": 7.9,
+  "Rope": 6.8,
+  "Grain": 7.8,
+  "Water": 2.4,
+  "Sea Turtle": null,
+  "Brass": null,
+  "Library": 13.9,
+  "Unicorn": null,
+  "Stainless Steel": 5.0,
+  "Gemstone Collection": 19.1,
+  "Natural Gas": 2.7,
+  "Canoe": 5.5,
+  "Ghost": null,
+  "Deer": 6.2,
+  "Ecosystem": 23.3,
+  "Furnace": 4.5,
+  "Croissant": 21.2,
+  "Motorcycle": 16.9,
+  "Yarn": 12.8,
+  "Parrot": null,
+  "Turbine Blade": 16.4,
+  "Mermaid": null,
+  "Car": 16.9,
+  "Fruit Cake": 22.8,
+  "Millennium Falcon": null,
+  "Beach Town": 25.4,
+  "Museum": 19.2,
+  "Bread": 21.8,
+  "Coffee Beans": null,
+  "Geothermal Pump": 9.7,
+  "Clock": 8.0,
+  "Fertilizer": 3.1,
+  "The One Ring": null,
+  "Soil": 4.5,
+  "Dragon": null,
+  "Aluminum Alloy": 5.3,
+  "Flour": 20.6,
+  "Book": 11.4,
+  "Building": 8.2,
+  "Coconut": null,
+  "Cow": 7.9,
+  "DNA": 3.6,
+  "Solar Panel": 8.2,
+  "Wool": 7.5,
+  "Rainbow": 17.0,
+  "Solar System": 17.3,
+  "Mango": null,
+  "Space Station": 23.1,
+  "Fireworks": 3.9,
+  "Bridge": 7.3,
+  "Seaweed": 5.1
  }
 }/*__STORY_DATA_END__*/;
 </script>
@@ -1932,6 +1952,42 @@ const DATA = /*__STORY_DATA_START__*/{
   }
   items.forEach(it => depthOf(it.name));
 
+  // reverse dependency graph: which items directly require `name` as an
+  // ingredient -- the opposite direction from itemDeps.
+  const dependents = {};
+  items.forEach(it => { dependents[it.name] = []; });
+  items.forEach(it => it.itemDeps.forEach(d => { if (dependents[d]) dependents[d].push(it.name); }));
+
+  // "keystone" reach = full transitive closure of the reverse graph, i.e.
+  // every item that's built on top of this one through some chain, however
+  // long. Catalog follows a power law: most items feed nothing else, a
+  // handful of raw materials (Clay, Sand, Steel...) feed dozens. Fixed
+  // breakpoints tuned against the current catalog's actual distribution:
+  // T3 >=20 reaches roughly a quarter of the whole catalog and is almost
+  // always a raw material; T2 5-19 is a solid mid-game component (Egg,
+  // Flour, Engine...); T1 1-4 is a minor building block used once or twice;
+  // T0 (no ring) is a dead end -- nothing is ever built from it.
+  const descendantsCache = {};
+  function descendantsOf(name) {
+    if (descendantsCache[name]) return descendantsCache[name];
+    const seen = new Set();
+    const stack = (dependents[name] || []).slice();
+    while (stack.length) {
+      const n = stack.pop();
+      if (seen.has(n)) continue;
+      seen.add(n);
+      stack.push(...(dependents[n] || []));
+    }
+    return descendantsCache[name] = seen;
+  }
+  function keystoneTier(reach) {
+    if (reach >= 20) return 3;
+    if (reach >= 5) return 2;
+    if (reach >= 1) return 1;
+    return 0;
+  }
+  items.forEach(it => { it.keyReach = descendantsOf(it.name).size; it.keyTier = keystoneTier(it.keyReach); });
+
   // full recursive component closure (every item ancestor, excluding self)
   const closureCache = {};
   function closureOf(name) {
@@ -1951,7 +2007,12 @@ const DATA = /*__STORY_DATA_START__*/{
   const maxDepth = Math.max(...Object.keys(byDepth).map(Number));
   const COL_W = 118, ROW_H = 46, PAD = 40, R = 15;
   Object.keys(byDepth).forEach(d => {
-    byDepth[d].sort((a,b) => (a.avgVisits||0) - (b.avgVisits||0));
+    // ?? Infinity, not || 0 -- a MISSING avgVisits (subzone items never
+    // simulated, see build_story_sim.py's own avg_visits_from()) is not
+    // the same as an avgVisits of 0, and sorting it as 0 shoved every one
+    // of those 29 items to the very front of each column/list, ahead of
+    // genuinely first-visit items like Water. Unknown sorts LAST instead.
+    byDepth[d].sort((a,b) => (a.avgVisits ?? Infinity) - (b.avgVisits ?? Infinity));
     byDepth[d].forEach((it, i) => {
       it.x = PAD + Number(d) * COL_W;
       it.y = PAD + i * ROW_H;
@@ -1989,6 +2050,12 @@ const DATA = /*__STORY_DATA_START__*/{
   items.forEach(it => {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.setAttribute("transform", `translate(${it.x},${it.y})`);
+    if (it.keyTier > 0) {
+      const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      ring.setAttribute("r", R + 4);
+      ring.setAttribute("class", `key-ring key-t${it.keyTier}`);
+      g.appendChild(ring);
+    }
     const circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circ.setAttribute("r", R);
     circ.setAttribute("class", "node-circ unrevealed");
@@ -2008,7 +2075,8 @@ const DATA = /*__STORY_DATA_START__*/{
   });
 
   // ---- mission state ----------------------------------------------------
-  const DEFAULT_ORDER = items.slice().sort((a,b) => (a.avgVisits||0) - (b.avgVisits||0))
+  // Same ?? Infinity fix as the column sort above -- see its own comment.
+  const DEFAULT_ORDER = items.slice().sort((a,b) => (a.avgVisits ?? Infinity) - (b.avgVisits ?? Infinity))
     .filter(it => it.tier !== "CAPSTONE").map(it => it.name);
   let order = DEFAULT_ORDER.slice();
   let cursor = 0; // number of missions "applied" so far
@@ -2134,9 +2202,11 @@ const DATA = /*__STORY_DATA_START__*/{
     if (!selected) { dp.innerHTML = '<span style="color:var(--mute)">Click a node in the graph for details.</span>'; }
     else {
       const chain = Array.from(closureOf(name));
+      const keyLabel = ["no downstream reach", "minor keystone (T1)", "load-bearing keystone (T2)", "foundational keystone (T3)"][it.keyTier];
       dp.innerHTML = `<b>${it.emoji} ${it.name}</b> — ${it.stations.join(", ")}, ${it.points}pt, avgVisits=${it.avgVisits != null ? it.avgVisits.toFixed(1) : "?"}<br>
         <span class="rec">${it.recipe}</span><br>
-        ${chain.length ? `Depends on ${chain.length} item${chain.length===1?"":"s"}: ${chain.join(", ")}` : "No item-level dependencies (built directly from elements)."}`;
+        ${chain.length ? `Depends on ${chain.length} item${chain.length===1?"":"s"}: ${chain.join(", ")}` : "No item-level dependencies (built directly from elements)."}<br>
+        <b>${it.keyReach}</b> item${it.keyReach===1?"":"s"} are built on top of this, directly or through a chain — ${keyLabel}.`;
     }
     render();
   }
@@ -2187,6 +2257,25 @@ const DATA = /*__STORY_DATA_START__*/{
     };
     reader.readAsText(file);
     e.target.value = "";
+  });
+
+  (function renderKeyLegend(){
+    const tiers = [
+      { t: 3, label: "Foundational", desc: "raw material, feeds 20+ items" },
+      { t: 2, label: "Load-bearing", desc: "solid component, feeds 5-19 items" },
+      { t: 1, label: "Minor", desc: "feeds 1-4 items" },
+    ];
+    document.getElementById("keyLegend").innerHTML = tiers.map(({ t, label, desc }) => {
+      const count = items.filter(it => it.keyTier === t).length;
+      return `<div class="key-legend-row">
+        <span class="key-swatch key-t${t}"></span>
+        <span><span class="lbl">${label}</span><span class="desc">${desc}</span></span>
+        <span class="cnt">${count}</span>
+      </div>`;
+    }).join("");
+  })();
+  document.getElementById("keyToggle").addEventListener("change", (e) => {
+    document.getElementById("graphPane").classList.toggle("hide-keystones", !e.target.checked);
   });
 
   rebuildAddSelect();

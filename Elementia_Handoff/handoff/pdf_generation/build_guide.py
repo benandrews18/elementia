@@ -38,7 +38,7 @@ CONTENT_VERSION = "2026.08.16"
 # into the header string, which is how the guide came to say "TAKE 3" while
 # the digital game and every simulation used 5 -- keep them here so the
 # printed sheet can never silently drift from the real rules again.
-TAKE = 5              # dice rolls per station visit
+TAKE = 6              # dice rolls per station visit
 MAX_VISITS = 15       # station visits per session
 # No per-element carry cap: removed 2026-07-29, elements are uncapped.
 
