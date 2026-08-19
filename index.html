@@ -2895,10 +2895,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="setting-row">
       <span class="setting-ico">🐭</span>
       <span class="setting-body">
-        <span class="setting-label">Guided intro</span>
-        <span class="setting-sub">Professor Mouse walks a brand-new run through its first two rolls. Plays once, ever.</span>
+        <span class="setting-label">Tutorial tips</span>
+        <span class="setting-sub">Professor Mouse points out new mechanics (Crafting, Convert, and more) the first time they come up. Each tip plays once, ever.</span>
       </span>
-      <input type="checkbox" id="setGuidedTutorial" class="switch" aria-label="Enable guided intro">
+      <input type="checkbox" id="setGuidedTutorial" class="switch" aria-label="Enable tutorial tips">
     </div>
 
     <div class="btnrow">
@@ -4612,12 +4612,6 @@ function mustStartAtOcean(){
 function chooseMode(mode){
   state.mode = mode; save();
   applyVisitLimit();
-  // The guided first-rolls intro (see state.guidedActive's own comment)
-  // never applies to Zen -- a true, ungated sandbox has nothing
-  // progressive left to demonstrate -- and only ever plays once per
-  // PLAYER (prefs.guidedTutorialSeen, not state), regardless of how many
-  // runs/resets follow.
-  state.guidedActive = mode !== "zen" && prefs.guidedTutorialEnabled && !prefs.guidedTutorialSeen;
   closeOverlay("modeOverlay");
   render();
   // Lands the player on The Ocean's preview card at the end of the scroll
@@ -5285,17 +5279,18 @@ let codexReturnScreen = null;
 // flushPendingReveal().
 let pendingRevealNames = null, pendingRevealStation = null;
 let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = false, itemRevealDismissTimer = null;
-// guidedTutorialEnabled/guidedTutorialSeen: the guided first-rolls intro
-// (see state.guidedActive) is meant to play exactly once per PLAYER, not
-// once per run -- these two live in prefs (persisted independently of
-// any save/reset, see loadAll()) rather than state for exactly that
-// reason. Enabled defaults on; a player can turn it off in Settings
-// before it's ever played (or mid-sequence, which just stops any further
-// guided beats for the rest of that run) -- Seen flips true once the
-// sequence actually finishes, so it never auto-plays again afterward
-// even with the setting left on.
+// guidedTutorialEnabled/tutorialHintsSeen: Professor Mouse's organic
+// feature call-outs (see showTutorialHintOnce()) -- each one fires the
+// first time its own real precondition comes up in actual play (a
+// craftable item appears, the player holds 3+ of an element, a first
+// craft, a first Convert, ...), not on any scripted visit. Both live in
+// prefs (persisted independently of any save/reset, see loadAll())
+// rather than state, since "have I seen this before" is a per-PLAYER
+// question, not a per-run one. Enabled defaults on; tutorialHintsSeen
+// collects the ids of hints already shown so none of them ever repeat,
+// even across a reset or a brand new run.
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true,
-  guidedTutorialEnabled:true, guidedTutorialSeen:false};
+  guidedTutorialEnabled:true, tutorialHintsSeen:[]};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -5396,23 +5391,6 @@ function freshState(){
     quests: {},       // {[questId]: {taken, completed}} -- see QUESTS/takeQuest()/
                        // checkQuestCompletion(). Hard Mode only; absent entries just read as
                        // "not taken yet" everywhere they're checked.
-    // Guided first-rolls intro (see GUIDED_TARGET1/computeGuidedTarget2()/
-    // doRoll()'s own forced-roll override) -- rigs a brand-new player's
-    // first two station rolls toward a guaranteed "craft this" moment,
-    // walks them to a second station to demonstrate Convert, then goes
-    // quiet until their first Marketplace visit. guidedActive is computed
-    // once mode is chosen (see chooseMode()) and flips back to false the
-    // moment the sequence finishes or is turned off in Settings; visits
-    // 1 vs 2 (already persisted) is what distinguishes the two rigged
-    // rolls, so nothing extra is needed to resume correctly after a
-    // reload mid-sequence.
-    guidedActive: false,
-    guidedBankEl: null,  // element banked 3x at the first station, spent via Convert at the
-                          // second -- null if the first station's own target needed all 3
-                          // spare dice for itself (see GUIDED_TARGET1).
-    guidedTarget1: null, // item name crafted at the first guided station
-    guidedTarget2: null, // {name, rollSymbols, needConvert} computed once the second guided
-                          // station is entered (see computeGuidedTarget2())
   };
 }
 
@@ -7448,9 +7426,28 @@ function hideMouseTip(){
   el.setAttribute("aria-hidden", "true");
 }
 function showMouseTipOnce(id, pose, html){
-  if (mouseTipsShown.has(id)) return;
+  if (mouseTipsShown.has(id)) return false;
   mouseTipsShown.add(id);
   showMouseTip(pose, html);
+  return true;
+}
+/* Same one-shot idea as showMouseTipOnce(), but "shown before" persists in
+   prefs (tutorialHintsSeen) rather than the per-RUN mouseTipsShown Set --
+   for organic feature call-outs (see maybeShowFirstVisitHint()) that
+   should only ever play once across a player's whole relationship with
+   the game, not once per run. Returns true/false same as
+   showMouseTipOnce() so a caller can chain "try this, else try that"
+   attempts and stop at whichever one actually displayed (see its own
+   callers) -- without that, two attempts landing true in the same
+   synchronous call would both mark themselves seen while only the
+   second's bubble ever actually painted. */
+function showTutorialHintOnce(id, pose, html){
+  if (prefs.guidedTutorialEnabled === false) return false;
+  if (prefs.tutorialHintsSeen.includes(id)) return false;
+  prefs.tutorialHintsSeen.push(id);
+  savePrefs();
+  showMouseTip(pose, html);
+  return true;
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
   if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
@@ -7470,45 +7467,33 @@ document.addEventListener("click", ev => {
   if (!ev.target.closest("#mouseTip")) hideMouseTip();
 }, true);
 
-/* Guides a brand-new run's very first station visit only (state.visits
-   === 1) -- "roll the dice" before this visit's roll, then "tap again to
-   head out" once it's done -- so a first-timer's first couple of taps
-   have somewhere obvious to land, without turning into the full opt-in
-   "How to Play" walkthrough. Professor Mouse's own speech bubble is the
-   ONLY thing that says this now (see showMouseTipOnce()) -- this used to
-   also pop a separate small #hint tooltip pointed at the hub button with
-   its own near-duplicate wording, which just meant the same instruction
-   said twice in two different visual styles at once. Naturally stops once
-   they leave (current becomes null) or the visit count moves past 1;
-   showMouseTipOnce()'s own per-id one-shot guard is what makes this safe
-   to call from every render() (see below) without re-popping a tip the
-   player already dismissed. */
+/* Guides a brand-new run's very first station visit (state.visits === 1)
+   -- "roll the dice" before this visit's roll, then "tap again to head
+   out" once it's done -- so a first-timer's first couple of taps have
+   somewhere obvious to land, without turning into the full opt-in "How
+   to Play" walkthrough. Every render() while standing at a station (see
+   below) runs through this, in order, stopping at the first tip that
+   actually displays -- showMouseTipOnce()/showTutorialHintOnce() both
+   return false for an id already shown, so a later attempt only ever
+   gets a turn once an earlier one is no longer eligible.
+
+   Past the visit-1 greeting, the rest are ORGANIC feature call-outs, not
+   scripted to any particular visit: each one fires the first time its
+   own real precondition turns up in actual play (a craftable item
+   appears, the player's holding 3+ of some element, ...), wherever and
+   whenever that happens to be -- no rigged dice behind any of it. */
 function maybeShowFirstVisitHint(){
   if (current === null || openPanelName()) return;
-  if (state.visits === 1){
-    if (state.rolledHere){
-      // guidedTarget1 is set by guidedForcedRoll() (called from doRoll())
-      // as a side effect of the very roll that just happened, so it's
-      // already populated by the time rolledHere flips true here.
-      showMouseTipOnce("afterroll", 12, state.guidedActive && state.guidedTarget1
-        ? `Nice roll! See ${esc(state.guidedTarget1)} down there? Its Craft button just turned green — that means you've got everything it needs. Craft it, then tap the button again when you're ready to head to a new station.`
-        : "Nice work! Tap the button again when you're ready to head out.");
-    } else {
-      showMouseTipOnce("firstroll", 3, state.guidedActive
-        ? "You made it! Tap the big button down there to roll the dice and see what elements you find."
-        : "You made it! Tap the big button down there to roll your first dice.");
-    }
+  if (state.visits === 1 && !state.rolledHere){
+    showMouseTipOnce("firstroll", 3, "You made it! Tap the big button down there to roll your first dice.");
     return;
   }
-  // The guided intro's second station -- only ever reached with
-  // guidedActive true (see goStation()'s own visits===2 branch, which is
-  // what populates guidedTarget2 in the first place).
-  if (state.visits === 2 && state.guidedActive && state.rolledHere && state.guidedTarget2){
-    const t2 = state.guidedTarget2;
-    showMouseTipOnce("guidedafterroll2", 2, t2.needConvert
-      ? `You're close, but ${esc(t2.name)} also needs ${esc(ELEMENT_NAMES[t2.needConvert] || t2.needConvert)} — and you don't have any... except you're still holding 3 spare ${esc(ELEMENT_NAMES[state.guidedBankEl] || state.guidedBankEl)} from before! Tap the Convert button (🔄), trade those in for ${esc(ELEMENT_NAMES[t2.needConvert] || t2.needConvert)}, then come back and craft ${esc(t2.name)}.`
-      : `You've got everything ${esc(t2.name)} needs — craft it below! (See that Convert button 🔄? Anytime you've got 3+ of one element, you can trade it in for something else you need.)`);
-  }
+  if (!state.rolledHere) return; // nothing below applies before this visit's own roll
+  if (state.visits === 1 && showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.")) return;
+  if (entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e))
+      && showTutorialHintOnce("cancraft", 9, "See a green Craft button below? That means you've got everything that item needs — tap it to build one!")) return;
+  if (Object.values(state.elements).some(n => n >= 3)
+      && showTutorialHintOnce("canconvert", 2, "Anytime you've got 3 or more of one element, tap Convert (🔄) to trade them in for something else you need.")) return;
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -7527,16 +7512,6 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
-  if (state.visits === 2){
-    // The guided intro's second station is genuinely the player's own
-    // pick (see GUIDED_TARGET1's own comment) -- compute its target the
-    // moment they actually arrive, not before, since there was no way to
-    // know which station this would be until now.
-    if (state.guidedActive) state.guidedTarget2 = computeGuidedTarget2(name, state.guidedBankEl);
-    showMouseTipOnce("secondstation", 9, state.guidedActive
-      ? "A whole new station! Let's roll again and see what we get here."
-      : "A whole new station! Let's see what's here.");
-  }
   const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
 
@@ -7583,7 +7558,6 @@ function goStation(name){
   if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
-  const leftFirstGuidedStation = state.guidedActive && state.visits === 1 && current !== null;
   if (current){ state.priorStation = state.lastStation; state.lastStation = current; }
   screen = "map"; current = null; state.lastRoll = null; selectedMapStation = null;
   save(); render(false);
@@ -7595,12 +7569,6 @@ function goMap(){
   else window.scrollTo({top:0, behavior:"instant"});
   // Surface the wrap-up once the last visit is done and they've come back.
   if (sessionOver() && !state.ended){ state.ended = true; save(); showSummary(); }
-  // Fires regardless of whether they actually crafted the first target --
-  // this is guidance, not a gate (see the guided intro's own top comment
-  // on state.guidedActive).
-  if (leftFirstGuidedStation){
-    showMouseTipOnce("guidedpickstation2", 7, "Now pick any new station on the map and let's see what's there!");
-  }
 }
 
 /* The mini-game's own score (0-1) sets how many dice this roll gets,
@@ -7633,14 +7601,8 @@ function launchMinigame(){
   // an explicit tap to roll -- same "Roll 🎲 x N" hub badge the minigame
   // path hands off to (see triggerRoll()), just reached directly instead
   // of via a results screen, using whatever TAKE (Dice rolls per visit)
-  // is currently configured. Also skipped for either of the guided
-  // intro's own two rigged visits, regardless of the minigames setting --
-  // a variable minigame score would mean a variable dice COUNT
-  // (minigameDiceFor()), which guidedForcedRoll()'s fixed-length arrays
-  // can't substitute into cleanly; a flat TAKE-dice grant keeps the
-  // rigged outcome fully deterministic.
-  const guidedVisit = state.guidedActive && (state.visits === 1 || state.visits === 2);
-  if (!run || !prefs.minigamesEnabled || guidedVisit){
+  // is currently configured.
+  if (!run || !prefs.minigamesEnabled){
     state.pendingRoll = TAKE;
     save();
     render();
@@ -7787,123 +7749,13 @@ document.getElementById("tourArcadeBtn").addEventListener("click", () => {
   openArcade();
 });
 
-/* ---------------------------------------------- guided first rolls --- */
-/* Precomputed offline (a real search over every station's dice pool and
-   shop, not a guess) for each of the 8 possible FIRST stations -- Hard
-   Mode always starts at The Ocean (see mustStartAtOcean()), but Classic
-   dropped its own forced start, so a Classic player can land the guided
-   intro anywhere. For each: the simplest item fully craftable from that
-   station's own dice alone (the "the Craft button just turned green"
-   moment), and which of that station's OTHER dice faces to bank 3-of
-   toward a Convert demonstration at whatever second station the player
-   picks next -- chosen to maximize how many of the other 7 stations
-   actually have a good Convert target waiting (see
-   computeGuidedTarget2()). A few stations (Greenhouse, The City) have no
-   simple 2-element item, so their target needs all 3 of TAKE's spare
-   dice for itself -- bank:null there, and the sequence just skips the
-   Convert demo for that particular playthrough (still narrated, just not
-   forced live -- see the "no bank" branches below). */
-const GUIDED_TARGET1 = {
-  "The Ocean":         {item:"Water",      els:["H","O"],        bank:"Si"},
-  "The Power Plant":   {item:"Wire",       els:["Cu","Al"],      bank:"Si"},
-  "Greenhouse":        {item:"Fertilizer", els:["N","P","K"],    bank:null},
-  "Deep Mine":         {item:"Steel",      els:["Fe","C"],       bank:"Ni"},
-  "Old Growth Forest": {item:"Sand",       els:["Si","O"],       bank:"Al"},
-  "The Bakery":        {item:"Water",      els:["H","O"],        bank:"P"},
-  "The City":          {item:"Clay",       els:["Al","Si","Mg"], bank:null},
-  "The Observatory":   {item:"Magnet",     els:["Fe","Ni"],      bank:"Al"},
-};
-/* Fills TAKE(5) dice from a short list of needed elements by cycling
-   through them (1 each, then repeat) -- keeps every rigged roll landing
-   only on elements the guided target actually uses, rather than wasting
-   slots on unrelated faces. */
-function guidedPadRoll(symbols){
-  const out = [];
-  for (let i = 0; i < TAKE; i++) out.push(symbols[i % symbols.length]);
-  return out;
-}
-/* The second guided station's own target -- found live (not
-   precomputed, since the player's choice of second station is genuinely
-   free) by searching its shop for the simplest all-element recipe
-   missing EXACTLY one ingredient from that station's own dice, where the
-   missing one isn't bankEl (spending 1 of the 3 already-banked directly
-   would skip Convert entirely, not demonstrate it). Falls back to any
-   item fully craftable from the station's own dice alone (no Convert
-   needed) if no such candidate exists, or if bankEl is null -- still a
-   real second "roll then craft" beat either way, just without forcing a
-   live Convert (see GUIDED_TARGET1's own comment). */
-function computeGuidedTarget2(stationName, bankEl){
-  const dice = sortedDice(STATION_BY_NAME[stationName]);
-  const simple = entriesAt(stationName).filter(e => {
-    if (e.tier === "CAPSTONE" || !e.reqs.length || !e.reqs.every(r => r.kind === "element")) return false;
-    const syms = e.reqs.map(r => r.name);
-    return new Set(syms).size === syms.length && syms.length <= 3;
-  });
-  if (bankEl){
-    let best = null;
-    for (const e of simple){
-      const syms = e.reqs.map(r => r.name);
-      const missing = syms.filter(sym => !dice.includes(sym));
-      if (missing.length === 1 && missing[0] !== bankEl && (!best || e.points < best.entry.points)){
-        best = {entry: e, have: syms.filter(sym => dice.includes(sym)), need: missing[0]};
-      }
-    }
-    if (best) return {name: best.entry.name, rollSymbols: guidedPadRoll(best.have), needConvert: best.need};
-  }
-  let fallback = null;
-  for (const e of simple){
-    const syms = e.reqs.map(r => r.name);
-    if (syms.every(sym => dice.includes(sym)) && (!fallback || e.points < fallback.entry.points)){
-      fallback = {entry: e, have: syms};
-    }
-  }
-  return fallback ? {name: fallback.entry.name, rollSymbols: guidedPadRoll(fallback.have), needConvert: null} : null;
-}
-/* What doRoll() should force this roll to produce, or null for an
-   ordinary random roll -- visit 1 is always the first guided station
-   (GUIDED_TARGET1, keyed by whichever station that turns out to be, The
-   Ocean in Hard Mode); visit 2 is state.guidedTarget2, computed the
-   moment that second station was entered (see goStation()). Both stop
-   applying the instant state.guidedActive itself does (sequence
-   finished, or turned off in Settings mid-run). */
-function guidedForcedRoll(){
-  if (!state.guidedActive || !current) return null;
-  if (state.visits === 1){
-    const t1 = GUIDED_TARGET1[current];
-    if (!t1) return null;
-    const bankCount = t1.bank ? Math.min(3, TAKE - t1.els.length) : 0;
-    const roll = [...t1.els];
-    for (let i = 0; i < bankCount; i++) roll.push(t1.bank);
-    state.guidedTarget1 = t1.item;
-    state.guidedBankEl = bankCount >= 3 ? t1.bank : null;
-    // roll (target elements + however many got banked, 0 or 3) is rarely
-    // exactly TAKE dice long -- guidedPadRoll() cycles it the rest of the
-    // way regardless, so this stays correct for any TAKE (Settings >
-    // Dice rolls per visit changes this at runtime, not just the
-    // build-time default).
-    return guidedPadRoll(roll);
-  }
-  if (state.visits === 2 && state.guidedTarget2){
-    return state.guidedTarget2.rollSymbols;
-  }
-  return null;
-}
-
 function doRoll(rollCount){
   if (state.rolledHere) return;
   const s = STATION_BY_NAME[current], out = [];
   const dice = sortedDice(s);
-  // guidedForcedRoll() may set/consult state.guidedTarget1/guidedBankEl
-  // as a side effect (visit 1 only) -- called before n is settled so the
-  // rest of this function doesn't need to know the guided intro exists
-  // at all beyond this one substitution.
-  const forced = guidedForcedRoll();
   const n = rollCount == null ? TAKE : rollCount;
   for (let i = 0; i < n; i++){
-    // A forced symbol still gets a real face number (its actual position
-    // in this station's own die), same lastRoll shape the UI already
-    // expects -- it just skips the random pick to get there.
-    const sym = (forced && forced[i]) || dice[Math.floor(Math.random() * 6)];
+    const sym = dice[Math.floor(Math.random() * 6)];
     const face = dice.indexOf(sym) + 1;
     state.elements[sym] = count(sym) + 1;
     out.push({face, sym});
@@ -8284,12 +8136,13 @@ document.getElementById("screen").addEventListener("click", ev => {
         if (entry.tier === "CAPSTONE") celebrate(entry);
         else showCardPop(entry);
       }
-      // The guided intro's second station climax -- crafting its target
-      // is the last "loud" beat before the sequence goes quiet until the
-      // first Marketplace visit (see openMarket()).
-      if (state.guidedActive && state.guidedTarget2 && entry.name === state.guidedTarget2.name){
-        showMouseTipOnce("guidedcraft2", 3, `Nice! You just built ${esc(entry.name)}. Now tap the Item Reference button (📖 in the bottom bar) to see exactly how it's put together.`);
-      }
+      // Organic -- craft() only ever succeeds for an item not already
+      // owned, so this fires on whatever happens to be the player's
+      // actual first-ever craft, not a scripted target (see
+      // showTutorialHintOnce(), which handles the real one-time-ever
+      // gating -- this runs after every craft, harmlessly, since it's
+      // already a no-op past the first time).
+      showTutorialHintOnce("firstcraft", 3, `Nice! You just built ${esc(entry.name)}. Tap the Item Reference button (📖 in the bottom bar) to see exactly how it's put together.`);
     }
     return;
   }
@@ -8944,23 +8797,16 @@ document.getElementById("marketArc").addEventListener("click", ev => {
 function openMarket(){
   screen = "market";
   render(true);
-  // The guided intro's very last beat -- fires once, on the player's
-  // first-ever Marketplace visit, then goes quiet for good: guidedActive
-  // drops (stopping every other guided hook, though visit-1/2 rigging
-  // has always long since aged out by now anyway) and
-  // prefs.guidedTutorialSeen persists past this run, so the whole
-  // sequence never auto-plays again even with the Settings toggle left
-  // on. Quests are Hard Mode only (see QUESTS' own comment), so Classic
-  // hears about Jobs alone.
-  if (state.guidedActive){
-    showMouseTipOnce("market", 10, state.mode === "hard"
-      ? "This is the Marketplace! Two more ways to earn points here: take Jobs for specific items you build, or start Quests toward big keystone goals -- both pay bonus points once you deliver. Have a look around!"
-      : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!");
-    state.guidedActive = false;
-    prefs.guidedTutorialSeen = true;
-    savePrefs();
-  } else {
-    showMouseTipOnce("market", 10, "This is the Marketplace — jobs, trades, and collections all live here.");
+  // Organic, one-time-ever: the first-ever Marketplace visit gets the
+  // full explanation (see showTutorialHintOnce()); every visit after
+  // that just gets a short per-run reminder instead (showMouseTipOnce(),
+  // same wording every new run). Quests are Hard Mode only (see QUESTS'
+  // own comment), so Classic hears about Jobs alone.
+  const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
+    ? "This is the Marketplace! Two more ways to earn points here: take Jobs for specific items you build, or start Quests toward big keystone goals -- both pay bonus points once you deliver. Have a look around!"
+    : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!");
+  if (!shownFirstEver){
+    showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.");
   }
 }
 
@@ -9522,13 +9368,10 @@ document.getElementById("setSave").addEventListener("click", () => {
   }
   prefs.diceCount = Math.max(1, Math.min(10, Math.round(Number(setDiceInput.value)) || DATA.take));
   prefs.minigamesEnabled = setMinigamesBox.checked;
+  // showTutorialHintOnce() itself checks this live, so toggling it off
+  // stops any further tips immediately, mid-run included -- no separate
+  // state to unwind.
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
-  // Turning it off stops any further guided beats for the rest of THIS
-  // run too, not just future ones -- turning it back on deliberately
-  // does NOT retroactively resume it mid-run (the player may already be
-  // well past the two rigged visits by now), it only re-arms eligibility
-  // for the next new game (see chooseMode()).
-  if (!prefs.guidedTutorialEnabled) state.guidedActive = false;
   savePrefs();
   applyVisitLimit();
   applyDiceCount();
@@ -9705,16 +9548,14 @@ document.getElementById("convertPickerGrid").addEventListener("click", ev => {
 document.getElementById("convertPickerClose").addEventListener("click", () => closeOverlay("convertPicker"));
 document.getElementById("convertGo").addEventListener("click", () => {
   if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < 3) return;
-  const wasGuidedConvert = state.guidedActive && state.guidedTarget2 &&
-    convertTo === state.guidedTarget2.needConvert;
   state.elements[convertFrom] = count(convertFrom) - 3;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
   save();
   playConvertAnimation(convertTo);
-  if (wasGuidedConvert){
-    showMouseTipOnce("guidedconverted", 12, `Perfect! Now close this and craft ${esc(state.guidedTarget2.name)}.`);
-  }
+  // Organic -- fires on the player's actual first-ever Convert, whatever
+  // it happens to be (see showTutorialHintOnce()).
+  showTutorialHintOnce("firstconvert", 12, "Nice — that's Convert! Trade 3 of one element for 1 of whatever you actually need, anytime you've got 3 or more of something.");
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
 
@@ -10118,6 +9959,17 @@ window.MINIGAMES = {};
         box-shadow:0 0 10px rgba(255,255,255,.25) inset, 0 2px 6px rgba(10,60,90,.25);
         will-change:transform, opacity;
         box-sizing:border-box;
+        /* border-radius only rounds the PAINT -- the actual hit-test area
+           stays the full square box unless clipped. Bubbles are appended
+           to the DOM in spawn order, so a newer bubble (often still low
+           on screen) sits on top in stacking order; without this, its
+           invisible square CORNERS -- well outside its visible circle --
+           could silently steal a tap aimed at a completely different,
+           older bubble overlapping that corner, which read as "the wrong
+           bubble popped" with no visual explanation why. clip-path makes
+           the hit-test region match the visible circle exactly. */
+        clip-path:circle(50%);
+        -webkit-clip-path:circle(50%);
       }
       .mg-bubble.mg-pop{animation:mg-pop-anim .22s ease-out forwards}
       @keyframes mg-pop-anim{
