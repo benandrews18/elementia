@@ -7505,7 +7505,7 @@ function maybeShowFirstVisitHint(){
   // what populates guidedTarget2 in the first place).
   if (state.visits === 2 && state.guidedActive && state.rolledHere && state.guidedTarget2){
     const t2 = state.guidedTarget2;
-    showMouseTipOnce("guidedafterroll2", 5, t2.needConvert
+    showMouseTipOnce("guidedafterroll2", 2, t2.needConvert
       ? `You're close, but ${esc(t2.name)} also needs ${esc(ELEMENT_NAMES[t2.needConvert] || t2.needConvert)} — and you don't have any... except you're still holding 3 spare ${esc(ELEMENT_NAMES[state.guidedBankEl] || state.guidedBankEl)} from before! Tap the Convert button (🔄), trade those in for ${esc(ELEMENT_NAMES[t2.needConvert] || t2.needConvert)}, then come back and craft ${esc(t2.name)}.`
       : `You've got everything ${esc(t2.name)} needs — craft it below! (See that Convert button 🔄? Anytime you've got 3+ of one element, you can trade it in for something else you need.)`);
   }
@@ -7533,7 +7533,7 @@ function goStation(name){
     // moment they actually arrive, not before, since there was no way to
     // know which station this would be until now.
     if (state.guidedActive) state.guidedTarget2 = computeGuidedTarget2(name, state.guidedBankEl);
-    showMouseTipOnce("secondstation", 5, state.guidedActive
+    showMouseTipOnce("secondstation", 9, state.guidedActive
       ? "A whole new station! Let's roll again and see what we get here."
       : "A whole new station! Let's see what's here.");
   }
@@ -7599,7 +7599,7 @@ function goMap(){
   // this is guidance, not a gate (see the guided intro's own top comment
   // on state.guidedActive).
   if (leftFirstGuidedStation){
-    showMouseTipOnce("guidedpickstation2", 5, "Now pick any new station on the map and let's see what's there!");
+    showMouseTipOnce("guidedpickstation2", 7, "Now pick any new station on the map and let's see what's there!");
   }
 }
 
@@ -8288,7 +8288,7 @@ document.getElementById("screen").addEventListener("click", ev => {
       // is the last "loud" beat before the sequence goes quiet until the
       // first Marketplace visit (see openMarket()).
       if (state.guidedActive && state.guidedTarget2 && entry.name === state.guidedTarget2.name){
-        showMouseTipOnce("guidedcraft2", 5, `Nice! You just built ${esc(entry.name)}. Now tap the Item Reference button (📖 in the bottom bar) to see exactly how it's put together.`);
+        showMouseTipOnce("guidedcraft2", 3, `Nice! You just built ${esc(entry.name)}. Now tap the Item Reference button (📖 in the bottom bar) to see exactly how it's put together.`);
       }
     }
     return;
@@ -9713,7 +9713,7 @@ document.getElementById("convertGo").addEventListener("click", () => {
   save();
   playConvertAnimation(convertTo);
   if (wasGuidedConvert){
-    showMouseTipOnce("guidedconverted", 5, `Perfect! Now close this and craft ${esc(state.guidedTarget2.name)}.`);
+    showMouseTipOnce("guidedconverted", 12, `Perfect! Now close this and craft ${esc(state.guidedTarget2.name)}.`);
   }
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
@@ -9889,17 +9889,14 @@ function renderTutElementsGrid(){
 }
 
 const TUT_COACH_STEPS = [
-  { sel: "#hubHome", text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
-  { sel: "#hubJobs", text: "This is the Job Board. Take on jobs for bonus points, then turn them in once you've made what they ask for." },
-  { sel: "#hubInv", text: "This is your Inventory -- everything you've collected and crafted so far, all in one place." },
-  { sel: "#hubCodex", text: "This is Item Reference. Look up any item's recipe -- even ones you haven't discovered yet." },
-  { sel: "#hubSettings", text: "This is Settings. Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
-  { sel: null, text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
+  { sel: "#hubHome", pose: 10, text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
+  { sel: "#hubJobs", pose: 2, text: "This is the Job Board. Take on jobs for bonus points, then turn them in once you've made what they ask for." },
+  { sel: "#hubInv", pose: 9, text: "This is your Inventory -- everything you've collected and crafted so far, all in one place." },
+  { sel: "#hubCodex", pose: 1, text: "This is Item Reference. Look up any item's recipe -- even ones you haven't discovered yet." },
+  { sel: "#hubSettings", pose: 7, text: "This is Settings. Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
+  { sel: null, pose: 3, text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
 ];
 let tutCoachIdx = 0;
-// Same pose the mode picker greets with -- one consistent "Professor Mouse
-// is teaching you something" face for the whole walkthrough.
-const TUT_COACH_MOUSE_POSE = 2;
 
 function positionTutCoach(){
   const spot = document.getElementById("tutCoachSpot");
@@ -9927,7 +9924,7 @@ function positionTutCoach(){
    shape once it's done). */
 function renderTutCoach(){
   const step = TUT_COACH_STEPS[tutCoachIdx];
-  showMouseTip(TUT_COACH_MOUSE_POSE, step.text);
+  showMouseTip(step.pose, step.text);
   document.getElementById("mouseTipClose").hidden = true;
   document.getElementById("mouseTipTour").hidden = false;
   document.getElementById("mouseTipStep").textContent = `${tutCoachIdx + 1} / ${TUT_COACH_STEPS.length}`;
