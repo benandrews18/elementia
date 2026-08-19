@@ -662,12 +662,11 @@ body[data-screen="market"] #trackedPill{display:none}
    an offer's own accept action lives INSIDE the card instead, as the
    checkmark half of .jc-actions. */
 .mp-options{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px}
-/* Shown once this visit's one job pick is spent -- see
-   state.jobBoard.taken/takeJob(). Offers stay visible (so there's still
-   something to look at/plan around) but read as inert: dimmed and
-   click-through disabled on the accept icon (grayscale reinforces "not
-   right now" beyond just opacity). Clears on the next visit, even to the
-   same station, once a fresh board is rolled. */
+/* Shown when the Job Board is either locked (Hard Mode's quest/station
+   gate, see jobBoardUnlocked()) or the player's at MAX_ACTIVE_JOBS --
+   offers stay visible (so there's still something to look at/plan around)
+   but read as inert: dimmed and click-through disabled on the accept icon
+   (grayscale reinforces "not right now" beyond just opacity). */
 .mp-options.locked{opacity:.5; filter:grayscale(.4)}
 .mp-options.locked .jc-accept{cursor:not-allowed}
 .job-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; margin-bottom:22px}
@@ -678,11 +677,6 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; flex-direction:column; overflow:visible; justify-content:center;
 }
 .job-card.turned-in{opacity:.6}
-/* The one board card per station guaranteed to be craftable AT that
-   station (see pickStationJobOptions()'s `special` card) -- a thick
-   station-colored border, --suit set inline same as .job-suit-badge,
-   distinguishes it from the other, fully-random cards at a glance. */
-.job-card.special{border-width:5px; border-color:var(--suit, var(--gold))}
 .job-badge{
   position:absolute; top:-15px; left:-8px; width:38px; height:38px; border-radius:50%;
   background:var(--gold-soft); border:2.5px solid var(--gold); color:#fff;
@@ -5144,19 +5138,6 @@ function shuffle(arr){
   return arr;
 }
 
-/* The board offered AT a given station -- up to 4 cards, always exactly
-   one item each, drawn from whatever's still eligible and not already
-   claimed by an earlier job this session. Cards are completely random
-   EXCEPT the first (top-left in the 2-column grid, see .mp-options) --
-   that one is guaranteed to be an item actually sold/craftable at THIS
-   station (entry.station === station), so every board has at least one
-   offer that visibly belongs here; the rest are an unweighted random
-   slice of the whole eligible pool. Called once per station ARRIVAL (see
-   goStation()), not on every board-panel open, so the same cards stay put
-   for the whole stay -- see the caller. Each card is {items, special} --
-   items is always a 1-element array (jobDone()/jobBonus() still just
-   .every()/.reduce() over it) -- special marks the guaranteed-local card
-   so jobBoardHTML() can give it its thick station-colored border. */
 /* Progressive job depth -- the pool is gated to items whose AvgVisits sits
    at or below a ceiling that grows with state.visits, so a fresh session
    sees only the shallowest "big items" and the full eligible pool only
@@ -5169,53 +5150,83 @@ const JOB_DEPTH_GROWTH = 0.8;
 function jobDepthCeiling(){
   return JOB_DEPTH_BASE + state.visits * JOB_DEPTH_GROWTH;
 }
-function pickStationJobOptions(station){
+/* Draws up to n fresh names for the board -- eligible, not already held as
+   a job, not already sitting in one of the board's OTHER slots (exclude),
+   and depth-gated same as ever. Shared by topUpJobBoard() (filling gaps
+   left by taken jobs) and rotateJobBoard() (periodic churn), so a single
+   partially-refreshed board never offers the same item twice. */
+function drawJobBoardItems(n, exclude){
   const taken = new Set(state.jobs.flatMap(j => j.items));
-  const eligible = jobEligibleItems().filter(n => !taken.has(n));
+  const excludeSet = new Set(exclude);
+  const eligible = jobEligibleItems().filter(name => !taken.has(name) && !excludeSet.has(name));
   const ceiling = jobDepthCeiling();
   // Items with no AvgVisits data (unreachable in the simulation, e.g. a
   // capstone gated behind a DNF dependency) must NOT be treated as shallow --
   // ?? 0 previously let them bypass the depth gate at visit 0.
-  let gated = eligible.filter(n => (DATA.avgVisits[n] ?? Infinity) <= ceiling);
+  let gated = eligible.filter(name => (DATA.avgVisits[name] ?? Infinity) <= ceiling);
   // Extreme early game (visit 0-1) can gate out literally everything --
-  // fall back to the single shallowest eligible item rather than an empty
-  // board.
+  // fall back to the single shallowest eligible item rather than nothing.
   if (!gated.length && eligible.length){
     gated = [eligible.slice().sort((a, b) => (DATA.avgVisits[a] ?? Infinity) - (DATA.avgVisits[b] ?? Infinity))[0]];
   }
-  const pool = shuffle(gated);
-  const cards = [];
-
-  const localIdx = pool.findIndex(n => {
-    const e = ENTRIES.find(x => x.name === n);
-    return e && e.station === station;
+  return shuffle(gated).slice(0, n);
+}
+/* Fills state.jobBoard back up to 4 -- called right after a job is taken
+   (so the board never sits at 3 waiting for a station visit) and as the
+   first half of rotateJobBoard() (so a board that's below 4 for any other
+   reason gets caught up before its periodic churn). No-op if already full
+   or if the eligible pool has genuinely run dry. */
+function topUpJobBoard(){
+  if (!state.jobBoard) state.jobBoard = [];
+  if (state.jobBoard.length >= 4) return;
+  drawJobBoardItems(4 - state.jobBoard.length, state.jobBoard).forEach(name => {
+    state.jobBoard.push(name);
+    if (!state.jobBoardUnseen.includes(name)) state.jobBoardUnseen.push(name);
   });
-  if (localIdx !== -1){
-    const [first] = pool.splice(localIdx, 1);
-    cards.push({items:[first], special:true});
-  }
-
-  while (cards.length < 4 && pool.length){
-    cards.push({items:[pool.shift()], special:false});
-  }
-  return cards;
+}
+/* One global board now, not one per station (see goStation()) -- up to 2
+   of its (up to) 4 slots are swapped for something new on every real
+   station visit, so the board keeps moving even for a player who never
+   takes anything. Skipped on the visit that first populates an empty/
+   Hard-Mode-still-locked board -- rotating immediately after a full fill
+   would just reshuffle the same pool for no visible reason. */
+function rotateJobBoard(){
+  if (!jobBoardUnlocked()) return;
+  const wasFull = (state.jobBoard || []).length >= 4;
+  topUpJobBoard();
+  if (!wasFull) return;
+  const n = state.jobBoard.length;
+  const rotateCount = Math.min(2, n);
+  if (!rotateCount) return;
+  const idxs = shuffle([...Array(n).keys()]).slice(0, rotateCount);
+  // Exclude the WHOLE current board, not just the 2 staying slots -- a
+  // rotated slot randomly redrawing its own outgoing item would look like
+  // rotation did nothing.
+  const fresh = drawJobBoardItems(rotateCount, state.jobBoard);
+  // If the pool comes up short, leave whatever slots didn't get a fresh
+  // pick exactly as they were rather than shrinking the board.
+  idxs.forEach((slotIdx, k) => {
+    if (!fresh[k]) return;
+    state.jobBoard[slotIdx] = fresh[k];
+    if (!state.jobBoardUnseen.includes(fresh[k])) state.jobBoardUnseen.push(fresh[k]);
+  });
 }
 /* Taking a job is a commitment -- there's no "un-take" -- so it's pushed
    straight onto state.jobs with no confirm step of its own (the picker
-   button copy is the confirmation). Only removes THIS card from the
-   station's board -- the other (up to) 2 stay put; the board as a whole
-   doesn't refresh until the player actually leaves the station (see
-   goStation()). Held jobs are capped at MAX_ACTIVE_JOBS -- see
-   jobBoardHTML(), which collapses and fades the whole board once the cap
-   is hit so there's nothing left to (mistakenly) tap. */
+   button copy is the confirmation). Immediately backfills the vacated slot
+   (see topUpJobBoard()) so the board stays at 4 rather than waiting on the
+   next station visit's rotation. Held jobs are capped at MAX_ACTIVE_JOBS --
+   see jobBoardHTML(), which collapses and fades the whole board once the
+   cap is hit so there's nothing left to (mistakenly) tap. */
 function takeJob(cardIndex){
   if (!jobBoardUnlocked()) return;
-  if (!state.jobBoard || state.jobBoard.taken || !state.jobBoard.cards[cardIndex]) return;
+  if (!state.jobBoard || !state.jobBoard[cardIndex]) return;
   if (activeJobCount() >= MAX_ACTIVE_JOBS) return;
-  const items = state.jobBoard.cards[cardIndex].items;
-  state.jobs.push({items, turnedIn:false});
-  state.jobBoard.cards.splice(cardIndex, 1);
-  state.jobBoard.taken = true;
+  const name = state.jobBoard[cardIndex];
+  state.jobs.push({items:[name], turnedIn:false});
+  state.jobBoard.splice(cardIndex, 1);
+  state.jobBoardUnseen = state.jobBoardUnseen.filter(n => n !== name);
+  topUpJobBoard();
   // Selecting a job is exactly the moment its items become worth tracking
   // everywhere -- auto-pin each one (Item Reference's pinned section +
   // the topbar) rather than making the player do it by hand. Skip
@@ -5223,7 +5234,7 @@ function takeJob(cardIndex){
   // progress toward something not built yet (see the matching auto-UNpin
   // in craft()), so pre-pinning an already-crafted item would just show
   // up as an already-complete pin with nothing left to do.
-  items.forEach(name => { if (!owns(name) && !isPinned(name)) togglePin(name); });
+  if (!owns(name) && !isPinned(name)) togglePin(name);
   save(); render();
 }
 function jobDone(job){ return job.items.every(owns); }
@@ -5352,9 +5363,11 @@ function freshState(){
     ended: false,      // session summary already shown for this run
     mode: null,        // "zen" | "classic" | "hard", chosen on the welcome screen
     jobs: [],          // taken job cards: [{items:[name] or [name,name], turnedIn}]
-    jobBoard: null,    // {station, cards: [items array, ...], taken} -- this station's own offer
-                       // board, rolled once on arrival (see goStation()), held stable until it's
-                       // left; taken flips true the moment this visit's one job pick is spent
+    jobBoard: [],      // up to 4 available job offers (item names) -- ONE board, shared by
+                       // every station and the Marketplace alike (no more per-station boards).
+                       // See rotateJobBoard()/topUpJobBoard()/takeJob().
+    jobBoardUnseen: [], // subset of jobBoard's names the player hasn't opened the board to see
+                        // yet -- drives the hub's "new offers" badge (see updateHub()).
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // progressive shop reveal's capstone-closure rule (see isRevealed()).
     stationLastSeen: {}, // {stationName: [itemName, ...]} -- the revealed non-capstone shop
@@ -5513,6 +5526,12 @@ function loadAll(){
   try {
     state = raw ? Object.assign(freshState(), JSON.parse(raw)) : freshState();
   } catch(e){ state = freshState(); isNewSession = true; }
+  // Older saves have jobBoard as a per-station {station,cards,seen,taken}
+  // object (Object.assign above blindly overwrote freshState()'s array
+  // default with it) -- discard rather than migrate; a stale in-progress
+  // board isn't worth preserving across this shape change.
+  if (!Array.isArray(state.jobBoard)) state.jobBoard = [];
+  if (!Array.isArray(state.jobBoardUnseen)) state.jobBoardUnseen = [];
   return isNewSession;
 }
 
@@ -6251,7 +6270,7 @@ function jobSuitBadgeHTML(name){
    (see .job-card) -- points badge overhangs the top-left corner, the
    station-suit badge mirrors it overhanging top-right (same treatment,
    opposite corner), "Job Card" label pinned to the top border between
-   them, then the single item itself (see pickStationJobOptions() -- every
+   them, then the single item itself (see drawJobBoardItems() -- every
    job card is exactly one item now). The book/accept action row is a
    separate sibling BELOW the card frame (see jobCardActionsHTML()), not
    padded inside it. */
@@ -6282,11 +6301,10 @@ function jobCardActionsHTML(items, offerIndex, locked){
    the same .job-card-wrap. Shared shape for an active job's card and a
    board offer's card, built by jobCardBodyHTML() above.
 
-   The offer board is per-STATION now (see goStation()/pickStationJobOptions()):
-   state.jobBoard is {station, cards}, rolled once on arrival and held
-   stable for the whole stay, so it only ever shows here while current
-   still matches the station it was rolled for -- nothing is offered from
-   the map screen (current === null), only the player's own held jobs. */
+   The offer board is one global list now (state.jobBoard, an array of up
+   to 4 item names -- see rotateJobBoard()/topUpJobBoard()), shown
+   identically here regardless of screen/station, so it works from the
+   Marketplace as well as the per-station sheet. */
 function jobBoardHTML(){
   // Up to MAX_ACTIVE_JOBS held at once -- every not-yet-turned-in job gets
   // its own card in a grid (same "Take this job" card shape the board
@@ -6337,36 +6355,33 @@ function jobBoardHTML(){
     ? `<details class="job-section" open><summary class="job-board-heading">📜 My Quests</summary><div class="quest-tier">${inProgressQuests.map(questCardHTML).join("")}</div></details>` : "";
 
   // Locked (collapsed, faded, untappable -- see .mp-options.locked) for
-  // any of three reasons: the Hard Mode quest/station gate isn't cleared
-  // yet (see jobBoardUnlocked()), this visit's one pick is already spent
-  // (see state.jobBoard.taken/takeJob()), or the player's already holding
+  // either of two reasons: the Hard Mode quest/station gate isn't cleared
+  // yet (see jobBoardUnlocked()), or the player's already holding
   // MAX_ACTIVE_JOBS jobs and needs to turn one in before taking another.
-  // A fresh visit rolls a fresh board with its own fresh pick either way.
+  // No more "one pick per visit" -- see takeJob()'s own comment.
   const gateOK = jobBoardUnlocked();
   const atCap = activeJobs.length >= MAX_ACTIVE_JOBS;
-  const locked = !gateOK || atCap || !!(state.jobBoard && state.jobBoard.station === current && state.jobBoard.taken);
+  const locked = !gateOK || atCap;
 
-  let boardSection;
-  if (current === null){
-    boardSection = `<p class="empty">🗺️ Job offers are specific to whatever station you're standing in -- visit one to see its board.</p>`;
-  } else {
-    const cards = (state.jobBoard && state.jobBoard.station === current) ? state.jobBoard.cards : [];
-    const st = STATION_BY_NAME[current];
-    const suitColor = st ? DATA.suits[st.suit].color : null;
-    const boardBody = cards.length
-      ? `<div class="mp-options ${locked ? "locked" : ""}">${cards.map((card, i) => `
-          <div class="job-card-wrap">
-            <div class="job-card ${card.special ? "special" : ""}" ${card.special && suitColor ? `style="--suit:${suitColor}"` : ""}>
-              ${jobCardBodyHTML(card.items, jobBonus({items: card.items}))}
-            </div>
-            ${jobCardActionsHTML(card.items, i, locked)}
-          </div>`).join("")}</div>`
-      : `<p class="empty">No more jobs on offer here this visit -- check back next time you stop by.</p>`;
-    const capNote = !gateOK
-      ? `<p class="empty">🔒 The Job Board unlocks once you've completed Quest Tiers 1–2 and visited every station.</p>`
-      : atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
-    boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">Job Board — ${esc(current)}</summary>${capNote}${boardBody}</details>`;
-  }
+  const board = state.jobBoard || [];
+  const boardBody = board.length
+    ? `<div class="mp-options ${locked ? "locked" : ""}">${board.map((name, i) => `
+        <div class="job-card-wrap">
+          <div class="job-card">
+            ${jobCardBodyHTML([name], jobBonus({items: [name]}))}
+          </div>
+          ${jobCardActionsHTML([name], i, locked)}
+        </div>`).join("")}</div>`
+    : `<p class="empty">No jobs on offer right now -- check back after your next station visit.</p>`;
+  const capNote = !gateOK
+    ? `<p class="empty">🔒 The Job Board unlocks once you've completed Quest Tiers 1–2 and visited every station.</p>`
+    : atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
+  // "Available Jobs", not "Job Board" -- the Marketplace's own section
+  // header already says "Job Board" (see marketSectionHTML()'s titles),
+  // and the standing hub sheet's header says "Jobs" (#jobTitle); repeating
+  // either verbatim here would stack two identical headings right on top
+  // of each other.
+  const boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">🎯 Available Jobs</summary>${capNote}${boardBody}</details>`;
 
   // Available offers first, accepted jobs below, completed jobs last --
   // the board is what a player's actively deciding on; My Jobs is a
@@ -6953,12 +6968,12 @@ function updateHub(){
   jobsBtn.setAttribute("aria-disabled", String(zen));
   if (!zen){
     const ready = state.jobs.filter(j => jobDone(j) && !j.turnedIn).length;
-    // New, unseen job offers at the CURRENT station -- a reminder to pop
-    // the board open, separate from (and lower-priority than) actually
-    // being ready to turn something in. Marked seen the moment the board
-    // is opened (see openJobBoard()), not just by visiting.
-    const newOffers = (state.jobBoard && state.jobBoard.station === current && !state.jobBoard.seen)
-      ? state.jobBoard.cards.length : 0;
+    // Unseen offers on the (now global) board -- a reminder to pop it
+    // open, separate from (and lower-priority than) actually being ready
+    // to turn something in. Cleared the moment the board is opened, from
+    // either entry point (see openJobBoard() and the Marketplace nav
+    // click handler).
+    const newOffers = state.jobBoardUnseen.length;
     if (ready > 0) setHubBadge("hubJobs", String(ready), true);
     else if (newOffers > 0) setHubBadge("hubJobs", String(newOffers), false);
     else if (!state.jobs.length) setHubBadge("hubJobs", "!", false);
@@ -7545,12 +7560,10 @@ function goStation(name){
   }
   state.stationLastSeen[name] = nowRevealed;
 
-  // A fresh 3-card board for THIS station, rolled once on arrival -- it
-  // stays put (see takeJob()) for the whole stay and only rerolls the
-  // next time a station is entered (including re-entering this same one
-  // after having left), never just from opening/closing the Jobs panel.
-  // taken:false is this visit's fresh one-job pick (see takeJob()).
-  state.jobBoard = {station: name, cards: pickStationJobOptions(name), seen:false, taken:false};
+  // One global job board now, not per-station -- every real station visit
+  // (arriving here counts) churns up to 2 of its 4 slots. See
+  // rotateJobBoard().
+  rotateJobBoard();
   save(); render(true);
   // The mini-game is the very first thing a player does at a station --
   // launched immediately, before they ever see the shop or roll any dice,
@@ -8795,7 +8808,9 @@ function renderJobBoard(){
   document.getElementById("jobSheetBody").innerHTML = jobBoardHTML();
 }
 function openJobBoard(){
-  if (state.jobBoard) state.jobBoard.seen = true;
+  if (jobBoardUnlocked()) topUpJobBoard();
+  state.jobBoardUnseen = [];
+  save();
   renderJobBoard();
   jobSheet.classList.add("open"); jobScrim.classList.add("open");
   jobSheet.setAttribute("aria-hidden", "false");
@@ -8915,7 +8930,11 @@ document.getElementById("marketArc").addEventListener("click", ev => {
   if (!navBtn || navBtn.disabled) return;
   const target = navBtn.dataset.marketNav;
   marketSection = marketSection === target ? null : target;
-  if (marketSection === "jobs" && state.jobBoard) state.jobBoard.seen = true;
+  if (marketSection === "jobs"){
+    if (jobBoardUnlocked()) topUpJobBoard();
+    state.jobBoardUnseen = [];
+    save();
+  }
   render();
 });
 function openMarket(){
