@@ -5112,7 +5112,11 @@ function jobBoardUnlocked(){
   const allStationsVisited = Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
   if (!allStationsVisited) return false;
   const tier1 = QUESTS.filter(q => q.parent === null);
-  const tier2 = QUESTS.filter(q => tier1.some(t => t.id === q.parent));
+  // q.parent can be an array (AND-join, see QUESTS' own comment) -- none
+  // currently land this shallow, but checking membership rather than
+  // strict equality keeps this correct if that ever changes.
+  const tier2 = QUESTS.filter(q => tier1.some(t =>
+    Array.isArray(q.parent) ? q.parent.includes(t.id) : t.id === q.parent));
   return tier1.concat(tier2).every(q => state.quests[q.id] && state.quests[q.id].completed);
 }
 function jobEligibleItems(){
@@ -9202,7 +9206,14 @@ function collectionsBodyHTML(){
    parent's entire set of children landing on the player all at once.
    gateway:<region> is display-only flavor (a badge), the actual unlock
    is still owning the item itself, same as it already works without
-   any of this. */
+   any of this.
+   parent can also be an ARRAY of ids -- an AND-join, only available once
+   EVERY one of those quests is completed (see questAvailable()). This is
+   how a fork back-merges: 2-3 sibling quests fan out from one parent, and
+   the next single quest waits on all of them rather than just the first
+   to finish. Never surfaced to the player as "tiers" or "requires X and
+   Y" anywhere -- same blurb-only presentation as a single-parent quest,
+   see questCardHTML(). */
 const QUESTS = [
   { id:"tools", item:"Tools", parent:null,
     blurb:"Nearly everything downstream of the Deep Mine and Observatory runs through a set of Tools sooner or later." },
@@ -9224,6 +9235,25 @@ const QUESTS = [
     blurb:"A Building plus a Book is all it takes to open the door to somewhere far stranger than The City." },
   { id:"rocket", item:"Rocket", parent:"alloy", gateway:"Solar System",
     blurb:"Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
+  // The Rocket branch, continued: two real prep builds fork off Rocket in
+  // parallel (neither depends on the other), then back-merge into Star,
+  // which itself forks into two more before a final merge at Space
+  // Station -- the same fan-out/fan-in shape repeated twice. Star's own
+  // recipe genuinely needs a Telescope, and Space Station's genuinely
+  // needs a Satellite Dish, so both merges land on at least one real
+  // recipe dependency, not just theme.
+  { id:"telescope", item:"Telescope", parent:"rocket",
+    blurb:"Glass and Aluminum Alloy, aimed straight up -- the first real look at what a Rocket only gets you closer to." },
+  { id:"satdish", item:"Satellite Dish", parent:"rocket",
+    blurb:"The Space Station's own ears, built long before there's a station to bolt them to." },
+  { id:"star", item:"Star", parent:["telescope","satdish"],
+    blurb:"The same Clock that unlocked every gemstone points a Telescope somewhere new: catch a Star." },
+  { id:"rainbow", item:"Rainbow", parent:"star",
+    blurb:"A Cloud and a Star together -- the sky's whole spectrum, chased down at last." },
+  { id:"solarsystem", item:"Solar System", parent:"star",
+    blurb:"A Star of your own, mapped against everything else out there -- the whole neighborhood, charted." },
+  { id:"spacestation", item:"Space Station", parent:["rainbow","solarsystem"],
+    blurb:"Every light this branch chased down -- the Rainbow's spectrum, the Solar System's map -- comes together the moment a Space Station goes up." },
 ];
 function questBonus(q){ return Math.round((ITEM_POINTS[q.item] || 0) * 0.3); }
 /* Available to accept: its parent (if any) is already completed, and it
@@ -9233,7 +9263,11 @@ function questBonus(q){ return Math.round((ITEM_POINTS[q.item] || 0) * 0.3); }
 function questAvailable(q){
   const st = state.quests[q.id];
   if (st && (st.taken || st.completed)) return false;
-  return q.parent === null || !!(state.quests[q.parent] && state.quests[q.parent].completed);
+  if (q.parent === null) return true;
+  // parent can be a single id or an array (AND-join, see QUESTS' own
+  // comment) -- every one of them has to be completed, not just one.
+  const parents = Array.isArray(q.parent) ? q.parent : [q.parent];
+  return parents.every(pid => state.quests[pid] && state.quests[pid].completed);
 }
 // How many not-yet-taken quests can be "on offer" at once, on top of
 // however many are already taken and in progress -- keeps the reveal to a
