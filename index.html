@@ -468,6 +468,16 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:rotate(var(--ang)) translateY(0) rotate(calc(-1 * var(--ang)));
   opacity:0; pointer-events:none;
 }
+/* Collections, specifically, before the player has earned it -- see
+   renderMarketArc()'s own comment. Same collapse-to-hub-center-and-fade
+   treatment as .retracted above (reusing the same transition already on
+   .market-arc-btn itself), so finishing a first collection and returning
+   to the Marketplace reads as the button springing into its slot, not
+   just appearing. */
+.market-arc-btn.earned-hidden{
+  transform:rotate(var(--ang)) translateY(0) rotate(calc(-1 * var(--ang)));
+  opacity:0; pointer-events:none;
+}
 .market-arc-icon{
   width:66px; height:66px; border-radius:50%;
   display:flex; align-items:center; justify-content:center; font-size:28px;
@@ -5132,18 +5142,25 @@ const JOB_EXTRA_ITEMS = new Set([
   "Bridge",                                               // The City
   "Telescope",                                            // The Observatory
 ]);
-/* Hard Mode only -- the Job Board reads as an extension of the Quest Log
-   there (see jobBoardHTML()'s own "My Quests" section), so it stays
+/* Shared by Job Board and Trading Post (both gate on this, see
+   jobBoardUnlocked()/tradeBodyHTML()) -- a player who hasn't at least
+   scouted every station yet doesn't have a stable enough picture of the
+   catalog for either "here's a job for something you build" or "here's a
+   trade" to read as a real, informed choice rather than a shot in the
+   dark. */
+function allStationsVisited(){
+  return Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
+}
+/* The Job Board reads as an extension of the Quest Log in Hard Mode (see
+   jobBoardHTML()'s own "My Quests" section), so Hard additionally stays
    locked until the player has actually engaged with that system: the
    first two quest tiers finished (QUESTS' own parent===null roots, plus
-   their direct children) AND every real station visited at least once
-   (state.visitedStations against MAP_NODE_POS's 8 keys). Classic/Zen
-   never gate on this -- neither mode has a quest tree to be an
-   extension of. */
+   their direct children). Classic never has a quest tree to be an
+   extension of, so it only ever needs the shared allStationsVisited()
+   gate above. */
 function jobBoardUnlocked(){
+  if (!allStationsVisited()) return false;
   if (state.mode !== "hard") return true;
-  const allStationsVisited = Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
-  if (!allStationsVisited) return false;
   const tier1 = QUESTS.filter(q => q.parent === null);
   // q.parent can be an array (AND-join, see QUESTS' own comment) -- none
   // currently land this shallow, but checking membership rather than
@@ -6395,7 +6412,7 @@ function jobBoardHTML(){
         </div>`).join("")}</div>`
     : `<p class="empty">No jobs on offer right now -- check back after your next station visit.</p>`;
   const capNote = !gateOK
-    ? `<p class="empty">🔒 The Job Board unlocks once you've completed Quest Tiers 1–2 and visited every station.</p>`
+    ? `<p class="empty">🔒 The Job Board unlocks once you've visited every station${state.mode === "hard" ? " and completed Quest Tiers 1–2" : ""}.</p>`
     : atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
   // "Available Jobs", not "Job Board" -- the Marketplace's own section
   // header already says "Job Board" (see marketSectionHTML()'s titles),
@@ -8779,14 +8796,24 @@ const ARC_RADIUS = "132px";
 const ARC_SLOTS = [-58, -19, 19, 58];
 function renderMarketArc(){
   const zen = state.mode === "zen"; // Zen has no Job Board at all, see updateHub()'s own hubJobs.disabled
+  const jobsLocked = zen || !jobBoardUnlocked();
+  const tradeLocked = state.mode !== "hard" || !allStationsVisited();
   const slots = [
-    { nav: "jobs", icon: "📋", label: "Job Board", disabled: zen,
-      title: zen ? "Job Board — not available in Zen Mode" : "Job Board — take jobs, turn in finished items" },
+    { nav: "jobs", icon: "📋", label: "Job Board", disabled: jobsLocked,
+      title: zen ? "Job Board — not available in Zen Mode"
+        : !jobBoardUnlocked() ? "Job Board — visit every station to unlock"
+        : "Job Board — take jobs, turn in finished items" },
     { nav: "quests", icon: "📜", label: "Quest Log", disabled: state.mode !== "hard",
       title: state.mode === "hard" ? "Quest Log — a branching tree of keystone-item goals" : "Quest Log — Hard Mode only" },
-    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: state.mode !== "hard",
-      title: state.mode === "hard" ? "Trading Post — swap a spare item for a random one" : "Trading Post — Hard Mode only" },
-    { nav: "collections", icon: "🏆", label: "Collections", disabled: state.mode === "classic",
+    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: tradeLocked,
+      title: state.mode !== "hard" ? "Trading Post — Hard Mode only"
+        : !allStationsVisited() ? "Trading Post — visit every station to unlock"
+        : "Trading Post — swap a spare item for a random one" },
+    // Hidden outright (not just disabled -- see .market-arc-btn.earned-hidden)
+    // until the player has actually finished one, rather than advertising a
+    // whole system with nothing to show for it yet.
+    { nav: "collections", icon: "🏆", label: "Collections",
+      disabled: state.mode === "classic", hidden: state.mode === "classic" || !state.collectionsCompleted.length,
       title: state.mode === "classic" ? "Collections — not available in Classic Mode"
         : `Collections — ${state.collectionsCompleted.length}/${COLLECTIONS.length} complete` },
   ];
@@ -8802,9 +8829,9 @@ function renderMarketArc(){
   // on .retracted already fully blocks interaction on its own.
   const retracted = !!marketSection;
   document.getElementById("marketArc").innerHTML = slots.map((s, i) => `
-    <button type="button" class="market-arc-btn ${retracted ? "retracted" : ""}" style="--ang:${ARC_SLOTS[i]}deg; --radius:${ARC_RADIUS}"
-      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled && !retracted ? "disabled" : ""}
-      ${retracted ? 'aria-hidden="true" tabindex="-1"' : ""}
+    <button type="button" class="market-arc-btn ${retracted ? "retracted" : ""} ${s.hidden ? "earned-hidden" : ""}" style="--ang:${ARC_SLOTS[i]}deg; --radius:${ARC_RADIUS}"
+      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled && !retracted && !s.hidden ? "disabled" : ""}
+      ${retracted || s.hidden ? 'aria-hidden="true" tabindex="-1"' : ""}
       title="${esc(s.title)}" aria-label="${esc(s.label)}">
       <span class="market-arc-icon">${s.icon}</span>
       <span class="market-arc-label">${esc(s.label)}</span>
@@ -8859,9 +8886,16 @@ function openMarket(){
   const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
     ? "This is the Marketplace! Two more ways to earn points here: take Jobs for specific items you build, or start Quests toward big keystone goals -- both pay bonus points once you deliver. Have a look around!"
     : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!", "top-left");
-  if (!shownFirstEver){
-    showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.", "top-left");
-  }
+  if (shownFirstEver) return;
+  // Collections' own arc button stays hidden (see renderMarketArc()'s
+  // earned-hidden) until at least one is actually done -- the first
+  // Marketplace visit after that becomes true is exactly when the button
+  // is about to pop into view for the first time, so that's the natural
+  // moment to explain it, rather than advertising a whole system with
+  // nothing in it yet.
+  const collectionsEligible = state.mode !== "classic" && state.collectionsCompleted.length > 0;
+  if (collectionsEligible && showTutorialHintOnce("collectionsunlocked", 3, "You've completed a Collection! 🏆 See the new Collections button? Tap it to see the full set, and track your progress toward the rest.", "top-right")) return;
+  showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.", "top-left");
 }
 
 /* ----------------------------------------------------- trade market --- */
@@ -8972,6 +9006,9 @@ function tradeCardHTML(offer, i){
 function tradeBodyHTML(){
   if (state.mode !== "hard"){
     return `<p class="empty">🔄 The Trading Post only opens in Hard Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
+  }
+  if (!allStationsVisited()){
+    return `<p class="empty">🔒 The Trading Post unlocks once you've visited every station.</p>`;
   }
   if (!state.tradeOffers.length) state.tradeOffers = rollTradeOffers();
   return state.tradeOffers.length
@@ -9200,6 +9237,12 @@ function takeQuest(id){
   if (!q || !questAvailable(q)) return;
   state.quests[id] = {taken:true, completed:false};
   if (!owns(q.item) && !isPinned(q.item)) togglePin(q.item);
+  // Crafting the target BEFORE accepting its quest is completely legal --
+  // nothing else forces the order -- but checkQuestCompletion() only ever
+  // runs reactively off a NEW craft/trade, so without this a quest taken
+  // for an already-owned item would sit stuck at taken:true/completed:false
+  // forever, with no further craft ever coming along to flip it.
+  checkQuestCompletion();
   save(); render();
 }
 let questToastQueue = [];
@@ -9373,6 +9416,21 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     if (isPinned(name)) selectedJobItem = name;
     renderJobBoard();
     render();
+    return;
+  }
+
+  // A completed/in-progress Quest card's own "Full breakdown" toggle (see
+  // questCardHTML()) -- #jobSheetBody sits outside #screen (same reason
+  // this whole listener exists instead of relying on #screen's own
+  // delegation, see the comment above it), so the [data-toggle] handling
+  // there never fires for a quest card rendered in THIS sheet specifically;
+  // the Marketplace's own inline Quest Log worked all along since that one
+  // renders inside #screen.
+  const refToggleBtn = ev.target.closest("[data-toggle]");
+  if (refToggleBtn){
+    const path = refToggleBtn.dataset.toggle;
+    if (jobExpanded.has(path)) jobExpanded.delete(path); else jobExpanded.add(path);
+    renderJobBoard();
     return;
   }
 });
