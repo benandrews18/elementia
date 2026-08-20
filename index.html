@@ -866,8 +866,8 @@ body[data-screen="market"] #trackedPill{display:none}
 .mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
 /* [hidden] alone loses to .mode-card's own display:flex below (an author
    rule always beats the [hidden] UA default at equal-or-lower specificity)
-   -- this one extra selector is what actually makes classicModeCard's
-   hidden attribute (see refreshModePicker()) take effect. */
+   -- this one extra selector is what actually makes classicModeCard/
+   zenModeCard's hidden attribute (see refreshModePicker()) take effect. */
 .mode-card[hidden]{display:none}
 .mode-card{
   display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
@@ -3282,7 +3282,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <div class="sheetbox">
     <h2 id="modeTitle">Choose a Game Mode</h2>
     <div class="mode-options">
-      <button type="button" class="mode-card" data-mode="zen">
+      <button type="button" class="mode-card" data-mode="zen" id="zenModeCard" hidden>
         <span class="mode-emoji">🌿</span>
         <span class="mode-name">Zen Mode</span>
       </button>
@@ -4971,6 +4971,7 @@ function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "
 // (see pendingClassicUnlockTip/prefs.classicUnlocked).
 function refreshModePicker(){
   document.getElementById("classicModeCard").hidden = !prefs.classicUnlocked;
+  document.getElementById("zenModeCard").hidden = !prefs.zenUnlocked;
 }
 function openModePicker(){
   refreshModePicker();
@@ -4991,6 +4992,14 @@ function mustStartAtOcean(){
 }
 function chooseMode(mode){
   state.mode = mode; save();
+  // Zen Mode's own unlock (see prefs.zenUnlocked's own comment) -- the
+  // moment the player actually commits to a Classic run, not just some
+  // later milestone within it, same "starting counts as playing" reading
+  // as this whole function's name.
+  if (mode === "classic" && !prefs.zenUnlocked){
+    prefs.zenUnlocked = true;
+    savePrefs();
+  }
   applyVisitLimit();
   closeOverlay("modeOverlay");
   render();
@@ -5705,7 +5714,13 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minig
   // Account-level unlock, not per-run state -- Classic Mode opens the
   // first time an Adventure Mode capstone is completed (see celebrate())
   // and stays open forever after, even across a session reset.
-  classicUnlocked:false};
+  classicUnlocked:false,
+  // Same idea, one step further down the chain -- Zen doesn't even show
+  // on the mode picker until the player has actually played a Classic
+  // Mode run at least once (see chooseMode()). First-time players land on
+  // just Adventure Mode with no other option, unlock Classic through it,
+  // then unlock Zen through THAT -- a deliberate progression, not a bug.
+  zenUnlocked:false};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
