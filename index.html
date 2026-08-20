@@ -642,13 +642,29 @@ body[data-screen="market"] #trackedPill{display:none}
    completed history last. Each card is a Station Shop .item (see
    questCardHTML()), not a quest-specific shape. */
 .quest-tier{display:flex; flex-direction:column; gap:14px}
-/* The expandable component tree an in-progress/completed quest card
-   grows (see questCardHTML()) is the exact same .ref-tree Item Reference
-   uses, but .ref-tree's own negative-margin bleed is tuned to THAT row's
-   padding/icon-column geometry, not a quest card's -- cancel it back to a
-   plain contained block here instead of chasing a second set of magic
-   numbers for a different card shape. */
-.quest-item .ref-tree{margin:6px 0 0}
+/* Full breakdown open: same "icon stays put at the top, the tree breaks
+   out to the card's full width" treatment Item Reference's own .refrow
+   uses (see .ref-tree's own comment -- align-items:flex-start there is
+   what keeps its icon from re-centering down the row as the body grows,
+   and its negative-margin bleed is what lets .ref-tree ignore the icon
+   column's width). .item .irow's own align-items:center (fine for every
+   collapsed card, where icon and one line of text are close to the same
+   height) was letting the icon drift toward vertical-center as the tree
+   grew tall; flex-start pins it to the top instead, matching Item
+   Reference. The bleed amount is tuned to a quest card's OWN icon
+   width/gap (34px + 15px, see .item .iem/.irow), not Item Reference's
+   54px icon -- a second set of magic numbers for a different card shape. */
+.item.quest-item .irow{align-items:flex-start}
+.quest-item .ref-tree{margin:6px -10px 0 -49px}
+/* The outer card itself also widens toward the tray's own edges while
+   expanded -- breaking out past whatever container padding it's sitting
+   in (the Job/Quest sheet's own .dbody, or the Marketplace's inline
+   .market-section, each with a different inset -- see their own padding)
+   so the full breakdown gets meaningfully more width to lay the tree out
+   in, not just what the ref-tree's own bleed above already recovers from
+   its icon column. */
+#jobSheetBody .quest-item.tree-open{margin:0 -18px}
+.market-section .quest-item.tree-open{margin:0 -14px}
 /* Quest cards reuse the Station Shop's own .item/.craftbtn language (see
    questCardHTML()) -- only the gateway pill and the "tracking" craftbtn
    tint are quest-specific. */
@@ -1628,6 +1644,18 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-trigger.arrange-trigger{
   border-color:var(--gold-line); background:var(--gold-soft); color:var(--gold);
 }
+/* Empty by default (see #convert's own HTML comment on #convertGoalCard)
+   -- :empty collapses it away entirely rather than leaving a blank gap
+   for the common case (Convert opened from the floating button, no item
+   context). Populated, it holds one real .item card (itemHTML() output,
+   unmodified -- same Craft button and all, so a player who's already got
+   what they need can just craft right from here) plus its own small label. */
+.convert-goal-card:empty{display:none}
+.convert-goal-card{margin-bottom:16px}
+.convert-goal-label{
+  font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
+  color:var(--mute); margin-bottom:8px;
+}
 .convert-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:22px 0 26px}
 .convert-box{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
@@ -2285,19 +2313,18 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 #hint b{font-weight:800}
 
 /* Professor Mouse companion -- see the HTML comment above #mouseTip for
-   what this is. Default z-index 71 -- above ordinary dialogs (.overlay's
-   65/#confirmBox's 66) but, like every ordinary bit of UI, still below
-   #hub's 72 (see .overlay's own "still below the hub" comment) -- so the
-   center Home button pokes visibly above the mouse/bubble instead of
-   getting covered by it whenever an anchor's bubble stretches into that
-   space. Bumped to 10000 via .tut-coach-active (see renderTutCoach()/
-   endTutCoach()) only for the guided "How to Play" walkthrough, which
-   reuses this same bubble for its own step text and needs to clear
-   #tour (200, the welcome slide), #mgOverlay (220, the mini-game
-   screen), AND #tutCoach's own spotlight cutout (9997-9999, see
-   .tut-coach-spot below) -- painting above that spotlight's dark
-   backdrop rather than getting dimmed out by it like an ordinary bit of
-   underlying UI would.
+   what this is. Default z-index 75 -- above ordinary dialogs (.overlay's
+   65/#confirmBox's 66) AND above #hub's 72, so a tip targeting a hub
+   button (Convert, the Travel face, ...) always paints its own spotlight
+   cutout (see #mouseHighlight below, z-index 73) and speech bubble on top
+   of the real button rather than behind it. Bumped further to 10000 via
+   .tut-coach-active (see renderTutCoach()/endTutCoach()) only for the
+   guided "How to Play" walkthrough, which reuses this same bubble for its
+   own step text and needs to clear #tour (200, the welcome slide),
+   #mgOverlay (220, the mini-game screen), AND #tutCoach's own spotlight
+   cutout (9997-9999, see .tut-coach-spot below) -- painting above that
+   spotlight's dark backdrop rather than getting dimmed out by it like an
+   ordinary bit of underlying UI would.
 
    FOUR CORNER anchors, never the center -- see showMouseTip()'s own
    anchor param. A single always-bottom-left bubble would routinely sit
@@ -2319,7 +2346,7 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    image ends up, not a single fixed corner -- see the 4 .mouse-bubble
    overrides after the anchor rules. */
 #mouseTip{
-  position:fixed; z-index:71;
+  position:fixed; z-index:75;
   display:flex; max-width:min(600px, 92vw);
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
 }
@@ -2387,23 +2414,24 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 .mouse-tip-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
 .mouse-tip-tour .bigbtn{padding:9px 18px; font-size:13px}
 
-/* Pulsing gold ring around whatever UI element the current mouse tip is
+/* Spotlight cutout around whatever UI element the current mouse tip is
    actually pointing at -- see positionMouseHighlight()/showMouseTip()'s
-   targetSel param. z-index 70, one below #mouseTip's own default 71 (see
-   its own comment), so the bubble itself always paints on top of the
-   ring rather than the ring ever covering the text explaining it. Circle
-   (not a rounded rect) per spec -- sized off the target's own larger
-   dimension so it comfortably encloses non-square buttons too. */
+   targetSel param. Same box-shadow-spread-past-a-tiny-rect technique as
+   .tut-coach-spot (see its own comment): the "hole" is just the absence
+   of shadow, not an actual mask, so the real element underneath stays
+   exactly as clickable as it always was. This is what "highlight circles"
+   always meant -- darkening the rest of the screen around the target, not
+   a thin ring drawn on top of it (an earlier pass here tried the ring;
+   this replaced it). z-index 73, above #hub's 72 so a tip targeting a hub
+   button (Convert, Travel, ...) actually darkens the hub around it rather
+   than rendering underneath the bar; #mouseTip's own 75 stays above this
+   so the speech bubble is never itself darkened by its own spotlight. */
 #mouseHighlight{
-  position:fixed; z-index:70; border-radius:50%; box-sizing:border-box;
-  border:3px solid var(--gold); pointer-events:none; opacity:0;
+  position:fixed; z-index:73; border-radius:14px; box-sizing:border-box;
+  box-shadow:0 0 0 9999px rgba(8,10,14,.74); pointer-events:none; opacity:0;
   transition:opacity .2s ease, left .25s ease, top .25s ease, width .25s ease, height .25s ease;
 }
-#mouseHighlight.show{opacity:1; animation:mouse-highlight-pulse 1.6s ease-in-out infinite}
-@keyframes mouse-highlight-pulse{
-  0%,100%{box-shadow:0 0 0 4px rgba(226,178,90,.35), 0 0 16px rgba(226,178,90,.5)}
-  50%{box-shadow:0 0 0 7px rgba(226,178,90,.15), 0 0 22px rgba(226,178,90,.7)}
-}
+#mouseHighlight.show{opacity:1}
 
 /* ------------------------------------------------- reference sheet --- */
 /* Pinned just below the topbar (var(--topbar-h) -- its own measured
@@ -2914,13 +2942,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     </div>
   </div>
 </div>
-<!-- Lightweight companion to #mouseTip -- a pulsing ring around whatever
-     UI element the current tip is actually talking about (see
-     positionMouseHighlight()/showMouseTip()'s own targetSel param). Not
-     the same thing as the guided walkthrough's own full-screen-darkening
-     .tut-coach-spot -- that's a deliberate blocking "look here" moment;
-     this is a quiet, non-blocking nudge that sits alongside an ordinary
-     organic tip without dimming the rest of the screen. -->
+<!-- Companion to #mouseTip -- a full-screen-darkening spotlight cutout
+     around whatever UI element the current tip is actually talking about
+     (see positionMouseHighlight()/showMouseTip()'s own targetSel param),
+     same box-shadow cutout technique as the guided walkthrough's own
+     .tut-coach-spot (see its comment), just a separate element so this
+     one can come and go with an ordinary organic tip instead of only
+     existing for the dedicated "How to Play" walkthrough. Non-blocking --
+     the darkened area has pointer-events:none, same as .tut-coach-spot,
+     so nothing underneath it (including the cutout target itself) is any
+     less tappable than it always was. -->
 <div id="mouseHighlight" aria-hidden="true"></div>
 
 <!-- capstone celebration -->
@@ -3079,6 +3110,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <span class="setbtn">Open</span>
     </button>
+    <button type="button" class="setting-row" id="resetCacheBtn">
+      <span class="setting-ico">🧹</span>
+      <span class="setting-body">
+        <span class="setting-label">Reset Cache</span>
+        <span class="setting-sub">Clears cached game files and reloads -- your save is untouched</span>
+      </span>
+      <span class="setbtn">Reset</span>
+    </button>
     <button type="button" class="setting-row warn" id="resetBtn">
       <span class="setting-ico">↺</span>
       <span class="setting-body">
@@ -3175,6 +3214,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="tbtn ghost" id="convertClose" aria-label="Close Convert Elements">✕</button>
   </div>
   <div class="dbody">
+    <!-- Populated only when Convert was opened by tapping a missing
+         element inside a specific item's recipe (see the .tok.el.need
+         click handler) -- a duplicate of that item's own shop card,
+         reusing itemHTML() wholesale so it's pixel-identical to the real
+         thing, pinned here as a "this is what you're working toward"
+         reminder while picking the conversion. Empty/hidden (see
+         .convert-goal-card's own CSS) for every other way Convert gets
+         opened -- the floating button, the inventory drawer's icon --
+         where there's no specific item context to show. -->
+    <div class="convert-goal-card" id="convertGoalCard"></div>
     <p>Trade 3 of one element for 1 of any other.</p>
     <div class="convert-row">
       <div class="convert-col">
@@ -5651,6 +5700,11 @@ function freshState(){
                         // Drives the tiered card-popup border (see craftTier()).
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
+    marketVisited: false, // true forever once the player has opened the Marketplace once -- see
+                           // openMarket()/maybeShowMarketReminder(), independent of
+                           // prefs.tutorialHintsSeen (which only tracks the tutorial-message side
+                           // of that first visit and stops updating at all once guided tutorial
+                           // tips are turned off in Settings).
     // True forever once the game's one and only preset dice roll has been
     // used (see doRoll()) -- The Ocean's shop stays forced-empty (see
     // renderStation()) until this first roll happens there, regardless of
@@ -7316,7 +7370,12 @@ function updateHub(){
       const entry = ENTRIES.find(e => e.name === q.item);
       return entry && canCraft(entry);
     }).length;
-    setHubBadge("hubJobs", readyQuests > 0 ? String(readyQuests) : null, readyQuests > 0);
+    // No green "ok" styling here (unlike Job Board's own ready-to-turn-in
+    // badge below) -- a quest completing itself the moment its target is
+    // crafted is already obvious from the craft itself (the toast, the
+    // quest card flipping to done in the Log); a green circle on top of
+    // that read as flagging something the player still had to act on.
+    setHubBadge("hubJobs", readyQuests > 0 ? String(readyQuests) : null);
   } else {
     const ready = state.jobs.filter(j => jobDone(j) && !j.turnedIn).length;
     // Unseen offers on the (now global) board -- a reminder to pop it
@@ -7387,7 +7446,15 @@ function updateHub(){
   // own length already gives Pins this same "never take it back" behavior
   // for free (see below); Convert needs its own persisted flag since
   // "3+ of some element" can become false again.
-  if (canConvert) state.convertRevealed = true;
+  if (canConvert && !state.convertRevealed){
+    state.convertRevealed = true;
+    // The real "the button just showed up" moment -- this used to fire
+    // only after the player's first actual Convert, well after they'd
+    // already had to find the button on their own. updateHub() runs on
+    // every render() regardless of screen, so this fires wherever the
+    // player happens to be the instant they first cross 3 of an element.
+    showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "bottom-right", "#quickConvertBtn");
+  }
 
   // Both floating buttons stay off their own edge of the screen until
   // there's something to do with them -- Pins needs at least one job OR
@@ -7798,25 +7865,26 @@ const MOUSE_ANCHORS = ["bottom-left", "bottom-right", "top-left", "top-right"];
 /* anchor picks WHICH CORNER the bubble appears in (see #mouseTip's own
    comment for all 4 and when each applies) -- defaults to bottom-left
    for any call site that doesn't care. */
-/* Positions the pulsing #mouseHighlight ring around whatever element
-   targetSel resolves to (see #mouseHighlight's own comment) -- a circle
-   sized off the target's larger dimension plus a little breathing room,
-   centered on it. Clears/hides the ring for a null selector or a
-   selector that doesn't currently match anything (e.g. the target hasn't
-   rendered yet, or isn't on this screen at all), so a stale ring can
-   never linger somewhere no longer relevant. */
+/* Positions the #mouseHighlight spotlight cutout around whatever element
+   targetSel resolves to (see #mouseHighlight's own comment) -- same
+   rect-plus-padding sizing as positionTutCoach()'s own spotlight, not a
+   circle centered on the target, so a wide/short button gets a snug
+   cutout instead of a big circle that oversells how much of the screen
+   is actually "the target." Clears/hides the spotlight for a null
+   selector or a selector that doesn't currently match anything (e.g. the
+   target hasn't rendered yet, or isn't on this screen at all), so a stale
+   cutout can never linger somewhere no longer relevant. */
 function positionMouseHighlight(targetSel){
-  const ring = document.getElementById("mouseHighlight");
+  const spot = document.getElementById("mouseHighlight");
   const target = targetSel && document.querySelector(targetSel);
-  if (!target){ ring.classList.remove("show"); return; }
+  if (!target){ spot.classList.remove("show"); return; }
   const r = target.getBoundingClientRect();
-  const pad = 10;
-  const size = Math.max(r.width, r.height) + pad * 2;
-  ring.style.left = (r.left + r.width / 2 - size / 2) + "px";
-  ring.style.top = (r.top + r.height / 2 - size / 2) + "px";
-  ring.style.width = size + "px";
-  ring.style.height = size + "px";
-  ring.classList.add("show");
+  const pad = 8;
+  spot.style.left = (r.left - pad) + "px";
+  spot.style.top = (r.top - pad) + "px";
+  spot.style.width = (r.width + pad * 2) + "px";
+  spot.style.height = (r.height + pad * 2) + "px";
+  spot.classList.add("show");
 }
 function showMouseTip(pose, html, anchor, targetSel){
   document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
@@ -7908,10 +7976,12 @@ function maybeShowFirstVisitHint(){
   // they'd actually exhausted their own options.
   const hasCraftable = entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e));
   if (state.visits === 1 && !hasCraftable
-      && showMouseTipOnce("afterroll", 12, "Tap again when ready to leave.", "bottom-left", "#hubHome")) return;
-  // bottom-right -- right where the floating Convert button (#quickConvertBtn) actually sits.
-  if (Object.values(state.elements).some(n => n >= 3)
-      && showTutorialHintOnce("canconvert", 1, "3+ elements? Tap Convert!", "bottom-right", "#quickConvertBtn")) return;
+      && showMouseTipOnce("afterroll", 12, "Tap the Map when you're ready to leave.", "bottom-left", "#hubHome")) return;
+  // Convert's own first-appearance tip now lives in updateHub(), right
+  // where state.convertRevealed actually flips true -- that's the real
+  // "the button just showed up" moment, and it fires globally (any
+  // screen), not just while standing at a station like this function only
+  // ever runs.
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -7996,6 +8066,15 @@ function goMap(){
   else window.scrollTo({top:0, behavior:"instant"});
   // Surface the wrap-up once the last visit is done and they've come back.
   if (sessionOver() && !state.ended){ state.ended = true; save(); showSummary(); }
+  // Organic, one-time-ever: a player back on the map after their second
+  // station who's never once opened the Marketplace hasn't stumbled onto
+  // it on their own yet -- Home's own default face here already IS the
+  // Market button (see hubHomeFace(), "market" is its resting face on the
+  // map whenever nothing travelable is selected), so this just points at
+  // it rather than adding a new control.
+  if (state.visits >= 2 && !state.marketVisited){
+    showTutorialHintOnce("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
+  }
 }
 
 /* The mini-game's own score (0-1) sets how many dice this roll gets,
@@ -8433,7 +8512,13 @@ function flyIngredientsAndReveal(entry){
     el.innerHTML = miniIngredientCardHTML(r);
     const card = el.firstElementChild;
     card.style.position = "fixed";
-    card.style.zIndex = "500";
+    // Flight order/timing (the stagger below) still follows reqs' own
+    // recipe-list order untouched -- this only controls which card paints
+    // on top once they're all fanned into the stack. Item ingredients
+    // always stack above element ingredients regardless of where either
+    // falls in the recipe text, so a card recognizable by its icon+name
+    // (an item) never gets buried under a plain element tile.
+    card.style.zIndex = r.kind === "element" ? "500" : "501";
     card.style.pointerEvents = "none";
     // Start just below the bottom edge, spread across the width so a
     // multi-ingredient recipe doesn't launch every card from one spot.
@@ -8516,7 +8601,16 @@ document.getElementById("pinsTrayBody").addEventListener("click", ev => {
   if (jobSelectBtn) toggleJobSelect(jobSelectBtn.dataset.selectJob);
 });
 
-document.getElementById("screen").addEventListener("click", ev => {
+// Named (not an inline arrow passed straight to addEventListener) so it
+// can be attached twice -- #screen for the real station/map/marketplace
+// content, and #convertGoalCard for the duplicated item card that can
+// show up inside the Convert tray (see the .tok.el.need branch below and
+// #convertGoalCard's own HTML comment). That card is real itemHTML()
+// output living OUTSIDE #screen entirely (the tray is its own top-level
+// <aside>), so without this its Craft button/tap-to-inspect/recipe
+// tokens would all be inert -- events there would never reach a listener
+// only ever attached to #screen.
+function handleScreenClick(ev){
   const hintEl = ev.target.closest("[data-hint]");
   if (hintEl){
     ev.stopPropagation();
@@ -8636,6 +8730,20 @@ document.getElementById("screen").addEventListener("click", ev => {
     openConvertScreen();
     convertTo = needElemBtn.dataset.elem;
     updateConvertUI();
+    // The item whose recipe this token came from -- every .tok.el.need
+    // only ever renders inside recipeHTML(), itself only ever called from
+    // itemHTML() (see recipeHTML()'s own comment), so the tapped token's
+    // nearest [data-item-card] ancestor is always that same item's real
+    // card. Duplicated at the top of the tray as a "here's what you're
+    // working toward" reminder (see #convertGoalCard's own comment) --
+    // real itemHTML() output, not a simplified stand-in, so it's exactly
+    // the card the player just tapped out of, Craft button included.
+    const itemCard = needElemBtn.closest("[data-item-card]");
+    const idx = itemCard && +itemCard.dataset.itemCard;
+    const goalEntry = itemCard && ENTRIES[idx];
+    document.getElementById("convertGoalCard").innerHTML = goalEntry
+      ? `<div class="convert-goal-label">Working toward</div>${itemHTML(goalEntry, idx)}`
+      : "";
     return;
   }
 
@@ -8751,7 +8859,9 @@ document.getElementById("screen").addEventListener("click", ev => {
   // Collapses whichever Jobs/Quests/Trade/Collections section is currently
   // expanded on the Marketplace screen -- see marketSectionHTML().
   if (ev.target.closest("[data-market-close]")){ marketSection = null; render(); return; }
-});
+}
+document.getElementById("screen").addEventListener("click", handleScreenClick);
+document.getElementById("convertGoalCard").addEventListener("click", handleScreenClick);
 
 document.getElementById("screen").addEventListener("keydown", ev => {
   const hintEl = ev.target.closest("[data-hint]");
@@ -8843,11 +8953,22 @@ function closePanelByName(name){
 }
 /* Tapping a button whose panel is already open just closes it. Tapping
    any OTHER button closes whatever's currently open (if anything) AND
-   opens its own target, in the same tap -- not two separate presses. */
+   opens its own target, in the same tap -- not two separate presses.
+   Market/Codex are screen-level (screen==="market"/"codex"), not true
+   stacking overlays like Jobs/Convert/Pins/Settings -- opening one of
+   those on top of either should just layer over it, the same way it
+   already layers over a station or the map, not navigate away first.
+   Without this exclusion, closePanelByName("market") ran anyway, which
+   sets screen back to "map" -- so e.g. tapping Quests while looking at
+   the Marketplace closed the Marketplace out from under the player and
+   left them stranded on the map once they closed Quests again, reading
+   as "Quests pulled me back to the map." Only close whatever's open if
+   it's ANOTHER true overlay (so Convert still closes before Jobs opens,
+   same as it always did). */
 function hubPanelClick(name, openFn){
   const open = openPanelName();
   if (open === name){ closePanelByName(name); return; }
-  if (open) closePanelByName(open);
+  if (open && open !== "market" && open !== "codex") closePanelByName(open);
   openFn();
 }
 /* Rolls this visit's dice (or launches the minigame that hands off to a
@@ -9321,6 +9442,8 @@ document.getElementById("marketArc").addEventListener("click", ev => {
 });
 function openMarket(){
   screen = "market";
+  state.marketVisited = true;
+  save();
   render(true);
   // Organic, one-time-ever: the first-ever Marketplace visit gets the
   // full explanation (see showTutorialHintOnce()); every visit after
@@ -9596,15 +9719,15 @@ function collectionsBodyHTML(){
    from when this was a branching tree -- no entry below uses it, but
    questAvailable()/jobBoardUnlocked() still support it. */
 const QUESTS = [
-  { id:"dna", item:"DNA", parent:null,
+  { id:"furnace", item:"Furnace", parent:null,
+    blurb:"Clay and Carbon, fired hot enough to become a Furnace -- the Deep Mine's own gateway to every alloy and gemstone." },
+  { id:"dna", item:"DNA", parent:"furnace",
     blurb:"The Greenhouse's first real biology -- Sugar and two elements twist into the blueprint every living thing in Elementia shares." },
   { id:"tools", item:"Tools", parent:"dna",
     blurb:"Steel and two alloys forged into the single set of Tools nearly every later recipe leans on." },
   { id:"soil", item:"Soil", parent:"tools",
     blurb:"Clay worked into Sand becomes Soil -- the forest floor everything green eventually grows out of." },
-  { id:"furnace", item:"Furnace", parent:"soil",
-    blurb:"Clay and Carbon, fired hot enough to become a Furnace -- the Deep Mine's own gateway to every alloy and gemstone." },
-  { id:"tree", item:"Tree", parent:"furnace",
+  { id:"tree", item:"Tree", parent:"soil",
     blurb:"Soil plus two elements is all a Tree needs to take root -- the forest's whole timber line starts here." },
   { id:"glass", item:"Glass", parent:"tree",
     blurb:"Sand and Limestone, melted together into Glass -- half the Observatory's own instruments start with this pane." },
@@ -9772,19 +9895,23 @@ function questAvailable(q){
 // slow drip (1-2 quests to look at at a time) instead of a parent's whole
 // set of children appearing together the moment it's done. QUESTS' own
 // declaration order is the priority candidates fill this cap in.
-const QUEST_VISIBLE_CAP = 2;
+const QUEST_VISIBLE_CAP = 3;
 function questActiveCount(){
   return QUESTS.filter(q => { const st = state.quests[q.id]; return st && st.taken && !st.completed; }).length;
 }
-/* Whether this quest belongs in the Quest Log at all right now -- taken
-   and completed quests always do (that's the player's own history/
-   progress), but a freshly-available candidate only gets a slot once one
-   opens up (QUEST_VISIBLE_CAP minus however many are already in
-   progress). This is what actually keeps the tree from dumping every
-   sibling on the player the instant their shared parent completes. */
+/* Whether this quest belongs in the Quest Log at all right now -- a
+   completed quest never does any more (the completion toast + the target
+   item flipping to owned everywhere else is the record of it; the Log
+   itself only shows what's still actually in play). A taken-but-not-yet-
+   completed quest always shows (that's the player's real in-progress
+   work); a freshly-available candidate only gets a slot once one opens up
+   (QUEST_VISIBLE_CAP minus however many are already in progress). This is
+   what actually keeps the tree from dumping every sibling on the player
+   the instant their shared parent completes. */
 function questVisible(q){
   const st = state.quests[q.id];
-  if (st && (st.taken || st.completed)) return true;
+  if (st && st.completed) return false;
+  if (st && st.taken) return true;
   if (!questAvailable(q)) return false;
   const candidates = QUESTS.filter(x => !state.quests[x.id] && questAvailable(x));
   const slot = candidates.indexOf(q);
@@ -9868,6 +9995,9 @@ function questCardHTML(q){
   const entry = (inProgress || completed) && ENTRIES.find(e => e.name === q.item);
   const treePath = "quest/" + q.id;
   const treeOpen = jobExpanded.has(treePath);
+  // Widens the whole card while its own breakdown is showing -- see
+  // .quest-item.tree-open's own CSS.
+  if (treeOpen) cls.push("tree-open");
   // .craftbtn normally stretches to match .irow's height (see its own
   // comment) so it always sits flush against the card's full height --
   // fine for a short collapsed card, but with the breakdown tree open
@@ -9908,11 +10038,13 @@ function questsBodyHTML(){
   if (state.mode !== "hard"){
     return `<p class="empty">📜 Quests only track in Adventure Mode, where the full item web -- and every keystone in it -- is actually in play.</p>`;
   }
+  // questVisible() no longer lets a completed quest through at all, so
+  // this is just in-progress (most actionable) first, then whatever's
+  // newly on offer -- no completed section left to order in after them.
   const visible = QUESTS.filter(questVisible);
-  const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken && !st.completed; });
+  const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken; });
   const available = visible.filter(q => questAvailable(q));
-  const completed = visible.filter(q => { const st = state.quests[q.id]; return st && st.completed; });
-  const ordered = [...inProgress, ...available, ...completed];
+  const ordered = [...inProgress, ...available];
   return `<p class="trade-intro">Finishing a quest quietly opens up what comes next -- there's only ever a couple to focus on at a time.</p>` +
     `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`;
 }
@@ -10110,6 +10242,31 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     startNewSession();
   });
 });
+/* Unregisters the PWA service worker (see setupPWA()) and clears every
+   Cache Storage entry it ever wrote under, then hard-reloads -- the self-
+   serve fix for "the game looks out of date" (a stale cached copy still
+   being served offline-first) without needing to walk someone through
+   their browser's own site-data settings. Game progress lives in
+   localStorage, a completely separate storage mechanism from Cache
+   Storage, so none of this touches it -- only cached FILES (this page's
+   own HTML, images, etc.) are cleared. No-ops cleanly wherever the PWA
+   layer never activated (file://, a browser with no Cache Storage, ...). */
+document.getElementById("resetCacheBtn").addEventListener("click", () => {
+  askConfirm("Clear cached game files and reload? Your save isn't affected.", async () => {
+    closeOverlay("settings");
+    try {
+      if ("serviceWorker" in navigator){
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      }
+      if (window.caches && caches.keys){
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } catch(e){ /* best-effort -- still reload below even if this failed */ }
+    location.reload();
+  });
+});
 
 /* Main Menu: Continue is a pure no-op close -- the run underneath was
    never touched, so there's nothing to restore. Reset reuses the exact
@@ -10149,6 +10306,11 @@ let convertFrom = null, convertTo = null, convertPickMode = null;  // "from" | "
 
 function openConvertScreen(){
   convertFrom = null; convertTo = null;
+  // Cleared here so every OTHER way into Convert (the floating button,
+  // the inventory drawer's icon) starts with no goal card -- only the
+  // .tok.el.need click handler below ever populates it, right after
+  // calling this same function.
+  document.getElementById("convertGoalCard").innerHTML = "";
   updateConvertUI();
   openOverlay("convert");
 }
@@ -10234,12 +10396,9 @@ document.getElementById("convertGo").addEventListener("click", () => {
   state.elements[convertTo] = count(convertTo) + 1;
   save();
   playConvertAnimation(convertTo);
-  // Organic -- fires on the player's actual first-ever Convert, whatever
-  // it happens to be (see showTutorialHintOnce()). top-right, not a
-  // bottom anchor -- the #convert tray this just happened inside covers
-  // up to 60vh of the screen's own bottom, so anywhere near the hub
-  // would sit right on top of the tray the player is still looking at.
-  showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "top-right", "#convertGo");
+  // "Convert Elements!" no longer fires here -- see updateHub(), it now
+  // fires the moment the floating button first appears, not after the
+  // player's already found and used it once.
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
 
