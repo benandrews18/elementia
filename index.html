@@ -2587,15 +2587,17 @@ button.setting-row.warn:hover{border-color:var(--bad); background:var(--bad-soft
 button.setting-row:hover .setbtn{border-color:var(--mute)}
 .setbtn.warn{background:var(--card); border-color:var(--bad); color:var(--bad)}
 
-/* Settings screen only: chunky raised "arcade menu" button language --
+/* Settings screens only: chunky raised "arcade menu" button language --
    heavy inspiration from mobile-game options screens (glossy bevelled
    3D buttons, ribbon section headers, bordered icon tiles), rebuilt in
    Elementia's own dark palette + suit colors rather than their literal
    wood-panel/parchment skin. Overrides the flatter .setting-row/.sec-
-   label/.bigbtn rules above, scoped to #settings so nothing else in the
-   game (Drawer, Convert, session summary, etc., which also use
-   .sec-label/.bigbtn) is affected. */
-#settings .sec-label{
+   label/.bigbtn rules above, scoped to the settings hub + its 3 sub-
+   screens (:is(...), one shared ruleset for all four rather than
+   repeating each rule 4 times) so nothing else in the game (Drawer,
+   Convert, session summary, etc., which also use .sec-label/.bigbtn) is
+   affected. */
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .sec-label{
   display:inline-block; font-size:11px; font-weight:800; letter-spacing:1px;
   color:#2a2110; text-transform:uppercase; border:none;
   background:linear-gradient(180deg, #f0d38a, var(--gold) 75%);
@@ -2603,48 +2605,48 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   box-shadow:0 3px 0 #7a5c22, 0 5px 10px rgba(0,0,0,.32);
   margin:20px 0 12px;
 }
-#settings .sec-label:first-child{margin-top:0}
-#settings .setting-row{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .sec-label:first-child{margin-top:0}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-row{
   background:linear-gradient(180deg, #38445a, #202836 62%);
   border:2px solid #10141b; border-radius:14px; padding:13px 14px; margin-bottom:12px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.38);
   transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
 }
-#settings button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
-#settings button.setting-row:not(:disabled):active{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 #10141b, 0 3px 8px rgba(0,0,0,.3);
 }
-#settings .setting-row.warn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-row.warn{
   background:linear-gradient(180deg, #5c3226, #351712 62%); border-color:#1c0b08;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #1c0b08, 0 7px 14px rgba(0,0,0,.38);
 }
-#settings button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
-#settings .setting-ico{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-ico{
   width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.14);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 2px 0 rgba(0,0,0,.3);
 }
-#settings .setbtn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setbtn{
   border-radius:10px; border:1.5px solid #10141b;
   background:linear-gradient(180deg, #4a5568, #2a3140 65%); color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #10141b;
 }
-#settings button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
-#settings .setbtn.warn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setbtn.warn{
   background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border-color:#3a140c; color:#2a0d07;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 #3a140c;
 }
-#settings .bigbtn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn{
   background:linear-gradient(180deg, #57d488, var(--ok) 62%); border:2px solid #184a29; color:#0a2015;
   border-radius:14px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 0 #184a29, 0 7px 14px rgba(0,0,0,.35);
 }
-#settings .bigbtn.sec{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn.sec{
   background:linear-gradient(180deg, #55627a, #2c3444 62%); border-color:#10141b; color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.35);
 }
-#settings .bigbtn:not(:disabled):active{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
 }
@@ -3096,11 +3098,50 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 </div>
 
 <!-- settings -->
+<!-- Settings hub -- just 3 doors (This Session / Game Rules / Dev Tools),
+     each its own overlay below. openSettingsScreen() swaps between all 4
+     (this one plus the 3 sub-screens) so exactly one is ever visible;
+     Close here is the only way OUT of the whole settings flow back to the
+     game -- each sub-screen's own Back/Cancel just returns here. -->
 <div class="overlay" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="sheetbox">
     <h2 id="setTitle">⚙️ Settings</h2>
+    <button type="button" class="setting-row" id="settingsSessionBtn">
+      <span class="setting-ico">📋</span>
+      <span class="setting-body">
+        <span class="setting-label">This Session</span>
+        <span class="setting-sub">How to Play, Main Menu, Start New Session</span>
+      </span>
+      <span class="setbtn">Open</span>
+    </button>
+    <button type="button" class="setting-row" id="settingsRulesBtn">
+      <span class="setting-ico">🎲</span>
+      <span class="setting-body">
+        <span class="setting-label">Game Rules</span>
+        <span class="setting-sub">Station visits, dice rolls, mini-games, tutorial tips</span>
+      </span>
+      <span class="setbtn">Open</span>
+    </button>
+    <button type="button" class="setting-row" id="settingsDevBtn">
+      <span class="setting-ico">🛠️</span>
+      <span class="setting-body">
+        <span class="setting-label">Dev Tools</span>
+        <span class="setting-sub">Clear cache, view run history</span>
+      </span>
+      <span class="setbtn">Open</span>
+    </button>
 
-    <div class="sec-label">This session</div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="setClose">Close</button>
+    </div>
+    <p class="setversion" id="setVersion"></p>
+  </div>
+</div>
+
+<!-- This Session -->
+<div class="overlay" id="settingsSession" role="dialog" aria-modal="true" aria-labelledby="setSessionTitle">
+  <div class="sheetbox">
+    <h2 id="setSessionTitle">📋 This Session</h2>
     <button type="button" class="setting-row" id="tourBtn" aria-label="How to play">
       <span class="setting-ico">▶️</span>
       <span class="setting-body">
@@ -3109,14 +3150,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <span class="setbtn">Open</span>
     </button>
-    <button type="button" class="setting-row" id="historyBtn">
-      <span class="setting-ico">🕓</span>
-      <span class="setting-body">
-        <span class="setting-label">History</span>
-        <span class="setting-sub">See your past runs</span>
-      </span>
-      <span class="setbtn">View</span>
-    </button>
     <button type="button" class="setting-row" id="mainMenuBtn">
       <span class="setting-ico">🏠</span>
       <span class="setting-body">
@@ -3124,14 +3157,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="setting-sub">Leave without resetting -- come back and continue anytime</span>
       </span>
       <span class="setbtn">Open</span>
-    </button>
-    <button type="button" class="setting-row" id="resetCacheBtn">
-      <span class="setting-ico">🧹</span>
-      <span class="setting-body">
-        <span class="setting-label">Reset Cache</span>
-        <span class="setting-sub">Clears cached game files and reloads -- your save is untouched</span>
-      </span>
-      <span class="setbtn">Reset</span>
     </button>
     <button type="button" class="setting-row warn" id="resetBtn">
       <span class="setting-ico">↺</span>
@@ -3142,7 +3167,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setbtn warn">Reset</span>
     </button>
 
-    <div class="sec-label" style="margin-top:20px">Game rules</div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="setSessionBack">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game Rules -->
+<div class="overlay" id="settingsRules" role="dialog" aria-modal="true" aria-labelledby="setRulesTitle">
+  <div class="sheetbox">
+    <h2 id="setRulesTitle">🎲 Game Rules</h2>
     <p class="setnote">Changing these mid-session just moves the finish line.</p>
     <div class="setting-row">
       <span class="setting-ico">🗺️</span>
@@ -3180,9 +3214,35 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
     <div class="btnrow">
       <button type="button" class="bigbtn" id="setSave">Save</button>
-      <button type="button" class="bigbtn sec" id="setClose">Cancel</button>
+      <button type="button" class="bigbtn sec" id="setRulesCancel">Cancel</button>
     </div>
-    <p class="setversion" id="setVersion"></p>
+  </div>
+</div>
+
+<!-- Dev Tools -->
+<div class="overlay" id="settingsDev" role="dialog" aria-modal="true" aria-labelledby="setDevTitle">
+  <div class="sheetbox">
+    <h2 id="setDevTitle">🛠️ Dev Tools</h2>
+    <button type="button" class="setting-row warn" id="resetCacheBtn">
+      <span class="setting-ico">🧹</span>
+      <span class="setting-body">
+        <span class="setting-label">Clear Cache</span>
+        <span class="setting-sub">Wipes your save, settings, and tutorial progress, then reloads to a fresh Main Menu</span>
+      </span>
+      <span class="setbtn warn">Clear</span>
+    </button>
+    <button type="button" class="setting-row" id="historyBtn">
+      <span class="setting-ico">🕓</span>
+      <span class="setting-body">
+        <span class="setting-label">History</span>
+        <span class="setting-sub">See your past runs</span>
+      </span>
+      <span class="setbtn">View</span>
+    </button>
+
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>
+    </div>
   </div>
 </div>
 
@@ -7456,7 +7516,7 @@ function updateHub(){
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   document.getElementById("hubInv").classList.toggle("active", drawer.classList.contains("open"));
   document.getElementById("hubJobs").classList.toggle("active", jobSheet.classList.contains("open"));
-  document.getElementById("hubSettings").classList.toggle("active", document.getElementById("settings").classList.contains("open"));
+  document.getElementById("hubSettings").classList.toggle("active", anySettingsOpen());
   const pinsOpen = pinsTray.classList.contains("open");
   const convertOpen = document.getElementById("convert").classList.contains("open");
   document.getElementById("pinsBtn").classList.toggle("active", pinsOpen);
@@ -7585,10 +7645,37 @@ function openOverlay(id){
   if (focusable) focusable.focus();
   updateHub(); // e.g. Settings' hub button going green while it's open
 }
+// The settings hub + its 3 sub-screens (see #settings' own HTML comment)
+// -- exactly one of these four is ever open at a time. anySettingsOpen()
+// and openSettingsScreen() are what let openPanelName()/closeOverlay()/
+// the hub's own Settings button keep treating all four as one logical
+// "Settings is open" state, the same as the old single #settings overlay
+// used to be, while still letting the player navigate freely BETWEEN the
+// 4 without that reading as "closing Settings" each time.
+const SETTINGS_OVERLAY_IDS = ["settings", "settingsSession", "settingsRules", "settingsDev"];
+function anySettingsOpen(){
+  return SETTINGS_OVERLAY_IDS.some(id => document.getElementById(id).classList.contains("open"));
+}
+// Swaps to a different settings screen WITHOUT going through closeOverlay()
+// on the one being left -- that would fire its "we've left Settings
+// entirely" side effects (dropping #tour's behind-settings layering,
+// flushing a queued mouse tip) a beat early, before the new screen has
+// actually opened.
+function openSettingsScreen(id){
+  SETTINGS_OVERLAY_IDS.forEach(otherId => { if (otherId !== id) document.getElementById(otherId).classList.remove("open"); });
+  openOverlay(id);
+}
 function closeOverlay(id){
   document.getElementById(id).classList.remove("open");
   if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
-  if (id === "settings") document.getElementById("tour").classList.remove("behind-settings");
+  // Only once NONE of the 4 settings screens is still open -- mid-flow
+  // navigation (hub -> Game Rules, say) closes one of these without
+  // opening through openSettingsScreen() in between, so checking the
+  // literal id alone would incorrectly restore #tour's z-index while a
+  // sub-screen is still genuinely open on top of it.
+  if (SETTINGS_OVERLAY_IDS.includes(id) && !anySettingsOpen()){
+    document.getElementById("tour").classList.remove("behind-settings");
+  }
   // #convertGoalCard sits ABOVE #convert's own box (bottom:100%, see its
   // own CSS comment), outside the box that #convert.open's transform
   // actually measures itself against -- closed #convert slides down by
@@ -9094,7 +9181,7 @@ function openPanelName(){
   if (drawer.classList.contains("open")) return "drawer";
   if (jobSheet.classList.contains("open")) return "jobs";
   if (pinsTray.classList.contains("open")) return "pins";
-  if (document.getElementById("settings").classList.contains("open")) return "settings";
+  if (anySettingsOpen()) return "settings";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
   if (screen === "codex") return "codex";
   // Market is a real screen (screen === "market"), same tier as Codex --
@@ -9109,7 +9196,10 @@ function closePanelByName(name){
   if (name === "drawer") closeDrawer();
   else if (name === "jobs") closeJobBoard();
   else if (name === "pins") closePinsTray();
-  else if (name === "settings") closeOverlay("settings");
+  else if (name === "settings"){
+    const openId = SETTINGS_OVERLAY_IDS.find(id => document.getElementById(id).classList.contains("open"));
+    if (openId) closeOverlay(openId);
+  }
   else if (name === "convert") closeOverlay("convert");
   else if (name === "codex" || name === "market"){
     // Same "return where you opened it from" rule as hubCodex's own toggle
@@ -10326,7 +10416,18 @@ const setUnlimitedBox = document.getElementById("setUnlimited");
 const setDiceInput = document.getElementById("setDice");
 const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
+// Just opens the hub (see #settings' own HTML comment) -- the 3 sub-
+// screens each have their own open function/handler below.
 function openSettings(){
+  openOverlay("settings");
+}
+document.getElementById("settingsSessionBtn").addEventListener("click", () => openSettingsScreen("settingsSession"));
+document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
+document.getElementById("setSessionBack").addEventListener("click", () => openSettingsScreen("settings"));
+document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
+document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
+
+function openSettingsRules(){
   // Zen/Hard already force MAX_VISITS to Infinity regardless of this pref
   // (see applyVisitLimit()) -- showing an editable "25" here while that's
   // true would silently do nothing if changed, which reads as a bug, not
@@ -10344,17 +10445,18 @@ function openSettings(){
   setDiceInput.value = TAKE;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
-  openOverlay("settings");
+  openSettingsScreen("settingsRules");
 }
+document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
 setUnlimitedBox.addEventListener("change", () => {
   setVisitsInput.disabled = setUnlimitedBox.checked;
 });
-document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
+document.getElementById("setRulesCancel").addEventListener("click", () => closeOverlay("settingsRules"));
 document.getElementById("setSave").addEventListener("click", () => {
-  // Zen/Hard's forced-unlimited display (see openSettings()) is read-only
-  // -- don't let merely opening Settings while in one of those modes
-  // silently overwrite whatever visit limit the player actually has
-  // configured for Classic mode.
+  // Zen/Hard's forced-unlimited display (see openSettingsRules()) is
+  // read-only -- don't let merely opening this screen while in one of
+  // those modes silently overwrite whatever visit limit the player
+  // actually has configured for Classic mode.
   if (setUnlimitedBox.disabled){
     // leave prefs.maxVisits untouched
   } else if (setUnlimitedBox.checked){
@@ -10372,7 +10474,7 @@ document.getElementById("setSave").addEventListener("click", () => {
   savePrefs();
   applyVisitLimit();
   applyDiceCount();
-  closeOverlay("settings");
+  closeOverlay("settingsRules");
   render();
 });
 
@@ -10422,22 +10524,29 @@ document.querySelectorAll(".overlay").forEach(ov => {
 
 document.getElementById("resetBtn").addEventListener("click", () => {
   askConfirm("Start a brand new session? Your inventory, visits and job board will be cleared.", () => {
-    closeOverlay("settings");
+    closeOverlay("settingsSession");
     startNewSession();
   });
 });
-/* Unregisters the PWA service worker (see setupPWA()) and clears every
-   Cache Storage entry it ever wrote under, then hard-reloads -- the self-
-   serve fix for "the game looks out of date" (a stale cached copy still
-   being served offline-first) without needing to walk someone through
-   their browser's own site-data settings. Game progress lives in
-   localStorage, a completely separate storage mechanism from Cache
-   Storage, so none of this touches it -- only cached FILES (this page's
-   own HTML, images, etc.) are cleared. No-ops cleanly wherever the PWA
-   layer never activated (file://, a browser with no Cache Storage, ...). */
+/* Full factory reset, not just a cache-clear -- unregisters the PWA
+   service worker and clears every Cache Storage entry it ever wrote under
+   (the original "the game looks out of date" self-serve fix, a stale
+   cached copy being served offline-first), AND wipes every localStorage
+   key this game owns (SAVE_KEY, PREFS_KEY, HISTORY_KEY, and any legacy
+   per-slot keys from before the current save format -- see loadAll()'s
+   own migration comments) so the reload that follows boots exactly like
+   a brand-new install: no save, no run history, and -- critically --
+   prefs.tutorialHintsSeen/mouseTipsShown both gone too, so every
+   Professor Mouse tip plays again from the very first one. loadAll()
+   finding no save on that reload is what makes bootedNewSession true and
+   the welcome slide (main menu) show automatically -- see the boot
+   section's own comment -- so no separate "go to main menu" step is
+   needed here. localStorage.clear() rather than removing keys one at a
+   time: this page owns the whole origin, so there's nothing else in
+   there to preserve. */
 document.getElementById("resetCacheBtn").addEventListener("click", () => {
-  askConfirm("Clear cached game files and reload? Your save isn't affected.", async () => {
-    closeOverlay("settings");
+  askConfirm("Reset the game completely? This clears your save, all settings, and every tutorial message, then reloads to a fresh Main Menu. This can't be undone.", async () => {
+    closeOverlay("settingsDev");
     try {
       if ("serviceWorker" in navigator){
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -10448,6 +10557,7 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
         await Promise.all(keys.map(k => caches.delete(k)));
       }
     } catch(e){ /* best-effort -- still reload below even if this failed */ }
+    try { localStorage.clear(); } catch(e){ /* best-effort -- private-browsing storage bans etc. */ }
     location.reload();
   });
 });
@@ -10462,9 +10572,10 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
    anytime" is still true; it just means tapping Play from here like any
    other title-screen visit, not confirming a choice first. Resetting
    outright is still exactly one tap away as its own dedicated row
-   (resetCacheBtn's neighbor, resetBtn) for anyone who actually wants that. */
+   (resetBtn, in This Session alongside this) for anyone who actually
+   wants that. */
 document.getElementById("mainMenuBtn").addEventListener("click", () => {
-  closeOverlay("settings");
+  closeOverlay("settingsSession");
   showWelcomeSlide();
 });
 
@@ -10847,7 +10958,7 @@ window.addEventListener("resize", () => {
 });
 
 document.getElementById("tourBtn").addEventListener("click", () => {
-  closeOverlay("settings");
+  closeOverlay("settingsSession");
   startNewTutorial();
 });
 document.getElementById("tourPlayBtn").addEventListener("click", tourNext);
