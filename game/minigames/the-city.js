@@ -26,7 +26,18 @@
   const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
   const TARGET_STONES = 4;           // stacking this many => score 1.0
   const STONE_H = 70;                // px, height of each stone row
-  const BASE_TOP = 360;              // px, screen y where the base stone's top sits
+  // The base stone starts 1/4 of the way up from the bottom of the stage
+  // (not screen-center, which used to feel like an awkward mid-air start),
+  // and each successful placement rises the active stone STONE_H higher
+  // with no camera movement at all -- until that rising entry point would
+  // reach screen-center, the same fixed height the game always pinned the
+  // active stone to. From there on it's exactly today's original
+  // mechanic: the entry point stays put at center and the stack itself
+  // pans down underneath it instead. Both are fractions of the actual
+  // measured stage height (see runMinigame's own stageH), not fixed px,
+  // so this holds up across different viewport sizes.
+  const START_TOP_FRAC = 0.75;       // base stone's top, as a fraction of stage height
+  const CENTER_TOP_FRAC = 0.5;       // the fixed "entry point" height once panning takes over
   const START_WIDTH_FRAC = 0.7;      // first stone's width, as a fraction of stage width
   const MIN_WIDTH_PX = 40;           // floor so a placed stone can't shrink to nothing
   const SLIDE_MS_START = 3000;       // full left-right-left cycle, stone #1
@@ -174,6 +185,9 @@
     const diceEl = hud.querySelector("#mg-city-dice");
     const timerEl = hud.querySelector("#mg-city-timer");
     const stageW = stage.clientWidth || 320;
+    const stageH = stage.clientHeight || 480;
+    const START_TOP = stageH * START_TOP_FRAC;
+    const CENTER_TOP = stageH * CENTER_TOP_FRAC;
 
     let running = true;
     let stonesPlaced = 0;
@@ -196,7 +210,7 @@
       el.style.width = width + "px";
       el.style.height = (STONE_H - 4) + "px";
       el.style.left = left + "px";
-      el.style.top = (BASE_TOP - index * STONE_H) + "px";
+      el.style.top = (START_TOP - index * STONE_H) + "px";
       el.style.background = color(index);
       track.appendChild(el);
       return el;
@@ -231,7 +245,7 @@
       chip.style.width = width + "px";
       chip.style.height = (STONE_H - 4) + "px";
       chip.style.left = left + "px";
-      chip.style.top = (BASE_TOP - index * STONE_H) + "px";
+      chip.style.top = (START_TOP - index * STONE_H) + "px";
       chip.style.background = color(index);
       track.appendChild(chip);
       requestAnimationFrame(() => chip.classList.add("mg-city-drop"));
@@ -270,9 +284,23 @@
       curWidth = Math.max(MIN_WIDTH_PX, overlapW);
       prevLeft = overlapLeft;
       prevRight = overlapLeft + curWidth;
-      panY += STONE_H;
-      track.classList.add("mg-city-pan");
-      track.style.transform = `translateY(${panY}px)`;
+      // Pan just enough to pin the NEXT stone's entry height at
+      // screen-center once its own natural (unpanned) position would
+      // otherwise rise past it -- computed directly from that position
+      // each time (not accumulated by a flat STONE_H per placement),
+      // since the first crossing is rarely a clean multiple of STONE_H.
+      // While still below center, neededPan is 0 and the stone simply
+      // keeps appearing higher on its own with no camera movement at all
+      // (see START_TOP_FRAC/CENTER_TOP_FRAC's own comment) -- no
+      // .mg-city-pan transition class added during that phase either, so
+      // there's nothing animating to "slide down".
+      const nextNaturalTop = START_TOP - (rowIndex + 1) * STONE_H;
+      const neededPan = Math.max(0, CENTER_TOP - nextNaturalTop);
+      if (neededPan !== panY) {
+        panY = neededPan;
+        track.classList.add("mg-city-pan");
+        track.style.transform = `translateY(${panY}px)`;
+      }
 
       slideMs = Math.max(SLIDE_MS_MIN, SLIDE_MS_START - stonesPlaced * SLIDE_MS_STEP);
       spawnActive();

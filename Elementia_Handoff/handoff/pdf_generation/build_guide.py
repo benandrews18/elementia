@@ -53,7 +53,7 @@ STATIONS = [
              ("🍌","Banana","CREATION","🌳 Tree + 💧 Water + K",8),
              ("🧵","Fabric","COMPONENT","🍂 Plant Fiber + 🛠️ Tools",9),
 
-             ("🟡","Yellow Dye","COMPONENT","🍌 Banana + 💧 Water + 🫙 Glass Vial",16),
+             ("__DYEYELLOW__","Yellow Dye","COMPONENT","🍌 Banana + 💧 Water + 🫙 Glass Vial",16),
 
 
              ("⛵","Sailboat","CREATION","🛶 Canoe + 🧵 Fabric",10),
@@ -128,7 +128,7 @@ STATIONS = [
              ("🦾","Aluminum Alloy","MATERIAL","Al + Mg + 🔥 Furnace",6),
              ("🛡️","Titanium Alloy","MATERIAL","Ti + Al + 🔥 Furnace",6),
              ("__BRASSBAR__","Brass","MATERIAL","Cu + Zn + 🔥 Furnace",10),
-             ("♨️","Geothermal Pump","CREATION","🔥 Furnace + 💧 Water + 🔋 Battery",10),
+             ("♨️","Geothermal Pump","CREATION","🌋 Volcano + 💧 Water + 🔋 Battery",10),
              ("__DIAMOND__","Diamond","COMPONENT","C + 🔥 Furnace + 🕐 Clock",12),
              ("🌋","Volcano","CREATION","🌎 Planet + 🔥 Furnace",14),
              ("__GEMCOLLECTION__","Gemstone Collection","CREATION","__PEARL__ Pearl + __RUBY__ Ruby + __OPAL__ Opal + __TURQUOISE__ Turquoise + __AMBER__ Amber + __DIAMOND__ Diamond",19)],
@@ -153,7 +153,7 @@ STATIONS = [
 
              ("🛖","Log Cabin","CREATION","🌳 Tree + 🛠️ Tools + 🔥 Furnace",8),
              ("__AMBER__","Amber","COMPONENT","🌳 Tree + C + 🕐 Clock",11),
-             ("🔴","Red Dye","COMPONENT","🍓 Strawberries + 💧 Water + 🫙 Glass Vial",16),
+             ("__DYERED__","Red Dye","COMPONENT","🍓 Strawberries + 💧 Water + 🫙 Glass Vial",16),
 
 
              ("🐟","Salmon","CREATION","🌿 Seaweed + 💧 Water + 🥚 Egg",12),
@@ -218,14 +218,14 @@ STATIONS = [
              ("🗿","Statue","COMPONENT","🪨 Limestone + 🛠️ Tools",6),
              ("📄","Paper","COMPONENT","🍂 Plant Fiber + 💧 Water",12),
 
-             ("⚫","Black Dye","COMPONENT","🍇 Blackberries + 💧 Water + 🫙 Glass Vial",18),
+             ("__DYEBLACK__","Black Dye","COMPONENT","🍇 Blackberries + 💧 Water + 🫙 Glass Vial",18),
 
 
              ("🌉","Bridge","CREATION","🔩 Steel + ⬜ Concrete + 💧 Water",8),
              ("🏢","Building","CREATION","⬜ Concrete + 🪟 Glass + 🔩 Steel",8),
              ("📕","Book","COMPONENT","📄 Paper + 🛠️ Tools",13),
              ("🧶","Yarn","COMPONENT","🤍 Wool + 🔘 Wheel",14),
-             ("🧣","Knit Scarf","CREATION","🧶 Yarn + 🔴 Red Dye + 🔵 Blue Dye",22),
+             ("🧣","Knit Scarf","CREATION","🧶 Yarn + __DYERED__ Red Dye + __DYEBLUE__ Blue Dye",22),
              ("🎺","Trumpet","CREATION","__BRASSBAR__ Brass + 🛠️ Tools",18),
 
 
@@ -245,7 +245,7 @@ STATIONS = [
              ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
              ("🫐","Blueberries","MATERIAL","🍬 Sugar + K + 🧺 Basket",14),
 
-             ("🔵","Blue Dye","COMPONENT","🫐 Blueberries + 💧 Water + 🫙 Glass Vial",19),
+             ("__DYEBLUE__","Blue Dye","COMPONENT","🫐 Blueberries + 💧 Water + 🫙 Glass Vial",19),
 
 
              ("__MICROCHIP__","Microchip","COMPONENT","🔌 Wire + Si + Ag",8),
