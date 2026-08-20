@@ -9040,14 +9040,6 @@ function handleScreenClick(ev){
         if (entry.tier === "CAPSTONE") celebrate(entry);
         else showCardPop(entry);
       }
-      // Organic -- craft() only ever succeeds for an item not already
-      // owned, so this fires on whatever happens to be the player's
-      // actual first-ever craft, not a scripted target (see
-      // showTutorialHintOnce(), which handles the real one-time-ever
-      // gating -- this runs after every craft, harmlessly, since it's
-      // already a no-op past the first time).
-      // bottom-right -- where the Item Reference hub icon (#hubCodex) actually sits.
-      showTutorialHintOnce("firstcraft", 3, "Nice! See it in Item Reference.", "bottom-right", "#hubCodex");
     }
     return;
   }
