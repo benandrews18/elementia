@@ -150,7 +150,7 @@ body[data-picking] #topbar{display:none}
 .hubbtn .hi{
   width:46px; height:46px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  font-size:23px; line-height:1; flex:none;
+  font-size:35px; line-height:1; flex:none;
   background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
   border:3px solid #f2a93a;
   box-shadow:inset 0 2px 3px rgba(255,255,255,.4), inset 0 -4px 6px rgba(0,0,0,.22),
@@ -527,12 +527,21 @@ body[data-screen="market"] #trackedPill{display:none}
   max-height:calc(100% - var(--hub-h, 67px) - 90px); overflow-y:auto;
 }
 #marketArc.show{display:flex}
+/* Light translucent card behind icon+label -- the backdrop art busy
+   enough (buildings, sky, water) that white text/icons alone sometimes
+   sank into it depending on what happened to sit behind them; a soft
+   frosted panel gives every row a consistent light patch to sit on
+   regardless of what's underneath. */
 .market-arc-btn{
-  pointer-events:auto; background:none; border:none; padding:0; cursor:pointer;
+  pointer-events:auto; border:none; cursor:pointer;
   display:flex; align-items:center; gap:10px;
+  padding:8px 18px 8px 8px; border-radius:999px;
+  background:rgba(255,255,255,.14); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
+  box-shadow:0 4px 14px rgba(0,0,0,.25);
   transform:translateX(0); opacity:1;
-  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .22s ease, background .12s;
 }
+.market-arc-btn:not(:disabled):hover{background:rgba(255,255,255,.22)}
 /* Retracts off the left edge and fades out -- see renderMarketArc()'s own
    comment on when this applies (a Jobs/Quests/Trade/Collections section
    is expanded). Same idea .floatbtn's own offscreen toggle uses. */
@@ -815,6 +824,11 @@ body[data-screen="market"] #trackedPill{display:none}
 
 /* ------------------------------------------------------- game mode --- */
 .mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
+/* [hidden] alone loses to .mode-card's own display:flex below (an author
+   rule always beats the [hidden] UA default at equal-or-lower specificity)
+   -- this one extra selector is what actually makes classicModeCard's
+   hidden attribute (see refreshModePicker()) take effect. */
+.mode-card[hidden]{display:none}
 .mode-card{
   display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
   padding:16px; border-radius:14px; border:2px solid var(--line); background:var(--bg-soft);
@@ -822,12 +836,9 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .mode-card:hover{border-color:var(--mute); background:var(--sunken)}
 .mode-card:active{transform:translateY(3px) scale(.99); box-shadow:0 0 0 transparent}
-.mode-card:disabled{opacity:.5; filter:grayscale(.3); cursor:not-allowed}
-.mode-card:disabled:hover{border-color:var(--line); background:var(--bg-soft)}
 .mode-emoji{font-size:28px; line-height:1}
 .mode-name{font-size:17px; font-weight:800}
 .mode-desc{font-size:13px; color:var(--ink2); line-height:1.4}
-.mode-lock-note{font-size:12px; font-weight:700; color:var(--gold)}
 
 /* Section titles ("Job Board — <station>", "My Jobs"). These are the only
    headings in the sheet, so they carry real weight rather than reading as
@@ -1154,29 +1165,22 @@ body[data-screen="market"] #trackedPill{display:none}
    fixed page-level #backdrop), since the card fills nearly the whole
    screen on phones/tablets -- a backdrop only visible in the page gutters
    around it would be invisible in practice on the devices this actually
-   ships to. Item rows, the gather chips, etc. all paint their own solid
-   tinted backgrounds on top (see .item/.gather/etc), so legibility isn't
-   affected -- only the card's empty space (margins between sections)
-   picks up the art. background:var(--card) stays as the base/fallback
-   layer; JS layers the wash+image on top of it inline, per station. */
+   ships to. A single still image, scaled to the card's full width (not
+   cropped to "cover" both axes) and anchored to its top edge -- whatever
+   the image's own aspect ratio, its top stays fully intact and legible;
+   only the bottom may run out before a long shop list does, which is fine
+   since item rows are transparent now (see .item) and don't depend on the
+   art extending the full scroll height. Scrolls normally with the rest of
+   the card's content -- no more background-attachment:fixed parallax trick
+   (that also sidesteps the real mobile Safari/Chrome repaint jank it used
+   to need a touch-device fallback for, see the removed media query this
+   comment used to sit above). background:var(--card) stays as the base/
+   fallback layer; JS layers the wash+image on top of it inline, per
+   station (see renderStation()'s bgStyle). */
 .sheet{
-  background:var(--card); background-size:cover; background-position:center;
+  background:var(--card); background-size:100% auto; background-position:top center; background-repeat:no-repeat;
   border:1px solid var(--line); border-top:16px solid var(--suit);
   border-radius:18px; overflow:hidden;
-}
-/* background-attachment:fixed (set inline per station, see shopBodyHTML())
-   is a well-known source of scroll-frame repaint jank on real mobile
-   browser tabs -- worse still combined with the collapsing/expanding
-   address bar in Safari/Chrome, which is why this reads fine inside an
-   embedded app webview (Claude's own artifact viewer) but visibly glitches
-   once the exact same page loads as an actual standalone mobile tab (e.g.
-   GitHub Pages). Touch devices fall back to normal scroll-following
-   background instead -- costs the "art stays pinned as a long shop list
-   scrolls past it" parallax touch specifically there, trading it for a
-   smooth scroll. !important is required: this is overriding a dynamically
-   generated inline style, not fighting our own cascade. */
-@media (hover:none), (pointer:coarse){
-  .sheet{ background-attachment:scroll !important; }
 }
 /* Title bar + dice-gather section are one continuous dark card (fixed dark
    tone, not theme-dependent -- this header always reads as "dark surface"
@@ -1400,9 +1404,13 @@ body[data-screen="market"] #trackedPill{display:none}
    light-section border, but identical text treatment. */
 .col-label.elements-label{margin:14px 26px 0; padding-bottom:0; border-bottom:none}
 .shop{display:flex; flex-direction:column; gap:9px}
-/* Opaque on the left (behind the emoji/name, where legibility matters
-   most) fading to translucent on the right, so the station backdrop
-   still reads as visible through the row without competing with text. */
+/* Fully transparent -- the station's own backdrop image (see .sheet) is
+   this row's background now, not a separate opaque-fading-to-translucent
+   fill layered on top of it. Scoped to .shop specifically (not the bare
+   .item rule below) since that class is reused wholesale in several other
+   contexts -- Quest Log, Job Board, the item-reveal popup -- that don't
+   sit over a station's own art and still want a real card fill there. */
+.shop .item{background:transparent}
 /* Craft button now fills the card's full right edge (see .craftbtn below)
    rather than sitting centered with its own padding -- the vertical
    padding that used to live on .item itself moves onto .irow, the only
@@ -1412,10 +1420,11 @@ body[data-screen="market"] #trackedPill{display:none}
    and the job-tracking pin badge, both of which deliberately poke a few
    px past .item's own box via negative offsets. The button rounds its
    own right corners instead (see .craftbtn) to match the card's shape. */
-/* Full suit-colored perimeter (was left-edge-only) + a corner points
-   bubble (see .item-pts-badge/itemHTML()) -- same "thick suit border,
-   number bubble straddling a corner" language as the element cards (see
-   .el-pop-card/.el-pop-bubble), scaled down for a compact list row. */
+/* Full suit-colored perimeter (was left-edge-only) -- the "thick suit
+   border" half of the element-card language (see .el-pop-card), scaled
+   down for a compact list row. The other half, the corner number bubble,
+   belongs on the tap-to-inspect popup instead (see .pc-card below), not
+   here -- a points number on every single row read as clutter, not signal. */
 .item{
   position:relative; cursor:pointer;
   display:flex; align-items:stretch; border-radius:14px;
@@ -1461,18 +1470,6 @@ body[data-screen="market"] #trackedPill{display:none}
   border-radius:50%; background:var(--card); border:2px solid var(--ok);
   display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
-}
-/* Points bubble -- the number-bubble-straddling-a-corner language from
-   .el-pop-bubble, scaled to a compact list card. Top-LEFT specifically so
-   it never collides with the owned checkmark/pin badge above, which both
-   live top-right (see itemHTML()). White face + suit-colored ring, same
-   as the element card's own bubbles. */
-.item-pts-badge{
-  position:absolute; top:-9px; left:-9px; width:30px; height:30px;
-  border-radius:50%; background:#fff; border:3px solid var(--suit, #4a4f5c);
-  display:flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:800; color:#2b2822; line-height:1;
-  box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:1;
 }
 .item .iem{font-size:38px; line-height:1.15; width:34px; text-align:center; flex:none}
 .item .ibody{flex:1; min-width:0}
@@ -2106,17 +2103,19 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    without affecting how far it hangs past the edge). */
 .pc-badge{
   position:absolute; top:-14px; right:-14px; width:64px; height:64px; border-radius:50%;
-  background:var(--gold-soft); border:2px solid var(--gold-line); color:var(--gold);
+  background:#fff; border:4px solid var(--suit, #4a4f5c); color:#2b2822;
   display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 .pc-badge .n{font-size:22px; font-weight:800}
-.pc-badge .l{font-size:8px; font-weight:800; letter-spacing:.5px; margin-top:1px}
+.pc-badge .l{font-size:8px; font-weight:800; letter-spacing:.5px; margin-top:1px; color:#5a5548}
 /* Top-left twin of .pc-badge -- the station this card was made at, same
    circle language as the points badge on the other corner. */
 .pc-station-badge{
   position:absolute; top:-14px; left:-14px; width:64px; height:64px; border-radius:50%;
-  background:var(--gold-soft); border:2px solid var(--gold-line); color:var(--gold);
+  background:#fff; border:4px solid var(--suit, #4a4f5c); color:#2b2822;
   display:flex; align-items:center; justify-content:center; font-size:28px; line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 .pc-station-badge img, .pc-station-badge svg{width:1em; height:1em}
 /* Centered, with symmetric side padding clearing BOTH corner circles now
@@ -3134,10 +3133,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="mode-emoji">🌿</span>
         <span class="mode-name">Zen Mode</span>
       </button>
-      <button type="button" class="mode-card" data-mode="classic" id="classicModeCard">
+      <button type="button" class="mode-card" data-mode="classic" id="classicModeCard" hidden>
         <span class="mode-emoji">🗺️</span>
         <span class="mode-name">Classic Mode</span>
-        <span class="mode-lock-note" id="classicLockNote" hidden>Complete a capstone in Adventure Mode to unlock</span>
       </button>
       <button type="button" class="mode-card" data-mode="hard">
         <span class="mode-emoji">🔥</span>
@@ -4801,10 +4799,14 @@ function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "
    celebrate(). Re-applied every time the picker opens rather than once,
    so a player who unlocks it mid-session (rare, but the overlay can be
    reopened) sees it come alive without a reload. */
+// Classic Mode card doesn't exist on the mode-select screen at all until
+// unlocked -- a visible-but-disabled card with a lock note used to sit
+// there as a preview of what's coming, but that read as "here's a mode
+// you can't have yet" clutter on a screen that's supposed to be a simple
+// 2-choice pick early on. It reappears the run after a capstone unlocks it
+// (see pendingClassicUnlockTip/prefs.classicUnlocked).
 function refreshModePicker(){
-  const locked = !prefs.classicUnlocked;
-  document.getElementById("classicModeCard").disabled = locked;
-  document.getElementById("classicLockNote").hidden = !locked;
+  document.getElementById("classicModeCard").hidden = !prefs.classicUnlocked;
 }
 function openModePicker(){
   refreshModePicker();
@@ -5310,47 +5312,10 @@ const STATION_BG = {
   "The Observatory":    "backdrops/observatory.webp",
 };
 /* ----------------------------------------------------------- job board --- */
-/* Eligible pool: every capstone, plus any non-capstone Creation worth
-   enough points to feel like a real "big item" rather than a stepping
-   stone. */
-const JOB_MIN_CREATION_POINTS = 13;
 /* At most this many jobs can be held (taken, not-yet-turned-in) at once --
    turning one in frees a slot. See takeJob()/jobBoardHTML(). */
 const MAX_ACTIVE_JOBS = 4;
 const activeJobCount = () => state.jobs.filter(j => !j.turnedIn).length;
-// Gemstone Collection is a deliberately hidden mission -- the only way to
-// it is stumbling onto Furnace+Clock ownership or its own component
-// closure (see GEMSTONE_SECRET/isRevealed()), never a job offer handing
-// it to the player outright.
-// Bakery's Hard-eligible pool ran to 12 -- the 3 lowest-value, most
-// interchangeable single-oven-bake items (Pretzel/Apple Pie/Croissant all
-// read as reskins of each other) are trimmed here rather than cut from the
-// catalog outright, so the job board leans on the more distinctive treats.
-// Library is likewise City's lowest-value non-core CREATION -- trimmed to
-// make room for Bridge (see JOB_EXTRA_ITEMS) without pushing City over the
-// 10-per-station job cap.
-const JOB_HIDDEN_ITEMS = new Set([
-  "Gemstone Collection", "Pretzel", "Apple Pie", "Croissant", "Library",
-]);
-/* Per-station job-eligible counts were badly skewed (Bakery/City had a
-   dozen options, Old Growth Forest/Deep Mine/Power Plant had 1-3, worse
-   still in Classic Mode where the CORE_SET filter above shrinks most
-   stations to 1-2) -- these items don't meet JOB_MIN_CREATION_POINTS (or
-   aren't CREATION tier at all) but are still substantial, ownable items,
-   force-included here purely for job-board variety. Every entry here is a
-   CORE_SET member so Classic Mode benefits too, EXCEPT Power Plant's
-   Turbine Blade/Computer/Fiberglass which are core there anyway. Picked to
-   bring every station to a 5-10 job-eligible range in both modes -- see
-   jobEligibleItems() for how this combines with the points-based filter. */
-const JOB_EXTRA_ITEMS = new Set([
-  "Turbine Blade", "Computer", "Fiberglass",            // Power Plant
-  "Tractor", "Chicken", "Solar Panel", "Farm",           // Greenhouse
-  "Diamond", "Aluminum Alloy", "Titanium Alloy", "Furnace", // Deep Mine
-  "Salmon", "Fossil", "Log Cabin", "Deer",               // Old Growth Forest
-  "Oven",                                                 // The Bakery
-  "Bridge",                                               // The City
-  "Telescope",                                            // The Observatory
-]);
 /* Shared by Job Board and Trading Post (both gate on this, see
    jobBoardUnlocked()/tradeBodyHTML()) -- a player who hasn't at least
    scouted every station yet doesn't have a stable enough picture of the
@@ -5380,8 +5345,7 @@ function jobBoardUnlocked(){
 }
 function jobEligibleItems(){
   const names = ENTRIES
-    .filter(e => (e.tier === "CAPSTONE" || (e.tier === "CREATION" && e.points >= JOB_MIN_CREATION_POINTS) || JOB_EXTRA_ITEMS.has(e.name))
-      && !JOB_HIDDEN_ITEMS.has(e.name)
+    .filter(e => QUEST_ITEM_NAMES.has(e.name)
       // Classic Mode: never offer a job for something outside CORE_SET --
       // it wouldn't be craftable (or even visible) here to begin with.
       && (state.mode !== "classic" || isCoreEntry(e))
@@ -6182,7 +6146,6 @@ function itemHTML(entry, idx){
   const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>'
     : (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
-    <span class="item-pts-badge">${entry.points}</span>
     ${pinBadge}
     <div class="irow">
       <div class="iem">${em(entry.emoji)}</div>
@@ -6305,6 +6268,14 @@ function mapCardHTML(name){
   // map pin itself). Zen Mode skips this masking entirely -- full sandbox,
   // nothing hidden.
   const unvisited = state.mode !== "zen" && state.mode !== "classic" && !state.visitedStations[name];
+  // The Ocean is the one exception to identity-masking: every Adventure
+  // run starts there (see mustStartAtOcean()), so its icon/name/dice pool
+  // are shown from the very first frame rather than reading as an unknown
+  // "???" station the player is being forced into blind. Its item shop
+  // still stays hidden behind the same "Visit this station..." placeholder
+  // as any other never-visited station below -- only the identity half of
+  // the mask lifts early, not the crafting-progress half.
+  const identityKnown = !unvisited || name === "The Ocean";
   // Adventure Mode only: the capstone line stays off this preview card
   // until the player has actually seen that capstone somewhere real (its
   // own station's shop, via isRevealed() -- same state.seenItems flag,
@@ -6321,10 +6292,10 @@ function mapCardHTML(name){
       <span class="cap-name">${esc(capName)}</span>
       ${done ? "<span>✓</span>" : ""}
     </div>` : ""}`;
-  const poolHTML = unvisited ? "" :
+  const poolHTML = !identityKnown ? "" :
     `<div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>`;
   return `<div class="map-card" style="--suit:${su.color}">
-    <div class="row1"><span class="em">${unvisited ? "❓" : em(s.emoji)}</span><h2>${unvisited ? "???" : esc(name)}</h2>${trackedPill}</div>
+    <div class="row1"><span class="em">${identityKnown ? em(s.emoji) : "❓"}</span><h2>${identityKnown ? esc(name) : "???"}</h2>${trackedPill}</div>
     ${poolHTML}
     ${itemsHTML}
     ${statusNote ? `<p class="map-status-note">${esc(statusNote)}</p>` : ""}
@@ -6358,6 +6329,9 @@ function renderMap(){
     // The dice pool stays visible either way -- that's public knowledge
     // regardless of visit history. Zen Mode skips this masking entirely.
     const unvisited = state.mode !== "zen" && state.mode !== "classic" && !state.visitedStations[name];
+    // The Ocean's own icon shows from the very start of Adventure Mode too
+    // -- same exception, same reasoning, as mapCardHTML()'s identityKnown.
+    const identityKnown = !unvisited || name === "The Ocean";
     // Same 28px "points back at the tracked item" badge itemHTML() uses
     // in the shop itself (see .item-pin-badge) -- only for a station
     // that's actually been visited (nothing to preview otherwise) and
@@ -6369,7 +6343,7 @@ function renderMap(){
       ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       ${trackedBadge}
-      <span class="mn-em">${unvisited ? "❓" : em(s.emoji)}</span>
+      <span class="mn-em">${identityKnown ? em(s.emoji) : "❓"}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
   }).join("");
@@ -7088,11 +7062,10 @@ function renderStation(name){
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
   const bg = STATION_BG[s.name];
-  // Pinned to the viewport (not the card's own, content-height box) --
-  // otherwise a long shop list stretches this same image across its full
-  // scrollable height, and the art visibly scrolls past behind the item
-  // rows instead of staying put with only the gaps between them showing it.
-  const bgStyle = bg ? `background-image:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url('${bg}'); background-attachment:fixed;` : "";
+  // Still image, scrolls normally with the card's own content -- see
+  // .sheet's own comment for why this dropped the old fixed-attachment
+  // parallax trick.
+  const bgStyle = bg ? `background-image:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url('${bg}');` : "";
 
   // A sub-zone with nothing sold there yet (the 8 planets, for now) gets
   // an explicit placeholder instead of a silently empty section.
@@ -7904,18 +7877,20 @@ function maybeShowFirstVisitHint(){
     return;
   }
   if (!state.rolledHere) return; // nothing below applies before this visit's own roll
-  if (state.visits === 1 && showMouseTipOnce("afterroll", 8, "Tap again when ready to leave.", "bottom-left", "#hubHome")) return;
-  // top -- a Craft button can be anywhere in a long, scrolled shop list,
-  // never at a fixed screen position the way the hub/floating buttons
-  // below are, so pinning near the top keeps the bubble from landing on
-  // top of whichever item actually turned craftable. The ring targets the
-  // first green Craft button on screen -- a representative example, not
-  // necessarily the exact item that triggered this.
-  if (entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e))
-      && showTutorialHintOnce("cancraft", 11, "Green Craft = ready to build!", "top-right", ".craftbtn.go")) return;
+  // No "here's a green Craft button" call-out any more -- the green ring
+  // itself (see .item.can/.craftbtn.go) already reads as "ready to build"
+  // on its own, and a first-time player crafting through the Ocean's
+  // starter items doesn't need a mouse tip re-explaining every single one.
+  // Held off until there's nothing left to build with what's on hand --
+  // telling a first-time player they're free to leave while a green Craft
+  // button is still sitting right there read as rushing them out before
+  // they'd actually exhausted their own options.
+  const hasCraftable = entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e));
+  if (state.visits === 1 && !hasCraftable
+      && showMouseTipOnce("afterroll", 12, "Tap again when ready to leave.", "bottom-left", "#hubHome")) return;
   // bottom-right -- right where the floating Convert button (#quickConvertBtn) actually sits.
   if (Object.values(state.elements).some(n => n >= 3)
-      && showTutorialHintOnce("canconvert", 6, "3+ elements? Tap Convert!", "bottom-right", "#quickConvertBtn")) return;
+      && showTutorialHintOnce("canconvert", 1, "3+ elements? Tap Convert!", "bottom-right", "#quickConvertBtn")) return;
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -8096,7 +8071,7 @@ function launchMinigame(){
   overlay.classList.add("show");
   introEl.classList.add("show");
   if (state.visits === 1){
-    showMouseTipOnce("minigame1", 9, "Quick challenge! Do your best.", "top-left");
+    showMouseTipOnce("minigame1", 1, "Quick challenge! Do your best.", "top-left");
   }
 
   function startRound(){
@@ -8904,7 +8879,7 @@ function openPinsTray(){
   // Reference to track them here."), and pointing at a chip that doesn't
   // exist yet would just be confusing.
   if (prefs.pinnedItems.length){
-    showTutorialHintOnce("pinselect", 4,
+    showTutorialHintOnce("pinselect", 10,
       "Tap a pin to start tracking!",
       "bottom-left", ".map-job-chip");
   }
@@ -9250,8 +9225,14 @@ function renderMarketArc(){
   const jobsLocked = jobsWrongMode || !jobBoardUnlocked();
   const tradeLocked = state.mode !== "hard" || !allStationsVisited();
   const slots = [
-    { nav: "jobs", icon: "📋", label: "Job Board", disabled: jobsLocked,
-      lockReason: jobsWrongMode ? "Classic Mode only" : !jobBoardUnlocked() ? "Visit every station to unlock" : "",
+    // Hidden outright in Adventure Mode (not just disabled) -- Quest Log
+    // is that mode's whole equivalent system, so a greyed-out Job Board
+    // sitting right next to it read as a second, broken quest system
+    // rather than a mode-appropriate absence. Still just disabled (visible,
+    // with its lockReason) in Classic Mode itself before all stations are
+    // visited -- that lock is real, temporary, and worth advertising.
+    { nav: "jobs", icon: "📋", label: "Job Board", disabled: jobsLocked, hidden: jobsWrongMode,
+      lockReason: !jobBoardUnlocked() ? "Visit every station to unlock" : "",
       title: jobsWrongMode ? "Job Board — Classic Mode only"
         : !jobBoardUnlocked() ? "Job Board — visit every station to unlock"
         : "Job Board — take jobs, turn in finished items" },
@@ -9328,9 +9309,12 @@ function openMarket(){
   // bottom anchor -- the Marketplace's own arc menu (see
   // renderMarketArc()) sits radially around the hub button, right where
   // a bottom corner bubble's own image would otherwise land.
+  // No highlight ring on this one -- #marketArc is the whole vertical
+  // button stack, not one specific control, so a ring drawn around all of
+  // it read as a vague box rather than pointing at anything real.
   const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
     ? "Welcome! Quests live here."
-    : "Welcome! Jobs live here.", "top-left", "#marketArc");
+    : "Welcome! Jobs live here.");
   if (shownFirstEver) return;
   // Collections' own arc button stays hidden (see renderMarketArc()'s
   // earned-hidden) until at least one is actually done -- the first
@@ -9340,7 +9324,7 @@ function openMarket(){
   // nothing in it yet.
   const collectionsEligible = state.mode !== "classic" && state.collectionsCompleted.length > 0;
   if (collectionsEligible && showTutorialHintOnce("collectionsunlocked", 5, "Collection done! 🏆 Tap to see it.", "top-right", '[data-market-nav="collections"]')) return;
-  showMouseTipOnce("marketreturn", 10, "Jobs, trades, collections here.", "top-left", "#marketArc");
+  showMouseTipOnce("marketreturn", 10, "Jobs, trades, collections here.", "top-left");
 }
 
 /* ----------------------------------------------------- trade market --- */
@@ -9571,74 +9555,183 @@ function collectionsBodyHTML(){
 }
 
 /* ---------------------------------------------------------- quests --- */
-/* Hard Mode only -- a branching tree of goal items, each one gated
-   behind its parent's completion rather than all open at once. The
-   roots and branch points are the item web's own "keystone" items (see
-   the centrality analysis behind this: highest transitive fan-out --
-   Tools/Furnace/Building each gate a huge share of the catalog -- plus
-   the three items that gate a whole separate region, Sailboat/Library/
-   Rocket, see SUBZONE_TRAVEL's own unlockItem values), so working
-   through the tree naturally points a player at the same items that
-   matter most structurally, not an arbitrary pick.
-   parent:null quests are structurally available from the very start;
-   everything else structurally opens up once its own parent quest is
-   completed -- "opens up 2 new quests" is just two different QUESTS
-   entries sharing that parent. But structural availability isn't the
-   same as what actually SHOWS: questVisible()/QUEST_VISIBLE_CAP throttle
-   the reveal to only 1-2 quests on offer at a time regardless of how many
-   are structurally eligible, so the tree drips out slowly instead of a
-   parent's entire set of children landing on the player all at once.
+/* Hard Mode only -- a single strict story line, not a branching tree:
+   each quest's parent is exactly the previous quest's id, so they unlock
+   one at a time in QUESTS' own declaration order (a hand-picked "story
+   mission order" -- see the design doc this was authored from). Taking a
+   quest for an item you already own completes it immediately (see
+   takeQuest()), so a player who crafted ahead of the quest line doesn't
+   get stuck -- they just clear it in one tap the moment it's offered.
+   parent:null on the very first entry only; every other quest structurally
+   opens up once its own parent is completed. Structural availability isn't
+   the same as what actually SHOWS: questVisible()/QUEST_VISIBLE_CAP still
+   throttle the reveal to 1-2 quests on offer at a time.
    gateway:<region> is display-only flavor (a badge), the actual unlock
-   is still owning the item itself, same as it already works without
-   any of this.
-   parent can also be an ARRAY of ids -- an AND-join, only available once
-   EVERY one of those quests is completed (see questAvailable()). This is
-   how a fork back-merges: 2-3 sibling quests fan out from one parent, and
-   the next single quest waits on all of them rather than just the first
-   to finish. Never surfaced to the player as "tiers" or "requires X and
-   Y" anywhere -- same blurb-only presentation as a single-parent quest,
-   see questCardHTML(). */
+   is still owning the item itself, same as it already works without any
+   of this -- kept on Sailboat/Library/Rocket at their new positions since
+   those three still gate Island/Wardrobe/Solar System (SUBZONE_TRAVEL's
+   own unlockItem values).
+   parent can also be an ARRAY of ids (an AND-join, see questAvailable())
+   from when this was a branching tree -- no entry below uses it, but
+   questAvailable()/jobBoardUnlocked() still support it. */
 const QUESTS = [
-  { id:"tools", item:"Tools", parent:null,
-    blurb:"Nearly everything downstream of the Deep Mine and Observatory runs through a set of Tools sooner or later." },
-  { id:"furnace", item:"Furnace", parent:null,
-    blurb:"Every alloy, every gemstone, most of the Bakery's late items -- almost none of it exists without a Furnace first." },
-  { id:"building", item:"Building", parent:null,
-    blurb:"The City's whole skyline -- and everything that references it -- starts with a single Building." },
-  { id:"sailboat", item:"Sailboat", parent:null, gateway:"Island",
-    blurb:"Sets you loose past The Ocean's own shore, out to the Island and everything only found there." },
-  { id:"clock", item:"Clock", parent:"tools",
-    blurb:"Every gemstone in the game -- Pearl, Ruby, Opal, Turquoise, Amber, Diamond -- waits on a Clock." },
-  { id:"farm", item:"Farm", parent:"tools",
-    blurb:"Cows, sheep, chickens, bees -- the whole Homestead line starts the moment a Farm exists." },
-  { id:"alloy", item:"Titanium Alloy", parent:"furnace",
-    blurb:"The first real alloy out of the Furnace, and the direct road to a Rocket." },
-  { id:"stainless", item:"Stainless Steel", parent:"furnace",
-    blurb:"The Furnace's other early payoff -- structural stock for the Maglev Train and beyond." },
-  { id:"library", item:"Library", parent:"building", gateway:"Wardrobe",
+  { id:"dna", item:"DNA", parent:null,
+    blurb:"The Greenhouse's first real biology -- Sugar and two elements twist into the blueprint every living thing in Elementia shares." },
+  { id:"tools", item:"Tools", parent:"dna",
+    blurb:"Steel and two alloys forged into the single set of Tools nearly every later recipe leans on." },
+  { id:"soil", item:"Soil", parent:"tools",
+    blurb:"Clay worked into Sand becomes Soil -- the forest floor everything green eventually grows out of." },
+  { id:"furnace", item:"Furnace", parent:"soil",
+    blurb:"Clay and Carbon, fired hot enough to become a Furnace -- the Deep Mine's own gateway to every alloy and gemstone." },
+  { id:"tree", item:"Tree", parent:"furnace",
+    blurb:"Soil plus two elements is all a Tree needs to take root -- the forest's whole timber line starts here." },
+  { id:"glass", item:"Glass", parent:"tree",
+    blurb:"Sand and Limestone, melted together into Glass -- half the Observatory's own instruments start with this pane." },
+  { id:"egg", item:"Egg", parent:"glass",
+    blurb:"DNA and three elements crack into an Egg -- the Bakery's first real ingredient with a pulse behind it." },
+  { id:"canoe", item:"Canoe", parent:"egg",
+    blurb:"A Tree and some Water lashed into a Canoe -- the forest's simplest way onto the river." },
+  { id:"deer", item:"Deer", parent:"canoe",
+    blurb:"Tree, Water, and Bone -- the forest's own wildlife starts wandering the moment a Deer appears." },
+  { id:"apple", item:"Apple", parent:"deer",
+    blurb:"A Tree given Water ripens into the Greenhouse's own first fruit." },
+  { id:"banana", item:"Banana", parent:"apple",
+    blurb:"Tree, Water, and Potassium -- the Ocean's own orchard, oddly enough, starts with a Banana." },
+  { id:"rope", item:"Rope", parent:"banana",
+    blurb:"Plant Fiber twisted around a set of Tools becomes Rope -- the forest's own answer to holding anything together." },
+  { id:"engine", item:"Engine", parent:"rope",
+    blurb:"Tools, Natural Gas, and Steel combine into an Engine -- the Power Plant's own answer to real motion." },
+  { id:"lightbulb", item:"Light Bulb", parent:"engine",
+    blurb:"Glass wrapped around a Wire is all a Light Bulb needs to switch the Power Plant's own lights on." },
+  { id:"farm", item:"Farm", parent:"lightbulb",
+    blurb:"Soil, Tools, and Water -- the Greenhouse's whole Homestead line starts the moment a Farm exists." },
+  { id:"bridge", item:"Bridge", parent:"farm",
+    blurb:"Steel and Concrete, spanned across Water -- The City's first real Bridge." },
+  { id:"wool", item:"Wool", parent:"bridge",
+    blurb:"A Sheep and a set of Tools shear into Wool -- the Greenhouse's own start of a whole textile line." },
+  { id:"logcabin", item:"Log Cabin", parent:"wool",
+    blurb:"Tree, Tools, and a Furnace's own heat raise the forest's first real Log Cabin." },
+  { id:"compass", item:"Compass", parent:"logcabin",
+    blurb:"A Magnet, Water, and Glass -- the Observatory's own answer to never losing your bearings." },
+  { id:"grain", item:"Grain", parent:"compass",
+    blurb:"A Farm and some Fertilizer are all it takes to bring in the Greenhouse's first real Grain harvest." },
+  { id:"cow", item:"Cow", parent:"grain",
+    blurb:"Farm and Grain together bring the Greenhouse's own livestock line to life, starting with a Cow." },
+  { id:"basket", item:"Basket", parent:"cow",
+    blurb:"Plant Fiber woven around a set of Tools becomes a Basket -- the Greenhouse's own way of carrying a harvest home." },
+  { id:"honey", item:"Honey", parent:"basket",
+    blurb:"A Bee and some Sugar are the Greenhouse's whole recipe for Honey." },
+  { id:"clock", item:"Clock", parent:"honey",
+    blurb:"A Battery and a set of Tools tick into a Clock -- every gemstone in the game waits on this one build." },
+  { id:"fabric", item:"Fabric", parent:"clock",
+    blurb:"Plant Fiber and Tools woven together into Fabric -- the Ocean's own start of a sail." },
+  { id:"plastic", item:"Plastic", parent:"fabric",
+    blurb:"Natural Gas run through a Furnace becomes Plastic -- the Power Plant's own building block for everything synthetic after it." },
+  { id:"solarpanel", item:"Solar Panel", parent:"plastic",
+    blurb:"Silicon, Wire, Glass, and a Battery -- the Greenhouse's own answer to catching sunlight." },
+  { id:"building", item:"Building", parent:"solarpanel",
+    blurb:"Concrete, Glass, and Steel raise The City's very first Building -- and everything the skyline references after it." },
+  { id:"microchip", item:"Microchip", parent:"building",
+    blurb:"Wire, Silicon, and Silver etched down into a Microchip -- the Observatory's smallest, most important build yet." },
+  { id:"sailboat", item:"Sailboat", parent:"microchip", gateway:"Island",
+    blurb:"A Canoe and some Fabric set you loose past The Ocean's own shore, out to the Island and everything only found there." },
+  { id:"chocolate", item:"Chocolate", parent:"sailboat",
+    blurb:"Sugar run through a Furnace's heat becomes the Bakery's own Chocolate." },
+  { id:"tractor", item:"Tractor", parent:"chocolate",
+    blurb:"A Farm fitted with an Engine becomes a Tractor -- the Greenhouse's own leap into real machinery." },
+  { id:"glassvial", item:"Glass Vial", parent:"tractor",
+    blurb:"Glass, reshaped again by a Furnace, becomes the Power Plant's own precision Glass Vial." },
+  { id:"wheel", item:"Wheel", parent:"glassvial",
+    blurb:"A Tree shaped by a set of Tools becomes the Observatory's own Wheel -- simple, and everywhere after this." },
+  { id:"satellitedish", item:"Satellite Dish", parent:"wheel",
+    blurb:"Aluminum Alloy and Wire curve into a Satellite Dish -- the Space Station's own ears, built long before there's a station to bolt them to." },
+  { id:"oven", item:"Oven", parent:"satellitedish",
+    blurb:"A Furnace timed by a Clock becomes the Bakery's own Oven -- every real dessert after this needs one." },
+  { id:"book", item:"Book", parent:"oven",
+    blurb:"Paper bound with a set of Tools becomes The City's first real Book." },
+  { id:"salmon", item:"Salmon", parent:"book",
+    blurb:"Seaweed, Water, and an Egg -- the forest's own river starts running with Salmon." },
+  { id:"telescope", item:"Telescope", parent:"salmon",
+    blurb:"Glass, Aluminum Alloy, and Silver, aimed straight up -- the first real look at what a Rocket only gets you closer to." },
+  { id:"orca", item:"Orca", parent:"telescope",
+    blurb:"Seaweed, Salmon, and Bone -- The Ocean's own apex predator, an Orca, surfaces." },
+  { id:"yarn", item:"Yarn", parent:"orca",
+    blurb:"Wool spun on a Wheel becomes Yarn -- The City's own start of every knit good after it." },
+  { id:"lighthouse", item:"Lighthouse", parent:"yarn",
+    blurb:"A Light Bulb set into Concrete becomes The Ocean's own Lighthouse, keeping watch over every ship after it." },
+  { id:"volcano", item:"Volcano", parent:"lighthouse",
+    blurb:"A Planet run through a Furnace's own heat becomes a Volcano -- the Deep Mine's strangest build yet." },
+  { id:"library", item:"Library", parent:"volcano", gateway:"Wardrobe",
     blurb:"A Building plus a Book is all it takes to open the door to somewhere far stranger than The City." },
-  { id:"rocket", item:"Rocket", parent:"alloy", gateway:"Solar System",
-    blurb:"Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
-  // The Rocket branch, continued: two real prep builds fork off Rocket in
-  // parallel (neither depends on the other), then back-merge into Star,
-  // which itself forks into two more before a final merge at Space
-  // Station -- the same fan-out/fan-in shape repeated twice. Star's own
-  // recipe genuinely needs a Telescope, and Space Station's genuinely
-  // needs a Satellite Dish, so both merges land on at least one real
-  // recipe dependency, not just theme.
-  { id:"telescope", item:"Telescope", parent:"rocket",
-    blurb:"Glass and Aluminum Alloy, aimed straight up -- the first real look at what a Rocket only gets you closer to." },
-  { id:"satdish", item:"Satellite Dish", parent:"rocket",
-    blurb:"The Space Station's own ears, built long before there's a station to bolt them to." },
-  { id:"star", item:"Star", parent:["telescope","satdish"],
+  { id:"bicycle", item:"Bicycle", parent:"library",
+    blurb:"Aluminum Alloy, a Wheel, and Rubber -- the Greenhouse's own two-wheeled answer to getting around." },
+  { id:"speedboat", item:"Speedboat", parent:"bicycle",
+    blurb:"A Canoe fitted with an Engine and a Compass becomes The Ocean's own Speedboat." },
+  { id:"computer", item:"Computer", parent:"speedboat",
+    blurb:"A Battery, Plastic, and a Microchip -- the Power Plant's own Computer, and a real step toward a Rocket." },
+  { id:"skyscraper", item:"Skyscraper", parent:"computer",
+    blurb:"A Building reaching for a Cloud, crowned with a Satellite Dish -- The City's tallest build yet." },
+  { id:"star", item:"Star", parent:"skyscraper",
     blurb:"The same Clock that unlocked every gemstone points a Telescope somewhere new: catch a Star." },
-  { id:"rainbow", item:"Rainbow", parent:"star",
+  { id:"car", item:"Car", parent:"star",
+    blurb:"Engine, Steel, Plastic, Glass, Rubber, and a Wheel -- the Power Plant's own full Car, assembled at last." },
+  { id:"motorcycle", item:"Motorcycle", parent:"car",
+    blurb:"A Bicycle fitted with an Engine becomes The City's own Motorcycle." },
+  { id:"rainbow", item:"Rainbow", parent:"motorcycle",
     blurb:"A Cloud and a Star together -- the sky's whole spectrum, chased down at last." },
-  { id:"solarsystem", item:"Solar System", parent:"star",
-    blurb:"A Star of your own, mapped against everything else out there -- the whole neighborhood, charted." },
-  { id:"spacestation", item:"Space Station", parent:["rainbow","solarsystem"],
-    blurb:"Every light this branch chased down -- the Rainbow's spectrum, the Solar System's map -- comes together the moment a Space Station goes up." },
+  { id:"solarsystem", item:"Solar System", parent:"rainbow",
+    blurb:"A Star of your own, mapped against a Planet -- the whole neighborhood, charted." },
+  { id:"life", item:"Life", parent:"solarsystem",
+    blurb:"Bone, DNA, Water, a Clock, and a Star -- The Ocean's own recipe for something that's actually alive." },
+  { id:"sushirestaurant", item:"Sushi Restaurant", parent:"life",
+    blurb:"Seaweed and Salmon, served inside a real Building -- The City's own Sushi Restaurant opens." },
+  { id:"gemstonecollection", item:"Gemstone Collection", parent:"sushirestaurant",
+    blurb:"Pearl, Ruby, Opal, Turquoise, Amber, and Diamond, all in one case -- the Deep Mine's entire gemstone line, complete." },
+  { id:"windmill", item:"Windmill", parent:"gemstonecollection",
+    blurb:"A Cloud, Concrete, a Turbine Blade, and a Battery -- the Greenhouse's own Windmill starts turning." },
+  { id:"museum", item:"Museum", parent:"windmill",
+    blurb:"A Building filled with a Dinosaur, a Telescope, and a Statue -- The City's own Museum, everything on display at once." },
+  { id:"helicopter", item:"Helicopter", parent:"museum",
+    blurb:"Engine, Glass, Stainless Steel, and a Turbine Blade lift The City's own Helicopter off the ground -- fast travel, unlocked." },
+  { id:"knitscarf", item:"Knit Scarf", parent:"helicopter",
+    blurb:"Yarn dyed red and blue becomes The City's own Knit Scarf." },
+  { id:"pretzel", item:"Pretzel", parent:"knitscarf",
+    blurb:"Dough, Potassium, and an Oven's heat twist into the Bakery's own Pretzel." },
+  { id:"applepie", item:"Apple Pie", parent:"pretzel",
+    blurb:"Dough, an Apple, and an Oven -- the Bakery's own Apple Pie, baked through." },
+  { id:"croissant", item:"Croissant", parent:"applepie",
+    blurb:"Dough, Butter, and an Oven -- the Bakery's own flaky Croissant." },
+  { id:"bananabread", item:"Banana Bread", parent:"croissant",
+    blurb:"A loaf of Bread folded around a Banana becomes the Bakery's own Banana Bread." },
+  { id:"rocket", item:"Rocket", parent:"bananabread", gateway:"Solar System",
+    blurb:"A Computer, a Solar Panel, and Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
+  { id:"chocolatecake", item:"Chocolate Cake", parent:"rocket",
+    blurb:"A Cake dressed in Chocolate becomes the Bakery's own Chocolate Cake." },
+  { id:"centralstation", item:"Central Station", parent:"chocolatecake",
+    blurb:"Helicopter, Maglev Train, Car, and Speedboat, all under one roof -- The City's own Central Station, every way to travel in one place." },
+  { id:"beachtown", item:"Beach Town", parent:"centralstation",
+    blurb:"A Lighthouse, a Sushi Restaurant, a Speedboat, and a Banana -- The Ocean's whole Beach Town, built from everything it's grown so far." },
+  { id:"grandbanquet", item:"Grand Banquet", parent:"beachtown",
+    blurb:"Apple, Banana, Sushi Restaurant, Cake, and Fireworks -- the Bakery's own Grand Banquet, everything on one table." },
+  { id:"renewablegrid", item:"Renewable Grid", parent:"grandbanquet",
+    blurb:"Biofuel, a Windmill, a Water Turbine, a Sunflower, and a Geothermal Pump -- the Power Plant's entire Renewable Grid, humming at once." },
+  { id:"cruiseship", item:"Cruise Ship", parent:"renewablegrid",
+    blurb:"Canoe, Engine, Compass, Stainless Steel, Fireworks, a Grand Banquet, and a Trumpet -- The Ocean's biggest build yet, a full Cruise Ship." },
+  { id:"trumpet", item:"Trumpet", parent:"cruiseship",
+    blurb:"Brass shaped by a set of Tools becomes The City's own Trumpet." },
+  { id:"seaturtle", item:"Sea Turtle", parent:"trumpet",
+    blurb:"Water, an Egg, and Sand -- the Island's own shoreline starts moving the moment a Sea Turtle appears." },
+  { id:"treasuremap", item:"Treasure Map", parent:"seaturtle",
+    blurb:"Paper, Black Dye, and a Mirror -- the Wardrobe's own Treasure Map, pointing somewhere stranger still." },
+  { id:"golem", item:"Golem", parent:"treasuremap",
+    blurb:"A Statue given Life -- the Wardrobe's last and strangest build, a Golem standing at last." },
 ];
+// Job Board's pool (see jobEligibleItems(), defined earlier in the file --
+// this only needs to exist by the time that function is actually CALLED,
+// well after this module-level code has finished running) -- the exact
+// same story-mission item set as QUESTS itself, so a job offer is never
+// something outside the quest line's own catalog.
+const QUEST_ITEM_NAMES = new Set(QUESTS.map(q => q.item));
 function questBonus(q){ return Math.round((ITEM_POINTS[q.item] || 0) * 0.3); }
 /* Available to accept: its parent (if any) is already completed, and it
    isn't already taken. Not yet available (parent incomplete) and
@@ -10125,7 +10218,7 @@ document.getElementById("convertGo").addEventListener("click", () => {
   // bottom anchor -- the #convert tray this just happened inside covers
   // up to 60vh of the screen's own bottom, so anywhere near the hub
   // would sit right on top of the tray the player is still looking at.
-  showTutorialHintOnce("firstconvert", 2, "Convert: 3 elements for 1 you need!", "top-right", "#convertGo");
+  showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "top-right", "#convertGo");
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
 
@@ -10314,9 +10407,9 @@ function tutCoachSteps(){
     { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "Home rolls dice and confirms travel." },
     { sel: "#hubJobs", pose: 2, anchor: "bottom-left",
       text: state.mode === "hard" ? "Quests: goals for bonus points." : "Jobs: build for bonus points." },
-    { sel: "#hubInv", pose: 9, anchor: "bottom-left", text: "Inventory: all you've collected." },
+    { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },
     { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "Look up any item's recipe here." },
-    { sel: "#hubSettings", pose: 6, anchor: "bottom-right", text: "Adjust rules or go to Main Menu." },
+    { sel: "#hubSettings", pose: 2, anchor: "bottom-right", text: "Adjust rules or go to Main Menu." },
     { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 Go build!" },
   ];
 }
