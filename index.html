@@ -7293,7 +7293,17 @@ function render(resetScroll){
   applyInvFilter();
   applyRefFilter();
   hideHint();
-  maybeShowFirstVisitHint();
+  // Deferred one tick, not called inline: several render() callers open a
+  // full-screen overlay (showCardPop()/celebrate()) or queue one to open
+  // (flushPendingReveal()) synchronously right AFTER this render() call
+  // returns (e.g. the craft handler's "render(); showCardPop(entry);").
+  // Checking blockingEventOpen() inline here would run BEFORE that overlay
+  // call ever happens, see it as nothing open yet, and let a mouse tip
+  // out for one frame right before getting buried under the popup a
+  // moment later. Deferring past the current synchronous chunk lets
+  // whatever follows this render() call finish opening its own overlay
+  // first, so the check sees the real, settled state.
+  setTimeout(maybeShowFirstVisitHint, 0);
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
   // The map's fixed-position station card (see .map-card-wrap) sits right
   // under the topbar -- its height is measured live (two small pills, but
@@ -7579,6 +7589,16 @@ function closeOverlay(id){
   document.getElementById(id).classList.remove("open");
   if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
   if (id === "settings") document.getElementById("tour").classList.remove("behind-settings");
+  // #convertGoalCard sits ABOVE #convert's own box (bottom:100%, see its
+  // own CSS comment), outside the box that #convert.open's transform
+  // actually measures itself against -- closed #convert slides down by
+  // 100% of ITS OWN height, which only brings the goal card back down to
+  // roughly where #convert's own top used to be, not off-screen. Clearing
+  // it here (every close path funnels through this one function) is what
+  // actually makes it disappear, rather than relying on a transform that
+  // was never guaranteed to carry it far enough. Mirrors openConvertScreen()
+  // clearing it on the way IN.
+  if (id === "convert") document.getElementById("convertGoalCard").innerHTML = "";
   // showSummary() forces #backdrop on against state.lastStation's art even
   // when the current screen isn't "station" (see its own comment) -- put
   // that back under updateBackdrop()'s normal screen-driven control once
@@ -7937,9 +7957,19 @@ function positionMouseHighlight(targetSel){
 // marked "seen" (see showMouseTipOnce()/showTutorialHintOnce(), both of
 // which flag the id BEFORE calling this) while buried behind the popup,
 // never actually seen by the player at all.
+// pendingRevealNames (queued by flushPendingReveal()'s caller but not yet
+// on screen -- see its own comment) counts as blocking too, not just
+// itemReveal's own .open class: cardPop's click handler calls
+// closeOverlay("cardPop") -- which flushes any pendingMouseTip right then,
+// still inside that same synchronous call -- BEFORE its very next line
+// actually opens itemReveal. Without this, a tip queued behind cardPop
+// would slip out in that one-line gap and then immediately get buried
+// under the "New Items Unlocked" reveal opening on top of it a moment
+// later, instead of staying queued until that reveal is actually done.
 function blockingEventOpen(){
   return document.getElementById("cardPop").classList.contains("open")
-      || document.getElementById("itemReveal").classList.contains("open");
+      || document.getElementById("itemReveal").classList.contains("open")
+      || !!(pendingRevealNames && pendingRevealNames.length);
 }
 // Holds the most recent call that arrived while blocked -- only ONE slot,
 // not a real queue: a second tip arriving before the first ever got to
@@ -7974,6 +8004,35 @@ function hideMouseTip(){
   el.classList.remove("show");
   el.setAttribute("aria-hidden", "true");
   positionMouseHighlight(null);
+}
+/* Pressing Map (see goHome()) always wins over the crafting/reveal/mouse-
+   tip pipeline -- a player who'd rather jump straight to the map than sit
+   through a stack of "New Items Unlocked"/item-inspection/mouse-tip beats
+   shouldn't have to tap through each one first. Closes cardPop and
+   itemReveal outright if either is open (their own dismiss timers too, so
+   a stale one can't fire later against whatever's on screen by then),
+   drops any reveal that was queued but hadn't actually opened yet (see
+   pendingRevealNames/blockingEventOpen()'s own comment), and clears the
+   mouse tip along with anything queued behind it -- not just hidden, but
+   actually dropped, so it can't reappear the moment something next calls
+   flushPendingMouseTip(). Direct classList/state manipulation rather than
+   closeOverlay() for cardPop/itemReveal: closeOverlay() would itself try
+   to flush pendingMouseTip, which is exactly what this function needs to
+   throw away, not let through. goMap() (called right after this from
+   goHome()) already re-renders and updates the hub, so skipping that
+   bookkeeping here costs nothing. */
+function cancelPendingFullscreenEvents(){
+  clearTimeout(cardPopTimer);
+  document.getElementById("cardPop").classList.remove("open");
+  clearTimeout(itemRevealTimer);
+  clearTimeout(itemRevealDismissTimer);
+  document.getElementById("itemReveal").classList.remove("open");
+  itemRevealShown = false;
+  itemRevealDismissable = false;
+  pendingRevealNames = null;
+  pendingRevealStation = null;
+  pendingMouseTip = null;
+  hideMouseTip();
 }
 function showMouseTipOnce(id, pose, html, anchor, targetSel){
   if (mouseTipsShown.has(id)) return false;
@@ -8822,7 +8881,19 @@ function handleScreenClick(ev){
     const itemCard = needElemBtn.closest("[data-item-card]");
     const idx = itemCard && +itemCard.dataset.itemCard;
     const goalEntry = itemCard && ENTRIES[idx];
-    document.getElementById("convertGoalCard").innerHTML = goalEntry ? itemHTML(goalEntry, idx) : "";
+    const goalCardEl = document.getElementById("convertGoalCard");
+    goalCardEl.innerHTML = goalEntry ? itemHTML(goalEntry, idx) : "";
+    // itemHTML()'s own .item border (see its own CSS) is drawn in
+    // var(--suit), which it never sets itself -- every other place it's
+    // used lives inside a station's .sheet, which sets --suit once for
+    // the whole shop and lets every card in it just inherit that. This
+    // card sits inside #convert instead, an ancestor that never sets
+    // --suit at all, so without setting it here var(--suit) resolved to
+    // nothing and silently dropped the whole border declaration.
+    if (goalEntry){
+      const su = DATA.suits[STATION_BY_NAME[goalEntry.station].suit];
+      goalCardEl.style.setProperty("--suit", su.color);
+    }
     return;
   }
 
@@ -8988,6 +9059,7 @@ document.getElementById("screen").addEventListener("input", ev => {
    station you just left, showing your old location and wrongly leaving
    that station open to revisit right away. */
 function goHome(){
+  cancelPendingFullscreenEvents();
   if (current === null && screen === "codex"){ screen = "map"; render(true); return; }
   goMap();
 }
