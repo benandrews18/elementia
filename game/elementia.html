@@ -2405,6 +2405,25 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 #mouseTip.anchor-top-left.show{ transform:translateY(0); }
 #mouseTip.anchor-top-right{ right:16px; top:14px; align-items:flex-start; flex-direction:row-reverse; transform:translateY(-14px); }
 #mouseTip.anchor-top-right.show{ transform:translateY(0); }
+/* Dead center of the screen -- not tucked into a corner like the other 4,
+   so there's no adjacent screen edge for the bubble's speech-tail to point
+   away from; kept as a plain image-left/bubble-right row (not reversed)
+   with a uniform bubble radius (see its own rule below) instead. Reserved
+   for the rare tip that needs the player's full, undivided attention
+   rather than pointing at a specific corner control -- popping in with a
+   scale rather than the corner anchors' directional slide, since there's
+   no direction to slide IN from when you're arriving at center. Needs no
+   768px-frame correction on wide viewports (unlike the 4 corner anchors,
+   see their own media-query overrides): left:50%/top:50% already lands on
+   the frame's own center, since the frame itself is centered in the real
+   viewport by the very same rule (see body's max-width:768px; margin:0
+   auto above). */
+#mouseTip.anchor-center{
+  left:50%; top:50%; align-items:center;
+  transform:translate(-50%, -50%) scale(.92);
+}
+#mouseTip.anchor-center.show{ transform:translate(-50%, -50%) scale(1); }
+#mouseTip.anchor-center .mouse-bubble{ border-radius:22px; }
 #mouseTipImg{
   width:114px; height:auto; flex:none; margin-right:-24px; margin-bottom:-9px;
   filter:drop-shadow(0 9px 15px rgba(0,0,0,.5)); position:relative; z-index:2;
@@ -7563,7 +7582,37 @@ function updateHub(){
     // already had to find the button on their own. updateHub() runs on
     // every render() regardless of screen, so this fires wherever the
     // player happens to be the instant they first cross 3 of an element.
-    showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "bottom-right", "#quickConvertBtn");
+    // Deferred past the button's own .offscreen->on-screen slide-in
+    // (see its own 320ms transition below) rather than fired inline here:
+    // #quickConvertBtn is still off-screen at THIS point in updateHub()
+    // (the class removal is a few lines further down, in the SAME
+    // synchronous call), and even after that removal a CSS transition
+    // doesn't jump straight to its resting spot -- getBoundingClientRect()
+    // called before the transition settles would still read the button's
+    // OLD (off-screen) position, positioning the spotlight cutout nowhere
+    // near the button that had actually just slid into view. Center
+    // anchor (not a corner) -- see #mouseTip.anchor-center's own comment
+    // -- since this is exactly the "full attention" beat that calls for.
+    setTimeout(() => showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "center", "#quickConvertBtn"), 350);
+  }
+
+  // Classic Mode's SECOND unlock path -- see celebrate()'s own comment
+  // for the first (completing an Adventure Mode capstone). A player who's
+  // scouted every station AND actually finished at least one quest has
+  // clearly gotten a real feel for Adventure Mode already, even short of
+  // a capstone. Checked here (updateHub() runs on every render()) rather
+  // than pinned to one specific action -- there's no single event that
+  // completes this combination, it's whichever of "last station visited"
+  // or "quest completed" happens to land second. No celebration overlay
+  // competing for attention here (unlike the capstone path, which defers
+  // its own tip until #celebClose -- see pendingClassicUnlockTip), so
+  // this fires the tip directly; showMouseTip()'s own blockingEventOpen()
+  // queuing still defers it correctly if something else happens to be up.
+  if (state.mode === "hard" && !prefs.classicUnlocked && allStationsVisited()
+      && Object.values(state.quests).some(q => q.completed)){
+    prefs.classicUnlocked = true;
+    savePrefs();
+    showMouseTip(12, "Every station scouted, a quest complete -- Classic Mode unlocked!", "center");
   }
 
   // Both floating buttons stay off their own edge of the screen until
@@ -7954,7 +8003,9 @@ function celebrate(entry){
   // Classic Mode unlocks the first time an Adventure Mode capstone is
   // completed (see the mode-select screen's own prefs.classicUnlocked
   // gate) -- persisted in prefs, not state, since it's an account-level
-  // unlock that should stick even if this run/save is later reset.
+  // unlock that should stick even if this run/save is later reset. Not
+  // the only path in any more either -- see updateHub()'s own
+  // all-stations-visited-plus-a-completed-quest check.
   if (state.mode === "hard" && !prefs.classicUnlocked){
     prefs.classicUnlocked = true;
     savePrefs();
@@ -8013,7 +8064,7 @@ const MOUSE_POSES = {
   9: "mouse/9.webp", 10: "mouse/10.webp", 11: "mouse/11.webp", 12: "mouse/12.webp",
 };
 let mouseTipsShown = new Set();
-const MOUSE_ANCHORS = ["bottom-left", "bottom-right", "top-left", "top-right"];
+const MOUSE_ANCHORS = ["bottom-left", "bottom-right", "top-left", "top-right", "center"];
 /* anchor picks WHICH CORNER the bubble appears in (see #mouseTip's own
    comment for all 4 and when each applies) -- defaults to bottom-left
    for any call site that doesn't care. */
