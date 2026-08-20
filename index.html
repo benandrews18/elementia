@@ -7960,7 +7960,7 @@ function positionMouseHighlight(targetSel){
 // pendingRevealNames (queued by flushPendingReveal()'s caller but not yet
 // on screen -- see its own comment) counts as blocking too, not just
 // itemReveal's own .open class: cardPop's click handler calls
-// closeOverlay("cardPop") -- which flushes any pendingMouseTip right then,
+// closeOverlay("cardPop") -- which flushes the queued tip right then,
 // still inside that same synchronous call -- BEFORE its very next line
 // actually opens itemReveal. Without this, a tip queued behind cardPop
 // would slip out in that one-line gap and then immediately get buried
@@ -7971,17 +7971,27 @@ function blockingEventOpen(){
       || document.getElementById("itemReveal").classList.contains("open")
       || !!(pendingRevealNames && pendingRevealNames.length);
 }
-// Holds the most recent call that arrived while blocked -- only ONE slot,
-// not a real queue: a second tip arriving before the first ever got to
-// show just replaces it, same "whichever's most relevant NOW wins" rule
-// maybeShowFirstVisitHint() already applies when picking among several
-// eligible organic hints. flushPendingMouseTip() (called from
-// closeOverlay() once neither blocking overlay is open any more) is what
-// actually lets it through.
-let pendingMouseTip = null;
+// Holds every tip that arrived while blocked, IN ORDER -- a real queue,
+// not a single slot. A single slot meant a second tip arriving before the
+// first ever got a turn silently overwrote (and permanently lost) it --
+// fatal for a one-time-ever scripted beat like firstconvert/pinselect,
+// since showMouseTipOnce()/showTutorialHintOnce() both mark their id
+// "seen" the moment they're CALLED, not the moment they're actually shown
+// -- an overwritten tip just vanishes for good, with no way to trigger it
+// again. This came up for real: updateHub() (which re-evaluates
+// firstconvert on every call) runs as part of openOverlay()/closeOverlay()
+// themselves, so it fires plenty of times while cardPop/itemReveal are
+// mid-sequence -- exactly when a second, unrelated tip (afterroll,
+// checkmarket, pinselect, ...) turning eligible around the same moment
+// used to stomp it. flushPendingMouseTip() drains this one at a time:
+// called once unblocked (see closeOverlay()) and again whenever the
+// currently-shown tip itself gets dismissed (see hideMouseTip()), so a
+// backlog surfaces progressively as the player moves through it instead
+// of only the front (or, before this, only the LAST) one ever appearing.
+let pendingMouseTips = [];
 function showMouseTip(pose, html, anchor, targetSel){
   if (blockingEventOpen()){
-    pendingMouseTip = {pose, html, anchor, targetSel};
+    pendingMouseTips.push({pose, html, anchor, targetSel});
     return;
   }
   document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
@@ -7994,9 +8004,8 @@ function showMouseTip(pose, html, anchor, targetSel){
   positionMouseHighlight(targetSel);
 }
 function flushPendingMouseTip(){
-  if (!pendingMouseTip || blockingEventOpen()) return;
-  const tip = pendingMouseTip;
-  pendingMouseTip = null;
+  if (!pendingMouseTips.length || blockingEventOpen()) return;
+  const tip = pendingMouseTips.shift();
   showMouseTip(tip.pose, tip.html, tip.anchor, tip.targetSel);
 }
 function hideMouseTip(){
@@ -8004,6 +8013,11 @@ function hideMouseTip(){
   el.classList.remove("show");
   el.setAttribute("aria-hidden", "true");
   positionMouseHighlight(null);
+  // Advance the queue -- see pendingMouseTips' own comment. Dismissing
+  // whatever's showing now (a close-button tap, a tap elsewhere, the
+  // guided walkthrough ending) is exactly the moment the next queued one,
+  // if any, should get its own turn.
+  flushPendingMouseTip();
 }
 /* Pressing Map (see goHome()) always wins over the crafting/reveal/mouse-
    tip pipeline -- a player who'd rather jump straight to the map than sit
@@ -8017,8 +8031,8 @@ function hideMouseTip(){
    actually dropped, so it can't reappear the moment something next calls
    flushPendingMouseTip(). Direct classList/state manipulation rather than
    closeOverlay() for cardPop/itemReveal: closeOverlay() would itself try
-   to flush pendingMouseTip, which is exactly what this function needs to
-   throw away, not let through. goMap() (called right after this from
+   to flush the queue, which is exactly what this function needs to throw
+   away, not let through. goMap() (called right after this from
    goHome()) already re-renders and updates the hub, so skipping that
    bookkeeping here costs nothing. */
 function cancelPendingFullscreenEvents(){
@@ -8031,7 +8045,11 @@ function cancelPendingFullscreenEvents(){
   itemRevealDismissable = false;
   pendingRevealNames = null;
   pendingRevealStation = null;
-  pendingMouseTip = null;
+  // Cleared BEFORE hideMouseTip() -- hideMouseTip() itself now flushes the
+  // next queued tip on the way out (see its own comment), which is
+  // exactly what this function must NOT let happen; emptying the queue
+  // first means that flush finds nothing left to show.
+  pendingMouseTips = [];
   hideMouseTip();
 }
 function showMouseTipOnce(id, pose, html, anchor, targetSel){
