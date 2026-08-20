@@ -130,7 +130,7 @@ body[data-picking] #topbar{display:none}
    grey flash or delayed response on mobile. */
 .hubbtn, .floatbtn{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .hubbtn{
-  flex:1; max-width:82px; display:flex; flex-direction:column; align-items:center; gap:2px;
+  flex:1; max-width:100px; display:flex; flex-direction:column; align-items:center; gap:2px;
   padding:4px 0; margin-top:calc(-1 * var(--hub-overhang)); border-radius:12px;
   background:transparent; color:var(--ink2); position:relative;
 }
@@ -148,13 +148,13 @@ body[data-picking] #topbar{display:none}
    the badge itself. Radial gradient + inset highlight/shadow for the
    glossy-bevel look, gold ring border, offset drop shadow underneath. */
 .hubbtn .hi{
-  width:46px; height:46px; border-radius:50%;
+  width:58px; height:58px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
-  font-size:35px; line-height:1; flex:none;
+  font-size:44px; line-height:1; flex:none;
   background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
-  border:3px solid #f2a93a;
-  box-shadow:inset 0 2px 3px rgba(255,255,255,.4), inset 0 -4px 6px rgba(0,0,0,.22),
-    0 3px 0 rgba(0,0,0,.2), 0 4px 8px rgba(0,0,0,.28);
+  border:4px solid #f2a93a;
+  box-shadow:inset 0 3px 4px rgba(255,255,255,.4), inset 0 -5px 8px rgba(0,0,0,.22),
+    0 4px 0 rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.28);
   transition:box-shadow .1s cubic-bezier(.3,.8,.4,1), filter .12s ease;
 }
 .hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px}
@@ -4866,7 +4866,14 @@ function playMapIntroScroll(){
     // doesn't actually apply to them.
     if (mustStartAtOcean()){
       selectedMapStation = "The Ocean";
-      showMouseTipOnce("mapintro", 7, "Start at The Ocean — tap it!", "bottom-left", '[data-map-node="The Ocean"]');
+      // top-left, not bottom -- The Ocean's own node sits near the bottom
+      // of the map once the intro scroll lands (see the scroll-to-endY
+      // above), so anchoring low would put Professor Mouse right on top of
+      // the very icon this beat is about. Rings #hubHome instead of the
+      // map node itself now too -- the text points at the real remaining
+      // action (tap Travel), not "tap the icon" (already done for the
+      // player, see selectedMapStation above).
+      showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "top-left", "#hubHome");
     }
     window.scrollTo({top: endY, behavior: "instant"});
     render(); // no resetScroll -- keep the bottom position just set above
