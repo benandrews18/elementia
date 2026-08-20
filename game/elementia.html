@@ -49,14 +49,21 @@ button:disabled{cursor:not-allowed}
 /* Station backdrop art -- fixed behind everything (negative z-index sits
    above body's own background but below all normal, non-positioned page
    content, so it shows only in the gutters around opaque cards/topbar/hub
-   without needing to touch any of their z-indices). The fade is baked
+   without needing to touch any of their z-indices). This is now the ONLY
+   copy of the art (see .sheet's own comment -- it used to carry a second,
+   scrolling copy of the same image, which read as a background sliding
+   around in front of this real one). Scaled to the viewport's full width
+   (not cropped to "cover" both axes) and anchored to the top, so the
+   image's own top stays fully intact regardless of aspect ratio -- being
+   truly fixed (not tied to any scrolling card), it never needs to extend
+   past what a single screen's height actually shows. The fade is baked
    into the image itself via a solid wash layered on top of it, in the
    theme's own bg color, so it always reads as "this screen's usual
    background, lightly textured" rather than a competing photo. Only
    shown behind an actual station screen (see updateBackdrop()). */
 #backdrop{
   position:fixed; inset:0; z-index:-4; pointer-events:none;
-  background-size:cover; background-position:center; background-repeat:no-repeat;
+  background-size:100% auto; background-position:top center; background-repeat:no-repeat;
   opacity:0; transition:opacity .3s ease;
 }
 #backdrop.show{opacity:1}
@@ -116,7 +123,18 @@ body[data-picking] #topbar{display:none}
    modest (see --hub-overhang) -- .floatbtn/#trackedPill float a fixed
    14px above the bar (see below), and Jobs sits at the bar's own left
    edge right under #pinsBtn, so the two must never visually collide. */
-:root{ --hub-overhang:8px; }
+/* 11.5px, not the 8px the comment above once described -- bumped so the
+   bar's own top edge (padding-box, see #hub below) lands flush with the
+   TOP of the side buttons' own circles (.hubbtn .hi) rather than showing
+   a sliver of bar above them. Margin-top on a flex-end-aligned item only
+   changes how much it contributes to the flex LINE's own height -- it
+   never moves the item's own rendered position (align-items:flex-end
+   pins its margin-box bottom to the line's bottom regardless of its top
+   margin) -- so this variable is really "how much shorter #hub's own
+   computed height gets," which is what actually moves #hub's fixed-
+   positioned (bottom:0) top edge up or down. Tuned empirically against
+   the real rendered geometry, not derived algebraically. */
+:root{ --hub-overhang:11.5px; }
 #hub{
   position:fixed; left:0; right:0; bottom:0; z-index:72;
   padding:6px 6px calc(6px + env(safe-area-inset-bottom));
@@ -178,6 +196,15 @@ body[data-picking] #topbar{display:none}
   box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
     inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
   transition:filter .2s ease, box-shadow .2s ease, border-color .2s ease;
+  /* The -26px margin above only shrinks how much height #hubHome
+     contributes to the flex row's own layout (see --hub-overhang's
+     comment for why margin-top can't move a flex-end-aligned item's own
+     rendered position) -- it doesn't actually raise the circle itself.
+     Without this, #hubHome's real bottom-anchored position sits a hair
+     BELOW the side buttons' own circles rather than above them, despite
+     being the visually "raised" center piece. top (this element already
+     has position:relative from .hubbtn) is what actually lifts it. */
+  top:-4px;
 }
 #hubHome:hover{filter:brightness(1.06)}
 /* #hubHome IS the glossy circle itself (unlike the 4 smaller nav buttons,
@@ -1161,24 +1188,16 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 
 /* --------------------------------------------------------- station --- */
-/* The card's own background carries the station art too (not just the
-   fixed page-level #backdrop), since the card fills nearly the whole
-   screen on phones/tablets -- a backdrop only visible in the page gutters
-   around it would be invisible in practice on the devices this actually
-   ships to. A single still image, scaled to the card's full width (not
-   cropped to "cover" both axes) and anchored to its top edge -- whatever
-   the image's own aspect ratio, its top stays fully intact and legible;
-   only the bottom may run out before a long shop list does, which is fine
-   since item rows are transparent now (see .item) and don't depend on the
-   art extending the full scroll height. Scrolls normally with the rest of
-   the card's content -- no more background-attachment:fixed parallax trick
-   (that also sidesteps the real mobile Safari/Chrome repaint jank it used
-   to need a touch-device fallback for, see the removed media query this
-   comment used to sit above). background:var(--card) stays as the base/
-   fallback layer; JS layers the wash+image on top of it inline, per
-   station (see renderStation()'s bgStyle). */
+/* No background of its own -- the single fixed page-level #backdrop (see
+   its own comment) is the ONLY station-art layer now, showing straight
+   through both this card and the transparent item rows scrolling over it
+   (see .item below). This card used to carry a second, scrolling copy of
+   the same image so the art stayed visible even though the card fills
+   nearly the whole screen -- but a scrolling copy in front of the true
+   fixed backdrop read as exactly that: a second background sliding around
+   in front of the real one, not one consistent piece of art. */
 .sheet{
-  background:var(--card); background-size:100% auto; background-position:top center; background-repeat:no-repeat;
+  background:transparent;
   border:1px solid var(--line); border-top:16px solid var(--suit);
   border-radius:18px; overflow:hidden;
 }
@@ -1404,13 +1423,6 @@ body[data-screen="market"] #trackedPill{display:none}
    light-section border, but identical text treatment. */
 .col-label.elements-label{margin:14px 26px 0; padding-bottom:0; border-bottom:none}
 .shop{display:flex; flex-direction:column; gap:9px}
-/* Fully transparent -- the station's own backdrop image (see .sheet) is
-   this row's background now, not a separate opaque-fading-to-translucent
-   fill layered on top of it. Scoped to .shop specifically (not the bare
-   .item rule below) since that class is reused wholesale in several other
-   contexts -- Quest Log, Job Board, the item-reveal popup -- that don't
-   sit over a station's own art and still want a real card fill there. */
-.shop .item{background:transparent}
 /* Craft button now fills the card's full right edge (see .craftbtn below)
    rather than sitting centered with its own padding -- the vertical
    padding that used to live on .item itself moves onto .irow, the only
@@ -2315,6 +2327,14 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 #mouseTip.show{opacity:1; pointer-events:auto}
 #mouseTip.anchor-bottom-left{ left:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; transform:translateY(14px); }
 #mouseTip.anchor-bottom-left.show{ transform:translateY(0); }
+/* "Tap a pin to start tracking!" (see openPinsTray()) fires WHILE #pinsTray
+   is already open -- the tray slides up to max-height:45vh from behind the
+   hub, well past the bottom-left anchor's normal ~14px-above-hub resting
+   spot, so without this the bubble would land inside the tray's own
+   content area instead of above it. #pinsTray precedes #mouseTip in the
+   DOM (see the HTML comments above each), so the sibling selector below
+   only overrides the offset while the tray is actually open. */
+#pinsTray.open ~ #mouseTip.anchor-bottom-left{ bottom:calc(45vh + 14px); }
 #mouseTip.anchor-bottom-right{ right:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; flex-direction:row-reverse; transform:translateY(14px); }
 #mouseTip.anchor-bottom-right.show{ transform:translateY(0); }
 #mouseTip.anchor-top-left{ left:16px; top:14px; align-items:flex-start; transform:translateY(-14px); }
@@ -7068,19 +7088,13 @@ function renderStation(name){
   // station later) should simply not include the playbar at all.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
-  const bg = STATION_BG[s.name];
-  // Still image, scrolls normally with the card's own content -- see
-  // .sheet's own comment for why this dropped the old fixed-attachment
-  // parallax trick.
-  const bgStyle = bg ? `background-image:linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url('${bg}');` : "";
-
   // A sub-zone with nothing sold there yet (the 8 planets, for now) gets
   // an explicit placeholder instead of a silently empty section.
   const shopBody = (!shopEntries.length && !capRevealed)
     ? `<div class="subzone-empty">🌌 Nothing here yet — just the elements to gather for now.</div>`
     : shopBodyHTML(shopEntries, idx);
 
-  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft};${bgStyle}">
+  return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
     <div class="stationhead">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
