@@ -1079,7 +1079,20 @@ body[data-screen="market"] #trackedPill{display:none}
 .map-node.reachable{border-color:var(--suit, #ffce54); box-shadow:0 0 0 3px color-mix(in srgb, var(--suit, #ffce54) 25%, transparent), 0 2px 10px var(--shadow)}
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
 .map-node.unreachable{filter:grayscale(1) brightness(.55)}
-.map-node.selected{box-shadow:0 0 0 4px rgba(255,255,255,.4)}
+/* Much bigger, harder-to-miss cue than the old plain 4px glow -- a thick
+   solid ring plus its own animated pulse (same here-pulse technique
+   .map-node.here uses, just on ::before instead of ::after so the two
+   can never collide if a node were ever somehow both at once), bright
+   gold rather than a barely-there white tint so "this is the one you
+   picked" reads instantly even among a cluster of reachable nodes. */
+.map-node.selected{
+  box-shadow:0 0 0 8px var(--gold), 0 0 24px 4px rgba(226,178,90,.6);
+  z-index:3;
+}
+.map-node.selected::before{
+  content:""; position:absolute; inset:-14px; border-radius:50%;
+  border:4px solid var(--gold); animation:here-pulse 1.4s ease-out infinite;
+}
 /* Same 28px "points back at the tracked item" circle as .item-pin-badge
    in a station shop, just anchored above the map pin instead of a card
    corner -- see renderMap()'s own comment. z-index above the pulsing
@@ -1244,6 +1257,15 @@ body[data-screen="market"] #trackedPill{display:none}
    badge always fits regardless of title length; the label shows as a
    native tooltip instead (title attribute). */
 .stationhead{position:relative}
+/* Pinned to the top of the viewport while scrolling through the shop --
+   only until the player's own first roll here has actually landed (see
+   renderStation()'s own frozen check: !state.rolledHere ||
+   rollAnimationInProgress, so this stays on through the roll's own
+   tumble-and-fly animation too, not just the empty-shop moment before it)
+   -- so the dice-gather row (the only thing worth acting on before that
+   point) never scrolls out of reach while skimming a long shop list.
+   Ordinary in-flow once rolled, same as it always was. */
+.stationhead.frozen{position:sticky; top:0; z-index:4}
 .travel-btn{
   position:absolute; top:14px; right:16px; z-index:3;
   display:flex; align-items:center; justify-content:center; width:40px; height:40px;
@@ -1645,16 +1667,23 @@ body[data-screen="market"] #trackedPill{display:none}
   border-color:var(--gold-line); background:var(--gold-soft); color:var(--gold);
 }
 /* Empty by default (see #convert's own HTML comment on #convertGoalCard)
-   -- :empty collapses it away entirely rather than leaving a blank gap
-   for the common case (Convert opened from the floating button, no item
-   context). Populated, it holds one real .item card (itemHTML() output,
-   unmodified -- same Craft button and all, so a player who's already got
-   what they need can just craft right from here) plus its own small label. */
+   -- :empty collapses it away entirely (display:none also drops it out of
+   flow, so there's no leftover absolutely-positioned gap) for the common
+   case (Convert opened from the floating button, no item context).
+   Populated, it holds exactly one real .item card -- itemHTML() output,
+   completely unmodified (no label, no extra wrapper styling), so it's
+   pixel-identical to the same card in its home station's own shop, Craft
+   button and all. Pulled OUT of the tray's own document flow and pinned
+   to sit directly on top of #convert's outer gold border (bottom:100% is
+   relative to #convert itself, which this is still a child of -- see its
+   own position:fixed) -- a card resting on the tray's rim, not one more
+   row inside it. #convert's overflow:hidden (there to clip content to its
+   own rounded corners) is turned off in exchange -- this card living
+   above that box entirely means it would otherwise disappear behind the
+   very state it exists to surface. */
 .convert-goal-card:empty{display:none}
-.convert-goal-card{margin-bottom:16px}
-.convert-goal-label{
-  font-size:11px; font-weight:800; letter-spacing:.6px; text-transform:uppercase;
-  color:var(--mute); margin-bottom:8px;
+.convert-goal-card{
+  position:absolute; left:16px; right:16px; bottom:100%; margin-bottom:-2px; z-index:1;
 }
 .convert-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:22px 0 26px}
 .convert-box{
@@ -2043,7 +2072,13 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
   max-height:60vh; background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
   transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  display:flex; flex-direction:column; overflow:hidden;
+  display:flex; flex-direction:column;
+  /* NOT overflow:hidden -- #convertGoalCard (see its own comment) lives
+     directly above this box on purpose, straddling the gold top border;
+     clipping overflow here would clip that card out of view entirely.
+     .dbody's own overflow-y:auto still scrolls this tray's real content
+     independently, so losing this doesn't affect that. */
+  overflow:visible;
 }
 #convert.open{transform:translateY(0)}
 #convert .dbody{padding-bottom:28px}
@@ -2358,10 +2393,12 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    is already open -- the tray slides up to max-height:45vh from behind the
    hub, well past the bottom-left anchor's normal ~14px-above-hub resting
    spot, so without this the bubble would land inside the tray's own
-   content area instead of above it. #pinsTray precedes #mouseTip in the
-   DOM (see the HTML comments above each), so the sibling selector below
-   only overrides the offset while the tray is actually open. */
-#pinsTray.open ~ #mouseTip.anchor-bottom-left{ bottom:calc(45vh + 14px); }
+   content area instead of above it. Snapped flush to that same 45vh (no
+   extra gap) so the bubble sits right at the tray's own top edge, not
+   floating above it. #pinsTray precedes #mouseTip in the DOM (see the
+   HTML comments above each), so the sibling selector below only overrides
+   the offset while the tray is actually open. */
+#pinsTray.open ~ #mouseTip.anchor-bottom-left{ bottom:45vh; }
 #mouseTip.anchor-bottom-right{ right:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; flex-direction:row-reverse; transform:translateY(14px); }
 #mouseTip.anchor-bottom-right.show{ transform:translateY(0); }
 #mouseTip.anchor-top-left{ left:16px; top:14px; align-items:flex-start; transform:translateY(-14px); }
@@ -3050,22 +3087,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
-<!-- Main Menu: a lightweight fork, not a rebuilt welcome screen -- Continue
-     just closes this (the run underneath is untouched, still sitting
-     exactly where it was), Reset routes through the exact same
-     askConfirm()+startNewSession() path the old direct Reset button always
-     used (see mainMenuBtn/resetBtn in Settings). -->
-<div class="overlay" id="mainMenuBox" role="dialog" aria-modal="true" aria-labelledby="mainMenuTitle">
-  <div class="sheetbox" style="max-width:420px">
-    <h2 id="mainMenuTitle">🏠 Main Menu</h2>
-    <p id="mainMenuSub" class="setnote"></p>
-    <div class="btnrow" style="flex-direction:column">
-      <button type="button" class="bigbtn" id="mainMenuContinue">▶️ Continue</button>
-      <button type="button" class="bigbtn sec" id="mainMenuReset">↺ Start a brand new session</button>
-    </div>
-  </div>
-</div>
-
 <!-- planet picker: opened from the Observatory's travel button once the
      player owns Rocket -- picks which of the 8 planets to travel to (see
      SUBZONE_TRAVEL/openPlanetPicker()). -->
@@ -3217,12 +3238,13 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <!-- Populated only when Convert was opened by tapping a missing
          element inside a specific item's recipe (see the .tok.el.need
          click handler) -- a duplicate of that item's own shop card,
-         reusing itemHTML() wholesale so it's pixel-identical to the real
-         thing, pinned here as a "this is what you're working toward"
-         reminder while picking the conversion. Empty/hidden (see
-         .convert-goal-card's own CSS) for every other way Convert gets
-         opened -- the floating button, the inventory drawer's icon --
-         where there's no specific item context to show. -->
+         reusing itemHTML() wholesale, unmodified, so it's pixel-identical
+         to the real thing. Sits directly on top of this tray's own gold
+         border (see .convert-goal-card's own CSS), not inline in the
+         list -- a card resting on the rim, not one more row inside it.
+         Empty/hidden for every other way Convert gets opened -- the
+         floating button, the inventory drawer's icon -- where there's no
+         specific item context to show. -->
     <div class="convert-goal-card" id="convertGoalCard"></div>
     <p>Trade 3 of one element for 1 of any other.</p>
     <div class="convert-row">
@@ -4937,12 +4959,13 @@ function playMapIntroScroll(){
       selectedMapStation = "The Ocean";
       // top-left, not bottom -- The Ocean's own node sits near the bottom
       // of the map once the intro scroll lands (see the scroll-to-endY
-      // above), so anchoring low would put Professor Mouse right on top of
-      // the very icon this beat is about. Rings #hubHome instead of the
-      // map node itself now too -- the text points at the real remaining
-      // action (tap Travel), not "tap the icon" (already done for the
-      // player, see selectedMapStation above).
-      showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "top-left", "#hubHome");
+      // above), so bottom-left puts Professor Mouse right where the beat
+      // is actually about -- just above The Ocean's own icon, not off at
+      // the top of the screen pointing at something far away. Rings
+      // #hubHome instead of the map node itself -- the text points at the
+      // real remaining action (tap Travel), not "tap the icon" (already
+      // done for the player, see selectedMapStation above).
+      showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "bottom-left", "#hubHome");
     }
     window.scrollTo({top: endY, behavior: "instant"});
     render(); // no resetScroll -- keep the bottom position just set above
@@ -6674,7 +6697,12 @@ function jobCardActionsHTML(items, offerIndex, locked){
    to 4 item names -- see rotateJobBoard()/topUpJobBoard()), shown
    identically here regardless of screen/station, so it works from the
    Marketplace as well as the per-station sheet. */
-function jobBoardHTML(){
+// acceptedOnly: true for the standing hub-button sheet (renderJobBoard())
+// -- a personal log of what THIS player has actually taken, never a
+// browse-and-accept list; the "Available Jobs" board itself only ever
+// shows on the Marketplace's own inline section (marketSectionHTML()),
+// which is where accepting a new one is actually meant to happen.
+function jobBoardHTML(acceptedOnly){
   // Up to MAX_ACTIVE_JOBS held at once -- every not-yet-turned-in job gets
   // its own card in a grid (same "Take this job" card shape the board
   // itself uses). Turned-in jobs get their own separate section below in
@@ -6705,8 +6733,13 @@ function jobBoardHTML(){
 
   const activeHTML = activeJobs.length
     ? jobGridHTML(activeJobs, false)
-    : `<p class="empty">No job taken yet -- pick one from the board above.</p>`;
-  const activeSection = (activeJobs.length || completedJobs.length)
+    : `<p class="empty">${acceptedOnly
+        ? "No job taken yet -- open the Marketplace to see what's on offer."
+        : "No job taken yet -- pick one from the board above."}</p>`;
+  // acceptedOnly always shows this section (even empty) since there's no
+  // board above it to point at instead -- otherwise a player with nothing
+  // taken yet would open Jobs from the hub button and see a blank sheet.
+  const activeSection = (acceptedOnly || activeJobs.length || completedJobs.length)
     ? `<details class="job-section" open><summary class="job-board-heading">📋 My Jobs</summary>${activeHTML}</details>` : "";
 
   const completedSection = completedJobs.length
@@ -6743,7 +6776,8 @@ function jobBoardHTML(){
   // and the standing hub sheet's header says "Jobs" (#jobTitle); repeating
   // either verbatim here would stack two identical headings right on top
   // of each other.
-  const boardSection = `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">🎯 Available Jobs</summary>${capNote}${boardBody}</details>`;
+  const boardSection = acceptedOnly ? "" :
+    `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">🎯 Available Jobs</summary>${capNote}${boardBody}</details>`;
 
   // Available offers first, accepted jobs below, completed jobs last --
   // the board is what a player's actively deciding on; My Jobs is a
@@ -7148,8 +7182,14 @@ function renderStation(name){
     ? `<div class="subzone-empty">🌌 Nothing here yet — just the elements to gather for now.</div>`
     : shopBodyHTML(shopEntries, idx);
 
+  // Frozen to the top of the screen (see .stationhead.frozen) until the
+  // player's own roll here has both happened AND finished animating --
+  // rollAnimationInProgress (set in playRollAnimation()/flyToInventory())
+  // covers the tumble-and-fly beat between state.rolledHere flipping true
+  // and the shop settling into its final rolled state.
+  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress;
   return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
-    <div class="stationhead">
+    <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
         <div><h1>${esc(s.name)}</h1></div>
@@ -7551,6 +7591,11 @@ function closeOverlay(id){
   // the summary closes, rather than leaving a stale station image behind.
   if (id === "summary") updateBackdrop();
   updateHub();
+  // No-ops unless this closed the LAST blocking overlay AND something
+  // actually queued while it was open (see showMouseTip()/its own
+  // blockingEventOpen() check) -- safe to call unconditionally here
+  // rather than gating this call site on which id just closed.
+  flushPendingMouseTip();
 }
 const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
 
@@ -7886,7 +7931,35 @@ function positionMouseHighlight(targetSel){
   spot.style.height = (r.height + pad * 2) + "px";
   spot.classList.add("show");
 }
+// True while a real full-screen moment (the crafted-card inspection
+// popup, the "New Items Unlocked" reveal) is showing -- deliberately
+// narrower than anyOverlayOpen() (see its own comment), which would also
+// catch Convert/Settings/History and wrongly defer tips that are
+// specifically ABOUT one of those (e.g. firstconvert targets #convertGo
+// while Convert is open on purpose). These two specifically are the
+// ones that cover the whole screen and demand the player's full
+// attention for a beat -- a mouse tip popping in underneath or on top of
+// either reads as visual noise at best, and at worst gets silently
+// marked "seen" (see showMouseTipOnce()/showTutorialHintOnce(), both of
+// which flag the id BEFORE calling this) while buried behind the popup,
+// never actually seen by the player at all.
+function blockingEventOpen(){
+  return document.getElementById("cardPop").classList.contains("open")
+      || document.getElementById("itemReveal").classList.contains("open");
+}
+// Holds the most recent call that arrived while blocked -- only ONE slot,
+// not a real queue: a second tip arriving before the first ever got to
+// show just replaces it, same "whichever's most relevant NOW wins" rule
+// maybeShowFirstVisitHint() already applies when picking among several
+// eligible organic hints. flushPendingMouseTip() (called from
+// closeOverlay() once neither blocking overlay is open any more) is what
+// actually lets it through.
+let pendingMouseTip = null;
 function showMouseTip(pose, html, anchor, targetSel){
+  if (blockingEventOpen()){
+    pendingMouseTip = {pose, html, anchor, targetSel};
+    return;
+  }
   document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
   document.getElementById("mouseTipText").innerHTML = html;
   const el = document.getElementById("mouseTip");
@@ -7895,6 +7968,12 @@ function showMouseTip(pose, html, anchor, targetSel){
   el.classList.add("show");
   el.setAttribute("aria-hidden", "false");
   positionMouseHighlight(targetSel);
+}
+function flushPendingMouseTip(){
+  if (!pendingMouseTip || blockingEventOpen()) return;
+  const tip = pendingMouseTip;
+  pendingMouseTip = null;
+  showMouseTip(tip.pose, tip.html, tip.anchor, tip.targetSel);
 }
 function hideMouseTip(){
   const el = document.getElementById("mouseTip");
@@ -8331,9 +8410,17 @@ function doRoll(rollCount){
    Runs entirely against the live DOM; render() only runs once at the very
    end to settle into the final state (renderStation() already omits the
    playbar entirely once state.rolledHere is true). */
+// True from the moment a roll's tumble-and-fly animation starts until its
+// very last card lands (see flyToInventory()'s own onfinish below) --
+// renderStation() reads this alongside state.rolledHere to decide whether
+// .stationhead should still be frozen (see its own comment): rolledHere
+// alone flips true well before the player's actually watched the roll
+// finish, so freezing would let go too early without this.
+let rollAnimationInProgress = false;
 function playRollAnimation(out){
+  rollAnimationInProgress = true;
   const playBar = document.getElementById("playBar");
-  if (!playBar){ render(); return; } // safety net -- shouldn't happen
+  if (!playBar){ rollAnimationInProgress = false; render(); return; } // safety net -- shouldn't happen
 
   const startH = playBar.getBoundingClientRect().height;
 
@@ -8412,7 +8499,7 @@ function flyToInventory(cards, playBar){
     // handler with an AnimationPlaybackEvent, and that (being a truthy
     // object) would land in render()'s own resetScroll parameter and
     // silently force the page back to the top after every roll.
-    if (i === cards.length - 1) anim.onfinish = () => render();
+    if (i === cards.length - 1) anim.onfinish = () => { rollAnimationInProgress = false; render(); };
   });
   // Punch as soon as the FIRST card makes contact, not once everything
   // (including every card's post-contact shrink/fade) has finished.
@@ -8741,9 +8828,7 @@ function handleScreenClick(ev){
     const itemCard = needElemBtn.closest("[data-item-card]");
     const idx = itemCard && +itemCard.dataset.itemCard;
     const goalEntry = itemCard && ENTRIES[idx];
-    document.getElementById("convertGoalCard").innerHTML = goalEntry
-      ? `<div class="convert-goal-label">Working toward</div>${itemHTML(goalEntry, idx)}`
-      : "";
+    document.getElementById("convertGoalCard").innerHTML = goalEntry ? itemHTML(goalEntry, idx) : "";
     return;
   }
 
@@ -9296,8 +9381,12 @@ const jobSheet = document.getElementById("jobSheet"), jobScrim = document.getEle
    updateHub()'s own hubJobs.disabled). */
 function renderJobBoard(){
   document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests" : "📋 Jobs";
+  // acceptedOnly:true -- this standing sheet (reached from the bottom
+  // hub's own Jobs/Quests button) is the player's personal log, never a
+  // place to browse and accept something new (see jobBoardHTML()/
+  // questsBodyHTML()'s own comments) -- that's the Marketplace's job.
   document.getElementById("jobSheetBody").innerHTML =
-    state.mode === "hard" ? questsBodyHTML() : jobBoardHTML();
+    state.mode === "hard" ? questsBodyHTML(true) : jobBoardHTML(true);
 }
 function openJobBoard(){
   if (state.mode !== "hard" && jobBoardUnlocked()) topUpJobBoard();
@@ -9699,175 +9788,178 @@ function collectionsBodyHTML(){
 }
 
 /* ---------------------------------------------------------- quests --- */
-/* Hard Mode only -- a single strict story line, not a branching tree:
-   each quest's parent is exactly the previous quest's id, so they unlock
-   one at a time in QUESTS' own declaration order (a hand-picked "story
-   mission order" -- see the design doc this was authored from). Taking a
-   quest for an item you already own completes it immediately (see
-   takeQuest()), so a player who crafted ahead of the quest line doesn't
-   get stuck -- they just clear it in one tap the moment it's offered.
-   parent:null on the very first entry only; every other quest structurally
-   opens up once its own parent is completed. Structural availability isn't
-   the same as what actually SHOWS: questVisible()/QUEST_VISIBLE_CAP still
-   throttle the reveal to 1-2 quests on offer at a time.
-   gateway:<region> is display-only flavor (a badge), the actual unlock
-   is still owning the item itself, same as it already works without any
-   of this -- kept on Sailboat/Library/Rocket at their new positions since
-   those three still gate Island/Wardrobe/Solar System (SUBZONE_TRAVEL's
-   own unlockItem values).
-   parent can also be an ARRAY of ids (an AND-join, see questAvailable())
-   from when this was a branching tree -- no entry below uses it, but
-   questAvailable()/jobBoardUnlocked() still support it. */
+/* Hard Mode only -- a branching tree of "generations", not a single-file
+   chain: every quest in one generation shares the exact same parent(s), so
+   they all structurally unlock TOGETHER the moment that generation's own
+   parent(s) complete (parent can be a single id or an ARRAY of ids -- an
+   AND-join, see questAvailable() -- when the previous generation itself
+   had more than one member, every one of them has to be done, not just
+   one). Generations are mostly size 2, sometimes 3, and (aside from
+   furnace leading solo and golem closing solo) essentially never size 1 --
+   see questVisible()/QUEST_VISIBLE_CAP for the "1-3 actually on offer at
+   once" throttle this feeds into. Declaration order within and across
+   generations is still the hand-picked "story mission order" the old
+   linear chain used (see the design doc this was authored from) -- only
+   the parent linkage was reshaped into groups, the items themselves and
+   their sequence weren't reordered.
+   Taking a quest for an item you already own completes it immediately
+   (see takeQuest()), so a player who crafted ahead of the quest line
+   doesn't get stuck -- they just clear it in one tap the moment it's
+   offered.
+   gateway:<region> is display-only flavor (a badge), the actual unlock is
+   still owning the item itself, same as it already works without any of
+   this -- kept on Sailboat/Library/Rocket since those three still gate
+   Island/Wardrobe/Solar System (SUBZONE_TRAVEL's own unlockItem values). */
 const QUESTS = [
   { id:"furnace", item:"Furnace", parent:null,
     blurb:"Clay and Carbon, fired hot enough to become a Furnace -- the Deep Mine's own gateway to every alloy and gemstone." },
   { id:"dna", item:"DNA", parent:"furnace",
     blurb:"The Greenhouse's first real biology -- Sugar and two elements twist into the blueprint every living thing in Elementia shares." },
-  { id:"tools", item:"Tools", parent:"dna",
+  { id:"tools", item:"Tools", parent:"furnace",
     blurb:"Steel and two alloys forged into the single set of Tools nearly every later recipe leans on." },
-  { id:"soil", item:"Soil", parent:"tools",
+  { id:"soil", item:"Soil", parent:"furnace",
     blurb:"Clay worked into Sand becomes Soil -- the forest floor everything green eventually grows out of." },
-  { id:"tree", item:"Tree", parent:"soil",
+  { id:"tree", item:"Tree", parent:["dna", "tools", "soil"],
     blurb:"Soil plus two elements is all a Tree needs to take root -- the forest's whole timber line starts here." },
-  { id:"glass", item:"Glass", parent:"tree",
+  { id:"glass", item:"Glass", parent:["dna", "tools", "soil"],
     blurb:"Sand and Limestone, melted together into Glass -- half the Observatory's own instruments start with this pane." },
-  { id:"egg", item:"Egg", parent:"glass",
+  { id:"egg", item:"Egg", parent:["tree", "glass"],
     blurb:"DNA and three elements crack into an Egg -- the Bakery's first real ingredient with a pulse behind it." },
-  { id:"canoe", item:"Canoe", parent:"egg",
+  { id:"canoe", item:"Canoe", parent:["tree", "glass"],
     blurb:"A Tree and some Water lashed into a Canoe -- the forest's simplest way onto the river." },
-  { id:"deer", item:"Deer", parent:"canoe",
+  { id:"deer", item:"Deer", parent:["egg", "canoe"],
     blurb:"Tree, Water, and Bone -- the forest's own wildlife starts wandering the moment a Deer appears." },
-  { id:"apple", item:"Apple", parent:"deer",
+  { id:"apple", item:"Apple", parent:["egg", "canoe"],
     blurb:"A Tree given Water ripens into the Greenhouse's own first fruit." },
-  { id:"banana", item:"Banana", parent:"apple",
+  { id:"banana", item:"Banana", parent:["egg", "canoe"],
     blurb:"Tree, Water, and Potassium -- the Ocean's own orchard, oddly enough, starts with a Banana." },
-  { id:"rope", item:"Rope", parent:"banana",
+  { id:"rope", item:"Rope", parent:["deer", "apple", "banana"],
     blurb:"Plant Fiber twisted around a set of Tools becomes Rope -- the forest's own answer to holding anything together." },
-  { id:"engine", item:"Engine", parent:"rope",
+  { id:"engine", item:"Engine", parent:["deer", "apple", "banana"],
     blurb:"Tools, Natural Gas, and Steel combine into an Engine -- the Power Plant's own answer to real motion." },
-  { id:"lightbulb", item:"Light Bulb", parent:"engine",
+  { id:"lightbulb", item:"Light Bulb", parent:["rope", "engine"],
     blurb:"Glass wrapped around a Wire is all a Light Bulb needs to switch the Power Plant's own lights on." },
-  { id:"farm", item:"Farm", parent:"lightbulb",
+  { id:"farm", item:"Farm", parent:["rope", "engine"],
     blurb:"Soil, Tools, and Water -- the Greenhouse's whole Homestead line starts the moment a Farm exists." },
-  { id:"bridge", item:"Bridge", parent:"farm",
+  { id:"bridge", item:"Bridge", parent:["rope", "engine"],
     blurb:"Steel and Concrete, spanned across Water -- The City's first real Bridge." },
-  { id:"wool", item:"Wool", parent:"bridge",
+  { id:"wool", item:"Wool", parent:["lightbulb", "farm", "bridge"],
     blurb:"A Sheep and a set of Tools shear into Wool -- the Greenhouse's own start of a whole textile line." },
-  { id:"logcabin", item:"Log Cabin", parent:"wool",
+  { id:"logcabin", item:"Log Cabin", parent:["lightbulb", "farm", "bridge"],
     blurb:"Tree, Tools, and a Furnace's own heat raise the forest's first real Log Cabin." },
-  { id:"compass", item:"Compass", parent:"logcabin",
+  { id:"compass", item:"Compass", parent:["wool", "logcabin"],
     blurb:"A Magnet, Water, and Glass -- the Observatory's own answer to never losing your bearings." },
-  { id:"grain", item:"Grain", parent:"compass",
+  { id:"grain", item:"Grain", parent:["wool", "logcabin"],
     blurb:"A Farm and some Fertilizer are all it takes to bring in the Greenhouse's first real Grain harvest." },
-  { id:"cow", item:"Cow", parent:"grain",
+  { id:"cow", item:"Cow", parent:["compass", "grain"],
     blurb:"Farm and Grain together bring the Greenhouse's own livestock line to life, starting with a Cow." },
-  { id:"basket", item:"Basket", parent:"cow",
+  { id:"basket", item:"Basket", parent:["compass", "grain"],
     blurb:"Plant Fiber woven around a set of Tools becomes a Basket -- the Greenhouse's own way of carrying a harvest home." },
-  { id:"honey", item:"Honey", parent:"basket",
+  { id:"honey", item:"Honey", parent:["cow", "basket"],
     blurb:"A Bee and some Sugar are the Greenhouse's whole recipe for Honey." },
-  { id:"clock", item:"Clock", parent:"honey",
+  { id:"clock", item:"Clock", parent:["cow", "basket"],
     blurb:"A Battery and a set of Tools tick into a Clock -- every gemstone in the game waits on this one build." },
-  { id:"fabric", item:"Fabric", parent:"clock",
+  { id:"fabric", item:"Fabric", parent:["cow", "basket"],
     blurb:"Plant Fiber and Tools woven together into Fabric -- the Ocean's own start of a sail." },
-  { id:"plastic", item:"Plastic", parent:"fabric",
+  { id:"plastic", item:"Plastic", parent:["honey", "clock", "fabric"],
     blurb:"Natural Gas run through a Furnace becomes Plastic -- the Power Plant's own building block for everything synthetic after it." },
-  { id:"solarpanel", item:"Solar Panel", parent:"plastic",
+  { id:"solarpanel", item:"Solar Panel", parent:["honey", "clock", "fabric"],
     blurb:"Silicon, Wire, Glass, and a Battery -- the Greenhouse's own answer to catching sunlight." },
-  { id:"building", item:"Building", parent:"solarpanel",
+  { id:"building", item:"Building", parent:["plastic", "solarpanel"],
     blurb:"Concrete, Glass, and Steel raise The City's very first Building -- and everything the skyline references after it." },
-  { id:"microchip", item:"Microchip", parent:"building",
+  { id:"microchip", item:"Microchip", parent:["plastic", "solarpanel"],
     blurb:"Wire, Silicon, and Silver etched down into a Microchip -- the Observatory's smallest, most important build yet." },
-  { id:"sailboat", item:"Sailboat", parent:"microchip", gateway:"Island",
+  { id:"sailboat", item:"Sailboat", parent:["building", "microchip"], gateway:"Island",
     blurb:"A Canoe and some Fabric set you loose past The Ocean's own shore, out to the Island and everything only found there." },
-  { id:"chocolate", item:"Chocolate", parent:"sailboat",
+  { id:"chocolate", item:"Chocolate", parent:["building", "microchip"],
     blurb:"Sugar run through a Furnace's heat becomes the Bakery's own Chocolate." },
-  { id:"tractor", item:"Tractor", parent:"chocolate",
+  { id:"tractor", item:"Tractor", parent:["building", "microchip"],
     blurb:"A Farm fitted with an Engine becomes a Tractor -- the Greenhouse's own leap into real machinery." },
-  { id:"glassvial", item:"Glass Vial", parent:"tractor",
+  { id:"glassvial", item:"Glass Vial", parent:["sailboat", "chocolate", "tractor"],
     blurb:"Glass, reshaped again by a Furnace, becomes the Power Plant's own precision Glass Vial." },
-  { id:"wheel", item:"Wheel", parent:"glassvial",
+  { id:"wheel", item:"Wheel", parent:["sailboat", "chocolate", "tractor"],
     blurb:"A Tree shaped by a set of Tools becomes the Observatory's own Wheel -- simple, and everywhere after this." },
-  { id:"satellitedish", item:"Satellite Dish", parent:"wheel",
+  { id:"satellitedish", item:"Satellite Dish", parent:["sailboat", "chocolate", "tractor"],
     blurb:"Aluminum Alloy and Wire curve into a Satellite Dish -- the Space Station's own ears, built long before there's a station to bolt them to." },
-  { id:"oven", item:"Oven", parent:"satellitedish",
+  { id:"oven", item:"Oven", parent:["glassvial", "wheel", "satellitedish"],
     blurb:"A Furnace timed by a Clock becomes the Bakery's own Oven -- every real dessert after this needs one." },
-  { id:"book", item:"Book", parent:"oven",
+  { id:"book", item:"Book", parent:["glassvial", "wheel", "satellitedish"],
     blurb:"Paper bound with a set of Tools becomes The City's first real Book." },
-  { id:"salmon", item:"Salmon", parent:"book",
+  { id:"salmon", item:"Salmon", parent:["glassvial", "wheel", "satellitedish"],
     blurb:"Seaweed, Water, and an Egg -- the forest's own river starts running with Salmon." },
-  { id:"telescope", item:"Telescope", parent:"salmon",
+  { id:"telescope", item:"Telescope", parent:["oven", "book", "salmon"],
     blurb:"Glass, Aluminum Alloy, and Silver, aimed straight up -- the first real look at what a Rocket only gets you closer to." },
-  { id:"orca", item:"Orca", parent:"telescope",
+  { id:"orca", item:"Orca", parent:["oven", "book", "salmon"],
     blurb:"Seaweed, Salmon, and Bone -- The Ocean's own apex predator, an Orca, surfaces." },
-  { id:"yarn", item:"Yarn", parent:"orca",
+  { id:"yarn", item:"Yarn", parent:["oven", "book", "salmon"],
     blurb:"Wool spun on a Wheel becomes Yarn -- The City's own start of every knit good after it." },
-  { id:"lighthouse", item:"Lighthouse", parent:"yarn",
+  { id:"lighthouse", item:"Lighthouse", parent:["telescope", "orca", "yarn"],
     blurb:"A Light Bulb set into Concrete becomes The Ocean's own Lighthouse, keeping watch over every ship after it." },
-  { id:"volcano", item:"Volcano", parent:"lighthouse",
+  { id:"volcano", item:"Volcano", parent:["telescope", "orca", "yarn"],
     blurb:"A Planet run through a Furnace's own heat becomes a Volcano -- the Deep Mine's strangest build yet." },
-  { id:"library", item:"Library", parent:"volcano", gateway:"Wardrobe",
+  { id:"library", item:"Library", parent:["lighthouse", "volcano"], gateway:"Wardrobe",
     blurb:"A Building plus a Book is all it takes to open the door to somewhere far stranger than The City." },
-  { id:"bicycle", item:"Bicycle", parent:"library",
+  { id:"bicycle", item:"Bicycle", parent:["lighthouse", "volcano"],
     blurb:"Aluminum Alloy, a Wheel, and Rubber -- the Greenhouse's own two-wheeled answer to getting around." },
-  { id:"speedboat", item:"Speedboat", parent:"bicycle",
+  { id:"speedboat", item:"Speedboat", parent:["library", "bicycle"],
     blurb:"A Canoe fitted with an Engine and a Compass becomes The Ocean's own Speedboat." },
-  { id:"computer", item:"Computer", parent:"speedboat",
+  { id:"computer", item:"Computer", parent:["library", "bicycle"],
     blurb:"A Battery, Plastic, and a Microchip -- the Power Plant's own Computer, and a real step toward a Rocket." },
-  { id:"skyscraper", item:"Skyscraper", parent:"computer",
+  { id:"skyscraper", item:"Skyscraper", parent:["speedboat", "computer"],
     blurb:"A Building reaching for a Cloud, crowned with a Satellite Dish -- The City's tallest build yet." },
-  { id:"star", item:"Star", parent:"skyscraper",
+  { id:"star", item:"Star", parent:["speedboat", "computer"],
     blurb:"The same Clock that unlocked every gemstone points a Telescope somewhere new: catch a Star." },
-  { id:"car", item:"Car", parent:"star",
+  { id:"car", item:"Car", parent:["skyscraper", "star"],
     blurb:"Engine, Steel, Plastic, Glass, Rubber, and a Wheel -- the Power Plant's own full Car, assembled at last." },
-  { id:"motorcycle", item:"Motorcycle", parent:"car",
+  { id:"motorcycle", item:"Motorcycle", parent:["skyscraper", "star"],
     blurb:"A Bicycle fitted with an Engine becomes The City's own Motorcycle." },
-  { id:"rainbow", item:"Rainbow", parent:"motorcycle",
+  { id:"rainbow", item:"Rainbow", parent:["car", "motorcycle"],
     blurb:"A Cloud and a Star together -- the sky's whole spectrum, chased down at last." },
-  { id:"solarsystem", item:"Solar System", parent:"rainbow",
+  { id:"solarsystem", item:"Solar System", parent:["car", "motorcycle"],
     blurb:"A Star of your own, mapped against a Planet -- the whole neighborhood, charted." },
-  { id:"life", item:"Life", parent:"solarsystem",
+  { id:"life", item:"Life", parent:["car", "motorcycle"],
     blurb:"Bone, DNA, Water, a Clock, and a Star -- The Ocean's own recipe for something that's actually alive." },
-  { id:"sushirestaurant", item:"Sushi Restaurant", parent:"life",
+  { id:"sushirestaurant", item:"Sushi Restaurant", parent:["rainbow", "solarsystem", "life"],
     blurb:"Seaweed and Salmon, served inside a real Building -- The City's own Sushi Restaurant opens." },
-  { id:"gemstonecollection", item:"Gemstone Collection", parent:"sushirestaurant",
+  { id:"gemstonecollection", item:"Gemstone Collection", parent:["rainbow", "solarsystem", "life"],
     blurb:"Pearl, Ruby, Opal, Turquoise, Amber, and Diamond, all in one case -- the Deep Mine's entire gemstone line, complete." },
-  { id:"windmill", item:"Windmill", parent:"gemstonecollection",
+  { id:"windmill", item:"Windmill", parent:["sushirestaurant", "gemstonecollection"],
     blurb:"A Cloud, Concrete, a Turbine Blade, and a Battery -- the Greenhouse's own Windmill starts turning." },
-  { id:"museum", item:"Museum", parent:"windmill",
+  { id:"museum", item:"Museum", parent:["sushirestaurant", "gemstonecollection"],
     blurb:"A Building filled with a Dinosaur, a Telescope, and a Statue -- The City's own Museum, everything on display at once." },
-  { id:"helicopter", item:"Helicopter", parent:"museum",
+  { id:"helicopter", item:"Helicopter", parent:["windmill", "museum"],
     blurb:"Engine, Glass, Stainless Steel, and a Turbine Blade lift The City's own Helicopter off the ground -- fast travel, unlocked." },
-  { id:"knitscarf", item:"Knit Scarf", parent:"helicopter",
+  { id:"knitscarf", item:"Knit Scarf", parent:["windmill", "museum"],
     blurb:"Yarn dyed red and blue becomes The City's own Knit Scarf." },
-  { id:"pretzel", item:"Pretzel", parent:"knitscarf",
+  { id:"pretzel", item:"Pretzel", parent:["windmill", "museum"],
     blurb:"Dough, Potassium, and an Oven's heat twist into the Bakery's own Pretzel." },
-  { id:"applepie", item:"Apple Pie", parent:"pretzel",
+  { id:"applepie", item:"Apple Pie", parent:["helicopter", "knitscarf", "pretzel"],
     blurb:"Dough, an Apple, and an Oven -- the Bakery's own Apple Pie, baked through." },
-  { id:"croissant", item:"Croissant", parent:"applepie",
+  { id:"croissant", item:"Croissant", parent:["helicopter", "knitscarf", "pretzel"],
     blurb:"Dough, Butter, and an Oven -- the Bakery's own flaky Croissant." },
-  { id:"bananabread", item:"Banana Bread", parent:"croissant",
+  { id:"bananabread", item:"Banana Bread", parent:["applepie", "croissant"],
     blurb:"A loaf of Bread folded around a Banana becomes the Bakery's own Banana Bread." },
-  { id:"rocket", item:"Rocket", parent:"bananabread", gateway:"Solar System",
+  { id:"rocket", item:"Rocket", parent:["applepie", "croissant"], gateway:"Solar System",
     blurb:"A Computer, a Solar Panel, and Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
-  { id:"chocolatecake", item:"Chocolate Cake", parent:"rocket",
+  { id:"chocolatecake", item:"Chocolate Cake", parent:["bananabread", "rocket"],
     blurb:"A Cake dressed in Chocolate becomes the Bakery's own Chocolate Cake." },
-  { id:"centralstation", item:"Central Station", parent:"chocolatecake",
+  { id:"centralstation", item:"Central Station", parent:["bananabread", "rocket"],
     blurb:"Helicopter, Maglev Train, Car, and Speedboat, all under one roof -- The City's own Central Station, every way to travel in one place." },
-  { id:"beachtown", item:"Beach Town", parent:"centralstation",
+  { id:"beachtown", item:"Beach Town", parent:["bananabread", "rocket"],
     blurb:"A Lighthouse, a Sushi Restaurant, a Speedboat, and a Banana -- The Ocean's whole Beach Town, built from everything it's grown so far." },
-  { id:"grandbanquet", item:"Grand Banquet", parent:"beachtown",
+  { id:"grandbanquet", item:"Grand Banquet", parent:["chocolatecake", "centralstation", "beachtown"],
     blurb:"Apple, Banana, Sushi Restaurant, Cake, and Fireworks -- the Bakery's own Grand Banquet, everything on one table." },
-  { id:"renewablegrid", item:"Renewable Grid", parent:"grandbanquet",
+  { id:"renewablegrid", item:"Renewable Grid", parent:["chocolatecake", "centralstation", "beachtown"],
     blurb:"Biofuel, a Windmill, a Water Turbine, a Sunflower, and a Geothermal Pump -- the Power Plant's entire Renewable Grid, humming at once." },
-  { id:"cruiseship", item:"Cruise Ship", parent:"renewablegrid",
+  { id:"cruiseship", item:"Cruise Ship", parent:["chocolatecake", "centralstation", "beachtown"],
     blurb:"Canoe, Engine, Compass, Stainless Steel, Fireworks, a Grand Banquet, and a Trumpet -- The Ocean's biggest build yet, a full Cruise Ship." },
-  { id:"trumpet", item:"Trumpet", parent:"cruiseship",
+  { id:"trumpet", item:"Trumpet", parent:["grandbanquet", "renewablegrid", "cruiseship"],
     blurb:"Brass shaped by a set of Tools becomes The City's own Trumpet." },
-  { id:"seaturtle", item:"Sea Turtle", parent:"trumpet",
+  { id:"seaturtle", item:"Sea Turtle", parent:["grandbanquet", "renewablegrid", "cruiseship"],
     blurb:"Water, an Egg, and Sand -- the Island's own shoreline starts moving the moment a Sea Turtle appears." },
-  { id:"treasuremap", item:"Treasure Map", parent:"seaturtle",
+  { id:"treasuremap", item:"Treasure Map", parent:["grandbanquet", "renewablegrid", "cruiseship"],
     blurb:"Paper, Black Dye, and a Mirror -- the Wardrobe's own Treasure Map, pointing somewhere stranger still." },
-  { id:"golem", item:"Golem", parent:"treasuremap",
+  { id:"golem", item:"Golem", parent:["trumpet", "seaturtle", "treasuremap"],
     blurb:"A Statue given Life -- the Wardrobe's last and strangest build, a Golem standing at last." },
 ];
 // Job Board's pool (see jobEligibleItems(), defined earlier in the file --
@@ -10034,7 +10126,11 @@ function questCardHTML(q){
    first (the most actionable), then whatever's newly on offer, completed
    history last -- same "what you're doing, what you could do, what
    you've done" ordering jobBoardHTML() already uses for jobs. */
-function questsBodyHTML(){
+// acceptedOnly: true for the standing hub-button sheet (renderJobBoard())
+// -- same "personal log, not a browse-and-accept list" rule jobBoardHTML()
+// follows (see its own comment). New candidates only ever show on the
+// Marketplace's own inline Quest Log section.
+function questsBodyHTML(acceptedOnly){
   if (state.mode !== "hard"){
     return `<p class="empty">📜 Quests only track in Adventure Mode, where the full item web -- and every keystone in it -- is actually in play.</p>`;
   }
@@ -10043,10 +10139,14 @@ function questsBodyHTML(){
   // newly on offer -- no completed section left to order in after them.
   const visible = QUESTS.filter(questVisible);
   const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken; });
-  const available = visible.filter(q => questAvailable(q));
+  const available = acceptedOnly ? [] : visible.filter(q => questAvailable(q));
   const ordered = [...inProgress, ...available];
-  return `<p class="trade-intro">Finishing a quest quietly opens up what comes next -- there's only ever a couple to focus on at a time.</p>` +
-    `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`;
+  const intro = acceptedOnly
+    ? `<p class="trade-intro">Your own accepted quests -- open the Marketplace to see what's newly on offer.</p>`
+    : `<p class="trade-intro">Finishing a quest quietly opens up what comes next -- there's only ever a couple to focus on at a time.</p>`;
+  const body = ordered.length ? `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`
+    : acceptedOnly ? `<p class="empty">No quest accepted yet -- open the Marketplace to see what's on offer.</p>` : "";
+  return intro + body;
 }
 
 /* -------------------------------------------------------- sub-zones --- */
@@ -10272,20 +10372,16 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
    never touched, so there's nothing to restore. Reset reuses the exact
    same confirm+startNewSession path resetBtn already used, just entered
    from here instead. */
-const MODE_LABEL = { zen: "Zen", classic: "Classic", hard: "Adventure" };
+/* Straight to the real title screen, no Continue/Reset fork in front of
+   it any more -- the run underneath is never touched (showWelcomeSlide()
+   is pure presentation, see its own comment), so "come back and continue
+   anytime" is still true; it just means tapping Play from here like any
+   other title-screen visit, not confirming a choice first. Resetting
+   outright is still exactly one tap away as its own dedicated row
+   (resetCacheBtn's neighbor, resetBtn) for anyone who actually wants that. */
 document.getElementById("mainMenuBtn").addEventListener("click", () => {
-  const modeName = MODE_LABEL[state.mode] || "Current";
-  document.getElementById("mainMenuSub").textContent =
-    `${modeName} Mode -- visit ${state.visits} of ${visitLimitLabel()}. Continue where you left off, or start over.`;
   closeOverlay("settings");
-  openOverlay("mainMenuBox");
-});
-document.getElementById("mainMenuContinue").addEventListener("click", () => closeOverlay("mainMenuBox"));
-document.getElementById("mainMenuReset").addEventListener("click", () => {
-  askConfirm("Start a brand new session? Your inventory, visits and job board will be cleared.", () => {
-    closeOverlay("mainMenuBox");
-    startNewSession();
-  });
+  showWelcomeSlide();
 });
 
 document.getElementById("historyBtn").addEventListener("click", () => {
@@ -10736,9 +10832,23 @@ document.getElementById("tourSettingsBtn").addEventListener("click", () => {
 
 /* ---------------------------------------------------------- boot --- */
 const bootedNewSession = loadAll();
-// Only a genuinely new session (see loadAll()) gets the welcome slide --
-// reloading mid-session shouldn't interrupt with it on every refresh.
-if (bootedNewSession) showWelcomeSlide();
+// sessionStorage is scoped to this one browsing context: a plain in-page
+// reload (or the page just re-running its own boot code) keeps it, but a
+// phone actually closing the app/tab and reopening it later starts a
+// FRESH context with sessionStorage empty again, even though localStorage
+// (SAVE_KEY, read by loadAll() above) still has the run. That's exactly
+// the "was this app truly closed and reopened" signal bootedNewSession
+// alone can't give -- bootedNewSession only catches a session with no
+// save at all, so a returning player got dropped straight back into
+// whatever screen they'd left instead of the main menu.
+const SESSION_FLAG_KEY = "elementia-session-active";
+const reopenedFromClosed = !bootedNewSession && sessionStorage.getItem(SESSION_FLAG_KEY) !== "1";
+sessionStorage.setItem(SESSION_FLAG_KEY, "1");
+// Either a genuinely new session (see loadAll()) or a returning one that
+// was actually closed and relaunched gets the welcome slide -- reloading
+// mid-session (still the same browsing context) shouldn't interrupt with
+// it on every refresh.
+if (bootedNewSession || reopenedFromClosed) showWelcomeSlide();
 render();
 document.getElementById("setVersion").textContent = "Elementia v" + (DATA.version || "dev");
 
@@ -10804,11 +10914,13 @@ window.MINIGAMES = {};
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
   const SIZE_MAX_PX = 110;
-  // Rise time is INVERSE speed: the floor is the FASTEST bubble. 1700ms
-  // against the 6000ms slowest is roughly a 3.5x spread, so a round mixes
-  // lazy drifters with ones that streak past in well under two seconds.
-  const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
-  const RISE_MAX_MS = 6000;
+  // Rise time is INVERSE speed: the floor is the FASTEST bubble. 900ms
+  // against the 5200ms slowest is nearly a 6x spread (up from the old
+  // 1700-6000 range's 3.5x) and a lower midpoint overall, so a round leans
+  // noticeably faster on average while still mixing in lazy drifters
+  // alongside ones that streak past in under a second.
+  const RISE_MIN_MS = 900;        // time for a bubble to float bottom to top
+  const RISE_MAX_MS = 5200;
   const TARGET_POPS = 17;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble
@@ -12433,24 +12545,31 @@ window.MINIGAMES = {};
       .mg-forest-result .mg-big{font-size:30px; font-weight:800}
       .mg-forest-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-forest-fade-in{ to{opacity:1} }
-      /* The actual tap target -- mirrors #hubHome's own look from the main
-         game exactly (76px circle, 3px card-colored ring, same green) so
-         every minigame's primary action reads as the same kind of control,
-         rather than "tap anywhere on the stage" (the old behavior here)
-         being a different, less discoverable interaction language per
-         game. Replaces the whole-stage pointerdown listener outright --
-         this is a pure timing game (WHEN you tap, never WHERE), so moving
-         the hit target to one clear button changes nothing about
-         difficulty or feel. */
+      /* The actual tap target -- copies #hubHome's real CSS values from
+         the main game verbatim (the glossy 3-stop radial-gradient green,
+         gold border, card-colored outer ring + inset highlight/shadow,
+         same translateY press) rather than a from-scratch flat green
+         circle that only approximated the look -- see #hubHome's own rule
+         in elementia.html for the source of truth if these ever need to
+         be re-synced. Replaces the whole-stage pointerdown listener
+         outright -- this is a pure timing game (WHEN you tap, never
+         WHERE), so moving the hit target to one clear button changes
+         nothing about difficulty or feel. */
       .mg-forest-center-btn{
         position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
-        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
-        border:3px solid #17321f; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        width:76px; height:76px; border-radius:50%; color:#fff;
+        background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+        border:5px solid #f2a93a;
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+          inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
         display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease, box-shadow .1s ease;
       }
-      .mg-forest-center-btn:hover{filter:brightness(1.08)}
-      .mg-forest-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-forest-center-btn:hover{filter:brightness(1.06)}
+      .mg-forest-center-btn:active{
+        transform:translateX(-50%) translateY(3px);
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+      }
       .mg-forest-center-btn .mg-cb-icon{font-size:32px; line-height:1}
       .mg-forest-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
       /* A faded scatter of whatever the player has already crafted at this
@@ -12882,8 +13001,13 @@ window.MINIGAMES = {};
       /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
          .mg-bakery-cake above), which would otherwise shrink the fruit
          along with everything else -- bump the source font-size so the
-         fruit renders twice as large as usual once that scale is applied. */
-      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:62px; }
+         fruit renders twice as large as usual once that scale is applied.
+         Sized and positioned separately from the shared base rule above --
+         half that doubled size, and dropped down into the top third of
+         the icing layer (which spans bottom:34px to bottom:92px, so its
+         top third starts at bottom:34+58*2/3 ≈ 73px) instead of floating
+         above it, on the "Now" order card specifically. */
+      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:31px; bottom:73px; }
       /* Straight horizontal travel, no rotation or fade -- it's a conveyor
          carrying the cake out of the kitchen, so it simply leaves the frame.
          --fly is the full stage width plus a margin, set per cake in JS. */
@@ -12917,24 +13041,33 @@ window.MINIGAMES = {};
       .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
         box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
-      /* Send is the actual tap target -- mirrors #hubHome's own look from
-         the main game exactly (76px circle, 3px card-colored ring, same
-         green) so every minigame's primary action reads as the same kind
-         of control, rather than each one inventing its own button shape.
-         Was a full-width rectangular bar; the click handler/disabled logic
-         are unchanged, only the shape and the wrapper's centering are new. */
+      /* Send is the actual tap target -- copies #hubHome's real CSS values
+         from the main game verbatim (the glossy 3-stop radial-gradient
+         green, gold border, card-colored outer ring + inset highlight/
+         shadow, same translateY press) rather than a from-scratch flat
+         green circle that only approximated the look -- see #hubHome's
+         own rule in elementia.html for the source of truth if these ever
+         need to be re-synced. Was a full-width rectangular bar originally;
+         the click handler/disabled logic are unchanged, only the shape
+         and the wrapper's centering are new. */
       .mg-bakery-sendwrap{ padding:4px 20px 14px; display:flex; justify-content:center; }
       .mg-bakery-send{
-        width:76px; height:76px; border-radius:50%; border:3px solid #17120c;
-        background:#3fb46c; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4); cursor:pointer;
+        width:76px; height:76px; border-radius:50%; border:5px solid #f2a93a;
+        background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+        color:#fff; cursor:pointer;
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+          inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
         display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-        transition:filter .15s ease, transform .1s ease;
+        transition:filter .15s ease, transform .1s ease, box-shadow .1s ease;
       }
-      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.08); }
-      .mg-bakery-send:not(:disabled):active{ transform:scale(.94); }
+      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.06); }
+      .mg-bakery-send:not(:disabled):active{
+        transform:translateY(3px);
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+      }
       .mg-bakery-send .mg-cb-icon{font-size:30px; line-height:1}
       .mg-bakery-send .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
-      .mg-bakery-send:disabled{ background:#4a4038; color:#8a7f70; cursor:not-allowed; }
+      .mg-bakery-send:disabled{ background:#4a4038; border-color:#6b5c47; box-shadow:0 0 0 3px var(--card); color:#8a7f70; cursor:not-allowed; }
       .mg-bakery-stage.mg-bakery-ok .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(95,207,106,.55); }
       .mg-bakery-stage.mg-bakery-bad .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(230,86,79,.55); }
       .mg-bakery-result{
@@ -13329,24 +13462,31 @@ window.MINIGAMES = {};
       .mg-city-result .mg-big{font-size:30px; font-weight:800}
       .mg-city-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-city-fade-in{ to{opacity:1} }
-      /* The actual tap target -- mirrors #hubHome's own look from the main
-         game exactly (76px circle, 3px card-colored ring, same green) so
-         every minigame's primary action reads as the same kind of control,
-         rather than "tap anywhere on the stage" (the old behavior here)
-         being a different, less discoverable interaction language per
-         game. Replaces the whole-stage pointerdown listener outright --
-         WHERE on the slab you tap has never mattered, only WHEN, so moving
-         the hit target to one clear button changes nothing about
-         difficulty or feel. */
+      /* The actual tap target -- copies #hubHome's real CSS values from
+         the main game verbatim (the glossy 3-stop radial-gradient green,
+         gold border, card-colored outer ring + inset highlight/shadow,
+         same translateY press) rather than a from-scratch flat green
+         circle that only approximated the look -- see #hubHome's own rule
+         in elementia.html for the source of truth if these ever need to
+         be re-synced. Replaces the whole-stage pointerdown listener
+         outright -- WHERE on the slab you tap has never mattered, only
+         WHEN, so moving the hit target to one clear button changes
+         nothing about difficulty or feel. */
       .mg-city-center-btn{
         position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
-        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
-        border:3px solid #17120c; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        width:76px; height:76px; border-radius:50%; color:#fff;
+        background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+        border:5px solid #f2a93a;
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+          inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
         display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease, box-shadow .1s ease;
       }
-      .mg-city-center-btn:hover{filter:brightness(1.08)}
-      .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-city-center-btn:hover{filter:brightness(1.06)}
+      .mg-city-center-btn:active{
+        transform:translateX(-50%) translateY(3px);
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+      }
       .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
       .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
       /* A faded scatter of whatever the player has already crafted at this
@@ -13901,9 +14041,15 @@ window.MINIGAMES = {};
       el.className = "mg-obs-rock";
       el.style.width = el.style.height = (r * 2) + "px";
       stage.appendChild(el);
+      // Center anywhere across the full stage width (plus a little overhang
+      // past either edge so some rocks graze in from off-screen) regardless
+      // of this rock's own size -- the old bounds shrank asymmetrically as r
+      // grew (particularly on the right), which quietly kept bigger rocks
+      // corralled toward center and made the spawn spread read as narrow.
+      const cx = rand(-r * 0.4, stageW + r * 0.4);
       const rock = {
         el, r,
-        x: rand(-r * 0.3, stageW - r * 1.7),
+        x: cx - r,
         y: -r * 2,
         speed: ROCK_SPEED_START + (ROCK_SPEED_MAX - ROCK_SPEED_START) * ramp,
       };

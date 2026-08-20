@@ -318,9 +318,15 @@
       el.className = "mg-obs-rock";
       el.style.width = el.style.height = (r * 2) + "px";
       stage.appendChild(el);
+      // Center anywhere across the full stage width (plus a little overhang
+      // past either edge so some rocks graze in from off-screen) regardless
+      // of this rock's own size -- the old bounds shrank asymmetrically as r
+      // grew (particularly on the right), which quietly kept bigger rocks
+      // corralled toward center and made the spawn spread read as narrow.
+      const cx = rand(-r * 0.4, stageW + r * 0.4);
       const rock = {
         el, r,
-        x: rand(-r * 0.3, stageW - r * 1.7),
+        x: cx - r,
         y: -r * 2,
         speed: ROCK_SPEED_START + (ROCK_SPEED_MAX - ROCK_SPEED_START) * ramp,
       };

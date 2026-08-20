@@ -173,8 +173,13 @@
       /* Order-card cakes are shown at .62 scale (see .mg-bakery-ordercard
          .mg-bakery-cake above), which would otherwise shrink the fruit
          along with everything else -- bump the source font-size so the
-         fruit renders twice as large as usual once that scale is applied. */
-      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:62px; }
+         fruit renders twice as large as usual once that scale is applied.
+         Sized and positioned separately from the shared base rule above --
+         half that doubled size, and dropped down into the top third of
+         the icing layer (which spans bottom:34px to bottom:92px, so its
+         top third starts at bottom:34+58*2/3 ≈ 73px) instead of floating
+         above it, on the "Now" order card specifically. */
+      .mg-bakery-ordercard .mg-bakery-layer-fruit{ font-size:31px; bottom:73px; }
       /* Straight horizontal travel, no rotation or fade -- it's a conveyor
          carrying the cake out of the kitchen, so it simply leaves the frame.
          --fly is the full stage width plus a margin, set per cake in JS. */
@@ -208,24 +213,33 @@
       .mg-bakery-opt[data-category="fruit"].mg-bakery-selected{
         box-shadow:0 0 0 3px #fff; border-radius:14px;
       }
-      /* Send is the actual tap target -- mirrors #hubHome's own look from
-         the main game exactly (76px circle, 3px card-colored ring, same
-         green) so every minigame's primary action reads as the same kind
-         of control, rather than each one inventing its own button shape.
-         Was a full-width rectangular bar; the click handler/disabled logic
-         are unchanged, only the shape and the wrapper's centering are new. */
+      /* Send is the actual tap target -- copies #hubHome's real CSS values
+         from the main game verbatim (the glossy 3-stop radial-gradient
+         green, gold border, card-colored outer ring + inset highlight/
+         shadow, same translateY press) rather than a from-scratch flat
+         green circle that only approximated the look -- see #hubHome's
+         own rule in elementia.html for the source of truth if these ever
+         need to be re-synced. Was a full-width rectangular bar originally;
+         the click handler/disabled logic are unchanged, only the shape
+         and the wrapper's centering are new. */
       .mg-bakery-sendwrap{ padding:4px 20px 14px; display:flex; justify-content:center; }
       .mg-bakery-send{
-        width:76px; height:76px; border-radius:50%; border:3px solid #17120c;
-        background:#3fb46c; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.4); cursor:pointer;
+        width:76px; height:76px; border-radius:50%; border:5px solid #f2a93a;
+        background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+        color:#fff; cursor:pointer;
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+          inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
         display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-        transition:filter .15s ease, transform .1s ease;
+        transition:filter .15s ease, transform .1s ease, box-shadow .1s ease;
       }
-      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.08); }
-      .mg-bakery-send:not(:disabled):active{ transform:scale(.94); }
+      .mg-bakery-send:not(:disabled):hover{ filter:brightness(1.06); }
+      .mg-bakery-send:not(:disabled):active{
+        transform:translateY(3px);
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+      }
       .mg-bakery-send .mg-cb-icon{font-size:30px; line-height:1}
       .mg-bakery-send .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
-      .mg-bakery-send:disabled{ background:#4a4038; color:#8a7f70; cursor:not-allowed; }
+      .mg-bakery-send:disabled{ background:#4a4038; border-color:#6b5c47; box-shadow:0 0 0 3px var(--card); color:#8a7f70; cursor:not-allowed; }
       .mg-bakery-stage.mg-bakery-ok .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(95,207,106,.55); }
       .mg-bakery-stage.mg-bakery-bad .mg-bakery-belt{ box-shadow:0 0 24px 4px rgba(230,86,79,.55); }
       .mg-bakery-result{

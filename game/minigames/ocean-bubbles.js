@@ -36,11 +36,13 @@
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
   const SIZE_MAX_PX = 110;
-  // Rise time is INVERSE speed: the floor is the FASTEST bubble. 1700ms
-  // against the 6000ms slowest is roughly a 3.5x spread, so a round mixes
-  // lazy drifters with ones that streak past in well under two seconds.
-  const RISE_MIN_MS = 1700;       // time for a bubble to float bottom to top
-  const RISE_MAX_MS = 6000;
+  // Rise time is INVERSE speed: the floor is the FASTEST bubble. 900ms
+  // against the 5200ms slowest is nearly a 6x spread (up from the old
+  // 1700-6000 range's 3.5x) and a lower midpoint overall, so a round leans
+  // noticeably faster on average while still mixing in lazy drifters
+  // alongside ones that streak past in under a second.
+  const RISE_MIN_MS = 900;        // time for a bubble to float bottom to top
+  const RISE_MAX_MS = 5200;
   const TARGET_POPS = 17;         // popping this many => score 1.0 (fewer bubbles spawn now)
   const RESULT_HOLD_MS = 1200;    // how long the "time's up" card sits before onComplete
   // Spawn placement: this many candidate x positions are tried per bubble

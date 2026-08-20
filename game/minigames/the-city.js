@@ -121,24 +121,31 @@
       .mg-city-result .mg-big{font-size:30px; font-weight:800}
       .mg-city-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-city-fade-in{ to{opacity:1} }
-      /* The actual tap target -- mirrors #hubHome's own look from the main
-         game exactly (76px circle, 3px card-colored ring, same green) so
-         every minigame's primary action reads as the same kind of control,
-         rather than "tap anywhere on the stage" (the old behavior here)
-         being a different, less discoverable interaction language per
-         game. Replaces the whole-stage pointerdown listener outright --
-         WHERE on the slab you tap has never mattered, only WHEN, so moving
-         the hit target to one clear button changes nothing about
-         difficulty or feel. */
+      /* The actual tap target -- copies #hubHome's real CSS values from
+         the main game verbatim (the glossy 3-stop radial-gradient green,
+         gold border, card-colored outer ring + inset highlight/shadow,
+         same translateY press) rather than a from-scratch flat green
+         circle that only approximated the look -- see #hubHome's own rule
+         in elementia.html for the source of truth if these ever need to
+         be re-synced. Replaces the whole-stage pointerdown listener
+         outright -- WHERE on the slab you tap has never mattered, only
+         WHEN, so moving the hit target to one clear button changes
+         nothing about difficulty or feel. */
       .mg-city-center-btn{
         position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
-        width:76px; height:76px; border-radius:50%; background:#3fb46c; color:#fff;
-        border:3px solid #17120c; box-shadow:0 4px 14px rgba(0,0,0,.4);
+        width:76px; height:76px; border-radius:50%; color:#fff;
+        background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+        border:5px solid #f2a93a;
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+          inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
         display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-        cursor:pointer; transition:filter .15s ease, transform .1s ease;
+        cursor:pointer; transition:filter .15s ease, transform .1s ease, box-shadow .1s ease;
       }
-      .mg-city-center-btn:hover{filter:brightness(1.08)}
-      .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
+      .mg-city-center-btn:hover{filter:brightness(1.06)}
+      .mg-city-center-btn:active{
+        transform:translateX(-50%) translateY(3px);
+        box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+      }
       .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
       .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
       /* A faded scatter of whatever the player has already crafted at this
