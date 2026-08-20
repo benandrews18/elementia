@@ -7587,7 +7587,25 @@ function updateHub(){
     // near the button that had actually just slid into view. Center
     // anchor (not a corner) -- see #mouseTip.anchor-center's own comment
     // -- since this is exactly the "full attention" beat that calls for.
-    setTimeout(() => showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "center", "#quickConvertBtn"), 350);
+    setTimeout(() => {
+      const shown = showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "center", "#quickConvertBtn");
+      // A second bubble, chained right behind the first rather than fired
+      // independently -- queued (see queueTutorialHintOnce()'s own
+      // comment), so it only actually appears once the player dismisses
+      // this one (hideMouseTip() flushes the queue on its way out). Only
+      // queued when the first one really did just show for the first
+      // time (shown === true): if firstconvert was already seen in an
+      // earlier session, there's no dismiss event left for this run to
+      // hang the follow-up off of, and it'd sit queued forever. .tok.el.
+      // need is whichever red "missing" element token happens to be on
+      // screen right now -- resolved lazily at actual display time (the
+      // player may take a while to dismiss the first bubble), not baked
+      // in here.
+      if (shown){
+        queueTutorialHintOnce("converttapmissing", 7,
+          "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
+      }
+    }, 350);
   }
 
   // Classic Mode's SECOND unlock path -- see celebrate()'s own comment
@@ -8212,6 +8230,26 @@ function showTutorialHintOnce(id, pose, html, anchor, targetSel){
   prefs.tutorialHintsSeen.push(id);
   savePrefs();
   showMouseTip(pose, html, anchor, targetSel);
+  return true;
+}
+/* Same one-shot guard as showTutorialHintOnce(), but QUEUES instead of
+   showing immediately -- for a second bubble meant to follow right after
+   an already-showing one closes, rather than another independent organic
+   call-out. targetSel is resolved lazily at actual display time (see
+   showMouseTip()'s own queue -> flushPendingMouseTip() path), which is
+   exactly what a "point at whichever missing element happens to still be
+   on screen once the player dismisses the first bubble" tip needs -- the
+   right element to spotlight can't be known yet at the moment this is
+   called. Pushed directly onto pendingMouseTips rather than through
+   showMouseTip() itself, since that only queues when blockingEventOpen()
+   is true -- this needs to queue unconditionally, behind whatever's
+   currently showing, blocking overlay or not. */
+function queueTutorialHintOnce(id, pose, html, anchor, targetSel){
+  if (prefs.guidedTutorialEnabled === false) return false;
+  if (prefs.tutorialHintsSeen.includes(id)) return false;
+  prefs.tutorialHintsSeen.push(id);
+  savePrefs();
+  pendingMouseTips.push({pose, html, anchor, targetSel});
   return true;
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
