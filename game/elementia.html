@@ -1026,6 +1026,17 @@ body[data-screen="market"] #trackedPill{display:none}
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
 .map-node.unreachable{filter:grayscale(1) brightness(.55)}
 .map-node.selected{box-shadow:0 0 0 4px rgba(255,255,255,.4)}
+/* Same 28px "points back at the tracked item" circle as .item-pin-badge
+   in a station shop, just anchored above the map pin instead of a card
+   corner -- see renderMap()'s own comment. z-index above the pulsing
+   .here::after ring (2) and the node itself so it never gets clipped
+   under either. */
+.map-node-tracked-badge{
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  width:28px; height:28px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
+}
 /* The station card overlays the map as a floating panel pinned to the top
    of the viewport (sticky, just under the topbar) instead of scrolling
    away with the page -- per spec, it should always be reachable without
@@ -2357,6 +2368,24 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
 .mouse-tip-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
 .mouse-tip-tour .bigbtn{padding:9px 18px; font-size:13px}
 
+/* Pulsing gold ring around whatever UI element the current mouse tip is
+   actually pointing at -- see positionMouseHighlight()/showMouseTip()'s
+   targetSel param. z-index 70, one below #mouseTip's own default 71 (see
+   its own comment), so the bubble itself always paints on top of the
+   ring rather than the ring ever covering the text explaining it. Circle
+   (not a rounded rect) per spec -- sized off the target's own larger
+   dimension so it comfortably encloses non-square buttons too. */
+#mouseHighlight{
+  position:fixed; z-index:70; border-radius:50%; box-sizing:border-box;
+  border:3px solid var(--gold); pointer-events:none; opacity:0;
+  transition:opacity .2s ease, left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+#mouseHighlight.show{opacity:1; animation:mouse-highlight-pulse 1.6s ease-in-out infinite}
+@keyframes mouse-highlight-pulse{
+  0%,100%{box-shadow:0 0 0 4px rgba(226,178,90,.35), 0 0 16px rgba(226,178,90,.5)}
+  50%{box-shadow:0 0 0 7px rgba(226,178,90,.15), 0 0 22px rgba(226,178,90,.7)}
+}
+
 /* ------------------------------------------------- reference sheet --- */
 /* Pinned just below the topbar (var(--topbar-h) -- its own measured
    height, same live-measured-chrome-height approach #hub's --hub-h uses
@@ -2857,7 +2886,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="mouse-tip-close" id="mouseTipClose" aria-label="Dismiss">✕</button>
     <p id="mouseTipText"></p>
     <!-- Shown only while the guided "How to Play" walkthrough (see
-         TUT_COACH_STEPS/renderTutCoach()) is driving this same bubble --
+         tutCoachSteps()/renderTutCoach()) is driving this same bubble --
          hidden for every other one-off tip, which just dismisses on its
          own close button or the player's next tap instead. -->
     <div class="mouse-tip-tour" id="mouseTipTour" hidden>
@@ -2866,6 +2895,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     </div>
   </div>
 </div>
+<!-- Lightweight companion to #mouseTip -- a pulsing ring around whatever
+     UI element the current tip is actually talking about (see
+     positionMouseHighlight()/showMouseTip()'s own targetSel param). Not
+     the same thing as the guided walkthrough's own full-screen-darkening
+     .tut-coach-spot -- that's a deliberate blocking "look here" moment;
+     this is a quiet, non-blocking nudge that sits alongside an ordinary
+     organic tip without dimming the rest of the screen. -->
+<div id="mouseHighlight" aria-hidden="true"></div>
 
 <!-- capstone celebration -->
 <div class="overlay" id="celebrate" role="dialog" aria-modal="true" aria-labelledby="celebName">
@@ -4827,7 +4864,7 @@ function playMapIntroScroll(){
     // doesn't actually apply to them.
     if (mustStartAtOcean()){
       selectedMapStation = "The Ocean";
-      showMouseTipOnce("mapintro", 7, "Every journey starts at The Ocean — tap it, then hit the big button below to dive in!", "bottom-left");
+      showMouseTipOnce("mapintro", 7, "Start at The Ocean — tap it!", "bottom-left", '[data-map-node="The Ocean"]');
     }
     window.scrollTo({top: endY, behavior: "instant"});
     render(); // no resetScroll -- keep the bottom position just set above
@@ -5176,9 +5213,17 @@ const SUBZONES = [
   // symbol roster, so "Gold Ring" became a plain Ag + Volcano forging;
   // "Space Ship" became Rocket).
   {id:"Wardrobe", emoji:"📖", suit:"city", dice:["Ca","C","O","Al","Si","Mg"], shop:[
+    // A pure-element MATERIAL, same role every other station's own
+    // MATERIAL tier plays (see e.g. The Ocean's Water/Sand/Limestone) --
+    // every other Wardrobe item needs at least one prior ITEM ingredient
+    // (Wand's own Tree included), so without this the shop could render
+    // completely empty on a visit where the player hasn't happened to
+    // bring any of those in yet. Feeds Treasure Map alongside Paper, so
+    // it's not a pure dead end either.
+    ["🪞","Mirror","MATERIAL","Si + O",3],
     ["🪄","Wand","CREATION","🌳 Tree",8],
     ["🔥","Phoenix","CREATION","🥚 Egg + 🔥 Furnace + 🪄 Wand",20],
-    ["🗺️","Treasure Map","COMPONENT","📄 Paper + __DYEBLACK__ Black Dye",16],
+    ["🗺️","Treasure Map","COMPONENT","📄 Paper + __DYEBLACK__ Black Dye + 🪞 Mirror",16],
     ["__GOLEM__","Golem","CREATION","🗿 Statue + __LIFE__ Life",21],
     ["💍","The One Ring","CREATION","Ag + 🌋 Volcano",17],
     ["🦄","Unicorn","CREATION","🦌 Deer + 🌈 Rainbow",22],
@@ -5762,6 +5807,13 @@ function loadAll(){
     state.visitedStations["Wardrobe"] = state.visitedStations["Fictional World"];
   }
   delete state.visitedStations["Fictional World"];
+  // Repair saves stuck from before goMap()'s own sub-zone fix -- if
+  // lastStation/priorStation somehow still points at a sub-zone (Island/
+  // Wardrobe/a planet) rather than that sub-zone's real parent station,
+  // every station reads as unreachable on the map (see canReachStation()/
+  // isMapConnected(), neither of which know sub-zone names at all).
+  if (SUBZONE_PARENT[state.lastStation]) state.lastStation = SUBZONE_PARENT[state.lastStation];
+  if (SUBZONE_PARENT[state.priorStation]) state.priorStation = SUBZONE_PARENT[state.priorStation];
   return isNewSession;
 }
 
@@ -6286,6 +6338,12 @@ function renderMap(){
   // node reads as unreachable during this window rather than the normal
   // "anywhere is fine" pre-start state (see mustStartAtOcean()).
   const forcedStart = mustStartAtOcean();
+  // Same tracked-item closure stationItemIconsHTML() rings on the station
+  // preview card -- mirrored here so a station carrying something that
+  // feeds the tracked item reads at a glance on the map overview itself,
+  // not just after tapping in to that one station's own preview.
+  const jobTree = selectedJobItem ? new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]) : null;
+  const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
 
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
     const [x,y] = MAP_NODE_POS[name];
@@ -6300,7 +6358,17 @@ function renderMap(){
     // The dice pool stays visible either way -- that's public knowledge
     // regardless of visit history. Zen Mode skips this masking entirely.
     const unvisited = state.mode !== "zen" && state.mode !== "classic" && !state.visitedStations[name];
+    // Same 28px "points back at the tracked item" badge itemHTML() uses
+    // in the shop itself (see .item-pin-badge) -- only for a station
+    // that's actually been visited (nothing to preview otherwise) and
+    // only counting items isRevealed() would actually show there, same
+    // scope stationItemIconsHTML() already uses for its own ring.
+    const hasTracked = jobTree && !unvisited && entriesAt(name)
+      .some(e => e.tier !== "CAPSTONE" && isRevealed(e) && jobTree.has(e.name));
+    const trackedBadge = hasTracked
+      ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+      ${trackedBadge}
       <span class="mn-em">${unvisited ? "❓" : em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
@@ -7000,9 +7068,9 @@ function renderStation(name){
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
     if (shopEntries.some(e => jobTree.has(e.name))){
-      showTutorialHintOnce("pintrackshop", 4,
-        `See the little icon badge? That's ${esc(selectedJobItem)} — it marks every item here that feeds into it.`,
-        "bottom-right");
+      showTutorialHintOnce("pintrackshop", 7,
+        "This badge marks what it feeds!",
+        "bottom-right", ".item-pin-badge");
     }
   }
 
@@ -7736,7 +7804,27 @@ const MOUSE_ANCHORS = ["bottom-left", "bottom-right", "top-left", "top-right"];
 /* anchor picks WHICH CORNER the bubble appears in (see #mouseTip's own
    comment for all 4 and when each applies) -- defaults to bottom-left
    for any call site that doesn't care. */
-function showMouseTip(pose, html, anchor){
+/* Positions the pulsing #mouseHighlight ring around whatever element
+   targetSel resolves to (see #mouseHighlight's own comment) -- a circle
+   sized off the target's larger dimension plus a little breathing room,
+   centered on it. Clears/hides the ring for a null selector or a
+   selector that doesn't currently match anything (e.g. the target hasn't
+   rendered yet, or isn't on this screen at all), so a stale ring can
+   never linger somewhere no longer relevant. */
+function positionMouseHighlight(targetSel){
+  const ring = document.getElementById("mouseHighlight");
+  const target = targetSel && document.querySelector(targetSel);
+  if (!target){ ring.classList.remove("show"); return; }
+  const r = target.getBoundingClientRect();
+  const pad = 10;
+  const size = Math.max(r.width, r.height) + pad * 2;
+  ring.style.left = (r.left + r.width / 2 - size / 2) + "px";
+  ring.style.top = (r.top + r.height / 2 - size / 2) + "px";
+  ring.style.width = size + "px";
+  ring.style.height = size + "px";
+  ring.classList.add("show");
+}
+function showMouseTip(pose, html, anchor, targetSel){
   document.getElementById("mouseTipImg").src = MOUSE_POSES[pose];
   document.getElementById("mouseTipText").innerHTML = html;
   const el = document.getElementById("mouseTip");
@@ -7744,16 +7832,18 @@ function showMouseTip(pose, html, anchor){
   el.classList.add("anchor-" + (MOUSE_ANCHORS.includes(anchor) ? anchor : "bottom-left"));
   el.classList.add("show");
   el.setAttribute("aria-hidden", "false");
+  positionMouseHighlight(targetSel);
 }
 function hideMouseTip(){
   const el = document.getElementById("mouseTip");
   el.classList.remove("show");
   el.setAttribute("aria-hidden", "true");
+  positionMouseHighlight(null);
 }
-function showMouseTipOnce(id, pose, html, anchor){
+function showMouseTipOnce(id, pose, html, anchor, targetSel){
   if (mouseTipsShown.has(id)) return false;
   mouseTipsShown.add(id);
-  showMouseTip(pose, html, anchor);
+  showMouseTip(pose, html, anchor, targetSel);
   return true;
 }
 /* Same one-shot idea as showMouseTipOnce(), but "shown before" persists in
@@ -7766,12 +7856,12 @@ function showMouseTipOnce(id, pose, html, anchor){
    callers) -- without that, two attempts landing true in the same
    synchronous call would both mark themselves seen while only the
    second's bubble ever actually painted. */
-function showTutorialHintOnce(id, pose, html, anchor){
+function showTutorialHintOnce(id, pose, html, anchor, targetSel){
   if (prefs.guidedTutorialEnabled === false) return false;
   if (prefs.tutorialHintsSeen.includes(id)) return false;
   prefs.tutorialHintsSeen.push(id);
   savePrefs();
-  showMouseTip(pose, html, anchor);
+  showMouseTip(pose, html, anchor, targetSel);
   return true;
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
@@ -7810,20 +7900,22 @@ document.addEventListener("click", ev => {
 function maybeShowFirstVisitHint(){
   if (current === null || openPanelName()) return;
   if (state.visits === 1 && !state.rolledHere){
-    showMouseTipOnce("firstroll", 3, "You made it! Tap the big button down there to roll your first dice.", "bottom-left");
+    showMouseTipOnce("firstroll", 3, "Tap Roll for your first dice!", "bottom-left", "#hubHome");
     return;
   }
   if (!state.rolledHere) return; // nothing below applies before this visit's own roll
-  if (state.visits === 1 && showMouseTipOnce("afterroll", 12, "Nice work! Tap the button again when you're ready to head out.", "bottom-left")) return;
+  if (state.visits === 1 && showMouseTipOnce("afterroll", 8, "Tap again when ready to leave.", "bottom-left", "#hubHome")) return;
   // top -- a Craft button can be anywhere in a long, scrolled shop list,
   // never at a fixed screen position the way the hub/floating buttons
   // below are, so pinning near the top keeps the bubble from landing on
-  // top of whichever item actually turned craftable.
+  // top of whichever item actually turned craftable. The ring targets the
+  // first green Craft button on screen -- a representative example, not
+  // necessarily the exact item that triggered this.
   if (entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e))
-      && showTutorialHintOnce("cancraft", 9, "See a green Craft button below? That means you've got everything that item needs — tap it to build one!", "top-right")) return;
+      && showTutorialHintOnce("cancraft", 11, "Green Craft = ready to build!", "top-right", ".craftbtn.go")) return;
   // bottom-right -- right where the floating Convert button (#quickConvertBtn) actually sits.
   if (Object.values(state.elements).some(n => n >= 3)
-      && showTutorialHintOnce("canconvert", 2, "Anytime you've got 3 or more of one element, tap Convert (🔄) to trade them in for something else you need.", "bottom-right")) return;
+      && showTutorialHintOnce("canconvert", 6, "3+ elements? Tap Convert!", "bottom-right", "#quickConvertBtn")) return;
 }
 
 /* ---------------------------------------------- inventory filter --- */
@@ -7888,7 +7980,16 @@ function goStation(name){
   if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
-  if (current){ state.priorStation = state.lastStation; state.lastStation = current; }
+  // A sub-zone (Island/Wardrobe/a planet) isn't a real map node -- it has
+  // no entry in MAP_ADJ, so isMapConnected() (and therefore
+  // canReachStation()) would return false for every station if
+  // lastStation were ever left pointing at one, stranding the player with
+  // no reachable node anywhere on the map. Landing back at the sub-zone's
+  // own parent station instead (see SUBZONE_PARENT) is exactly correct,
+  // not just a fallback -- that parent is genuinely where the player
+  // still physically "is" for every purpose except the sub-zone's own
+  // shop screen they just left.
+  if (current){ state.priorStation = state.lastStation; state.lastStation = SUBZONE_PARENT[current] || current; }
   screen = "map"; current = null; state.lastRoll = null; selectedMapStation = null;
   save(); render(false);
   // Land on the player's own position, not the top of the page -- on a
@@ -7944,8 +8045,8 @@ function launchMinigame(){
     render();
     if (oceanFirstRoll){
       showMouseTipOnce("oceanfirstroll", 1,
-        "Welcome to The Ocean! Tap the big Roll button below to gather your first elements.",
-        "bottom-left");
+        "Tap Roll to gather elements!",
+        "bottom-left", "#hubHome");
     }
     return;
   }
@@ -7980,6 +8081,14 @@ function launchMinigame(){
   function mgScrollGuard(){ if (window.scrollY !== 0) window.scrollTo(0, 0); }
   window.addEventListener("scroll", mgScrollGuard, {passive:true});
 
+  // Read by each minigame's own craftedBgHTML() (see any game/minigames/*.js)
+  // to scatter a faded texture of this station's own already-crafted items
+  // behind the actual gameplay -- pre-resolved through em() here (HTML
+  // strings, ready to drop straight into innerHTML) since the minigame
+  // files themselves have no access to CUSTOM_ICONS/em() -- they only ever
+  // see this global, same convention as MINIGAME_ASSETS/MINIGAME_BACKDROP_BASE.
+  window.MINIGAME_CRAFTED_ITEMS = entriesAt(current).filter(e => owns(e.name)).map(e => em(e.emoji));
+
   const info = MINIGAME_INTRO[current] || {title: current, blurb: "Do your best before time runs out."};
   introEl.innerHTML = `<div class="mg-intro-title">${esc(info.title)}</div>` +
     `<div class="mg-intro-blurb">${esc(info.blurb)}</div>` +
@@ -7987,7 +8096,7 @@ function launchMinigame(){
   overlay.classList.add("show");
   introEl.classList.add("show");
   if (state.visits === 1){
-    showMouseTipOnce("minigame1", 9, "Time for a quick challenge! Do your best — every little bit helps.", "top-left");
+    showMouseTipOnce("minigame1", 9, "Quick challenge! Do your best.", "top-left");
   }
 
   function startRound(){
@@ -8514,7 +8623,7 @@ document.getElementById("screen").addEventListener("click", ev => {
       // gating -- this runs after every craft, harmlessly, since it's
       // already a no-op past the first time).
       // bottom-right -- where the Item Reference hub icon (#hubCodex) actually sits.
-      showTutorialHintOnce("firstcraft", 3, `Nice! You just built ${esc(entry.name)}. Tap the Item Reference button (📖 in the bottom bar) to see exactly how it's put together.`, "bottom-right");
+      showTutorialHintOnce("firstcraft", 3, "Nice! See it in Item Reference.", "bottom-right", "#hubCodex");
     }
     return;
   }
@@ -8796,8 +8905,8 @@ function openPinsTray(){
   // exist yet would just be confusing.
   if (prefs.pinnedItems.length){
     showTutorialHintOnce("pinselect", 4,
-      "Tap one of your pinned items below to start tracking it — its icon gets a ring wherever it fits in around the map and shops.",
-      "bottom-left");
+      "Tap a pin to start tracking!",
+      "bottom-left", ".map-job-chip");
   }
 }
 function closePinsTray(){
@@ -9057,7 +9166,7 @@ document.getElementById("celebClose").addEventListener("click", () => {
   closeOverlay("celebrate");
   if (pendingClassicUnlockTip){
     pendingClassicUnlockTip = false;
-    showMouseTip(3, "You just finished your first Adventure Mode capstone — Classic Mode is now open from the main menu!", "bottom-left");
+    showMouseTip(12, "Capstone done! Classic unlocked.", "bottom-left");
   }
 });
 
@@ -9220,8 +9329,8 @@ function openMarket(){
   // renderMarketArc()) sits radially around the hub button, right where
   // a bottom corner bubble's own image would otherwise land.
   const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
-    ? "This is the Marketplace! Two more ways to earn points here: take Jobs for specific items you build, or start Quests toward big keystone goals -- both pay bonus points once you deliver. Have a look around!"
-    : "This is the Marketplace! Take Jobs here for specific items you build -- deliver one and it pays bonus points. Have a look around!", "top-left");
+    ? "Welcome! Quests live here."
+    : "Welcome! Jobs live here.", "top-left", "#marketArc");
   if (shownFirstEver) return;
   // Collections' own arc button stays hidden (see renderMarketArc()'s
   // earned-hidden) until at least one is actually done -- the first
@@ -9230,8 +9339,8 @@ function openMarket(){
   // moment to explain it, rather than advertising a whole system with
   // nothing in it yet.
   const collectionsEligible = state.mode !== "classic" && state.collectionsCompleted.length > 0;
-  if (collectionsEligible && showTutorialHintOnce("collectionsunlocked", 3, "You've completed a Collection! 🏆 See the new Collections button? Tap it to see the full set, and track your progress toward the rest.", "top-right")) return;
-  showMouseTipOnce("marketreturn", 10, "This is the Marketplace — jobs, trades, and collections all live here.", "top-left");
+  if (collectionsEligible && showTutorialHintOnce("collectionsunlocked", 5, "Collection done! 🏆 Tap to see it.", "top-right", '[data-market-nav="collections"]')) return;
+  showMouseTipOnce("marketreturn", 10, "Jobs, trades, collections here.", "top-left", "#marketArc");
 }
 
 /* ----------------------------------------------------- trade market --- */
@@ -10016,7 +10125,7 @@ document.getElementById("convertGo").addEventListener("click", () => {
   // bottom anchor -- the #convert tray this just happened inside covers
   // up to 60vh of the screen's own bottom, so anywhere near the hub
   // would sit right on top of the tray the player is still looking at.
-  showTutorialHintOnce("firstconvert", 12, "Nice — that's Convert! Trade 3 of one element for 1 of whatever you actually need, anytime you've got 3 or more of something.", "top-right");
+  showTutorialHintOnce("firstconvert", 2, "Convert: 3 elements for 1 you need!", "top-right", "#convertGo");
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
 
@@ -10196,19 +10305,26 @@ function renderTutElementsGrid(){
    Jobs, Inventory, Home, Item Reference, Settings -- see the #hub markup)
    so the bubble never sits on top of the very button the spotlight is
    cutting out. */
-const TUT_COACH_STEPS = [
-  { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "This is Home, your main button. It rolls the dice at a station, opens the Marketplace on your way out, then confirms travel once you've picked where to go next." },
-  { sel: "#hubJobs", pose: 2, anchor: "bottom-left", text: "This is the Job Board. Take on jobs for bonus points, then turn them in once you've made what they ask for." },
-  { sel: "#hubInv", pose: 9, anchor: "bottom-left", text: "This is your Inventory -- everything you've collected and crafted so far, all in one place." },
-  { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "This is Item Reference. Look up any item's recipe -- even ones you haven't discovered yet." },
-  { sel: "#hubSettings", pose: 7, anchor: "bottom-right", text: "This is Settings. Adjust the rules, view your history, or head back to the Main Menu without losing your run." },
-  { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 The goal of the game is to create as many items as you can, and discover new and interesting combinations along the way!" },
-];
+// A function, not a plain array -- the Jobs/Quests step's own text
+// depends on state.mode (see updateHub()'s own label swap), which isn't
+// set yet at module-load time, so this has to be resolved fresh each
+// time rather than baked in once.
+function tutCoachSteps(){
+  return [
+    { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "Home rolls dice and confirms travel." },
+    { sel: "#hubJobs", pose: 2, anchor: "bottom-left",
+      text: state.mode === "hard" ? "Quests: goals for bonus points." : "Jobs: build for bonus points." },
+    { sel: "#hubInv", pose: 9, anchor: "bottom-left", text: "Inventory: all you've collected." },
+    { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "Look up any item's recipe here." },
+    { sel: "#hubSettings", pose: 6, anchor: "bottom-right", text: "Adjust rules or go to Main Menu." },
+    { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 Go build!" },
+  ];
+}
 let tutCoachIdx = 0;
 
 function positionTutCoach(){
   const spot = document.getElementById("tutCoachSpot");
-  const step = TUT_COACH_STEPS[tutCoachIdx];
+  const step = tutCoachSteps()[tutCoachIdx];
   const target = step.sel && document.querySelector(step.sel);
   if (!target){
     spot.classList.add("hidden");
@@ -10231,14 +10347,14 @@ function positionTutCoach(){
    (see endTutCoach() for putting the bubble back to its normal one-off-tip
    shape once it's done). */
 function renderTutCoach(){
-  const step = TUT_COACH_STEPS[tutCoachIdx];
+  const step = tutCoachSteps()[tutCoachIdx];
   showMouseTip(step.pose, step.text, step.anchor);
   document.getElementById("mouseTip").classList.add("tut-coach-active");
   document.getElementById("mouseTipClose").hidden = true;
   document.getElementById("mouseTipTour").hidden = false;
-  document.getElementById("mouseTipStep").textContent = `${tutCoachIdx + 1} / ${TUT_COACH_STEPS.length}`;
+  document.getElementById("mouseTipStep").textContent = `${tutCoachIdx + 1} / ${tutCoachSteps().length}`;
   document.getElementById("mouseTipNext").textContent =
-    tutCoachIdx === TUT_COACH_STEPS.length - 1 ? "Start Playing" : "Next";
+    tutCoachIdx === tutCoachSteps().length - 1 ? "Start Playing" : "Next";
   positionTutCoach();
 }
 function startNewTutorial(){
@@ -10263,7 +10379,7 @@ function endTutCoach(){
   hideMouseTip();
 }
 document.getElementById("mouseTipNext").addEventListener("click", () => {
-  if (tutCoachIdx >= TUT_COACH_STEPS.length - 1){
+  if (tutCoachIdx >= tutCoachSteps().length - 1){
     endTutCoach();
     return;
   }
@@ -10410,7 +10526,7 @@ window.MINIGAMES = {};
   /* ---- tunables --------------------------------------------------------
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;      // total round length (standardized across all 8 games, minus 5s)
   const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
@@ -10522,6 +10638,13 @@ window.MINIGAMES = {};
       .mg-ocean-result .mg-big{font-size:30px; font-weight:800}
       .mg-ocean-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML().
+         z-index 0 (the HUD/game elements all sit above it, most at 3+) and
+         appended before anything else in the stage either way, so it reads
+         as a textural backdrop, not something competing for attention. */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-ocean-style";
@@ -10532,6 +10655,25 @@ window.MINIGAMES = {};
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called).
+     Cycles through the crafted list if there are more spots than items;
+     renders nothing at all if the player hasn't crafted anything here yet. */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -10539,6 +10681,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-ocean-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
@@ -10745,7 +10888,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const DURATION_MS = 25000;      // total round length (Bakery/Power Plant/Observatory get 25s, the rest 10s)
   const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
@@ -10830,12 +10973,33 @@ window.MINIGAMES = {};
       .mg-power-result .mg-big{font-size:30px; font-weight:800}
       .mg-power-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-power-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-power-style";
     style.textContent = css;
     document.head.appendChild(style);
     styleInjected = true;
+  }
+
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
   }
 
   const SVG_NS = "http://www.w3.org/2000/svg";
@@ -10867,6 +11031,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-power-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";
@@ -11127,7 +11292,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;         // total round length (standardized across all 8 games, minus 5s)
   const TARGET_GOOD = 9;             // net good-egg-equivalents => score 1.0
   const BAD_PENALTY = 2;             // score lost per bad egg caught
   // Basket sizes relative to the stage, not fixed px -- a thumb needs to be
@@ -11258,6 +11423,10 @@ window.MINIGAMES = {};
       .mg-green-result .mg-big{font-size:30px; font-weight:800}
       .mg-green-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-green-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-green-style";
@@ -11268,6 +11437,23 @@ window.MINIGAMES = {};
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -11275,6 +11461,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-green-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-green-hud";
@@ -11485,7 +11672,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;        // total round length (standardized across all 8 games, minus 5s)
   const TARGET_ROCKS = 6;           // breaking this many => score 1.0
   const HITS_START = 2;             // taps needed for rock #1
   const HITS_STEP = 1;              // extra taps needed per subsequent rock
@@ -11596,6 +11783,10 @@ window.MINIGAMES = {};
       .mg-mine-result .mg-big{font-size:30px; font-weight:800}
       .mg-mine-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-mine-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-mine-style";
@@ -11606,6 +11797,23 @@ window.MINIGAMES = {};
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -11613,6 +11821,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-mine-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-mine-hud";
@@ -11826,7 +12035,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;        // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;        // total round length (standardized across all 8 games, minus 5s)
   const TARGET_TREES = 3;           // planting this many => score 1.0
   const SWEEP_MS_START = 1500;      // full left-right-left cycle, tree #1
   const SWEEP_MS_MIN = 1150;        // cycle time floor as difficulty ramps
@@ -11971,6 +12180,10 @@ window.MINIGAMES = {};
       .mg-forest-center-btn:active{transform:translateX(-50%) scale(.94)}
       .mg-forest-center-btn .mg-cb-icon{font-size:32px; line-height:1}
       .mg-forest-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-forest-style";
@@ -12012,6 +12225,23 @@ window.MINIGAMES = {};
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -12019,6 +12249,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-forest-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-forest-hud";
@@ -12227,7 +12458,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const DURATION_MS = 25000;      // total round length (Bakery/Power Plant/Observatory get 25s, the rest 10s)
   const TARGET_CAKES = 3;         // matching this many orders => score 1.0
   const SEND_ANIM_MS = 950;       // conveyor slide-away duration (fully off-screen)
   const RESULT_HOLD_MS = 1300;
@@ -12441,6 +12672,10 @@ window.MINIGAMES = {};
       .mg-bakery-result .mg-big{font-size:30px; font-weight:800}
       .mg-bakery-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-bakery-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-bakery-style";
@@ -12450,6 +12685,23 @@ window.MINIGAMES = {};
   }
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
 
   function cakeInnerHTML(baseColor, frostingImg, fruitEmoji) {
     const frostingHTML = frostingImg
@@ -12468,6 +12720,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-bakery-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-bakery-hud";
@@ -12705,7 +12958,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;         // total round length (standardized across all 8 games, minus 5s)
   const TARGET_STONES = 4;           // stacking this many => score 1.0
   const STONE_H = 70;                // px, height of each stone row
   // The base stone starts 1/4 of the way up from the bottom of the stage
@@ -12823,12 +13076,33 @@ window.MINIGAMES = {};
       .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
       .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
       .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-city-style";
     style.textContent = css;
     document.head.appendChild(style);
     styleInjected = true;
+  }
+
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
   }
 
   function runMinigame(container, onComplete) {
@@ -12838,6 +13112,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-city-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";
@@ -13060,7 +13335,7 @@ window.MINIGAMES = {};
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;         // absolute round cap (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const DURATION_MS = 25000;         // absolute round cap (Bakery/Power Plant/Observatory get 25s, the rest 10s)
   const TARGET_SURVIVE_MS = 30000;   // surviving this long => score 1.0 (== DURATION_MS: a full
                                       // clean run should actually be able to hit max score)
   const THRUST_ACCEL = 800;          // px/s^2 sideways while a side is held
@@ -13211,6 +13486,10 @@ window.MINIGAMES = {};
       .mg-obs-result .mg-big{font-size:30px; font-weight:800}
       .mg-obs-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-obs-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-obs-style";
@@ -13221,6 +13500,23 @@ window.MINIGAMES = {};
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -13228,6 +13524,7 @@ window.MINIGAMES = {};
     const stage = document.createElement("div");
     stage.className = "mg-obs-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
     ["s1", "s2", "s3"].forEach(cls => {
       const layer = document.createElement("div");
       layer.className = "mg-obs-stars " + cls;

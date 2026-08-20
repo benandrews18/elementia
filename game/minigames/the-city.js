@@ -23,7 +23,7 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 15000;         // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;         // total round length (standardized across all 8 games, minus 5s)
   const TARGET_STONES = 4;           // stacking this many => score 1.0
   const STONE_H = 70;                // px, height of each stone row
   // The base stone starts 1/4 of the way up from the bottom of the stage
@@ -141,12 +141,33 @@
       .mg-city-center-btn:active{transform:translateX(-50%) scale(.94)}
       .mg-city-center-btn .mg-cb-icon{font-size:30px; line-height:1}
       .mg-city-center-btn .mg-cb-label{font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase}
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-city-style";
     style.textContent = css;
     document.head.appendChild(style);
     styleInjected = true;
+  }
+
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
   }
 
   function runMinigame(container, onComplete) {
@@ -156,6 +177,7 @@
     const stage = document.createElement("div");
     stage.className = "mg-city-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-city-hud";

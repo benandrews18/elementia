@@ -24,7 +24,7 @@
   "use strict";
 
   /* ---- tunables -------------------------------------------------------- */
-  const DURATION_MS = 30000;      // total round length (Bakery/Power Plant/Observatory get 30s, the rest 15s)
+  const DURATION_MS = 25000;      // total round length (Bakery/Power Plant/Observatory get 25s, the rest 10s)
   const TARGET_SOLVES = 2;        // solving this many puzzles => score 1.0
   const START_WIRES = 4;
   const MAX_WIRES = 8;            // +1 wire per solve, capped here
@@ -109,12 +109,33 @@
       .mg-power-result .mg-big{font-size:30px; font-weight:800}
       .mg-power-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-power-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML(). */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-power-style";
     style.textContent = css;
     document.head.appendChild(style);
     styleInjected = true;
+  }
+
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called). */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
   }
 
   const SVG_NS = "http://www.w3.org/2000/svg";
@@ -146,6 +167,7 @@
     const stage = document.createElement("div");
     stage.className = "mg-power-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
 
     const hud = document.createElement("div");
     hud.className = "mg-power-hud";

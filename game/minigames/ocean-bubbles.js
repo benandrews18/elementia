@@ -31,7 +31,7 @@
   /* ---- tunables --------------------------------------------------------
      These are the knobs to turn while play-testing. Nothing else in this
      file should need to change to retune difficulty/feel. */
-  const DURATION_MS = 15000;      // total round length (standardized across all 8 games)
+  const DURATION_MS = 10000;      // total round length (standardized across all 8 games, minus 5s)
   const SPAWN_MIN_MS = 260;       // gap between bubble spawns -- fewer bubbles
   const SPAWN_MAX_MS = 950;       // on screen at once than before, easier to track/tap
   const SIZE_MIN_PX = 80;         // bubble diameter range
@@ -143,6 +143,13 @@
       .mg-ocean-result .mg-big{font-size:30px; font-weight:800}
       .mg-ocean-result .mg-sub{font-size:14px; font-weight:700; opacity:.9}
       @keyframes mg-fade-in{ to{opacity:1} }
+      /* A faded scatter of whatever the player has already crafted at this
+         station, sitting behind the actual game -- see craftedBgHTML().
+         z-index 0 (the HUD/game elements all sit above it, most at 3+) and
+         appended before anything else in the stage either way, so it reads
+         as a textural backdrop, not something competing for attention. */
+      .mg-crafted-bg{position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none}
+      .mg-crafted-bg span{position:absolute; font-size:34px; line-height:1; opacity:.16; filter:grayscale(.2)}
     `;
     const style = document.createElement("style");
     style.id = "mg-ocean-style";
@@ -153,6 +160,25 @@
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
+  /* 8 scattered spots (x%, y%, rotation deg), shared across every minigame
+     file for one consistent "textural background" language -- see
+     global.MINIGAME_CRAFTED_ITEMS (set by launchMinigame() in
+     elementia.html right before this file's own runMinigame() is called).
+     Cycles through the crafted list if there are more spots than items;
+     renders nothing at all if the player hasn't crafted anything here yet. */
+  const CRAFTED_BG_SPOTS = [
+    [10,16,-14],[86,12,12],[14,42,10],[88,40,-10],
+    [10,70,8],[90,68,-16],[50,18,-6],[50,90,14],
+  ];
+  function craftedBgHTML() {
+    const items = global.MINIGAME_CRAFTED_ITEMS;
+    if (!items || !items.length) return "";
+    return `<div class="mg-crafted-bg">${CRAFTED_BG_SPOTS.map((spot, i) => {
+      const [x, y, rot] = spot;
+      return `<span style="left:${x}%;top:${y}%;transform:translate(-50%,-50%) rotate(${rot}deg)">${items[i % items.length]}</span>`;
+    }).join("")}</div>`;
+  }
+
   function runMinigame(container, onComplete) {
     injectStyle();
     container.innerHTML = "";
@@ -160,6 +186,7 @@
     const stage = document.createElement("div");
     stage.className = "mg-ocean-stage";
     stage.style.setProperty("--mg-backdrop", `url('${backdropURL()}')`);
+    stage.insertAdjacentHTML("beforeend", craftedBgHTML());
     const hud = document.createElement("div");
     hud.className = "mg-ocean-hud";
     hud.innerHTML = `<span class="mg-pill mg-dice-pill" id="mg-dice">${diceGridHTML(DICE_MIN)}</span>` +
