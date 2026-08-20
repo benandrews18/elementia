@@ -3258,6 +3258,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <span class="setbtn">View</span>
     </button>
+    <div class="setting-row">
+      <span class="setting-ico">🔓</span>
+      <span class="setting-body">
+        <span class="setting-label">Force unlock modes</span>
+        <span class="setting-sub">Show Classic Mode and Zen Mode on the mode picker regardless of real unlock progress</span>
+      </span>
+      <input type="checkbox" id="setForceModes" class="switch" aria-label="Force unlock Classic and Zen Mode">
+    </div>
 
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>
@@ -4970,8 +4978,9 @@ function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "
 // 2-choice pick early on. It reappears the run after a capstone unlocks it
 // (see pendingClassicUnlockTip/prefs.classicUnlocked).
 function refreshModePicker(){
-  document.getElementById("classicModeCard").hidden = !prefs.classicUnlocked;
-  document.getElementById("zenModeCard").hidden = !prefs.zenUnlocked;
+  const forced = prefs.devForceModesUnlocked;
+  document.getElementById("classicModeCard").hidden = !(prefs.classicUnlocked || forced);
+  document.getElementById("zenModeCard").hidden = !(prefs.zenUnlocked || forced);
 }
 function openModePicker(){
   refreshModePicker();
@@ -5720,7 +5729,14 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minig
   // Mode run at least once (see chooseMode()). First-time players land on
   // just Adventure Mode with no other option, unlock Classic through it,
   // then unlock Zen through THAT -- a deliberate progression, not a bug.
-  zenUnlocked:false};
+  zenUnlocked:false,
+  // Dev Tools-only escape hatch (see #setForceModes) -- shows Classic and
+  // Zen on the picker regardless of prefs.classicUnlocked/zenUnlocked,
+  // for testing either mode without actually playing through the real
+  // unlock chain first. Off by default; doesn't touch the real unlock
+  // flags at all, so turning it back off returns the picker to exactly
+  // whatever the player had actually earned.
+  devForceModesUnlocked:false};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -10518,10 +10534,25 @@ function openSettings(){
   openOverlay("settings");
 }
 document.getElementById("settingsSessionBtn").addEventListener("click", () => openSettingsScreen("settingsSession"));
-document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
 document.getElementById("setSessionBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
+
+const setForceModesBox = document.getElementById("setForceModes");
+function openSettingsDev(){
+  setForceModesBox.checked = !!prefs.devForceModesUnlocked;
+  openSettingsScreen("settingsDev");
+}
+document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
+// Applies immediately, no Save step -- this is a dev toggle, not a real
+// game rule (see prefs.devForceModesUnlocked's own comment), so it should
+// take effect the instant it's flipped, same "instant action" character
+// as Clear Cache/History right above it rather than Game Rules' buffered
+// Save/Cancel pair.
+setForceModesBox.addEventListener("change", () => {
+  prefs.devForceModesUnlocked = setForceModesBox.checked;
+  savePrefs();
+});
 
 function openSettingsRules(){
   // Zen/Hard already force MAX_VISITS to Infinity regardless of this pref
