@@ -66,7 +66,7 @@ STATIONS = [
 
              ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",16),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25),
-             ("🛳️","Cruise Ship","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🍽️ Grand Banquet + 🎺 Trumpet",40)],
+             ("🛳️","Cruise Ship","CREATION","🚤 Speedboat + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🎂 Fruit Cake + 🎺 Trumpet",40)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",22)},
 
     {"emoji":"⚡","name":"The Power Plant","suit":"power",
@@ -171,7 +171,7 @@ STATIONS = [
              ("🥚","Egg","COMPONENT","🧬 DNA + Ca + C + O",6),
              ("🍫","Chocolate","COMPONENT","🍬 Sugar + 🔥 Furnace",9),
 
-             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 𖣘 Windmill",21),
+             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 🛠️ Tools",21),
 
              ("🥛","Milk","COMPONENT","🐄 Cow + 💧 Water",10),
              ("🫓","Dough","COMPONENT","__FLOUR__ Flour + 💧 Water",22),
@@ -193,8 +193,6 @@ STATIONS = [
              ("🥐","Croissant","CREATION","🫓 Dough + 🧈 Butter + 🍳 Oven",24),
 
 
-             ("🧀","Cheesecake","CREATION","🫓 Dough + 🍶 Cream + 🥚 Egg + 🍬 Sugar + 🍳 Oven",25),
-
              ("🍩","Éclair","CREATION","🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🍳 Oven",25),
 
 
@@ -204,7 +202,7 @@ STATIONS = [
 
 
              ("🍽️","Grand Banquet","CREATION","🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",28)],
-     "capstone":("🎂","Fruit Cake","CAPSTONE","🍞 Bread + 🍰 Cake + 🍎 Apple + 🕐 Clock + 🍌 Banana",25)},
+     "capstone":("🎂","Fruit Cake","CAPSTONE","🍰 Cake + 🍎 Apple + 🍌 Banana",25)},
 
     {"emoji":"🏗️","name":"The City","suit":"city",
      "dice":["Ca", "C", "O", "Al", "Si", "Mg"],
