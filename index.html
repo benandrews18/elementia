@@ -43,6 +43,27 @@ body{
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 button:disabled{cursor:not-allowed}
 
+/* Boot screen -- this whole file is a single (often multi-MB, since every
+   image is inlined as base64) HTML document, and the browser paints
+   whatever's already in the DOM the instant CSS is ready. With no
+   boot-state gating, that meant the raw game UI skeleton (empty hub,
+   topbar, blank screen) sitting there fully visible for however long it
+   takes the huge inline <script> at the end of body to finish
+   downloading/parsing/running -- the boot section right before </html>
+   is what actually reveals the real UI (adds .game-ready to body; see
+   its own comment). #bootScreen is deliberately tiny and asset-free (no
+   embedded art of its own) so it paints instantly regardless of how long
+   the rest of the page takes, standing in as "the main menu's own
+   background" until the real welcome slide is actually ready to show. */
+#bootScreen{
+  position:fixed; inset:0; z-index:99999;
+  background:var(--bg); display:flex; align-items:center; justify-content:center;
+}
+#bootScreen .boot-icon{ font-size:64px; line-height:1; animation:bootPulse 1.6s ease-in-out infinite; }
+@keyframes bootPulse{ 0%,100%{opacity:.45} 50%{opacity:1} }
+body:not(.game-ready) > *:not(#bootScreen){ visibility:hidden !important; }
+body.game-ready #bootScreen{ display:none; }
+
 /* Station backdrop art -- fixed behind everything (negative z-index sits
    above body's own background but below all normal, non-positioned page
    content, so it shows only in the gutters around opaque cards/topbar/hub
@@ -691,6 +712,21 @@ body[data-screen="market"] #trackedPill{display:none}
   padding:3px 8px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--mute);
 }
 .coll-row.done .coll-bonus{background:var(--collection); border-color:var(--collection); color:#fff}
+/* Trading Post's own locked state (see tradeBodyHTML()) -- 8 circles, one
+   per real station, "?" until state.visitedStations flips it to that
+   station's actual icon. Same "have/haven't" checklist language as
+   .coll-member right below, just circular badges (a station, not an
+   item) instead of a dimmed/grayscale icon+label pair. */
+.trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
+.trade-lock-station{
+  width:46px; height:46px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; line-height:1; font-weight:800;
+  background:var(--bg-soft); border:2px solid var(--line); color:var(--mute);
+}
+.trade-lock-station.visited{
+  background:var(--gold-soft); border-color:var(--gold); color:var(--ink);
+}
 .coll-members{display:flex; flex-wrap:wrap; gap:6px}
 .coll-member{
   display:flex; flex-direction:column; align-items:center; gap:2px; width:52px;
@@ -719,23 +755,43 @@ body[data-screen="market"] #trackedPill{display:none}
 #collectionToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--collection)}
 #collectionToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
 #collectionToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--collection)}
-/* Quest completion toast -- identical shape/motion to #collectionToast
-   right above (same .ct-em/.ct-body/.ct-title/.ct-name/.ct-bonus
-   classes, see showNextQuestToast()), gold instead of purple since
-   that's already the Marketplace/achievement color elsewhere. */
-#questToast{
+/* Shared event toast -- quest completion, job completion (Classic Mode's
+   own auto-turn-in, see checkJobCompletion()), and game-mode-unlock
+   notifications all funnel through this one element/queue (see
+   queueEventToast()/showNextEventToast()) rather than each getting its
+   own copy-pasted toast. Sized up and given a real drop shadow (not just
+   the thin border-bottom #questToast/#collectionToast made do with) so it
+   reads clearly now that three different kinds of news share it -- the
+   accent color still swaps per kind via .et-quest/.et-job/.et-unlock
+   below, same "which color means what" language the rest of the game
+   already uses (gold = Marketplace/achievement, green = a completed
+   build, purple = Collections' own big-milestone color, reused here for
+   a mode unlock since that's the same "you've cleared a real gate"
+   weight). */
+#eventToast{
   position:fixed; top:0; left:0; right:0; z-index:90;
-  display:flex; align-items:center; gap:12px; padding:14px 18px;
-  background:var(--gold-soft); border-bottom:2.5px solid var(--gold);
+  display:flex; align-items:center; gap:14px; padding:16px 20px;
+  border-bottom:3px solid var(--gold);
+  box-shadow:0 10px 26px rgba(0,0,0,.4);
   transform:translateY(-100%); transition:transform .35s cubic-bezier(.34,1.56,.64,1);
   cursor:pointer;
 }
-#questToast.show{transform:translateY(0)}
-#questToast .ct-em{font-size:30px; line-height:1; flex:none}
-#questToast .ct-body{flex:1; min-width:0}
-#questToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--gold)}
-#questToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
-#questToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--gold)}
+#eventToast.show{transform:translateY(0)}
+#eventToast .ct-icon{
+  flex:none; width:44px; height:44px; border-radius:50%; font-size:24px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.2); box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);
+}
+#eventToast .ct-body{flex:1; min-width:0}
+#eventToast .ct-title{font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase}
+#eventToast .ct-name{font-size:16.5px; font-weight:800; color:var(--ink)}
+#eventToast .ct-bonus{flex:none; font-size:14px; font-weight:800}
+#eventToast.et-quest{background:var(--gold-soft); border-bottom-color:var(--gold)}
+#eventToast.et-quest .ct-title, #eventToast.et-quest .ct-bonus{color:var(--gold)}
+#eventToast.et-job{background:var(--ok-soft); border-bottom-color:var(--ok)}
+#eventToast.et-job .ct-title, #eventToast.et-job .ct-bonus{color:var(--ok)}
+#eventToast.et-unlock{background:var(--collection-soft); border-bottom-color:var(--collection)}
+#eventToast.et-unlock .ct-title, #eventToast.et-unlock .ct-bonus{color:var(--collection)}
 /* Coin-flip: only played on the Home button's icon+label when it swaps
    specifically between the Map and Marketplace faces (see
    setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
@@ -819,7 +875,6 @@ body[data-screen="market"] #trackedPill{display:none}
   box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
 .jc-items{display:flex; flex-direction:column}
-.job-turnin{flex:1; padding:16px 10px; white-space:nowrap}
 .job-turnedin-note{font-size:12.5px; font-weight:800; color:var(--ok); text-align:center}
 /* A single item section on a job card -- flat, not expandable (see
    jobItemChipHTML()); tapping the icon/name goes to Item Reference for the
@@ -1481,6 +1536,15 @@ body[data-screen="market"] #trackedPill{display:none}
 .item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:center; padding:10px 10px 10px 10px}
 .capbox .item .irow{padding:0}
 .item.can{background:var(--ok-soft); border-color:var(--ok-line)}
+/* Station shop lists specifically -- a thin pale grey border instead of
+   the suit color every OTHER .item context (quest cards, the New Items
+   reveal, job cards, ...) still uses, so a shop's own scrolling list
+   reads as one calm, uniform grid rather than every row shouting its own
+   suit color. :not(.can) (not just placement) is what wins over
+   .item.can's own green override above regardless of source order --
+   equal specificity otherwise, and craftable's green ring is a real
+   status signal that should keep winning here. */
+.shop .item:not(.can){ border-width:2px; border-color:var(--pip); }
 /* Same green ring as the topbar's job chips -- lets a player tap between
    their job items and see which of this station's items feed into
    whichever one is selected, without the shop rows shifting around.
@@ -1531,6 +1595,15 @@ body[data-screen="market"] #trackedPill{display:none}
    whatever the longest line happens to be. */
 .recipe{font-size:14px; color:var(--ink2); margin-top:4px; display:flex; flex-wrap:wrap;
   align-items:center; justify-content:flex-start; gap:5px}
+/* Not-yet-taken quest cards' flavor blurb (see questCardHTML()) -- plain
+   prose, not the token-chip row .recipe otherwise holds, so it overrides
+   right back to a normal block and clamps to 2 lines with an ellipsis.
+   The full text stays exactly as authored (see QUESTS), this only trims
+   what's actually ON SCREEN so the list reads as a scannable set of goals
+   rather than a page of prose. */
+.recipe.quest-blurb{
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+}
 .plus{color:#fff; font-weight:700}
 .tok{display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:7px;
   font-weight:700; font-size:13.5px; border:1.5px solid}
@@ -1915,7 +1988,7 @@ body[data-screen="market"] #trackedPill{display:none}
   80%{transform:scale(.97)}
   100%{transform:scale(1); opacity:1}
 }
-.sheetbox, .pc-card, .jtp-card, .mode-card, .el-pop-bubble,
+.sheetbox, .pc-card, .mode-card, .el-pop-bubble,
 .bigbtn, .tbtn:not(.ghost), button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
@@ -2017,29 +2090,11 @@ button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:d
    DOM, so without this the parent overlay would paint over it. Still
    below the hub. */
 #confirmBox{z-index:66}
-/* Turn-in popup can be opened from inside the Job Board sheet (z-index 69)
-   so it needs to sit above that, not just the usual .overlay stack. */
-#jobTurninPop{z-index:70}
-.jtp-card{
-  width:min(260px,80vw); background:var(--jobcard-bg); border:3px solid var(--gold); border-radius:18px;
-  padding:24px 18px 20px; position:relative; text-align:center; box-shadow:0 18px 50px rgba(0,0,0,.4);
-  margin:auto;
-}
-.jtp-badge{
-  position:absolute; top:-18px; left:50%; transform:translateX(-50%); width:50px; height:50px; border-radius:50%;
-  background:var(--gold-soft); border:2.5px solid var(--gold); color:#fff;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 2px 8px rgba(0,0,0,.3);
-}
-.jtp-badge .n{font-size:15px; font-weight:800}
-.jtp-badge .l{font-size:7.5px; font-weight:800; letter-spacing:.4px; margin-top:1px}
-.jtp-title{font-size:16px; font-weight:800; color:#fff; margin-top:12px}
-.jtp-icons{display:flex; justify-content:center; gap:10px; margin-top:14px; font-size:32px; line-height:1}
 /* Gold border, same design language as the map screen's reachable-node
-   rings (.map-node.reachable) and the job-turn-in/capstone-celebration
-   cards that already borrowed it (.jtp-card, #celebrate .sheetbox) --
-   extended here to the base dialog shell so every overlay in the game
-   reads as part of one consistent "important floating panel" family. */
+   rings (.map-node.reachable) and the capstone-celebration card that
+   already borrowed it (#celebrate .sheetbox) -- extended here to the
+   base dialog shell so every overlay in the game reads as part of one
+   consistent "important floating panel" family. */
 .sheetbox{
   background:var(--card); border-radius:20px; padding:26px 28px; max-width:560px; width:100%;
   border:2.5px solid var(--gold); box-shadow:0 18px 50px rgba(0,0,0,.35); position:relative; z-index:2;
@@ -2795,10 +2850,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   background:var(--card); border:1.5px solid var(--line); color:var(--ink);
 }
 .arr-tool-btn.danger{color:var(--bad); border-color:var(--bad)}
-/* Tray of "sticker" cards -- same card shape/gold border as the job-board
-   turn-in cards (.jtp-card), reused here so this reads as another "pick a
-   card" surface rather than inventing a third card language for the same
-   underlying data. Rows of 3, scrolling vertically within whatever space
+/* Tray of "sticker" cards -- same gold-bordered card language used
+   throughout the game's overlays, reused here so this reads as another
+   "pick a card" surface rather than inventing a third card language for
+   the same underlying data. Rows of 3, scrolling vertically within
+   whatever space
    is left inside the panel's own max-height (see .arr-tray-panel) --
    min-height:0 lets a flex child actually shrink to fit instead of
    forcing the panel taller than its cap. */
@@ -2869,7 +2925,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
-  #collectionToast, #questToast{left:50%; margin-left:-192px}
+  #collectionToast, #eventToast{left:50%; margin-left:-192px}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
@@ -2904,6 +2960,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   body[data-screen="station"] .sheet{border-radius:0; border-left:none; border-right:none}
 }
 </style>
+<div id="bootScreen" aria-hidden="true"><span class="boot-icon">⚗️</span></div>
+
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
@@ -3044,16 +3102,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div class="overlay item-reveal" id="itemReveal" role="dialog" aria-modal="true" aria-labelledby="itemRevealCaption">
   <div class="item-reveal-caption" id="itemRevealCaption" hidden>✨ NEW ITEMS UNLOCKED</div>
   <div class="item-reveal-list" id="itemRevealList"></div>
-</div>
-
-<!-- job turn-in feedback: same trading-card look as the Job Board's own
-     cards (see .job-card), tap anywhere to dismiss -->
-<div class="overlay" id="jobTurninPop" role="dialog" aria-modal="true" aria-labelledby="jtpTitle">
-  <div class="jtp-card">
-    <span class="jtp-badge"><span class="n" id="jtpPts"></span><span class="l">pts</span></span>
-    <div class="jtp-title" id="jtpTitle">Job Complete!</div>
-    <div class="jtp-icons" id="jtpIcons"></div>
-  </div>
 </div>
 
 <!-- element card, tapped from a raw-element box in the inventory drawer --
@@ -3293,14 +3341,17 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <button type="button" class="mode-card" data-mode="zen" id="zenModeCard" hidden>
         <span class="mode-emoji">🌿</span>
         <span class="mode-name">Zen Mode</span>
+        <span class="mode-desc">Freely explore and create any item found in the game.</span>
       </button>
       <button type="button" class="mode-card" data-mode="classic" id="classicModeCard" hidden>
         <span class="mode-emoji">🗺️</span>
         <span class="mode-name">Classic Mode</span>
+        <span class="mode-desc">Complete Capstones and Job Cards to get the highest score in 20 moves! Keep all your items, only element cards are spent in this mode.</span>
       </button>
       <button type="button" class="mode-card" data-mode="hard">
         <span class="mode-emoji">🔥</span>
         <span class="mode-name">Adventure Mode</span>
+        <span class="mode-desc">Explore the world of Elementia! Elements and Item Cards are spent to create bigger creations.</span>
       </button>
     </div>
   </div>
@@ -3500,7 +3551,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      own slide-in sheets -- only their toast popups still live here as
      standalone overlays. -->
 <div id="collectionToast" role="status" aria-hidden="true"></div>
-<div id="questToast" role="status" aria-hidden="true"></div>
+<div id="eventToast" role="status" aria-hidden="true"></div>
 
 <script>
 /* =====================================================================
@@ -5008,6 +5059,7 @@ function chooseMode(mode){
   if (mode === "classic" && !prefs.zenUnlocked){
     prefs.zenUnlocked = true;
     savePrefs();
+    queueModeUnlockToast("🌿", "Zen Mode");
   }
   applyVisitLimit();
   closeOverlay("modeOverlay");
@@ -5655,6 +5707,12 @@ function takeJob(cardIndex){
   // in craft()), so pre-pinning an already-crafted item would just show
   // up as an already-complete pin with nothing left to do.
   if (!owns(name) && !isPinned(name)) togglePin(name);
+  // Same "already owned when taken" edge case takeQuest() guards against
+  // (see its own comment) -- checkJobCompletion() otherwise only ever
+  // runs reactively off a NEW craft/trade, so a job taken for an item
+  // already in hand would sit at turnedIn:false forever with nothing
+  // left to trigger the check.
+  checkJobCompletion();
   save(); render();
 }
 function jobDone(job){ return job.items.every(owns); }
@@ -5662,11 +5720,6 @@ function jobDone(job){ return job.items.every(owns); }
    same as any other crafted item) -- it's purely a bonus-points action,
    see score(). */
 function jobBonus(job){ return job.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0); }
-function turnInJob(job){
-  if (!job || job.turnedIn || !jobDone(job)) return;
-  job.turnedIn = true;
-  save(); render();
-}
 const entriesAt = st => ENTRIES.filter(e => e.station === st);
 
 /* =====================================================================
@@ -6063,6 +6116,7 @@ function craft(entry){
   if (selectedJobItem === entry.name) selectedJobItem = null;
   checkCollections();
   checkQuestCompletion();
+  checkJobCompletion();
   save();
   return true;
 }
@@ -6818,19 +6872,23 @@ function jobBoardHTML(acceptedOnly){
   const activeJobs = state.jobs.filter(j => !j.turnedIn);
   const completedJobs = state.jobs.filter(j => j.turnedIn);
 
+  // No manual "Turn In" button any more -- see checkJobCompletion(), which
+  // turns a job in itself the instant jobDone() goes true (same
+  // auto-complete feel as Adventure Mode's quests). A job briefly showing
+  // here as jobDone() but not yet turnedIn is a transient render-order
+  // artifact at most (checkJobCompletion() runs before the render that
+  // would ever draw it), never something a player could actually see or
+  // needs a control for.
   const jobGridHTML = (jobs, turnedIn) => `<div class="job-grid">${
     jobs.map(job => {
-      const i = state.jobs.indexOf(job);
       const bonus = jobBonus(job);
       const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(job.items[0])}"
           title="View ${esc(job.items[0])} in Item Reference" aria-label="View ${esc(job.items[0])} in Item Reference">📖</button>`;
-      const turninBtn = !turnedIn && jobDone(job)
-        ? `<button type="button" class="bigbtn job-turnin" data-turnin="${i}">Turn In</button>` : "";
       return `<div class="job-card-wrap">
         <div class="job-card${turnedIn ? " turned-in" : ""}">
           ${jobCardBodyHTML(job.items, bonus)}
         </div>
-        <div class="jc-actions">${bookBtn}${turninBtn}</div>
+        <div class="jc-actions">${bookBtn}</div>
       </div>`;
     }).join("")
   }</div>`;
@@ -7646,16 +7704,12 @@ function updateHub(){
   // a capstone. Checked here (updateHub() runs on every render()) rather
   // than pinned to one specific action -- there's no single event that
   // completes this combination, it's whichever of "last station visited"
-  // or "quest completed" happens to land second. No celebration overlay
-  // competing for attention here (unlike the capstone path, which defers
-  // its own tip until #celebClose -- see pendingClassicUnlockTip), so
-  // this fires the tip directly; showMouseTip()'s own blockingEventOpen()
-  // queuing still defers it correctly if something else happens to be up.
+  // or "quest completed" happens to land second.
   if (state.mode === "hard" && !prefs.classicUnlocked && allStationsVisited()
       && Object.values(state.quests).some(q => q.completed)){
     prefs.classicUnlocked = true;
     savePrefs();
-    showMouseTip(12, "Every station scouted, a quest complete -- Classic Mode unlocked!", "center");
+    queueModeUnlockToast("🗺️", "Classic Mode");
   }
 
   // Both floating buttons stay off their own edge of the screen until
@@ -7675,7 +7729,23 @@ function updateHub(){
     : face === "market" ? "Open the Marketplace"
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : "Back to the station map";
-  setHubBadge("hubHome", face === "roll" && state.pendingRoll ? String(state.pendingRoll) : null, true);
+  // Home doubles as the Marketplace shortcut on the map screen (see its
+  // own "market" face above) -- flags it with the same red "!" every
+  // other floating badge uses for "look here" (not the green pending-
+  // roll count just below, which is "ready when you are", not an alert)
+  // whenever there's a quest actually sitting available to accept, or
+  // the Trading Post has just unlocked and hasn't been opened yet
+  // (state.tradeOffers staying empty is exactly "never actually viewed
+  // it" -- tradeBodyHTML() rolls its first batch the moment it's opened).
+  const newQuestAvailable = state.mode === "hard" && QUESTS.some(q => questAvailable(q) && questVisible(q));
+  const tradePostNew = state.mode === "hard" && allStationsVisited() && !state.tradeOffers.length;
+  if (face === "roll" && state.pendingRoll){
+    setHubBadge("hubHome", String(state.pendingRoll), true);
+  } else if (face === "market" && (newQuestAvailable || tradePostNew)){
+    setHubBadge("hubHome", "!");
+  } else {
+    setHubBadge("hubHome", null);
+  }
 }
 
 /* Whichever station card is showing on the map screen, can the player
@@ -7992,23 +8062,6 @@ document.getElementById("cpTreeBtn").addEventListener("click", ev => {
   goToRefItem(name);
 });
 
-/* --------------------------------------------- job turn-in feedback --- */
-let jobTurninTimer;
-function showJobTurninPop(job){
-  document.getElementById("jtpPts").textContent = "+" + jobBonus(job);
-  document.getElementById("jtpIcons").innerHTML = job.items.map(name => {
-    const entry = ENTRIES.find(e => e.name === name);
-    return entry ? `<span>${em(entry.emoji)}</span>` : "";
-  }).join("");
-  openOverlay("jobTurninPop");
-  clearTimeout(jobTurninTimer);
-  jobTurninTimer = setTimeout(() => closeOverlay("jobTurninPop"), 3800);
-}
-document.getElementById("jobTurninPop").addEventListener("click", () => {
-  clearTimeout(jobTurninTimer);
-  closeOverlay("jobTurninPop");
-});
-
 /* -------------------------------------------------- element card popup --- */
 /* Tapped from a raw-element box in the inventory drawer -- the only place
    the atomic number is shown anywhere in the game (everywhere else that
@@ -8029,11 +8082,16 @@ function showElCardPop(sym){
 }
 document.getElementById("elCardPop").addEventListener("click", () => closeOverlay("elCardPop"));
 
-// Set by celebrate() when this capstone is the one that unlocks Classic
-// Mode -- shown as its own mouse beat right after the celebration overlay
-// closes (see #celebClose's own handler) rather than layered on top of
-// it, so the two moments read as sequential, not competing for attention.
-let pendingClassicUnlockTip = false;
+/* Same top-drop toast quests/jobs use (see #eventToast's own CSS comment
+   and queueEventToast()), reused for the "you just unlocked a whole game
+   mode" moment -- fires immediately, not deferred behind whatever
+   overlay triggered it (celebrate()'s own full-screen capstone card, in
+   this case): a fixed top banner and a centered modal occupy different
+   screen regions, so unlike a mouse tip (which can land anywhere and
+   genuinely compete for attention) there's nothing to sequence here. */
+function queueModeUnlockToast(emoji, modeName){
+  queueEventToast("unlock", emoji, "Mode unlocked", modeName);
+}
 function celebrate(entry){
   const n = CAPSTONES.filter(owns).length;
   document.getElementById("celebEmoji").innerHTML = em(entry.emoji);
@@ -8052,7 +8110,7 @@ function celebrate(entry){
   if (state.mode === "hard" && !prefs.classicUnlocked){
     prefs.classicUnlocked = true;
     savePrefs();
-    pendingClassicUnlockTip = true;
+    queueModeUnlockToast("🗺️", "Classic Mode");
   }
 }
 
@@ -9190,22 +9248,12 @@ function handleScreenClick(ev){
   // now (see marketSectionHTML()), so their own action buttons need a home
   // in this shared dispatcher rather than a sheet-scoped listener of their
   // own -- jobSheetBody's listener (further down) still handles the same
-  // data-take/data-turnin/data-ref-jump/data-goto-ref pairing for Jobs'
-  // OTHER entry point, the standing hub bar's Jobs icon, which still opens
-  // the classic slide-in sheet from a station/map visit.
+  // data-take/data-ref-jump/data-goto-ref pairing for Jobs' OTHER entry
+  // point, the standing hub bar's Jobs icon, which still opens the classic
+  // slide-in sheet from a station/map visit. No data-turnin any more --
+  // jobs turn themselves in automatically now (see checkJobCompletion()).
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); render(); return; }
-
-  const turninBtn = ev.target.closest("[data-turnin]");
-  if (turninBtn){
-    const job = state.jobs[+turninBtn.dataset.turnin];
-    if (job && !job.turnedIn && jobDone(job)){
-      turnInJob(job);
-      showJobTurninPop(job);
-    }
-    render();
-    return;
-  }
 
   const questTakeBtn = ev.target.closest("[data-quest-take]");
   if (questTakeBtn){ takeQuest(questTakeBtn.dataset.questTake); return; }
@@ -9392,9 +9440,13 @@ function openPinsTray(){
   // Reference to track them here."), and pointing at a chip that doesn't
   // exist yet would just be confusing.
   if (prefs.pinnedItems.length){
+    // No spotlight (targetSel omitted) -- the tray's own pin chips are
+    // already the whole visible screen at this point, so cutting out one
+    // specific chip just drew attention away from the others rather than
+    // toward anything in particular.
     showTutorialHintOnce("pinselect", 10,
       "Tap a pin to start tracking!",
-      "bottom-left", ".map-job-chip");
+      "bottom-left");
   }
 }
 function closePinsTray(){
@@ -9650,13 +9702,7 @@ document.getElementById("arrToolbar").addEventListener("click", ev => {
 });
 
 /* ------------------------------------------------------ overlays --- */
-document.getElementById("celebClose").addEventListener("click", () => {
-  closeOverlay("celebrate");
-  if (pendingClassicUnlockTip){
-    pendingClassicUnlockTip = false;
-    showMouseTip(12, "Capstone done! Classic unlocked.", "bottom-left");
-  }
-});
+document.getElementById("celebClose").addEventListener("click", () => closeOverlay("celebrate"));
 
 /* ------------------------------------------------------- job board --- */
 const jobSheet = document.getElementById("jobSheet"), jobScrim = document.getElementById("jobScrim");
@@ -9929,6 +9975,7 @@ function acceptTradeOffer(i){
   if (fresh) state.tradeOffers[i] = fresh; else state.tradeOffers.splice(i, 1);
   checkCollections();
   checkQuestCompletion();
+  checkJobCompletion();
   save(); render();
 }
 /* Bespoke Trading Post row -- the give/get exchange as two real item
@@ -9959,7 +10006,17 @@ function tradeBodyHTML(){
     return `<p class="empty">🔄 The Trading Post only opens in Adventure Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
   }
   if (!allStationsVisited()){
-    return `<p class="empty">🔒 The Trading Post unlocks once you've visited every station.</p>`;
+    // One circle per real station (DATA.stations -- sub-zones aren't real
+    // map nodes, see allStationsVisited()'s own comment), "?" until
+    // state.visitedStations flips it to that station's real icon, so the
+    // progress toward unlocking is legible at a glance rather than just
+    // an abstract "visit everywhere" instruction.
+    const stationCircles = DATA.stations.map(s => {
+      const visited = !!state.visitedStations[s.name];
+      return `<span class="trade-lock-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
+    }).join("");
+    return `<p class="empty">🔒 Visit each station before the Trading Post will open for business.</p>
+      <div class="trade-lock-stations">${stationCircles}</div>`;
   }
   if (!state.tradeOffers.length) state.tradeOffers = rollTradeOffers();
   return state.tradeOffers.length
@@ -10311,8 +10368,37 @@ function takeQuest(id){
   checkQuestCompletion();
   save(); render();
 }
-let questToastQueue = [];
-let questToastTimer = null;
+/* Shared by quest completion, job completion, and mode-unlock
+   notifications (see #eventToast's own CSS comment) -- one FIFO queue and
+   one element, each entry just carrying which accent class to paint it
+   with. kind selects the .et-<kind> CSS class; icon is raw HTML (an em()
+   call, or a plain literal emoji for mode unlocks, which have no item of
+   their own); bonus is optional (mode unlocks don't award points). */
+let eventToastQueue = [];
+let eventToastTimer = null;
+function queueEventToast(kind, icon, title, name, bonus){
+  eventToastQueue.push({kind, icon, title, name, bonus});
+  if (!eventToastTimer) showNextEventToast();
+}
+function showNextEventToast(){
+  const toast = document.getElementById("eventToast");
+  const t = eventToastQueue.shift();
+  if (!t){ eventToastTimer = null; return; }
+  toast.className = "et-" + t.kind;
+  toast.innerHTML = `
+    <span class="ct-icon">${t.icon}</span>
+    <span class="ct-body"><div class="ct-title">${esc(t.title)}</div><div class="ct-name">${esc(t.name)}</div></span>
+    ${t.bonus ? `<span class="ct-bonus">${esc(t.bonus)}</span>` : ""}`;
+  toast.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => toast.classList.add("show"));
+  const dismiss = () => {
+    toast.classList.remove("show");
+    toast.setAttribute("aria-hidden", "true");
+    eventToastTimer = setTimeout(showNextEventToast, 350);
+  };
+  toast.onclick = dismiss;
+  eventToastTimer = setTimeout(dismiss, 3500);
+}
 /* Same craft()/acceptTradeOffer() call sites as checkCollections(), same
    queued-toast reasoning (see its own comment) -- a completion here is
    just as likely to land in the middle of an unrelated craft/trade
@@ -10323,27 +10409,24 @@ function checkQuestCompletion(){
     const st = state.quests[q.id];
     if (!st || !st.taken || st.completed || !owns(q.item)) return;
     st.completed = true;
-    questToastQueue.push(q);
+    queueEventToast("quest", em(ITEM_EMOJI[q.item]), "Quest complete", q.item, "+" + questBonus(q) + " pts");
   });
-  if (questToastQueue.length && !questToastTimer) showNextQuestToast();
 }
-function showNextQuestToast(){
-  const toast = document.getElementById("questToast");
-  const q = questToastQueue.shift();
-  if (!q){ questToastTimer = null; return; }
-  toast.innerHTML = `
-    <span class="ct-em">${em(ITEM_EMOJI[q.item])}</span>
-    <span class="ct-body"><div class="ct-title">Quest complete</div><div class="ct-name">${esc(q.item)}</div></span>
-    <span class="ct-bonus">+${questBonus(q)} pts</span>`;
-  toast.setAttribute("aria-hidden", "false");
-  requestAnimationFrame(() => toast.classList.add("show"));
-  const dismiss = () => {
-    toast.classList.remove("show");
-    toast.setAttribute("aria-hidden", "true");
-    questToastTimer = setTimeout(showNextQuestToast, 350);
-  };
-  toast.onclick = dismiss;
-  questToastTimer = setTimeout(dismiss, 3500);
+/* Classic Mode's own version of checkQuestCompletion() -- a job that's
+   fully assembled (jobDone()) turns itself in the instant that becomes
+   true, same auto-complete feel Adventure Mode's quests already have,
+   rather than waiting on a manual "Turn In" tap (see jobBoardHTML(),
+   which no longer renders one at all). Gated on Classic specifically,
+   same as checkQuestCompletion() is gated on Hard -- Zen has no job/quest
+   system of its own to check. */
+function checkJobCompletion(){
+  if (state.mode !== "classic") return;
+  state.jobs.forEach(job => {
+    if (job.turnedIn || !jobDone(job)) return;
+    job.turnedIn = true;
+    const entry = ENTRIES.find(e => e.name === job.items[0]);
+    queueEventToast("job", entry ? em(entry.emoji) : "", "Job complete", job.items.join(", "), "+" + jobBonus(job) + " pts");
+  });
 }
 /* Same card shape as a Station Shop item (see itemHTML()) -- .item/.irow/
    .iem/.ibody/.craftbtn, reused wholesale rather than a parallel set of
@@ -10369,7 +10452,11 @@ function questCardHTML(q){
     ? `<div class="recipe">Quest complete — +${questBonus(q)} pts</div>`
     : inProgress
       ? `<div class="recipe">🎯 Craft ${esc(q.item)} to complete</div>`
-      : `<div class="recipe">${esc(q.blurb)}</div>`;
+      // quest-blurb clamps to 2 lines (see its own CSS) -- the full blurb
+      // text stays exactly as authored, this is purely a display trim so
+      // the list reads as a scannable set of goals rather than a page of
+      // prose to read through.
+      : `<div class="recipe quest-blurb">${esc(q.blurb)}</div>`;
   const entry = (inProgress || completed) && ENTRIES.find(e => e.name === q.item);
   const treePath = "quest/" + q.id;
   const treeOpen = jobExpanded.has(treePath);
@@ -10427,12 +10514,9 @@ function questsBodyHTML(acceptedOnly){
   const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken; });
   const available = acceptedOnly ? [] : visible.filter(q => questAvailable(q));
   const ordered = [...inProgress, ...available];
-  const intro = acceptedOnly
-    ? `<p class="trade-intro">Your own accepted quests -- open the Marketplace to see what's newly on offer.</p>`
-    : `<p class="trade-intro">Finishing a quest quietly opens up what comes next -- there's only ever a couple to focus on at a time.</p>`;
   const body = ordered.length ? `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`
     : acceptedOnly ? `<p class="empty">No quest accepted yet -- open the Marketplace to see what's on offer.</p>` : "";
-  return intro + body;
+  return body;
 }
 
 /* -------------------------------------------------------- sub-zones --- */
@@ -10464,17 +10548,6 @@ jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
-
-  const turninBtn = ev.target.closest("[data-turnin]");
-  if (turninBtn){
-    const job = state.jobs[+turninBtn.dataset.turnin];
-    if (job && !job.turnedIn && jobDone(job)){
-      turnInJob(job);
-      showJobTurninPop(job);
-    }
-    renderJobBoard();
-    return;
-  }
 
   // Tapping an item chip opens its Card Inspection -- same as tapping an
   // item anywhere else in the game now (station preview, shop list). The
@@ -11129,6 +11202,12 @@ document.getElementById("setVersion").textContent = "Elementia v" + (DATA.versio
    Settings, or auto-started here via ?tutorial=1 for testing/linking
    directly to it. */
 if (/[?&]tutorial=1/.test(location.search)) startTour();
+
+// Reveals the real UI and retires #bootScreen (see its own CSS comment)
+// -- everything above has now actually run: state loaded, the welcome
+// slide (or the resumed screen) rendered, so whatever's about to become
+// visible is the real thing, not a half-booted skeleton.
+document.body.classList.add("game-ready");
 </script>
 <!--__MINIGAMES_START__-->
 <script>
