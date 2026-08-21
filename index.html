@@ -655,42 +655,13 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .tp-ex-arrow{flex:none; font-size:22px; color:var(--gold)}
 .tp-trade-row:disabled .tp-ex-arrow{color:var(--mute)}
-/* Quests -- a flat drip-fed list (see questVisible()), not a tree laid
-   out in sections: in-progress first, then whatever's newly on offer,
-   completed history last. Each card is a Station Shop .item (see
-   questCardHTML()), not a quest-specific shape. */
-.quest-tier{display:flex; flex-direction:column; gap:14px}
-/* Full breakdown open: same "icon stays put at the top, the tree breaks
-   out to the card's full width" treatment Item Reference's own .refrow
-   uses (see .ref-tree's own comment -- align-items:flex-start there is
-   what keeps its icon from re-centering down the row as the body grows,
-   and its negative-margin bleed is what lets .ref-tree ignore the icon
-   column's width). .item .irow's own align-items:center (fine for every
-   collapsed card, where icon and one line of text are close to the same
-   height) was letting the icon drift toward vertical-center as the tree
-   grew tall; flex-start pins it to the top instead, matching Item
-   Reference. The bleed amount is tuned to a quest card's OWN icon
-   width/gap (34px + 15px, see .item .iem/.irow), not Item Reference's
-   54px icon -- a second set of magic numbers for a different card shape. */
-.item.quest-item .irow{align-items:flex-start}
-.quest-item .ref-tree{margin:6px -10px 0 -49px}
-/* The outer card itself also widens toward the tray's own edges while
-   expanded -- breaking out past whatever container padding it's sitting
-   in (the Job/Quest sheet's own .dbody, or the Marketplace's inline
-   .market-section, each with a different inset -- see their own padding)
-   so the full breakdown gets meaningfully more width to lay the tree out
-   in, not just what the ref-tree's own bleed above already recovers from
-   its icon column. */
-#jobSheetBody .quest-item.tree-open{margin:0 -18px}
-.market-section .quest-item.tree-open{margin:0 -14px}
-/* Quest cards reuse the Station Shop's own .item/.craftbtn language (see
-   questCardHTML()) -- only the gateway pill and the "tracking" craftbtn
-   tint are quest-specific. */
+/* Quest rows share Item Reference's own .refrow entirely now (see
+   refStyleRowHTML()/questRowHTML()) -- this pill is the one quest-
+   specific addition, dropped into .reftop via opts.extraTop. */
 .quest-gateway{
   font-size:9.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase;
   color:#2a2110; background:var(--gold); padding:2px 8px; border-radius:999px; white-space:nowrap;
 }
-.craftbtn.tracking{background:var(--gold-soft); border-left-color:var(--gold-line); color:var(--gold)}
 /* Collections: each entry is a row (not a card grid like Trade Market) --
    a collection can have anywhere from 4 to 7 members, and a card grid of
    tiny per-member icons reads better as a horizontal filmstrip inside a
@@ -813,109 +784,28 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 
 .mp-sub{font-size:14px; color:var(--ink2); margin-bottom:16px; line-height:1.5}
-/* "Trading card" job cards -- a deliberately different card stock (dark
-   maroon-purple, not the app's usual blue-grey --card) with a thick gold
-   border and badges that overhang the top edge: a points circle, a "Job
-   Card" label pill, and one station-suit badge per item (the FIRST item's
-   badge sits on the card's own top border; a SECOND item's badge, if any,
-   straddles the horizontal divider between the two stacked item sections
-   -- see jobCardBodyHTML()). Two cards per row (.job-grid/.mp-options).
-   Turn In is a SIBLING below the card, not padded inside its own frame;
-   an offer's own accept action lives INSIDE the card instead, as the
-   checkmark half of .jc-actions. */
-.mp-options{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px}
-/* Shown when the Job Board is either locked (Hard Mode's quest/station
-   gate, see jobBoardUnlocked()) or the player's at MAX_ACTIVE_JOBS --
-   offers stay visible (so there's still something to look at/plan around)
-   but read as inert: dimmed and click-through disabled on the accept icon
-   (grayscale reinforces "not right now" beyond just opacity). */
-.mp-options.locked{opacity:.5; filter:grayscale(.4)}
-.mp-options.locked .jc-accept{cursor:not-allowed}
-.job-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px 14px; margin-bottom:22px}
-.job-card-wrap{display:flex; flex-direction:column; gap:20px}
-.job-card{
-  position:relative; background:var(--jobcard-bg); border:3px solid var(--gold); border-radius:16px;
-  padding:22px 8px 14px; box-shadow:0 4px 14px var(--shadow);
-  display:flex; flex-direction:column; overflow:visible; justify-content:center;
+/* Job Board rows share Item Reference's own .refrow entirely now (see
+   refStyleRowHTML()/jobRowHTML()) -- the old "trading card" job-card
+   language (badges, a separate Turn In sibling, a centered icon+progress
+   chip) is gone. Locked state (Job Board gated shut, or the player at
+   MAX_ACTIVE_JOBS) dims the whole row list the same way, just against
+   .reftable instead of a card grid. */
+.reftable.locked{opacity:.5; filter:grayscale(.4)}
+.reftable.locked .refpin-action{cursor:not-allowed}
+/* The one right-side control that isn't a plain pin toggle -- Accept
+   (quests) / Take (jobs), shown only before a quest/job has been
+   committed to (see questRowHTML()/jobRowHTML()) -- reads as a real,
+   alive call-to-action rather than .refpin's own default dimmed/
+   grayscale "nothing to do yet" look, same green "ready to go" language
+   .item.can/.craftbtn.go use elsewhere. Text needs more room than the
+   34px icon-only pin box, so width goes auto with real padding instead. */
+.refpin-action{
+  width:auto; padding:0 12px; font-size:13px; font-weight:800; white-space:nowrap;
+  color:var(--ok); border-color:var(--ok-line); background:var(--ok-soft);
+  opacity:1; filter:none;
 }
-.job-card.turned-in{opacity:.6}
-.job-badge{
-  position:absolute; top:-15px; left:-8px; width:38px; height:38px; border-radius:50%;
-  background:var(--gold-soft); border:2.5px solid var(--gold); color:#fff;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
-}
-.job-badge .n{font-size:11.5px; font-weight:800}
-.job-badge .l{font-size:6px; font-weight:800; letter-spacing:.3px; margin-top:1px}
-.job-card-label{
-  position:absolute; top:-13px; left:50%; transform:translateX(-50%); z-index:2;
-  background:var(--gold); color:#241a0c; font-size:9px; font-weight:800; letter-spacing:.3px;
-  padding:4px 10px; border-radius:999px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.3);
-}
-/* Book (jump to Item Reference) + accept/turn-in action row -- a SIBLING
-   below the card frame, same slot the old full-width "Take this job"
-   button used to occupy alone (see .job-card-wrap's own gap), now shared
-   evenly between whichever buttons apply (see jobCardActionsHTML()) so
-   together they always span the card's own width. */
-.jc-actions{display:flex; gap:10px; width:100%}
-.jc-icon-btn{
-  flex:1; padding:16px 10px; border-radius:14px; display:flex; align-items:center; justify-content:center;
-  font-size:28px; background:var(--card); border:2.5px solid var(--gold);
-}
-.jc-icon-btn.jc-accept{background:var(--ok-soft); border-color:var(--ok)}
-.jc-icon-btn:disabled{opacity:.5; cursor:not-allowed}
-/* Station-suit badge -- overhangs the card's own top-right corner, same
-   size/shape language as .job-badge's identical overhang on the top-left
-   (see jobCardBodyHTML()) -- the two badges read as a matched pair
-   bracketing the "Job Card" label between them. */
-.job-suit-badge{
-  position:absolute; top:-15px; right:-8px; z-index:2;
-  width:38px; height:38px; border-radius:50%; background:var(--gold-soft); border:2.5px solid var(--suit, var(--gold));
-  display:flex; align-items:center; justify-content:center; font-size:18px; line-height:1;
-  box-shadow:0 2px 6px rgba(0,0,0,.3);
-}
-.jc-items{display:flex; flex-direction:column}
-.job-turnedin-note{font-size:12.5px; font-weight:800; color:var(--ok); text-align:center}
-/* A single item section on a job card -- flat, not expandable (see
-   jobItemChipHTML()); tapping the icon/name goes to Item Reference for the
-   full recursive breakdown instead of showing one in place here. Ownership
-   (job progress) reads via a small checkmark badge on the icon rather than
-   a status line, since the centered layout has no room for strikethrough
-   text to read cleanly. */
-.job-item{
-  position:relative; display:flex; flex-direction:column; align-items:center; gap:5px;
-  padding:12px 4px 8px; text-align:center;
-}
-.ji-goto{
-  display:flex; flex-direction:column; align-items:center; gap:5px; width:100%;
-  background:none; border:none; padding:0; font:inherit; color:#fff; cursor:pointer;
-}
-.ji-icon-wrap{position:relative; width:56px; height:56px; display:flex; align-items:center; justify-content:center}
-.ji-em{font-size:38px; line-height:1}
-/* Pin sits on the name's own line, to its left -- one centred unit rather
-   than a control floating in a corner. Its own row (not inside .ji-goto)
-   so tapping the pin never counts as tapping through to Item Reference. */
-.ji-nameline{display:flex; align-items:center; justify-content:center; gap:6px; width:100%; padding:0 2px}
-.ji-name{font-weight:700; font-size:12.5px; line-height:1.25; min-width:0; overflow:hidden; text-overflow:ellipsis}
-.ji-progress{font-size:10.5px; font-weight:700; color:var(--mute); letter-spacing:.2px; font-variant-numeric:tabular-nums}
-.job-item.have .ji-icon-wrap::after{
-  content:"\2713"; position:absolute; bottom:-2px; left:-2px; width:17px; height:17px; border-radius:50%;
-  background:var(--ok); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;
-  border:2px solid var(--jobcard-bg);
-}
-/* Same pin affordance as Item Reference's own 📌 (see .refpin) -- pinning
-   from here jumps straight to both places at once: the topbar job-chip row
-   AND the top of Item Reference (see togglePin()/prefs.pinnedItems). It's
-   also how a 2-item job's job-highlight ring is chosen (see selectedJobItem
-   in the click handler), so it stays a real control even in this compact
-   layout, not just a convenience. */
-.ji-pin{
-  flex:none; width:22px; height:22px; border-radius:7px;
-  border:1.5px solid var(--gold-line); background:rgba(0,0,0,.3); color:#fff; font-size:11px; cursor:pointer;
-  opacity:.55; filter:grayscale(1);
-}
-.ji-pin:hover{opacity:.85}
-.ji-pin.active{opacity:1; filter:none; border-color:var(--gold); background:var(--gold-soft)}
+.refpin-action:hover{filter:brightness(1.06)}
+.refpin-action:disabled{opacity:.5; filter:grayscale(.5); cursor:not-allowed}
 
 /* ------------------------------------------------------- game mode --- */
 .mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
@@ -1595,15 +1485,6 @@ body[data-screen="market"] #trackedPill{display:none}
    whatever the longest line happens to be. */
 .recipe{font-size:14px; color:var(--ink2); margin-top:4px; display:flex; flex-wrap:wrap;
   align-items:center; justify-content:flex-start; gap:5px}
-/* Not-yet-taken quest cards' flavor blurb (see questCardHTML()) -- plain
-   prose, not the token-chip row .recipe otherwise holds, so it overrides
-   right back to a normal block and clamps to 2 lines with an ellipsis.
-   The full text stays exactly as authored (see QUESTS), this only trims
-   what's actually ON SCREEN so the list reads as a scannable set of goals
-   rather than a page of prose. */
-.recipe.quest-blurb{
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-}
 .plus{color:#fff; font-weight:700}
 .tok{display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:7px;
   font-weight:700; font-size:13.5px; border:1.5px solid}
@@ -1641,15 +1522,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .craftbtn.go:hover{filter:brightness(1.07)}
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); border-left-color:var(--line2)}
 .craftbtn.done{background:var(--ok-soft); border-left-color:var(--ok-line); color:var(--ok); animation:none}
-/* Opt-out of the shared align-self:stretch above for one specific case --
-   a quest card's Tracking/Done pill while its own breakdown tree is open
-   (see questCardHTML()) -- self-aligns to the top instead of stretching
-   the full (now much taller) card height into an absurd vertical bar.
-   border-radius/border-left restored on all 4 corners since it's no
-   longer flush against the card's full-height right edge. */
-.craftbtn.no-stretch{
-  align-self:flex-start; border-radius:10.5px; border-left-color:transparent; margin-top:2px;
-}
 
 .capbox{margin-top:16px; background:var(--cap-grad);
   border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
@@ -2043,14 +1915,14 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
    that UI was already tuned by hand, button-by-button, and doesn't need
    a second, competing treatment layered on top (see the #convert
    overrides at the very end of this block). */
-.bigbtn, .tbtn:not(.ghost), .craftbtn, button.setting-row, .mode-card, .jc-icon-btn{
+.bigbtn, .tbtn:not(.ghost), .craftbtn, button.setting-row, .mode-card{
   box-shadow:0 3px 0 rgba(0,0,0,.22);
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1),
     filter .15s ease, background .12s, border-color .12s;
 }
 .bigbtn:not(:disabled):active, .tbtn:not(.ghost):not(:disabled):active,
 .craftbtn:not(:disabled):active,
-button.setting-row:not(:disabled):active, .mode-card:active, .jc-icon-btn:not(:disabled):active{
+button.setting-row:not(:disabled):active, .mode-card:active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
 /* Craft button opt-out from the shared ledge/lift look (see the block just
@@ -6765,96 +6637,29 @@ function jobNodeHTML(name, kind, path, seen){
    just repeated per job -- then the current board to take a new one from.
    The board section alone (no active-jobs list above it) is what the
    full-screen "picker" mode shows on a brand new session. */
-/* A flat, non-expandable item section -- Job Board no longer shows its own
-   ingredient tree (see jobBoardHTML()); tapping the icon/name sends the
-   player to Item Reference instead, which is the one place that tree still
-   lives. Progress reads via a small checkmark badge on the icon (see
-   .job-item.have .ji-icon-wrap::after) AND a build-progress fraction below
-   the name (see jobItemProgressFraction()) -- the checkmark is just "do I
-   have THIS item," the fraction is "how far along its whole build is." */
-/* x/N build-progress fraction for a job item -- N is the item itself plus
-   every item anywhere in its ingredient chain (componentClosure(), which
-   already excludes the item itself), x is how many of that full set the
-   player currently owns. Unlike stillNeededClosure() (which prunes already-
-   satisfied branches to answer "what do I still need to buy"), this
-   deliberately wants the FULL static tree as the denominator -- it's a
-   progress meter over the whole build, not a shopping list. */
-function jobItemProgressFraction(name){
-  const all = [name, ...componentClosure(name)];
-  const have = all.filter(owns).length;
-  return {have, total: all.length};
-}
-function jobItemChipHTML(name){
+/* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
+   replaces the old job-card system (points/suit badges, a "Job Card"
+   label, a separate book-icon action row) entirely, same reasoning as
+   questRowHTML() right above it. A not-yet-taken board offer gets a Take
+   control in the pin slot; an already-taken job (whether still active or
+   turned in) has nothing left to take, so it just falls back to the
+   normal pin toggle, same as any other tracked item. offerIndex is the
+   job's own slot in state.jobBoard (what takeJob() actually needs);
+   omit it for an active/completed job. */
+function jobRowHTML(name, offerIndex, locked){
   const entry = ENTRIES.find(e => e.name === name);
   if (!entry) return "";
-  const has = owns(name);
-  const pinned = isPinned(name);
-  const {have, total} = jobItemProgressFraction(name);
-  return `<div class="job-item ${has ? "have" : ""}">
-    <button type="button" class="ji-goto" data-goto-ref="${esc(name)}">
-      <span class="ji-icon-wrap"><span class="ji-em">${em(entry.emoji)}</span></span>
-    </button>
-    <span class="ji-nameline">
-      <button type="button" class="ji-pin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
-        title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
-      <span class="ji-name">${esc(name)}</span>
-    </span>
-    <span class="ji-progress">${have}/${total}</span>
-  </div>`;
+  const rightControl = offerIndex != null
+    ? `<button type="button" class="refpin refpin-action" data-take="${offerIndex}" ${locked ? "disabled" : ""}
+        title="Take this job" aria-label="Take this job for ${esc(entry.name)}">Take</button>`
+    : undefined;
+  return refStyleRowHTML(entry, {rightControl});
 }
 
-/* Small gold-circle badge showing where an item is actually sold -- a job
-   card can still offer an item whose own home station is a different one
-   than wherever the board is currently showing it. Overhangs the card's
-   own top-right corner (see jobCardBodyHTML()), mirroring the points
-   badge's identical overhang on the top-left. */
-function jobSuitBadgeHTML(name){
-  const entry = ENTRIES.find(e => e.name === name);
-  const home = entry && STATION_BY_NAME[entry.station];
-  if (!home) return "";
-  const suitColor = DATA.suits[home.suit].color;
-  return `<span class="job-suit-badge" style="--suit:${suitColor}" title="Found at ${esc(entry.station)}" aria-label="Found at ${esc(entry.station)}">${em(home.emoji)}</span>`;
-}
-
-/* Card interior shared by an active job's card and a board offer's card
-   (see .job-card) -- points badge overhangs the top-left corner, the
-   station-suit badge mirrors it overhanging top-right (same treatment,
-   opposite corner), "Job Card" label pinned to the top border between
-   them, then the single item itself (see drawJobBoardItems() -- every
-   job card is exactly one item now). The book/accept action row is a
-   separate sibling BELOW the card frame (see jobCardActionsHTML()), not
-   padded inside it. */
-function jobCardBodyHTML(items, bonus){
-  return `<span class="job-badge"><span class="n">+${bonus}</span><span class="l">pts</span></span>
-    <span class="job-card-label">Job Card</span>
-    ${jobSuitBadgeHTML(items[0])}
-    <div class="jc-items">${jobItemChipHTML(items[0])}</div>`;
-}
-/* Book (jump to Item Reference for the card's first item, one level
-   expanded, see goToRefItem()) + accept action row, sized to share the
-   card's own full width evenly (see .jc-actions/.jc-icon-btn). Accept
-   only renders for a not-yet-taken board offer -- that's the only
-   context it means anything -- so a card can show either icon alone
-   (full width) or both side by side. */
-function jobCardActionsHTML(items, offerIndex, locked){
-  const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(items[0])}"
-      title="View ${esc(items[0])} in Item Reference" aria-label="View ${esc(items[0])} in Item Reference">📖</button>`;
-  const acceptBtn = offerIndex != null
-    ? `<button type="button" class="jc-icon-btn jc-accept" data-take="${offerIndex}" ${locked ? "disabled" : ""}
-        title="Accept this job" aria-label="Accept this job">✅</button>`
-    : "";
-  return `<div class="jc-actions">${bookBtn}${acceptBtn}</div>`;
-}
-
-/* Real cards (see .job-card), two per row (.job-grid/.mp-options are a
-   2-column grid) -- action button OUTSIDE the card frame as a sibling in
-   the same .job-card-wrap. Shared shape for an active job's card and a
-   board offer's card, built by jobCardBodyHTML() above.
-
-   The offer board is one global list now (state.jobBoard, an array of up
-   to 4 item names -- see rotateJobBoard()/topUpJobBoard()), shown
-   identically here regardless of screen/station, so it works from the
-   Marketplace as well as the per-station sheet. */
+/* The offer board is one global list (state.jobBoard, an array of up to 4
+   item names -- see rotateJobBoard()/topUpJobBoard()), shown identically
+   here regardless of screen/station, so it works from the Marketplace as
+   well as the per-station sheet. */
 // acceptedOnly: true for the standing hub-button sheet (renderJobBoard())
 // -- a personal log of what THIS player has actually taken, never a
 // browse-and-accept list; the "Available Jobs" board itself only ever
@@ -6862,13 +6667,11 @@ function jobCardActionsHTML(items, offerIndex, locked){
 // which is where accepting a new one is actually meant to happen.
 function jobBoardHTML(acceptedOnly){
   // Up to MAX_ACTIVE_JOBS held at once -- every not-yet-turned-in job gets
-  // its own card in a grid (same "Take this job" card shape the board
-  // itself uses). Turned-in jobs get their own separate section below in
-  // the same grid format, just dimmed (.job-card.turned-in) --
-  // they used to collapse into a small stacked deck inside "My Jobs"
-  // itself, but that stack's own negative top/left offsets (each card
-  // shifted up to peek out above the one in front of it) crept upward
-  // into whatever sat above it in the section.
+  // its own row. Turned-in jobs get their own separate section below,
+  // still a full row each rather than collapsing into a stack -- a
+  // previous stacked-deck treatment's own negative top/left offsets (each
+  // card shifted up to peek out above the one in front of it) crept
+  // upward into whatever sat above it in the section.
   const activeJobs = state.jobs.filter(j => !j.turnedIn);
   const completedJobs = state.jobs.filter(j => j.turnedIn);
 
@@ -6879,22 +6682,8 @@ function jobBoardHTML(acceptedOnly){
   // artifact at most (checkJobCompletion() runs before the render that
   // would ever draw it), never something a player could actually see or
   // needs a control for.
-  const jobGridHTML = (jobs, turnedIn) => `<div class="job-grid">${
-    jobs.map(job => {
-      const bonus = jobBonus(job);
-      const bookBtn = `<button type="button" class="jc-icon-btn jc-ref" data-ref-jump="${esc(job.items[0])}"
-          title="View ${esc(job.items[0])} in Item Reference" aria-label="View ${esc(job.items[0])} in Item Reference">📖</button>`;
-      return `<div class="job-card-wrap">
-        <div class="job-card${turnedIn ? " turned-in" : ""}">
-          ${jobCardBodyHTML(job.items, bonus)}
-        </div>
-        <div class="jc-actions">${bookBtn}</div>
-      </div>`;
-    }).join("")
-  }</div>`;
-
   const activeHTML = activeJobs.length
-    ? jobGridHTML(activeJobs, false)
+    ? `<div class="reftable">${activeJobs.map(j => jobRowHTML(j.items[0])).join("")}</div>`
     : `<p class="empty">${acceptedOnly
         ? "No job taken yet -- open the Marketplace to see what's on offer."
         : "No job taken yet -- pick one from the board above."}</p>`;
@@ -6905,30 +6694,24 @@ function jobBoardHTML(acceptedOnly){
     ? `<details class="job-section" open><summary class="job-board-heading">📋 My Jobs</summary>${activeHTML}</details>` : "";
 
   const completedSection = completedJobs.length
-    ? `<details class="job-section"><summary class="job-board-heading">✅ Completed Jobs</summary>${jobGridHTML(completedJobs, true)}</details>` : "";
+    ? `<details class="job-section"><summary class="job-board-heading">✅ Completed Jobs</summary><div class="reftable">${completedJobs.map(j => jobRowHTML(j.items[0])).join("")}</div></details>` : "";
 
-  // Locked (collapsed, faded, untappable -- see .mp-options.locked) for
-  // either of two reasons: the all-stations-visited gate isn't cleared
-  // yet (see jobBoardUnlocked()), or the player's already holding
-  // MAX_ACTIVE_JOBS jobs and needs to turn one in before taking another.
-  // No more "one pick per visit" -- see takeJob()'s own comment. Job
-  // Board is Classic Mode only now (see renderMarketArc()/updateHub()'s
-  // own Adventure-Mode Quests swap) -- jobBoardUnlocked()'s own Hard-Mode
-  // quest-tier branch is dead code from here, kept only because that
-  // function is harmless to leave general-purpose.
+  // Locked (dimmed, untappable -- see .reftable.locked) for either of two
+  // reasons: the all-stations-visited gate isn't cleared yet (see
+  // jobBoardUnlocked()), or the player's already holding MAX_ACTIVE_JOBS
+  // jobs and needs to turn one in before taking another. No more "one
+  // pick per visit" -- see takeJob()'s own comment. Job Board is Classic
+  // Mode only now (see renderMarketArc()/updateHub()'s own Adventure-Mode
+  // Quests swap) -- jobBoardUnlocked()'s own Hard-Mode quest-tier branch
+  // is dead code from here, kept only because that function is harmless
+  // to leave general-purpose.
   const gateOK = jobBoardUnlocked();
   const atCap = activeJobs.length >= MAX_ACTIVE_JOBS;
   const locked = !gateOK || atCap;
 
   const board = state.jobBoard || [];
   const boardBody = board.length
-    ? `<div class="mp-options ${locked ? "locked" : ""}">${board.map((name, i) => `
-        <div class="job-card-wrap">
-          <div class="job-card">
-            ${jobCardBodyHTML([name], jobBonus({items: [name]}))}
-          </div>
-          ${jobCardActionsHTML([name], i, locked)}
-        </div>`).join("")}</div>`
+    ? `<div class="reftable ${locked ? "locked" : ""}">${board.map((name, i) => jobRowHTML(name, i, locked)).join("")}</div>`
     : `<p class="empty">No jobs on offer right now -- check back after your next station visit.</p>`;
   const capNote = !gateOK
     ? `<p class="empty">🔒 The Job Board unlocks once you've visited every station.</p>`
@@ -7129,8 +6912,7 @@ function markSeen(name){
   if (!state.seenItems[name]) state.seenItems[name] = true;
 }
 
-/* Jump to an item's row in Item Reference -- from a Job Board card's own
-   book-icon shortcut (see jobItemChipHTML()) or the card-pop popup's
+/* Jump to an item's row in Item Reference -- from the card-pop popup's
    "View Item Tree" button. Item Reference's own expanded breakdowns
    deliberately do NOT do this: tapping a nested ingredient there just
    expands it in place, since jumping away mid-lookup was more
@@ -7147,8 +6929,17 @@ const cssEsc = s => (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\
 function goToRefItem(name){
   const openPanel = openPanelName();
   const fromMarket = screen === "market";
+  // Captured before closePanelByName()/clearing current below can touch
+  // either -- current still holds the real station name here whenever
+  // this was reached from inside a station shop (a crafted-card's "View
+  // Item Tree", a shop item's book icon, ...), even though this function
+  // is about to null current out itself for Item Reference's own screen.
+  // codexReturnScreen carries it through so closing Item Reference later
+  // (see closePanelByName()'s own comment) lands back on that station
+  // instead of falling through to the map.
+  const fromStation = current;
   if (openPanel) closePanelByName(openPanel);
-  codexReturnScreen = fromMarket ? "market" : null;
+  codexReturnScreen = fromMarket ? "market" : fromStation;
   screen = "codex"; current = null;
   jobExpanded.clear();
   jobExpanded.add("refroot/" + name);
@@ -7184,6 +6975,56 @@ function refExpandHTML(entry){
   }));
   return `<div class="mission-tree">${reqs.map(r =>
     jobNodeHTML(r.name, r.kind, "ref/" + entry.name + "/" + r.name, new Set([entry.name]))).join("")}</div>`;
+}
+
+/* Same exact row design Item Reference's own rows use (.refrow/.refem/
+   .refbody/.reftop/.refname/.refpts/.refwhere/.refexpand/.ref-tree) --
+   reused verbatim for the Quest Log and Job Board (see questRowHTML()/
+   jobRowHTML() below), replacing their old bespoke card language
+   entirely, rather than building a second design for the same "here's
+   the thing, here's where it's built, here's its full breakdown on
+   request" job. Same data-toggle/jobExpanded/refExpandHTML machinery
+   renderCodex() itself uses, and even the SAME expand-state key
+   ("refroot/"+name) -- a row expanded once stays expanded everywhere it
+   shows up, exactly the "identical to Item Reference" behavior asked
+   for, not a parallel lookalike.
+   opts.rightControl overrides the right-side square control (defaults to
+   the same pin toggle Item Reference itself uses) -- the one piece that
+   really does have to differ, since pinning a quest/job's item means
+   nothing until it's actually been committed to; every state AFTER that
+   (in progress, completed/turned in) reverts to the plain pin button,
+   because at that point it genuinely is just a normal tracked item.
+   opts.extraTop inserts extra markup into .reftop before the points
+   badge (the quest gateway pill). opts.complete overrides owns()-driven
+   "owned" styling when completion means something other than plain
+   ownership (kept for clarity even though today it doesn't need to). */
+function refStyleRowHTML(entry, opts){
+  opts = opts || {};
+  const has = opts.complete !== undefined ? opts.complete : owns(entry.name);
+  const pinned = isPinned(entry.name);
+  const path = "refroot/" + entry.name;
+  const open = jobExpanded.has(path);
+  const tier = craftTier(entry.name);
+  const homes = ENTRIES.filter(x => x.name === entry.name).map(x => x.station);
+  const control = opts.rightControl || `<button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(entry.name)}"
+    title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(entry.name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>`;
+  return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(entry.name)}">
+    <div class="refem">${em(entry.emoji)}</div>
+    <div class="refbody">
+      <div class="reftop">
+        <span class="refname">${esc(entry.name)}</span>
+        ${has ? '<span class="tick">✓</span>' : ""}
+        ${opts.extraTop || ""}
+        <span class="refpts">⭐ ${entry.points}</span>
+      </div>
+      <div class="refwhere">${homes.map(h => `<span>${em(STATION_BY_NAME[h].emoji)} ${esc(h)}</span>`).join("")}</div>
+      <button type="button" class="refexpand" data-toggle="${path}" aria-expanded="${open}">
+        ${open ? "▾ Hide full breakdown" : "▸ Full breakdown"}
+      </button>
+      <div class="ref-tree" ${open ? "" : "hidden"}>${open ? refExpandHTML(entry) : ""}</div>
+    </div>
+    ${control}
+  </div>`;
 }
 
 /* Reference sheet: every item in the game, one row each, with its recipe
@@ -9244,14 +9085,14 @@ function handleScreenClick(ev){
     return;
   }
 
-  // Job/Quest/Trade cards render straight inline on the Marketplace screen
+  // Job/Quest/Trade rows render straight inline on the Marketplace screen
   // now (see marketSectionHTML()), so their own action buttons need a home
   // in this shared dispatcher rather than a sheet-scoped listener of their
   // own -- jobSheetBody's listener (further down) still handles the same
-  // data-take/data-ref-jump/data-goto-ref pairing for Jobs' OTHER entry
-  // point, the standing hub bar's Jobs icon, which still opens the classic
-  // slide-in sheet from a station/map visit. No data-turnin any more --
-  // jobs turn themselves in automatically now (see checkJobCompletion()).
+  // data-take pairing for Jobs' OTHER entry point, the standing hub bar's
+  // Jobs icon, which still opens the classic slide-in sheet from a
+  // station/map visit. No data-turnin any more -- jobs turn themselves in
+  // automatically now (see checkJobCompletion()).
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); render(); return; }
 
@@ -9260,16 +9101,6 @@ function handleScreenClick(ev){
 
   const tradeAcceptBtn = ev.target.closest("[data-trade-accept]");
   if (tradeAcceptBtn && !tradeAcceptBtn.disabled){ acceptTradeOffer(+tradeAcceptBtn.dataset.tradeAccept); return; }
-
-  const refJumpBtn2 = ev.target.closest("[data-ref-jump]");
-  if (refJumpBtn2){ goToRefItem(refJumpBtn2.dataset.refJump); return; }
-
-  const gotoRefBtn = ev.target.closest("[data-goto-ref]");
-  if (gotoRefBtn){
-    const entry = ENTRIES.find(e => e.name === gotoRefBtn.dataset.gotoRef);
-    if (entry) showCardPop(entry, false);
-    return;
-  }
 
   // Collapses whichever Jobs/Quests/Trade/Collections section is currently
   // expanded on the Marketplace screen -- see marketSectionHTML().
@@ -9364,8 +9195,22 @@ function closePanelByName(name){
   else if (name === "codex" || name === "market"){
     // Same "return where you opened it from" rule as hubCodex's own toggle
     // -- codexReturnScreen overrides the plain map fallback when Codex was
-    // opened from the Marketplace specifically (see goToRefItem()/hubCodex).
-    screen = current ? "station" : (name === "codex" && codexReturnScreen === "market") ? "market" : "map";
+    // opened from the Marketplace specifically, or carries a STATION NAME
+    // when it was opened via goToRefItem() from inside a station shop
+    // (that function has to null out `current` itself -- see its own
+    // comment -- so this is what lets closing restore it instead of
+    // falling through to "current is empty, back to the map"; every
+    // other entry point, like hubCodex's own toggle, never touches
+    // `current` at all, so the plain current-truthy fallback below
+    // already covers those correctly on its own).
+    if (name === "codex" && codexReturnScreen === "market"){
+      screen = "market";
+    } else if (name === "codex" && codexReturnScreen){
+      current = codexReturnScreen;
+      screen = "station";
+    } else {
+      screen = current ? "station" : "map";
+    }
     codexReturnScreen = null;
     render(true);
   }
@@ -10428,71 +10273,30 @@ function checkJobCompletion(){
     queueEventToast("job", entry ? em(entry.emoji) : "", "Job complete", job.items.join(", "), "+" + jobBonus(job) + " pts");
   });
 }
-/* Same card shape as a Station Shop item (see itemHTML()) -- .item/.irow/
-   .iem/.ibody/.craftbtn, reused wholesale rather than a parallel set of
-   quest-specific classes, so "here's a thing, here's its action button"
-   reads identically everywhere in the game. A quest has no station suit
-   of its own, so --suit is pinned to gold throughout. completed maps onto
-   the exact same .item.owned checkmark-badge treatment a crafted shop
-   item gets; available maps onto .item.can. Only questVisible() quests
-   ever reach this function, so there's no "locked" state left to render
-   here at all -- a quest either hasn't unlocked yet (not shown) or it has.
-   Once taken (or completed, for a look-back), the card grows the exact
-   same expandable component tree Item Reference uses (refExpandHTML()),
-   right inline -- no need to leave the Quest Log to see what's left. */
-function questCardHTML(q){
+/* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
+   not a lookalike, the literal same function -- so "Full breakdown"
+   behaves identically everywhere it appears, right down to sharing the
+   same expand-state key (a quest's item expanded here stays expanded if
+   you look it up in Item Reference too). Only questVisible() quests ever
+   reach this function, so there's no "locked" state left to render here
+   at all -- a quest either hasn't unlocked yet (not shown) or it has.
+   The one departure from a plain reference row: an unaccepted quest gets
+   an actual Accept control in the pin slot instead of the pin toggle,
+   since pinning means nothing before that. Once taken, it reverts to the
+   normal pin button -- takeQuest() already auto-pins the target, so at
+   that point it genuinely is just a tracked item like any other. */
+function questRowHTML(q){
   const st = state.quests[q.id];
   const completed = st && st.completed;
-  const inProgress = st && st.taken && !st.completed;
-  const available = questAvailable(q);
-  const gatewayBadge = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
-  const cls = ["item", "quest-item"];
-  if (completed) cls.push("owned"); else if (available) cls.push("can");
-  const sub = completed
-    ? `<div class="recipe">Quest complete — +${questBonus(q)} pts</div>`
-    : inProgress
-      ? `<div class="recipe">🎯 Craft ${esc(q.item)} to complete</div>`
-      // quest-blurb clamps to 2 lines (see its own CSS) -- the full blurb
-      // text stays exactly as authored, this is purely a display trim so
-      // the list reads as a scannable set of goals rather than a page of
-      // prose to read through.
-      : `<div class="recipe quest-blurb">${esc(q.blurb)}</div>`;
-  const entry = (inProgress || completed) && ENTRIES.find(e => e.name === q.item);
-  const treePath = "quest/" + q.id;
-  const treeOpen = jobExpanded.has(treePath);
-  // Widens the whole card while its own breakdown is showing -- see
-  // .quest-item.tree-open's own CSS.
-  if (treeOpen) cls.push("tree-open");
-  // .craftbtn normally stretches to match .irow's height (see its own
-  // comment) so it always sits flush against the card's full height --
-  // fine for a short collapsed card, but with the breakdown tree open
-  // .irow can run much taller, and stretching "Tracking"/"Done" to match
-  // turned them into a ridiculous vertical bar. .no-stretch (see its own
-  // CSS) opts out of the stretch just for that one expanded moment,
-  // keeping the normal flush-fit look everywhere else.
-  const btnStretch = treeOpen ? " no-stretch" : "";
-  const btn = completed
-    ? `<span class="craftbtn done${btnStretch}">✓ Done</span>`
-    : inProgress
-      ? `<span class="craftbtn tracking${btnStretch}">Tracking</span>`
-      : `<button type="button" class="craftbtn go" data-quest-take="${esc(q.id)}">Accept</button>`;
-  const tree = entry
-    ? `<button type="button" class="refexpand" data-toggle="${treePath}" aria-expanded="${treeOpen}">
-         ${treeOpen ? "▾ Hide full breakdown" : "▸ Full breakdown"}
-       </button>
-       <div class="ref-tree" ${treeOpen ? "" : "hidden"}>${treeOpen ? refExpandHTML(entry) : ""}</div>`
-    : "";
-  return `<div class="${cls.join(" ")}" style="--suit:var(--gold)">
-    <div class="irow">
-      <div class="iem">${em(ITEM_EMOJI[q.item])}</div>
-      <div class="ibody">
-        <div class="itop"><span class="iname">${esc(q.item)}</span>${gatewayBadge}</div>
-        ${sub}
-        ${tree}
-      </div>
-    </div>
-    ${btn}
-  </div>`;
+  const taken = st && st.taken;
+  const entry = ENTRIES.find(e => e.name === q.item);
+  if (!entry) return "";
+  const extraTop = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
+  const rightControl = !taken
+    ? `<button type="button" class="refpin refpin-action" data-quest-take="${esc(q.id)}"
+        title="Accept quest" aria-label="Accept quest for ${esc(q.item)}">Accept</button>`
+    : undefined;
+  return refStyleRowHTML(entry, {complete: completed, extraTop, rightControl});
 }
 /* A flat, drip-fed list -- not the underlying tree structure laid bare
    in sections (see questVisible()/QUEST_VISIBLE_CAP): in-progress quests
@@ -10514,7 +10318,7 @@ function questsBodyHTML(acceptedOnly){
   const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken; });
   const available = acceptedOnly ? [] : visible.filter(q => questAvailable(q));
   const ordered = [...inProgress, ...available];
-  const body = ordered.length ? `<div class="quest-tier">${ordered.map(questCardHTML).join("")}</div>`
+  const body = ordered.length ? `<div class="reftable">${ordered.map(questRowHTML).join("")}</div>`
     : acceptedOnly ? `<p class="empty">No quest accepted yet -- open the Marketplace to see what's on offer.</p>` : "";
   return body;
 }
@@ -10549,21 +10353,6 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
-  // Tapping an item chip opens its Card Inspection -- same as tapping an
-  // item anywhere else in the game now (station preview, shop list). The
-  // card's own book icon (see jobCardBodyHTML()) is the direct one-tap
-  // shortcut to Item Reference; this is a separate, slower path for
-  // actually looking at the item's art/detail.
-  const gotoBtn = ev.target.closest("[data-goto-ref]");
-  if (gotoBtn){
-    const entry = ENTRIES.find(e => e.name === gotoBtn.dataset.gotoRef);
-    if (entry) showCardPop(entry, false);
-    return;
-  }
-
-  const refJumpBtn = ev.target.closest("[data-ref-jump]");
-  if (refJumpBtn){ goToRefItem(refJumpBtn.dataset.refJump); return; }
-
   const pinBtn = ev.target.closest("[data-pin]");
   if (pinBtn){
     const name = pinBtn.dataset.pin;
@@ -10579,13 +10368,13 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     return;
   }
 
-  // A completed/in-progress Quest card's own "Full breakdown" toggle (see
-  // questCardHTML()) -- #jobSheetBody sits outside #screen (same reason
-  // this whole listener exists instead of relying on #screen's own
-  // delegation, see the comment above it), so the [data-toggle] handling
-  // there never fires for a quest card rendered in THIS sheet specifically;
-  // the Marketplace's own inline Quest Log worked all along since that one
-  // renders inside #screen.
+  // A row's own "Full breakdown" toggle (see refStyleRowHTML()) --
+  // #jobSheetBody sits outside #screen (same reason this whole listener
+  // exists instead of relying on #screen's own delegation, see the
+  // comment above it), so the [data-toggle] handling there never fires
+  // for a row rendered in THIS sheet specifically; the Marketplace's own
+  // inline Quest Log/Job Board worked all along since those render
+  // inside #screen.
   const refToggleBtn = ev.target.closest("[data-toggle]");
   if (refToggleBtn){
     const path = refToggleBtn.dataset.toggle;
