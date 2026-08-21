@@ -254,7 +254,7 @@ STATIONS = [
              ("📡","Satellite Dish","COMPONENT","🦾 Aluminum Alloy + 🔌 Wire",12),
              ("🔭","Telescope","CREATION","🪟 Glass + 🦾 Aluminum Alloy + Ag",12),
              ("__TURQUOISE__","Turquoise","COMPONENT","Cu + Al + P + 🔥 Furnace + 🕐 Clock",14),
-             ("⭐","Star","CREATION","🔭 Telescope + H + 🕐 Clock",16),
+             ("⭐","Star","CREATION","🔥 Furnace + H + 🕐 Clock",16),
              ("🌈","Rainbow","CREATION","☁️ Cloud + ⭐ Star",17),
              ("☀️","Solar System","CREATION","⭐ Star + 🌎 Planet",18),
              ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",22)],
