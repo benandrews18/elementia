@@ -688,9 +688,27 @@ body[data-screen="market"] #trackedPill{display:none}
    station's actual icon. Same "have/haven't" checklist language as
    .coll-member right below, just circular badges (a station, not an
    item) instead of a dimmed/grayscale icon+label pair. */
-.market-station-progress{margin:18px auto 4px; max-width:420px}
-.market-station-progress-label{font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
-  color:var(--mute); margin-bottom:8px}
+/* Lives inside #marketArc's own left-edge column now (see
+   renderMarketArc(), right under the Quest Log slot) -- a compact
+   single-line row of small circles, not the roomier centered block
+   Trading Post's own locked view uses (.trade-lock-station/-stations
+   above), which needs to stay wide/legible as the sole content of its
+   own screen. flex-wrap:nowrap (not wrap) is the point: all 8 stations
+   always read as one row, never wrapping to a second line regardless of
+   viewport width. */
+.market-station-progress-row{flex-direction:column; align-items:flex-start; gap:8px; cursor:default}
+.market-station-progress-label{font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  color:rgba(255,255,255,.75)}
+.market-progress-stations{display:flex; flex-wrap:nowrap; gap:5px}
+.market-progress-station{
+  width:24px; height:24px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; line-height:1; font-weight:800;
+  background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.3); color:rgba(255,255,255,.65);
+}
+.market-progress-station.visited{
+  background:var(--gold-soft); border-color:var(--gold); color:var(--ink);
+}
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
   width:46px; height:46px; border-radius:50%; flex:none;
@@ -3926,7 +3944,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Homestead",
     "CAPSTONE",
     "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin + 🔆 Solar Panel",
-    19
+    20
    ]
   },
   {
@@ -4257,7 +4275,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Flour",
      "COMPONENT",
      "🌾 Grain + 🛠️ Tools",
-     21
+     19
     ],
     [
      "🥛",
@@ -4271,7 +4289,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Dough",
      "COMPONENT",
      "__FLOUR__ Flour + 💧 Water",
-     22
+     19
     ],
     [
      "🍳",
@@ -4292,14 +4310,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "Bread",
      "CREATION",
      "🫓 Dough + 🦠 Yeast + 🍳 Oven",
-     24
+     19
     ],
     [
      "🍰",
      "Cake",
      "CREATION",
      "🫓 Dough + 🍬 Sugar + 🥚 Egg + 🍳 Oven",
-     24
+     19
     ],
     [
      "🍶",
@@ -4348,7 +4366,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Banana Bread",
      "CREATION",
      "🍞 Bread + 🍌 Banana",
-     24
+     19
     ],
     [
      "🧁",
@@ -4510,7 +4528,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Helicopter",
      "CREATION",
      "⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + 🌀 Turbine Blade",
-     21
+     19
     ],
     [
      "🗼",
@@ -4538,7 +4556,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Museum",
      "CREATION",
      "🏢 Building + 🔭 Telescope + 🦕 Fossil",
-     21
+     19
     ],
     [
      "🚉",
@@ -4679,7 +4697,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Rocket",
      "CREATION",
      "💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",
-     22
+     19
     ]
    ],
    "capstone": [
@@ -4692,146 +4710,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Star": 14.0,
-  "Wire": 3.6,
-  "Banana": 6.9,
-  "Light Bulb": 7.3,
-  "Oven": 11.0,
-  "Knit Scarf": 20.5,
-  "Pretzel": 11.2,
-  "Clay": 2.5,
-  "Yellow Dye": 15.3,
-  "Deer": 6.2,
-  "Telescope": 11.6,
-  "Limestone": 2.6,
-  "Titanium Alloy": 5.6,
-  "Rope": 6.7,
-  "Wool": 7.3,
-  "Fossil": 10.5,
-  "Orca": 12.5,
-  "Clock": 8.3,
-  "Book": 11.6,
-  "Chocolate": 8.9,
-  "Strawberries": 10.5,
-  "Battery": 4.4,
-  "Chocolate Cake": 13.3,
-  "Coral Reef": 17.0,
-  "Computer": 15.2,
-  "Apple Pie": 12.8,
-  "Canoe": 5.4,
-  "Grand Banquet": 23.5,
-  "Glass": 5.2,
-  "Tree": 4.8,
-  "Volcano": 13.3,
-  "Soil": 4.4,
-  "Skyscraper": 15.2,
-  "Steel": 2.7,
-  "Concrete": 4.9,
-  "Motorcycle": 16.8,
-  "Natural Gas": 2.7,
-  "Cloud": 5.0,
-  "Lighthouse": 13.5,
-  "Bread": 12.7,
-  "Satellite Dish": 11.0,
-  "Speedboat": 15.0,
-  "Sand": 3.0,
-  "Central Station": 24.1,
-  "Blueberries": 13.1,
-  "Maglev Train": 15.8,
-  "Biofuel": 10.8,
-  "Stainless Steel": 4.9,
-  "Turquoise": 14.4,
-  "Plant Fiber": 6.8,
-  "Butter": 11.0,
-  "Tools": 3.8,
-  "Planet": 8.3,
-  "Fiberglass": 10.3,
-  "Bone": 5.1,
-  "Bicycle": 14.5,
-  "Fabric": 8.2,
-  "Homestead": 16.1,
-  "Yarn": 13.1,
-  "Mushroom": 5.2,
-  "Rainbow": 14.8,
-  "Space Station": 23.2,
-  "Flour": 9.0,
-  "Fruit Cake": 19.8,
-  "Ruby": 13.2,
-  "Solar Panel": 8.2,
-  "Magnet": 4.7,
-  "Furnace": 4.4,
-  "Geothermal Pump": 15.6,
-  "Tractor": 9.8,
-  "Turbine Blade": 16.2,
-  "Diamond": 12.3,
-  "Egg": 5.6,
-  "Rocket": 21.0,
-  "Renewable Grid": 29.1,
-  "Apple": 6.6,
-  "Dinosaur": 12.1,
-  "Aluminum Alloy": 5.0,
-  "Bridge": 7.4,
-  "Cow": 7.7,
-  "Opal": 10.8,
-  "Yeast": 4.7,
-  "Rubber": 5.0,
-  "Honey": 8.0,
-  "Windmill": 18.8,
-  "Trumpet": null,
-  "Cake": 13.2,
-  "Compass": 7.6,
-  "Croissant": 12.2,
-  "DNA": 3.5,
-  "Library": 13.5,
-  "Farm": 7.4,
-  "Robot": 17.5,
   "Brass": null,
+  "Wire": 3.6,
+  "Oven": 11.0,
+  "Renewable Grid": 29.2,
+  "Soil": 4.3,
+  "Planet": 8.2,
+  "Gemstone Collection": 19.4,
+  "Limestone": 2.5,
+  "Light Bulb": 6.9,
+  "Yellow Dye": 15.3,
+  "Cream": 10.9,
   "Éclair": 13.5,
-  "Bee": 7.8,
+  "Bicycle": 14.4,
+  "Star": 14.2,
+  "Robot": 18.3,
+  "Canoe": 5.6,
+  "Volcano": 13.5,
+  "Flour": 8.9,
+  "Log Cabin": 7.2,
+  "Mushroom": 5.0,
+  "Fabric": 7.9,
+  "Cake": 13.2,
+  "Sailboat": 8.6,
+  "Coral Reef": 16.8,
+  "Stainless Steel": 4.9,
+  "Dinosaur": 12.1,
+  "Clay": 2.4,
+  "Orca": 12.9,
+  "Grand Banquet": 23.6,
+  "Lighthouse": 13.3,
+  "Butter": 11.0,
+  "Basket": 7.8,
+  "Dough": 9.0,
+  "Library": 14.1,
+  "Clock": 8.2,
+  "Tree": 4.9,
+  "DNA": 3.6,
+  "Cow": 7.9,
+  "Plastic": 8.0,
+  "Turbine Blade": 16.1,
+  "Knit Scarf": 20.4,
+  "Sunflower": 17.5,
+  "Fiberglass": 10.2,
+  "Rubber": 5.1,
+  "Salmon": 11.3,
+  "Geothermal Pump": 15.6,
+  "Yarn": 12.8,
+  "Skyscraper": 15.9,
   "Cruise Ship": null,
-  "Metropolis": 21.7,
-  "Sugar": 2.9,
-  "Wheel": 10.4,
-  "Paper": 11.5,
-  "Sailboat": 8.8,
-  "Plastic": 8.1,
-  "Log Cabin": 7.3,
-  "Seaweed": 4.9,
-  "Milk": 9.1,
-  "Amber": 10.7,
-  "Blue Dye": 17.3,
-  "Microchip": 8.5,
-  "Gemstone Collection": 19.0,
-  "Banana Bread": 17.7,
-  "Red Dye": 14.3,
+  "Red Dye": 14.2,
+  "Steel": 2.7,
+  "Space Station": 23.5,
+  "Museum": 17.8,
+  "Telescope": 11.5,
+  "Bone": 4.9,
+  "Rocket": 21.3,
+  "Pearl": 13.3,
+  "Ruby": 12.8,
+  "Homestead": 16.3,
+  "Glass Vial": 10.4,
+  "Honey": 7.8,
+  "Sushi Restaurant": 18.8,
+  "Compass": 7.3,
+  "Turquoise": 14.3,
+  "Fireworks": 3.8,
+  "Apple Pie": 12.4,
+  "Biofuel": 10.8,
+  "Tractor": 9.8,
+  "Berry Cupcakes": 22.0,
+  "Farm": 7.4,
+  "Aluminum Alloy": 5.2,
+  "Metropolis": 21.9,
   "Engine": 7.2,
-  "Grain": 7.9,
+  "Water Turbine": 21.6,
+  "Blue Dye": 17.2,
+  "Opal": 10.9,
+  "Solar Panel": 8.2,
+  "Maglev Train": 16.1,
+  "Croissant": 12.3,
+  "Seaweed": 4.8,
+  "Glass": 5.1,
+  "Wheel": 10.6,
+  "Grain": 8.0,
+  "Paper": 11.6,
+  "Egg": 5.6,
+  "Speedboat": 14.8,
+  "Fruit Cake": 19.6,
+  "Natural Gas": 2.7,
+  "Bridge": 7.2,
+  "Fossil": 10.7,
+  "Trumpet": null,
+  "Ecosystem": 21.6,
+  "Pretzel": 11.4,
   "Solar System": 15.8,
-  "Sushi Restaurant": 18.2,
-  "Blackberries": 10.3,
-  "Sheep": 7.3,
+  "Strawberries": 10.1,
+  "Blueberries": 13.1,
+  "Sugar": 2.9,
+  "Chicken": 10.7,
+  "Titanium Alloy": 5.4,
+  "Car": 17.0,
+  "Sheep": 7.4,
+  "Apple": 6.5,
+  "Windmill": 18.7,
+  "Blackberries": 10.5,
+  "Water": 2.3,
+  "Plant Fiber": 6.7,
+  "Sand": 2.9,
   "Beach Town": 25.5,
-  "Statue": 7.3,
-  "Helicopter": 20.7,
-  "Fertilizer": 3.2,
-  "Museum": 17.4,
-  "Glass Vial": 10.2,
-  "Ecosystem": 22.0,
-  "Life": 16.9,
-  "Basket": 8.3,
-  "Fireworks": 3.9,
-  "Building": 8.3,
-  "Berry Cupcakes": 21.9,
-  "Water": 2.4,
-  "Salmon": 11.1,
-  "Cream": 10.8,
-  "Water Turbine": 22.1,
-  "Sunflower": 17.0,
+  "Fertilizer": 3.0,
+  "Computer": 15.1,
+  "Life": 16.6,
+  "Battery": 4.5,
+  "Microchip": 8.5,
+  "Amber": 10.7,
+  "Concrete": 5.4,
+  "Tools": 3.8,
+  "Banana": 6.9,
+  "Cloud": 5.2,
+  "Yeast": 4.7,
+  "Motorcycle": 16.8,
+  "Milk": 8.9,
+  "Bee": 7.8,
+  "Deer": 6.3,
   "Black Dye": 16.2,
-  "Car": 17.3,
-  "Dough": 9.2,
-  "Chicken": 10.6,
-  "Pearl": 13.8
+  "Chocolate Cake": 13.0,
+  "Rope": 6.8,
+  "Building": 8.2,
+  "Furnace": 4.5,
+  "Statue": 7.5,
+  "Diamond": 12.2,
+  "Bread": 12.2,
+  "Wool": 7.3,
+  "Book": 11.4,
+  "Helicopter": 20.6,
+  "Central Station": 23.8,
+  "Satellite Dish": 11.1,
+  "Magnet": 4.5,
+  "Banana Bread": 17.7,
+  "Rainbow": 14.8,
+  "Chocolate": 8.7
  }
 }/*__GAME_DATA_END__*/;
 
@@ -9602,25 +9620,28 @@ function marketSectionHTML(){
   </div>`;
 }
 /* Same circle language Trading Post's own lock screen uses (see
-   tradeBodyHTML()) -- reused here as a standing progress indicator for
-   every mode, not just Hard Mode's locked view, since Job Board (Classic)
-   and Trading Post (Hard) both gate on allStationsVisited() and neither
-   mode otherwise shows how close that is to done. */
+   tradeBodyHTML()), scaled down to a compact single row -- reused here as
+   a standing progress indicator for every mode, not just Hard Mode's
+   locked view, since Job Board (Classic) and Trading Post (Hard) both
+   gate on allStationsVisited() and neither mode otherwise shows how
+   close that is to done. Sits in #marketArc's own left-edge column now
+   (see renderMarketArc(), right under the Quest Log slot), not the
+   scrolling screen content, so it has to stay narrow -- .market-progress-
+   station below is a smaller, nowrap-forced variant of .trade-lock-
+   station/.trade-lock-stations, not a resize of those shared rules
+   (tradeBodyHTML()'s own locked view keeps its original larger circles). */
 function marketStationProgressHTML(){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   const stationCircles = DATA.stations.map(s => {
     const visited = !!state.visitedStations[s.name];
-    return `<span class="trade-lock-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
+    return `<span class="market-progress-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
   }).join("");
-  return `<div class="market-station-progress">
-    <div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
-    <div class="trade-lock-stations">${stationCircles}</div>
-  </div>`;
+  return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
+    <div class="market-progress-stations">${stationCircles}</div>`;
 }
 function renderMarketScreen(){
   return `<div class="market-screen">
     <div class="market-banner"><h1>Marketplace</h1></div>
-    ${marketStationProgressHTML()}
     ${marketSectionHTML()}
   </div>`;
 }
@@ -9636,7 +9657,6 @@ function renderMarketArc(){
   // Jobs/Quests hub-button swap), Zen has neither.
   const jobsWrongMode = state.mode !== "classic";
   const jobsLocked = jobsWrongMode || !jobBoardUnlocked();
-  const tradeLocked = state.mode !== "hard" || !allStationsVisited();
   const slots = [
     // Hidden outright in Adventure Mode (not just disabled) -- Quest Log
     // is that mode's whole equivalent system, so a greyed-out Job Board
@@ -9649,13 +9669,16 @@ function renderMarketArc(){
       title: jobsWrongMode ? "Job Board — Classic Mode only"
         : !jobBoardUnlocked() ? "Job Board — visit every station to unlock"
         : "Job Board — take jobs, turn in finished items" },
-    { nav: "quests", icon: "📜", label: "Quest Log", disabled: state.mode !== "hard",
-      lockReason: state.mode !== "hard" ? "Adventure Mode only" : "",
-      title: state.mode === "hard" ? "Quest Log — a branching tree of keystone-item goals" : "Quest Log — Adventure Mode only" },
-    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: tradeLocked,
-      lockReason: state.mode !== "hard" ? "Adventure Mode only" : !allStationsVisited() ? "Visit every station to unlock" : "",
-      title: state.mode !== "hard" ? "Trading Post — Adventure Mode only"
-        : !allStationsVisited() ? "Trading Post — visit every station to unlock"
+    // Hidden outright outside Adventure Mode, same reasoning as Job Board
+    // above -- a greyed-out "Adventure Mode only" row for a mode the
+    // player isn't in and can't switch to from here isn't worth the
+    // clutter; Classic/Zen have their own slots (Job Board) that get the
+    // same treatment in reverse.
+    { nav: "quests", icon: "📜", label: "Quest Log", disabled: false, hidden: state.mode !== "hard",
+      title: "Quest Log — a branching tree of keystone-item goals" },
+    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: !allStationsVisited(), hidden: state.mode !== "hard",
+      lockReason: !allStationsVisited() ? "Visit every station to unlock" : "",
+      title: !allStationsVisited() ? "Trading Post — visit every station to unlock"
         : "Trading Post — swap a spare item for a random one" },
     // Hidden outright (not just disabled -- see .market-arc-btn.earned-hidden)
     // until the player has actually finished one, rather than advertising a
@@ -9685,7 +9708,8 @@ function renderMarketArc(){
       title="${esc(s.title)}" aria-label="${esc(s.label)}">
       <span class="market-arc-icon">${s.icon}</span>
       <span class="market-arc-label">${esc(s.label)}</span>
-    </button>`).join("");
+    </button>
+    ${s.nav === "quests" ? `<div class="market-arc-btn market-station-progress-row ${retracted ? "retracted" : ""}">${marketStationProgressHTML()}</div>` : ""}`).join("");
 }
 /* Purely CSS-positioned now (see #marketArc's own comment) -- kept as a
    no-op function rather than deleted so its call site in updateHub()
