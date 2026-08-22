@@ -41,7 +41,11 @@ CORE_PAIRS = set(re.findall(r'"([^"|]+)\|([^"]+)"', m.group(1)))
 # actual art rather than literal "__LIFE__" placeholder text.
 EXTRA_MARKERS = {"__DIAMOND__": "DIAMOND_IMG", "__ECOSYSTEM__": "ECOSYSTEM_IMG",
                   "__LIFE__": "LIFE_IMG", "__MICROCHIP__": "MICROCHIP_IMG",
-                  "__RUBBER__": "RUBBER_SVG"}
+                  "__RUBBER__": "RUBBER_SVG", "__CORAL__": "CORAL_SVG", "__FLOUR__": "FLOUR_SVG",
+                  "__WHEEL__": "WHEEL_IMG", "__FURNACE__": "FURNACE_IMG", "__OVEN__": "OVEN_IMG",
+                  "__BANANABREAD__": "BANANABREAD_IMG", "__TURBINEBLADE__": "TURBINEBLADE_IMG",
+                  "__STEEL__": "STEEL_IMG", "__FOSSIL__": "FOSSIL_IMG", "__CONCRETE__": "CONCRETE_IMG",
+                  "__FIBERGLASS__": "FIBERGLASS_IMG", "__LOGCABIN__": "LOGCABIN_IMG"}
 
 def extract_js_const(src, name):
     m2 = re.search(r"const " + name + r" = '(.*?)';", src)
@@ -210,7 +214,9 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
 
 .pagefoot { position:absolute; }
 
-.diamondicon,.lifeicon,.ecosystemicon,.microchip,.rubbersq
+.diamondicon,.lifeicon,.ecosystemicon,.microchip,.rubbersq,.coral,.flour,
+.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,
+.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon
 { width:1em; height:1em; vertical-align:-.15em; display:inline-block; }
 """
 
@@ -233,8 +239,6 @@ cap_html = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{CSS}</styl
 def resolve_markers(page_html):
     page_html = (page_html
                  .replace("__ORCA__", bg.ORCA_SVG)
-                 .replace("__CORAL__", bg.CORAL_SVG)
-                 .replace("__FLOUR__", bg.FLOUR_SVG)
                  .replace("__LIGHTHOUSE__", bg.LIGHTHOUSE_SVG)
                  .replace("__TUNNEL__", bg.TUNNEL_SVG))
     for token, const_name in EXTRA_MARKERS.items():
