@@ -85,7 +85,7 @@ STATIONS = [
              ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + 🔌 Wire + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",17),
              ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",29)],
-     "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy",21)},
+     "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy + 💡 Light Bulb",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
      "dice":["C", "H", "O", "K", "N", "P"],
