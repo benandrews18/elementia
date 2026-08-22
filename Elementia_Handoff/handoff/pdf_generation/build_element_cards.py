@@ -69,11 +69,19 @@ def elem_card_html(symbol, name, atomic_num, suit):
       <span class="num-bubble bl">{atomic_num}</span>
       <span class="num-bubble tl">{icon}</span>
       <span class="num-bubble br">{icon}</span>
-      <span class="symbol">{symbol}</span>
-      <span class="name">{name}</span>
+      <div class="mid">
+        <span class="symbol">{symbol}</span>
+        <span class="name">{name}</span>
+      </div>
       <span class="suit-pill">{label}</span>
     </div>"""
 
+# Every dimension below is the digital game's own .el-pop-card value (see
+# elementia.html ~2210-2253) scaled by k = 2.35in-card-width / 300px-digital-
+# reference-width, so the printed card is a faithful scale copy -- same
+# border-to-width ratio, same badge overhang, same type sizes relative to
+# the card, same alignment (symbol+name centered as a group in the space
+# between the top padding and the bottom pill, not top-anchored).
 CSS = """
 @page { margin: 0; }
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -82,51 +90,58 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
 /* Every corner now has a bubble (atomic number top-right/bottom-left,
    suit glyph top-left/bottom-right), so column/row gaps must clear TWO
    overhangs meeting each other (this card's + the neighbor's), not just
-   one against a page edge like before. Gap >= 2x the overhang (10px) with
-   a small margin -- don't shrink card size or gap without re-checking
-   this math against .num-bubble's offset below. */
-.page-portrait { width:8.5in; height:11in; padding:0.3in 0.5in; page-break-after:always;
-  display:grid; grid-template-columns:repeat(3,2.3in); grid-template-rows:repeat(3,3.28in);
-  gap:0.22in; justify-content:center; align-content:start; }
+   one against a page edge like before. Gap >= 2x the overhang with a small
+   margin -- don't shrink card size or gap without re-checking this math
+   against .num-bubble's offset below. */
+.page-portrait { width:8.5in; height:11in; padding:0.34in 0.47in; page-break-after:always;
+  display:grid; grid-template-columns:repeat(3,2.3in); grid-template-rows:repeat(3,3.22in);
+  gap:0.33in; justify-content:center; align-content:start; }
 
 /* White face, black type, thick suit-colored border, atomic number in a
    white bubble straddling the top-right corner of the border -- the
-   locked element-card design (see the element-palette artifact). */
+   locked element-card design, aspect-ratio-for-aspect-ratio identical to
+   the digital .el-pop-card (5:7, same as .pc-card). */
 .card {
-  width:2.3in; height:3.28in; background:#ffffff; border-radius:20px;
-  border:18px solid var(--suit); padding:18px 10px 16px;
+  width:2.3in; height:3.22in; background:#ffffff; border-radius:19px;
+  border:14px solid var(--suit); padding:20px 16px 16px;
   display:flex; flex-direction:column; align-items:center;
   position:relative; box-shadow:0 2px 8px rgba(0,0,0,.18);
 }
 /* Bubble SIZE can grow freely without affecting how far it overhangs past
-   the card's outer edge -- overhang is set purely by the -10px offset
+   the card's outer edge -- overhang is set purely by the -14px offset
    below, not by width/height, so this stays safe against the print-grid
    gap math in .page-portrait above. */
 .num-bubble {
   position:absolute; width:60px; height:60px; border-radius:50%;
   background:#fff; border:8px solid var(--suit); box-shadow:0 2px 6px rgba(0,0,0,.22);
   display:flex; align-items:center; justify-content:center;
-  font-size:34px; font-weight:800; color:#2b2822;
+  font-size:31px; font-weight:800; color:#2b2822;
 }
 /* Atomic number sits top-right and, mirrored, bottom-left; the suit's own
    glyph sits in the two corners left over -- top-left and bottom-right --
    so the two symbol types sit on opposite diagonals from each other. */
-.num-bubble.tr { top:-10px; right:-10px; }
-.num-bubble.bl { bottom:-10px; left:-10px; }
-.num-bubble.tl { top:-10px; left:-10px; }
-.num-bubble.br { bottom:-10px; right:-10px; }
+.num-bubble.tr { top:-14px; right:-14px; }
+.num-bubble.bl { bottom:-14px; left:-14px; }
+.num-bubble.tl { top:-14px; left:-14px; }
+.num-bubble.br { bottom:-14px; right:-14px; }
 .num-bubble img { width:58%; height:58%; object-fit:contain; }
+/* Grows to fill the space between the top padding and the pill (pinned to
+   the bottom edge via margin-top:auto on itself), then centers the symbol
+   + name as a group within that space -- the same .el-pop-mid alignment
+   the digital card popup uses, instead of the symbol sitting fixed near
+   the top with leftover space dumped above the pill. */
+.mid { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:0; }
 .symbol {
-  margin-top:20px; font-size:80px; font-weight:800; color:#1f1c17; line-height:1;
-  letter-spacing:-.01em;
+  font-size:76px; font-weight:800; color:#1f1c17; line-height:1;
+  letter-spacing:-.01em; text-align:center;
 }
 .name {
-  margin-top:10px; font-size:22px; font-weight:700; color:#3a362f; text-align:center;
+  margin-top:11px; font-size:20px; font-weight:700; color:#3a362f; text-align:center;
 }
 .suit-pill {
-  margin-top:auto; font-size:12px; font-weight:800; letter-spacing:.08em;
+  margin-top:auto; font-size:9px; font-weight:800; letter-spacing:.08em;
   text-transform:uppercase; color:#fff; background:var(--suit);
-  padding:5px 14px; border-radius:999px; white-space:nowrap;
+  padding:4px 11px; border-radius:999px; white-space:nowrap;
 }
 """
 
@@ -134,7 +149,7 @@ def chunk(lst, n):
     for i in range(0, len(lst), n):
         yield lst[i:i+n]
 
-cards_html = [elem_card_html(*e) for e in ELEMENTS]
+cards_html = [elem_card_html(*e) for e in sorted(ELEMENTS, key=lambda e: e[2])]
 pages = "".join(
     f'<div class="page-portrait">{"".join(page_cards)}</div>'
     for page_cards in chunk(cards_html, 9)

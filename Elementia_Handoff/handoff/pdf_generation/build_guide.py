@@ -82,10 +82,10 @@ STATIONS = [
              ("🫙","Glass Vial","COMPONENT","🪟 Glass + 🔥 Furnace",10),
              ("🔷","Fiberglass","COMPONENT","🪟 Glass + 🥤 Plastic",11),
              ("🌀","Turbine Blade","COMPONENT","🔘 Wheel + 🔷 Fiberglass",17),
-             ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + __MICROCHIP__ Microchip",15),
+             ("💻","Computer","COMPONENT","🔋 Battery + 🥤 Plastic + 🔌 Wire + __MICROCHIP__ Microchip",15),
              ("🚗","Car","CREATION","⚙️ Engine + 🔩 Steel + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + 🔘 Wheel",17),
              ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",29)],
-     "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🔌 Wire + 🧲 Magnet + 🦾 Aluminum Alloy + __MICROCHIP__ Microchip",21)},
+     "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy",21)},
 
     {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
      "dice":["C", "H", "O", "K", "N", "P"],
@@ -291,7 +291,11 @@ def render_recipe(r):
         if re.fullmatch(r"[A-Z][a-z]?", bare):
             out.append(f'<span class="elem-badge">{bare}</span>')
         else:
-            out.append(tok)
+            # Keep each ingredient's icon+name together so a multi-word name
+            # (e.g. "Natural Gas") never splits across the line break -- the
+            # line can still wrap at the " + " between tokens, just not
+            # inside one.
+            out.append(f'<span class="rtok">{tok}</span>')
     return " + ".join(out)
 
 def shop_html(shop):
@@ -302,6 +306,12 @@ def shop_html(shop):
         <div class="item-top"><span class="item-name">{n}</span><span class="tier">{t}</span></div>
         <div class="recipe">{render_recipe(r)}</div></div></div>""")
     return "".join(out)
+
+# Same 16-element set/atomic numbers as build_element_cards.py's own
+# ELEMENTS list -- kept here too since gather_html's dice order needs it
+# and that script's card order isn't imported by this one (or vice versa).
+ATOMIC_NUM = {"H":1,"C":6,"N":7,"O":8,"Mg":12,"Al":13,"Si":14,"P":15,"S":16,
+              "K":19,"Ca":20,"Ti":22,"Fe":26,"Ni":28,"Cu":29,"Ag":47}
 
 def page(s, idx, total):
     su = SUITS[s["suit"]]
@@ -321,7 +331,7 @@ def page(s, idx, total):
         <div class="draw">PLAY ▸ ROLL {TAKE} DICE</div>
       </header>
 
-      <div class="gatherblock">{gather_html(s['dice'], su['color'])}</div>
+      <div class="gatherblock">{gather_html(sorted(s['dice'], key=lambda e: ATOMIC_NUM[e]), su['color'])}</div>
 
       <div class="makewrap">
         <div class="col-label">MAKE HERE</div>
@@ -364,15 +374,21 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
 .makewrap { padding:6px 34px 4px; flex:1; display:flex; flex-direction:column; min-height:0; }
 .col-label { font-size:13px; font-weight:800; letter-spacing:1.6px; color:#98a2b3;
   padding-bottom:5px; border-bottom:2px solid #eceff3; margin-bottom:7px; }
-.shop { display:grid; grid-template-columns:1fr 1fr; gap:3px 50px; align-content:center; flex:1; }
-.item { display:flex; gap:14px; align-items:flex-start; }
+/* space-between (not center) so the rows spread out to fill the whole
+   makewrap gap themselves -- .shop is already flex:1 between .col-label
+   and .capstone, so this makes the item rows evenly occupy that entire
+   span rather than clumping together in its middle. */
+.shop { display:grid; grid-template-columns:1fr 1fr; gap:6px 50px; align-content:space-between; flex:1; }
+.item { display:flex; gap:14px; align-items:flex-start; border:1px solid #e4e7ec;
+  border-radius:10px; padding:6px 10px; }
 .item-emoji { font-size:30px; line-height:1.1; width:36px; text-align:center; }
 .item-body { flex:1; min-width:0; }
 .item-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.item-name { font-size:21.5px; font-weight:800; }
+.item-name { font-size:19px; font-weight:800; line-height:1; margin-top:-2px; }
 .tier { font-size:11px; font-weight:800; letter-spacing:.6px; color:#667085; background:#f2f4f7;
   padding:2px 8px; border-radius:6px; }
 .recipe { font-size:17px; color:#475467; margin-top:0; line-height:1.15; }
+.rtok { white-space:nowrap; }
 
 .capstone { grid-column:1/-1; margin-top:8px; display:flex; gap:14px; align-items:center;
   background:linear-gradient(90deg,#fff8ec,#fffdf8); border:2px solid #f0d9a8; border-radius:14px; padding:13px 18px; }
