@@ -2257,15 +2257,19 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   display:flex; align-items:center; justify-content:center;
   font-size:40px; font-weight:800; color:#2b2822;
 }
-/* Atomic number sits top-right and, mirrored, bottom-left; the suit's own
+/* Atomic number sits top-left and, mirrored, bottom-right; the suit's own
    glyph (leaf/flame/anvil/mountain) sits in the two corners left over --
-   top-left and bottom-right -- so every corner is accounted for and the
+   top-right and bottom-left -- so every corner is accounted for and the
    two symbol types sit on opposite diagonals from each other. */
 .el-pop-bubble.tr{top:-18px; right:-18px}
 .el-pop-bubble.bl{bottom:-18px; left:-18px}
 .el-pop-bubble.tl{top:-18px; left:-18px}
 .el-pop-bubble.br{bottom:-18px; right:-18px}
 .el-pop-bubble img{width:58%; height:58%; object-fit:contain}
+/* Metal's own suit glyph, 50% bigger than the other three suits' --
+   deliberately allowed to spill past the bubble's own circular edge
+   (no clipping) rather than get shrunk back down to fit inside it. */
+.el-pop-bubble.suit-icon-big img{width:87%; height:87%}
 /* Grows to fill the space between the top padding and the pill (which
    stays pinned to the bottom edge via margin-top:auto below), then
    centers the symbol+name as a group within that space -- rather than
@@ -3012,14 +3016,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- element card, tapped from a raw-element box in the inventory drawer --
      the locked element-card design: white face, thick suit-colored border,
-     atomic number in a white bubble straddling the top-right corner, suit
+     atomic number in a white bubble straddling the top-left corner, suit
      pill pinned to the bottom edge. Atomic number appears ONLY here. -->
 <div class="overlay" id="elCardPop" role="dialog" aria-modal="true" aria-labelledby="ecName">
   <div class="el-pop-card" id="ecCard">
-    <span class="el-pop-bubble tr" id="ecNum"></span>
-    <span class="el-pop-bubble bl" id="ecNum2"></span>
-    <span class="el-pop-bubble tl" id="ecIconTL"></span>
-    <span class="el-pop-bubble br" id="ecIconBR"></span>
+    <span class="el-pop-bubble tl" id="ecNum"></span>
+    <span class="el-pop-bubble br" id="ecNum2"></span>
+    <span class="el-pop-bubble tr" id="ecIconTR"></span>
+    <span class="el-pop-bubble bl" id="ecIconBL"></span>
     <div class="el-pop-mid">
       <span class="el-pop-symbol" id="ecSym"></span>
       <span class="el-pop-name" id="ecName"></span>
@@ -7927,8 +7931,14 @@ function showElCardPop(sym){
   document.getElementById("ecNum").textContent = num;
   document.getElementById("ecNum2").textContent = num;
   const icon = SUIT_ICON[suit] || "";
-  document.getElementById("ecIconTL").innerHTML = icon;
-  document.getElementById("ecIconBR").innerHTML = icon;
+  document.getElementById("ecIconTR").innerHTML = icon;
+  document.getElementById("ecIconBL").innerHTML = icon;
+  // Metal's own suit glyph reads small against the other three at the
+  // bubble's normal image scale -- boosted 50% here, allowed to overlap
+  // past the bubble's own circular edge rather than get constrained back
+  // down to fit inside it.
+  document.getElementById("ecIconTR").classList.toggle("suit-icon-big", suit === "metal");
+  document.getElementById("ecIconBL").classList.toggle("suit-icon-big", suit === "metal");
   document.getElementById("ecSym").textContent = sym;
   document.getElementById("ecName").textContent = ELEMENT_NAMES[sym] || sym;
   document.getElementById("ecPill").textContent = ELEMENT_SUIT_LABEL[suit] || "";
