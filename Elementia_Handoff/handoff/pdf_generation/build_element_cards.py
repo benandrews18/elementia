@@ -63,12 +63,16 @@ def elem_card_html(symbol, name, atomic_num, suit):
     color = ELEMENT_SUITS[suit]["color"]
     label = ELEMENT_SUITS[suit]["label"]
     icon = f'<img src="data:image/png;base64,{SUIT_ICON_B64[suit]}" alt="">'
+    # Metal's own suit glyph, 50% bigger than the other three suits' --
+    # deliberately allowed to spill past the bubble's own circular edge
+    # (no clipping) rather than get shrunk back down to fit inside it.
+    icon_cls = "num-bubble big-icon" if suit == "metal" else "num-bubble"
     return f"""
     <div class="card" style="--suit:{color}">
-      <span class="num-bubble tr">{atomic_num}</span>
-      <span class="num-bubble bl">{atomic_num}</span>
-      <span class="num-bubble tl">{icon}</span>
-      <span class="num-bubble br">{icon}</span>
+      <span class="num-bubble tl">{atomic_num}</span>
+      <span class="num-bubble br">{atomic_num}</span>
+      <span class="{icon_cls} tr">{icon}</span>
+      <span class="{icon_cls} bl">{icon}</span>
       <div class="mid">
         <span class="symbol">{symbol}</span>
         <span class="name">{name}</span>
@@ -117,14 +121,15 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
   display:flex; align-items:center; justify-content:center;
   font-size:33px; font-weight:800; color:#2b2822;
 }
-/* Atomic number sits top-right and, mirrored, bottom-left; the suit's own
-   glyph sits in the two corners left over -- top-left and bottom-right --
+/* Atomic number sits top-left and, mirrored, bottom-right; the suit's own
+   glyph sits in the two corners left over -- top-right and bottom-left --
    so the two symbol types sit on opposite diagonals from each other. */
 .num-bubble.tr { top:-15px; right:-15px; }
 .num-bubble.bl { bottom:-15px; left:-15px; }
 .num-bubble.tl { top:-15px; left:-15px; }
 .num-bubble.br { bottom:-15px; right:-15px; }
 .num-bubble img { width:58%; height:58%; object-fit:contain; }
+.num-bubble.big-icon img { width:87%; height:87%; }
 /* Grows to fill the space between the top padding and the pill (pinned to
    the bottom edge via margin-top:auto on itself), then centers the symbol
    + name as a group within that space -- the same .el-pop-mid alignment
