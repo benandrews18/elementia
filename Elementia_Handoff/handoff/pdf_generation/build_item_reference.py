@@ -119,6 +119,10 @@ def collect_items():
 
 def recipe_html(entry):
     tokens = [parse_token(t) for t in entry["recipe"].split("+")]
+    # Elements before items, always (matches sortIngredientTokens() in the
+    # digital game) -- Python's sort is stable, so this is a partition,
+    # each group keeping its own original relative order.
+    tokens.sort(key=lambda t: 0 if t[0] == "element" else 1)
     seen, pills = set(), []
     for kind, emoji, name in tokens:
         key = (kind, name)

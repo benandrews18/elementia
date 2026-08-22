@@ -32,6 +32,10 @@ def parse_ingredient(token):
 
 def ingredients_html(recipe):
     tokens = [t.strip() for t in recipe.split("+")]
+    # Elements before items, always (matches sortIngredientTokens() in the
+    # digital game) -- Python's sort is stable, so this is a partition,
+    # each group keeping its own original relative order.
+    tokens.sort(key=lambda t: 0 if re.fullmatch(r"[A-Z][a-z]?", t) else 1)
     pills = []
     for i, t in enumerate(tokens):
         icon, name = parse_ingredient(t)

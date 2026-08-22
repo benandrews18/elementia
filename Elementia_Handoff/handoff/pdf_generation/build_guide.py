@@ -113,7 +113,7 @@ STATIONS = [
 
              ("🚲","Bicycle","CREATION","🦾 Aluminum Alloy + 🔘 Wheel + __RUBBER__ Rubber",15),
              ("𖣘","Windmill","CREATION","☁️ Cloud + ⬜ Concrete + 🌀 Turbine Blade + 🔋 Battery",20)],
-     "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin + 🔆 Solar Panel",19)},
+     "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + 🛖 Log Cabin + 🔆 Solar Panel",20)},
 
     {"emoji":"💎","name":"Deep Mine","suit":"mine",
      "dice":["Ni", "Si", "Al", "Fe", "C", "Mg"],
@@ -170,18 +170,18 @@ STATIONS = [
              ("🥚","Egg","COMPONENT","🧬 DNA + Ca + C + O",6),
              ("🍫","Chocolate","COMPONENT","🍬 Sugar + 🔥 Furnace",9),
 
-             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 🛠️ Tools",21),
+             ("__FLOUR__","Flour","COMPONENT","🌾 Grain + 🛠️ Tools",19),
 
              ("🥛","Milk","COMPONENT","🐄 Cow + 💧 Water",10),
-             ("🫓","Dough","COMPONENT","__FLOUR__ Flour + 💧 Water",22),
+             ("🫓","Dough","COMPONENT","__FLOUR__ Flour + 💧 Water",19),
              ("🍳","Oven","CREATION","🔥 Furnace + 🕐 Clock",11),
 
 
              ("🥨","Pretzel","CREATION","🫓 Dough + K + 🍳 Oven",23),
 
-             ("🍞","Bread","CREATION","🫓 Dough + 🦠 Yeast + 🍳 Oven",24),
+             ("🍞","Bread","CREATION","🫓 Dough + 🦠 Yeast + 🍳 Oven",19),
 
-             ("🍰","Cake","CREATION","🫓 Dough + 🍬 Sugar + 🥚 Egg + 🍳 Oven",24),
+             ("🍰","Cake","CREATION","🫓 Dough + 🍬 Sugar + 🥚 Egg + 🍳 Oven",19),
 
              ("🍶","Cream","COMPONENT","🥛 Milk + 🕐 Clock",13),
              ("🧈","Butter","MATERIAL","🍶 Cream + 🛠️ Tools",13),
@@ -195,7 +195,7 @@ STATIONS = [
              ("🍩","Éclair","CREATION","🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + 🍳 Oven",25),
 
 
-             ("🍞","Banana Bread","CREATION","🍞 Bread + 🍌 Banana",24),
+             ("🍞","Banana Bread","CREATION","🍞 Bread + 🍌 Banana",19),
 
              ("🧁","Berry Cupcakes","CREATION","🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",28),
 
@@ -228,11 +228,11 @@ STATIONS = [
 
              ("__RUBY__","Ruby","COMPONENT","Al + O + 🔥 Furnace + 🕐 Clock",13),
              ("📚","Library","CREATION","🏢 Building + 📕 Book",15),
-             ("🚁","Helicopter","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + 🌀 Turbine Blade",21),
+             ("🚁","Helicopter","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + 🌀 Turbine Blade",19),
              ("🗼","Skyscraper","CREATION","🏢 Building + ☁️ Cloud + 📡 Satellite Dish",16),
              ("🏍️","Motorcycle","CREATION","🚲 Bicycle + ⚙️ Engine",18),
              ("🍣","Sushi Restaurant","CREATION","🌿 Seaweed + 🐟 Salmon + 🏢 Building",19),
-             ("🏛️","Museum","CREATION","🏢 Building + 🔭 Telescope + 🦕 Fossil",21),
+             ("🏛️","Museum","CREATION","🏢 Building + 🔭 Telescope + 🦕 Fossil",19),
              ("🚉","Central Station","CREATION","🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",25)],
      "capstone":("🌆","Metropolis","CAPSTONE","🌉 Bridge + 🗼 Skyscraper + 🚁 Helicopter + 🚗 Car + 💡 Light Bulb",23)},
 
@@ -256,7 +256,7 @@ STATIONS = [
              ("⭐","Star","CREATION","🔥 Furnace + H + 🕐 Clock",16),
              ("🌈","Rainbow","CREATION","☁️ Cloud + ⭐ Star",17),
              ("☀️","Solar System","CREATION","⭐ Star + 🌎 Planet",18),
-             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",22)],
+             ("🚀","Rocket","CREATION","💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy",19)],
      "capstone":("🛰️","Space Station","CAPSTONE","🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",28)},
 ]
 
@@ -284,10 +284,16 @@ def gather_html(dice, color):
 def render_recipe(r):
     r = r.replace("*", '<span class="farmstar">*</span>')
     tokens = r.split(" + ")
+    # Elements before items, always (matches sortIngredientTokens() in the
+    # digital game) -- a stable partition, each group keeping its own
+    # original relative order, not a full re-sort.
+    def is_elem(tok):
+        return re.fullmatch(r"[A-Z][a-z]?", tok.strip()) is not None
+    tokens = [t for t in tokens if is_elem(t)] + [t for t in tokens if not is_elem(t)]
     out = []
     for tok in tokens:
         bare = tok.strip()
-        if re.fullmatch(r"[A-Z][a-z]?", bare):
+        if is_elem(tok):
             out.append(f'<span class="elem-badge">{bare}</span>')
         else:
             # Keep each ingredient's icon+name together so a multi-word name
