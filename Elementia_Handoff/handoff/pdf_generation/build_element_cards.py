@@ -87,43 +87,43 @@ CSS = """
 * { box-sizing:border-box; margin:0; padding:0; }
 body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#1f2733;
   -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-/* Every corner now has a bubble (atomic number top-right/bottom-left,
-   suit glyph top-left/bottom-right), so column/row gaps must clear TWO
-   overhangs meeting each other (this card's + the neighbor's), not just
-   one against a page edge like before. Gap >= 2x the overhang with a small
-   margin -- don't shrink card size or gap without re-checking this math
-   against .num-bubble's offset below. */
+/* Zero gap: the bubble offset equals the border width (see .card below),
+   so bubbles sit flush with the card's own edge rather than overhanging
+   past it -- neighboring cards can touch boundary-to-boundary without
+   their bubbles colliding. Card size grows (aspect-locked, every
+   dimension scaled by the same k) until 3 columns/rows fill the page
+   with no gap left over. */
 .page-portrait { width:8.5in; height:11in; padding:0.34in 0.47in; page-break-after:always;
-  display:grid; grid-template-columns:repeat(3,2.3in); grid-template-rows:repeat(3,3.22in);
-  gap:0.33in; justify-content:center; align-content:start; }
+  display:grid; grid-template-columns:repeat(3,2.457in); grid-template-rows:repeat(3,3.44in);
+  gap:0; justify-content:center; align-content:start; }
 
 /* White face, black type, thick suit-colored border, atomic number in a
    white bubble straddling the top-right corner of the border -- the
    locked element-card design, aspect-ratio-for-aspect-ratio identical to
    the digital .el-pop-card (5:7, same as .pc-card). */
 .card {
-  width:2.3in; height:3.22in; background:#ffffff; border-radius:19px;
-  border:14px solid var(--suit); padding:20px 16px 16px;
+  width:2.457in; height:3.44in; background:#ffffff; border-radius:20px;
+  border:15px solid var(--suit); padding:21px 17px 17px;
   display:flex; flex-direction:column; align-items:center;
   position:relative; box-shadow:0 2px 8px rgba(0,0,0,.18);
 }
 /* Bubble SIZE can grow freely without affecting how far it overhangs past
-   the card's outer edge -- overhang is set purely by the -14px offset
-   below, not by width/height, so this stays safe against the print-grid
-   gap math in .page-portrait above. */
+   the card's outer edge -- overhang is set purely by the -15px offset
+   below (equal to the border width, so it lands exactly flush), not by
+   width/height. */
 .num-bubble {
-  position:absolute; width:60px; height:60px; border-radius:50%;
-  background:#fff; border:8px solid var(--suit); box-shadow:0 2px 6px rgba(0,0,0,.22);
+  position:absolute; width:64px; height:64px; border-radius:50%;
+  background:#fff; border:9px solid var(--suit); box-shadow:0 2px 6px rgba(0,0,0,.22);
   display:flex; align-items:center; justify-content:center;
-  font-size:31px; font-weight:800; color:#2b2822;
+  font-size:33px; font-weight:800; color:#2b2822;
 }
 /* Atomic number sits top-right and, mirrored, bottom-left; the suit's own
    glyph sits in the two corners left over -- top-left and bottom-right --
    so the two symbol types sit on opposite diagonals from each other. */
-.num-bubble.tr { top:-14px; right:-14px; }
-.num-bubble.bl { bottom:-14px; left:-14px; }
-.num-bubble.tl { top:-14px; left:-14px; }
-.num-bubble.br { bottom:-14px; right:-14px; }
+.num-bubble.tr { top:-15px; right:-15px; }
+.num-bubble.bl { bottom:-15px; left:-15px; }
+.num-bubble.tl { top:-15px; left:-15px; }
+.num-bubble.br { bottom:-15px; right:-15px; }
 .num-bubble img { width:58%; height:58%; object-fit:contain; }
 /* Grows to fill the space between the top padding and the pill (pinned to
    the bottom edge via margin-top:auto on itself), then centers the symbol
@@ -132,16 +132,16 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
    the top with leftover space dumped above the pill. */
 .mid { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:0; }
 .symbol {
-  font-size:76px; font-weight:800; color:#1f1c17; line-height:1;
+  font-size:81px; font-weight:800; color:#1f1c17; line-height:1;
   letter-spacing:-.01em; text-align:center;
 }
 .name {
-  margin-top:11px; font-size:20px; font-weight:700; color:#3a362f; text-align:center;
+  margin-top:12px; font-size:21px; font-weight:700; color:#3a362f; text-align:center;
 }
 .suit-pill {
-  margin-top:auto; font-size:9px; font-weight:800; letter-spacing:.08em;
+  margin-top:auto; font-size:10px; font-weight:800; letter-spacing:.08em;
   text-transform:uppercase; color:#fff; background:var(--suit);
-  padding:4px 11px; border-radius:999px; white-space:nowrap;
+  padding:4px 12px; border-radius:999px; white-space:nowrap;
 }
 """
 
