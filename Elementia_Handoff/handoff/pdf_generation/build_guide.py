@@ -34,12 +34,11 @@ SUITS = {
 # without diffing bytes. See CHANGELOG.md for what changed at each version.
 CONTENT_VERSION = "2026.08.16"
 
-# Table rules printed on every station page. These were previously hardcoded
+# Table rules printed on every station page. This was previously hardcoded
 # into the header string, which is how the guide came to say "TAKE 3" while
-# the digital game and every simulation used 5 -- keep them here so the
+# the digital game and every simulation used 5 -- keep it here so the
 # printed sheet can never silently drift from the real rules again.
 TAKE = 6              # dice rolls per station visit
-MAX_VISITS = 15       # station visits per session
 # No per-element carry cap: removed 2026-07-29, elements are uncapped.
 
 STATIONS = [
@@ -340,7 +339,6 @@ def page(s, idx, total):
       </div>
       <footer class="foot">
         <span>Elementia · Station Guide · v{CONTENT_VERSION}</span>
-        <span class="rules">Crafted items are kept, never spent · <b>{MAX_VISITS}</b> visits per session</span>
         <span>{idx} / {total}</span></footer>
     </div></section>"""
 
@@ -404,8 +402,6 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
   padding:0px 6px; margin:0 1px; color:#1f2733; }
 .foot { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:14px;
   padding:10px 34px 14px; font-size:11px; color:#98a2b3; border-top:1px solid #f2f4f7; }
-.foot .rules { color:#5a6472; font-weight:600; }
-.foot .rules b { color:#1f2733; font-weight:800; }
 """
 
 ORCA_SVG = '''<svg viewBox="0 0 128 128" style="width:1em;height:1em;vertical-align:-0.15em" xmlns="http://www.w3.org/2000/svg"><path style="fill:#5E6367;" d="M46.1,52.5c0,0,2.5,6.5,6.8,12.6c4.8,6.7,10.8,12.4,14.6,10.9s0.2-8.5-1.5-13.8
