@@ -5926,6 +5926,11 @@ function loadAll(){
 
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
+// Total 3-for-1 conversions available right now, summed across every
+// element -- the same number the Convert button's own hub badge shows
+// (see updateHub()) and what tokenHTML() repeats on a recipe's own
+// missing-element tokens.
+const totalConvertibleCount = () => [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / 3), 0);
 
 /* Group a recipe's requirements: elements accumulate, items are unique. */
 function needsOf(reqs){
@@ -6233,13 +6238,12 @@ function tokenHTML(r, groupedEls){
     const need = groupedEls[r.name], have = count(r.name);
     const ok = have >= need;
     const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
-    // Same floor(count/3) 3-for-1 math as the Convert button's own hub
-    // badge (see updateHub()) -- how many conversions THIS element alone
-    // is good for right now, so a surplus is visible right where the
-    // player's deciding whether to spend or convert it.
-    const convertible = Math.floor(have / 3);
-    const convertBadge = convertible > 0
-      ? `<span class="tok-convert-badge" title="${convertible} conversion${convertible === 1 ? "" : "s"} available from this element">${convertible}</span>` : "";
+    // Only on a token the player's actually missing -- same global count
+    // the Convert button's own hub badge shows (see updateHub()), a
+    // reminder that a tap of Convert could close this exact shortfall.
+    const totalConvertible = ok ? 0 : totalConvertibleCount();
+    const convertBadge = totalConvertible > 0
+      ? `<span class="tok-convert-badge" title="${totalConvertible} conversion${totalConvertible === 1 ? "" : "s"} available right now">${totalConvertible}</span>` : "";
     return `<button type="button" class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
       `${esc(r.name)}${convertBadge}` +
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
@@ -7489,7 +7493,7 @@ function updateHub(){
   // independently good for floor(count/3) 3-for-1 conversions, see
   // convertGo's own handler) -- not just "you have enough of something",
   // the actual number the player could cash in right now.
-  const totalConvertible = [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / 3), 0);
+  const totalConvertible = totalConvertibleCount();
   const canConvert = totalConvertible > 0;
   setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
   // Once revealed, Convert stays on-screen for good -- even after the
