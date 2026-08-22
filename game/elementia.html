@@ -691,14 +691,17 @@ body[data-screen="market"] #trackedPill{display:none}
    station's actual icon. Same "have/haven't" checklist language as
    .coll-member right below, just circular badges (a station, not an
    item) instead of a dimmed/grayscale icon+label pair. */
-/* Lives inside #marketArc's own left-edge column now (see
-   renderMarketArc(), right under the Quest Log slot) -- a compact
-   single-line row of small circles, not the roomier centered block
-   Trading Post's own locked view uses (.trade-lock-station/-stations
-   above), which needs to stay wide/legible as the sole content of its
-   own screen. flex-wrap:nowrap (not wrap) is the point: all 8 stations
-   always read as one row, never wrapping to a second line regardless of
-   viewport width. */
+/* Two homes for this same row now: Hard Mode keeps it inside #marketArc's
+   own left-edge column (see renderMarketArc(), right under the Quest Log
+   slot), a compact single-line row of small circles; Classic Mode shows
+   it full-width at the top of the screen instead (see
+   renderMarketScreen()'s .market-classic-progress, which overrides the
+   circle size up to fill that width). Neither is the roomier centered
+   block Trading Post's own locked view uses (.trade-lock-station/
+   -stations above), which needs to stay wide/legible as the sole content
+   of its own screen. flex-wrap:nowrap (not wrap) is the point in both
+   homes: all 8 stations always read as one row, never wrapping to a
+   second line regardless of viewport width. */
 .market-station-progress-row{flex-direction:column; align-items:flex-start; gap:8px; cursor:default}
 .market-station-progress-label{font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
   color:rgba(255,255,255,.75)}
@@ -711,6 +714,22 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .market-progress-station.visited{
   background:var(--gold-soft); border-color:var(--gold); color:var(--ink);
+}
+/* Classic Mode's own top-of-screen copy of this same row (see
+   renderMarketScreen()) -- full width of the scrolling content column,
+   not #marketArc's fixed-width left-edge strip, so the 8 circles can
+   scale up to actually fill it. flex:1 (not a fixed px width) on each
+   circle below is what guarantees all 8 always fit exactly one screen
+   wide regardless of viewport size, rather than wrapping or overflowing
+   the way a fixed size would on a narrow phone. */
+.market-classic-progress{
+  margin:0 0 18px; padding:14px 16px; border-radius:16px;
+  background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18);
+}
+.market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px}
+.market-classic-progress .market-progress-stations{width:100%; gap:6px}
+.market-classic-progress .market-progress-station{
+  flex:1 1 0; width:auto; max-width:46px; aspect-ratio:1; font-size:19px;
 }
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
@@ -2203,6 +2222,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    100px size everywhere else it's used (shop cards, reference list) --
    doubled here, on the card inspection popup only (see showCardPop()). */
 .pc-icon.pc-icon-xl{font-size:200px}
+/* Same "this one's own art reads small at the shared size" fix as above,
+   just 50% rather than doubled -- matches the Classic Card Deck PDF's own
+   ENLARGED_ICONS treatment (see build_cards_classic.py) so these items'
+   art reads at a consistent scale between the physical cards and this
+   digital inspection popup. */
+.pc-icon.pc-icon-lg{font-size:150px}
 .pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .brassbar,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .wheelicon,.pc-icon .furnaceicon,.pc-icon .ovenicon,.pc-icon .bananabreadicon,.pc-icon .turbineicon,.pc-icon .steelicon,.pc-icon .fossilicon,.pc-icon .concreteicon,.pc-icon .fiberglassicon,.pc-icon .logcabinicon,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.pc-icon .noto-icon,.alcan{width:1em; height:1em}
 .pc-tag{align-self:center; font-size:12px; font-weight:800; letter-spacing:.5px; color:#fff;
   border-radius:999px; padding:4px 13px; margin-bottom:8px}
@@ -2580,6 +2605,13 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .refpin-action:hover{filter:brightness(1.06)}
 .refpin-action:disabled{opacity:.5; filter:grayscale(.5); cursor:not-allowed}
+/* Wraps Take/Accept (see jobRowHTML()/questRowHTML()) so the x/y
+   component-completion fraction (refProgressFractionHTML()) can sit
+   directly under it -- takes over .refpin's own flex:none/align-self:
+   flex-start role since the button is no longer a direct .refrow child
+   in this case. */
+.refpin-action-col{flex:none; align-self:flex-start; display:flex; flex-direction:column; align-items:center; gap:4px}
+.refpin-progress{font-size:11px; font-weight:800; color:var(--ink2)}
 .ref-pinned-heading{
   font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
 }
@@ -4800,146 +4832,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Robot": 17.7,
-  "Water Turbine": 22.4,
-  "Limestone": 2.5,
-  "Tree": 4.7,
-  "Red Dye": 14.1,
-  "Sheep": 7.5,
-  "Glass": 5.2,
-  "Apple Pie": 12.9,
-  "Yellow Dye": 15.5,
-  "Bee": 7.9,
-  "Water": 2.4,
-  "Ruby": 12.9,
-  "Gemstone Collection": 19.2,
-  "Coral Reef": 17.2,
+  "Turquoise": 14.3,
   "Life": 16.8,
-  "Apple": 6.5,
-  "Stainless Steel": 5.0,
   "Wool": 7.4,
-  "Plant Fiber": 6.9,
-  "Windmill": 18.9,
-  "Homestead": 20.5,
-  "Pretzel": 11.3,
-  "Cloud": 5.2,
-  "Car": 17.0,
-  "Strawberries": 10.3,
-  "Clock": 8.1,
-  "Building": 7.9,
-  "Glass Vial": 10.4,
-  "Wire": 3.7,
-  "Chocolate": 8.6,
-  "Telescope": 11.5,
-  "Solar System": 15.7,
-  "Canoe": 5.5,
-  "Biofuel": 10.9,
-  "Fossil": 10.8,
-  "Fruit Cake": 19.5,
-  "Tools": 3.9,
-  "Volcano": 13.5,
-  "Steel": 2.8,
-  "Black Dye": 15.8,
-  "Clay": 2.5,
-  "Knit Scarf": 20.7,
-  "Natural Gas": 2.7,
-  "Croissant": 12.1,
-  "Engine": 7.2,
-  "Skyscraper": 15.7,
-  "Grain": 8.0,
-  "Butter": 10.9,
-  "Éclair": 13.1,
-  "Oven": 11.3,
-  "Bread": 12.6,
-  "Mushroom": 5.0,
-  "Bridge": 7.2,
-  "Cruise Ship": null,
-  "Central Station": 23.9,
-  "Yeast": 4.9,
-  "Banana": 6.8,
-  "Chocolate Cake": 13.3,
-  "Rope": 6.7,
+  "Lighthouse": 13.7,
   "Fertilizer": 3.1,
-  "Library": 13.6,
-  "Furnace": 4.4,
-  "Titanium Alloy": 5.4,
+  "Bridge": 7.2,
+  "Bee": 7.9,
+  "Pretzel": 11.3,
+  "Rocket": 21.5,
+  "Diamond": 12.4,
+  "Tools": 3.9,
+  "Banana": 6.8,
+  "Plant Fiber": 6.9,
+  "Oven": 11.3,
+  "Geothermal Pump": 15.8,
+  "Ruby": 12.9,
+  "Sand": 2.9,
+  "Skyscraper": 15.7,
+  "Fiberglass": 10.1,
   "Cream": 10.8,
-  "Dough": 9.0,
-  "Deer": 6.3,
-  "Magnet": 4.8,
-  "Soil": 4.5,
-  "Dinosaur": 11.8,
-  "Milk": 9.0,
-  "Sushi Restaurant": 18.3,
-  "Light Bulb": 7.2,
-  "Amber": 10.5,
-  "Salmon": 11.4,
-  "Speedboat": 15.0,
-  "Sailboat": 8.8,
-  "Aluminum Alloy": 5.3,
-  "Sugar": 3.0,
-  "Tractor": 15.9,
-  "Orca": 13.0,
-  "Seaweed": 5.0,
-  "Satellite Dish": 11.1,
   "Brass": null,
-  "DNA": 3.5,
-  "Book": 11.5,
+  "Natural Gas": 2.7,
+  "Ecosystem": 22.1,
+  "Cow": 7.8,
+  "Red Dye": 14.1,
+  "Rope": 6.7,
+  "Glass": 5.2,
+  "Wheel": 10.3,
+  "Trumpet": null,
+  "Strawberries": 10.3,
+  "Coral Reef": 17.2,
+  "Battery": 4.5,
+  "Basket": 7.8,
+  "Honey": 7.9,
+  "Star": 13.8,
+  "Wire": 3.7,
+  "Dough": 9.0,
+  "Fabric": 8.0,
+  "Glass Vial": 10.4,
+  "Furnace": 4.4,
+  "Pearl": 13.7,
+  "Speedboat": 15.0,
+  "Central Station": 23.9,
+  "Egg": 5.6,
+  "Solar Panel": 8.1,
+  "Yarn": 12.9,
+  "Homestead": 20.5,
+  "Chocolate": 8.6,
+  "Volcano": 13.5,
+  "Rubber": 5.1,
   "Museum": 18.0,
-  "Farm": 7.4,
-  "Log Cabin": 7.3,
+  "Book": 11.5,
+  "Éclair": 13.1,
+  "Cruise Ship": null,
+  "Rainbow": 14.7,
+  "Salmon": 11.4,
+  "Tractor": 15.9,
+  "Engine": 7.2,
+  "Fossil": 10.8,
+  "Stainless Steel": 5.0,
+  "Grain": 8.0,
+  "Sheep": 7.5,
+  "Dinosaur": 11.8,
+  "Sushi Restaurant": 18.3,
+  "Building": 7.9,
+  "Croissant": 12.1,
+  "Windmill": 18.9,
+  "Fireworks": 3.8,
+  "Metropolis": 21.9,
+  "Mushroom": 5.0,
+  "Blueberries": 13.2,
+  "Tree": 4.7,
+  "Bread": 12.6,
+  "Water": 2.4,
+  "Cake": 13.2,
+  "Concrete": 5.2,
+  "Bicycle": 14.8,
+  "Motorcycle": 16.8,
+  "Water Turbine": 22.4,
+  "Biofuel": 10.9,
+  "Milk": 9.0,
+  "Deer": 6.3,
+  "Aluminum Alloy": 5.3,
+  "Microchip": 8.1,
+  "Blue Dye": 17.6,
+  "Sailboat": 8.8,
+  "Bone": 5.1,
   "Planet": 8.3,
   "Space Station": 23.4,
-  "Honey": 7.9,
-  "Maglev Train": 15.4,
-  "Ecosystem": 22.1,
-  "Helicopter": 20.1,
+  "Amber": 10.5,
+  "Limestone": 2.5,
   "Flour": 9.0,
-  "Wheel": 10.3,
-  "Bone": 5.1,
-  "Trumpet": null,
-  "Turquoise": 14.3,
-  "Bicycle": 14.8,
-  "Fabric": 8.0,
-  "Battery": 4.5,
-  "Blueberries": 13.2,
-  "Basket": 7.8,
-  "Paper": 11.3,
-  "Turbine Blade": 17.1,
-  "Cow": 7.8,
+  "Canoe": 5.5,
+  "Titanium Alloy": 5.4,
+  "Clock": 8.1,
+  "Soil": 4.5,
   "Opal": 10.8,
-  "Sunflower": 16.8,
-  "Metropolis": 21.9,
-  "Beach Town": 25.4,
-  "Rainbow": 14.7,
-  "Berry Cupcakes": 21.8,
-  "Statue": 7.5,
-  "Concrete": 5.2,
-  "Pearl": 13.7,
-  "Renewable Grid": 29.2,
-  "Star": 13.8,
-  "Grand Banquet": 23.6,
-  "Microchip": 8.1,
-  "Cake": 13.2,
-  "Solar Panel": 8.1,
-  "Chicken": 10.6,
-  "Rocket": 21.5,
-  "Motorcycle": 16.8,
-  "Fireworks": 3.8,
-  "Egg": 5.6,
-  "Lighthouse": 13.7,
-  "Sand": 2.9,
-  "Fiberglass": 10.1,
-  "Geothermal Pump": 15.8,
-  "Plastic": 7.9,
-  "Compass": 7.6,
+  "Gemstone Collection": 19.2,
+  "Turbine Blade": 17.1,
+  "Seaweed": 5.0,
+  "Orca": 13.0,
   "Computer": 15.0,
+  "Apple Pie": 12.9,
+  "Berry Cupcakes": 21.8,
+  "Satellite Dish": 11.1,
+  "Yellow Dye": 15.5,
+  "Fruit Cake": 19.5,
+  "Sugar": 3.0,
+  "Light Bulb": 7.2,
+  "Compass": 7.6,
+  "Apple": 6.5,
+  "Sunflower": 16.8,
+  "Steel": 2.8,
+  "Library": 13.6,
+  "Cloud": 5.2,
+  "DNA": 3.5,
+  "Chicken": 10.6,
+  "Chocolate Cake": 13.3,
+  "Farm": 7.4,
+  "Helicopter": 20.1,
+  "Yeast": 4.9,
+  "Statue": 7.5,
+  "Knit Scarf": 20.7,
+  "Grand Banquet": 23.6,
+  "Magnet": 4.8,
   "Banana Bread": 17.4,
+  "Clay": 2.5,
+  "Maglev Train": 15.4,
+  "Solar System": 15.7,
+  "Plastic": 7.9,
+  "Paper": 11.3,
+  "Black Dye": 15.8,
   "Blackberries": 10.3,
-  "Rubber": 5.1,
-  "Blue Dye": 17.6,
-  "Diamond": 12.4,
-  "Yarn": 12.9
+  "Butter": 10.9,
+  "Car": 17.0,
+  "Telescope": 11.5,
+  "Renewable Grid": 29.2,
+  "Log Cabin": 7.3,
+  "Robot": 17.7,
+  "Beach Town": 25.4
  }
 }/*__GAME_DATA_END__*/;
 
@@ -6539,6 +6571,10 @@ const NOTO_ICONS = {"⏳": NOTO_23f3, "☀️": NOTO_2600_fe0f, "☁️": NOTO_2
 /*__NOTO_ICONS_END__*/
 const CUSTOM_ICONS = {...NOTO_ICONS, "__WHEEL__": WHEEL_IMG, "__FURNACE__": FURNACE_IMG, "__OVEN__": OVEN_IMG, "__BANANABREAD__": BANANABREAD_IMG, "__TURBINEBLADE__": TURBINEBLADE_IMG, "__STEEL__": STEEL_IMG, "__FOSSIL__": FOSSIL_IMG, "__CONCRETE__": CONCRETE_IMG, "__FIBERGLASS__": FIBERGLASS_IMG, "__LOGCABIN__": LOGCABIN_IMG, "__GOLEM__": GOLEM_IMG, "__DYEYELLOW__": DYE_YELLOW_IMG, "__DYERED__": DYE_RED_IMG, "__DYEBLUE__": DYE_BLUE_IMG, "__DYEBLACK__": DYE_BLACK_IMG, "__ORCA__": ORCA_SVG, "__CORAL__": CORAL_SVG, "__FLOUR__": FLOUR_SVG, "__LIGHTHOUSE__": LIGHTHOUSE_SVG, "__TUNNEL__": TUNNEL_SVG, "__ALCAN__": ALCAN_SVG, "__BRASSBAR__": BRASS_BAR_SVG, "🔘": RUBBER_TIRE_IMG, "__RUBBER__": RUBBER_SVG, "__MICROCHIP__": MICROCHIP_IMG, "__LIFE__": LIFE_IMG, "__ECOSYSTEM__": ECOSYSTEM_IMG, "__GEMCOLLECTION__": GEMCOLLECTION_IMG, "__PEARL__": PEARL_IMG, "__RUBY__": RUBY_IMG, "__OPAL__": OPAL_IMG, "__TURQUOISE__": TURQUOISE_IMG, "__AMBER__": AMBER_IMG, "__DIAMOND__": DIAMOND_IMG};
 const em = e => CUSTOM_ICONS[e] || esc(e);
+// Items whose own custom art reads small at the shared card-popup icon
+// size -- same set, same reasoning, as build_cards_classic.py's own
+// ENLARGED_ICONS (see showCardPop()'s pc-icon-lg toggle).
+const PDF_ENLARGED_ICONS = new Set(["Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"]);
 
 function dieFace(v){
   const on = PIPS[v];
@@ -7028,8 +7064,11 @@ function jobRowHTML(name, offerIndex, locked){
   const entry = ENTRIES.find(e => e.name === name);
   if (!entry) return "";
   const rightControl = offerIndex != null
-    ? `<button type="button" class="refpin refpin-action" data-take="${offerIndex}" ${locked ? "disabled" : ""}
-        title="Take this job" aria-label="Take this job for ${esc(entry.name)}">Take</button>`
+    ? `<div class="refpin-action-col">
+        <button type="button" class="refpin refpin-action" data-take="${offerIndex}" ${locked ? "disabled" : ""}
+          title="Take this job" aria-label="Take this job for ${esc(entry.name)}">Take</button>
+        ${refProgressFractionHTML(entry.name)}
+      </div>`
     : undefined;
   return refStyleRowHTML(entry, {rightControl});
 }
@@ -7177,6 +7216,28 @@ function stillNeededClosure(name){
   if (!rootEntry) return [];
   visit(needsOf(rootEntry.reqs).items);
   return [...needed];
+}
+
+/* "x/y" progress toward being able to craft a quest/job target -- the
+   full static component tree (componentClosure(), NOT the ownership-
+   pruned stillNeededClosure()) is the denominator, so it never shrinks
+   as pieces get built; the numerator is just however many of those the
+   player already owns right now. null for an item with no intermediate
+   components at all (built straight from elements) -- there's no
+   meaningful fraction to show for those. */
+function closureCompletionFraction(name){
+  const total = componentClosure(name);
+  if (!total.length) return null;
+  const stillNeeded = new Set(stillNeededClosure(name));
+  return {have: total.length - stillNeeded.size, total: total.length};
+}
+// Sits under the Take/Accept button on a job/quest row (see jobRowHTML()/
+// questRowHTML()) -- "" (not a hidden/empty element) for a null fraction
+// so the row's own layout doesn't leave a gap where a fraction never
+// applies (a target built straight from elements, no components at all).
+function refProgressFractionHTML(name){
+  const frac = closureCompletionFraction(name);
+  return frac ? `<span class="refpin-progress" title="${frac.have} of ${frac.total} components already built">${frac.have}/${frac.total}</span>` : "";
 }
 
 /* =====================================================================
@@ -8048,7 +8109,18 @@ function closeOverlay(id){
   // actually makes it disappear, rather than relying on a transform that
   // was never guaranteed to carry it far enough. Mirrors openConvertScreen()
   // clearing it on the way IN.
-  if (id === "convert") document.getElementById("convertGoalCard").innerHTML = "";
+  // Also reset convertGoalEntry itself, not just the innerHTML -- render()
+  // calls renderConvertGoalCard() on every single render (so the card
+  // stays live while Convert is open, see its own comment), and that
+  // silently repopulates this element from convertGoalEntry regardless of
+  // whether the tray is even open. Clearing the HTML alone left the very
+  // next render() (triggered by anything -- a craft, a tap elsewhere)
+  // undoing this clear and bringing the card back, which is exactly what
+  // made it read as "sometimes still visible after closing."
+  if (id === "convert"){
+    convertGoalEntry = null;
+    document.getElementById("convertGoalCard").innerHTML = "";
+  }
   // showSummary() forces #backdrop on against state.lastStation's art even
   // when the current screen isn't "station" (see its own comment) -- put
   // that back under updateBackdrop()'s normal screen-driven control once
@@ -8152,6 +8224,7 @@ function showCardPop(entry, autoDismiss = true){
   const cpIconEl = document.getElementById("cpIcon");
   cpIconEl.innerHTML = em(entry.emoji);
   cpIconEl.classList.toggle("pc-icon-xl", entry.name === "Gemstone Collection");
+  cpIconEl.classList.toggle("pc-icon-lg", PDF_ENLARGED_ICONS.has(entry.name));
   document.getElementById("cpPts").textContent = entry.points;
   const tagEl = document.getElementById("cpTag");
   const isUtility = state.mode === "hard" && UTILITY_ITEMS.has(entry.name);
@@ -8617,6 +8690,16 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
+  // Defensive reset: if the player navigated here mid-flight from a
+  // previous roll's dice animation (tapping Map/Travel before
+  // flyToInventory()'s onfinish had a chance to fire -- its target cards
+  // get torn out of the DOM by this very render, which doesn't reliably
+  // fire a WAAPI finish event), this flag would otherwise stay stuck true
+  // forever, permanently freezing .stationhead at every station from here
+  // on (see renderStation()'s own stationheadFrozen). A fresh arrival can
+  // never legitimately still be "mid-animation" for a roll that belongs
+  // to wherever the player just was.
+  rollAnimationInProgress = false;
   const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
 
@@ -10038,8 +10121,19 @@ function marketStationProgressHTML(){
     <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
 }
 function renderMarketScreen(){
+  // Classic Mode only -- Job Board/fast travel's shared unlock condition
+  // (allStationsVisited()) lives at the TOP of the screen now, full-width,
+  // not tucked into #marketArc's own left-edge column (see its own
+  // comment on why that read as "the middle of the screen" and easy to
+  // miss entirely). Hard Mode's own copy of this row (Trading Post's same
+  // unlock) stays exactly where it was -- only Classic asked for this.
+  // Hidden whenever a section is open, same "step back for the arc" rule
+  // the arc buttons themselves already follow.
+  const classicProgress = (state.mode === "classic" && !marketSection)
+    ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>` : "";
   return `<div class="market-screen">
     <div class="market-banner"><h1>Marketplace</h1></div>
+    ${classicProgress}
     ${marketSectionHTML()}
   </div>`;
 }
@@ -10107,7 +10201,7 @@ function renderMarketArc(){
       <span class="market-arc-icon">${s.icon}</span>
       <span class="market-arc-label">${esc(s.label)}</span>
     </button>
-    ${s.nav === "quests" ? `<div class="market-arc-btn market-station-progress-row ${retracted ? "retracted" : ""}">${marketStationProgressHTML()}</div>` : ""}`).join("");
+    ${s.nav === "quests" && state.mode === "hard" ? `<div class="market-arc-btn market-station-progress-row ${retracted ? "retracted" : ""}">${marketStationProgressHTML()}</div>` : ""}`).join("");
 }
 /* Purely CSS-positioned now (see #marketArc's own comment) -- kept as a
    no-op function rather than deleted so its call site in updateHub()
@@ -10729,8 +10823,11 @@ function questRowHTML(q){
   if (!entry) return "";
   const extraTop = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
   const rightControl = !taken
-    ? `<button type="button" class="refpin refpin-action" data-quest-take="${esc(q.id)}"
-        title="Accept quest" aria-label="Accept quest for ${esc(q.item)}">Accept</button>`
+    ? `<div class="refpin-action-col">
+        <button type="button" class="refpin refpin-action" data-quest-take="${esc(q.id)}"
+          title="Accept quest" aria-label="Accept quest for ${esc(q.item)}">Accept</button>
+        ${refProgressFractionHTML(entry.name)}
+      </div>`
     : undefined;
   return refStyleRowHTML(entry, {complete: completed, extraTop, rightControl});
 }
