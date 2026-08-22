@@ -102,10 +102,18 @@ for s in STATIONS:
     print(f"{s['name']}: {n} core cards")
 print(f"total: {len(REGULAR)} regular + {len(CAPSTONES)} capstone")
 
+# A handful of items' own art reads small next to the rest of the deck
+# (their source image has more empty padding baked in than the other
+# custom icons) -- bump just their card art by 50%, rather than the
+# shared .cicon font-size every card inherits.
+ENLARGED_ICONS = {"Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"}
+
 def card_html(item, big=False):
     cls = "card big" if big else "card"
     icon_size = "163px" if big else "160px"
     badge_size = "104px" if big else "51px"
+    icon_font = "123px" if big else "153px"
+    icon_style = f' style="font-size:{icon_font}"' if item["name"] in ENLARGED_ICONS else ""
     return f"""
     <div class="{cls}" style="--suit:{item['color']};--suit-soft:{item['soft']}">
       <div class="cstation-badge" style="width:{badge_size};height:{badge_size}">{item['station_emoji']}</div>
@@ -114,7 +122,7 @@ def card_html(item, big=False):
         <span class="ctitle">{item['name']}</span>
       </div>
       <div class="cicon-wrap"><div class="cicon-bg" style="width:{icon_size};height:{icon_size}">
-        <span class="cicon">{item['emoji']}</span></div></div>
+        <span class="cicon"{icon_style}>{item['emoji']}</span></div></div>
       <div class="cdivider"></div>
       <div class="clabel">MADE FROM</div>
       <div class="cingredients">{ingredients_html(item['recipe'])}</div>

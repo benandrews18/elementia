@@ -98,7 +98,7 @@ STATIONS = [
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",7),
              ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",7),
              ("🌻","Sunflower","CREATION","⭐ Star + 🌾 Grain",20),
-             ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine",9),
+             ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",9),
              ("__OPAL__","Opal","COMPONENT","Si + O + __FURNACE__ Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",10),
              ("🐄","Cow","CREATION","🧑‍🌾 Farm + 🌾 Grain",9),
@@ -409,7 +409,9 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
    otherwise have (the original hand-drawn __ORCA__/__FLOUR__-style SVGs
    above size themselves inline instead). One rule here covers all of them. */
 .coral,.flour,.rubbersq,.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,
-.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon
+.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon,
+.diamondicon,.lifeicon,.ecosystemicon,.microchip,.noto,.brassbar,.alcan,
+.gemcollectionicon,.pearlicon,.rubyicon,.opalicon,.turquoiseicon,.ambericon
 { width:1em; height:1em; vertical-align:-0.15em; display:inline-block; }
 .stnote { font-size:16px; color:#5a6472; padding:2px 34px 0; font-style:italic; font-weight:600; }
 .farmstar { font-size:1.5em; color:#c79a2e; font-weight:800; font-style:normal; vertical-align:-0.05em; }
@@ -493,6 +495,14 @@ EXTRA_MARKERS = {
     "__BANANABREAD__": "BANANABREAD_IMG", "__TURBINEBLADE__": "TURBINEBLADE_IMG",
     "__STEEL__": "STEEL_IMG", "__FOSSIL__": "FOSSIL_IMG", "__CONCRETE__": "CONCRETE_IMG",
     "__FIBERGLASS__": "FIBERGLASS_IMG", "__LOGCABIN__": "LOGCABIN_IMG",
+    "__DIAMOND__": "DIAMOND_IMG", "__ECOSYSTEM__": "ECOSYSTEM_IMG",
+    "__LIFE__": "LIFE_IMG", "__MICROCHIP__": "MICROCHIP_IMG",
+    "__DYEYELLOW__": "DYE_YELLOW_IMG", "__DYERED__": "DYE_RED_IMG",
+    "__DYEBLUE__": "DYE_BLUE_IMG", "__DYEBLACK__": "DYE_BLACK_IMG",
+    "__BRASSBAR__": "BRASS_BAR_SVG", "__GOLEM__": "GOLEM_IMG", "__ALCAN__": "ALCAN_SVG",
+    "__GEMCOLLECTION__": "GEMCOLLECTION_IMG", "__PEARL__": "PEARL_IMG",
+    "__RUBY__": "RUBY_IMG", "__OPAL__": "OPAL_IMG", "__TURQUOISE__": "TURQUOISE_IMG",
+    "__AMBER__": "AMBER_IMG",
 }
 _GAME_HTML = (HERE.parent.parent.parent / "game" / "elementia.html").read_text(encoding="utf-8")
 
