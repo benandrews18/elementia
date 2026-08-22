@@ -813,20 +813,6 @@ body[data-screen="market"] #trackedPill{display:none}
    .reftable instead of a card grid. */
 .reftable.locked{opacity:.5; filter:grayscale(.4)}
 .reftable.locked .refpin-action{cursor:not-allowed}
-/* The one right-side control that isn't a plain pin toggle -- Accept
-   (quests) / Take (jobs), shown only before a quest/job has been
-   committed to (see questRowHTML()/jobRowHTML()) -- reads as a real,
-   alive call-to-action rather than .refpin's own default dimmed/
-   grayscale "nothing to do yet" look, same green "ready to go" language
-   .item.can/.craftbtn.go use elsewhere. Text needs more room than the
-   34px icon-only pin box, so width goes auto with real padding instead. */
-.refpin-action{
-  width:auto; padding:0 12px; font-size:13px; font-weight:800; white-space:nowrap;
-  color:var(--ok); border-color:var(--ok-line); background:var(--ok-soft);
-  opacity:1; filter:none;
-}
-.refpin-action:hover{filter:brightness(1.06)}
-.refpin-action:disabled{opacity:.5; filter:grayscale(.5); cursor:not-allowed}
 
 /* ------------------------------------------------------- game mode --- */
 .mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
@@ -1530,9 +1516,13 @@ body[data-screen="market"] #trackedPill{display:none}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
 /* Same visual language as .hub-badge (Convert button's own count bubble)
    -- floor(count/3) for this one element, corner-mounted on its token. */
+/* Same red language as the .tok.need element it's mounted on (dark-red
+   soft fill, red border, red text) instead of the Convert button's own
+   green -- this bubble sits on a MISSING element, not a ready-to-go one. */
 .tok-convert-badge{
   position:absolute; top:-7px; right:-7px; min-width:16px; height:16px; padding:0 3px;
-  border-radius:999px; background:var(--ok); color:#fff; font-size:9.5px; font-weight:800;
+  border-radius:999px; background:var(--bad-soft); border:1.5px solid var(--bad); color:var(--bad);
+  font-size:9.5px; font-weight:800;
   display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--card);
 }
 /* Fills the entire end of the card, edge-to-edge top-to-bottom (see
@@ -2517,6 +2507,26 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .refpin:hover{opacity:.85}
 .refpin.active{opacity:1; filter:none; border-color:var(--gold); background:var(--gold-soft)}
+/* The one right-side control that isn't a plain pin toggle -- Accept
+   (quests) / Take (jobs), shown only before a quest/job has been
+   committed to (see questRowHTML()/jobRowHTML()) -- reads as a real,
+   alive call-to-action rather than .refpin's own default dimmed/
+   grayscale "nothing to do yet" look, same green "ready to go" language
+   .item.can/.craftbtn.go use elsewhere. Text needs more room than the
+   34px icon-only pin box, so width goes auto with real padding instead.
+   Placed AFTER .refpin/.refpin.active above (not just relying on this
+   selector's own specificity) -- this used to sit much earlier in the
+   stylesheet, before .refpin's own base rule, so the equal-specificity
+   tie silently went to whichever rule was LAST, which was .refpin's own
+   opacity:.5 -- the button was fully clickable the whole time, just
+   invisible-looking, styled exactly like an inactive pin toggle. */
+.refpin-action{
+  width:auto; padding:0 12px; font-size:13px; font-weight:800; white-space:nowrap;
+  color:var(--ok); border-color:var(--ok-line); background:var(--ok-soft);
+  opacity:1; filter:none;
+}
+.refpin-action:hover{filter:brightness(1.06)}
+.refpin-action:disabled{opacity:.5; filter:grayscale(.5); cursor:not-allowed}
 .ref-pinned-heading{
   font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
 }
@@ -7354,6 +7364,7 @@ function render(resetScroll){
   document.getElementById("drawerBody").innerHTML = renderDrawer();
   renderPinsTray();
   renderTrackedPill();
+  renderConvertGoalCard();
   updateHub();
   updateBackdrop();
   applyInvFilter();
@@ -9006,20 +9017,16 @@ function handleScreenClick(ev){
     // the card the player just tapped out of, Craft button included.
     const itemCard = needElemBtn.closest("[data-item-card]");
     const idx = itemCard && +itemCard.dataset.itemCard;
-    const goalEntry = itemCard && ENTRIES[idx];
-    const goalCardEl = document.getElementById("convertGoalCard");
-    goalCardEl.innerHTML = goalEntry ? itemHTML(goalEntry, idx) : "";
+    convertGoalEntry = itemCard ? ENTRIES[idx] : null;
     // itemHTML()'s own .item border (see its own CSS) is drawn in
     // var(--suit), which it never sets itself -- every other place it's
     // used lives inside a station's .sheet, which sets --suit once for
     // the whole shop and lets every card in it just inherit that. This
     // card sits inside #convert instead, an ancestor that never sets
     // --suit at all, so without setting it here var(--suit) resolved to
-    // nothing and silently dropped the whole border declaration.
-    if (goalEntry){
-      const su = DATA.suits[STATION_BY_NAME[goalEntry.station].suit];
-      goalCardEl.style.setProperty("--suit", su.color);
-    }
+    // nothing and silently dropped the whole border declaration (handled
+    // inside renderConvertGoalCard() itself now).
+    renderConvertGoalCard();
     return;
   }
 
@@ -10631,9 +10638,15 @@ document.getElementById("historyClose").addEventListener("click", () => closeOve
    can't happen regardless of which box gets picked first.
    ===================================================================== */
 let convertFrom = null, convertTo = null, convertPickMode = null;  // "from" | "to"
+// The item whose recipe sent the player into Convert (see the
+// .tok.el.need click handler's own comment) -- kept as a live reference,
+// not just the one-off rendered HTML, so renderConvertGoalCard() can
+// re-render it fresh (Craft enabled/disabled, missing-element tokens)
+// every time render() runs, not just at the moment it was first opened.
+let convertGoalEntry = null;
 
 function openConvertScreen(){
-  convertFrom = null; convertTo = null;
+  convertFrom = null; convertTo = null; convertGoalEntry = null;
   // Cleared here so every OTHER way into Convert (the floating button,
   // the inventory drawer's icon) starts with no goal card -- only the
   // .tok.el.need click handler below ever populates it, right after
@@ -10641,6 +10654,23 @@ function openConvertScreen(){
   document.getElementById("convertGoalCard").innerHTML = "";
   updateConvertUI();
   openOverlay("convert");
+}
+/* Re-renders #convertGoalCard from convertGoalEntry's CURRENT state --
+   called from render() (see its own call site) so the goal card's Craft
+   button and missing-element tokens stay live through anything that
+   changes the player's inventory while Convert is open (a conversion,
+   a craft elsewhere, ...), not just frozen at whatever it looked like
+   the moment the card was first opened. */
+function renderConvertGoalCard(){
+  const goalCardEl = document.getElementById("convertGoalCard");
+  if (!goalCardEl) return;
+  if (!convertGoalEntry){ goalCardEl.innerHTML = ""; return; }
+  const idx = ENTRIES.indexOf(convertGoalEntry);
+  goalCardEl.innerHTML = itemHTML(convertGoalEntry, idx);
+  // See the .tok.el.need click handler's own comment on why --suit has
+  // to be set explicitly here.
+  const su = DATA.suits[STATION_BY_NAME[convertGoalEntry.station].suit];
+  goalCardEl.style.setProperty("--suit", su.color);
 }
 function updateConvertUI(){
   const fromStack = document.getElementById("convFromStack");
