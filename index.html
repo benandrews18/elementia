@@ -7145,6 +7145,15 @@ function travelButtonHTML(name){
     <span class="tb-em">${cfg.emoji}</span>
   </button>`;
 }
+// The Ocean's one-time preset-roll tutorial (see OCEAN_FIRST_ROLL further
+// down) is Adventure/Hard Mode only. Classic players have no forced first
+// station (see mustStartAtOcean()), so this used to fire whenever a
+// Classic run happened to wander into Ocean -- at whatever random point
+// in the session that turned out to be, not session start -- instead of
+// never running there at all, which is what Classic actually wants.
+function oceanTutorialActive(name){
+  return name === "The Ocean" && !state.oceanFirstRollDone && state.mode !== "classic";
+}
 function renderStation(name){
   const s = STATION_BY_NAME[name], su = DATA.suits[s.suit];
   const all = entriesAt(name);
@@ -7156,7 +7165,7 @@ function renderStation(name){
   // otherwise show Water/Limestone/Sand before the player has rolled
   // anything at all). Not calling markSeen() below in this state, since
   // nothing has actually been shown to the player yet.
-  const oceanFirstVisitPending = name === "The Ocean" && !state.oceanFirstRollDone;
+  const oceanFirstVisitPending = oceanTutorialActive(name);
   // Items newly unlocked by a craft that just happened stay hidden until
   // the resulting card-inspection popup is dismissed (see craft's click
   // handler / flushPendingReveal()) -- they shouldn't materialize in the
@@ -7526,21 +7535,6 @@ function updateHub(){
           "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
       }
     }, 350);
-  }
-
-  // Classic Mode's SECOND unlock path -- see celebrate()'s own comment
-  // for the first (completing an Adventure Mode capstone). A player who's
-  // scouted every station AND actually finished at least one quest has
-  // clearly gotten a real feel for Adventure Mode already, even short of
-  // a capstone. Checked here (updateHub() runs on every render()) rather
-  // than pinned to one specific action -- there's no single event that
-  // completes this combination, it's whichever of "last station visited"
-  // or "quest completed" happens to land second.
-  if (state.mode === "hard" && !prefs.classicUnlocked && allStationsVisited()
-      && Object.values(state.quests).some(q => q.completed)){
-    prefs.classicUnlocked = true;
-    savePrefs();
-    queueModeUnlockToast("🗺️", "Classic Mode");
   }
 
   // Both floating buttons stay off their own edge of the screen until
@@ -7932,17 +7926,6 @@ function celebrate(entry){
             : `${n} of 8 capstones complete.`;
   openOverlay("celebrate");
   fireConfetti();
-  // Classic Mode unlocks the first time an Adventure Mode capstone is
-  // completed (see the mode-select screen's own prefs.classicUnlocked
-  // gate) -- persisted in prefs, not state, since it's an account-level
-  // unlock that should stick even if this run/save is later reset. Not
-  // the only path in any more either -- see updateHub()'s own
-  // all-stations-visited-plus-a-completed-quest check.
-  if (state.mode === "hard" && !prefs.classicUnlocked){
-    prefs.classicUnlocked = true;
-    savePrefs();
-    queueModeUnlockToast("🗺️", "Classic Mode");
-  }
 }
 
 /* --------------------------------------------------------- hints --- */
@@ -8359,7 +8342,7 @@ function launchMinigame(){
   // hands off to (see triggerRoll()), just reached directly instead of
   // via a results screen, using whatever TAKE (Dice rolls per visit) is
   // currently configured.
-  const oceanFirstRoll = current === "The Ocean" && !state.oceanFirstRollDone;
+  const oceanFirstRoll = oceanTutorialActive(current);
   if (!run || !prefs.minigamesEnabled || oceanFirstRoll){
     state.pendingRoll = TAKE;
     save();
@@ -8544,7 +8527,7 @@ function doRoll(rollCount){
   if (state.rolledHere) return;
   const s = STATION_BY_NAME[current], out = [];
   const dice = sortedDice(s);
-  const isOceanFirstRoll = current === "The Ocean" && !state.oceanFirstRollDone;
+  const isOceanFirstRoll = oceanTutorialActive(current);
   const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : (rollCount == null ? TAKE : rollCount);
   for (let i = 0; i < n; i++){
     const sym = isOceanFirstRoll ? OCEAN_FIRST_ROLL[i] : dice[Math.floor(Math.random() * 6)];
@@ -10268,6 +10251,15 @@ function checkQuestCompletion(){
     if (!st || !st.taken || st.completed || !owns(q.item)) return;
     st.completed = true;
     queueEventToast("quest", em(ITEM_EMOJI[q.item]), "Quest complete", q.item, "+" + questBonus(q) + " pts");
+    // Classic Mode's only unlock condition -- the first quest completed
+    // in Adventure Mode, full stop. Persisted in prefs, not state, since
+    // it's an account-level unlock that should stick even if this
+    // run/save is later reset.
+    if (!prefs.classicUnlocked){
+      prefs.classicUnlocked = true;
+      savePrefs();
+      queueModeUnlockToast("🗺️", "Classic Mode");
+    }
   });
 }
 /* Classic Mode's own version of checkQuestCompletion() -- a job that's
