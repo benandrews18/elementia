@@ -1558,6 +1558,47 @@ body[data-screen="market"] #trackedPill{display:none}
 .craftbtn.go:hover{filter:brightness(1.07)}
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); border-left-color:var(--line2)}
 .craftbtn.done{background:var(--ok-soft); border-left-color:var(--ok-line); color:var(--ok); animation:none}
+/* Batch crafting's quantity strip -- a second panel stacked under the
+   Craft button rather than beside it, so the button keeps its own full-
+   width tap target (see .craftbtn above) instead of shrinking to share a
+   row with the +/-. .craft-col takes over .craftbtn's old "fills the
+   card's full right edge" job (align-self:stretch/width), so .craftbtn
+   itself just fills whatever's left after the qty strip's own height. */
+.craft-col{flex:none; align-self:stretch; width:72px; display:flex; flex-direction:column}
+.craft-col .craftbtn{flex:1; align-self:stretch; width:auto; border-radius:0 10px 0 0}
+.batch-qty-row{
+  flex:none; display:flex; align-items:center; justify-content:space-between; gap:2px;
+  border-left:1.5px solid var(--line); border-top:1.5px solid var(--line);
+  background:var(--card); border-radius:0 0 10px 0; padding:3px 5px;
+}
+.batch-qty-btn{
+  flex:none; width:20px; height:20px; border:none; border-radius:6px; padding:0;
+  background:var(--sunken); color:var(--ink); font-weight:800; font-size:14px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.batch-qty-btn:disabled{color:var(--mute); cursor:not-allowed}
+.batch-qty-btn:not(:disabled):active{filter:brightness(.88)}
+.batch-qty-label{font-size:11px; font-weight:800; color:var(--ink2)}
+/* Same corner-badge language as .item.owned::after (below), but showing
+   current stock instead of a checkmark -- batch mode keeps the card
+   live/craftable even once you own one, so a plain checkmark would read
+   as "done" when it isn't. attr(data-stock) (set in itemHTML()) instead
+   of a fixed "✓" is the only difference from that rule. */
+.item.stocked::after{
+  content:attr(data-stock); position:absolute; top:-8px; right:-8px; min-width:26px; height:24px; padding:0 5px;
+  border-radius:999px; background:var(--ok); color:#fff; font-size:12px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card); z-index:1;
+}
+/* Batch confirm sheet: each planned conversion is one row, "Change"
+   swaps that row's donor element via the same picker-grid language the
+   main Convert screen already uses (.convert-picker-grid/.convert-pick). */
+.batch-conv-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 12px; border-radius:10px; background:var(--sunken); margin-bottom:8px;
+}
+.batch-conv-text{font-size:14px; font-weight:700}
+.batch-swap-wrap{margin-top:4px}
 
 .capbox{margin-top:16px; background:var(--cap-grad);
   border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
@@ -3355,6 +3396,26 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
+<!-- Batch crafting's confirm sheet -- only ever shown when the requested
+     quantity needs at least one element auto-conversion (see the
+     [data-craft] click handler); an exact-stock batch just crafts
+     immediately with no sheet at all. -->
+<div class="overlay" id="batchConfirm" role="dialog" aria-modal="true" aria-labelledby="batchConfirmTitle">
+  <div class="sheetbox">
+    <h2 id="batchConfirmTitle">Craft?</h2>
+    <p>Not quite enough elements on hand -- here's what'll get auto-converted to make up the difference:</p>
+    <div id="batchConfirmRows"></div>
+    <div class="batch-swap-wrap" id="batchConfirmSwapWrap" style="display:none">
+      <p class="convert-picker-sub" id="batchConfirmSwapTarget"></p>
+      <div class="convert-picker-grid" id="batchConfirmSwapGrid"></div>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="batchConfirmCancel">Cancel</button>
+      <button type="button" class="bigbtn" id="batchConfirmGo">Confirm & Craft</button>
+    </div>
+  </div>
+</div>
+
 <!-- Arrange Items: freeform scene builder opened from the inventory
      drawer. See the CSS block above (search "Arrange Items") for the
      layout rationale. -->
@@ -4739,146 +4800,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Yeast": 4.9,
-  "Helicopter": 20.1,
-  "Chocolate": 8.6,
-  "Grain": 8.0,
-  "Sheep": 7.5,
-  "Bread": 12.6,
-  "Paper": 11.3,
-  "Water": 2.4,
-  "Water Turbine": 22.4,
-  "Museum": 18.0,
-  "Renewable Grid": 29.2,
-  "Building": 7.9,
-  "Rainbow": 14.7,
-  "Fiberglass": 10.1,
-  "Book": 11.5,
-  "Éclair": 13.1,
-  "Flour": 9.0,
-  "Rocket": 21.5,
-  "Deer": 6.3,
-  "Dough": 9.0,
-  "Blackberries": 10.3,
-  "Lighthouse": 13.7,
-  "Windmill": 18.9,
-  "Steel": 2.8,
-  "Sunflower": 16.8,
-  "Milk": 9.0,
-  "Aluminum Alloy": 5.3,
-  "Strawberries": 10.3,
-  "Opal": 10.8,
-  "Fireworks": 3.8,
-  "Amber": 10.5,
-  "Ecosystem": 22.1,
-  "Berry Cupcakes": 21.8,
-  "Bridge": 7.2,
-  "Sushi Restaurant": 18.3,
-  "Battery": 4.5,
-  "Plastic": 7.9,
-  "Fabric": 8.0,
-  "Banana Bread": 17.4,
-  "Fertilizer": 3.1,
-  "Wire": 3.7,
-  "Log Cabin": 7.3,
-  "Stainless Steel": 5.0,
-  "Egg": 5.6,
-  "Apple": 6.5,
-  "Fossil": 10.8,
-  "Bee": 7.9,
-  "Telescope": 11.5,
-  "Ruby": 12.9,
-  "Cow": 7.8,
-  "Beach Town": 25.4,
-  "Life": 16.8,
-  "Canoe": 5.5,
-  "Turbine Blade": 17.1,
-  "Mushroom": 5.0,
-  "Oven": 11.3,
-  "Solar Panel": 8.1,
-  "Gemstone Collection": 19.2,
-  "Cream": 10.8,
-  "Magnet": 4.8,
-  "Pretzel": 11.3,
-  "Butter": 10.9,
-  "Sand": 2.9,
-  "Croissant": 12.1,
-  "Grand Banquet": 23.6,
-  "Plant Fiber": 6.9,
-  "Blueberries": 13.2,
-  "Yarn": 12.9,
-  "Bicycle": 14.8,
-  "Black Dye": 15.8,
-  "Clock": 8.1,
-  "Clay": 2.5,
-  "Maglev Train": 15.4,
-  "Honey": 7.9,
-  "Sailboat": 8.8,
-  "Compass": 7.6,
-  "Chocolate Cake": 13.3,
-  "Star": 13.8,
-  "Wheel": 10.3,
-  "Trumpet": null,
-  "Engine": 7.2,
-  "Cake": 13.2,
-  "Cruise Ship": null,
-  "Speedboat": 15.0,
-  "Wool": 7.4,
-  "Satellite Dish": 11.1,
-  "Pearl": 13.7,
-  "Glass Vial": 10.4,
-  "Sugar": 3.0,
-  "Turquoise": 14.3,
-  "Tree": 4.7,
-  "Geothermal Pump": 15.8,
-  "Basket": 7.8,
-  "Rope": 6.7,
-  "Knit Scarf": 20.7,
-  "Cloud": 5.2,
-  "Planet": 8.3,
-  "Light Bulb": 7.2,
-  "Rubber": 5.1,
-  "Tractor": 15.9,
-  "Glass": 5.2,
-  "Tools": 3.9,
-  "Biofuel": 10.9,
-  "Natural Gas": 2.7,
-  "Car": 17.0,
-  "Blue Dye": 17.6,
-  "Library": 13.6,
-  "Volcano": 13.5,
-  "Statue": 7.5,
-  "Solar System": 15.7,
-  "Metropolis": 21.9,
-  "Apple Pie": 12.9,
-  "Homestead": 20.5,
-  "Farm": 7.4,
-  "Bone": 5.1,
-  "Microchip": 8.1,
-  "Computer": 15.0,
-  "DNA": 3.5,
-  "Furnace": 4.4,
-  "Chicken": 10.6,
-  "Motorcycle": 16.8,
-  "Concrete": 5.2,
-  "Fruit Cake": 19.5,
-  "Soil": 4.5,
-  "Salmon": 11.4,
-  "Brass": null,
-  "Coral Reef": 17.2,
-  "Dinosaur": 11.8,
-  "Banana": 6.8,
-  "Diamond": 12.4,
   "Robot": 17.7,
-  "Seaweed": 5.0,
-  "Space Station": 23.4,
-  "Yellow Dye": 15.5,
-  "Orca": 13.0,
-  "Skyscraper": 15.7,
-  "Titanium Alloy": 5.4,
-  "Central Station": 23.9,
+  "Water Turbine": 22.4,
+  "Limestone": 2.5,
+  "Tree": 4.7,
   "Red Dye": 14.1,
-  "Limestone": 2.5
+  "Sheep": 7.5,
+  "Glass": 5.2,
+  "Apple Pie": 12.9,
+  "Yellow Dye": 15.5,
+  "Bee": 7.9,
+  "Water": 2.4,
+  "Ruby": 12.9,
+  "Gemstone Collection": 19.2,
+  "Coral Reef": 17.2,
+  "Life": 16.8,
+  "Apple": 6.5,
+  "Stainless Steel": 5.0,
+  "Wool": 7.4,
+  "Plant Fiber": 6.9,
+  "Windmill": 18.9,
+  "Homestead": 20.5,
+  "Pretzel": 11.3,
+  "Cloud": 5.2,
+  "Car": 17.0,
+  "Strawberries": 10.3,
+  "Clock": 8.1,
+  "Building": 7.9,
+  "Glass Vial": 10.4,
+  "Wire": 3.7,
+  "Chocolate": 8.6,
+  "Telescope": 11.5,
+  "Solar System": 15.7,
+  "Canoe": 5.5,
+  "Biofuel": 10.9,
+  "Fossil": 10.8,
+  "Fruit Cake": 19.5,
+  "Tools": 3.9,
+  "Volcano": 13.5,
+  "Steel": 2.8,
+  "Black Dye": 15.8,
+  "Clay": 2.5,
+  "Knit Scarf": 20.7,
+  "Natural Gas": 2.7,
+  "Croissant": 12.1,
+  "Engine": 7.2,
+  "Skyscraper": 15.7,
+  "Grain": 8.0,
+  "Butter": 10.9,
+  "Éclair": 13.1,
+  "Oven": 11.3,
+  "Bread": 12.6,
+  "Mushroom": 5.0,
+  "Bridge": 7.2,
+  "Cruise Ship": null,
+  "Central Station": 23.9,
+  "Yeast": 4.9,
+  "Banana": 6.8,
+  "Chocolate Cake": 13.3,
+  "Rope": 6.7,
+  "Fertilizer": 3.1,
+  "Library": 13.6,
+  "Furnace": 4.4,
+  "Titanium Alloy": 5.4,
+  "Cream": 10.8,
+  "Dough": 9.0,
+  "Deer": 6.3,
+  "Magnet": 4.8,
+  "Soil": 4.5,
+  "Dinosaur": 11.8,
+  "Milk": 9.0,
+  "Sushi Restaurant": 18.3,
+  "Light Bulb": 7.2,
+  "Amber": 10.5,
+  "Salmon": 11.4,
+  "Speedboat": 15.0,
+  "Sailboat": 8.8,
+  "Aluminum Alloy": 5.3,
+  "Sugar": 3.0,
+  "Tractor": 15.9,
+  "Orca": 13.0,
+  "Seaweed": 5.0,
+  "Satellite Dish": 11.1,
+  "Brass": null,
+  "DNA": 3.5,
+  "Book": 11.5,
+  "Museum": 18.0,
+  "Farm": 7.4,
+  "Log Cabin": 7.3,
+  "Planet": 8.3,
+  "Space Station": 23.4,
+  "Honey": 7.9,
+  "Maglev Train": 15.4,
+  "Ecosystem": 22.1,
+  "Helicopter": 20.1,
+  "Flour": 9.0,
+  "Wheel": 10.3,
+  "Bone": 5.1,
+  "Trumpet": null,
+  "Turquoise": 14.3,
+  "Bicycle": 14.8,
+  "Fabric": 8.0,
+  "Battery": 4.5,
+  "Blueberries": 13.2,
+  "Basket": 7.8,
+  "Paper": 11.3,
+  "Turbine Blade": 17.1,
+  "Cow": 7.8,
+  "Opal": 10.8,
+  "Sunflower": 16.8,
+  "Metropolis": 21.9,
+  "Beach Town": 25.4,
+  "Rainbow": 14.7,
+  "Berry Cupcakes": 21.8,
+  "Statue": 7.5,
+  "Concrete": 5.2,
+  "Pearl": 13.7,
+  "Renewable Grid": 29.2,
+  "Star": 13.8,
+  "Grand Banquet": 23.6,
+  "Microchip": 8.1,
+  "Cake": 13.2,
+  "Solar Panel": 8.1,
+  "Chicken": 10.6,
+  "Rocket": 21.5,
+  "Motorcycle": 16.8,
+  "Fireworks": 3.8,
+  "Egg": 5.6,
+  "Lighthouse": 13.7,
+  "Sand": 2.9,
+  "Fiberglass": 10.1,
+  "Geothermal Pump": 15.8,
+  "Plastic": 7.9,
+  "Compass": 7.6,
+  "Computer": 15.0,
+  "Banana Bread": 17.4,
+  "Blackberries": 10.3,
+  "Rubber": 5.1,
+  "Blue Dye": 17.6,
+  "Diamond": 12.4,
+  "Yarn": 12.9
  }
 }/*__GAME_DATA_END__*/;
 
@@ -5810,6 +5871,9 @@ function freshState(){
     craftCounts: {},   // {itemName: N} -- Hard Mode only, times ever successfully crafted
                         // (not current stock -- items get spent, this never decrements).
                         // Drives the tiered card-popup border (see craftTier()).
+    batchCraftUnlocked: false, // Hard/Adventure Mode only -- true forever once any single item
+                        // has been craftCounts[name] >= 5. Reveals the +/- quantity controls
+                        // on every item card (see itemHTML()/BATCH_CRAFT_THRESHOLD).
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true forever once the player has opened the Marketplace once -- see
@@ -6017,8 +6081,14 @@ function itemReqsMet(entry){
   const {items} = needsOf(entry.reqs);
   return items.every(it => owns(it.name));
 }
-function craft(entry){
-  if (owns(entry.name) || !canCraft(entry)) return false;
+const BATCH_CRAFT_THRESHOLD = 5; // crafting any one item this many times (lifetime, see craftCounts) reveals +/- everywhere
+function craft(entry, opts={}){
+  // Batch crafting (see craftBatch()) re-invokes this once per copy on an
+  // item the player may already own one of -- opts.batch is the only way
+  // past the single-copy guard below, and only once actually unlocked, so
+  // nothing changes for a plain single Craft tap anywhere else in the game.
+  const bypassOwnGuard = opts.batch && state.mode === "hard" && state.batchCraftUnlocked;
+  if ((owns(entry.name) && !bypassOwnGuard) || !canCraft(entry)) return false;
   const {els, items} = needsOf(entry.reqs);
   // Only raw elements are spent. Catalysts are never spent.
   for (const sym in els){
@@ -6046,6 +6116,16 @@ function craft(entry){
   state.items.push(entry.name);
   if (state.mode === "hard"){
     state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
+    // First item ever to reach the threshold turns batch crafting on for
+    // every item, forever (see freshState()'s own comment) -- a one-time,
+    // organic "you've done this enough, here's a faster way" moment
+    // rather than a setting the player has to go find.
+    if (!state.batchCraftUnlocked && state.craftCounts[entry.name] >= BATCH_CRAFT_THRESHOLD){
+      state.batchCraftUnlocked = true;
+      setTimeout(() => showTutorialHintOnce("batchcraft", 2,
+        "You've crafted this a lot! Use the new + / − buttons to craft several at once.",
+        "bottom-right", ".craftbtn"), 300);
+    }
   }
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
@@ -6064,6 +6144,178 @@ function craft(entry){
   save();
   return true;
 }
+
+/* =====================================================================
+   Batch crafting -- the +/- quantity controls (see itemHTML()), Hard
+   Mode only, revealed once state.batchCraftUnlocked (see craft() above).
+   ===================================================================== */
+// Transient, not saved -- just "what's currently dialed in on each card",
+// reset to 1 by default every time (batchQtyOf()'s fallback), same as
+// reloading the page would reset any other in-progress, unconfirmed pick.
+let batchQty = {};
+function batchQtyOf(name){ return batchQty[name] || 1; }
+function setBatchQty(name, n){ batchQty[name] = Math.max(1, n); }
+
+/* The auto-conversion the player asked for: whenever a batch needs more
+   of an element than's on hand, spend 3-for-1 out of whichever OTHER
+   element (not itself still short for this same batch) currently has the
+   biggest pile -- recomputed after every single conversion, so the donor
+   switches naturally once a bigger pile appears elsewhere. An element
+   sitting at exactly 3 is never touched (its "last 3", same floor the
+   manual Convert screen already enforces by requiring >=3 to convert at
+   all) -- anything else (4+) is fair game, right down to ITS last 3.
+   Pure -- returns a plan without touching real state; the confirm sheet
+   (openBatchConfirm()) applies it only once the player actually commits. */
+function planBatchConversion(entry, qty){
+  const {els} = needsOf(entry.reqs);
+  const catalystSyms = new Set(entry.reqs.filter(r => r.kind === "element" && r.catalyst).map(r => r.name));
+  const neededTotal = {};
+  for (const sym in els){
+    if (catalystSyms.has(sym)) continue; // catalysts aren't spent, so batching doesn't multiply them
+    neededTotal[sym] = els[sym] * qty;
+  }
+  const stock = {...state.elements};
+  const shortfallOf = sym => Math.max(0, (neededTotal[sym] || 0) - (stock[sym] || 0));
+  const conversions = []; // [{from, to}], one 3-for-1 conversion each
+  let feasible = true, guard = 0;
+  while (Object.keys(neededTotal).some(sym => shortfallOf(sym) > 0)){
+    if (++guard > 999){ feasible = false; break; } // pathological safety valve, never expected to fire
+    const target = Object.keys(neededTotal).find(sym => shortfallOf(sym) > 0);
+    let donor = null, donorMax = 0;
+    for (const sym in stock){
+      if (sym === target || shortfallOf(sym) > 0) continue; // still needed for this same batch itself
+      const c = stock[sym] || 0;
+      if (c < 4) continue; // excludes both <3 (can't convert at all) and exactly-3 (the protected "last 3")
+      if (c > donorMax){ donorMax = c; donor = sym; }
+    }
+    if (!donor){ feasible = false; break; }
+    stock[donor] -= 3;
+    stock[target] = (stock[target] || 0) + 1;
+    conversions.push({from: donor, to: target});
+  }
+  return {neededTotal, conversions, feasible};
+}
+/* Same items-half gate as canCraft(), scaled by qty (Hard Mode's item
+   ingredients are spent per-craft, see craft() above, so a batch of N
+   needs N copies on hand -- there's no conversion mechanic for items the
+   way there is for elements, so a shortfall here just isn't craftable at
+   this quantity, full stop). Elements are checked via planBatchConversion
+   -- feasible means enough exists, on hand or reachable through auto-
+   conversion, to cover the whole batch at once. */
+function canCraftQty(entry, qty){
+  const {items} = needsOf(entry.reqs);
+  for (const it of items){
+    if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE" || UTILITY_ITEMS.has(it.name)) continue;
+    if (state.mode === "hard" ? itemStock(it.name) < qty : !owns(it.name)) return false;
+  }
+  return planBatchConversion(entry, qty).feasible;
+}
+/* Applies a (possibly player-edited, see the batch confirm sheet) set of
+   conversions to REAL state, then crafts qty copies. By the time this
+   runs the caller has already proven every element need is covered, so
+   each craft() call below (batch:true bypasses the single-copy guard) is
+   guaranteed to succeed. */
+function craftBatch(entry, qty, conversions){
+  conversions.forEach(({from, to}) => {
+    state.elements[from] = count(from) - 3;
+    if (state.elements[from] <= 0) delete state.elements[from];
+    state.elements[to] = count(to) + 1;
+  });
+  for (let i = 0; i < qty; i++) craft(entry, {batch: true});
+}
+
+/* ---- The confirm sheet itself: only shown when planBatchConversion()
+   actually needs at least one conversion -- an exact-stock batch just
+   crafts immediately (see the [data-craft] click handler), same as
+   today's single Craft tap. Conversions are grouped by (from,to) pair
+   for display/editing ("9x Al -> 3x Fe" reads as one line, not nine) --
+   groupIdx below always refers to this grouped array, not the flat
+   per-unit list planBatchConversion() returns. */
+let batchConfirmEntry = null, batchConfirmQty = 1, batchConfirmGroups = null, batchConfirmNeeded = null;
+function groupConversions(conversions){
+  const groups = [];
+  conversions.forEach(({from, to}) => {
+    const g = groups.find(g => g.from === from && g.to === to);
+    if (g) g.count++; else groups.push({from, to, count: 1});
+  });
+  return groups;
+}
+function openBatchConfirm(entry, qty, plan){
+  batchConfirmEntry = entry; batchConfirmQty = qty;
+  batchConfirmGroups = groupConversions(plan.conversions);
+  batchConfirmNeeded = plan.neededTotal;
+  renderBatchConfirm();
+  openOverlay("batchConfirm");
+}
+// How much of `sym` is still free to hand out as a donor -- current stock
+// minus whatever this same recipe still needs of it (never cannibalize
+// the batch's own requirement) minus whatever every OTHER group in this
+// plan has already claimed from it.
+function batchDonorAvailable(sym, excludeIdx){
+  const reserved = batchConfirmNeeded[sym] || 0;
+  const claimedElsewhere = batchConfirmGroups.reduce((sum, g, i) =>
+    i === excludeIdx ? sum : sum + (g.from === sym ? g.count * 3 : 0), 0);
+  return count(sym) - reserved - claimedElsewhere;
+}
+function renderBatchConfirm(){
+  const entry = batchConfirmEntry;
+  document.getElementById("batchConfirmTitle").textContent = `Craft ×${batchConfirmQty} ${entry.name}?`;
+  const rowsHTML = batchConfirmGroups.map((g, i) => {
+    const nSym = ELEMENT_NAMES[g.to] || g.to;
+    const fSym = ELEMENT_NAMES[g.from] || g.from;
+    return `<div class="batch-conv-row">
+      <span class="batch-conv-text">${g.count * 3}× <b>${esc(fSym)}</b> → ${g.count}× <b>${esc(nSym)}</b></span>
+      <button type="button" class="tbtn ghost batch-conv-swap" data-batch-swap="${i}">Change</button>
+    </div>`;
+  }).join("");
+  document.getElementById("batchConfirmRows").innerHTML = rowsHTML ||
+    '<p class="empty">No conversion needed -- your current elements already cover this batch.</p>';
+  document.getElementById("batchConfirmSwapGrid").innerHTML = "";
+  document.getElementById("batchConfirmSwapWrap").style.display = "none";
+}
+document.getElementById("batchConfirmRows").addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-batch-swap]");
+  if (!btn) return;
+  const i = +btn.dataset.batchSwap;
+  const g = batchConfirmGroups[i];
+  const ELEMENT_DISPLAY_ORDER = Object.keys(ELEMENT_SUIT);
+  const options = Object.keys(ATOMIC_NUMBER)
+    .filter(sym => sym !== g.to && sym !== g.from)
+    .filter(sym => batchDonorAvailable(sym, i) >= g.count * 3)
+    .sort((a, b) => ELEMENT_DISPLAY_ORDER.indexOf(a) - ELEMENT_DISPLAY_ORDER.indexOf(b));
+  const grid = document.getElementById("batchConfirmSwapGrid");
+  const wrap = document.getElementById("batchConfirmSwapWrap");
+  if (!options.length){
+    grid.innerHTML = '<p class="empty">No other element currently has enough spare stock for this swap.</p>';
+  } else {
+    grid.innerHTML = options.map(sym => {
+      const suitStyle = `style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"`;
+      return `<button type="button" class="convert-pick" data-batch-swap-pick="${esc(sym)}">
+        <span class="elsym" ${suitStyle}>${esc(sym)}</span>
+        <span class="pickqty">×${count(sym)}</span>
+      </button>`;
+    }).join("");
+  }
+  document.getElementById("batchConfirmSwapTarget").textContent = `Convert into: ${g.count * 3}× ? → ${g.count}× ${esc(ELEMENT_NAMES[g.to] || g.to)}`;
+  wrap.dataset.forGroup = i;
+  wrap.style.display = "block";
+});
+document.getElementById("batchConfirmSwapGrid").addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-batch-swap-pick]");
+  if (!btn) return;
+  const i = +document.getElementById("batchConfirmSwapWrap").dataset.forGroup;
+  batchConfirmGroups[i].from = btn.dataset.batchSwapPick;
+  renderBatchConfirm();
+});
+document.getElementById("batchConfirmCancel").addEventListener("click", () => closeOverlay("batchConfirm"));
+document.getElementById("batchConfirmGo").addEventListener("click", () => {
+  const conversions = batchConfirmGroups.flatMap(g => Array(g.count).fill({from: g.from, to: g.to}));
+  craftBatch(batchConfirmEntry, batchConfirmQty, conversions);
+  closeOverlay("batchConfirm");
+  render();
+  showCardPop(batchConfirmEntry);
+});
+
 /* Hard Mode's shiny tap-to-inspect border tiers: 2 crafts = silver, 3 =
    gold, 4+ = diamond (with an idle shine sweep). Only ever read by
    showCardPop() -- deliberately nowhere else the item appears (shop
@@ -6333,8 +6585,19 @@ function recipeHTML(entry){
 }
 
 function itemHTML(entry, idx){
-  const has = owns(entry.name), can = canCraft(entry);
-  const cls = [has ? "owned" : (can ? "can" : "")];
+  // Batch crafting (Hard Mode only, once unlocked) keeps a card "live" --
+  // still craftable, quantity controls and all -- even once a copy
+  // exists, instead of collapsing to the static "✓ Owned" label the way
+  // every other mode (and Hard Mode before unlocking) still does. See
+  // craft()'s own bypassOwnGuard for the matching change on the JS side.
+  const batchOn = state.mode === "hard" && state.batchCraftUnlocked;
+  const qty = batchOn ? batchQtyOf(entry.name) : 1;
+  const has = owns(entry.name);
+  const can = batchOn ? canCraftQty(entry, qty) : canCraft(entry);
+  const done = has && !batchOn;
+  const stock = state.mode === "hard" ? itemStock(entry.name) : (has ? 1 : 0);
+  const cls = [done ? "owned" : (can ? "can" : "")];
+  if (batchOn && stock > 0) cls.push("stocked");
   // Green ring means exactly "you can build this right now" -- decoupled
   // from job tracking, which used to also light the ring for anything in
   // the tracked item's component closure even when it wasn't actually
@@ -6348,7 +6611,7 @@ function itemHTML(entry, idx){
   // on whatever needed it -- its own ingredients stop being flagged too;
   // a sibling branch still needing the same ingredient keeps it flagged
   // on its own.
-  if (can && !has) cls.push("job-highlight");
+  if (can && !done) cls.push("job-highlight");
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
@@ -6357,9 +6620,18 @@ function itemHTML(entry, idx){
       if (selEntry) pinBadge = `<span class="item-pin-badge" title="Needed for ${esc(selectedJobItem)}">${em(selEntry.emoji)}</span>`;
     }
   }
-  const btn = has
+  const btn = done
     ? '<span class="craftbtn done">✓ Owned</span>'
     : `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" ${can ? "" : "disabled"}>Craft</button>`;
+  // "-" bottoms out at 1 (never 0 -- there's no such thing as crafting
+  // zero); "+" has no ceiling of its own, canCraftQty() disabling Craft
+  // once a quantity genuinely can't be made is the only limit that matters.
+  const batchRow = batchOn ? `<div class="batch-qty-row">
+      <button type="button" class="batch-qty-btn" data-batch-dec="${idx}" ${qty <= 1 ? "disabled" : ""} aria-label="Fewer">−</button>
+      <span class="batch-qty-label">×${qty}</span>
+      <button type="button" class="batch-qty-btn" data-batch-inc="${idx}" aria-label="More">+</button>
+    </div>` : "";
+  const craftCol = batchOn ? `<div class="craft-col">${btn}${batchRow}</div>` : btn;
   // Tier (MATERIAL/COMPONENT/CREATION) no longer shown -- the CAPSTONE tag
   // stays, since that one's a meaningful "this is the big one" signal
   // rather than a classification most players never cared about. UTILITY
@@ -6367,7 +6639,7 @@ function itemHTML(entry, idx){
   // "this never gets spent" changes how you play around it.
   const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>'
     : (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
-  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
+  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}"${batchOn && stock > 0 ? ` data-stock="×${stock}"` : ""}>
     ${pinBadge}
     <div class="irow">
       <div class="iem">${em(entry.emoji)}</div>
@@ -6377,7 +6649,7 @@ function itemHTML(entry, idx){
             title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button></div>
         <div class="recipe">${recipeHTML(entry)}</div>
       </div>
-    </div>${btn}</div>`;
+    </div>${craftCol}</div>`;
 }
 
 /* Compact stand-in for a station shop's crafted items when the "Collapse
@@ -9019,9 +9291,44 @@ function handleScreenClick(ev){
     return;
   }
 
+  const batchIncBtn = ev.target.closest("[data-batch-inc]");
+  if (batchIncBtn){
+    const entry = ENTRIES[+batchIncBtn.dataset.batchInc];
+    setBatchQty(entry.name, batchQtyOf(entry.name) + 1);
+    render();
+    return;
+  }
+  const batchDecBtn = ev.target.closest("[data-batch-dec]");
+  if (batchDecBtn){
+    const entry = ENTRIES[+batchDecBtn.dataset.batchDec];
+    setBatchQty(entry.name, batchQtyOf(entry.name) - 1);
+    render();
+    return;
+  }
+
   const cBtn = ev.target.closest("[data-craft]");
   if (cBtn){
     const entry = ENTRIES[+cBtn.dataset.craft];
+    // Batch crafting: a quantity of more than 1 skips the single-craft
+    // flow below entirely -- exact-stock batches craft straight away
+    // (same immediate feel as a normal Craft tap, just qty times over),
+    // while a batch that needs auto-conversion stops for the confirm
+    // sheet instead (see openBatchConfirm()) rather than silently
+    // spending elements the player never explicitly agreed to convert.
+    const batchOn = state.mode === "hard" && state.batchCraftUnlocked;
+    const qty = batchOn ? batchQtyOf(entry.name) : 1;
+    if (batchOn && qty > 1){
+      const plan = planBatchConversion(entry, qty);
+      if (!plan.feasible) return; // Craft is disabled in this state anyway (see canCraftQty())
+      if (plan.conversions.length > 0){
+        openBatchConfirm(entry, qty, plan);
+      } else {
+        craftBatch(entry, qty, []);
+        render();
+        showCardPop(entry);
+      }
+      return;
+    }
     // First-ever craft gets the ingredient fly-and-stack reveal (see
     // flyIngredientsAndReveal()) -- checked before craft() changes what
     // owns() would report. Every re-craft after the first (wasOwnedBefore
