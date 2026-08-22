@@ -233,7 +233,7 @@ STATIONS = [
              ("🗼","Skyscraper","CREATION","🏢 Building + ☁️ Cloud + 📡 Satellite Dish",16),
              ("🏍️","Motorcycle","CREATION","🚲 Bicycle + ⚙️ Engine",18),
              ("🍣","Sushi Restaurant","CREATION","🌿 Seaweed + 🐟 Salmon + 🏢 Building",19),
-             ("🏛️","Museum","CREATION","🏢 Building + 🦖 Dinosaur + 🔭 Telescope + 🗿 Statue",21),
+             ("🏛️","Museum","CREATION","🏢 Building + 🔭 Telescope + 🦕 Fossil",21),
              ("🚉","Central Station","CREATION","🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",25)],
      "capstone":("🌆","Metropolis","CAPSTONE","🌉 Bridge + 🗼 Skyscraper + 🚁 Helicopter + 🚗 Car + 💡 Light Bulb",23)},
 
