@@ -1173,15 +1173,22 @@ body[data-screen="market"] #trackedPill{display:none}
 .sheet{
   background:transparent;
   border:1px solid var(--line); border-top:16px solid var(--suit);
-  border-radius:18px; overflow:hidden;
+  border-radius:18px;
 }
 /* Title bar + dice-gather section are one continuous dark card (fixed dark
    tone, not theme-dependent -- this header always reads as "dark surface"
    even in light theme, so the bright suit-colored gchips and white die
-   faces have consistent contrast to sit on regardless of theme). */
+   faces have consistent contrast to sit on regardless of theme).
+   .sheet itself used to clip this to the rounded card via overflow:hidden,
+   but overflow:hidden on an ancestor silently breaks position:sticky for
+   every descendant (see .stationhead.frozen) -- nothing below this ever
+   had its own background needing clipping (.makewrap is transparent all
+   the way down), so rounding the top corners here directly, instead of
+   relying on the parent to clip them, gets the same look without it. */
 .stationhead{
   background:linear-gradient(180deg,#1c2430 0%,#161d26 100%);
   padding-bottom:18px;
+  border-radius:17px 17px 0 0;
 }
 /* Centered, with extra side padding so the title clears the floating
    visits/score pills that float over this same top band on every screen
@@ -1202,14 +1209,10 @@ body[data-screen="market"] #trackedPill{display:none}
    badge always fits regardless of title length; the label shows as a
    native tooltip instead (title attribute). */
 .stationhead{position:relative}
-/* Pinned to the top of the viewport while scrolling through the shop --
-   only until the player's own first roll here has actually landed (see
-   renderStation()'s own frozen check: !state.rolledHere ||
-   rollAnimationInProgress, so this stays on through the roll's own
-   tumble-and-fly animation too, not just the empty-shop moment before it)
-   -- so the dice-gather row (the only thing worth acting on before that
-   point) never scrolls out of reach while skimming a long shop list.
-   Ordinary in-flow once rolled, same as it always was. */
+/* Pinned to the top of the viewport for the whole station visit (see
+   renderStation()'s own stationheadFrozen) -- title, element pool, and
+   dice (including the roll's own tumble-and-fly animation) all stay
+   reachable/visible while skimming a long shop list underneath. */
 .stationhead.frozen{position:sticky; top:0; z-index:4}
 .travel-btn{
   position:absolute; top:14px; right:16px; z-index:3;
@@ -7217,12 +7220,12 @@ function renderStation(name){
     ? `<div class="subzone-empty">🌌 Nothing here yet — just the elements to gather for now.</div>`
     : shopBodyHTML(shopEntries, idx);
 
-  // Frozen to the top of the screen (see .stationhead.frozen) until the
-  // player's own roll here has both happened AND finished animating --
-  // rollAnimationInProgress (set in playRollAnimation()/flyToInventory())
-  // covers the tumble-and-fly beat between state.rolledHere flipping true
-  // and the shop settling into its final rolled state.
-  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress;
+  // Frozen to the top of the screen (see .stationhead.frozen) for the
+  // whole visit now, not just until the roll lands -- title, element
+  // pool, dice, and the roll's own tumble-and-fly animation all stay
+  // reachable/visible while skimming a long shop list, not just before
+  // rolling.
+  const stationheadFrozen = true;
   return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
@@ -8569,11 +8572,9 @@ function doRoll(rollCount){
    end to settle into the final state (renderStation() already omits the
    playbar entirely once state.rolledHere is true). */
 // True from the moment a roll's tumble-and-fly animation starts until its
-// very last card lands (see flyToInventory()'s own onfinish below) --
-// renderStation() reads this alongside state.rolledHere to decide whether
-// .stationhead should still be frozen (see its own comment): rolledHere
-// alone flips true well before the player's actually watched the roll
-// finish, so freezing would let go too early without this.
+// very last card lands (see flyToInventory()'s own onfinish below), which
+// triggers the render() that settles the shop into its final rolled
+// state once the animation actually finishes watching.
 let rollAnimationInProgress = false;
 function playRollAnimation(out){
   rollAnimationInProgress = true;
