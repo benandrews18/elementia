@@ -688,6 +688,9 @@ body[data-screen="market"] #trackedPill{display:none}
    station's actual icon. Same "have/haven't" checklist language as
    .coll-member right below, just circular badges (a station, not an
    item) instead of a dimmed/grayscale icon+label pair. */
+.market-station-progress{margin:18px auto 4px; max-width:420px}
+.market-station-progress-label{font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  color:var(--mute); margin-bottom:8px}
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
   width:46px; height:46px; border-radius:50%; flex:none;
@@ -1478,6 +1481,9 @@ body[data-screen="market"] #trackedPill{display:none}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 .tier{font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink2); background:var(--sunken);
   padding:2px 7px; border-radius:5px}
+/* Smaller than .refpin's own 34px -- this sits inline with the item name
+   in a compact single-line row, not a roomier Item Reference row. */
+.shop-pin{width:26px; height:26px; font-size:13px; border-radius:7px; align-self:center}
 /* Left-aligned, flush with the item name above it -- now that the Craft
    button lives outside .ibody entirely (see .craftbtn), there's no longer
    a gutter to keep the list away from, and left-justifying against the
@@ -1499,8 +1505,15 @@ body[data-screen="market"] #trackedPill{display:none}
    now (plain .tok.have/.tok.need above) -- no separate suit-colored fill.
    Only the cursor stays element-specific (opens a card rather than a
    "where do I get this" hint). */
-.tok.el{cursor:pointer}
+.tok.el{cursor:pointer; position:relative}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
+/* Same visual language as .hub-badge (Convert button's own count bubble)
+   -- floor(count/3) for this one element, corner-mounted on its token. */
+.tok-convert-badge{
+  position:absolute; top:-7px; right:-7px; min-width:16px; height:16px; padding:0 3px;
+  border-radius:999px; background:var(--ok); color:#fff; font-size:9.5px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--card);
+}
 /* Fills the entire end of the card, edge-to-edge top-to-bottom (see
    .item/.irow above) -- a flush panel rather than a pill-shaped button, so
    it reads as part of the card's own structure. Its own right corners
@@ -5640,7 +5653,7 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // (bubbles popped, seconds survived, ...) even if a game's own difficulty
 // constants get retuned later -- the whole point of tracking these at all
 // is so the player can report them back for exactly that kind of tuning.
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:true,
+let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minigamesEnabled:false,
   guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
   // Account-level unlock, not per-run state -- Classic Mode opens the
   // first time an Adventure Mode capstone is completed (see celebrate())
@@ -6220,8 +6233,15 @@ function tokenHTML(r, groupedEls){
     const need = groupedEls[r.name], have = count(r.name);
     const ok = have >= need;
     const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
+    // Same floor(count/3) 3-for-1 math as the Convert button's own hub
+    // badge (see updateHub()) -- how many conversions THIS element alone
+    // is good for right now, so a surplus is visible right where the
+    // player's deciding whether to spend or convert it.
+    const convertible = Math.floor(have / 3);
+    const convertBadge = convertible > 0
+      ? `<span class="tok-convert-badge" title="${convertible} conversion${convertible === 1 ? "" : "s"} available from this element">${convertible}</span>` : "";
     return `<button type="button" class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
-      `${esc(r.name)}` +
+      `${esc(r.name)}${convertBadge}` +
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
   }
   const ok = owns(r.name);
@@ -6281,7 +6301,9 @@ function itemHTML(entry, idx){
     <div class="irow">
       <div class="iem">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}</div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}
+          <button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
+            title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button></div>
         <div class="recipe">${recipeHTML(entry)}</div>
       </div>
     </div>${btn}</div>`;
@@ -7406,39 +7428,10 @@ function updateHub(){
   jobsBtn.disabled = zen;
   jobsBtn.setAttribute("aria-disabled", String(zen));
   jobsBtn.querySelector(".hl").textContent = state.mode === "hard" ? "Quests" : "Jobs";
-  if (zen){
-    setHubBadge("hubJobs", null);
-  } else if (state.mode === "hard"){
-    // "Ready" here means an in-progress quest whose target item the
-    // player can actually craft right now -- quests auto-complete on
-    // craft (see checkQuestCompletion()), so there's no separate
-    // turn-in step to badge the way jobs have; this is the closest
-    // equivalent nudge ("go finish this one").
-    const readyQuests = QUESTS.filter(q => {
-      const st = state.quests[q.id];
-      if (!st || !st.taken || st.completed) return false;
-      const entry = ENTRIES.find(e => e.name === q.item);
-      return entry && canCraft(entry);
-    }).length;
-    // No green "ok" styling here (unlike Job Board's own ready-to-turn-in
-    // badge below) -- a quest completing itself the moment its target is
-    // crafted is already obvious from the craft itself (the toast, the
-    // quest card flipping to done in the Log); a green circle on top of
-    // that read as flagging something the player still had to act on.
-    setHubBadge("hubJobs", readyQuests > 0 ? String(readyQuests) : null);
-  } else {
-    const ready = state.jobs.filter(j => jobDone(j) && !j.turnedIn).length;
-    // Unseen offers on the (now global) board -- a reminder to pop it
-    // open, separate from (and lower-priority than) actually being ready
-    // to turn something in. Cleared the moment the board is opened, from
-    // either entry point (see openJobBoard() and the Marketplace nav
-    // click handler).
-    const newOffers = state.jobBoardUnseen.length;
-    if (ready > 0) setHubBadge("hubJobs", String(ready), true);
-    else if (newOffers > 0) setHubBadge("hubJobs", String(newOffers), false);
-    else if (!state.jobs.length) setHubBadge("hubJobs", "!", false);
-    else setHubBadge("hubJobs", null);
-  }
+  // Never badged, in any mode, green or red -- Jobs/Quests state is
+  // already visible the moment the panel opens; a bubble here read as
+  // one more thing competing for attention on the hub.
+  setHubBadge("hubJobs", null);
 
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
@@ -9016,6 +9009,12 @@ function handleScreenClick(ev){
   const elemBtn = ev.target.closest("[data-elem]");
   if (elemBtn){ showElCardPop(elemBtn.dataset.elem); return; }
 
+  // Pin toggle inline on a station shop card's own title row (see
+  // itemHTML()) -- checked before the data-item-card fallback below so
+  // tapping it toggles the pin instead of opening the card popup.
+  const shopPinBtn = ev.target.closest("[data-shop-pin]");
+  if (shopPinBtn){ togglePin(shopPinBtn.dataset.shopPin); render(); return; }
+
   // Tapping the CARD (not its Craft button, which returned above) opens the
   // item's playing card, owned or not -- same non-auto-dismissing popup the
   // inventory drawer uses for an owned item.
@@ -9610,9 +9609,26 @@ function marketSectionHTML(){
     ${body}
   </div>`;
 }
+/* Same circle language Trading Post's own lock screen uses (see
+   tradeBodyHTML()) -- reused here as a standing progress indicator for
+   every mode, not just Hard Mode's locked view, since Job Board (Classic)
+   and Trading Post (Hard) both gate on allStationsVisited() and neither
+   mode otherwise shows how close that is to done. */
+function marketStationProgressHTML(){
+  const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
+  const stationCircles = DATA.stations.map(s => {
+    const visited = !!state.visitedStations[s.name];
+    return `<span class="trade-lock-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
+  }).join("");
+  return `<div class="market-station-progress">
+    <div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
+    <div class="trade-lock-stations">${stationCircles}</div>
+  </div>`;
+}
 function renderMarketScreen(){
   return `<div class="market-screen">
     <div class="market-banner"><h1>Marketplace</h1></div>
+    ${marketStationProgressHTML()}
     ${marketSectionHTML()}
   </div>`;
 }
