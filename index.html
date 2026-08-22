@@ -7544,9 +7544,13 @@ function updateHub(){
   // Both floating buttons stay off their own edge of the screen until
   // there's something to do with them -- Pins needs at least one job OR
   // quest ever taken (neither state.jobs nor state.quests is ever
-  // trimmed, so their sizes alone tell us that), Convert needs to have
-  // been revealed at least once.
-  const everTakenSomething = state.jobs.length > 0 || Object.keys(state.quests).length > 0;
+  // trimmed, so their sizes alone tell us that) OR an item pinned from
+  // Item Reference or a station shop's own pin toggle (prefs.pinnedItems
+  // is likewise never auto-cleared, so its length alone is enough --
+  // unpinning everything again doesn't hide the button back offscreen).
+  // Convert needs to have been revealed at least once.
+  const everTakenSomething = state.jobs.length > 0 || Object.keys(state.quests).length > 0
+    || prefs.pinnedItems.length > 0;
   document.getElementById("pinsBtn").classList.toggle("offscreen", !everTakenSomething);
   document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
