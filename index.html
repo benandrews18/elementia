@@ -843,16 +843,31 @@ body[data-screen="market"] #trackedPill{display:none}
    -- this one extra selector is what actually makes classicModeCard/
    zenModeCard's hidden attribute (see refreshModePicker()) take effect. */
 .mode-card[hidden]{display:none}
-.mode-card{
+/* Plain layout wrapper now -- the earlier single <button class="mode-card">
+   split into two real buttons (.mode-card-main to resume/start, plus its
+   own separate New Game button beside it, see the HTML comment above)
+   since a button can't nest inside another button. */
+.mode-card{display:flex; flex-direction:column; gap:8px}
+.mode-card-main{
   display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
   padding:16px; border-radius:14px; border:2px solid var(--line); background:var(--bg-soft);
   transition:transform .08s, border-color .12s, background .12s, box-shadow .12s cubic-bezier(.3,.8,.4,1);
 }
-.mode-card:hover{border-color:var(--mute); background:var(--sunken)}
-.mode-card:active{transform:translateY(3px) scale(.99); box-shadow:0 0 0 transparent}
+.mode-card-main:hover{border-color:var(--mute); background:var(--sunken)}
+.mode-card-main:active{transform:translateY(3px) scale(.99); box-shadow:0 0 0 transparent}
 .mode-emoji{font-size:28px; line-height:1}
 .mode-name{font-size:17px; font-weight:800}
 .mode-desc{font-size:13px; color:var(--ink2); line-height:1.4}
+/* "N visits · M points" (readModeSave() has a save) or "New" (it doesn't)
+   -- see refreshModePicker(). */
+.mode-stats{font-size:12px; font-weight:800; color:var(--gold); margin-top:2px}
+.mode-newgame-btn{
+  align-self:flex-end; font-size:12px; font-weight:800; color:var(--ink2);
+  background:none; border:1.5px solid var(--line); border-radius:999px; padding:5px 14px;
+  cursor:pointer;
+}
+.mode-newgame-btn:hover{border-color:var(--mute); color:var(--ink)}
+.mode-newgame-btn:active{transform:translateY(2px)}
 
 /* Section titles ("Job Board — <station>", "My Jobs"). These are the only
    headings in the sheet, so they carry real weight rather than reading as
@@ -3341,26 +3356,44 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- game mode: shown once, right after Play on the welcome screen. No
      close/skip button on purpose -- same "can't dismiss without choosing"
-     rule the tutorial already follows. -->
+     rule the tutorial already follows. Each mode is now its OWN save file
+     (see saveKeyFor()) -- the main card body resumes that mode's save if
+     one exists (or starts fresh if this is its first-ever pick, see
+     chooseMode()), while "New Game" always starts over, confirming first
+     when that would actually erase real progress (see newGameForMode()).
+     .mode-stats (filled by refreshModePicker()) shows that save's visits/
+     points, or "New" when there isn't one yet. -->
 <div class="overlay" id="modeOverlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
   <div class="sheetbox">
     <h2 id="modeTitle">Choose a Game Mode</h2>
     <div class="mode-options">
-      <button type="button" class="mode-card" data-mode="zen" id="zenModeCard" hidden>
-        <span class="mode-emoji">🌿</span>
-        <span class="mode-name">Zen Mode</span>
-        <span class="mode-desc">Freely explore and create any item found in the game.</span>
-      </button>
-      <button type="button" class="mode-card" data-mode="classic" id="classicModeCard" hidden>
-        <span class="mode-emoji">🗺️</span>
-        <span class="mode-name">Classic Mode</span>
-        <span class="mode-desc">Complete Capstones and Job Cards to get the highest score in 25 moves! Keep all your items, only element cards are spent in this mode.</span>
-      </button>
-      <button type="button" class="mode-card" data-mode="hard">
-        <span class="mode-emoji">🔥</span>
-        <span class="mode-name">Adventure Mode</span>
-        <span class="mode-desc">Explore the world of Elementia! Elements and Item Cards are spent to create bigger creations.</span>
-      </button>
+      <div class="mode-card" data-mode="zen" id="zenModeCard" hidden>
+        <button type="button" class="mode-card-main" data-mode-select="zen">
+          <span class="mode-emoji">🌿</span>
+          <span class="mode-name">Zen Mode</span>
+          <span class="mode-desc">Freely explore and create any item found in the game.</span>
+          <span class="mode-stats" data-mode-stats="zen"></span>
+        </button>
+        <button type="button" class="mode-newgame-btn" data-mode-newgame="zen">New Game</button>
+      </div>
+      <div class="mode-card" data-mode="classic" id="classicModeCard" hidden>
+        <button type="button" class="mode-card-main" data-mode-select="classic">
+          <span class="mode-emoji">🗺️</span>
+          <span class="mode-name">Classic Mode</span>
+          <span class="mode-desc">Complete Capstones and Job Cards to get the highest score in 25 moves! Keep all your items, only element cards are spent in this mode.</span>
+          <span class="mode-stats" data-mode-stats="classic"></span>
+        </button>
+        <button type="button" class="mode-newgame-btn" data-mode-newgame="classic">New Game</button>
+      </div>
+      <div class="mode-card" data-mode="hard">
+        <button type="button" class="mode-card-main" data-mode-select="hard">
+          <span class="mode-emoji">🔥</span>
+          <span class="mode-name">Adventure Mode</span>
+          <span class="mode-desc">Explore the world of Elementia! Elements and Item Cards are spent to create bigger creations.</span>
+          <span class="mode-stats" data-mode-stats="hard"></span>
+        </button>
+        <button type="button" class="mode-newgame-btn" data-mode-newgame="hard">New Game</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5036,6 +5069,7 @@ function applyVisitLimit(){
 function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "∞"; }
 
 /* ------------------------------------------------------- game mode --- */
+const MODE_DISPLAY_NAME = {zen:"Zen Mode", classic:"Classic Mode", hard:"Adventure Mode"};
 /* Classic Mode is locked (same disabled-but-visible + on-screen unlock
    note pattern as the Marketplace arc's own gated slots, see
    renderMarketArc()) until prefs.classicUnlocked flips true -- see
@@ -5052,6 +5086,16 @@ function refreshModePicker(){
   const forced = prefs.devForceModesUnlocked;
   document.getElementById("classicModeCard").hidden = !(prefs.classicUnlocked || forced);
   document.getElementById("zenModeCard").hidden = !(prefs.zenUnlocked || forced);
+  // Each mode is its own save now (see saveKeyFor()) -- show what's
+  // actually IN it (visits/points) so "Continue" vs. "New Game" is an
+  // informed choice, not a guess. scoreOf() (not score(), which only
+  // reads the live `state`) is what lets this read every mode's saved
+  // blob without touching the game currently in progress.
+  ["zen", "classic", "hard"].forEach(mode => {
+    const saved = readModeSave(mode);
+    document.querySelector(`[data-mode-stats="${mode}"]`).textContent =
+      saved ? `${saved.visits || 0} visits · ${scoreOf(saved)} points` : "New";
+  });
 }
 function openModePicker(){
   refreshModePicker();
@@ -5070,24 +5114,62 @@ function mustStartAtOcean(){
   // keeps it as part of being the deliberately harder, full-catalog mode.
   return state.mode === "hard" && state.lastStation === null;
 }
+// Tapping a mode's own card: resumes that mode's save if one exists, or
+// starts it fresh (first-ever pick) if not -- see resumeMode()/
+// startFreshMode() for what actually differs between the two (mainly:
+// only a fresh start plays playMapIntroScroll()'s pan, see its own
+// comment on why a resume never should).
 function chooseMode(mode){
-  state.mode = mode; save();
   // Zen Mode's own unlock (see prefs.zenUnlocked's own comment) -- the
   // moment the player actually commits to a Classic run, not just some
   // later milestone within it, same "starting counts as playing" reading
-  // as this whole function's name.
+  // this used to have inside the old single chooseMode(). Checked before
+  // branching so it applies whether this Classic pick is a fresh start or
+  // a resume.
   if (mode === "classic" && !prefs.zenUnlocked){
     prefs.zenUnlocked = true;
     savePrefs();
     queueModeUnlockToast("🌿", "Zen Mode");
   }
+  if (modeHasSave(mode)) resumeMode(mode); else startFreshMode(mode);
+}
+/* Loads an existing save straight back into play -- no reset, no pan
+   animation (see playMapIntroScroll()'s own comment on why that's a
+   fresh-start-only beat), just landing wherever that run left off. */
+function resumeMode(mode){
+  const saved = readModeSave(mode);
+  state = Object.assign(freshState(), saved, {mode});
   applyVisitLimit();
+  prefs.lastActiveMode = mode; savePrefs();
+  closeOverlay("modeOverlay");
+  screen = "map"; current = null; selectedMapStation = null;
+  render(true);
+}
+/* The true beginning of a run for this mode -- freshState() plus the pan
+   (see playMapIntroScroll()), used both for a mode's very first-ever pick
+   (chooseMode() above) and for deliberately starting over (New Game/
+   Reset Session below), since both are genuinely "nothing carries over"
+   moments. */
+function startFreshMode(mode){
+  state = freshState();
+  state.mode = mode;
+  applyVisitLimit();
+  prefs.lastActiveMode = mode; savePrefs();
+  save();
   closeOverlay("modeOverlay");
   render();
   // Lands the player on The Ocean's preview card at the end of the scroll
   // (see playMapIntroScroll()), same as the old instant-scroll used to for
   // Classic/Hard -- every mode gets that same landing.
   playMapIntroScroll();
+}
+/* "New Game" next to a mode card -- only confirms when there's actually
+   something to lose (a real save with real progress); a never-played
+   mode just starts, same as tapping the card itself would. */
+function newGameForMode(mode){
+  if (!modeHasSave(mode)){ startFreshMode(mode); return; }
+  askConfirm(`Start a new ${MODE_DISPLAY_NAME[mode] || mode} run? Your current save will be erased.`,
+    () => startFreshMode(mode));
 }
 
 /* =====================================================================
@@ -5146,8 +5228,10 @@ function playMapIntroScroll(){
   requestAnimationFrame(step);
 }
 document.getElementById("modeOverlay").addEventListener("click", ev => {
-  const btn = ev.target.closest("[data-mode]");
-  if (btn) chooseMode(btn.dataset.mode);
+  const newBtn = ev.target.closest("[data-mode-newgame]");
+  if (newBtn){ newGameForMode(newBtn.dataset.modeNewgame); return; }
+  const selectBtn = ev.target.closest("[data-mode-select]");
+  if (selectBtn) chooseMode(selectBtn.dataset.modeSelect);
 });
 /* Carry cap: a group may hold at most this many of any ONE raw element.
    Anything rolled beyond it goes straight back to the shared pool. Verified
@@ -5388,15 +5472,19 @@ const ENTRIES = [];       // {station, emoji, name, tier, recipe, points, reqs, 
 const ITEM_EMOJI = {};    // name -> emoji, for inventory display
 const ITEM_TIER  = {};
 const ITEM_POINTS = {};
-function score(){
-  const base = state.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
-  const jobBonuses = state.jobs.filter(j => j.turnedIn).reduce((sum, j) => sum + jobBonus(j), 0);
-  const collectionBonuses = state.collectionsCompleted.reduce((sum, id) => {
+// Parameterized so the mode-select screen can score every OTHER mode's
+// saved state too (see modeSummary()) without swapping the live `state`
+// global out and back in just to reuse this math.
+function scoreOf(st){
+  const base = st.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
+  const jobBonuses = st.jobs.filter(j => j.turnedIn).reduce((sum, j) => sum + jobBonus(j), 0);
+  const collectionBonuses = st.collectionsCompleted.reduce((sum, id) => {
     const col = COLLECTIONS.find(c => c.id === id);
     return sum + (col ? collectionBonus(col) : 0);
   }, 0);
   return base + jobBonuses + collectionBonuses;
 }
+function score(){ return scoreOf(state); }
 
 DATA.stations.forEach(s => {
   const push = row => {
@@ -5750,12 +5838,15 @@ const entriesAt = st => ENTRIES.filter(e => e.station === st);
 /* =====================================================================
    State
    ===================================================================== */
-/* Single-player: one save, one key. The v1/v2 keys below are only read
-   once, to carry old progress forward, then cleaned up. */
+/* Single-player: one save PER MODE now (see saveKeyFor()/loadAll()) --
+   Zen, Classic, and Adventure each own their own independent run. Every
+   key below SAVE_KEY_PREFIX is a one-time migration source, read once to
+   carry old progress forward, then cleaned up. */
 const LEGACY_KEY  = "elementia-save-v1";      // pre-groups single save
 const SLOTS_KEY   = "elementia-slots-v2";     // groups metadata
 const SAVE_PREFIX = "elementia-save-v2-";     // per-group saves
-const SAVE_KEY    = "elementia-save-v3";
+const SAVE_KEY    = "elementia-save-v3";      // pre-per-mode flat save
+const SAVE_KEY_PREFIX = "elementia-save-v4-"; // one save per mode (see saveKeyFor())
 const PREFS_KEY   = "elementia-prefs-v1";
 const HISTORY_KEY = "elementia-history-v1";
 const HISTORY_MAX = 50;
@@ -5814,7 +5905,12 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minig
   // unlock chain first. Off by default; doesn't touch the real unlock
   // flags at all, so turning it back off returns the picker to exactly
   // whatever the player had actually earned.
-  devForceModesUnlocked:false};
+  devForceModesUnlocked:false,
+  // Which mode's own save (see saveKeyFor()) a plain reload/relaunch
+  // resumes into -- set every time chooseMode() actually lands on a mode
+  // (see resumeMode()/startFreshMode()), null only pre-migration/before
+  // any mode's ever been picked at all.
+  lastActiveMode:null};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -6006,7 +6102,21 @@ const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
 const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
 
 function savePrefs(){ lsSet(PREFS_KEY, JSON.stringify(prefs)); }
-function save(){ lsSet(SAVE_KEY, JSON.stringify(state)); }
+// One save file per mode -- see the "State" section comment above.
+function saveKeyFor(mode){ return SAVE_KEY_PREFIX + mode; }
+// Guarded on state.mode existing: during the brief window between
+// startNewSession-style resets and chooseMode() actually landing on a
+// mode, state.mode is null and there's nothing meaningful to persist yet
+// (see freshState()) -- writing under a "null" key would just leave a
+// stray, unreachable localStorage entry behind.
+function save(){ if (state.mode) lsSet(saveKeyFor(state.mode), JSON.stringify(state)); }
+function readModeSave(mode){
+  try {
+    const raw = lsGet(saveKeyFor(mode));
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+function modeHasSave(mode){ return readModeSave(mode) !== null; }
 
 /* Pull forward whatever the previous storage layouts left behind, newest
    first, then delete them so this only ever runs once. */
@@ -6033,25 +6143,58 @@ function migrateOldSave(){
   return raw;
 }
 
+/* One-time v3 (single flat save) -> v4 (one save per mode) migration --
+   the old blob already carries its own .mode field (every save has always
+   recorded which mode it was), so it just moves under that mode's new
+   key verbatim. Guarded on the per-mode key not already existing so this
+   can never clobber real v4 progress if it somehow ran twice. Also seeds
+   prefs.lastActiveMode (see loadAll()) so a returning player's very next
+   load resumes the same mode they were last on, exactly as before. */
+function migrateFlatSaveToPerMode(){
+  const raw = lsGet(SAVE_KEY);
+  if (raw === null) return;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.mode && lsGet(saveKeyFor(parsed.mode)) === null){
+      lsSet(saveKeyFor(parsed.mode), raw);
+      if (!prefs.lastActiveMode) prefs.lastActiveMode = parsed.mode;
+    }
+  } catch(e){}
+  lsDel(SAVE_KEY);
+}
+
 /* Returns whether this is a genuinely new session (no save at all, even
    after the legacy migration) -- as opposed to just reloading the page
    mid-session, which shouldn't re-show the welcome slide every refresh. */
 function loadAll(){
   try { prefs = Object.assign(prefs, JSON.parse(lsGet(PREFS_KEY) || "{}")); } catch(e){}
   delete prefs.theme; // theme choice no longer exists -- drop it from any older save
-  applyVisitLimit();
   applyDiceCount();
   loadHistory();
 
-  let raw = lsGet(SAVE_KEY);
-  if (raw === null){
-    raw = migrateOldSave();
-    if (raw) lsSet(SAVE_KEY, raw);
+  // v1/v2 -> v3 (flat single save), then v3 -> v4 (one save per mode) --
+  // oldest first, each a one-time migration into the next format.
+  let legacyRaw = lsGet(SAVE_KEY);
+  if (legacyRaw === null){
+    legacyRaw = migrateOldSave();
+    if (legacyRaw) lsSet(SAVE_KEY, legacyRaw);
   }
+  migrateFlatSaveToPerMode();
+
+  // Which mode a returning player resumes into on a plain reload/relaunch
+  // -- set every time chooseMode()'s two branches (resumeMode()/
+  // startFreshMode()) actually land on a mode, so this always reflects
+  // whichever save should come back up automatically.
+  const lastMode = prefs.lastActiveMode;
+  const raw = lastMode ? lsGet(saveKeyFor(lastMode)) : null;
   let isNewSession = !raw;
   try {
     state = raw ? Object.assign(freshState(), JSON.parse(raw)) : freshState();
   } catch(e){ state = freshState(); isNewSession = true; }
+  // Depends on the actual loaded state.mode, so this has to run AFTER
+  // state exists, not just the early guarded no-op call this used to be
+  // before state was ever assigned.
+  applyVisitLimit();
   // Older saves have jobBoard as a per-station {station,cards,seen,taken}
   // object (Object.assign above blindly overwrote freshState()'s array
   // default with it) -- discard rather than migrate; a stale in-progress
@@ -6074,6 +6217,7 @@ function loadAll(){
   // isMapConnected(), neither of which know sub-zone names at all).
   if (SUBZONE_PARENT[state.lastStation]) state.lastStation = SUBZONE_PARENT[state.lastStation];
   if (SUBZONE_PARENT[state.priorStation]) state.priorStation = SUBZONE_PARENT[state.priorStation];
+  savePrefs(); // persists migrateFlatSaveToPerMode()'s prefs.lastActiveMode write, if any
   return isNewSession;
 }
 
@@ -8421,7 +8565,7 @@ function showHint(target, name, kind){
    times its call site re-renders, so a re-render triggered by something
    unrelated (opening a panel, an unrelated click) can't re-pop a tip the
    player already dismissed. Ephemeral, not saved -- mouseTipsShown
-   resets in startNewSession(), same lifetime as the run itself. */
+   resets in resetCurrentModeRun(), same lifetime as the run itself. */
 const MOUSE_POSES = {
   1: "mouse/1.webp", 2: "mouse/2.webp", 3: "mouse/3.webp", 4: "mouse/4.webp",
   5: "mouse/5.webp", 6: "mouse/6.webp", 7: "mouse/7.webp", 8: "mouse/8.webp",
@@ -9291,17 +9435,24 @@ function punchInventory(){
   ], { duration: 380, easing: "cubic-bezier(.3,1.4,.4,1)" });
 }
 
-function startNewSession(){
+/* "Reset Session" (Settings) and "Play Again" (the run-summary screen)
+   both want the exact same thing: wipe THIS mode's save and start it
+   over, staying right here rather than bouncing out to the main menu --
+   Zen/Classic/Adventure are separate saves now (see saveKeyFor()), so
+   there's no longer a single mode-less "session" to fall back to anyway.
+   Reuses startFreshMode() for the actual reset (including its own pan --
+   a wiped save genuinely IS the beginning of a run, same as a first-ever
+   mode pick) after recording the run that's ending, same as before. */
+function resetCurrentModeRun(){
+  const mode = state.mode;
   recordHistory();
-  state = freshState(); screen = "map"; current = null; selectedJobItem = null;
+  selectedJobItem = null;
   mouseTipsShown = new Set();
   // Pins are a "what am I working toward right now" habit, not a
   // long-term bookmark -- they shouldn't carry over into a new run where
   // none of them are relevant anymore (a fresh session owns nothing yet).
   prefs.pinnedItems = []; savePrefs();
-  save();
-  showWelcomeSlide();
-  render(true);
+  startFreshMode(mode);
 }
 
 document.getElementById("pinsTrayBody").addEventListener("click", ev => {
@@ -11001,7 +11152,7 @@ document.getElementById("setSave").addEventListener("click", () => {
 });
 
 document.getElementById("sumNew").addEventListener("click", () => {
-  closeOverlay("summary"); startNewSession();
+  closeOverlay("summary"); resetCurrentModeRun();
 });
 document.getElementById("sumReview").addEventListener("click", () => {
   closeOverlay("summary"); openDrawer();
@@ -11045,19 +11196,23 @@ document.querySelectorAll(".overlay").forEach(ov => {
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => {
-  askConfirm("Start a brand new session? Your inventory, visits and job board will be cleared.", () => {
+  // Scoped to the mode the player is actually inside right now -- stays
+  // there afterward (resetCurrentModeRun() -> startFreshMode(), not the
+  // main menu) rather than bouncing them all the way out to re-pick a
+  // mode they were already in.
+  askConfirm(`Start a new ${MODE_DISPLAY_NAME[state.mode] || "Mode"} run? Your inventory, visits and job board will be cleared.`, () => {
     closeOverlay("settingsSession");
-    startNewSession();
+    resetCurrentModeRun();
   });
 });
 /* Full factory reset, not just a cache-clear -- unregisters the PWA
    service worker and clears every Cache Storage entry it ever wrote under
    (the original "the game looks out of date" self-serve fix, a stale
    cached copy being served offline-first), AND wipes every localStorage
-   key this game owns (SAVE_KEY, PREFS_KEY, HISTORY_KEY, and any legacy
-   per-slot keys from before the current save format -- see loadAll()'s
-   own migration comments) so the reload that follows boots exactly like
-   a brand-new install: no save, no run history, and -- critically --
+   key this game owns (every mode's own save, see saveKeyFor(), plus
+   PREFS_KEY, HISTORY_KEY, and any legacy pre-per-mode keys -- see
+   loadAll()'s own migration comments) so the reload that follows boots
+   exactly like a brand-new install: no save, no run history, and -- critically --
    prefs.tutorialHintsSeen/mouseTipsShown both gone too, so every
    Professor Mouse tip plays again from the very first one. loadAll()
    finding no save on that reload is what makes bootedNewSession true and
@@ -11084,10 +11239,6 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
   });
 });
 
-/* Main Menu: Continue is a pure no-op close -- the run underneath was
-   never touched, so there's nothing to restore. Reset reuses the exact
-   same confirm+startNewSession path resetBtn already used, just entered
-   from here instead. */
 /* Straight to the real title screen, no Continue/Reset fork in front of
    it any more -- the run underneath is never touched (showWelcomeSlide()
    is pure presentation, see its own comment), so "come back and continue
@@ -11576,7 +11727,8 @@ const bootedNewSession = loadAll();
 // reload (or the page just re-running its own boot code) keeps it, but a
 // phone actually closing the app/tab and reopening it later starts a
 // FRESH context with sessionStorage empty again, even though localStorage
-// (SAVE_KEY, read by loadAll() above) still has the run. That's exactly
+// (prefs.lastActiveMode's own save, read by loadAll() above) still has
+// the run. That's exactly
 // the "was this app truly closed and reopened" signal bootedNewSession
 // alone can't give -- bootedNewSession only catches a session with no
 // save at all, so a returning player got dropped straight back into
