@@ -363,6 +363,12 @@ body[data-screen="market"] #trackedPill{display:none}
   background:rgba(15,20,28,.82); border:2px solid var(--ok); border-radius:16px;
   box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
   animation:pickNotePulse 2.2s ease-in-out infinite;
+  /* Frozen to the top of the screen while scrolling the map -- same
+     position:sticky freeze .stationhead.frozen already uses (see its own
+     comment). Lower z-index than .map-card-wrap's 40 (see below) so a
+     selected station's own preview card, also pinned at the very top,
+     visually covers this note rather than the two stacking awkwardly. */
+  position:sticky; top:0; z-index:33;
 }
 @keyframes pickNotePulse{
   0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft)}
@@ -506,6 +512,23 @@ body[data-screen="market"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
+/* Classic Mode's own Job Select (see openJobBoard()/renderJobBoard()) --
+   slides down from the top instead of in from the left, full width of
+   the phone frame rather than a partial side panel, since it now carries
+   the FULL board (browse/take, track, station-visited progress) in place
+   of the Marketplace screen it used to open onto -- see updateHub()'s own
+   comment on why Home's "market" face opens this in Classic Mode now.
+   Adventure Mode's Quests tray is untouched (openJobBoard() only adds
+   this class in Classic). */
+#jobSheet.top-tray{
+  top:0; left:0; right:0; bottom:auto; width:auto;
+  max-height:calc(100% - var(--hub-h, 67px) - env(safe-area-inset-bottom) - 30px);
+  padding-left:0;
+  border-right:none; border-left:none; border-bottom:2.5px solid var(--gold);
+  border-radius:0 0 14px 14px;
+  transform:translateY(-100%);
+}
+#jobSheet.top-tray.open{transform:none}
 /* Trade Market, Quests, and Collections used to be three more instances of
    this same slide-from-left sheet shape -- all three now render inline on
    the Marketplace screen itself instead (see marketSectionHTML() and
@@ -729,7 +752,12 @@ body[data-screen="market"] #trackedPill{display:none}
 .market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px}
 .market-classic-progress .market-progress-stations{width:100%; gap:6px}
 .market-classic-progress .market-progress-station{
-  flex:1 1 0; width:auto; max-width:46px; aspect-ratio:1; font-size:19px;
+  /* height:auto overrides the base rule's fixed 24px (see
+     .market-progress-station above) -- without it the circle stretched
+     into an oval, width flexed open by the row below but height pinned
+     at its old fixed value. aspect-ratio alone can't win that fight once
+     an explicit height is already set elsewhere. */
+  flex:1 1 0; width:auto; height:auto; max-width:46px; aspect-ratio:1; font-size:19px;
 }
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
@@ -1516,14 +1544,17 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 /* "Needed for [selected pinned item]" badge -- the SELECTED item's own
    icon, not this card's, so it reads as a pointer back to what it's
-   feeding into. Same 28px size as the owned checkmark above (both now
+   feeding into. True top-right corner now (was offset in from it to dodge
+   the pin toggle, which has since moved to the opposite corner -- see
+   .shop-pin) -- same 28px size as the owned checkmark below (both now
    match .crafted-row .station-item-icon's own footprint) and a higher
-   z-index so it stays on top wherever the two overlap -- it used to
-   render behind the checkmark (plain DOM/paint order put the checkmark,
-   a ::after pseudo-element, above an earlier real sibling), silently
-   hiding the more informative of the two badges. */
+   z-index so it wins whenever the two genuinely overlap (an owned item
+   that's also the tracked one itself, not just a component of it) --
+   it used to render behind the checkmark (plain DOM/paint order put the
+   checkmark, a ::after pseudo-element, above an earlier real sibling),
+   silently hiding the more informative of the two badges. */
 .item-pin-badge{
-  position:absolute; top:-9px; right:20px; width:28px; height:28px;
+  position:absolute; top:-8px; right:-8px; width:28px; height:28px;
   border-radius:50%; background:var(--card); border:2px solid var(--ok);
   display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
@@ -1534,9 +1565,16 @@ body[data-screen="market"] #trackedPill{display:none}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 .tier{font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink2); background:var(--sunken);
   padding:2px 7px; border-radius:5px}
-/* Smaller than .refpin's own 34px -- this sits inline with the item name
-   in a compact single-line row, not a roomier Item Reference row. */
-.shop-pin{width:26px; height:26px; font-size:13px; border-radius:7px; align-self:center}
+/* Top-left corner badge now (was inline with the item name) -- mirrors
+   .item-pin-badge's own corner treatment on the opposite side, so both
+   of an item card's "special" indicators read as a matched pair of
+   corner badges rather than one inline button and one floating badge.
+   Round + 28px to match every other corner badge's own footprint
+   (.item.owned::after, .item-pin-badge, .item.stocked::after). */
+.shop-pin{
+  position:absolute; top:-9px; left:-9px; z-index:3;
+  width:28px; height:28px; border-radius:50%; font-size:14px;
+}
 /* Left-aligned, flush with the item name above it -- now that the Craft
    button lives outside .ibody entirely (see .craftbtn), there's no longer
    a gutter to keep the list away from, and left-justifying against the
@@ -2945,6 +2983,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
+  #jobSheet.top-tray{left:50%; right:auto; width:768px; margin-left:-384px}
   #collectionToast, #eventToast{left:50%; margin-left:-192px}
   #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
@@ -3337,6 +3376,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <input type="checkbox" id="setForceModes" class="switch" aria-label="Force unlock Classic and Zen Mode">
     </div>
+    <div class="setting-row">
+      <span class="setting-ico">🏫</span>
+      <span class="setting-body">
+        <span class="setting-label">Classroom Mode</span>
+        <span class="setting-sub">Only Classic Mode is offered on the mode picker -- Adventure and Zen stay hidden</span>
+      </span>
+      <input type="checkbox" id="setClassroomMode" class="switch" aria-label="Classroom Mode">
+    </div>
 
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>
@@ -3385,7 +3432,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         </button>
         <button type="button" class="mode-newgame-btn" data-mode-newgame="classic">New Game</button>
       </div>
-      <div class="mode-card" data-mode="hard">
+      <div class="mode-card" data-mode="hard" id="hardModeCard">
         <button type="button" class="mode-card-main" data-mode-select="hard">
           <span class="mode-emoji">🔥</span>
           <span class="mode-name">Adventure Mode</span>
@@ -5084,8 +5131,14 @@ const MODE_DISPLAY_NAME = {zen:"Zen Mode", classic:"Classic Mode", hard:"Adventu
 // (see pendingClassicUnlockTip/prefs.classicUnlocked).
 function refreshModePicker(){
   const forced = prefs.devForceModesUnlocked;
-  document.getElementById("classicModeCard").hidden = !(prefs.classicUnlocked || forced);
-  document.getElementById("zenModeCard").hidden = !(prefs.zenUnlocked || forced);
+  const classroom = prefs.classroomMode;
+  // Classroom Mode: Classic is the only option, forced visible regardless
+  // of prefs.classicUnlocked (Adventure Mode -- the normal way to earn
+  // that unlock -- is hidden too, so the real flag would otherwise be
+  // unreachable). Zen and Adventure both drop out entirely.
+  document.getElementById("classicModeCard").hidden = classroom ? false : !(prefs.classicUnlocked || forced);
+  document.getElementById("zenModeCard").hidden = classroom ? true : !(prefs.zenUnlocked || forced);
+  document.getElementById("hardModeCard").hidden = classroom;
   // Each mode is its own save now (see saveKeyFor()) -- show what's
   // actually IN it (visits/points) so "Continue" vs. "New Game" is an
   // informed choice, not a guess. scoreOf() (not score(), which only
@@ -5622,6 +5675,18 @@ Object.entries(SUBZONE_TRAVEL).forEach(([station, cfg]) => {
 const subzoneVisited = name => !!state.visitedStations[name];
 
 const TOTAL_ITEM_COUNT = new Set(ENTRIES.map(e => e.name)).size;
+// Classic Mode's own denominator for Item Reference's "N / total" count
+// (see renderCodex()/applyRefFilter()) -- its own catalog is CORE_SET, not
+// the full item list, so the full TOTAL_ITEM_COUNT above would read as
+// "missing" items that were never reachable in this mode to begin with.
+// Item NAMES, not station|item pairs -- a dual-homed item (Glass, sold at
+// 3 stations but only actually core AT one of them) is still fully part
+// of Classic's catalog through that one station, so checks against this
+// set (unlike isCoreEntry(), which needs one specific station) work
+// correctly regardless of which station a caller happens to be looking at.
+const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
+const TOTAL_CORE_ITEM_COUNT = CORE_ITEM_NAMES.size;
+const refItemTotal = () => state.mode === "classic" ? TOTAL_CORE_ITEM_COUNT : TOTAL_ITEM_COUNT;
 
 /* Recurring raw materials that show up under the same name at several
    stations (Water, Clay, etc.) -- pinned to the top of every shop list
@@ -5906,6 +5971,12 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:null, pinnedItems:[], minig
   // flags at all, so turning it back off returns the picker to exactly
   // whatever the player had actually earned.
   devForceModesUnlocked:false,
+  // Dev Tools -- on by default (this game shipped for classroom use first):
+  // restricts the mode picker to Classic Mode alone, see refreshModePicker().
+  // Classic is force-visible while this is on regardless of
+  // prefs.classicUnlocked -- Adventure Mode (the normal way to unlock it)
+  // is hidden too, so there'd otherwise be no way to ever reach it.
+  classroomMode:true,
   // Which mode's own save (see saveKeyFor()) a plain reload/relaunch
   // resumes into -- set every time chooseMode() actually lands on a mode
   // (see resumeMode()/startFreshMode()), null only pre-migration/before
@@ -6070,21 +6141,18 @@ function edgeUnlocked(a, b){
    for picking a starting station as for normal in-run movement). */
 const isMapConnected = (a,b) => a === null ? !!b :
   !!(a && b && MAP_ADJ[a] && MAP_ADJ[a].has(b) && edgeUnlocked(a,b));
-/* Two independent fast-travel unlocks, one per mode -- Classic earns
-   free-roam by having actually SEEN every station (allStationsVisited()),
-   Adventure/Hard still earns it the original way, by owning Helicopter
-   (see goStation()'s own Natural-Gas cost that comes with using
-   Helicopter's version, which Classic's doesn't have). Either way,
-   once unlocked every station on the map is reachable regardless of
-   graph adjacency, not just this one edge. Still respects
-   mustStartAtOcean() at both call sites below (a === null there means
-   "picking a starting station," not an in-run move, so the very first
-   move of a Hard Mode run stays gated the same as ever -- fast travel
-   only kicks in once the player is actually standing somewhere). */
-const canReachStation = (a, b) => {
-  if (state.mode === "classic") return allStationsVisited() || isMapConnected(a, b);
-  return owns("Helicopter") || isMapConnected(a, b);
-};
+/* One fast-travel unlock, same in every mode -- owning Helicopter makes
+   every station on the map reachable regardless of graph adjacency, not
+   just this one edge (Classic used to also earn free-roam just by having
+   SEEN every station; removed -- Helicopter is the only way in now, same
+   as Adventure/Hard, though Classic's own goStation() never charges it
+   Natural Gas the way Adventure's does since Classic doesn't spend items
+   at all). Still respects mustStartAtOcean() at both call sites below
+   (a === null there means "picking a starting station," not an in-run
+   move, so the very first move of a Hard Mode run stays gated the same
+   as ever -- fast travel only kicks in once the player is actually
+   standing somewhere). */
+const canReachStation = (a, b) => owns("Helicopter") || isMapConnected(a, b);
 
 const MAP_NODE_POS = {
   "The Observatory":    [49.7,  9.1],
@@ -6820,13 +6888,13 @@ function itemHTML(entry, idx){
   const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>'
     : (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}"${batchOn && stock > 0 ? ` data-stock="×${stock}"` : ""}>
+    <button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
+      title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>
     ${pinBadge}
     <div class="irow">
       <div class="iem">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}
-          <button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
-            title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button></div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${tierTag}</div>
         <div class="recipe">${recipeHTML(entry)}</div>
       </div>
     </div>${craftCol}</div>`;
@@ -6970,22 +7038,11 @@ function mapCardHTML(name){
     </div>` : ""}`;
   const poolHTML = !identityKnown ? "" :
     `<div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}</button>`).join("")}</div>`;
-  // Classic Mode only: an out-of-reach station's own preview card explains
-  // exactly what unlocks fast travel here (visiting every station, see
-  // canReachStation()'s own Classic branch), same circle row Marketplace
-  // shows for the same underlying progress. Adventure/Hard's fast travel
-  // is Helicopter-gated instead, already explained well enough by owning
-  // (or not owning) a real item, so this is Classic-only.
-  const showFastTravelHint = state.mode === "classic" && !here && !connected;
   return `<div class="map-card" style="--suit:${su.color}">
     <div class="row1"><span class="em">${identityKnown ? em(s.emoji) : "❓"}</span><h2>${identityKnown ? esc(name) : "???"}</h2>${trackedPill}</div>
     ${poolHTML}
     ${itemsHTML}
     ${statusNote ? `<p class="map-status-note">${esc(statusNote)}</p>` : ""}
-    ${showFastTravelHint ? `<div class="mc-fasttravel-hint">
-      <div class="market-station-progress-label">Visit every station to unlock fast travel</div>
-      <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>
-    </div>` : ""}
   </div>`;
 }
 
@@ -7053,13 +7110,8 @@ function renderMap(){
   // (see mapPathsHTML), which just means the *entire* web lights up at
   // once. That's too busy for a screen whose only job is "pick one node
   // to begin" -- skip the web entirely until there's an actual location
-  // to draw connections from. Classic Mode additionally drops the whole
-  // path web once fast travel unlocks (every station visited) -- these
-  // gold lines exist to show which moves are adjacency-legal, and once
-  // every station is reachable from anywhere (see canReachStation()) that
-  // signal is just noise.
-  const classicFastTravel = state.mode === "classic" && allStationsVisited();
-  const pathsHTML = (state.lastStation === null || classicFastTravel) ? "" : mapPathsHTML(state.lastStation);
+  // to draw connections from.
+  const pathsHTML = state.lastStation === null ? "" : mapPathsHTML(state.lastStation);
 
   return `${cardHTML}
     ${banner}
@@ -7635,7 +7687,18 @@ function renderCodex(){
   // catalog, but a sub-zone doesn't really exist for a player yet if
   // they've never unlocked and visited it, so listing its items here
   // would spoil that it exists at all, not just what's in it.
-  const rows = allRows.filter(row => !SUBZONE_PARENT[row.station] || subzoneVisited(row.station));
+  // Classic Mode additionally never sees the full catalog at all -- only
+  // its own CORE_SET. Checked by NAME (CORE_ITEM_NAMES), not isCoreEntry()
+  // (which needs one specific station) -- allRows already deduped each
+  // item down to a single representative station above, and for a dual-
+  // homed item that representative isn't guaranteed to be its core one
+  // (Glass sells at 3 stations, dedup keeps whichever comes first in
+  // station order, but it's only actually core at The City) -- checking
+  // isCoreEntry() on that arbitrary station wrongly excluded it even
+  // though Classic players can genuinely reach it through The City.
+  const rows = allRows
+    .filter(row => !SUBZONE_PARENT[row.station] || subzoneVisited(row.station))
+    .filter(row => state.mode !== "classic" || CORE_ITEM_NAMES.has(row.name));
 
   const TIER_ORDER = {MATERIAL:0, COMPONENT:1, CREATION:2, CAPSTONE:3};
   rows.sort((a, b) =>
@@ -7679,7 +7742,7 @@ function renderCodex(){
     <div class="refbar">
       <input id="refFilter" type="search" placeholder="Search items, ingredients or stations…"
              aria-label="Search the item reference" value="${esc(refFilterQuery)}">
-      <span class="refcount" id="refCount">${rows.length} / ${TOTAL_ITEM_COUNT}</span>
+      <span class="refcount" id="refCount">${rows.length} / ${refItemTotal()}</span>
     </div>
     ${pinnedHTML}
     <div class="reftable">${restRows.map(rowHTML).join("")}</div>`;
@@ -7973,7 +8036,10 @@ function setHubHomeFace(face){
   const viaAir = selectedMapStation && !isMapConnected(state.lastStation, selectedMapStation);
   const FACES = {
     roll:   { hi: "🎲", hl: "Roll" },
-    market: { hi: "🏪", hl: "Market" },
+    // Classic Mode's own copy of this face opens Job Select, not the
+    // Marketplace (see hubHomeFace()'s own comment) -- the icon/label
+    // says so rather than lying about what tapping it actually does.
+    market: state.mode === "classic" ? { hi: "📋", hl: "Jobs" } : { hi: "🏪", hl: "Market" },
     travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
@@ -8126,7 +8192,7 @@ function updateHub(){
   home.setAttribute("aria-disabled", "false");
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
-    : face === "market" ? "Open the Marketplace"
+    : face === "market" ? (state.mode === "classic" ? "Open Job Select" : "Open the Marketplace")
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : "Back to the station map";
   // Home doubles as the Marketplace shortcut on the map screen (see its
@@ -8139,9 +8205,10 @@ function updateHub(){
   // it" -- tradeBodyHTML() rolls its first batch the moment it's opened).
   const newQuestAvailable = state.mode === "hard" && QUESTS.some(q => questAvailable(q) && questVisible(q));
   const tradePostNew = state.mode === "hard" && allStationsVisited() && !state.tradeOffers.length;
+  const newJobAvailable = state.mode === "classic" && state.jobBoardUnseen.length > 0;
   if (face === "roll" && state.pendingRoll){
     setHubBadge("hubHome", String(state.pendingRoll), true);
-  } else if (face === "market" && (newQuestAvailable || tradePostNew)){
+  } else if (face === "market" && (newQuestAvailable || tradePostNew || newJobAvailable)){
     setHubBadge("hubHome", "!");
   } else {
     setHubBadge("hubHome", null);
@@ -8180,6 +8247,13 @@ function canTravelTo(name){
                Marketplace", same as it does for any other panel. */
 function hubHomeFace(){
   const panel = openPanelName();
+  // Classic Mode's Job Select tray reads as "Map" (not "Close") on Home
+  // while it's open -- see updateHub()'s own comment on why "market"
+  // means Jobs in Classic now; tapping Home to leave it really is just
+  // "go back to the map" (already true underneath), matching Classic's
+  // "Map and Job Select are the only two screens" framing instead of a
+  // generic close arrow.
+  if (panel === "jobs" && state.mode === "classic") return "map";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -8824,12 +8898,22 @@ function goStation(name){
   // Wardrobe/planets, entered through this same function but never real
   // map hops), lastStation !== null excludes picking a starting station,
   // and isMapConnected() being false is exactly "this move only works
-  // because of Helicopter" (see canReachStation()). Classic Mode's own
-  // fast travel (allStationsVisited()) has no resource cost by design.
+  // because of Helicopter" (see canReachStation()). The cost itself stays
+  // Hard-Mode-only by design (Classic never spends items at all) even
+  // though the reachability rule underneath it is the same in every mode.
   if (state.mode === "hard" && state.lastStation !== null && STATION_BY_NAME[name] &&
       !isMapConnected(state.lastStation, name)){
     const idx = state.items.indexOf("Natural Gas");
     if (idx !== -1) state.items.splice(idx, 1);
+  }
+  // Classic Mode only: the very first station of a run (state.visits still
+  // 0 at this point, before the increment below) has its capstone
+  // auto-pinned -- a concrete first goal on the map/tracked-item badges
+  // from the very first tap, rather than an empty Pins tray until the
+  // player finds and pins something themselves.
+  if (state.mode === "classic" && state.visits === 0 && STATION_BY_NAME[name]){
+    const capName = STATION_BY_NAME[name].capstone[1];
+    if (!isPinned(capName)) togglePin(capName);
   }
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
@@ -9767,7 +9851,7 @@ function applyRefFilter(){
     row.style.display = hit ? "" : "none";
     if (hit) shown++;
   });
-  document.getElementById("refCount").textContent = `${shown} / ${TOTAL_ITEM_COUNT}`;
+  document.getElementById("refCount").textContent = `${shown} / ${refItemTotal()}`;
 }
 
 document.getElementById("screen").addEventListener("input", ev => {
@@ -9893,8 +9977,16 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     return;
   }
   if (face === "roll"){ triggerRoll(); return; }
-  if (face === "market"){ openMarket(); return; }
+  // Classic Mode's own copy of this face opens Job Select directly (see
+  // hubHomeFace()'s own comment) -- the Marketplace screen itself is
+  // otherwise unreachable there now, replaced by this tray.
+  if (face === "market"){ (state.mode === "classic" ? openJobBoard : openMarket)(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
+  // Job Select reads as "Map" rather than "Close" while open in Classic
+  // Mode (see hubHomeFace()'s own comment) but still needs the tray
+  // itself actually closed -- the map underneath was never navigated
+  // away from, so there's nothing else for goHome() below to do here.
+  if (face === "map" && openPanelName() === "jobs"){ closeJobBoard(); return; }
   goHome(); // face === "map"
 });
 document.getElementById("hubInv").addEventListener("click", () => hubPanelClick("drawer", openDrawer));
@@ -10186,22 +10278,35 @@ const jobSheet = document.getElementById("jobSheet"), jobScrim = document.getEle
 /* Same standing sheet, two different systems inside it -- Adventure Mode
    shows Quests (reusing the Marketplace's own questsBodyHTML(), so this
    is a genuine shortcut to that content, not a second implementation of
-   it), Classic shows the Job Board. Zen never gets here at all (see
-   updateHub()'s own hubJobs.disabled). */
+   it), Classic shows Job Select. Zen never gets here at all (see
+   updateHub()'s own hubJobs.disabled).
+   Classic Mode's own copy is the FULL board now (browse/take AND track),
+   not just the acceptedOnly personal log Adventure's Quests still is --
+   Classic no longer has a separate Marketplace screen to browse offers
+   from (see #jobSheet.top-tray's own CSS comment), so this sheet is the
+   only place left to do that. The station-visited progress row rides
+   along with it for the same reason it used to sit on the Marketplace
+   screen: Job Board's own unlock (jobBoardUnlocked()) still gates on
+   allStationsVisited(), so it's still worth showing here. */
 function renderJobBoard(){
-  document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests" : "📋 Jobs";
-  // acceptedOnly:true -- this standing sheet (reached from the bottom
-  // hub's own Jobs/Quests button) is the player's personal log, never a
-  // place to browse and accept something new (see jobBoardHTML()/
-  // questsBodyHTML()'s own comments) -- that's the Marketplace's job.
-  document.getElementById("jobSheetBody").innerHTML =
-    state.mode === "hard" ? questsBodyHTML(true) : jobBoardHTML(true);
+  const classic = state.mode === "classic";
+  document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests" : "📋 Job Select";
+  document.getElementById("jobSheetBody").innerHTML = classic
+    ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>${jobBoardHTML(false)}`
+    // acceptedOnly:true -- Adventure's Quests tray stays a personal log,
+    // never a place to browse and accept something new (see
+    // questsBodyHTML()'s own comment) -- that's still the Marketplace's job.
+    : questsBodyHTML(true);
 }
 function openJobBoard(){
   if (state.mode !== "hard" && jobBoardUnlocked()) topUpJobBoard();
   state.jobBoardUnseen = [];
   save();
   renderJobBoard();
+  // Classic's own copy slides down from the top instead of in from the
+  // left (see #jobSheet.top-tray's own CSS) -- Adventure's Quests tray is
+  // untouched, so this only ever applies in Classic.
+  jobSheet.classList.toggle("top-tray", state.mode === "classic");
   jobSheet.classList.add("open"); jobScrim.classList.add("open");
   jobSheet.setAttribute("aria-hidden", "false");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "true");
@@ -11085,8 +11190,10 @@ document.getElementById("setDevBack").addEventListener("click", () => openSettin
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
 const setForceModesBox = document.getElementById("setForceModes");
+const setClassroomModeBox = document.getElementById("setClassroomMode");
 function openSettingsDev(){
   setForceModesBox.checked = !!prefs.devForceModesUnlocked;
+  setClassroomModeBox.checked = !!prefs.classroomMode;
   openSettingsScreen("settingsDev");
 }
 document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
@@ -11097,6 +11204,10 @@ document.getElementById("settingsDevBtn").addEventListener("click", openSettings
 // Save/Cancel pair.
 setForceModesBox.addEventListener("change", () => {
   prefs.devForceModesUnlocked = setForceModesBox.checked;
+  savePrefs();
+});
+setClassroomModeBox.addEventListener("change", () => {
+  prefs.classroomMode = setClassroomModeBox.checked;
   savePrefs();
 });
 
