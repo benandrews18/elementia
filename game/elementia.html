@@ -238,15 +238,22 @@ body[data-picking] #topbar{display:none}
 #hubHome .hi{
   width:auto; height:auto; background:none; border:none; box-shadow:none; font-size:37px;
 }
-/* Twice the size of every other face's glyph here (2em against .hi's own
-   37px font-size, so it scales with it automatically) -- the custom
+/* Twice the size of every other face's glyph here -- the custom
    marketplace art reads small against a real 37px emoji at the shared
    1em sizing every other custom icon in the game uses (see the base
    selector list this class also belongs to), and this is the one
    flagship button it's worth letting run a little large for. Scoped to
    #hubHome specifically (.marketicon isn't used anywhere else) so no
-   other appearance of this same art is affected. */
-#hubHome .hi .marketicon{width:2em; height:2em}
+   other appearance of this same art is affected.
+   transform:scale(2), not width/height:2em -- a transform doesn't touch
+   layout, so .hi/.hl's shared flex column still measures this icon at
+   its real 1em box exactly like every other face's plain-emoji glyph.
+   Sizing it via width/height instead grew the icon's actual LAYOUT
+   height to 2x, which pushed the label below it down along with it --
+   #hubHome.face-market's own .hl ended up sitting well below where
+   Roll/Travel/Map/Close's own labels all land, even though every face
+   shares the exact same CSS otherwise. */
+#hubHome .hi .marketicon{transform:scale(2)}
 #hubHome:not(:disabled):active{
   transform:translateY(3px);
   box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
@@ -10414,23 +10421,27 @@ function renderJobBoard(){
       : classicPinsAndJobsHTML();
 }
 /* Pins + active/completed jobs only -- no "Available Jobs" board (that's
-   jobBoardHTML(false)'s own job, reserved for the full variant above) --
-   same pin-chip markup/row renderPinsTray() uses for the floating Pins
-   button's own tray, just embedded here too so a player checking in on
-   Jobs sees what they're tracking without a second button to visit. */
+   jobBoardHTML(false)'s own job, reserved for the full variant above).
+   The pinned section itself is a byte-for-byte match of Item Reference's
+   own (see renderCodex()'s pinnedHTML/rowHTML) -- same .ref-pinned-
+   heading/.reftable.ref-pinned wrapper around refStyleRowHTML() rows
+   (the same shared row renderer job/quest rows in this sheet already
+   use, so its pin/full-breakdown buttons work here for free via
+   #jobSheetBody's existing [data-pin]/[data-toggle] handling), not the
+   floating Pins button's own smaller pin-chip style -- including nothing
+   at all rendering when there's nothing pinned, exactly like Item
+   Reference. That does mean this section can't switch WHICH pinned item
+   is tracked without unpinning/repinning it (data-pin already does that
+   part) -- same limitation Item Reference's own pinned rows have; the
+   floating Pins button's chip tray is still the place for that. */
 function classicPinsAndJobsHTML(){
   const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
-  const chips = names.length
-    ? `<div class="map-job-chips">${names.map(name => {
-        const entry = ENTRIES.find(e => e.name === name);
-        const sel = selectedJobItem === name;
-        return `<button type="button" class="map-job-chip ${sel ? "selected" : ""}" data-select-job="${esc(name)}" aria-pressed="${sel}">
-          <span class="mj-em">${em(entry.emoji)}</span><span class="mj-name">${esc(name)}</span>
-        </button>`;
-      }).join("")}</div>`
-    : `<span class="pinned-empty-note">Pin items in Item Reference to track them here.</span>`;
-  const pinsSection = `<details class="job-section" open><summary class="job-board-heading">📌 Pinned Items</summary>${chips}</details>`;
-  return pinsSection + jobBoardHTML(true);
+  const pinnedHTML = names.length
+    ? `<div class="ref-pinned-heading">📌 Pinned</div><div class="reftable ref-pinned">${
+        names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
+      }</div>`
+    : "";
+  return pinnedHTML + jobBoardHTML(true);
 }
 /* Shared open logic for both doors -- jobSheetVariant (set by whichever
    of the two functions below actually got called) decides the rest:
@@ -11289,17 +11300,6 @@ document.getElementById("planetPicker").addEventListener("click", ev => {
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
-  // Pin chips (see classicPinsAndJobsHTML(), the bottom hub's own compact
-  // Jobs side tray) -- same toggleJobSelect() the floating Pins button's
-  // own tray uses, just reused here since this sheet sits outside
-  // #screen's own delegation too (see the [data-toggle] comment below).
-  const selectJobBtn = ev.target.closest("[data-select-job]");
-  if (selectJobBtn){
-    toggleJobSelect(selectJobBtn.dataset.selectJob); // also calls render() itself
-    renderJobBoard(); // ...but that doesn't touch this sheet's own content -- refresh separately
-    return;
-  }
-
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
