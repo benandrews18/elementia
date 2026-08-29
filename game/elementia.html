@@ -269,7 +269,12 @@ body[data-picking] #topbar{display:none}
    (box-shadow:none included) rather than getting the glossy treatment,
    since it's meant to read as switched-off, not another live action face. */
 #hubHome.face-roll{--face-color:var(--ok); color:#fff}
-#hubHome.face-market{--face-color:var(--gold); color:#2a2110}
+/* White label text like every other live face (Roll/Travel/Map) -- used
+   to be a dark #2a2110 for contrast against the gold background, but the
+   label's now mostly hidden behind the doubled-size marketplace icon
+   anyway (see .marketicon above), so matching the others reads as more
+   consistent than it costs in legibility. */
+#hubHome.face-market{--face-color:var(--gold); color:#fff}
 #hubHome.face-travel{--face-color:var(--hub-travel); color:#fff}
 #hubHome.face-map{--face-color:var(--hub-map); color:#fff}
 #hubHome.face-roll, #hubHome.face-market, #hubHome.face-travel, #hubHome.face-map{
