@@ -63,7 +63,7 @@ STATIONS = [
              ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",15),
              ("🌊","Water Turbine","CREATION","💧 Water + __CONCRETE__ Concrete + __TURBINEBLADE__ Turbine Blade + 🔋 Battery",22),
 
-             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass",13),
+             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + __FIBERGLASS__ Fiberglass",13),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25),
              ("🛳️","Cruise Ship","CREATION","🚤 Speedboat + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🎂 Fruit Cake + 🎺 Trumpet",40)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",21)},
@@ -230,7 +230,7 @@ STATIONS = [
              ("📚","Library","CREATION","🏢 Building + 📕 Book",15),
              ("🚁","Helicopter","CREATION","⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + __TURBINEBLADE__ Turbine Blade",18),
              ("🗼","Skyscraper","CREATION","🏢 Building + ☁️ Cloud + 📡 Satellite Dish",14),
-             ("🏍️","Motorcycle","CREATION","🚲 Bicycle + ⚙️ Engine",18),
+             ("🏍️","Motorcycle","CREATION","🚲 Bicycle + ⚙️ Engine + __FIBERGLASS__ Fiberglass",18),
              ("🍣","Sushi Restaurant","CREATION","🌿 Seaweed + 🐟 Salmon + 🏢 Building",19),
              ("🏛️","Museum","CREATION","🏢 Building + 🔭 Telescope + __FOSSIL__ Fossil",16),
              ("🚉","Central Station","CREATION","🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",25)],
