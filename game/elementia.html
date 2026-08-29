@@ -5236,12 +5236,23 @@ function resumeMode(mode){
    (see playMapIntroScroll()), used both for a mode's very first-ever pick
    (chooseMode() above) and for deliberately starting over (New Game/
    Reset Session below), since both are genuinely "nothing carries over"
-   moments. */
+   moments. Pins/tracked-item/dismissed-tips are per-RUN habits, not
+   long-term settings, but they live in prefs (mouseTipsShown is plain
+   module state) rather than the state object that just got replaced --
+   nothing about wiping state on its own would have reset them, so it's
+   done explicitly here instead. Guards every caller at once: this used
+   to only happen inside resetCurrentModeRun() below, so New Game (which
+   calls straight into this function) silently left a previous run's
+   pins sitting there un-cleared. */
 function startFreshMode(mode){
   state = freshState();
   state.mode = mode;
   applyVisitLimit();
-  prefs.lastActiveMode = mode; savePrefs();
+  selectedJobItem = null;
+  mouseTipsShown = new Set();
+  prefs.pinnedItems = [];
+  prefs.lastActiveMode = mode;
+  savePrefs();
   save();
   closeOverlay("modeOverlay");
   render();
@@ -9616,18 +9627,12 @@ function punchInventory(){
    over, staying right here rather than bouncing out to the main menu --
    Zen/Classic/Adventure are separate saves now (see saveKeyFor()), so
    there's no longer a single mode-less "session" to fall back to anyway.
-   Reuses startFreshMode() for the actual reset (including its own pan --
-   a wiped save genuinely IS the beginning of a run, same as a first-ever
-   mode pick) after recording the run that's ending, same as before. */
+   Reuses startFreshMode() for the actual reset (including its own pan,
+   and its own pins/tracked-item/tips clearing -- see that function's own
+   comment) after recording the run that's ending, same as before. */
 function resetCurrentModeRun(){
   const mode = state.mode;
   recordHistory();
-  selectedJobItem = null;
-  mouseTipsShown = new Set();
-  // Pins are a "what am I working toward right now" habit, not a
-  // long-term bookmark -- they shouldn't carry over into a new run where
-  // none of them are relevant anymore (a fresh session owns nothing yet).
-  prefs.pinnedItems = []; savePrefs();
   startFreshMode(mode);
 }
 
