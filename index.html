@@ -1119,6 +1119,17 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
+/* Classic Mode's initial station-pick screen only (see renderMap()'s own
+   comment) -- a smaller corner badge (bottom-right, .map-node-tracked-
+   badge already owns top-center) showing each node's own capstone, gold
+   border rather than the tracked badge's green so the two read as
+   different signals at a glance. */
+.map-node-capstone-badge{
+  position:absolute; bottom:-6px; right:-6px;
+  width:22px; height:22px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:12px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
+}
 /* The station card overlays the map as a floating panel pinned to the top
    of the viewport (sticky, just under the topbar) instead of scrolling
    away with the page -- per spec, it should always be reachable without
@@ -5931,6 +5942,12 @@ const HISTORY_MAX = 50;
 
 let state, screen = "map", current = null;
 let selectedMapStation = null; // ephemeral: which node's card is showing on the map
+// Classic Mode's initial station-pick preview (see syncInitialPickCapstoneTracking())
+// -- whichever capstone name THIS mechanism itself last auto-pinned/tracked,
+// so it can be cleanly un-done (only that one, never a genuine manual pin
+// that happens to match) the instant the preview swaps to a different
+// station or clears entirely. Ephemeral, same lifecycle as selectedMapStation.
+let initialPickPinnedCapstone = null;
 // Ephemeral: which of Jobs/Quests/Trade/Collections is expanded inline on
 // the Marketplace screen right now (null = just the banner) -- see
 // renderMarketScreen()/marketSectionHTML() and the #marketArc click
@@ -7099,8 +7116,16 @@ function renderMap(){
       .some(e => e.tier !== "CAPSTONE" && isRevealed(e) && jobTree.has(e.name));
     const trackedBadge = hasTracked
       ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
+    // Classic Mode's initial station-pick screen only (state.lastStation
+    // === null, nothing confirmed yet) -- every node's own capstone shows
+    // as a small corner badge, so a player can compare end goals while
+    // still choosing where to start (see syncInitialPickCapstoneTracking()
+    // for the matching auto-pin/track on whichever one's card is open).
+    const capstoneBadge = state.mode === "classic" && state.lastStation === null
+      ? `<span class="map-node-capstone-badge" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       ${trackedBadge}
+      ${capstoneBadge}
       <span class="mn-em">${identityKnown ? em(s.emoji) : "❓"}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
@@ -7372,6 +7397,37 @@ function togglePin(name){
   else prefs.pinnedItems.push(name);
   savePrefs();
   return true;
+}
+
+/* Classic Mode's initial station-pick preview: whichever station's card
+   is currently showing (selectedMapStation) has ITS capstone auto-pinned
+   AND actively tracked, so previewing a candidate shows its real end
+   goal immediately rather than an empty Pins tray. Swapping the preview
+   to a different station un-pins/un-tracks the old capstone and pins/
+   tracks the new one in the same pass; clearing the preview entirely
+   (deselecting) just un-does the last one with nothing to replace it.
+   Only ever un-pins/un-tracks whatever THIS function itself pinned
+   (initialPickPinnedCapstone), never a genuine manual pin that happens
+   to match -- see its own declaration.
+   Scoped to state.lastStation === null (nothing confirmed yet, still
+   choosing where to start) so this can never fire during regular play,
+   where pinning/tracking is entirely the player's own explicit choice --
+   see goStation()'s own separate, one-time auto-pin for what happens
+   once a station is actually confirmed (this one's own pin/track just
+   carries straight through into that, already in place). Call this right
+   after any assignment to selectedMapStation, before render(). */
+function syncInitialPickCapstoneTracking(){
+  if (state.mode !== "classic" || state.lastStation !== null) return;
+  const wantedName = selectedMapStation ? STATION_BY_NAME[selectedMapStation].capstone[1] : null;
+  if (initialPickPinnedCapstone && initialPickPinnedCapstone !== wantedName){
+    if (isPinned(initialPickPinnedCapstone)) togglePin(initialPickPinnedCapstone);
+    if (selectedJobItem === initialPickPinnedCapstone) selectedJobItem = null;
+  }
+  if (wantedName){
+    if (!isPinned(wantedName)) togglePin(wantedName);
+    selectedJobItem = wantedName;
+  }
+  initialPickPinnedCapstone = wantedName;
 }
 
 /* Every item anywhere in name's ingredient chain (recursive, items only --
@@ -9613,6 +9669,7 @@ function handleScreenClick(ev){
     } else {
       selectedMapStation = selectedMapStation === nodeBtn.dataset.mapNode ? null : nodeBtn.dataset.mapNode;
     }
+    syncInitialPickCapstoneTracking();
     render();
     return;
   }
@@ -9620,6 +9677,7 @@ function handleScreenClick(ev){
   if (selectedMapStation && ev.target.closest("[data-map-bg]")){
     if (mustStartAtOcean()) return;
     selectedMapStation = null;
+    syncInitialPickCapstoneTracking();
     render();
     return;
   }
