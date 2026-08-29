@@ -7143,10 +7143,17 @@ function renderMap(){
     // Same 28px "points back at the tracked item" badge itemHTML() uses
     // in the shop itself (see .item-pin-badge) -- only for a station
     // that's actually been visited (nothing to preview otherwise) and
-    // only counting items isRevealed() would actually show there, same
-    // scope stationItemIconsHTML() already uses for its own ring.
+    // only counting items isRevealed() would actually show there.
+    // Unlike stationItemIconsHTML()'s own near-identical ring (which
+    // deliberately excludes capstones -- they already get their own
+    // dedicated line on that same station card, so counting them again
+    // in the icon row would just double them up), this one does NOT
+    // exclude capstone tier: when the tracked item IS a capstone, this
+    // badge is the only breadcrumb pointing at its own home station at
+    // all, and dropping it right there left the trail going cold exactly
+    // at the destination that mattered most.
     const hasTracked = jobTree && !unvisited && entriesAt(name)
-      .some(e => e.tier !== "CAPSTONE" && isRevealed(e) && jobTree.has(e.name));
+      .some(e => isRevealed(e) && jobTree.has(e.name));
     // Classic Mode's initial station-pick screen only (state.lastStation
     // === null, nothing confirmed yet) -- every node's own capstone shows
     // in the SAME top-center slot the tracked-item badge below uses
