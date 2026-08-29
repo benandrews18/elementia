@@ -238,6 +238,15 @@ body[data-picking] #topbar{display:none}
 #hubHome .hi{
   width:auto; height:auto; background:none; border:none; box-shadow:none; font-size:37px;
 }
+/* Twice the size of every other face's glyph here (2em against .hi's own
+   37px font-size, so it scales with it automatically) -- the custom
+   marketplace art reads small against a real 37px emoji at the shared
+   1em sizing every other custom icon in the game uses (see the base
+   selector list this class also belongs to), and this is the one
+   flagship button it's worth letting run a little large for. Scoped to
+   #hubHome specifically (.marketicon isn't used anywhere else) so no
+   other appearance of this same art is affected. */
+#hubHome .hi .marketicon{width:2em; height:2em}
 #hubHome:not(:disabled):active{
   transform:translateY(3px);
   box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
@@ -1120,14 +1129,15 @@ body[data-screen="market"] #trackedPill{display:none}
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
 /* Classic Mode's initial station-pick screen only (see renderMap()'s own
-   comment) -- a smaller corner badge (bottom-right, .map-node-tracked-
-   badge already owns top-center) showing each node's own capstone, gold
-   border rather than the tracked badge's green so the two read as
-   different signals at a glance. */
+   comment) -- same top-center slot .map-node-tracked-badge uses during
+   regular gameplay (the two never render on the same node at once, see
+   renderMap()'s own comment), gold border rather than the tracked
+   badge's green so the two still read as different signals wherever a
+   player has seen both across a session. */
 .map-node-capstone-badge{
-  position:absolute; bottom:-6px; right:-6px;
-  width:22px; height:22px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
-  display:flex; align-items:center; justify-content:center; font-size:12px; line-height:1;
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  width:28px; height:28px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
 /* The station card overlays the map as a floating panel pinned to the top
@@ -7114,15 +7124,19 @@ function renderMap(){
     // scope stationItemIconsHTML() already uses for its own ring.
     const hasTracked = jobTree && !unvisited && entriesAt(name)
       .some(e => e.tier !== "CAPSTONE" && isRevealed(e) && jobTree.has(e.name));
-    const trackedBadge = hasTracked
-      ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     // Classic Mode's initial station-pick screen only (state.lastStation
     // === null, nothing confirmed yet) -- every node's own capstone shows
-    // as a small corner badge, so a player can compare end goals while
-    // still choosing where to start (see syncInitialPickCapstoneTracking()
-    // for the matching auto-pin/track on whichever one's card is open).
+    // in the SAME top-center slot the tracked-item badge below uses
+    // during regular gameplay (see syncInitialPickCapstoneTracking() for
+    // the matching auto-pin/track on whichever one's card is open). Takes
+    // priority over trackedBadge on a node that would otherwise show both
+    // -- the two never render on top of each other, and during THIS
+    // window (the tracked item is always itself one of the very capstones
+    // being previewed) the capstone badge is the more specific signal.
     const capstoneBadge = state.mode === "classic" && state.lastStation === null
       ? `<span class="map-node-capstone-badge" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
+    const trackedBadge = (hasTracked && !capstoneBadge)
+      ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       ${trackedBadge}
       ${capstoneBadge}
