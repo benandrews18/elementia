@@ -8326,7 +8326,13 @@ function updateHub(){
   // it" -- tradeBodyHTML() rolls its first batch the moment it's opened).
   const newQuestAvailable = state.mode === "hard" && QUESTS.some(q => questAvailable(q) && questVisible(q));
   const tradePostNew = state.mode === "hard" && allStationsVisited() && !state.tradeOffers.length;
-  const newJobAvailable = state.mode === "classic" && state.jobBoardUnseen.length > 0;
+  // activeJobCount() < MAX_ACTIVE_JOBS -- an unseen offer sitting on the
+  // board doesn't mean anything actionable if every active job slot is
+  // already full (jobRowHTML()'s own Take button is disabled in exactly
+  // that state too, see jobBoardHTML()'s atCap), so flagging Home over it
+  // would point at a board the player can't actually do anything with yet.
+  const newJobAvailable = state.mode === "classic" && state.jobBoardUnseen.length > 0
+    && activeJobCount() < MAX_ACTIVE_JOBS;
   if (face === "roll" && state.pendingRoll){
     setHubBadge("hubHome", String(state.pendingRoll), true);
   } else if (face === "market" && (newQuestAvailable || tradePostNew || newJobAvailable)){
@@ -10459,7 +10465,25 @@ function openJobSheet(){
   state.jobBoardUnseen = [];
   save();
   renderJobBoard();
+  // Force a clean jump to THIS variant's own closed resting position
+  // before animating open, rather than just toggling classes and letting
+  // the transition animate from wherever the sheet currently visually is.
+  // Without this, opening one variant right after closing the OTHER
+  // (its close transition still mid-flight -- a very reachable timing,
+  // since the two live on separate buttons a player can tap back to back)
+  // let the browser interpolate from an in-between top/side blend instead
+  // of a clean single-axis slide, since .top-tray's own transform axis
+  // (translateY) only takes effect once the class is actually toggled,
+  // which used to happen in the same breath as adding .open. Disabling
+  // the transition for one reflow, THEN toggling the class and restoring
+  // it, guarantees the animation always starts from the correct axis's
+  // own hidden position regardless of what the sheet was doing a moment
+  // before.
+  jobSheet.style.transition = "none";
+  jobSheet.classList.remove("open");
   jobSheet.classList.toggle("top-tray", state.mode === "classic" && jobSheetVariant === "full");
+  jobSheet.offsetHeight; // force reflow
+  jobSheet.style.transition = "";
   jobSheet.classList.add("open"); jobScrim.classList.add("open");
   jobSheet.setAttribute("aria-hidden", "false");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "true");
