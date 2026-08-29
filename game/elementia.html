@@ -512,14 +512,15 @@ body[data-screen="market"] #trackedPill{display:none}
   transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
 }
 #jobSheet.open{transform:none}
-/* Classic Mode's own Job Select (see openJobBoard()/renderJobBoard()) --
-   slides down from the top instead of in from the left, full width of
-   the phone frame rather than a partial side panel, since it now carries
-   the FULL board (browse/take, track, station-visited progress) in place
-   of the Marketplace screen it used to open onto -- see updateHub()'s own
-   comment on why Home's "market" face opens this in Classic Mode now.
-   Adventure Mode's Quests tray is untouched (openJobBoard() only adds
-   this class in Classic). */
+/* Classic Mode's FULL Job Select tray, opened via openJobSelectTray() from
+   Home's own "Market" face -- slides down from the top instead of in from
+   the left, full width of the phone frame rather than a partial side
+   panel, since it carries the FULL board (browse/take, track, station-
+   visited progress) in place of the Marketplace screen Home used to open
+   there. The bottom hub's own Jobs button keeps the original left-slide
+   (see openJobBoard()/jobSheetVariant), a smaller side tray with
+   different content -- the two are deliberately NOT the same door onto
+   the same thing. Adventure Mode's Quests tray is untouched either way. */
 #jobSheet.top-tray{
   top:0; left:0; right:0; bottom:auto; width:auto;
   max-height:calc(100% - var(--hub-h, 67px) - env(safe-area-inset-bottom) - 30px);
@@ -1565,16 +1566,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 .tier{font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink2); background:var(--sunken);
   padding:2px 7px; border-radius:5px}
-/* Top-left corner badge now (was inline with the item name) -- mirrors
-   .item-pin-badge's own corner treatment on the opposite side, so both
-   of an item card's "special" indicators read as a matched pair of
-   corner badges rather than one inline button and one floating badge.
-   Round + 28px to match every other corner badge's own footprint
-   (.item.owned::after, .item-pin-badge, .item.stocked::after). */
-.shop-pin{
-  position:absolute; top:-9px; left:-9px; z-index:3;
-  width:28px; height:28px; border-radius:50%; font-size:14px;
-}
 /* Left-aligned, flush with the item name above it -- now that the Craft
    button lives outside .ibody entirely (see .craftbtn), there's no longer
    a gutter to keep the list away from, and left-justifying against the
@@ -2638,6 +2629,28 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .refpin:hover{opacity:.85}
 .refpin.active{opacity:1; filter:none; border-color:var(--gold); background:var(--gold-soft)}
+/* Top-left corner badge on station shop cards (was inline with the item
+   name) -- mirrors .item-pin-badge's own corner treatment on the
+   opposite side, so both of an item card's "special" indicators read as
+   a matched pair of corner badges rather than one inline button and one
+   floating badge. Round + 28px, matching every other corner badge's own
+   footprint (.item.owned::after, .item-pin-badge, .item.stocked::after)
+   and, not coincidentally, .item-pin-badge's own size exactly -- placed
+   AFTER .refpin here (not just relying on this selector's own
+   specificity) so its width/height/border-radius actually win over
+   .refpin's own 34px/9px-radius base, the same equal-specificity/
+   source-order fix .refpin-action needed below.
+   border-color is its own deliberately lighter grey rather than
+   .refpin's inherited var(--line) -- that color is already dark/subtle
+   by itself, and .refpin's own opacity:.5 (still applies, unchanged)
+   fades it a second time on top, landing at "border basically invisible"
+   rather than the "faint but there" ring actually wanted. */
+.shop-pin{
+  position:absolute; top:-9px; left:-9px; z-index:3;
+  width:28px; height:28px; border-radius:50%; font-size:14px;
+  border-color:rgba(255,255,255,.4);
+}
+.shop-pin.active{border-color:var(--gold)}
 /* The one right-side control that isn't a plain pin toggle -- Accept
    (quests) / Take (jobs), shown only before a quest/job has been
    committed to (see questRowHTML()/jobRowHTML()) -- reads as a real,
@@ -8037,14 +8050,14 @@ function setHubHomeFace(face){
   const viaAir = selectedMapStation && !isMapConnected(state.lastStation, selectedMapStation);
   const FACES = {
     roll:   { hi: "🎲", hl: "Roll" },
-    // Classic Mode's own copy of this face opens Job Select, not the
-    // Marketplace (see hubHomeFace()'s own comment) -- the icon/label
-    // says so rather than lying about what tapping it actually does.
-    // Non-classic's own icon is the real custom marketplace-stall art
-    // (see CUSTOM_ICONS's __MARKETPLACE__ token) rather than a plain 🏪
-    // emoji -- em() returns real HTML here (an <img> tag), which is why
-    // apply() below sets .innerHTML, not .textContent, for this span.
-    market: state.mode === "classic" ? { hi: "📋", hl: "Jobs" } : { hi: em("__MARKETPLACE__"), hl: "Market" },
+    // Same "Market" icon/label in every mode now, even though Classic's
+    // own tap target is Job Select, not the real Marketplace screen (see
+    // hubHomeFace()'s own comment) -- the button is still recognizably
+    // "the marketplace one" either way. Real custom marketplace-stall art
+    // (see CUSTOM_ICONS's __MARKETPLACE__ token), not a plain 🏪 emoji --
+    // em() returns real HTML here (an <img> tag), which is why apply()
+    // below sets .innerHTML, not .textContent, for this span.
+    market: { hi: em("__MARKETPLACE__"), hl: "Market" },
     travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
@@ -8200,7 +8213,7 @@ function updateHub(){
   home.setAttribute("aria-disabled", "false");
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
-    : face === "market" ? (state.mode === "classic" ? "Open Job Select" : "Open the Marketplace")
+    : face === "market" ? "Open the Marketplace"
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : "Back to the station map";
   // Home doubles as the Marketplace shortcut on the map screen (see its
@@ -8255,13 +8268,14 @@ function canTravelTo(name){
                Marketplace", same as it does for any other panel. */
 function hubHomeFace(){
   const panel = openPanelName();
-  // Classic Mode's Job Select tray reads as "Map" (not "Close") on Home
-  // while it's open -- see updateHub()'s own comment on why "market"
-  // means Jobs in Classic now; tapping Home to leave it really is just
-  // "go back to the map" (already true underneath), matching Classic's
-  // "Map and Job Select are the only two screens" framing instead of a
-  // generic close arrow.
-  if (panel === "jobs" && state.mode === "classic") return "map";
+  // Classic Mode's FULL Job Select tray reads as "Map" (not "Close") on
+  // Home while it's open, but only when Home is the one that opened it
+  // (jobSheetVariant === "full", see openJobSelectTray()) -- tapping Home
+  // to leave really is just "go back to the map" (already true
+  // underneath). The bottom hub's own smaller side tray (jobSheetVariant
+  // === "compact") falls through to the generic "close" case just below,
+  // same as every other panel a DIFFERENT button opened.
+  if (panel === "jobs" && state.mode === "classic" && jobSheetVariant === "full") return "map";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -9985,10 +9999,13 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     return;
   }
   if (face === "roll"){ triggerRoll(); return; }
-  // Classic Mode's own copy of this face opens Job Select directly (see
-  // hubHomeFace()'s own comment) -- the Marketplace screen itself is
-  // otherwise unreachable there now, replaced by this tray.
-  if (face === "market"){ (state.mode === "classic" ? openJobBoard : openMarket)(); return; }
+  // Classic Mode's own copy of this face opens the FULL Job Select tray
+  // directly (see hubHomeFace()'s own comment) -- the Marketplace screen
+  // itself is otherwise unreachable there now, replaced by this tray.
+  // openJobSelectTray(), not openJobBoard() -- that one's now the bottom
+  // hub's own Jobs button, a smaller side tray with different content
+  // (see its own comment), not this button's job.
+  if (face === "market"){ (state.mode === "classic" ? openJobSelectTray : openMarket)(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
   // Job Select reads as "Map" rather than "Close" while open in Classic
   // Mode (see hubHomeFace()'s own comment) but still needs the tray
@@ -10283,42 +10300,85 @@ document.getElementById("celebClose").addEventListener("click", () => closeOverl
 
 /* ------------------------------------------------------- job board --- */
 const jobSheet = document.getElementById("jobSheet"), jobScrim = document.getElementById("jobScrim");
-/* Same standing sheet, two different systems inside it -- Adventure Mode
-   shows Quests (reusing the Marketplace's own questsBodyHTML(), so this
-   is a genuine shortcut to that content, not a second implementation of
-   it), Classic shows Job Select. Zen never gets here at all (see
-   updateHub()'s own hubJobs.disabled).
-   Classic Mode's own copy is the FULL board now (browse/take AND track),
-   not just the acceptedOnly personal log Adventure's Quests still is --
-   Classic no longer has a separate Marketplace screen to browse offers
-   from (see #jobSheet.top-tray's own CSS comment), so this sheet is the
-   only place left to do that. The station-visited progress row rides
-   along with it for the same reason it used to sit on the Marketplace
-   screen: Job Board's own unlock (jobBoardUnlocked()) still gates on
-   allStationsVisited(), so it's still worth showing here. */
+/* Classic Mode alone now has TWO different doors into this one standing
+   sheet, on purpose -- Home's own "Market" face opens the FULL board
+   (browse/take/track + station progress, top-tray, see openJobSelectTray())
+   since the real Marketplace screen isn't reachable there any more; the
+   bottom hub's own Jobs button opens a smaller side tray instead (left-
+   slide, see openJobBoard() below), just current pins and active/
+   completed jobs -- a quick personal check-in, deliberately NOT another
+   copy of the same browse-and-take board Home already owns, so the two
+   buttons stay clearly different from each other. jobSheetVariant records
+   which one is currently showing so renderJobBoard() (also re-run by
+   in-sheet interactions like taking a job or toggling a pin) keeps
+   rendering the same variant rather than silently reverting to one. */
+let jobSheetVariant = "full"; // "full" | "compact" -- Classic Mode only, see above
+/* Adventure Mode shows Quests here regardless of variant (reusing the
+   Marketplace's own questsBodyHTML(), a genuine shortcut to that content,
+   not a second implementation of it) -- Zen never gets here at all (see
+   updateHub()'s own hubJobs.disabled). */
 function renderJobBoard(){
   const classic = state.mode === "classic";
-  document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests" : "📋 Job Select";
-  document.getElementById("jobSheetBody").innerHTML = classic
-    ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>${jobBoardHTML(false)}`
+  const full = jobSheetVariant === "full";
+  document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests"
+    : full ? "📋 Job Select" : "📋 Jobs";
+  document.getElementById("jobSheetBody").innerHTML = !classic
     // acceptedOnly:true -- Adventure's Quests tray stays a personal log,
     // never a place to browse and accept something new (see
     // questsBodyHTML()'s own comment) -- that's still the Marketplace's job.
-    : questsBodyHTML(true);
+    ? questsBodyHTML(true)
+    : full
+      ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>${jobBoardHTML(false)}`
+      : classicPinsAndJobsHTML();
 }
-function openJobBoard(){
+/* Pins + active/completed jobs only -- no "Available Jobs" board (that's
+   jobBoardHTML(false)'s own job, reserved for the full variant above) --
+   same pin-chip markup/row renderPinsTray() uses for the floating Pins
+   button's own tray, just embedded here too so a player checking in on
+   Jobs sees what they're tracking without a second button to visit. */
+function classicPinsAndJobsHTML(){
+  const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
+  const chips = names.length
+    ? `<div class="map-job-chips">${names.map(name => {
+        const entry = ENTRIES.find(e => e.name === name);
+        const sel = selectedJobItem === name;
+        return `<button type="button" class="map-job-chip ${sel ? "selected" : ""}" data-select-job="${esc(name)}" aria-pressed="${sel}">
+          <span class="mj-em">${em(entry.emoji)}</span><span class="mj-name">${esc(name)}</span>
+        </button>`;
+      }).join("")}</div>`
+    : `<span class="pinned-empty-note">Pin items in Item Reference to track them here.</span>`;
+  const pinsSection = `<details class="job-section" open><summary class="job-board-heading">📌 Pinned Items</summary>${chips}</details>`;
+  return pinsSection + jobBoardHTML(true);
+}
+/* Shared open logic for both doors -- jobSheetVariant (set by whichever
+   of the two functions below actually got called) decides the rest:
+   which content renderJobBoard() shows and whether the sheet itself
+   slides in from the top or the left (see jobSheet.top-tray's own CSS). */
+function openJobSheet(){
   if (state.mode !== "hard" && jobBoardUnlocked()) topUpJobBoard();
   state.jobBoardUnseen = [];
   save();
   renderJobBoard();
-  // Classic's own copy slides down from the top instead of in from the
-  // left (see #jobSheet.top-tray's own CSS) -- Adventure's Quests tray is
-  // untouched, so this only ever applies in Classic.
-  jobSheet.classList.toggle("top-tray", state.mode === "classic");
+  jobSheet.classList.toggle("top-tray", state.mode === "classic" && jobSheetVariant === "full");
   jobSheet.classList.add("open"); jobScrim.classList.add("open");
   jobSheet.setAttribute("aria-hidden", "false");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "true");
   updateHub();
+}
+/* Home's own "Market" face, Classic Mode only -- the full board, slid
+   down from the top (see #jobSheet.top-tray's own CSS comment). */
+function openJobSelectTray(){
+  jobSheetVariant = "full";
+  openJobSheet();
+}
+/* The bottom hub's own Jobs button, every mode -- Classic gets the
+   smaller side tray (see classicPinsAndJobsHTML()); Adventure's Quests
+   ignores jobSheetVariant entirely and always shows the same content
+   either way (see renderJobBoard()), so setting it here is harmless
+   there, just unused. */
+function openJobBoard(){
+  jobSheetVariant = "compact";
+  openJobSheet();
 }
 function closeJobBoard(){
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
@@ -11147,6 +11207,17 @@ document.getElementById("planetPicker").addEventListener("click", ev => {
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
+  // Pin chips (see classicPinsAndJobsHTML(), the bottom hub's own compact
+  // Jobs side tray) -- same toggleJobSelect() the floating Pins button's
+  // own tray uses, just reused here since this sheet sits outside
+  // #screen's own delegation too (see the [data-toggle] comment below).
+  const selectJobBtn = ev.target.closest("[data-select-job]");
+  if (selectJobBtn){
+    toggleJobSelect(selectJobBtn.dataset.selectJob); // also calls render() itself
+    renderJobBoard(); // ...but that doesn't touch this sheet's own content -- refresh separately
+    return;
+  }
+
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
