@@ -907,7 +907,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .mode-card-main:active{transform:translateY(3px) scale(.99); box-shadow:0 0 0 transparent}
 .mode-emoji{font-size:28px; line-height:1}
 .mode-name{font-size:17px; font-weight:800}
-.mode-desc{font-size:13px; color:var(--ink2); line-height:1.4}
 /* "N visits · M points" (readModeSave() has a save) or "New" (it doesn't)
    -- see refreshModePicker(). */
 .mode-stats{font-size:12px; font-weight:800; color:var(--gold); margin-top:2px}
@@ -2765,17 +2764,17 @@ button.setting-row.warn:hover{border-color:var(--bad); background:var(--bad-soft
 button.setting-row:hover .setbtn{border-color:var(--mute)}
 .setbtn.warn{background:var(--card); border-color:var(--bad); color:var(--bad)}
 
-/* Settings screens only: chunky raised "arcade menu" button language --
-   heavy inspiration from mobile-game options screens (glossy bevelled
-   3D buttons, ribbon section headers, bordered icon tiles), rebuilt in
-   Elementia's own dark palette + suit colors rather than their literal
-   wood-panel/parchment skin. Overrides the flatter .setting-row/.sec-
-   label/.bigbtn rules above, scoped to the settings hub + its 3 sub-
-   screens (:is(...), one shared ruleset for all four rather than
-   repeating each rule 4 times) so nothing else in the game (Drawer,
-   Convert, session summary, etc., which also use .sec-label/.bigbtn) is
-   affected. */
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .sec-label{
+/* Settings screens (+ Mode Select, for modeHistoryBtn -- a plain copy of
+   Dev Tools' own historyBtn row, so it should look identical): chunky
+   raised "arcade menu" button language -- heavy inspiration from mobile-
+   game options screens (glossy bevelled 3D buttons, ribbon section
+   headers, bordered icon tiles), rebuilt in Elementia's own dark palette +
+   suit colors rather than their literal wood-panel/parchment skin.
+   Overrides the flatter .setting-row/.sec-label/.bigbtn rules above,
+   scoped via :is(...) (one shared ruleset rather than repeating each rule
+   per screen) so nothing else in the game (Drawer, Convert, session
+   summary, etc., which also use .sec-label/.bigbtn) is affected. */
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .sec-label{
   display:inline-block; font-size:11px; font-weight:800; letter-spacing:1px;
   color:#2a2110; text-transform:uppercase; border:none;
   background:linear-gradient(180deg, #f0d38a, var(--gold) 75%);
@@ -2783,48 +2782,48 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   box-shadow:0 3px 0 #7a5c22, 0 5px 10px rgba(0,0,0,.32);
   margin:20px 0 12px;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .sec-label:first-child{margin-top:0}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-row{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .sec-label:first-child{margin-top:0}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-row{
   background:linear-gradient(180deg, #38445a, #202836 62%);
   border:2px solid #10141b; border-radius:14px; padding:13px 14px; margin-bottom:12px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.38);
   transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:not(:disabled):active{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 #10141b, 0 3px 8px rgba(0,0,0,.3);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-row.warn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-row.warn{
   background:linear-gradient(180deg, #5c3226, #351712 62%); border-color:#1c0b08;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #1c0b08, 0 7px 14px rgba(0,0,0,.38);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setting-ico{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-ico{
   width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.14);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 2px 0 rgba(0,0,0,.3);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setbtn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setbtn{
   border-radius:10px; border:1.5px solid #10141b;
   background:linear-gradient(180deg, #4a5568, #2a3140 65%); color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #10141b;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .setbtn.warn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setbtn.warn{
   background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border-color:#3a140c; color:#2a0d07;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 #3a140c;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn{
   background:linear-gradient(180deg, #57d488, var(--ok) 62%); border:2px solid #184a29; color:#0a2015;
   border-radius:14px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 0 #184a29, 0 7px 14px rgba(0,0,0,.35);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn.sec{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.sec{
   background:linear-gradient(180deg, #55627a, #2c3444 62%); border-color:#10141b; color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.35);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev) .bigbtn:not(:disabled):active{
+:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
 }
@@ -3437,16 +3436,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
-<!-- history -->
-<div class="overlay" id="history" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
-  <div class="sheetbox">
-    <h2 id="historyTitle">🕓 History</h2>
-    <p>Past runs on this device, most recent first.</p>
-    <div id="historyList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="historyClose">Close</button></div>
-  </div>
-</div>
-
 <!-- game mode: shown once, right after Play on the welcome screen. No
      close/skip button on purpose -- same "can't dismiss without choosing"
      rule the tutorial already follows. Each mode is now its OWN save file
@@ -3455,7 +3444,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      chooseMode()), while "New Game" always starts over, confirming first
      when that would actually erase real progress (see newGameForMode()).
      .mode-stats (filled by refreshModePicker()) shows that save's visits/
-     points, or "New" when there isn't one yet. -->
+     points, or "New" when there isn't one yet. modeHistoryBtn is a plain
+     copy of Dev Tools' own historyBtn (same row markup, same #history
+     overlay/renderHistory()) -- history is meaningful to check right here,
+     before picking a mode, not just buried in Dev Tools. -->
 <div class="overlay" id="modeOverlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
   <div class="sheetbox">
     <h2 id="modeTitle">Choose a Game Mode</h2>
@@ -3464,7 +3456,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <button type="button" class="mode-card-main" data-mode-select="zen">
           <span class="mode-emoji">🌿</span>
           <span class="mode-name">Zen Mode</span>
-          <span class="mode-desc">Freely explore and create any item found in the game.</span>
           <span class="mode-stats" data-mode-stats="zen"></span>
         </button>
         <button type="button" class="mode-newgame-btn" data-mode-newgame="zen">New Game</button>
@@ -3473,7 +3464,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <button type="button" class="mode-card-main" data-mode-select="classic">
           <span class="mode-emoji">🗺️</span>
           <span class="mode-name">Classic Mode</span>
-          <span class="mode-desc">Complete Capstones and Job Cards to get the highest score in 25 moves! Keep all your items, only element cards are spent in this mode.</span>
           <span class="mode-stats" data-mode-stats="classic"></span>
         </button>
         <button type="button" class="mode-newgame-btn" data-mode-newgame="classic">New Game</button>
@@ -3482,12 +3472,29 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <button type="button" class="mode-card-main" data-mode-select="hard">
           <span class="mode-emoji">🔥</span>
           <span class="mode-name">Adventure Mode</span>
-          <span class="mode-desc">Explore the world of Elementia! Elements and Item Cards are spent to create bigger creations.</span>
           <span class="mode-stats" data-mode-stats="hard"></span>
         </button>
         <button type="button" class="mode-newgame-btn" data-mode-newgame="hard">New Game</button>
       </div>
     </div>
+    <button type="button" class="setting-row" id="modeHistoryBtn">
+      <span class="setting-ico">🕓</span>
+      <span class="setting-body">
+        <span class="setting-label">History</span>
+        <span class="setting-sub">See your past runs</span>
+      </span>
+      <span class="setbtn">View</span>
+    </button>
+  </div>
+</div>
+
+<!-- history -->
+<div class="overlay" id="history" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="sheetbox">
+    <h2 id="historyTitle">🕓 History</h2>
+    <p>Past runs on this device, most recent first.</p>
+    <div id="historyList"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="historyClose">Close</button></div>
   </div>
 </div>
 
@@ -5820,6 +5827,10 @@ function jobBoardUnlocked(){
     Array.isArray(q.parent) ? q.parent.includes(t.id) : t.id === q.parent));
   return tier1.concat(tier2).every(q => state.quests[q.id] && state.quests[q.id].completed);
 }
+// Jobs below this are cheap enough (raw materials, first-tier crafts) that
+// a job card for one barely feels worth turning in -- keeps every offer on
+// the board worth a real detour.
+const MIN_JOB_POINTS = 10;
 function jobEligibleItems(){
   const names = ENTRIES
     .filter(e => QUEST_ITEM_NAMES.has(e.name)
@@ -5833,7 +5844,8 @@ function jobEligibleItems(){
       // they can't act on without a trip they haven't made yet would just
       // swamp the board with dead-end picks. Once visited, it's fair game
       // like any other item.
-      && (!SUBZONE_PARENT[e.station] || subzoneVisited(e.station)))
+      && (!SUBZONE_PARENT[e.station] || subzoneVisited(e.station))
+      && (ITEM_POINTS[e.name] || 0) >= MIN_JOB_POINTS)
     .map(e => e.name);
   return [...new Set(names)]; // a couple of items are sold at 2 stations under the same name
 }
@@ -11556,6 +11568,10 @@ document.getElementById("mainMenuBtn").addEventListener("click", () => {
 });
 
 document.getElementById("historyBtn").addEventListener("click", () => {
+  renderHistory();
+  openOverlay("history");
+});
+document.getElementById("modeHistoryBtn").addEventListener("click", () => {
   renderHistory();
   openOverlay("history");
 });
