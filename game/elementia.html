@@ -768,10 +768,20 @@ body[data-screen="market"] #trackedPill{display:none}
    wide regardless of viewport size, rather than wrapping or overflowing
    the way a fixed size would on a narrow phone. */
 .market-classic-progress{
-  margin:0 0 18px; padding:14px 16px; border-radius:16px;
+  position:relative; margin:0 0 18px; padding:14px 16px; border-radius:16px;
   background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18);
 }
-.market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px}
+/* Points for scouting every station, shown right on the card that tracks
+   that progress -- gold pill matches the same "achievement" gradient
+   language as .setbtn/.sec-label elsewhere (see their own shared :is(...)
+   comment), just used standalone here rather than inside that ruleset. */
+.market-progress-bonus{
+  position:absolute; top:12px; right:14px; font-weight:800; font-size:12px; color:#2a2110;
+  background:linear-gradient(180deg,#f0d38a,var(--gold) 75%); border-radius:999px;
+  padding:4px 10px; box-shadow:0 2px 0 #7a5c22;
+}
+.market-progress-bonus.done{background:linear-gradient(180deg,#57d488,var(--ok) 62%); color:#0a2015; box-shadow:0 2px 0 #184a29}
+.market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px; padding-right:56px}
 .market-classic-progress .market-progress-stations{width:100%; gap:6px}
 .market-classic-progress .market-progress-station{
   /* height:auto overrides the base rule's fixed 24px (see
@@ -780,6 +790,50 @@ body[data-screen="market"] #trackedPill{display:none}
      at its old fixed value. aspect-ratio alone can't win that fight once
      an explicit height is already set elsewhere. */
   flex:1 1 0; width:auto; height:auto; max-width:46px; aspect-ratio:1; font-size:19px;
+}
+/* Item Bingo (draft) -- Classic Mode's Job Select tray, see bingoCardHTML().
+   Same dark/gold/green tokens as everywhere else, and the same 28px-ish
+   round corner-badge language as .item-pin-badge/.shop-pin for its own pin
+   indicator, so this reads as the existing design system rather than a
+   bolted-on new screen. Unlike a shop card's .item.owned (dimmed once
+   owned -- nothing left to do there), an owned bingo square is the whole
+   point, so ownership here means full color/lit, not dimmed -- the
+   opposite convention, deliberately. */
+.bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:2px}
+.bingo-cell{
+  position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
+  background:var(--sunken); border:1.5px solid var(--line);
+  display:flex; flex-direction:column; align-items:stretch;
+  cursor:pointer; opacity:.5; transition:all .12s;
+}
+.bingo-cell:hover{border-color:var(--mute)}
+.bingo-cell.owned{opacity:1; background:var(--card); border-color:var(--line2)}
+.bingo-cell.line-complete{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
+/* Icon sits in the flexible remaining space above the name; the name
+   itself is a fixed-height flex item (not centered/wrapped with the icon)
+   so every square's name lands at the exact same height regardless of
+   how tall that square's icon renders -- single line + ellipsis rather
+   than the old 2-line clamp, since the doubled icon size leaves less
+   room to spare. */
+.bc-icon{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1}
+.bc-name{
+  flex:none; height:11px; line-height:11px; font-size:8px; font-weight:700; text-align:center;
+  color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 2px;
+}
+/* Inside the card's own border now (was straddling it like .bc-pin still
+   does) -- specifically requested apart from the pin badge's own corner
+   treatment, so left as the one exception to that shared convention. */
+.bc-pts{
+  position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%;
+  background:var(--gold); color:#2a2110; font-size:9px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:2;
+}
+.bc-pin{
+  position:absolute; top:-7px; left:-7px; width:22px; height:22px; border-radius:50%;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold); font-size:11px;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
@@ -5589,6 +5643,12 @@ const ENTRIES = [];       // {station, emoji, name, tier, recipe, points, reqs, 
 const ITEM_EMOJI = {};    // name -> emoji, for inventory display
 const ITEM_TIER  = {};
 const ITEM_POINTS = {};
+// Classic Mode only -- scouting every station used to gate the Job Board/
+// fast travel/Bingo; now that Bingo's visible from the start (no more
+// gate), visiting them all still deserves its own reward, so it becomes a
+// flat one-time score bonus instead. Shown on the stations-visited card
+// itself (see stationsVisitedBonusBadgeHTML()).
+const STATIONS_VISITED_BONUS = 15;
 // Parameterized so the mode-select screen can score every OTHER mode's
 // saved state too (see modeSummary()) without swapping the live `state`
 // global out and back in just to reuse this math.
@@ -5599,7 +5659,9 @@ function scoreOf(st){
     const col = COLLECTIONS.find(c => c.id === id);
     return sum + (col ? collectionBonus(col) : 0);
   }, 0);
-  return base + jobBonuses + collectionBonuses;
+  const stationsBonus = (st.mode === "classic" && Object.keys(MAP_NODE_POS).every(name => st.visitedStations[name]))
+    ? STATIONS_VISITED_BONUS : 0;
+  return base + jobBonuses + collectionBonuses + stationsBonus;
 }
 function score(){ return scoreOf(state); }
 
@@ -5751,6 +5813,87 @@ const TOTAL_ITEM_COUNT = new Set(ENTRIES.map(e => e.name)).size;
 const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
 const TOTAL_CORE_ITEM_COUNT = CORE_ITEM_NAMES.size;
 const refItemTotal = () => state.mode === "classic" ? TOTAL_CORE_ITEM_COUNT : TOTAL_ITEM_COUNT;
+
+/* Item Bingo (draft) -- Classic Mode's Job Select tray, see bingoCardHTML().
+   Eligible pool is every core item worth BINGO_MIN_POINTS or more (the
+   cheap 2-4pt staples would make nearly every square a formality); drawn
+   once per run into state.bingoCard by ensureBingoCard() and held stable
+   after that -- a fresh run already gets state.bingoCard === null from
+   freshState(), which is what actually gives it a new draw, not anything
+   here. shuffle() is defined further down the file but hoisted, same as
+   every other function-declaration call in this file. */
+const BINGO_SIZE = 5;
+const BINGO_MIN_POINTS = 5;
+function bingoEligibleItems(){
+  return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
+}
+// One guaranteed capstone, always the center square -- the card's one big
+// promised prize. Every OTHER capstone gets a small independent chance of
+// sneaking in as a bonus (simulation-tuned low, not zero) rather than
+// being excluded outright; everything else fills in from the ordinary
+// non-capstone eligible pool. See bingo_sim.py's card-composition
+// scenarios for why a flat random draw (avg ~3.4 capstones/card) was
+// dragging line-completion down -- capping hard at exactly 1 keeps most
+// of that benefit while this rare-extra keeps some upside variance.
+const BINGO_EXTRA_CAPSTONE_CHANCE = 0.02;
+function drawBingoCard(){
+  const eligible = bingoEligibleItems();
+  const capstones = eligible.filter(n => ITEM_TIER[n] === "CAPSTONE");
+  const nonCapstones = eligible.filter(n => ITEM_TIER[n] !== "CAPSTONE");
+  const centerCap = shuffle(capstones.slice())[0];
+  const extras = capstones.filter(n => n !== centerCap && Math.random() < BINGO_EXTRA_CAPSTONE_CHANCE);
+  const need = BINGO_SIZE * BINGO_SIZE;
+  const fillCount = need - 1 - extras.length;
+  const others = shuffle([...extras, ...shuffle(nonCapstones).slice(0, fillCount)]);
+  const centerIdx = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BINGO_SIZE / 2);
+  return [...others.slice(0, centerIdx), centerCap, ...others.slice(centerIdx)];
+}
+function ensureBingoCard(){
+  const need = BINGO_SIZE * BINGO_SIZE;
+  if (!state.bingoCard || state.bingoCard.length !== need){
+    state.bingoCard = drawBingoCard();
+  }
+  return state.bingoCard;
+}
+// Every row/column/diagonal as a flat array of cell indices -- purely a
+// function of BINGO_SIZE, so it's cheap to recompute on every render
+// rather than caching it anywhere.
+function bingoLines(){
+  const n = BINGO_SIZE, lines = [], at = (r, c) => r * n + c;
+  for (let r = 0; r < n; r++) lines.push(Array.from({length:n}, (_, c) => at(r, c)));
+  for (let c = 0; c < n; c++) lines.push(Array.from({length:n}, (_, r) => at(r, c)));
+  lines.push(Array.from({length:n}, (_, i) => at(i, i)));
+  lines.push(Array.from({length:n}, (_, i) => at(i, n - 1 - i)));
+  return lines;
+}
+/* Tapping a square pins it -- reuses #jobSheetBody's existing [data-pin]
+   click delegation (same one job/quest rows already use), so no new event
+   wiring is needed here at all; togglePin()+render() already happen there.
+   "Owned" (lit up, not greyed out) reflects real inventory (owns()), not a
+   separate tracked flag -- completed lines are highlighted the same way,
+   recomputed fresh every render rather than stored, so there's no separate
+   state to keep in sync. Score is NOT touched yet -- purely visual for
+   this draft pass. */
+function bingoCardHTML(){
+  const card = ensureBingoCard();
+  const ownedFlags = card.map(owns);
+  const completeCells = new Set();
+  bingoLines().forEach(line => {
+    if (line.every(i => ownedFlags[i])) line.forEach(i => completeCells.add(i));
+  });
+  const cells = card.map((name, i) => {
+    const cls = ["bingo-cell"];
+    if (ownedFlags[i]) cls.push("owned");
+    if (completeCells.has(i)) cls.push("line-complete");
+    return `<div class="${cls.join(" ")}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+      ${isPinned(name) ? `<span class="bc-pin">📌</span>` : ""}
+      <span class="bc-pts">${ITEM_POINTS[name]}</span>
+      <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
+      <span class="bc-name">${esc(name)}</span>
+    </div>`;
+  }).join("");
+  return `<div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>`;
+}
 
 /* Recurring raw materials that show up under the same name at several
    stations (Water, Clay, etc.) -- pinned to the top of every shop list
@@ -6170,6 +6313,9 @@ function freshState(){
     quests: {},       // {[questId]: {taken, completed}} -- see QUESTS/takeQuest()/
                        // checkQuestCompletion(). Hard Mode only; absent entries just read as
                        // "not taken yet" everywhere they're checked.
+    bingoCard: null,  // [itemName, ...] x25 -- Classic Mode's Job Select tray (draft), lazily
+                       // drawn once per run by ensureBingoCard() and left stable after that.
+                       // null here is what makes a fresh run get its own new draw.
   };
 }
 
@@ -10435,14 +10581,24 @@ function renderJobBoard(){
   const classic = state.mode === "classic";
   const full = jobSheetVariant === "full";
   document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests"
-    : full ? "📋 Job Select" : "📋 Jobs";
+    : full ? "🎯 Item Bingo" : "📋 Jobs";
   document.getElementById("jobSheetBody").innerHTML = !classic
     // acceptedOnly:true -- Adventure's Quests tray stays a personal log,
     // never a place to browse and accept something new (see
     // questsBodyHTML()'s own comment) -- that's still the Marketplace's job.
     ? questsBodyHTML(true)
     : full
-      ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>${jobBoardHTML(false)}`
+      // Draft: Job Select's own "Available Jobs" board (jobBoardHTML(false))
+      // replaced with the Item Bingo card here -- jobBoardHTML() itself is
+      // untouched and still powers the compact tray below (acceptedOnly
+      // true there), so already-taken jobs stay fully manageable; there's
+      // just no way to TAKE a new one from this tray anymore now that its
+      // job board's not rendered here. Bingo is visible from the very
+      // first visit now -- no more allStationsVisited() gate -- scouting
+      // every station still matters, it just earns its own score bonus
+      // now instead (STATIONS_VISITED_BONUS, badge on the progress card
+      // right above) rather than unlocking anything.
+      ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>${bingoCardHTML()}`
       : classicPinsAndJobsHTML();
 }
 /* Pins + active/completed jobs only -- no "Available Jobs" board (that's
@@ -10458,15 +10614,19 @@ function renderJobBoard(){
    Reference. That does mean this section can't switch WHICH pinned item
    is tracked without unpinning/repinning it (data-pin already does that
    part) -- same limitation Item Reference's own pinned rows have; the
-   floating Pins button's chip tray is still the place for that. */
+   floating Pins button's chip tray is still the place for that.
+   Job Cards are fully retired in Classic Mode now (see renderJobBoard()'s
+   own comment on the full-variant tray) -- no jobBoardHTML() call here
+   any more, since state.jobs can never gain a new entry to show. Pins are
+   still very much live (tapping a Bingo square pins it), so this compact
+   tray's whole remaining job is just that pinned list. */
 function classicPinsAndJobsHTML(){
   const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
-  const pinnedHTML = names.length
+  return names.length
     ? `<div class="ref-pinned-heading">📌 Pinned</div><div class="reftable ref-pinned">${
         names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
       }</div>`
     : "";
-  return pinnedHTML + jobBoardHTML(true);
 }
 /* Shared open logic for both doors -- jobSheetVariant (set by whichever
    of the two functions below actually got called) decides the rest:
@@ -10580,6 +10740,15 @@ function marketStationProgressHTML(){
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
     <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
 }
+// Classic Mode's own copy of the progress row (.market-classic-progress,
+// see its own CSS) shows the STATIONS_VISITED_BONUS badge in its top-right
+// corner -- Hard Mode's compact #marketArc copy of this same row (Trading
+// Post's unlock, see renderMarketArc()) does NOT get this badge, since
+// that bonus doesn't exist for Hard Mode at all.
+function stationsVisitedBonusBadgeHTML(){
+  const done = allStationsVisited();
+  return `<span class="market-progress-bonus${done ? " done" : ""}">${done ? "✓ " : ""}+${STATIONS_VISITED_BONUS}</span>`;
+}
 function renderMarketScreen(){
   // Classic Mode only -- Job Board/fast travel's shared unlock condition
   // (allStationsVisited()) lives at the TOP of the screen now, full-width,
@@ -10590,7 +10759,7 @@ function renderMarketScreen(){
   // Hidden whenever a section is open, same "step back for the arc" rule
   // the arc buttons themselves already follow.
   const classicProgress = (state.mode === "classic" && !marketSection)
-    ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>` : "";
+    ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>` : "";
   return `<div class="market-screen">
     <div class="market-banner"><h1>Marketplace</h1></div>
     ${classicProgress}
