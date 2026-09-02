@@ -795,20 +795,20 @@ body[data-screen="market"] #trackedPill{display:none}
    Same dark/gold/green tokens as everywhere else, and the same 28px-ish
    round corner-badge language as .item-pin-badge/.shop-pin for its own pin
    indicator, so this reads as the existing design system rather than a
-   bolted-on new screen. Unlike a shop card's .item.owned (dimmed once
-   owned -- nothing left to do there), an owned bingo square is the whole
-   point, so ownership here means full color/lit, not dimmed -- the
-   opposite convention, deliberately. */
+   bolted-on new screen. Every square stays full color/full opacity
+   regardless of ownership (unlike a shop card's dimmed .item.owned) --
+   the green border is the only ownership signal, and it lands the moment
+   THAT item is owned, not held back until its whole line completes. */
 .bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:2px}
 .bingo-cell{
   position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
   background:var(--sunken); border:1.5px solid var(--line);
   display:flex; flex-direction:column; align-items:stretch;
-  cursor:pointer; opacity:.5; transition:all .12s;
+  cursor:pointer; transition:all .12s;
 }
 .bingo-cell:hover{border-color:var(--mute)}
-.bingo-cell.owned{opacity:1; background:var(--card); border-color:var(--line2)}
-.bingo-cell.line-complete{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
+.bingo-cell.owned{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
+.bingo-hint{font-size:11.5px; color:var(--mute); line-height:1.5; margin-top:10px; text-align:center}
 /* Icon sits in the flexible remaining space above the name; the name
    itself is a fixed-height flex item (not centered/wrapped with the icon)
    so every square's name lands at the exact same height regardless of
@@ -3153,7 +3153,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- bottom hub: every global action, reachable from every screen -->
 <nav id="hub" aria-label="Main actions">
-  <button type="button" class="hubbtn" id="hubJobs"><span class="hi">📋</span><span class="hl">Jobs</span></button>
+  <button type="button" class="hubbtn" id="hubJobs"><span class="hi">📋</span><span class="hl">To-Do List</span></button>
   <button type="button" class="hubbtn" id="hubInv"><span class="hi">🎒</span><span class="hl">Inventory</span></button>
   <button type="button" class="hubbtn" id="hubHome"><span class="hi">🗺️</span><span class="hl">Map</span></button>
   <button type="button" class="hubbtn" id="hubCodex"><span class="hi">📖</span><span class="hl">Items</span></button>
@@ -3755,7 +3755,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="jobScrim"></div>
 <aside id="jobSheet" aria-label="Jobs" aria-hidden="true">
   <div class="dhead">
-    <h2 id="jobTitle">📋 Jobs</h2>
+    <h2 id="jobTitle">🏪 Marketplace</h2>
     <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
   </div>
   <div class="dbody" id="jobSheetBody"></div>
@@ -5477,6 +5477,15 @@ const ATOMIC_NUMBER = {
   C:6, H:1, N:7, O:8, S:16, K:19, Ca:20,
   Si:14, Al:13, Mg:12, P:15, Fe:26, Ti:22, Cu:29, Ag:47, Ni:28, Zn:30,
 };
+// Zn only ever appears in the Island sub-zone's own dice (see SUBZONES) --
+// invisible to Classic Mode by design, same as every other sub-zone/
+// planet. DATA.stations is just the 8 real core stations (sub-zones are a
+// hand-written JS-side addition, never part of the embedded game data),
+// so this is exactly "every element a Classic player can actually roll."
+// Used by renderConvertPicker() to keep Zn out of the Convert TO list in
+// Classic -- without this it showed up as a real option despite no
+// Classic station ever producing it.
+const CLASSIC_ELEMENTS = [...new Set(DATA.stations.flatMap(s => s.dice))];
 
 /* Element-suit palette ("Chemical Role", Palette A) -- the same four
    colors as the printed element cards (see build_element_cards.py),
@@ -5828,20 +5837,28 @@ function bingoEligibleItems(){
   return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
 }
 // One guaranteed capstone, always the center square -- the card's one big
-// promised prize. Every OTHER capstone gets a small independent chance of
-// sneaking in as a bonus (simulation-tuned low, not zero) rather than
-// being excluded outright; everything else fills in from the ordinary
-// non-capstone eligible pool. See bingo_sim.py's card-composition
-// scenarios for why a flat random draw (avg ~3.4 capstones/card) was
-// dragging line-completion down -- capping hard at exactly 1 keeps most
-// of that benefit while this rare-extra keeps some upside variance.
-const BINGO_EXTRA_CAPSTONE_CHANCE = 0.02;
+// promised prize. A second is a COMMON occurrence (not rare), and a third
+// is rare on top of that -- P(1 total)~35%, P(2)~55%, P(3)~10% at the
+// values below, tuned per direct playtesting feedback ("2 should be more
+// common, rarely a third which makes the card very difficult") rather
+// than bingo_sim.py's original flat-random-draw math (which averaged
+// ~3.4 capstones/card and dragged line-completion down hard -- see its
+// own scenario comparisons for that history). Checked as two sequential
+// rolls, not one flat rate per remaining capstone, specifically so a
+// third staying rare doesn't also force a second to stay rare.
+const BINGO_SECOND_CAPSTONE_CHANCE = 0.65;
+const BINGO_THIRD_CAPSTONE_CHANCE = 0.15;
 function drawBingoCard(){
   const eligible = bingoEligibleItems();
-  const capstones = eligible.filter(n => ITEM_TIER[n] === "CAPSTONE");
+  const capstones = shuffle(eligible.filter(n => ITEM_TIER[n] === "CAPSTONE").slice());
   const nonCapstones = eligible.filter(n => ITEM_TIER[n] !== "CAPSTONE");
-  const centerCap = shuffle(capstones.slice())[0];
-  const extras = capstones.filter(n => n !== centerCap && Math.random() < BINGO_EXTRA_CAPSTONE_CHANCE);
+  const cardCapstones = [capstones[0]];
+  if (Math.random() < BINGO_SECOND_CAPSTONE_CHANCE){
+    cardCapstones.push(capstones[1]);
+    if (Math.random() < BINGO_THIRD_CAPSTONE_CHANCE) cardCapstones.push(capstones[2]);
+  }
+  const centerCap = cardCapstones[0];
+  const extras = cardCapstones.slice(1);
   const need = BINGO_SIZE * BINGO_SIZE;
   const fillCount = need - 1 - extras.length;
   const others = shuffle([...extras, ...shuffle(nonCapstones).slice(0, fillCount)]);
@@ -5869,30 +5886,25 @@ function bingoLines(){
 /* Tapping a square pins it -- reuses #jobSheetBody's existing [data-pin]
    click delegation (same one job/quest rows already use), so no new event
    wiring is needed here at all; togglePin()+render() already happen there.
-   "Owned" (lit up, not greyed out) reflects real inventory (owns()), not a
-   separate tracked flag -- completed lines are highlighted the same way,
-   recomputed fresh every render rather than stored, so there's no separate
-   state to keep in sync. Score is NOT touched yet -- purely visual for
-   this draft pass. */
+   "Owned" (green border, full color) reflects real inventory (owns())
+   directly, lighting up the instant that ONE item is owned rather than
+   waiting on its whole line -- bingoLines() is still here for whenever
+   line-completion actually pays out (see bingo_sim.py), just not driving
+   any per-cell styling right now. Score is NOT touched yet -- purely
+   visual for this draft pass. */
 function bingoCardHTML(){
   const card = ensureBingoCard();
-  const ownedFlags = card.map(owns);
-  const completeCells = new Set();
-  bingoLines().forEach(line => {
-    if (line.every(i => ownedFlags[i])) line.forEach(i => completeCells.add(i));
-  });
-  const cells = card.map((name, i) => {
-    const cls = ["bingo-cell"];
-    if (ownedFlags[i]) cls.push("owned");
-    if (completeCells.has(i)) cls.push("line-complete");
-    return `<div class="${cls.join(" ")}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+  const cells = card.map(name => {
+    const cls = owns(name) ? "bingo-cell owned" : "bingo-cell";
+    return `<div class="${cls}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       ${isPinned(name) ? `<span class="bc-pin">📌</span>` : ""}
       <span class="bc-pts">${ITEM_POINTS[name]}</span>
       <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>`;
+  return `<div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
+    <p class="bingo-hint">Complete a line of 5 across the card for bonus points. Tap an item to add it to your To-Do List.</p>`;
 }
 
 /* Recurring raw materials that show up under the same name at several
@@ -6606,6 +6618,7 @@ function craft(entry, opts={}){
   checkCollections();
   checkQuestCompletion();
   checkJobCompletion();
+  checkBingoCompletion(entry.name);
   save();
   return true;
 }
@@ -7469,13 +7482,13 @@ function jobNodeHTML(name, kind, path, seen){
   // spot deep in a breakdown without backing out to find its own row.
   return `<div class="mission-node ${has ? "done" : ""}">
     <div class="mn-row">
+      ${has ? '<span class="mn-tick">✓</span>' : ""}
       <button type="button" class="mn-head${open ? " open" : ""}" data-toggle="${esc(path)}" aria-expanded="${open}">
         <span class="mn-arrow">▸</span>
         <span class="mn-emoji">${em(entry.emoji)}</span>
         <span class="mn-name">${esc(name)}</span>
         <span class="mn-where">${whereEmoji(name, "item")}</span>
       </button>
-      ${has ? '<span class="mn-tick">✓</span>' : ""}
       <button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(name)}"
         title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>
     </div>
@@ -8352,7 +8365,7 @@ function updateHub(){
   const jobsBtn = document.getElementById("hubJobs");
   jobsBtn.disabled = zen;
   jobsBtn.setAttribute("aria-disabled", String(zen));
-  jobsBtn.querySelector(".hl").textContent = state.mode === "hard" ? "Quests" : "Jobs";
+  jobsBtn.querySelector(".hl").textContent = state.mode === "hard" ? "Quests" : "To-Do List";
   // Never badged, in any mode, green or red -- Jobs/Quests state is
   // already visible the moment the panel opens; a bubble here read as
   // one more thing competing for attention on the hub.
@@ -10581,7 +10594,7 @@ function renderJobBoard(){
   const classic = state.mode === "classic";
   const full = jobSheetVariant === "full";
   document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests"
-    : full ? "🎯 Item Bingo" : "📋 Jobs";
+    : full ? "🏪 Marketplace" : "📋 To-Do List";
   document.getElementById("jobSheetBody").innerHTML = !classic
     // acceptedOnly:true -- Adventure's Quests tray stays a personal log,
     // never a place to browse and accept something new (see
@@ -11074,6 +11087,12 @@ function collectionDone(col){ return col.items.every(everOwned); }
 let collectionToastQueue = [];
 let collectionToastTimer = null;
 function checkCollections(){
+  // Collections are hidden from Classic Mode's own Marketplace/Item
+  // Reference entry points already (see renderMarketArc()'s own
+  // disabled/hidden check and collectionsEligible above) -- this was the
+  // one path that kept silently completing and toasting them anyway,
+  // since detection here never checked mode at all.
+  if (state.mode === "classic") return;
   COLLECTIONS.forEach(col => {
     if (state.collectionsCompleted.includes(col.id)) return;
     if (collectionDone(col)){
@@ -11431,6 +11450,18 @@ function checkJobCompletion(){
     const entry = ENTRIES.find(e => e.name === job.items[0]);
     queueEventToast("job", entry ? em(entry.emoji) : "", "Job complete", job.items.join(", "), "+" + jobBonus(job) + " pts");
   });
+}
+/* Same top-drop notification Job Cards used to fire (queueEventToast's
+   "job" kind, reused as-is) -- called from craft()'s own tail right
+   alongside checkJobCompletion() etc., passing the item that was JUST
+   crafted. No dedup bookkeeping needed: craft() already refuses to
+   re-craft something already owned in Classic Mode (see its own guard),
+   so this only ever runs once per item per run, exactly when it
+   transitions onto the board for real. */
+function checkBingoCompletion(name){
+  if (state.mode !== "classic" || !state.bingoCard || !state.bingoCard.includes(name)) return;
+  const entry = ENTRIES.find(e => e.name === name);
+  queueEventToast("job", entry ? em(entry.emoji) : "", "On your Bingo card", name);
 }
 /* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
    not a lookalike, the literal same function -- so "Full breakdown"
@@ -11820,7 +11851,7 @@ function renderConvertPicker(){
   // what's close/not just what already qualifies; TO offers the full set.
   let syms = isFrom
     ? Object.keys(state.elements).filter(s => count(s) > 0)
-    : Object.keys(ATOMIC_NUMBER);
+    : (state.mode === "classic" ? CLASSIC_ELEMENTS : Object.keys(ATOMIC_NUMBER));
   // Grouped by suit (ELEMENT_SUIT's own key order already is: organic,
   // reactive, earth, metal), not real atomic number -- Nickel's actual
   // atomic number (28) would otherwise sort it in among the metals, away
