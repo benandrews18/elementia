@@ -63,7 +63,7 @@ STATIONS = [
              ("__LIFE__","Life","CREATION","🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",15),
              ("🌊","Water Turbine","CREATION","💧 Water + __CONCRETE__ Concrete + __TURBINEBLADE__ Turbine Blade + 🔋 Battery",22),
 
-             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + __FIBERGLASS__ Fiberglass",13),
+             ("🚤","Speedboat","CREATION","🛶 Canoe + ⚙️ Engine + 🧭 Compass + __TURBINEBLADE__ Turbine Blade",13),
              ("🏖️","Beach Town","CREATION","__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",25),
              ("🛳️","Cruise Ship","CREATION","🚤 Speedboat + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🎂 Fruit Cake + 🎺 Trumpet",40)],
      "capstone":("__CORAL__","Coral Reef","CAPSTONE","__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock",21)},
@@ -98,7 +98,7 @@ STATIONS = [
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",7),
              ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",7),
              ("🌻","Sunflower","CREATION","⭐ Star + 🌾 Grain",20),
-             ("🚜","Tractor","CREATION","🧑‍🌾 Farm + ⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",14),
+             ("🚜","Tractor","CREATION","⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",14),
              ("__OPAL__","Opal","COMPONENT","Si + O + __FURNACE__ Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",10),
              ("🐄","Cow","CREATION","🧑‍🌾 Farm + 🌾 Grain",9),
@@ -144,7 +144,7 @@ STATIONS = [
 
              ("🍄","Mushroom","COMPONENT","🌱 Soil + 💧 Water + N",6),
              ("🌳","Tree","COMPONENT","🌱 Soil + C + O",4),
-             ("🛶","Canoe","COMPONENT","🌳 Tree + 💧 Water",5),
+             ("🛶","Canoe","COMPONENT","🌳 Tree + 💧 Water + 🛠️ Tools",5),
              ("🦌","Deer","CREATION","🌳 Tree + 💧 Water + 🦴 Bone",6),
              ("🍂","Plant Fiber","MATERIAL","🌳 Tree + 🛠️ Tools",7),
 
