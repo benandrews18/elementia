@@ -2663,6 +2663,8 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #refFilter{flex:1; min-width:200px; padding:10px 13px; border:1.5px solid var(--line);
   border-radius:10px; font:inherit; font-size:15px; background:var(--card); color:var(--ink)}
 #refFilter::placeholder{color:var(--mute)}
+#refSort{flex:none; padding:10px 13px; border:1.5px solid var(--line);
+  border-radius:10px; font:inherit; font-size:13px; font-weight:700; background:var(--card); color:var(--ink)}
 .refcount{font-size:13px; color:var(--mute); font-weight:700; white-space:nowrap}
 /* Full-width row per item: a big icon on the left (fixed column, matching
    the reference layout in images/Item Reference UI*.png) and everything
@@ -3941,7 +3943,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚤",
      "Speedboat",
      "CREATION",
-     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + __FIBERGLASS__ Fiberglass",
+     "🛶 Canoe + ⚙️ Engine + 🧭 Compass + __TURBINEBLADE__ Turbine Blade",
      13
     ],
     [
@@ -4174,7 +4176,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚜",
      "Tractor",
      "CREATION",
-     "🧑‍🌾 Farm + ⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",
+     "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",
      14
     ],
     [
@@ -4449,7 +4451,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🛶",
      "Canoe",
      "COMPONENT",
-     "🌳 Tree + 💧 Water",
+     "🌳 Tree + 💧 Water + 🛠️ Tools",
      5
     ],
     [
@@ -5019,146 +5021,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Gemstone Collection": 19.4,
-  "Beach Town": 26.5,
-  "Glass Vial": 10.1,
-  "Blueberries": 13.2,
-  "Sheep": 7.3,
-  "Solar Panel": 8.3,
-  "Solar System": 15.6,
-  "Cloud": 5.1,
-  "Engine": 7.2,
-  "Yellow Dye": 15.5,
-  "Lighthouse": 13.2,
-  "Cream": 10.8,
-  "Robot": 17.8,
-  "Log Cabin": 7.2,
-  "Oven": 11.3,
-  "Apple Pie": 12.8,
-  "Trumpet": null,
-  "Milk": 8.9,
-  "Cruise Ship": null,
-  "Biofuel": 10.4,
-  "Ecosystem": 21.9,
-  "Pretzel": 11.1,
-  "Wheel": 10.5,
-  "Library": 13.7,
-  "Flour": 8.8,
-  "Croissant": 12.4,
-  "DNA": 3.7,
-  "Bicycle": 14.6,
-  "Orca": 13.3,
-  "Clay": 2.4,
-  "Maglev Train": 15.7,
-  "Yeast": 4.9,
-  "Strawberries": 10.4,
-  "Chicken": 10.6,
-  "Apple": 6.5,
-  "Blue Dye": 17.7,
-  "Pearl": 13.6,
-  "Rocket": 21.3,
-  "Telescope": 11.6,
-  "Car": 17.0,
-  "Geothermal Pump": 15.6,
-  "Sand": 2.9,
-  "Sugar": 3.0,
-  "Statue": 7.3,
-  "Homestead": 20.0,
-  "Plastic": 8.2,
-  "Knit Scarf": 20.2,
-  "Fertilizer": 3.0,
-  "Life": 16.5,
-  "Volcano": 13.4,
-  "Bread": 12.4,
-  "Speedboat": 16.8,
-  "Paper": 11.8,
-  "Steel": 2.7,
-  "Chocolate Cake": 13.3,
-  "Banana": 6.8,
-  "Tree": 4.8,
-  "Rope": 6.8,
-  "Brass": null,
-  "Black Dye": 16.0,
-  "Fossil": 10.5,
-  "Dinosaur": 12.0,
-  "Helicopter": 20.9,
-  "Metropolis": 21.6,
-  "Amber": 10.7,
-  "Skyscraper": 15.8,
-  "Book": 11.7,
-  "Canoe": 5.6,
-  "Farm": 7.5,
-  "Basket": 7.8,
-  "Rubber": 5.2,
-  "Soil": 4.5,
-  "Salmon": 11.5,
-  "Rainbow": 14.9,
-  "Seaweed": 4.8,
-  "Grand Banquet": 23.1,
-  "Honey": 7.8,
-  "Opal": 11.0,
-  "Central Station": 24.7,
-  "Battery": 4.7,
-  "Planet": 8.3,
-  "Light Bulb": 7.1,
-  "Tractor": 16.0,
-  "Sushi Restaurant": 18.6,
-  "Wire": 3.5,
-  "Sunflower": 16.8,
-  "Space Station": 23.4,
-  "Turquoise": 13.9,
-  "Furnace": 4.3,
-  "Natural Gas": 2.7,
-  "Chocolate": 8.9,
-  "Magnet": 4.9,
-  "Plant Fiber": 6.8,
-  "Bee": 8.1,
-  "Windmill": 19.0,
-  "Renewable Grid": 29.5,
-  "Compass": 7.4,
-  "Éclair": 13.9,
-  "Dough": 9.0,
-  "Star": 13.7,
-  "Water": 2.3,
-  "Concrete": 5.2,
-  "Bridge": 6.9,
-  "Egg": 5.6,
-  "Bone": 4.9,
-  "Museum": 17.8,
-  "Mushroom": 5.0,
-  "Fruit Cake": 20.2,
-  "Satellite Dish": 10.9,
-  "Building": 8.2,
-  "Clock": 8.2,
-  "Banana Bread": 17.1,
-  "Red Dye": 14.4,
-  "Yarn": 12.9,
-  "Fabric": 8.1,
-  "Glass": 5.2,
-  "Titanium Alloy": 5.5,
-  "Butter": 10.9,
-  "Turbine Blade": 16.5,
-  "Deer": 6.2,
   "Limestone": 2.6,
-  "Microchip": 8.4,
-  "Cow": 7.9,
+  "Rainbow": 14.9,
+  "Statue": 7.3,
+  "Clock": 8.2,
+  "Tractor": 16.0,
+  "Yeast": 4.9,
+  "Steel": 2.7,
+  "Natural Gas": 2.7,
+  "Space Station": 23.4,
+  "Paper": 11.8,
+  "Biofuel": 10.4,
+  "Homestead": 20.0,
   "Stainless Steel": 5.1,
-  "Blackberries": 10.2,
-  "Tools": 3.9,
-  "Water Turbine": 21.8,
-  "Ruby": 12.9,
-  "Fiberglass": 10.2,
-  "Sailboat": 8.7,
-  "Grain": 8.0,
-  "Berry Cupcakes": 21.8,
+  "Bread": 12.4,
+  "Sushi Restaurant": 18.6,
   "Cake": 13.2,
+  "Seaweed": 4.8,
+  "Rubber": 5.2,
+  "Microchip": 8.4,
+  "Deer": 6.2,
+  "Soil": 4.5,
+  "Furnace": 4.3,
+  "Yellow Dye": 15.5,
+  "Sheep": 7.3,
+  "Car": 17.0,
+  "Turquoise": 13.9,
+  "Blue Dye": 17.7,
+  "Titanium Alloy": 5.5,
   "Motorcycle": 17.7,
+  "DNA": 3.7,
+  "Pretzel": 11.1,
+  "Apple": 6.5,
+  "Star": 13.7,
+  "Banana Bread": 17.1,
+  "Cloud": 5.1,
+  "Life": 16.5,
+  "Opal": 11.0,
+  "Concrete": 5.2,
+  "Trumpet": null,
+  "Tools": 3.9,
   "Aluminum Alloy": 5.2,
-  "Computer": 15.3,
-  "Fireworks": 4.0,
-  "Coral Reef": 16.9,
+  "Yarn": 12.9,
+  "Canoe": 5.6,
+  "Museum": 17.8,
+  "Planet": 8.3,
+  "Bridge": 6.9,
+  "Sailboat": 8.7,
+  "Blackberries": 10.2,
+  "Renewable Grid": 29.5,
+  "Red Dye": 14.4,
+  "Gemstone Collection": 19.4,
+  "Telescope": 11.6,
+  "Robot": 17.8,
+  "Magnet": 4.9,
+  "Farm": 7.5,
+  "Milk": 8.9,
+  "Brass": null,
+  "Ecosystem": 21.9,
+  "Grain": 8.0,
+  "Flour": 8.8,
+  "Sugar": 3.0,
+  "Ruby": 12.9,
+  "Engine": 7.2,
   "Wool": 7.5,
-  "Diamond": 12.6
+  "Sand": 2.9,
+  "Tree": 4.8,
+  "Battery": 4.7,
+  "Volcano": 13.4,
+  "Croissant": 12.4,
+  "Blueberries": 13.2,
+  "Plant Fiber": 6.8,
+  "Honey": 7.8,
+  "Fertilizer": 3.0,
+  "Apple Pie": 12.8,
+  "Library": 13.7,
+  "Glass": 5.2,
+  "Éclair": 13.9,
+  "Fireworks": 4.0,
+  "Orca": 13.3,
+  "Central Station": 24.7,
+  "Cream": 10.8,
+  "Bone": 4.9,
+  "Black Dye": 16.0,
+  "Solar System": 15.6,
+  "Lighthouse": 13.2,
+  "Clay": 2.4,
+  "Coral Reef": 16.9,
+  "Salmon": 11.5,
+  "Satellite Dish": 10.9,
+  "Fiberglass": 10.2,
+  "Diamond": 12.6,
+  "Chocolate": 8.9,
+  "Compass": 7.4,
+  "Rope": 6.8,
+  "Knit Scarf": 20.2,
+  "Water Turbine": 21.8,
+  "Butter": 10.9,
+  "Speedboat": 16.8,
+  "Water": 2.3,
+  "Banana": 6.8,
+  "Computer": 15.3,
+  "Geothermal Pump": 15.6,
+  "Beach Town": 26.5,
+  "Chicken": 10.6,
+  "Solar Panel": 8.3,
+  "Book": 11.7,
+  "Egg": 5.6,
+  "Plastic": 8.2,
+  "Amber": 10.7,
+  "Bicycle": 14.6,
+  "Fossil": 10.5,
+  "Bee": 8.1,
+  "Wire": 3.5,
+  "Cow": 7.9,
+  "Dough": 9.0,
+  "Turbine Blade": 16.5,
+  "Glass Vial": 10.1,
+  "Chocolate Cake": 13.3,
+  "Oven": 11.3,
+  "Mushroom": 5.0,
+  "Log Cabin": 7.2,
+  "Basket": 7.8,
+  "Light Bulb": 7.1,
+  "Windmill": 19.0,
+  "Helicopter": 20.9,
+  "Skyscraper": 15.8,
+  "Strawberries": 10.4,
+  "Metropolis": 21.6,
+  "Cruise Ship": null,
+  "Fabric": 8.1,
+  "Grand Banquet": 23.1,
+  "Sunflower": 16.8,
+  "Fruit Cake": 20.2,
+  "Building": 8.2,
+  "Dinosaur": 12.0,
+  "Wheel": 10.5,
+  "Rocket": 21.3,
+  "Pearl": 13.6,
+  "Maglev Train": 15.7,
+  "Berry Cupcakes": 21.8
  }
 }/*__GAME_DATA_END__*/;
 
@@ -5197,7 +5199,20 @@ const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.
 /* Dice rolls per visit. Defaults to build_guide.py's value but is adjustable
    per-device via the settings overlay (prefs.diceCount). */
 let TAKE = DATA.take;
-function applyDiceCount(){ TAKE = prefs.diceCount || DATA.take; }
+// Classic Mode's own dice economy: starts stingier than every other mode
+// (DATA.take, still 6) specifically so Tractor reads as a real "engine"
+// unlock once bought -- same shape as Furnace lifting the suit-conversion
+// restriction, or Helicopter unlocking full fast travel. An explicit
+// prefs.diceCount (Settings' own override) always wins regardless of mode
+// or Tractor, same as before this existed. Guarded for state possibly
+// still being unset the very first time this runs (see loadAll()).
+const CLASSIC_TAKE_BASE = 4, CLASSIC_TAKE_WITH_TRACTOR = 6;
+function applyDiceCount(){
+  if (prefs.diceCount){ TAKE = prefs.diceCount; return; }
+  TAKE = (state && state.mode === "classic")
+    ? (owns("Tractor") ? CLASSIC_TAKE_WITH_TRACTOR : CLASSIC_TAKE_BASE)
+    : DATA.take;
+}
 /* Session cap from HANDOFF.md §6: a group gets at most 15 station visits.
    Kept out of the generated DATA block (which must stay byte-identical to
    build_guide.py) so regenerating game data never clobbers it. Adjustable
@@ -5300,6 +5315,7 @@ function resumeMode(mode){
   const saved = readModeSave(mode);
   state = Object.assign(freshState(), saved, {mode});
   applyVisitLimit();
+  applyDiceCount();
   prefs.lastActiveMode = mode; savePrefs();
   closeOverlay("modeOverlay");
   screen = "map"; current = null; selectedMapStation = null;
@@ -5321,6 +5337,7 @@ function startFreshMode(mode){
   state = freshState();
   state.mode = mode;
   applyVisitLimit();
+  applyDiceCount();
   selectedJobItem = null;
   mouseTipsShown = new Set();
   prefs.pinnedItems = [];
@@ -6225,6 +6242,9 @@ let selectedJobItem = null;
    silently wipe whatever the player had typed. See renderCodex()'s value=
    attribute and applyRefFilter() below. */
 let refFilterQuery = "";
+// Same "outlives a full renderCodex() rebuild" reasoning as refFilterQuery
+// above -- the <select> itself gets torn down and rebuilt on every render.
+let refSortMode = "tier"; // "tier" (default) | "az" | "points"
 /* Shared by the topbar's job chips and the (legacy, now-unreachable)
    [data-select-job] case in #screen's own click handler. */
 function toggleJobSelect(name){
@@ -6524,6 +6544,17 @@ function loadAll(){
 
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
+// Classic Mode only, and only until Furnace is owned -- ties Convert
+// Elements more directly to the science theme (same chemical-role "suit"
+// every element card already shows) by restricting a raw conversion to
+// same-suit swaps at first, then Furnace (cheap, an early Deep Mine buy)
+// lifts the restriction entirely, same "engine building" shape as
+// Helicopter unlocking full fast travel. Adventure/Zen never had this
+// restriction and don't get it now either.
+function convertAllowed(from, to){
+  if (state.mode !== "classic" || !from || !to || owns("Furnace")) return true;
+  return ELEMENT_SUIT[from] === ELEMENT_SUIT[to];
+}
 // Total 3-for-1 conversions available right now, summed across every
 // element -- the same number the Convert button's own hub badge shows
 // (see updateHub()) and what tokenHTML() repeats on a recipe's own
@@ -6619,6 +6650,7 @@ function craft(entry, opts={}){
   checkQuestCompletion();
   checkJobCompletion();
   checkBingoCompletion(entry.name);
+  applyDiceCount(); // Tractor may have just been crafted -- see its own comment
   save();
   return true;
 }
@@ -7986,8 +8018,12 @@ function renderCodex(){
     .filter(row => state.mode !== "classic" || CORE_ITEM_NAMES.has(row.name));
 
   const TIER_ORDER = {MATERIAL:0, COMPONENT:1, CREATION:2, CAPSTONE:3};
-  rows.sort((a, b) =>
-    (TIER_ORDER[a.tier] - TIER_ORDER[b.tier]) || a.name.localeCompare(b.name));
+  const REF_SORTERS = {
+    tier: (a, b) => (TIER_ORDER[a.tier] - TIER_ORDER[b.tier]) || a.name.localeCompare(b.name),
+    az: (a, b) => a.name.localeCompare(b.name),
+    points: (a, b) => (b.points - a.points) || a.name.localeCompare(b.name),
+  };
+  rows.sort(REF_SORTERS[refSortMode] || REF_SORTERS.tier);
 
   const rowHTML = e => {
     const has = owns(e.name);
@@ -8027,6 +8063,11 @@ function renderCodex(){
     <div class="refbar">
       <input id="refFilter" type="search" placeholder="Search items, ingredients or stations…"
              aria-label="Search the item reference" value="${esc(refFilterQuery)}">
+      <select id="refSort" aria-label="Sort the item reference">
+        <option value="tier" ${refSortMode === "tier" ? "selected" : ""}>Sort: Default</option>
+        <option value="az" ${refSortMode === "az" ? "selected" : ""}>Sort: A–Z</option>
+        <option value="points" ${refSortMode === "points" ? "selected" : ""}>Sort: Points</option>
+      </select>
       <span class="refcount" id="refCount">${rows.length} / ${refItemTotal()}</span>
     </div>
     ${pinnedHTML}
@@ -9747,13 +9788,15 @@ function flyIngredientsAndReveal(entry){
     el.innerHTML = miniIngredientCardHTML(r);
     const card = el.firstElementChild;
     card.style.position = "fixed";
-    // Flight order/timing (the stagger below) still follows reqs' own
-    // recipe-list order untouched -- this only controls which card paints
-    // on top once they're all fanned into the stack. Item ingredients
-    // always stack above element ingredients regardless of where either
-    // falls in the recipe text, so a card recognizable by its icon+name
-    // (an item) never gets buried under a plain element tile.
-    card.style.zIndex = r.kind === "element" ? "500" : "501";
+    // Pure recipe-list position, not ingredient kind -- each card stacks
+    // directly on top of the one before it in the recipe text, matching
+    // both its own flight-stagger delay (below) and the fanned resting
+    // pile's visual order. Used to split element/item into two fixed
+    // layers instead (items always above elements regardless of recipe
+    // position), which is exactly what made a mid-recipe element land on
+    // top of an earlier item, or vice versa -- looked like cards arrived
+    // out of order, or landed underneath ones they should have covered.
+    card.style.zIndex = String(500 + i);
     card.style.pointerEvents = "none";
     // Start just below the bottom edge, spread across the width so a
     // multi-ingredient recipe doesn't launch every card from one spot.
@@ -10153,6 +10196,11 @@ document.getElementById("screen").addEventListener("input", ev => {
   if (ev.target.id !== "refFilter") return;
   refFilterQuery = ev.target.value;
   applyRefFilter();
+});
+document.getElementById("screen").addEventListener("change", ev => {
+  if (ev.target.id !== "refSort") return;
+  refSortMode = ev.target.value;
+  render();
 });
 
 /* ------------------------------------------------------- bottom hub --- */
@@ -11837,15 +11885,20 @@ function updateConvertUI(){
     convertTo ? (ELEMENT_NAMES[convertTo] || convertTo) : "Pick element";
   paintElement(toBox, convertTo);
 
-  const ready = convertFrom && convertTo && convertFrom !== convertTo && count(convertFrom) >= 3;
+  const ready = convertFrom && convertTo && convertFrom !== convertTo && count(convertFrom) >= 3
+    && convertAllowed(convertFrom, convertTo);
   document.getElementById("convertGo").disabled = !ready;
 }
 function renderConvertPicker(){
   const isFrom = convertPickMode === "from";
+  const other = isFrom ? convertTo : convertFrom;
+  const suitLocked = state.mode === "classic" && !owns("Furnace") && !!other;
   document.getElementById("convertPickerKicker").textContent = isFrom ? "Inventory" : "Choose an element";
   document.getElementById("convertPickerSub").textContent = isFrom
     ? "Elements with 3 or more can be converted."
-    : "Pick what you'd like to convert into.";
+    : suitLocked
+      ? `Same suit only (${ELEMENT_SUIT_LABEL[ELEMENT_SUIT[other]]}) until you own a Furnace.`
+      : "Pick what you'd like to convert into.";
 
   // FROM shows every element the player has (even under 3) so they can see
   // what's close/not just what already qualifies; TO offers the full set.
@@ -11858,6 +11911,7 @@ function renderConvertPicker(){
   // from Si/Al/Mg, the rest of its (reassigned) earth suit.
   const ELEMENT_DISPLAY_ORDER = Object.keys(ELEMENT_SUIT);
   syms = syms.filter(s => s !== (isFrom ? convertTo : convertFrom))
+    .filter(s => !suitLocked || convertAllowed(isFrom ? s : other, isFrom ? other : s))
     .sort((a, b) => ELEMENT_DISPLAY_ORDER.indexOf(a) - ELEMENT_DISPLAY_ORDER.indexOf(b));
 
   const grid = document.getElementById("convertPickerGrid");
@@ -11896,7 +11950,8 @@ document.getElementById("convertPickerGrid").addEventListener("click", ev => {
 });
 document.getElementById("convertPickerClose").addEventListener("click", () => closeOverlay("convertPicker"));
 document.getElementById("convertGo").addEventListener("click", () => {
-  if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < 3) return;
+  if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < 3
+    || !convertAllowed(convertFrom, convertTo)) return;
   state.elements[convertFrom] = count(convertFrom) - 3;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
