@@ -98,7 +98,7 @@ STATIONS = [
              ("🌾","Grain","COMPONENT","🧑‍🌾 Farm + ♻️ Fertilizer",7),
              ("🔆","Solar Panel","COMPONENT","Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",7),
              ("🌻","Sunflower","CREATION","⭐ Star + 🌾 Grain",20),
-             ("🚜","Tractor","CREATION","⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",14),
+             ("🚜","Tractor","CREATION","⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber + 🧑‍🌾 Farm",14),
              ("__OPAL__","Opal","COMPONENT","Si + O + __FURNACE__ Furnace + 🕐 Clock",11),
              ("🐔","Chicken","CREATION","🧑‍🌾 Farm + 🥚 Egg",10),
              ("🐄","Cow","CREATION","🧑‍🌾 Farm + 🌾 Grain",9),
