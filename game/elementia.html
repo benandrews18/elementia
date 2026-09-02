@@ -3483,7 +3483,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🎲</span>
       <span class="setting-body">
         <span class="setting-label">Dice rolls per visit</span>
-        <span class="setting-sub">How many elements you collect each PLAY</span>
+        <span class="setting-sub" id="setDiceSub">How many elements you collect each PLAY</span>
+        <label class="mini-toggle"><input type="checkbox" id="setDiceAuto" class="switch"> Automatic</label>
       </span>
       <input id="setDice" class="setnum" type="number" min="1" max="10" step="1" inputmode="numeric" aria-label="Dice rolls per visit">
     </div>
@@ -11888,6 +11889,7 @@ document.getElementById("jobSheetBody").addEventListener("touchend", ev => {
 const setVisitsInput = document.getElementById("setVisits");
 const setUnlimitedBox = document.getElementById("setUnlimited");
 const setDiceInput = document.getElementById("setDice");
+const setDiceAutoBox = document.getElementById("setDiceAuto");
 const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
 // Just opens the hub (see #settings' own HTML comment) -- the 3 sub-
@@ -11937,7 +11939,13 @@ function openSettingsRules(){
   document.getElementById("setVisitsSub").textContent = modeForcesUnlimited
     ? "Zen and Adventure Mode are always unlimited"
     : "How many stations you can visit before the session ends";
-  setDiceInput.value = TAKE;
+  const diceAuto = prefs.diceCount == null;
+  setDiceAutoBox.checked = diceAuto;
+  setDiceInput.value = diceAuto ? TAKE : prefs.diceCount;
+  setDiceInput.disabled = diceAuto;
+  document.getElementById("setDiceSub").textContent = diceAuto
+    ? "Follows the mode's own rules (Classic/Adventure start at 4, Tractor raises it to 6)"
+    : "How many elements you collect each PLAY";
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
   openSettingsScreen("settingsRules");
@@ -11945,6 +11953,13 @@ function openSettingsRules(){
 document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
 setUnlimitedBox.addEventListener("change", () => {
   setVisitsInput.disabled = setUnlimitedBox.checked;
+});
+setDiceAutoBox.addEventListener("change", () => {
+  setDiceInput.disabled = setDiceAutoBox.checked;
+  document.getElementById("setDiceSub").textContent = setDiceAutoBox.checked
+    ? "Follows the mode's own rules (Classic/Adventure start at 4, Tractor raises it to 6)"
+    : "How many elements you collect each PLAY";
+  if (setDiceAutoBox.checked){ setDiceInput.value = TAKE; }
 });
 document.getElementById("setRulesCancel").addEventListener("click", () => closeOverlay("settingsRules"));
 document.getElementById("setSave").addEventListener("click", () => {
@@ -11960,7 +11975,11 @@ document.getElementById("setSave").addEventListener("click", () => {
     const n = Math.max(1, Math.round(Number(setVisitsInput.value)) || DEFAULT_MAX_VISITS);
     prefs.maxVisits = n;
   }
-  prefs.diceCount = Math.max(1, Math.min(10, Math.round(Number(setDiceInput.value)) || DATA.take));
+  if (setDiceAutoBox.checked){
+    prefs.diceCount = null;
+  } else {
+    prefs.diceCount = Math.max(1, Math.min(10, Math.round(Number(setDiceInput.value)) || DATA.take));
+  }
   prefs.minigamesEnabled = setMinigamesBox.checked;
   // showTutorialHintOnce() itself checks this live, so toggling it off
   // stops any further tips immediately, mid-run included -- no separate
