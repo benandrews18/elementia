@@ -752,13 +752,18 @@ body[data-screen="market"] #trackedPill{display:none}
   color:rgba(255,255,255,.75)}
 .market-progress-stations{display:flex; flex-wrap:nowrap; gap:5px}
 .market-progress-station{
-  width:24px; height:24px; border-radius:50%; flex:none;
+  position:relative; width:24px; height:24px; border-radius:50%; flex:none;
   display:flex; align-items:center; justify-content:center;
   font-size:12px; line-height:1; font-weight:800;
   background:rgba(255,255,255,.12); border:1.5px solid rgba(255,255,255,.3); color:rgba(255,255,255,.65);
 }
 .market-progress-station.visited{
-  background:var(--gold-soft); border-color:var(--gold); color:var(--ink);
+  background:var(--ok-soft); border-color:var(--ok); color:var(--ink);
+}
+.mps-check{
+  position:absolute; top:-5px; right:-5px; width:13px; height:13px; border-radius:50%;
+  background:var(--ok); color:#fff; font-size:8px; font-weight:800; line-height:1;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--bg-soft);
 }
 /* Classic Mode's own top-of-screen copy of this same row (see
    renderMarketScreen()) -- full width of the scrolling content column,
@@ -835,6 +840,50 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
+/* Adventure Mode's own Marketplace tray (see adventureMarketTrayHTML()) --
+   two swipeable panels (Quests, then Collection Bundles) in the same
+   top-tray slot Classic's Bingo card fills. .market-tray-track holds both
+   panels side by side; JS sets its own transform (0% or -100%) rather
+   than a class toggle, since marketTrayPanel can also land on either
+   value straight from a fresh open. */
+.market-tray-dots{display:flex; justify-content:center; gap:8px; margin:4px 0 10px}
+.market-tray-dot{
+  width:8px; height:8px; border-radius:50%; padding:0; border:none;
+  background:var(--line); transition:background .15s, transform .15s;
+}
+.market-tray-dot.active{background:var(--gold); transform:scale(1.3)}
+.market-tray-swipe{overflow:hidden}
+.market-tray-track{display:flex; width:200%; transition:transform .25s cubic-bezier(.3,.8,.4,1)}
+.market-tray-panel{flex:0 0 50%; min-width:0}
+/* Bundle cards -- horizontally scrolling row, one card per COLLECTIONS
+   entry. Each item square is deliberately the same size as a Bingo square
+   (see .bundle-cell below, sized to match .bingo-cell's own rendered
+   footprint rather than sharing its class, since bundle cards sit in a
+   narrower horizontally-scrolled context instead of a fixed 5-column
+   grid). */
+.bundle-row{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 10px; -webkit-overflow-scrolling:touch}
+.bundle-card{
+  flex:none; width:212px; background:var(--card); border:1.5px solid var(--line);
+  border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px;
+}
+.bundle-card.complete{border-color:var(--gold-line); box-shadow:0 0 0 1px var(--gold-line), 0 0 14px rgba(226,178,90,.18)}
+.bundle-card-head{display:flex; align-items:center; justify-content:space-between; gap:6px}
+.bundle-card-name{font-size:12.5px; font-weight:700; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.bundle-card-bonus{
+  flex:none; font-family:inherit; font-weight:800; font-size:11px; color:var(--mute);
+  background:var(--sunken); border:1px solid var(--line); border-radius:999px; padding:3px 8px;
+}
+.bundle-card.complete .bundle-card-bonus{color:#2a2110; background:linear-gradient(180deg,#f0d38a,var(--gold) 75%); border-color:transparent}
+.bundle-card-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:5px}
+.bundle-cell{
+  width:60px; height:60px; border-radius:10px; background:var(--sunken); border:1.5px solid var(--line);
+  display:flex; align-items:center; justify-content:center; opacity:.4; filter:grayscale(1);
+}
+.bundle-cell .bc-icon{font-size:26px; line-height:1}
+.bundle-cell.seen{opacity:.75}
+.bundle-cell.owned{opacity:1; filter:none; background:var(--ok-soft); border-color:var(--ok-line)}
+.bundle-card-progress{font-size:11px; color:var(--mute); font-weight:700; text-align:right}
+.bundle-card.complete .bundle-card-progress{color:var(--gold)}
 .trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
 .trade-lock-station{
   width:46px; height:46px; border-radius:50%; flex:none;
@@ -5221,11 +5270,12 @@ let TAKE = DATA.take;
 // restriction, or Helicopter unlocking full fast travel. An explicit
 // prefs.diceCount (Settings' own override) always wins regardless of mode
 // or Tractor, same as before this existed. Guarded for state possibly
-// still being unset the very first time this runs (see loadAll()).
+// still being unset the very first time this runs (see loadAll()). Now
+// shared by Classic AND Adventure (Hard) -- Zen keeps the flat DATA.take.
 const CLASSIC_TAKE_BASE = 4, CLASSIC_TAKE_WITH_TRACTOR = 6;
 function applyDiceCount(){
   if (prefs.diceCount){ TAKE = prefs.diceCount; return; }
-  TAKE = (state && state.mode === "classic")
+  TAKE = (state && (state.mode === "classic" || state.mode === "hard"))
     ? (owns("Tractor") ? CLASSIC_TAKE_WITH_TRACTOR : CLASSIC_TAKE_BASE)
     : DATA.take;
 }
@@ -5940,6 +5990,63 @@ function bingoCardHTML(){
     <p class="bingo-hint">Complete a line of 5 across the card for bonus points. Tap an item to add it to your To-Do List.</p>`;
 }
 
+////////////////////////////////////////////////////////////////////////
+// Adventure (Hard) Mode's own Marketplace tray -- same top-tray doorway
+// Classic's Bingo card uses (see openJobSelectTray()), but two swipeable
+// panels instead: available Quests, then Collection Bundles. marketTrayPanel
+// (0=quests, 1=bundles) is reset to 0 every time the tray is freshly
+// opened (see openJobSelectTray()) so it never reopens mid-swipe.
+////////////////////////////////////////////////////////////////////////
+let marketTrayPanel = 0;
+function adventureMarketTrayHTML(){
+  const stationsCard = `<div class="market-classic-progress">${marketStationProgressHTML()}</div>`;
+  const quests = questsBodyHTML(false) || '<p class="empty">No quests available yet -- keep exploring.</p>';
+  return `${stationsCard}
+    <div class="market-tray-dots">
+      <button type="button" class="market-tray-dot ${marketTrayPanel === 0 ? "active" : ""}" data-tray-panel="0" aria-label="Quests"></button>
+      <button type="button" class="market-tray-dot ${marketTrayPanel === 1 ? "active" : ""}" data-tray-panel="1" aria-label="Collection Bundles"></button>
+    </div>
+    <div class="market-tray-swipe" id="marketTraySwipe">
+      <div class="market-tray-track" style="transform:translateX(${marketTrayPanel * -50}%)">
+        <div class="market-tray-panel">${quests}</div>
+        <div class="market-tray-panel">${bundlesPanelHTML()}</div>
+      </div>
+    </div>`;
+}
+/* Reuses COLLECTIONS as-is (see its own definition) -- same data Hard/Zen's
+   old arc-based Collections screen read from, just redrawn here in the
+   bingo-square visual language (.bundle-cell shares .bingo-cell's own
+   size) and, unlike that old screen, always visible/browsable rather than
+   hidden until the player's already finished one -- the whole point is
+   watching a bundle slowly fill in, not just a trophy case at the end.
+   Auto-populates purely off ownership (everOwned()), nothing to select or
+   commit to, same "just play and it fills itself in" feel Bingo has. */
+function bundlesPanelHTML(){
+  const cards = COLLECTIONS.map(col => {
+    const have = col.items.filter(everOwned).length;
+    const done = have === col.items.length;
+    const cells = col.items.map(name => bundleCellHTML(name)).join("");
+    return `<div class="bundle-card ${done ? "complete" : ""}">
+      <div class="bundle-card-head">
+        <span class="bundle-card-name">${esc(col.icon)} ${esc(col.name)}</span>
+        <span class="bundle-card-bonus">+${collectionBonus(col)}</span>
+      </div>
+      <div class="bundle-card-grid">${cells}</div>
+      <div class="bundle-card-progress">${have}/${col.items.length}</div>
+    </div>`;
+  }).join("");
+  return `<div class="bundle-row">${cards}</div>`;
+}
+function bundleCellHTML(name){
+  const owned = everOwned(name);
+  const seen = !owned && !!state.seenItems[name];
+  const cls = owned ? "owned" : seen ? "seen" : "hidden";
+  return `<div class="bundle-cell ${cls}" title="${owned || seen ? esc(name) : "???"}">
+    <span class="bc-icon">${owned || seen ? em(ITEM_EMOJI[name]) : "?"}</span>
+  </div>`;
+}
+
+
 /* Recurring raw materials that show up under the same name at several
    stations (Water, Clay, etc.) -- pinned to the top of every shop list
    that sells them, always in this same relative order, so a player
@@ -6591,15 +6698,16 @@ function loadAll(){
 
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
-// Classic Mode only, and only until Furnace is owned -- ties Convert
-// Elements more directly to the science theme (same chemical-role "suit"
-// every element card already shows) by restricting a raw conversion to
-// same-suit swaps at first, then Furnace (cheap, an early Deep Mine buy)
-// lifts the restriction entirely, same "engine building" shape as
-// Helicopter unlocking full fast travel. Adventure/Zen never had this
-// restriction and don't get it now either.
+// Classic and Adventure (Hard) Mode, and only until Furnace is owned --
+// ties Convert Elements more directly to the science theme (same
+// chemical-role "suit" every element card already shows) by restricting a
+// raw conversion to same-suit swaps at first, then Furnace (cheap, an
+// early Deep Mine buy) lifts the restriction entirely, same "engine
+// building" shape as Helicopter unlocking full fast travel. Zen never had
+// this restriction and doesn't get it now either.
+function convertRestrictedMode(){ return state.mode === "classic" || state.mode === "hard"; }
 function convertAllowed(from, to){
-  if (state.mode !== "classic" || !from || !to || owns("Furnace")) return true;
+  if (!convertRestrictedMode() || !from || !to || owns("Furnace")) return true;
   return ELEMENT_SUIT[from] === ELEMENT_SUIT[to];
 }
 // Total 3-for-1 conversions available right now, summed across every
@@ -6652,35 +6760,40 @@ function craft(entry, opts={}){
   }
   Object.keys(state.elements).forEach(k => { if (state.elements[k] <= 0) delete state.elements[k]; });
 
-  // Hard Mode only: ingredient items are spent too, same as elements --
-  // everything except Capstones (never an ingredient anyway, in any
-  // recipe currently in the game) and explicit catalysts (a trailing *
-  // in the recipe string). In every other mode items stay permanent, so
-  // state.items is only ever a set of unique names there; in Hard Mode
-  // it becomes a multiset (the same name can appear more than once if
-  // re-crafted after being spent) -- owns()'s plain .includes() check
-  // and the UI (see renderDrawer()) both already handle that.
-  if (state.mode === "hard"){
-    for (const it of items){
-      if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE" || UTILITY_ITEMS.has(it.name)) continue;
-      const idx = state.items.indexOf(it.name);
-      if (idx !== -1) state.items.splice(idx, 1);
-    }
-  }
+  // ARCHIVED 2026-09 -- Hard Mode used to spend ingredient items too, same
+  // as elements (everything except Capstones and explicit catalysts).
+  // Experimenting with permanent items in Adventure Mode too now (same
+  // rule Classic/Zen already had), so this whole block -- and the batch-
+  // craft feature it justified (see BATCH_CRAFT_THRESHOLD's own now-
+  // archived comment below) -- is intentionally left here, commented out
+  // rather than deleted, in case that experiment doesn't stick:
+  //
+  // if (state.mode === "hard"){
+  //   for (const it of items){
+  //     if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE" || UTILITY_ITEMS.has(it.name)) continue;
+  //     const idx = state.items.indexOf(it.name);
+  //     if (idx !== -1) state.items.splice(idx, 1);
+  //   }
+  // }
 
   state.items.push(entry.name);
   if (state.mode === "hard"){
     state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
-    // First item ever to reach the threshold turns batch crafting on for
-    // every item, forever (see freshState()'s own comment) -- a one-time,
-    // organic "you've done this enough, here's a faster way" moment
-    // rather than a setting the player has to go find.
-    if (!state.batchCraftUnlocked && state.craftCounts[entry.name] >= BATCH_CRAFT_THRESHOLD){
-      state.batchCraftUnlocked = true;
-      setTimeout(() => showTutorialHintOnce("batchcraft", 2,
-        "You've crafted this a lot! Use the new + / − buttons to craft several at once.",
-        "bottom-right", ".craftbtn"), 300);
-    }
+    // ARCHIVED 2026-09, alongside the item-spending block above -- batch
+    // crafting only ever made sense when items got spent and might need
+    // re-building several at once. state.craftCounts itself stays live
+    // (still drives craftTier()'s "how many times have I built this"
+    // border, unrelated to batch crafting specifically); just the trigger
+    // that ever turned batchCraftUnlocked on is disabled, which leaves
+    // craftBatch()/itemHTML()'s +/- controls naturally unreachable
+    // without having to touch either of them:
+    //
+    // if (!state.batchCraftUnlocked && state.craftCounts[entry.name] >= BATCH_CRAFT_THRESHOLD){
+    //   state.batchCraftUnlocked = true;
+    //   setTimeout(() => showTutorialHintOnce("batchcraft", 2,
+    //     "You've crafted this a lot! Use the new + / − buttons to craft several at once.",
+    //     "bottom-right", ".craftbtn"), 300);
+    // }
   }
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
@@ -8644,8 +8757,10 @@ function hubHomeFace(){
   // to leave really is just "go back to the map" (already true
   // underneath). The bottom hub's own smaller side tray (jobSheetVariant
   // === "compact") falls through to the generic "close" case just below,
-  // same as every other panel a DIFFERENT button opened.
-  if (panel === "jobs" && state.mode === "classic" && jobSheetVariant === "full") return "map";
+  // same as every other panel a DIFFERENT button opened. Adventure shares
+  // this doorway now too (Zen still uses the old full-screen Marketplace,
+  // so it's excluded here same as before).
+  if (panel === "jobs" && (state.mode === "classic" || state.mode === "hard") && jobSheetVariant === "full") return "map";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -10382,8 +10497,10 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // itself is otherwise unreachable there now, replaced by this tray.
   // openJobSelectTray(), not openJobBoard() -- that one's now the bottom
   // hub's own Jobs button, a smaller side tray with different content
-  // (see its own comment), not this button's job.
-  if (face === "market"){ (state.mode === "classic" ? openJobSelectTray : openMarket)(); return; }
+  // (see its own comment), not this button's job. Adventure (Hard) now
+  // shares Classic's top-tray doorway too (see adventureMarketTrayHTML());
+  // only Zen still opens the old full-screen Marketplace.
+  if (face === "market"){ (state.mode === "zen" ? openMarket : openJobSelectTray)(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
   // Job Select reads as "Map" rather than "Close" while open in Classic
   // Mode (see hubHomeFace()'s own comment) but still needs the tray
@@ -10697,27 +10814,35 @@ let jobSheetVariant = "full"; // "full" | "compact" -- Classic Mode only, see ab
    updateHub()'s own hubJobs.disabled). */
 function renderJobBoard(){
   const classic = state.mode === "classic";
+  const hard = state.mode === "hard";
   const full = jobSheetVariant === "full";
-  document.getElementById("jobTitle").textContent = state.mode === "hard" ? "📜 Quests"
-    : full ? "🏪 Marketplace" : "📋 To-Do List";
-  document.getElementById("jobSheetBody").innerHTML = !classic
-    // acceptedOnly:true -- Adventure's Quests tray stays a personal log,
-    // never a place to browse and accept something new (see
-    // questsBodyHTML()'s own comment) -- that's still the Marketplace's job.
-    ? questsBodyHTML(true)
-    : full
-      // Draft: Job Select's own "Available Jobs" board (jobBoardHTML(false))
-      // replaced with the Item Bingo card here -- jobBoardHTML() itself is
-      // untouched and still powers the compact tray below (acceptedOnly
-      // true there), so already-taken jobs stay fully manageable; there's
-      // just no way to TAKE a new one from this tray anymore now that its
-      // job board's not rendered here. Bingo is visible from the very
-      // first visit now -- no more allStationsVisited() gate -- scouting
-      // every station still matters, it just earns its own score bonus
-      // now instead (STATIONS_VISITED_BONUS, badge on the progress card
-      // right above) rather than unlocking anything.
-      ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>${bingoCardHTML()}`
-      : classicPinsAndJobsHTML();
+  document.getElementById("jobTitle").textContent =
+    (classic || hard) && full ? "🏪 Marketplace"
+    : classic ? "📋 To-Do List"
+    : "📜 Quests"; // Adventure's compact tray, and Zen's unreachable fallback
+  document.getElementById("jobSheetBody").innerHTML =
+    classic
+      ? (full
+          // Job Select's own "Available Jobs" board (jobBoardHTML(false))
+          // replaced with the Item Bingo card here -- jobBoardHTML() itself
+          // is untouched and still powers the compact tray below
+          // (acceptedOnly true there), so already-taken jobs stay fully
+          // manageable; there's just no way to TAKE a new one from this
+          // tray anymore now that its job board's not rendered here. Bingo
+          // is visible from the very first visit now -- no more
+          // allStationsVisited() gate -- scouting every station still
+          // matters, it just earns its own score bonus now instead
+          // (STATIONS_VISITED_BONUS, badge on the progress card right
+          // above) rather than unlocking anything.
+          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`
+          : classicPinsAndJobsHTML())
+      : hard
+        ? (full ? adventureMarketTrayHTML() : questsBodyHTML(true))
+        // acceptedOnly:true -- Adventure's own compact tray (and Zen's
+        // unreachable fallback, see updateHub()'s own hubJobs.disabled)
+        // stays a personal log, never a place to browse and accept
+        // something new -- that's the "full" tray's job.
+        : questsBodyHTML(true);
 }
 /* Pins + active/completed jobs only -- no "Available Jobs" board (that's
    jobBoardHTML(false)'s own job, reserved for the full variant above).
@@ -10771,7 +10896,11 @@ function openJobSheet(){
   // before.
   jobSheet.style.transition = "none";
   jobSheet.classList.remove("open");
-  jobSheet.classList.toggle("top-tray", state.mode === "classic" && jobSheetVariant === "full");
+  // "full" is only ever the Market face's own doorway now (Classic's
+  // Bingo tray, Hard's new Marketplace tray below) -- the compact variant
+  // (bottom hub's own button, every mode) is the only other value, so
+  // checking jobSheetVariant alone is exactly right regardless of mode.
+  jobSheet.classList.toggle("top-tray", jobSheetVariant === "full");
   jobSheet.offsetHeight; // force reflow
   jobSheet.style.transition = "";
   jobSheet.classList.add("open"); jobScrim.classList.add("open");
@@ -10783,6 +10912,7 @@ function openJobSheet(){
    down from the top (see #jobSheet.top-tray's own CSS comment). */
 function openJobSelectTray(){
   jobSheetVariant = "full";
+  marketTrayPanel = 0; // always reopens on the Quests panel, not mid-swipe
   openJobSheet();
 }
 /* The bottom hub's own Jobs button, every mode -- Classic gets the
@@ -10843,20 +10973,39 @@ function marketSectionHTML(){
    station below is a smaller, nowrap-forced variant of .trade-lock-
    station/.trade-lock-stations, not a resize of those shared rules
    (tradeBodyHTML()'s own locked view keeps its original larger circles).
-   Also reused as-is (see mapCardHTML()) for Classic Mode's own fast-
-   travel lock hint, which needs the exact same circle row, just under a
-   different caption -- see stationProgressCirclesHTML() below, the
-   shared part both callers build on. */
-function stationProgressCirclesHTML(){
-  return DATA.stations.map(s => {
-    const visited = !!state.visitedStations[s.name];
-    return `<span class="market-progress-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
+   Also the same row Hard Mode's new Marketplace tray shows (see
+   adventureMarketTrayHTML()) -- see stationProgressCirclesHTML() below,
+   the shared part every caller builds on. */
+// Fixed display order (Ocean, Old Growth, Deep Mine, Greenhouse, Power
+// Plant, Bakery, City, Observatory) -- deliberately NOT DATA.stations' own
+// order (Ocean, Power Plant, Greenhouse, Deep Mine, Old Growth, ...), same
+// 8 stations either way. Shared by every caller of this row.
+const STATION_TRACKER_ORDER = [
+  "The Ocean", "Old Growth Forest", "Deep Mine", "Greenhouse",
+  "The Power Plant", "The Bakery", "The City", "The Observatory",
+];
+// reveal=true shows every station's real icon even before it's been
+// visited (Classic's own copy of this row, now that Bingo doesn't gate on
+// scouting anymore -- see openJobSheet()'s own history); every other
+// caller (Hard's compact arc row, Classic's fast-travel hint, Hard's new
+// Marketplace tray) leaves it "?"-hidden until visited, the original
+// behavior. A visited station always gets its real icon plus the green
+// check regardless of reveal, in every caller.
+function stationProgressCirclesHTML(reveal){
+  return STATION_TRACKER_ORDER.map(name => {
+    const s = STATION_BY_NAME[name];
+    const visited = !!state.visitedStations[name];
+    const showIcon = reveal || visited;
+    return `<span class="market-progress-station${visited ? " visited" : ""}" title="${esc(name)}">
+      ${showIcon ? em(s.emoji) : "?"}
+      ${visited ? '<span class="mps-check">✓</span>' : ""}
+    </span>`;
   }).join("");
 }
-function marketStationProgressHTML(){
+function marketStationProgressHTML(reveal){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
-    <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
+    <div class="market-progress-stations">${stationProgressCirclesHTML(reveal)}</div>`;
 }
 // Classic Mode's own copy of the progress row (.market-classic-progress,
 // see its own CSS) shows the STATIONS_VISITED_BONUS badge in its top-right
@@ -10877,7 +11026,7 @@ function renderMarketScreen(){
   // Hidden whenever a section is open, same "step back for the arc" rule
   // the arc buttons themselves already follow.
   const classicProgress = (state.mode === "classic" && !marketSection)
-    ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>` : "";
+    ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>` : "";
   return `<div class="market-screen">
     <div class="market-banner"><h1>Marketplace</h1></div>
     ${classicProgress}
@@ -11152,7 +11301,7 @@ function tradeBodyHTML(){
 const COLLECTIONS = [
   {id:"fruit", name:"Fruit", icon:"🍎", items:["Apple","Banana","Strawberries","Blueberries","Blackberries"]},
   {id:"gemstones", name:"Gemstones", icon:"💎", items:["Pearl","Ruby","Opal","Turquoise","Amber","Diamond"]},
-  {id:"vehicles", name:"Vehicles", icon:"🚗", items:["Sailboat","Speedboat","Car","Bicycle","Motorcycle","Helicopter","Maglev Train"]},
+  {id:"vehicles", name:"Vehicles", icon:"🚗", items:["Sailboat","Speedboat","Car","Motorcycle","Helicopter","Maglev Train"]},
   {id:"farm-animals", name:"Farm Animals", icon:"🐄", items:["Cow","Sheep","Chicken","Bee"]},
   {id:"wildlife", name:"Wildlife", icon:"🦌", items:["Deer","Salmon","Orca","Dinosaur"]},
   {id:"textiles", name:"Textiles", icon:"🧶", items:["Wool","Yarn","Fabric","Rope","Basket","Paper"]},
@@ -11651,6 +11800,20 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
+  // Adventure's own Marketplace tray shows available (not-yet-accepted)
+  // quests now, unlike the compact tray -- same data-quest-take handling
+  // #screen's own delegation already does for the old full-screen
+  // Marketplace's inline Quest Log, mirrored here since this sheet sits
+  // outside #screen (see the [data-toggle] comment below for why that
+  // matters).
+  const questTakeBtn = ev.target.closest("[data-quest-take]");
+  if (questTakeBtn){ takeQuest(questTakeBtn.dataset.questTake); renderJobBoard(); render(); return; }
+
+  // Swipe dots, Adventure's own tray -- tap to jump straight to a panel,
+  // same target marketTrayPanel value the swipe gesture below writes to.
+  const dotBtn = ev.target.closest("[data-tray-panel]");
+  if (dotBtn){ marketTrayPanel = +dotBtn.dataset.trayPanel; renderJobBoard(); return; }
+
   const pinBtn = ev.target.closest("[data-pin]");
   if (pinBtn){
     const name = pinBtn.dataset.pin;
@@ -11680,6 +11843,35 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     renderJobBoard();
     return;
   }
+});
+
+/* Adventure's Marketplace tray: swipe left/right between Quests and
+   Bundles (see marketTrayPanel/adventureMarketTrayHTML()). Delegated on
+   #jobSheetBody (regenerated every render, so a listener bound directly
+   to #marketTraySwipe would go stale) -- touchstart or pointerdown either
+   one starts tracking, but only while the touch/pointer actually began
+   inside .market-tray-swipe, so a horizontal drag elsewhere in the sheet
+   (a quest row's own horizontal scroll, if it ever has one) can't
+   accidentally flip the panel. A short, mostly-horizontal drag past
+   SWIPE_THRESHOLD_PX counts as a swipe; anything shorter or more vertical
+   is left alone (a tap, or vertical scrolling). */
+const SWIPE_THRESHOLD_PX = 50;
+let swipeStartX = null, swipeStartY = null, swipeActive = false;
+document.getElementById("jobSheetBody").addEventListener("touchstart", ev => {
+  if (!ev.target.closest("#marketTraySwipe")) return;
+  swipeStartX = ev.touches[0].clientX;
+  swipeStartY = ev.touches[0].clientY;
+  swipeActive = true;
+}, {passive: true});
+document.getElementById("jobSheetBody").addEventListener("touchend", ev => {
+  if (!swipeActive || swipeStartX === null) return;
+  swipeActive = false;
+  const dx = (ev.changedTouches[0].clientX) - swipeStartX;
+  const dy = (ev.changedTouches[0].clientY) - swipeStartY;
+  swipeStartX = null;
+  if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) return;
+  const next = dx < 0 ? 1 : 0; // swipe left -> next panel, swipe right -> previous
+  if (next !== marketTrayPanel){ marketTrayPanel = next; renderJobBoard(); }
 });
 
 /* -------------------------------------------------------- settings --- */
@@ -11974,7 +12166,7 @@ function updateConvertUI(){
 function renderConvertPicker(){
   const isFrom = convertPickMode === "from";
   const other = isFrom ? convertTo : convertFrom;
-  const suitLocked = state.mode === "classic" && !owns("Furnace") && !!other;
+  const suitLocked = convertRestrictedMode() && !owns("Furnace") && !!other;
   document.getElementById("convertPickerKicker").textContent = isFrom ? "Inventory" : "Choose an element";
   document.getElementById("convertPickerSub").textContent = isFrom
     ? "Elements with 3 or more can be converted."
