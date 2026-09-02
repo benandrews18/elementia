@@ -7667,11 +7667,14 @@ function jobNodeHTML(name, kind, path, seen){
   if (!seen.has(name)){
     const seen2 = new Set(seen); seen2.add(name);
     const seenTok = new Set();
-    childrenHTML = entry.reqs.filter(r => {
+    // Same rule as every other level of this tree (see refExpandHTML()'s
+    // own top-level sort) -- this was the one nesting level still left in
+    // raw declaration order.
+    childrenHTML = sortIngredientTokens(entry.reqs.filter(r => {
       const k = r.kind + ":" + r.name;
       if (seenTok.has(k)) return false;
       seenTok.add(k); return true;
-    }).map(r => jobNodeHTML(r.name, r.kind, path + "/" + r.name, seen2)).join("");
+    })).map(r => jobNodeHTML(r.name, r.kind, path + "/" + r.name, seen2)).join("");
   }
 
   // Same .refpin button (size + rightmost column) as the top-level Item
@@ -8956,11 +8959,15 @@ function showCardPop(entry, autoDismiss = true){
   tagEl.textContent = isUtility ? "UTILITY" : entry.tier;
   tagEl.style.background = isUtility ? "#2dd4c8" : (TAG_COLORS[entry.tier] || "#8a94a6");
   const seen = new Set();
-  const toks = entry.reqs.filter(r => {
+  // Same elements-first-then-items-by-points rule the station shop
+  // (recipeHTML()) and Item Reference (refExpandHTML()) already follow --
+  // this popup was the one place still showing a recipe in raw
+  // declaration order instead.
+  const toks = sortIngredientTokens(entry.reqs.filter(r => {
     const k = r.kind + ":" + r.name;
     if (seen.has(k)) return false;
     seen.add(k); return true;
-  });
+  }));
   document.getElementById("cpIngredients").innerHTML = toks.map((r, i) =>
     (i ? '<span class="pc-plus">+</span>' : "") +
     `<span class="pc-ping${r.kind === "element" ? " elem" : ""}">${
@@ -9940,11 +9947,14 @@ function fireworkBurst(x, y){
 }
 function flyIngredientsAndReveal(entry){
   const seen = new Set();
-  const reqs = entry.reqs.filter(r => {
+  // Same elements-first-then-items-by-points rule as everywhere else a
+  // recipe renders (recipeHTML(), refExpandHTML(), showCardPop()) --
+  // drives both the launch stagger and the resting stack order below.
+  const reqs = sortIngredientTokens(entry.reqs.filter(r => {
     const k = r.kind + ":" + r.name;
     if (seen.has(k)) return false;
     seen.add(k); return true;
-  });
+  }));
 
   const tx = innerWidth / 2, ty = innerHeight / 2;
   const RISE_MS = 560, RISE_STAGGER_MS = 220, FAN_STEP_PX = 7, FAN_STEP_DEG = 5;
