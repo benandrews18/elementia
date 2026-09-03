@@ -813,7 +813,7 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .bingo-cell:hover{border-color:var(--mute)}
 .bingo-cell.owned{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
-.bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin-top:10px; text-align:center}
+.bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
 /* Icon sits in the flexible remaining space above the name; the name
    itself is a fixed-height flex item (not centered/wrapped with the icon)
@@ -1903,7 +1903,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-goal-card{
   position:absolute; left:16px; right:16px; bottom:100%; margin-bottom:-2px; z-index:1;
 }
-.convert-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:22px 0 26px}
+.convert-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:32px 0 26px}
 .convert-box{
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
   width:112px; height:112px; border-radius:16px; border:8px solid var(--line);
@@ -1923,7 +1923,20 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-box .convert-label{
   font-size:15px; font-weight:800; color:inherit; text-align:center; padding:0 6px;
 }
-.convert-arrow{font-size:26px; color:var(--mute); font-weight:800; flex:none}
+/* Doubles as the "Convert" action itself (see #convert's own HTML
+   comment) -- greyed out and inert until both sides are picked and
+   affordable, same disabled language every other .bigbtn uses, then
+   flips to --ok green so the arrow itself reads as "tap to confirm"
+   once it's actually live. */
+.convert-arrow{
+  font-size:26px; color:var(--mute); font-weight:800; flex:none;
+  background:none; border:none; padding:12px; margin:-12px; border-radius:50%;
+  transition:color .12s, background .12s, transform .08s;
+}
+.convert-arrow:not(:disabled){color:var(--ok); cursor:pointer}
+.convert-arrow:not(:disabled):hover{background:var(--ok-soft)}
+.convert-arrow:not(:disabled):active{transform:scale(.9)}
+.convert-arrow:disabled{cursor:not-allowed}
 /* Wraps each side of the row (and the arrow between them) in an identical
    label-then-content column -- the arrow's own wrapper carries a hidden
    "1x" spacer of the same size as the real labels, so all three columns
@@ -2271,6 +2284,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .sheetbox h2{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px}
 .sheetbox p{color:var(--ink2); font-size:15px; margin-bottom:14px; line-height:1.5}
 .sheetbox .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+/* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
+   padding/font than a normal .btnrow pair so none of the three has to
+   wrap to its own row. */
+#settings .btnrow{flex-wrap:nowrap}
+#settings .btnrow .bigbtn{flex:1 1 0; padding:12px 6px; font-size:13.5px; white-space:nowrap}
 /* Convert tray -- same slide-up-from-behind-the-hub language as #pinsTray
    (no scrim, shop/map stays visible and scrollable underneath), just
    anchored bottom-full-width like that tray rather than centered like the
@@ -2294,8 +2312,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   overflow:visible;
 }
 #convert.open{transform:translateY(0)}
-#convert .dbody{padding-bottom:28px}
-#convert .btnrow{margin-top:32px}
+/* Generous bottom padding (not the old 28px) -- #quickConvertBtn floats
+   ON TOP of this tray at all times while it's open (see this block's own
+   comment above), sitting right over the tray's bottom-right corner, so
+   .convert-row needs real clearance from the tray's true bottom edge or
+   its own right-hand box ends up under that circle. */
+#convert .dbody{padding-bottom:56px}
 .bigbtn{
   background:var(--ok); color:#fff; font-size:15px; font-weight:800; padding:12px 22px;
   border-radius:11px; box-shadow:0 3px 0 #24774a;
@@ -2304,6 +2326,8 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .bigbtn:not(:disabled):active{box-shadow:0 1px 0 #24774a}
 .bigbtn.sec{background:var(--sunken); color:var(--ink); box-shadow:none; border:1.5px solid var(--line)}
 .bigbtn.sec:not(:disabled):active{box-shadow:none}
+.bigbtn.warn{background:var(--bad); box-shadow:0 3px 0 #a8402c}
+.bigbtn.warn:not(:disabled):active{box-shadow:0 1px 0 #a8402c}
 .bigbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none; cursor:not-allowed}
 .bigbtn:disabled:hover{filter:none}
 
@@ -2893,7 +2917,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    scoped via :is(...) (one shared ruleset rather than repeating each rule
    per screen) so nothing else in the game (Drawer, Convert, session
    summary, etc., which also use .sec-label/.bigbtn) is affected. */
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .sec-label{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .sec-label{
   display:inline-block; font-size:11px; font-weight:800; letter-spacing:1px;
   color:#2a2110; text-transform:uppercase; border:none;
   background:linear-gradient(180deg, #f0d38a, var(--gold) 75%);
@@ -2901,48 +2925,52 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   box-shadow:0 3px 0 #7a5c22, 0 5px 10px rgba(0,0,0,.32);
   margin:20px 0 12px;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .sec-label:first-child{margin-top:0}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-row{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .sec-label:first-child{margin-top:0}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-row{
   background:linear-gradient(180deg, #38445a, #202836 62%);
   border:2px solid #10141b; border-radius:14px; padding:13px 14px; margin-bottom:12px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.38);
   transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:not(:disabled):active{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 #10141b, 0 3px 8px rgba(0,0,0,.3);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-row.warn{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-row.warn{
   background:linear-gradient(180deg, #5c3226, #351712 62%); border-color:#1c0b08;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #1c0b08, 0 7px 14px rgba(0,0,0,.38);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setting-ico{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-ico{
   width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.14);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 2px 0 rgba(0,0,0,.3);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setbtn{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setbtn{
   border-radius:10px; border:1.5px solid #10141b;
   background:linear-gradient(180deg, #4a5568, #2a3140 65%); color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #10141b;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .setbtn.warn{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setbtn.warn{
   background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border-color:#3a140c; color:#2a0d07;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 #3a140c;
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn{
   background:linear-gradient(180deg, #57d488, var(--ok) 62%); border:2px solid #184a29; color:#0a2015;
   border-radius:14px;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 0 #184a29, 0 7px 14px rgba(0,0,0,.35);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.sec{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.sec{
   background:linear-gradient(180deg, #55627a, #2c3444 62%); border-color:#10141b; color:#fff;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.35);
 }
-:is(#settings, #settingsSession, #settingsRules, #settingsDev, #modeOverlay) .bigbtn:not(:disabled):active{
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.warn{
+  background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border:2px solid #3a140c; color:#2a0d07;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 4px 0 #3a140c, 0 7px 14px rgba(0,0,0,.35);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn:not(:disabled):active{
   transform:translateY(4px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
 }
@@ -3399,11 +3427,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div class="overlay" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="sheetbox">
     <h2 id="setTitle">⚙️ Settings</h2>
-    <button type="button" class="setting-row" id="settingsSessionBtn">
-      <span class="setting-ico">📋</span>
+    <button type="button" class="setting-row" id="tourBtn" aria-label="How to play">
+      <span class="setting-ico">▶️</span>
       <span class="setting-body">
-        <span class="setting-label">This Session</span>
-        <span class="setting-sub">How to Play, Main Menu, Start New Session</span>
+        <span class="setting-label">How to Play</span>
       </span>
       <span class="setbtn">Open</span>
     </button>
@@ -3411,7 +3438,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🎲</span>
       <span class="setting-body">
         <span class="setting-label">Game Rules</span>
-        <span class="setting-sub">Station visits, dice rolls, mini-games, tutorial tips</span>
       </span>
       <span class="setbtn">Open</span>
     </button>
@@ -3419,50 +3445,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🛠️</span>
       <span class="setting-body">
         <span class="setting-label">Dev Tools</span>
-        <span class="setting-sub">Clear cache, view run history</span>
       </span>
       <span class="setbtn">Open</span>
     </button>
 
     <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="mainMenuBtn">🏠 Home</button>
+      <button type="button" class="bigbtn warn" id="resetBtn">↺ Reset</button>
       <button type="button" class="bigbtn sec" id="setClose">Close</button>
     </div>
     <p class="setversion" id="setVersion"></p>
-  </div>
-</div>
-
-<!-- This Session -->
-<div class="overlay" id="settingsSession" role="dialog" aria-modal="true" aria-labelledby="setSessionTitle">
-  <div class="sheetbox">
-    <h2 id="setSessionTitle">📋 This Session</h2>
-    <button type="button" class="setting-row" id="tourBtn" aria-label="How to play">
-      <span class="setting-ico">▶️</span>
-      <span class="setting-body">
-        <span class="setting-label">How to Play</span>
-        <span class="setting-sub">Walk through the rules step by step</span>
-      </span>
-      <span class="setbtn">Open</span>
-    </button>
-    <button type="button" class="setting-row" id="mainMenuBtn">
-      <span class="setting-ico">🏠</span>
-      <span class="setting-body">
-        <span class="setting-label">Main Menu</span>
-        <span class="setting-sub">Leave without resetting -- come back and continue anytime</span>
-      </span>
-      <span class="setbtn">Open</span>
-    </button>
-    <button type="button" class="setting-row warn" id="resetBtn">
-      <span class="setting-ico">↺</span>
-      <span class="setting-body">
-        <span class="setting-label">Start a brand new session</span>
-        <span class="setting-sub">Clears your inventory, visits, and job board</span>
-      </span>
-      <span class="setbtn warn">Reset</span>
-    </button>
-
-    <div class="btnrow">
-      <button type="button" class="bigbtn sec" id="setSessionBack">← Back</button>
-    </div>
   </div>
 </div>
 
@@ -3475,7 +3467,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🗺️</span>
       <span class="setting-body">
         <span class="setting-label">Station visits per session</span>
-        <span class="setting-sub" id="setVisitsSub">How many stations you can visit before the session ends</span>
         <label class="mini-toggle"><input type="checkbox" id="setUnlimited" class="switch"> Unlimited</label>
       </span>
       <input id="setVisits" class="setnum" type="number" min="1" step="1" inputmode="numeric" aria-label="Station visits per session">
@@ -3484,7 +3475,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🎲</span>
       <span class="setting-body">
         <span class="setting-label">Dice rolls per visit</span>
-        <span class="setting-sub">How many elements you collect each PLAY</span>
       </span>
       <input id="setDice" class="setnum" type="number" min="1" max="10" step="1" inputmode="numeric" aria-label="Dice rolls per visit">
     </div>
@@ -3492,7 +3482,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🎮</span>
       <span class="setting-body">
         <span class="setting-label">Mini-games</span>
-        <span class="setting-sub">Play a quick game at each station before rolling. Off rolls dice straight away.</span>
       </span>
       <input type="checkbox" id="setMinigames" class="switch" aria-label="Enable mini-games">
     </div>
@@ -3500,7 +3489,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🐭</span>
       <span class="setting-body">
         <span class="setting-label">Tutorial tips</span>
-        <span class="setting-sub">Professor Mouse points out new mechanics (Crafting, Convert, and more) the first time they come up. Each tip plays once, ever.</span>
       </span>
       <input type="checkbox" id="setGuidedTutorial" class="switch" aria-label="Enable tutorial tips">
     </div>
@@ -3520,7 +3508,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🧹</span>
       <span class="setting-body">
         <span class="setting-label">Clear Cache</span>
-        <span class="setting-sub">Wipes your save, settings, and tutorial progress, then reloads to a fresh Main Menu</span>
       </span>
       <span class="setbtn warn">Clear</span>
     </button>
@@ -3528,7 +3515,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🕓</span>
       <span class="setting-body">
         <span class="setting-label">History</span>
-        <span class="setting-sub">See your past runs</span>
       </span>
       <span class="setbtn">View</span>
     </button>
@@ -3536,7 +3522,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🔓</span>
       <span class="setting-body">
         <span class="setting-label">Force unlock modes</span>
-        <span class="setting-sub">Show Classic Mode and Zen Mode on the mode picker regardless of real unlock progress</span>
       </span>
       <input type="checkbox" id="setForceModes" class="switch" aria-label="Force unlock Classic and Zen Mode">
     </div>
@@ -3544,7 +3529,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <span class="setting-ico">🏫</span>
       <span class="setting-body">
         <span class="setting-label">Classroom Mode</span>
-        <span class="setting-sub">Only Classic Mode is offered on the mode picker -- Adventure and Zen stay hidden</span>
       </span>
       <input type="checkbox" id="setClassroomMode" class="switch" aria-label="Classroom Mode">
     </div>
@@ -3656,7 +3640,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </div>
       <div class="convert-col">
         <div class="convert-qty" aria-hidden="true" style="visibility:hidden">1x</div>
-        <span class="convert-arrow">➜</span>
+        <button type="button" class="convert-arrow" id="convertGo" disabled aria-label="Convert">➜</button>
       </div>
       <div class="convert-col">
         <div class="convert-qty">1x</div>
@@ -3665,9 +3649,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
           <span class="convert-label" id="convToLabel">Pick element</span>
         </button>
       </div>
-    </div>
-    <div class="btnrow">
-      <button type="button" class="bigbtn" id="convertGo" disabled>Convert</button>
     </div>
   </div>
 </aside>
@@ -5975,8 +5956,8 @@ function bingoCardHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
-    <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span><span class="bingo-hint-line">📌 Tap an item to add it to your To-Do List.</span></p>`;
+  return `<p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span><span class="bingo-hint-line">📌 Tap an item to add it to your To-Do List.</span></p>
+    <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>`;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -8781,7 +8762,7 @@ function openOverlay(id){
 // "Settings is open" state, the same as the old single #settings overlay
 // used to be, while still letting the player navigate freely BETWEEN the
 // 4 without that reading as "closing Settings" each time.
-const SETTINGS_OVERLAY_IDS = ["settings", "settingsSession", "settingsRules", "settingsDev"];
+const SETTINGS_OVERLAY_IDS = ["settings", "settingsRules", "settingsDev"];
 function anySettingsOpen(){
   return SETTINGS_OVERLAY_IDS.some(id => document.getElementById(id).classList.contains("open"));
 }
@@ -11872,8 +11853,6 @@ const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
 function openSettings(){
   openOverlay("settings");
 }
-document.getElementById("settingsSessionBtn").addEventListener("click", () => openSettingsScreen("settingsSession"));
-document.getElementById("setSessionBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
@@ -11904,16 +11883,13 @@ function openSettingsRules(){
   // (see applyVisitLimit()) -- showing an editable "25" here while that's
   // true would silently do nothing if changed, which reads as a bug, not
   // a setting. So for those two modes the control just reflects reality:
-  // locked to Unlimited, both inputs disabled, with a note explaining why.
+  // locked to Unlimited, both inputs disabled.
   const modeForcesUnlimited = state && (state.mode === "zen" || state.mode === "hard");
   const unlimited = modeForcesUnlimited || prefs.maxVisits === "unlimited";
   setUnlimitedBox.checked = unlimited;
   setUnlimitedBox.disabled = modeForcesUnlimited;
   setVisitsInput.value = unlimited ? DEFAULT_MAX_VISITS : prefs.maxVisits;
   setVisitsInput.disabled = unlimited;
-  document.getElementById("setVisitsSub").textContent = modeForcesUnlimited
-    ? "Zen and Adventure Mode are always unlimited"
-    : "How many stations you can visit before the session ends";
   setDiceInput.value = TAKE;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
@@ -12000,7 +11976,7 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   // main menu) rather than bouncing them all the way out to re-pick a
   // mode they were already in.
   askConfirm(`Start a new ${MODE_DISPLAY_NAME[state.mode] || "Mode"} run? Your inventory, visits and job board will be cleared.`, () => {
-    closeOverlay("settingsSession");
+    closeOverlay("settings");
     resetCurrentModeRun();
   });
 });
@@ -12043,11 +12019,10 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
    is pure presentation, see its own comment), so "come back and continue
    anytime" is still true; it just means tapping Play from here like any
    other title-screen visit, not confirming a choice first. Resetting
-   outright is still exactly one tap away as its own dedicated row
-   (resetBtn, in This Session alongside this) for anyone who actually
-   wants that. */
+   outright is still exactly one tap away as its own button right next to
+   this one for anyone who actually wants that. */
 document.getElementById("mainMenuBtn").addEventListener("click", () => {
-  closeOverlay("settingsSession");
+  closeOverlay("settings");
   showWelcomeSlide();
 });
 
@@ -12482,7 +12457,7 @@ window.addEventListener("resize", () => {
 });
 
 document.getElementById("tourBtn").addEventListener("click", () => {
-  closeOverlay("settingsSession");
+  closeOverlay("settings");
   startNewTutorial();
 });
 document.getElementById("tourPlayBtn").addEventListener("click", tourNext);
