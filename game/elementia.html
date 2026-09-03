@@ -10914,12 +10914,18 @@ function openJobSheet(){
   document.getElementById("hubJobs").setAttribute("aria-expanded", "true");
   updateHub();
 }
-/* Home's own "Market" face, Classic Mode only -- the full board, slid
-   down from the top (see #jobSheet.top-tray's own CSS comment). */
+/* Home's own "Market" face for Classic AND Hard (Zen uses openMarket()
+   instead, see hubHomeFace()'s dispatch) -- the full board, slid down
+   from the top (see #jobSheet.top-tray's own CSS comment). This IS
+   "visiting the Marketplace" for those two modes, same as openMarket()
+   is for Zen -- see state.marketVisited's own comment/the Home badge's
+   own "!" logic in updateHub(), which needs this set to ever clear. */
 function openJobSelectTray(){
   jobSheetVariant = "full";
   marketTrayPanel = 0; // always reopens on the Quests panel, not mid-swipe
+  state.marketVisited = true;
   openJobSheet();
+  updateHub();
 }
 /* The bottom hub's own Jobs button, every mode -- Classic gets the
    smaller side tray (see classicPinsAndJobsHTML()); Adventure's Quests
