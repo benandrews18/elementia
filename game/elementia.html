@@ -6,6 +6,13 @@
 <title>Elementia</title>
 <meta name="description" content="Elementia — a STEM crafting game for summer camp.">
 <meta name="theme-color" content="#12171f">
+<!-- Tells the browser this page is deliberately dark-themed already, so
+     it doesn't try to be "helpful" and auto-darken/invert colors on top
+     of it (Android Chrome's force-dark heuristic does this to pages that
+     never declare a color-scheme, and can land individual elements'
+     text on a color that matches its own background -- invisible text
+     with everything else on the page looking fine). */
+<meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,6 +26,7 @@
 /* Dark is the only palette -- no Light theme, no data-theme attribute, no
    prefers-color-scheme handling. One set of variables, defined once. */
 :root{
+  color-scheme:dark;
   --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
   --line:#2b3442; --line2:#232b37; --bg:#12171f; --card:#1a212b;
   --bg-soft:#161d26; --sunken:#232b37; --pip:#c9d3e0;
