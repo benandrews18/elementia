@@ -826,20 +826,21 @@ body[data-screen="market"] #trackedPill{display:none}
   flex:none; height:11px; line-height:11px; font-size:8px; font-weight:700; text-align:center;
   color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 2px;
 }
-/* Inside the card's own border now (was straddling it like .bc-pin still
-   does) -- specifically requested apart from the pin badge's own corner
-   treatment, so left as the one exception to that shared convention. */
+/* Inside the card's own border, top-right corner. */
 .bc-pts{
   position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%;
   background:var(--gold); color:#2a2110; font-size:9px; font-weight:800;
   display:flex; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:2;
 }
+/* Mirrors .bc-pts's own inset corner position exactly (top-left instead of
+   top-right) rather than straddling the card's border the way this used
+   to. */
 .bc-pin{
-  position:absolute; top:-7px; left:-7px; width:22px; height:22px; border-radius:50%;
-  background:var(--card); border:2px solid var(--gold); color:var(--gold); font-size:11px;
+  position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold); font-size:10px;
   display:flex; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
+  box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:3;
 }
 /* Adventure Mode's own Marketplace tray (see adventureMarketTrayHTML()) --
    two swipeable panels (Quests, then Collection Bundles) in the same
