@@ -9513,13 +9513,18 @@ function goMap(){
   else window.scrollTo({top:0, behavior:"instant"});
   // Surface the wrap-up once the last visit is done and they've come back.
   if (sessionOver() && !state.ended){ state.ended = true; save(); showSummary(); }
-  // Organic, one-time-ever: a player back on the map after their second
-  // station who's never once opened the Marketplace hasn't stumbled onto
-  // it on their own yet -- Home's own default face here already IS the
-  // Market button (see hubHomeFace(), "market" is its resting face on the
-  // map whenever nothing travelable is selected), so this just points at
-  // it rather than adding a new control.
-  if (state.visits >= 2 && !state.marketVisited){
+  // Organic, one-time-ever: a player back on the map choosing their
+  // SECOND station (state.visits === 1 here -- goMap() only ever runs
+  // after leaving a station, so this is always >= 1, never the very
+  // first pre-visit map) who's never once opened the Marketplace hasn't
+  // stumbled onto it on their own yet -- Home's own default face here
+  // already IS the Market button (see hubHomeFace(), "market" is its
+  // resting face on the map whenever nothing travelable is selected), so
+  // this just points at it rather than adding a new control. Independent
+  // of which station they actually started at -- purely visits/
+  // marketVisited driven. showTutorialHintOnce() itself is what makes
+  // this one-time-ever, same as every other scripted tip.
+  if (state.visits >= 1 && !state.marketVisited){
     showTutorialHintOnce("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
   }
 }
