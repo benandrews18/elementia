@@ -73,7 +73,7 @@ STATIONS = [
      "shop":[("🔌","Wire","MATERIAL","Cu + Al",3),
              ("🔋","Battery","MATERIAL","Ni + Fe + K",4),
              ("🎆","Fireworks","MATERIAL","C + S + K",4),
-             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
+             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",4),
              ("⚙️","Engine","COMPONENT","🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel",6),
              ("💡","Light Bulb","COMPONENT","🪟 Glass + 🔌 Wire",6),
              ("🕐","Clock","COMPONENT","🔋 Battery + 🛠️ Tools",7),
@@ -122,7 +122,7 @@ STATIONS = [
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
              ("🛠️","Tools","CREATION","__STEEL__ Steel + Ti + Al",3),
              ("__FURNACE__","Furnace","CREATION","🏺 Clay + C",4),
-             ("__RUBBER__","Rubber","COMPONENT","🛢️ Natural Gas + S",5),
+             ("__RUBBER__","Rubber","COMPONENT","🛢️ Natural Gas + S",4),
              ("🔩","Stainless Steel","MATERIAL","__STEEL__ Steel + Ni + __FURNACE__ Furnace",4),
              ("🦾","Aluminum Alloy","MATERIAL","Al + Mg + __FURNACE__ Furnace",4),
              ("🛡️","Titanium Alloy","MATERIAL","Ti + Al + __FURNACE__ Furnace",4),
@@ -210,8 +210,8 @@ STATIONS = [
              ("🏺","Clay","MATERIAL","Al + Si + Mg",2),
              ("🍇","Blackberries","MATERIAL","🍬 Sugar + Mg + 🧺 Basket",12),
 
-             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
-             ("__CONCRETE__","Concrete","COMPONENT","🏺 Clay + 🪨 Limestone",5),
+             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",4),
+             ("__CONCRETE__","Concrete","COMPONENT","🏺 Clay + 🪨 Limestone",4),
              ("🗿","Statue","COMPONENT","🪨 Limestone + 🛠️ Tools",6),
              ("📄","Paper","COMPONENT","🍂 Plant Fiber + 💧 Water",12),
 
@@ -239,7 +239,7 @@ STATIONS = [
     {"emoji":"🔭","name":"The Observatory","suit":"observatory",
      "dice":["Ni", "Al", "Fe", "Ag", "Ti", "Si"],
      "shop":[("🛠️","Tools","CREATION","__STEEL__ Steel + Ti + Al",3),
-             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",5),
+             ("🪟","Glass","COMPONENT","⏳ Sand + 🪨 Limestone",4),
              ("🫐","Blueberries","MATERIAL","🍬 Sugar + K + 🧺 Basket",14),
 
              ("__DYEBLUE__","Blue Dye","COMPONENT","🫐 Blueberries + 💧 Water + 🫙 Glass Vial",19),

@@ -425,11 +425,13 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(2px);
   box-shadow:inset 0 2px 3px rgba(255,255,255,.12), inset 0 -1px 3px rgba(0,0,0,.1);
 }
-/* Pins button (and its trackedPill readout, see below) sit ABOVE #pinsTray
-   itself (z-index 33) -- unlike Convert's button, which the tray covers
-   while open, Pins keeps its own trigger and tracked-item readout visible
-   the whole time the tray is open. */
-#pinsBtn{left:16px; z-index:35}
+/* Pins button (and its trackedPill readout, see below) sit ABOVE both
+   #pinsTray (z-index 33) AND #jobSheet (69, the Marketplace dropdown
+   tray) -- unlike Convert's button, which #pinsTray covers while open,
+   Pins keeps its own trigger and tracked-item readout visible on top of
+   every tray, including the Marketplace one. Below #hub's own 72, so the
+   bottom nav bar still wins. */
+#pinsBtn{left:16px; z-index:71}
 /* z-index 36 -- above #convert's own tray (33), so the button stays
    visible on top of its own tray while open instead of being covered
    by it (see #convert's comment). */
@@ -454,7 +456,7 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Pinned-items tray -- rests just above the hub already (same bottom
    offset #jobSheet uses). z-index 33 -- ABOVE Convert's own floating
    button (.floatbtn's 32; the tray covers it while open), but BELOW
-   #pinsBtn/#trackedPill's own 35/34 -- Pins keeps its trigger and
+   #pinsBtn/#trackedPill's own 71/70 -- Pins keeps its trigger and
    tracked-item readout visible on top of its own tray the whole time
    it's open, unlike Convert. #hub itself is z-index 72, so it still sits
    above everything here regardless. Closed state is translateY(100%) off
@@ -482,7 +484,7 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Tracked-item readout riding alongside #pinsBtn. Same white border and
    card fill as the button so the two read as one object. A full stadium
    shape (not just the right end rounded) -- its left portion sits behind
-   the button (z-index 34 vs the button's 35, plus a left inset that
+   the button (z-index 70 vs the button's 71, plus a left inset that
    starts it inside the button's footprint) so that half is invisible
    regardless, but the visible right end now reads as a real pill instead
    of a flat-edged tab. Smaller than the button and bottom-aligned to it
@@ -495,7 +497,7 @@ body[data-screen="market"] #trackedPill{display:none}
    toggles with .show so it doesn't swallow taps meant for the button it
    overlaps while hidden/translated off it. */
 #trackedPill{
-  position:fixed; z-index:34; pointer-events:none;
+  position:fixed; z-index:70; pointer-events:none;
   bottom:calc(var(--hub-h, 67px) + 14px);
   left:56px; height:34px; max-width:calc(100vw - 140px);
   display:flex; align-items:center; gap:6px; padding:0 13px 0 20px;
@@ -559,6 +561,12 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(-100%);
 }
 #jobSheet.top-tray.open{transform:none}
+/* Tighter than .dbody's own base 40px -- this tray shrink-wraps to its
+   content (no fixed height, just the max-height cap above), so that
+   generic padding was leaving a visible gap between the last real content
+   (the Bingo hint text/Adventure's own panels) and the tray's own bottom
+   border. */
+#jobSheet.top-tray .dbody{padding-bottom:16px}
 /* Trade Market, Quests, and Collections used to be three more instances of
    this same slide-from-left sheet shape -- all three now render inline on
    the Marketplace screen itself instead (see marketSectionHTML() and
@@ -816,6 +824,11 @@ body[data-screen="market"] #trackedPill{display:none}
    the green border is the only ownership signal, and it lands the moment
    THAT item is owned, not held back until its whole line completes. */
 .bingo-title{font-size:20px; font-weight:800; text-align:center; margin:0 0 10px; letter-spacing:.3px}
+/* Tighter than the stations-visited card's own 18px bottom margin (see
+   .market-classic-progress) when it's sitting right above the title --
+   scoped to that one pairing so every other .market-classic-progress use
+   (Hard Mode's compact copy, no title beneath it) keeps its normal gap. */
+.market-classic-progress + .bingo-title{margin-top:-8px}
 .bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:2px}
 .bingo-cell{
   position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
@@ -4076,7 +4089,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     5
+     4
     ],
     [
      "⚙️",
@@ -4379,7 +4392,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Rubber",
      "COMPONENT",
      "🛢️ Natural Gas + S",
-     5
+     4
     ],
     [
      "🔩",
@@ -4816,14 +4829,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     5
+     4
     ],
     [
      "__CONCRETE__",
      "Concrete",
      "COMPONENT",
      "🏺 Clay + 🪨 Limestone",
-     5
+     4
     ],
     [
      "🗿",
@@ -4978,7 +4991,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Glass",
      "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
-     5
+     4
     ],
     [
      "🫐",
@@ -5089,146 +5102,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Yarn": 12.9,
-  "Aluminum Alloy": 5.2,
-  "Telescope": 11.6,
-  "Glass": 5.2,
-  "Library": 13.7,
-  "Lighthouse": 13.2,
-  "Fertilizer": 3.0,
-  "Tools": 3.9,
-  "Canoe": 5.6,
-  "Sheep": 7.3,
-  "Battery": 4.7,
+  "Turquoise": 13.9,
+  "Opal": 11.0,
+  "Pearl": 13.6,
+  "Limestone": 2.6,
+  "Clock": 8.2,
+  "Bee": 8.1,
   "Furnace": 4.3,
   "Solar System": 15.6,
-  "Dough": 9.0,
-  "Mushroom": 5.0,
-  "Salmon": 11.5,
-  "Ruby": 12.9,
-  "Log Cabin": 7.2,
-  "Satellite Dish": 10.9,
-  "Paper": 11.8,
-  "Yellow Dye": 15.5,
-  "Sunflower": 16.8,
-  "Planet": 8.3,
-  "Grain": 8.0,
-  "Rainbow": 14.9,
-  "Rubber": 5.2,
-  "Sushi Restaurant": 18.6,
-  "Wire": 3.5,
   "Life": 16.5,
-  "Fireworks": 4.0,
-  "Yeast": 4.9,
-  "Microchip": 8.4,
-  "Grand Banquet": 23.1,
-  "Book": 11.7,
-  "Croissant": 12.4,
-  "Wool": 7.5,
-  "Turbine Blade": 16.5,
-  "Ecosystem": 21.9,
-  "Rope": 6.8,
-  "Apple": 6.5,
-  "Butter": 10.9,
-  "Bread": 12.4,
-  "Farm": 7.5,
-  "Honey": 7.8,
-  "Star": 13.7,
-  "Knit Scarf": 20.2,
-  "Concrete": 5.2,
   "Renewable Grid": 29.5,
-  "Geothermal Pump": 15.6,
-  "Maglev Train": 15.7,
-  "Museum": 17.8,
-  "Amber": 10.7,
-  "Glass Vial": 10.1,
-  "Fossil": 10.5,
-  "Dinosaur": 12.0,
-  "Cream": 10.8,
-  "Car": 17.0,
-  "Motorcycle": 17.7,
-  "DNA": 3.7,
-  "Steel": 2.7,
-  "Blackberries": 10.2,
-  "Helicopter": 20.9,
-  "Coral Reef": 16.9,
-  "Cow": 7.9,
+  "Milk": 8.9,
   "Tree": 4.8,
-  "Diamond": 12.6,
-  "Pretzel": 11.1,
-  "Fruit Cake": 20.2,
-  "Windmill": 19.0,
-  "Fabric": 8.1,
-  "Sand": 2.9,
-  "Banana": 6.8,
-  "Plant Fiber": 6.8,
-  "Bone": 4.9,
-  "Plastic": 8.2,
-  "Central Station": 24.7,
-  "Compass": 7.4,
-  "Bridge": 6.9,
-  "Natural Gas": 2.7,
-  "Homestead": 20.0,
-  "Banana Bread": 17.1,
-  "Light Bulb": 7.1,
-  "Solar Panel": 8.3,
-  "Pearl": 13.6,
-  "Seaweed": 4.8,
+  "Tractor": 16.0,
+  "Book": 11.7,
+  "Building": 8.2,
+  "Wheel": 10.5,
   "Volcano": 13.4,
-  "Basket": 7.8,
-  "Blue Dye": 17.7,
-  "Bee": 8.1,
-  "Limestone": 2.6,
-  "Chocolate Cake": 13.3,
+  "Compass": 7.4,
+  "Space Station": 23.4,
+  "Wire": 3.5,
+  "Telescope": 11.6,
+  "Knit Scarf": 20.2,
+  "Dinosaur": 12.0,
   "Red Dye": 14.4,
+  "Croissant": 12.4,
+  "Library": 13.7,
+  "Log Cabin": 7.2,
+  "Sheep": 7.3,
+  "Flour": 8.8,
+  "Éclair": 13.9,
+  "Cream": 10.8,
+  "Sailboat": 8.7,
+  "Mushroom": 5.0,
+  "Turbine Blade": 16.5,
+  "Fiberglass": 10.2,
+  "Deer": 6.2,
+  "Sand": 2.9,
+  "Magnet": 4.9,
   "Water": 2.3,
-  "Strawberries": 10.4,
+  "Robot": 17.8,
+  "Amber": 10.7,
   "Cruise Ship": null,
-  "Stainless Steel": 5.1,
-  "Metropolis": 21.6,
+  "Black Dye": 16.0,
+  "Ruby": 12.9,
+  "Bone": 4.9,
+  "Solar Panel": 8.3,
+  "Glass Vial": 10.1,
+  "Rope": 6.8,
+  "Glass": 5.2,
+  "Wool": 7.5,
+  "Brass": null,
+  "Bicycle": 14.6,
+  "Skyscraper": 15.8,
+  "DNA": 3.7,
+  "Strawberries": 10.4,
+  "Oven": 11.3,
+  "Grand Banquet": 23.1,
+  "Sugar": 3.0,
+  "Yeast": 4.9,
+  "Fabric": 8.1,
+  "Windmill": 19.0,
+  "Car": 17.0,
+  "Central Station": 24.7,
+  "Blueberries": 13.2,
+  "Fertilizer": 3.0,
+  "Diamond": 12.6,
+  "Biofuel": 10.4,
+  "Beach Town": 26.5,
+  "Canoe": 5.6,
+  "Honey": 7.8,
+  "Apple Pie": 12.8,
+  "Bridge": 6.9,
+  "Rocket": 21.3,
+  "Yarn": 12.9,
+  "Cloud": 5.1,
+  "Berry Cupcakes": 21.8,
+  "Chicken": 10.6,
+  "Helicopter": 20.9,
+  "Planet": 8.3,
   "Soil": 4.5,
-  "Titanium Alloy": 5.5,
+  "Star": 13.7,
+  "Bread": 12.4,
+  "Orca": 13.3,
+  "Cake": 13.2,
+  "Maglev Train": 15.7,
+  "Dough": 9.0,
+  "Banana Bread": 17.1,
+  "Motorcycle": 17.7,
+  "Coral Reef": 16.9,
+  "Fruit Cake": 20.2,
+  "Water Turbine": 21.8,
+  "Aluminum Alloy": 5.2,
+  "Fireworks": 4.0,
+  "Salmon": 11.5,
+  "Rainbow": 14.9,
+  "Natural Gas": 2.7,
+  "Basket": 7.8,
+  "Rubber": 5.2,
+  "Engine": 7.2,
+  "Metropolis": 21.6,
+  "Seaweed": 4.8,
+  "Statue": 7.3,
+  "Computer": 15.3,
+  "Yellow Dye": 15.5,
+  "Chocolate Cake": 13.3,
   "Clay": 2.4,
   "Speedboat": 16.8,
-  "Deer": 6.2,
-  "Cake": 13.2,
-  "Blueberries": 13.2,
-  "Fiberglass": 10.2,
-  "Cloud": 5.1,
-  "Sugar": 3.0,
-  "Brass": null,
-  "Flour": 8.8,
-  "Trumpet": null,
-  "Skyscraper": 15.8,
-  "Black Dye": 16.0,
+  "Banana": 6.8,
+  "Paper": 11.8,
+  "Cow": 7.9,
   "Chocolate": 8.9,
-  "Statue": 7.3,
-  "Chicken": 10.6,
-  "Space Station": 23.4,
-  "Turquoise": 13.9,
-  "Robot": 17.8,
-  "Opal": 11.0,
-  "Egg": 5.6,
-  "Building": 8.2,
-  "Biofuel": 10.4,
+  "Sushi Restaurant": 18.6,
+  "Battery": 4.7,
+  "Blue Dye": 17.7,
+  "Museum": 17.8,
+  "Microchip": 8.4,
+  "Satellite Dish": 10.9,
+  "Apple": 6.5,
   "Gemstone Collection": 19.4,
-  "Milk": 8.9,
-  "Water Turbine": 21.8,
-  "Beach Town": 26.5,
-  "Clock": 8.2,
-  "Éclair": 13.9,
-  "Tractor": 16.0,
-  "Magnet": 4.9,
-  "Computer": 15.3,
-  "Wheel": 10.5,
-  "Apple Pie": 12.8,
-  "Bicycle": 14.6,
-  "Oven": 11.3,
-  "Sailboat": 8.7,
-  "Orca": 13.3,
-  "Engine": 7.2,
-  "Berry Cupcakes": 21.8,
-  "Rocket": 21.3
+  "Stainless Steel": 5.1,
+  "Steel": 2.7,
+  "Tools": 3.9,
+  "Grain": 8.0,
+  "Plant Fiber": 6.8,
+  "Plastic": 8.2,
+  "Light Bulb": 7.1,
+  "Concrete": 5.2,
+  "Homestead": 20.0,
+  "Butter": 10.9,
+  "Lighthouse": 13.2,
+  "Pretzel": 11.1,
+  "Egg": 5.6,
+  "Farm": 7.5,
+  "Sunflower": 16.8,
+  "Titanium Alloy": 5.5,
+  "Ecosystem": 21.9,
+  "Fossil": 10.5,
+  "Geothermal Pump": 15.6,
+  "Trumpet": null,
+  "Blackberries": 10.2
  }
 }/*__GAME_DATA_END__*/;
 
@@ -7801,15 +7814,20 @@ function togglePin(name){
 }
 
 /* Classic Mode's initial station-pick preview: whichever station's card
-   is currently showing (selectedMapStation) has ITS capstone auto-pinned
-   AND actively tracked, so previewing a candidate shows its real end
-   goal immediately rather than an empty Pins tray. Swapping the preview
-   to a different station un-pins/un-tracks the old capstone and pins/
-   tracks the new one in the same pass; clearing the preview entirely
-   (deselecting) just un-does the last one with nothing to replace it.
-   Only ever un-pins/un-tracks whatever THIS function itself pinned
-   (initialPickPinnedCapstone), never a genuine manual pin that happens
-   to match -- see its own declaration.
+   is currently showing (selectedMapStation) has ITS capstone auto-pinned,
+   so previewing a candidate shows its real end goal immediately rather
+   than an empty Pins tray. Swapping the preview to a different station
+   un-pins the old capstone and pins the new one in the same pass;
+   clearing the preview entirely (deselecting) just un-does the last one
+   with nothing to replace it. Only ever un-pins whatever THIS function
+   itself pinned (initialPickPinnedCapstone), never a genuine manual pin
+   that happens to match -- see its own declaration.
+   ACTIVE TRACKING (selectedJobItem) is the one exception: it's only ever
+   touched here while it's still either unset or still pointing at this
+   function's own last auto-pick (trackingIsOurs below) -- a player who
+   already tapped something else to track (a Bingo square, say) before
+   ever opening a station preview keeps tracking that, even though the
+   previewed capstone still gets pinned right alongside it.
    Scoped to state.lastStation === null (nothing confirmed yet, still
    choosing where to start) so this can never fire during regular play,
    where pinning/tracking is entirely the player's own explicit choice --
@@ -7820,13 +7838,14 @@ function togglePin(name){
 function syncInitialPickCapstoneTracking(){
   if (state.mode !== "classic" || state.lastStation !== null) return;
   const wantedName = selectedMapStation ? STATION_BY_NAME[selectedMapStation].capstone[1] : null;
+  const trackingIsOurs = selectedJobItem === null || selectedJobItem === initialPickPinnedCapstone;
   if (initialPickPinnedCapstone && initialPickPinnedCapstone !== wantedName){
     if (isPinned(initialPickPinnedCapstone)) togglePin(initialPickPinnedCapstone);
-    if (selectedJobItem === initialPickPinnedCapstone) selectedJobItem = null;
+    if (trackingIsOurs && selectedJobItem === initialPickPinnedCapstone) selectedJobItem = null;
   }
   if (wantedName){
     if (!isPinned(wantedName)) togglePin(wantedName);
-    selectedJobItem = wantedName;
+    if (trackingIsOurs) selectedJobItem = wantedName;
   }
   initialPickPinnedCapstone = wantedName;
 }
@@ -11823,12 +11842,16 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   if (pinBtn){
     const name = pinBtn.dataset.pin;
     togglePin(name);
-    // Pinning from a job card is a "track this everywhere" gesture --
+    // Pinning from a job/quest card is a "track this everywhere" gesture --
     // besides floating it to the top of Item Reference (isPinned()), also
     // select it as the map's tracked job item so its green ingredient
     // ring shows up in the topbar row and every station shop immediately,
-    // not just after a separate tap there too.
-    if (isPinned(name)) selectedJobItem = name;
+    // not just after a separate tap there too. Bingo cells are the one
+    // exception: tapping a square there is "add this to my To-Do List",
+    // not "swap what I'm tracking" -- without this exception it silently
+    // replaced whatever the player was already tracking every time they
+    // tapped a different square.
+    if (isPinned(name) && !pinBtn.closest(".bingo-cell")) selectedJobItem = name;
     renderJobBoard();
     render();
     return;
