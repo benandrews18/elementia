@@ -829,18 +829,22 @@ body[data-screen="market"] #trackedPill{display:none}
    scoped to that one pairing so every other .market-classic-progress use
    (Hard Mode's compact copy, no title beneath it) keeps its normal gap. */
 .market-classic-progress + .bingo-title{margin-top:-8px}
-/* No gap -- the corner badges now live INSIDE each cell's own border (see
-   .bc-pts/.bc-pin/.bc-station's own comment), so nothing overhangs into
-   neighboring cells any more and squares can sit flush, borders touching. */
-.bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:0; margin-top:2px}
+/* Plain white grid lines (rows/columns), not a colored border per cell --
+   the rounding lives on the grid's own outer frame (overflow:hidden clips
+   the corner cells to follow it), while every cell inside stays a square
+   sharing a single thin white line with its neighbors. */
+.bingo-grid{
+  display:grid; grid-template-columns:repeat(5,1fr); gap:0; margin-top:2px;
+  border-radius:12px; overflow:hidden;
+}
 .bingo-cell{
-  position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
-  background:var(--sunken); border:6px solid var(--suit);
+  position:relative; aspect-ratio:1; padding:3px 2px 2px;
+  background:var(--sunken); border:1px solid rgba(255,255,255,.4);
   display:flex; flex-direction:column; align-items:stretch;
   cursor:pointer; transition:all .12s;
 }
 .bingo-cell:hover{filter:brightness(1.12)}
-.bingo-cell.owned{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
+.bingo-cell.owned{background:var(--ok-soft)}
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
 /* Icon sits in the flexible remaining space above the name. The name
@@ -854,19 +858,21 @@ body[data-screen="market"] #trackedPill{display:none}
 .bc-icon{flex:1; min-height:0; display:flex; align-items:center; justify-content:center; font-size:40px; line-height:1}
 .bc-name{
   flex:none; height:22px; line-height:11px; font-size:8px; font-weight:700; text-align:center;
-  color:var(--ink2); overflow:hidden; padding:0 16px 0 2px;
+  color:#fff; overflow:hidden; padding:0 16px 0 2px;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
 }
 /* All three corner badges are 18px, positioned flush against the INSIDE
    face of the cell's own border (top/right/etc offsets of 0 resolve
    against the padding edge, which for an absolutely positioned child IS
    the border's inner face) -- tangent to the border from inside it,
-   entirely within the square rather than straddling its edge. Borders
-   match the cell's own --suit color (same one driving the cell's border
-   itself), and none of the three carry a drop shadow. */
+   entirely within the square rather than straddling its edge. Each badge's
+   own border still carries that item's station color via --suit (set
+   inline per cell, see bingoCardHTML()) even though the cell's own
+   border is now the plain white grid line, not this color. None of the
+   three carry a drop shadow. */
 .bc-pts{
   position:absolute; top:0; right:0; width:18px; height:18px; border-radius:50%;
-  background:var(--gold); color:#2a2110; font-size:9px; font-weight:800;
+  color:#fff; font-size:9px; font-weight:800;
   border:2px solid var(--suit);
   display:flex; align-items:center; justify-content:center; line-height:1;
   z-index:2;
