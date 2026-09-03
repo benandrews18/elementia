@@ -785,16 +785,19 @@ body[data-screen="market"] #trackedPill{display:none}
   background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.18);
 }
 /* Points for scouting every station, shown right on the card that tracks
-   that progress -- gold pill matches the same "achievement" gradient
-   language as .setbtn/.sec-label elsewhere (see their own shared :is(...)
-   comment), just used standalone here rather than inside that ruleset. */
+   that progress -- a corner badge circle poking out over the card's own
+   border/corner (same "resting on the rim" language as .bc-pin/.bc-pts on
+   a Bingo cell), gold gradient matching the same "achievement" language
+   as .setbtn/.sec-label elsewhere (see their own shared :is(...) comment). */
 .market-progress-bonus{
-  position:absolute; top:12px; right:14px; font-weight:800; font-size:12px; color:#2a2110;
-  background:linear-gradient(180deg,#f0d38a,var(--gold) 75%); border-radius:999px;
-  padding:4px 10px; box-shadow:0 2px 0 #7a5c22;
+  position:absolute; top:-10px; right:-8px; width:38px; height:38px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; text-align:center; line-height:1;
+  font-weight:800; font-size:11px; color:#2a2110;
+  background:linear-gradient(180deg,#f0d38a,var(--gold) 75%);
+  box-shadow:0 2px 0 #7a5c22, 0 3px 8px rgba(0,0,0,.3); z-index:2;
 }
-.market-progress-bonus.done{background:linear-gradient(180deg,#57d488,var(--ok) 62%); color:#0a2015; box-shadow:0 2px 0 #184a29}
-.market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px; padding-right:56px}
+.market-progress-bonus.done{background:linear-gradient(180deg,#57d488,var(--ok) 62%); color:#0a2015; box-shadow:0 2px 0 #184a29, 0 3px 8px rgba(0,0,0,.3)}
+.market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:10px}
 .market-classic-progress .market-progress-stations{width:100%; gap:6px}
 .market-classic-progress .market-progress-station{
   /* height:auto overrides the base rule's fixed 24px (see
@@ -812,6 +815,7 @@ body[data-screen="market"] #trackedPill{display:none}
    regardless of ownership (unlike a shop card's dimmed .item.owned) --
    the green border is the only ownership signal, and it lands the moment
    THAT item is owned, not held back until its whole line completes. */
+.bingo-title{font-size:20px; font-weight:800; text-align:center; margin:0 0 10px; letter-spacing:.3px}
 .bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:2px}
 .bingo-cell{
   position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
@@ -1006,30 +1010,23 @@ body[data-screen="market"] #trackedPill{display:none}
    -- this one extra selector is what actually makes classicModeCard/
    zenModeCard's hidden attribute (see refreshModePicker()) take effect. */
 .mode-card[hidden]{display:none}
-/* Plain layout wrapper now -- the earlier single <button class="mode-card">
-   split into two real buttons (.mode-card-main to resume/start, plus its
-   own separate New Game button beside it, see the HTML comment above)
-   since a button can't nest inside another button. */
-.mode-card{display:flex; flex-direction:column; gap:8px}
-.mode-card-main{
-  display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
+/* One bordered card per mode, holding its info (emoji/name/stats) and both
+   of its own action buttons (Continue/New Game) -- previously Continue's
+   own tap target (.mode-card-main) carried the border/card look by itself
+   and New Game sat beside it uncontained, reading as if it belonged to
+   the screen rather than the card. */
+.mode-card{
+  display:flex; flex-direction:column; gap:12px;
   padding:16px; border-radius:14px; border:2px solid var(--line); background:var(--bg-soft);
-  transition:transform .08s, border-color .12s, background .12s, box-shadow .12s cubic-bezier(.3,.8,.4,1);
 }
-.mode-card-main:hover{border-color:var(--mute); background:var(--sunken)}
-.mode-card-main:active{transform:translateY(3px) scale(.99); box-shadow:0 0 0 transparent}
+.mode-card-info{display:flex; flex-direction:column; align-items:flex-start; gap:4px}
 .mode-emoji{font-size:28px; line-height:1}
 .mode-name{font-size:17px; font-weight:800}
 /* "N visits · M points" (readModeSave() has a save) or "New" (it doesn't)
    -- see refreshModePicker(). */
 .mode-stats{font-size:12px; font-weight:800; color:var(--gold); margin-top:2px}
-.mode-newgame-btn{
-  align-self:flex-end; font-size:12px; font-weight:800; color:var(--ink2);
-  background:none; border:1.5px solid var(--line); border-radius:999px; padding:5px 14px;
-  cursor:pointer;
-}
-.mode-newgame-btn:hover{border-color:var(--mute); color:var(--ink)}
-.mode-newgame-btn:active{transform:translateY(2px)}
+.mode-card-actions{display:flex; gap:8px}
+.mode-card-actions .bigbtn{flex:1; padding:11px 10px; font-size:14px}
 
 /* Section titles ("Job Board — <station>", "My Jobs"). These are the only
    headings in the sheet, so they carry real weight rather than reading as
@@ -2028,7 +2025,14 @@ body[data-screen="market"] #trackedPill{display:none}
 .histexport-btn{flex:none; font-size:12.5px; font-weight:700; padding:6px 10px}
 .histexport-btn.done{color:var(--ok)}
 .histrows{display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto}
-.histentry{border:1.5px solid var(--line); border-radius:11px; background:var(--bg-soft); overflow:hidden}
+/* flex-shrink:0 -- without it, a .histrows/.histturns list longer than its
+   own max-height doesn't scroll at all: flexbox shrinks every row to fit
+   the constrained height FIRST (its default flex-shrink:1), and only
+   falls back to overflow-y:auto for whatever shrinking can't absorb. With
+   many rows that reads as every row getting crushed down together rather
+   than the list scrolling -- this pins each row to its real content
+   height so overflow (not shrinkage) is what handles a long list. */
+.histentry{border:1.5px solid var(--line); border-radius:11px; background:var(--bg-soft); overflow:hidden; flex-shrink:0}
 .histrow{
   display:flex; align-items:center; gap:12px; padding:10px 13px; width:100%;
   border:none; border-radius:0; background:transparent; cursor:pointer; color:inherit;
@@ -2041,7 +2045,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
 .histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
 .histturns{display:flex; flex-direction:column; gap:4px; max-height:40vh; overflow-y:auto}
-.histturn{display:flex; align-items:baseline; gap:8px; font-size:12.5px; line-height:1.4}
+.histturn{display:flex; align-items:baseline; gap:8px; font-size:12.5px; line-height:1.4; flex-shrink:0}
 .histturn-n{flex:none; width:18px; color:var(--mute); font-weight:800; text-align:right}
 .histturn-station{flex:none; font-weight:700; white-space:nowrap}
 .histturn-items{color:var(--ink2); min-width:0}
@@ -2761,7 +2765,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #refFilter::placeholder{color:var(--mute)}
 #refSort{flex:none; padding:10px 13px; border:1.5px solid var(--line);
   border-radius:10px; font:inherit; font-size:13px; font-weight:700; background:var(--card); color:var(--ink)}
-.refcount{font-size:13px; color:var(--mute); font-weight:700; white-space:nowrap}
 /* Full-width row per item: a big icon on the left (fixed column, matching
    the reference layout in images/Item Reference UI*.png) and everything
    else -- name, tier/points, ingredients, location -- stacked to its
@@ -2769,7 +2772,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    narrow fixed grid columns (which is also what forced the old mobile
    breakpoint to stack everything vertically; this layout doesn't need one). */
 .reftable{background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden}
-.refrow{position:relative; display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line2)}
+.refrow{position:relative; display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line2); cursor:pointer}
 .refrow:last-child{border-bottom:none}
 .refrow:hover{background:var(--bg-soft)}
 .refrow.owned{background:var(--ok-soft)}
@@ -3565,28 +3568,37 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <h2 id="modeTitle">Choose a Game Mode</h2>
     <div class="mode-options">
       <div class="mode-card" data-mode="zen" id="zenModeCard" hidden>
-        <button type="button" class="mode-card-main" data-mode-select="zen">
+        <div class="mode-card-info">
           <span class="mode-emoji">🌿</span>
           <span class="mode-name">Zen Mode</span>
           <span class="mode-stats" data-mode-stats="zen"></span>
-        </button>
-        <button type="button" class="mode-newgame-btn" data-mode-newgame="zen">New Game</button>
+        </div>
+        <div class="mode-card-actions">
+          <button type="button" class="bigbtn" data-mode-select="zen">Continue</button>
+          <button type="button" class="bigbtn sec" data-mode-newgame="zen">New Game</button>
+        </div>
       </div>
       <div class="mode-card" data-mode="classic" id="classicModeCard" hidden>
-        <button type="button" class="mode-card-main" data-mode-select="classic">
+        <div class="mode-card-info">
           <span class="mode-emoji">🗺️</span>
           <span class="mode-name">Classic Mode</span>
           <span class="mode-stats" data-mode-stats="classic"></span>
-        </button>
-        <button type="button" class="mode-newgame-btn" data-mode-newgame="classic">New Game</button>
+        </div>
+        <div class="mode-card-actions">
+          <button type="button" class="bigbtn" data-mode-select="classic">Continue</button>
+          <button type="button" class="bigbtn sec" data-mode-newgame="classic">New Game</button>
+        </div>
       </div>
       <div class="mode-card" data-mode="hard" id="hardModeCard">
-        <button type="button" class="mode-card-main" data-mode-select="hard">
+        <div class="mode-card-info">
           <span class="mode-emoji">🔥</span>
           <span class="mode-name">Adventure Mode</span>
           <span class="mode-stats" data-mode-stats="hard"></span>
-        </button>
-        <button type="button" class="mode-newgame-btn" data-mode-newgame="hard">New Game</button>
+        </div>
+        <div class="mode-card-actions">
+          <button type="button" class="bigbtn" data-mode-select="hard">Continue</button>
+          <button type="button" class="bigbtn sec" data-mode-newgame="hard">New Game</button>
+        </div>
       </div>
     </div>
     <button type="button" class="setting-row" id="modeHistoryBtn">
@@ -5732,7 +5744,8 @@ function scoreOf(st){
   }, 0);
   const stationsBonus = (st.mode === "classic" && Object.keys(MAP_NODE_POS).every(name => st.visitedStations[name]))
     ? STATIONS_VISITED_BONUS : 0;
-  return base + jobBonuses + collectionBonuses + stationsBonus;
+  const bingoBonus = (st.bingoLinesCompleted || []).length * BINGO_LINE_BONUS;
+  return base + jobBonuses + collectionBonuses + stationsBonus + bingoBonus;
 }
 function score(){ return scoreOf(state); }
 
@@ -5871,19 +5884,12 @@ Object.entries(SUBZONE_TRAVEL).forEach(([station, cfg]) => {
    is just a plain read of that same dict, no separate tracking needed. */
 const subzoneVisited = name => !!state.visitedStations[name];
 
-const TOTAL_ITEM_COUNT = new Set(ENTRIES.map(e => e.name)).size;
-// Classic Mode's own denominator for Item Reference's "N / total" count
-// (see renderCodex()/applyRefFilter()) -- its own catalog is CORE_SET, not
-// the full item list, so the full TOTAL_ITEM_COUNT above would read as
-// "missing" items that were never reachable in this mode to begin with.
 // Item NAMES, not station|item pairs -- a dual-homed item (Glass, sold at
 // 3 stations but only actually core AT one of them) is still fully part
 // of Classic's catalog through that one station, so checks against this
 // set (unlike isCoreEntry(), which needs one specific station) work
 // correctly regardless of which station a caller happens to be looking at.
 const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
-const TOTAL_CORE_ITEM_COUNT = CORE_ITEM_NAMES.size;
-const refItemTotal = () => state.mode === "classic" ? TOTAL_CORE_ITEM_COUNT : TOTAL_ITEM_COUNT;
 
 /* Item Bingo (draft) -- Classic Mode's Job Select tray, see bingoCardHTML().
    Eligible pool is every core item worth BINGO_MIN_POINTS or more (the
@@ -5895,6 +5901,14 @@ const refItemTotal = () => state.mode === "classic" ? TOTAL_CORE_ITEM_COUNT : TO
    every other function-declaration call in this file. */
 const BINGO_SIZE = 5;
 const BINGO_MIN_POINTS = 5;
+// Flat per-line bonus, same for every line regardless of which items make
+// it up -- a harder line (more/pricier capstones) already pays more
+// through those items' own points, so a difficulty-scaled bonus on top
+// would double-count that and add a UI legend for what's mostly luck of
+// the draw anyway. Awarded once per line, ever (see checkBingoLines()/
+// state.bingoLinesCompleted), same "lifetime, never un-earned" shape as
+// STATIONS_VISITED_BONUS/collectionBonus().
+const BINGO_LINE_BONUS = 20;
 function bingoEligibleItems(){
   return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
 }
@@ -5950,10 +5964,10 @@ function bingoLines(){
    wiring is needed here at all; togglePin()+render() already happen there.
    "Owned" (green border, full color) reflects real inventory (owns())
    directly, lighting up the instant that ONE item is owned rather than
-   waiting on its whole line -- bingoLines() is still here for whenever
-   line-completion actually pays out (see bingo_sim.py), just not driving
-   any per-cell styling right now. Score is NOT touched yet -- purely
-   visual for this draft pass. */
+   waiting on its whole line -- bingoLines() itself now also drives real
+   scoring (see checkBingoLines()/BINGO_LINE_BONUS), just not any per-cell
+   styling of its own; a completed line still only shows as 5 individually
+   green-bordered cells, no extra highlight tying them together. */
 function bingoCardHTML(){
   const card = ensureBingoCard();
   const cells = card.map(name => {
@@ -5965,8 +5979,9 @@ function bingoCardHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span><span class="bingo-hint-line">📌 Tap an item to add it to your To-Do List.</span></p>
-    <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>`;
+  return `<h3 class="bingo-title">Elementia BINGO</h3>
+    <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
+    <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span><span class="bingo-hint-line">📌 Tap an item to add it to your To-Do List.</span></p>`;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -6346,7 +6361,7 @@ let selectedJobItem = null;
 let refFilterQuery = "";
 // Same "outlives a full renderCodex() rebuild" reasoning as refFilterQuery
 // above -- the <select> itself gets torn down and rebuilt on every render.
-let refSortMode = "tier"; // "tier" (default) | "az" | "points"
+let refSortMode = "az"; // "az" (default) | "points_asc" | "points_desc"
 /* Shared by the topbar's job chips and the (legacy, now-unreachable)
    [data-select-job] case in #screen's own click handler. */
 function toggleJobSelect(name){
@@ -6481,6 +6496,9 @@ function freshState(){
     bingoCard: null,  // [itemName, ...] x25 -- Classic Mode's Job Select tray (draft), lazily
                        // drawn once per run by ensureBingoCard() and left stable after that.
                        // null here is what makes a fresh run get its own new draw.
+    bingoLinesCompleted: [], // [lineIndex, ...] into bingoLines()'s own 12-line array -- see
+                       // checkBingoLines()/BINGO_LINE_BONUS. Lifetime, never un-completes even
+                       // if a member item is later spent (Classic never spends items anyway).
   };
 }
 
@@ -6777,6 +6795,7 @@ function craft(entry, opts={}){
   checkQuestCompletion();
   checkJobCompletion();
   checkBingoCompletion(entry.name);
+  checkBingoLines();
   applyDiceCount(); // Tractor may have just been crafted -- see its own comment
   // History's per-turn breakdown -- appended to whichever turn is current
   // (goStation() always pushes a fresh entry before any crafting can
@@ -8095,7 +8114,7 @@ function refStyleRowHTML(entry, opts){
   const homes = ENTRIES.filter(x => x.name === entry.name).map(x => x.station);
   const control = opts.rightControl || `<button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(entry.name)}"
     title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(entry.name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>`;
-  return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(entry.name)}">
+  return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(entry.name)}" data-toggle="${path}">
     <div class="refem">${em(entry.emoji)}</div>
     <div class="refbody">
       <div class="reftop">
@@ -8152,13 +8171,12 @@ function renderCodex(){
     .filter(row => !SUBZONE_PARENT[row.station] || subzoneVisited(row.station))
     .filter(row => state.mode !== "classic" || CORE_ITEM_NAMES.has(row.name));
 
-  const TIER_ORDER = {MATERIAL:0, COMPONENT:1, CREATION:2, CAPSTONE:3};
   const REF_SORTERS = {
-    tier: (a, b) => (TIER_ORDER[a.tier] - TIER_ORDER[b.tier]) || a.name.localeCompare(b.name),
     az: (a, b) => a.name.localeCompare(b.name),
-    points: (a, b) => (b.points - a.points) || a.name.localeCompare(b.name),
+    points_asc: (a, b) => (a.points - b.points) || a.name.localeCompare(b.name),
+    points_desc: (a, b) => (b.points - a.points) || a.name.localeCompare(b.name),
   };
-  rows.sort(REF_SORTERS[refSortMode] || REF_SORTERS.tier);
+  rows.sort(REF_SORTERS[refSortMode] || REF_SORTERS.az);
 
   const rowHTML = e => {
     const has = owns(e.name);
@@ -8168,7 +8186,7 @@ function renderCodex(){
     // "how many times have I built this" reads at a glance across the whole
     // catalog too, not just on the one-off card-inspection popup.
     const tier = craftTier(e.name);
-    return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(e.name)}" data-ref="${esc(e.name.toLowerCase())} ${esc(e.tier.toLowerCase())} ${esc(e.homes.join(" ").toLowerCase())} ${esc(e.recipe.toLowerCase())}">
+    return `<div class="refrow ${has ? "owned" : ""} ${tier ? "tier-" + tier : ""}" data-refname="${esc(e.name)}" data-toggle="refroot/${esc(e.name)}" data-ref="${esc(e.name.toLowerCase())} ${esc(e.tier.toLowerCase())} ${esc(e.homes.join(" ").toLowerCase())} ${esc(e.recipe.toLowerCase())}">
       <div class="refem">${em(e.emoji)}</div>
       <div class="refbody">
         <div class="reftop">
@@ -8199,11 +8217,10 @@ function renderCodex(){
       <input id="refFilter" type="search" placeholder="Search items, ingredients or stations…"
              aria-label="Search the item reference" value="${esc(refFilterQuery)}">
       <select id="refSort" aria-label="Sort the item reference">
-        <option value="tier" ${refSortMode === "tier" ? "selected" : ""}>Sort: Default</option>
         <option value="az" ${refSortMode === "az" ? "selected" : ""}>Sort: A–Z</option>
-        <option value="points" ${refSortMode === "points" ? "selected" : ""}>Sort: Points</option>
+        <option value="points_asc" ${refSortMode === "points_asc" ? "selected" : ""}>Sort: Points (Low to High)</option>
+        <option value="points_desc" ${refSortMode === "points_desc" ? "selected" : ""}>Sort: Points (High to Low)</option>
       </select>
-      <span class="refcount" id="refCount">${rows.length} / ${refItemTotal()}</span>
     </div>
     ${pinnedHTML}
     <div class="reftable">${restRows.map(rowHTML).join("")}</div>`;
@@ -10332,13 +10349,9 @@ function applyRefFilter(){
   const refFilterEl = document.getElementById("refFilter");
   if (!refFilterEl) return;
   const q = refFilterQuery.trim().toLowerCase();
-  let shown = 0;
   document.querySelectorAll(".refrow").forEach(row => {
-    const hit = !q || row.dataset.ref.includes(q);
-    row.style.display = hit ? "" : "none";
-    if (hit) shown++;
+    row.style.display = (!q || row.dataset.ref.includes(q)) ? "" : "none";
   });
-  document.getElementById("refCount").textContent = `${shown} / ${refItemTotal()}`;
 }
 
 document.getElementById("screen").addEventListener("input", ev => {
@@ -10793,8 +10806,8 @@ function renderJobBoard(){
   const classic = state.mode === "classic";
   const hard = state.mode === "hard";
   const full = jobSheetVariant === "full";
-  document.getElementById("jobTitle").textContent =
-    (classic || hard) && full ? "🏪 Marketplace"
+  document.getElementById("jobTitle").innerHTML =
+    (classic || hard) && full ? `${em("__MARKETPLACE__")} Marketplace` // same custom icon as Home's own Market face, see hubHomeFace()
     : classic ? "📋 To-Do List"
     : "📜 Quests"; // Adventure's compact tray, and Zen's unreachable fallback
   document.getElementById("jobSheetBody").innerHTML =
@@ -11693,6 +11706,21 @@ function checkBingoCompletion(name){
   if (state.mode !== "classic" || !state.bingoCard || !state.bingoCard.includes(name)) return;
   const entry = ENTRIES.find(e => e.name === name);
   queueEventToast("job", entry ? em(entry.emoji) : "", "On your Bingo card", name);
+}
+/* Fires right alongside checkBingoCompletion() in craft()'s own tail --
+   every line is checked every craft (cheap: 12 lines x 5 owns() lookups),
+   since a single craft can complete more than one line at once (the
+   center square sits on 4 lines by itself). Each line only ever pays out
+   once (state.bingoLinesCompleted), same flat BINGO_LINE_BONUS regardless
+   of which line or what's on it -- see that constant's own comment. */
+function checkBingoLines(){
+  if (state.mode !== "classic" || !state.bingoCard) return;
+  bingoLines().forEach((line, i) => {
+    if (state.bingoLinesCompleted.includes(i)) return;
+    if (!line.every(idx => owns(state.bingoCard[idx]))) return;
+    state.bingoLinesCompleted.push(i);
+    queueEventToast("job", "🎉", "BINGO! Line complete", "", "+" + BINGO_LINE_BONUS + " pts");
+  });
 }
 /* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
    not a lookalike, the literal same function -- so "Full breakdown"
