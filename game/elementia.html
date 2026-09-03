@@ -844,7 +844,11 @@ body[data-screen="market"] #trackedPill{display:none}
   cursor:pointer; transition:all .12s;
 }
 .bingo-cell:hover{filter:brightness(1.12)}
-.bingo-cell.owned{background:var(--ok-soft)}
+/* Same green used for a craftable item's own border in the shop (.item.can
+   -- var(--ok-line)), but as an inset box-shadow rather than the real
+   border property: that keeps the cell's actual 1px white grid line
+   drawn on top of it at the true edge, instead of the green replacing it. */
+.bingo-cell.owned{background:var(--ok-soft); box-shadow:inset 0 0 0 4px var(--ok-line)}
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
 /* Icon sits in the flexible remaining space above the name. The name
