@@ -5370,11 +5370,14 @@ function chooseMode(mode){
   // later milestone within it, same "starting counts as playing" reading
   // this used to have inside the old single chooseMode(). Checked before
   // branching so it applies whether this Classic pick is a fresh start or
-  // a resume.
+  // a resume. The unlock itself still happens under Classroom Mode (Zen
+  // stays hidden on the mode picker regardless, see refreshModePicker()),
+  // just without announcing it -- a "Zen Mode unlocked!" toast mid-class
+  // has nothing for the player to actually do with right now.
   if (mode === "classic" && !prefs.zenUnlocked){
     prefs.zenUnlocked = true;
     savePrefs();
-    queueModeUnlockToast("🌿", "Zen Mode");
+    if (!prefs.classroomMode) queueModeUnlockToast("🌿", "Zen Mode");
   }
   if (modeHasSave(mode)) resumeMode(mode); else startFreshMode(mode);
 }
@@ -8701,24 +8704,18 @@ function updateHub(){
     : "Back to the station map";
   // Home doubles as the Marketplace shortcut on the map screen (see its
   // own "market" face above) -- flags it with the same red "!" every
-  // other floating badge uses for "look here" (not the green pending-
-  // roll count just below, which is "ready when you are", not an alert)
-  // whenever there's a quest actually sitting available to accept, or
-  // the Trading Post has just unlocked and hasn't been opened yet
-  // (state.tradeOffers staying empty is exactly "never actually viewed
-  // it" -- tradeBodyHTML() rolls its first batch the moment it's opened).
-  const newQuestAvailable = state.mode === "hard" && QUESTS.some(q => questAvailable(q) && questVisible(q));
-  const tradePostNew = state.mode === "hard" && allStationsVisited() && !state.tradeOffers.length;
-  // activeJobCount() < MAX_ACTIVE_JOBS -- an unseen offer sitting on the
-  // board doesn't mean anything actionable if every active job slot is
-  // already full (jobRowHTML()'s own Take button is disabled in exactly
-  // that state too, see jobBoardHTML()'s atCap), so flagging Home over it
-  // would point at a board the player can't actually do anything with yet.
-  const newJobAvailable = state.mode === "classic" && state.jobBoardUnseen.length > 0
-    && activeJobCount() < MAX_ACTIVE_JOBS;
+  // other floating badge uses for "look here", but ONLY until the player
+  // has opened the Marketplace for the very first time (state.marketVisited,
+  // set true forever in openMarket()/openJobSelectTray()). Never comes
+  // back after that for any reason (a new quest, the Trading Post
+  // unlocking, an unseen job offer, ...) -- those all have their own
+  // in-context indicators once you're actually looking at the
+  // Marketplace, so re-flagging Home for them would just be a second,
+  // redundant "look here" nagging at a screen the player already knows
+  // to check.
   if (face === "roll" && state.pendingRoll){
     setHubBadge("hubHome", String(state.pendingRoll), true);
-  } else if (face === "market" && (newQuestAvailable || tradePostNew || newJobAvailable)){
+  } else if (face === "market" && !state.marketVisited){
     setHubBadge("hubHome", "!");
   } else {
     setHubBadge("hubHome", null);
