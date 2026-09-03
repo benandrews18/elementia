@@ -829,14 +829,22 @@ body[data-screen="market"] #trackedPill{display:none}
    scoped to that one pairing so every other .market-classic-progress use
    (Hard Mode's compact copy, no title beneath it) keeps its normal gap. */
 .market-classic-progress + .bingo-title{margin-top:-8px}
-.bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:2px}
+/* gap must be at least 2x a corner badge's own radius (9px, so 18px) in
+   BOTH directions -- two facing badges on adjacent cells (a cell's own
+   .bc-pts/.bc-station and the matching corner badge on its neighbor,
+   whether that neighbor is to the side or below) have their centers
+   exactly `gap` apart, so anything less than 2x their radius overlaps
+   them. Applies row-to-row (every cell's .bc-station meets the next
+   row's .bc-pts) and column-to-column too (.bc-pin, when a cell happens
+   to be pinned, meets its left neighbor's .bc-pts). */
+.bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:18px; margin-top:2px}
 .bingo-cell{
   position:relative; aspect-ratio:1; border-radius:12px; padding:3px 2px 2px;
-  background:var(--sunken); border:1.5px solid var(--line);
+  background:var(--sunken); border:3px solid var(--suit);
   display:flex; flex-direction:column; align-items:stretch;
   cursor:pointer; transition:all .12s;
 }
-.bingo-cell:hover{border-color:var(--mute)}
+.bingo-cell:hover{filter:brightness(1.12)}
 .bingo-cell.owned{background:var(--ok-soft); border-color:var(--ok-line); box-shadow:0 0 0 1px var(--ok-line)}
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
@@ -851,21 +859,38 @@ body[data-screen="market"] #trackedPill{display:none}
   flex:none; height:11px; line-height:11px; font-size:8px; font-weight:700; text-align:center;
   color:var(--ink2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 2px;
 }
-/* Inside the card's own border, top-right corner. */
+/* All three corner badges are 18px (radius 9px) and offset by that radius
+   PLUS the cell's own 3px border -- top/right/etc offsets resolve against
+   the padding edge (inside the border), not the border's outer edge, so
+   without adding the border width back in, each badge's center would
+   land 3px short of the actual visual corner. With it, the center lands
+   precisely on the square's own outer corner point -- half in, half out,
+   coincident with the corner rather than just inset near it or
+   arbitrarily straddling it. Borders match the cell's own --suit color
+   (same one driving the cell's border itself), and none of the three
+   carry a drop shadow. */
 .bc-pts{
-  position:absolute; top:3px; right:3px; width:18px; height:18px; border-radius:50%;
+  position:absolute; top:-12px; right:-12px; width:18px; height:18px; border-radius:50%;
   background:var(--gold); color:#2a2110; font-size:9px; font-weight:800;
+  border:2px solid var(--suit);
   display:flex; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:2;
+  z-index:2;
 }
-/* Mirrors .bc-pts's own inset corner position exactly (top-left instead of
-   top-right) rather than straddling the card's border the way this used
-   to. */
 .bc-pin{
-  position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
-  background:var(--card); border:2px solid var(--gold); color:var(--gold); font-size:10px;
+  position:absolute; top:-12px; left:-12px; width:18px; height:18px; border-radius:50%;
+  background:var(--card); color:var(--gold); font-size:10px;
+  border:2px solid var(--suit);
   display:flex; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:3;
+  z-index:3;
+}
+/* Third badge -- which station this item is actually found at. Bottom-
+   right, the one corner .bc-pts/.bc-pin don't already use. */
+.bc-station{
+  position:absolute; bottom:-12px; right:-12px; width:18px; height:18px; border-radius:50%;
+  background:var(--card); font-size:11px;
+  border:2px solid var(--suit);
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  z-index:2;
 }
 /* Adventure Mode's own Marketplace tray (see adventureMarketTrayHTML()) --
    two swipeable panels (Quests, then Collection Bundles) in the same
@@ -2564,7 +2589,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    top/left/bottom/right offset below, not by width/height. */
 .el-pop-bubble{
   position:absolute; width:76px; height:76px; border-radius:50%;
-  background:#fff; border:10px solid var(--suit); box-shadow:0 2px 6px rgba(0,0,0,.22);
+  background:#fff; border:10px solid var(--suit);
   display:flex; align-items:center; justify-content:center;
   font-size:40px; font-weight:800; color:#2b2822;
 }
@@ -5906,6 +5931,14 @@ const subzoneVisited = name => !!state.visitedStations[name];
 // set (unlike isCoreEntry(), which needs one specific station) work
 // correctly regardless of which station a caller happens to be looking at.
 const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
+// Item name -> its one canonical CORE_SET station -- Glass et al sell at
+// several stations, but CORE_SET pins each core item to exactly one (see
+// CORE_ITEM_NAMES's own comment), which is exactly what a single "here's
+// where this comes from" badge (see bingoCardHTML()) needs.
+const CORE_ITEM_STATION = Object.fromEntries([...CORE_SET].map(s => {
+  const [station, name] = s.split("|");
+  return [name, station];
+}));
 
 /* Item Bingo (draft) -- Classic Mode's Job Select tray, see bingoCardHTML().
    Eligible pool is every core item worth BINGO_MIN_POINTS or more (the
@@ -5988,9 +6021,12 @@ function bingoCardHTML(){
   const card = ensureBingoCard();
   const cells = card.map(name => {
     const cls = owns(name) ? "bingo-cell owned" : "bingo-cell";
-    return `<div class="${cls}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+    const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
+    const suit = DATA.suits[station.suit].color;
+    return `<div class="${cls}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts" style="--suit:${suit}">
       ${isPinned(name) ? `<span class="bc-pin">📌</span>` : ""}
       <span class="bc-pts">${ITEM_POINTS[name]}</span>
+      <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
       <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
       <span class="bc-name">${esc(name)}</span>
     </div>`;
