@@ -3547,6 +3547,13 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       </span>
       <input type="checkbox" id="setGuidedTutorial" class="switch" aria-label="Enable tutorial tips">
     </div>
+    <div class="setting-row">
+      <span class="setting-ico">🃏</span>
+      <span class="setting-body">
+        <span class="setting-label">Auto card inspection</span>
+      </span>
+      <input type="checkbox" id="setAutoCardInspection" class="switch" aria-label="Automatically open a full card view after crafting">
+    </div>
 
     <div class="btnrow">
       <button type="button" class="bigbtn" id="setSave">Save</button>
@@ -6375,6 +6382,11 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // is so the player can report them back for exactly that kind of tuning.
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:6, pinnedItems:[], minigamesEnabled:false,
   guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
+  // On by default (existing behavior) -- see showCardPop()/autoCardPop().
+  // Off replaces the full inspection popup after a fresh craft with a
+  // quick close-and-settle beat into wherever the item now sits in the
+  // shop (the crafted-items row, or the full list if that's expanded).
+  autoCardInspection:true,
   // Account-level unlock, not per-run state -- Classic Mode opens the
   // first time an Adventure Mode capstone is completed (see celebrate())
   // and stays open forever after, even across a session reset.
@@ -7031,7 +7043,7 @@ document.getElementById("batchConfirmGo").addEventListener("click", () => {
   craftBatch(batchConfirmEntry, batchConfirmQty, conversions);
   closeOverlay("batchConfirm");
   render();
-  showCardPop(batchConfirmEntry);
+  autoCardPop(batchConfirmEntry);
 });
 
 /* Hard Mode's shiny tap-to-inspect border tiers: 2 crafts = silver, 3 =
@@ -9018,6 +9030,59 @@ function showCardPop(entry, autoDismiss = true){
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
 }
+/* The post-craft alternative to showCardPop() when Settings' "Auto card
+   inspection" is off (see autoCardPop() below): the real #cpCard shows
+   very briefly -- same populated content showCardPop() would have shown
+   -- then flies and shrinks toward wherever the item now actually sits in
+   the shop (the collapsed crafted-items row, or its own full card if that
+   section is expanded; both render with the same [data-item-card] marker,
+   so no separate lookup is needed for either state) and disappears, with
+   a small punch on arrival so that row visibly gains the new item. Falls
+   straight through to a plain, immediate dismissal if the target can't be
+   found (e.g. the player already navigated away) or the browser prefers
+   reduced motion, same fallback shape flyIngredientsAndReveal() uses. */
+function showCardPopThenSettle(entry){
+  const cpCard = document.getElementById("cpCard");
+  // Cancel/clear any transform-and-fade a PREVIOUS settle left mid-flight
+  // (WAAPI's fill:"forwards" holds its end state on the element until
+  // something explicitly overrides it) so this card starts fresh, fully
+  // visible, at its normal resting position.
+  cpCard.getAnimations().forEach(a => a.cancel());
+  cpCard.style.transform = ""; cpCard.style.opacity = "";
+  showCardPop(entry, false); // false: this function drives dismissal itself, below
+  const target = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(() => {
+    if (!target || reduced){
+      closeOverlay("cardPop");
+      flushPendingReveal();
+      return;
+    }
+    const r = cpCard.getBoundingClientRect(), t = target.getBoundingClientRect();
+    const dx = (t.left + t.width / 2) - (r.left + r.width / 2);
+    const dy = (t.top + t.height / 2) - (r.top + r.height / 2);
+    const anim = cpCard.animate([
+      { transform: "translate(0,0) scale(1)", opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.2)`, opacity: 0 },
+    ], { duration: 420, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" });
+    anim.onfinish = () => {
+      closeOverlay("cardPop");
+      flushPendingReveal();
+      target.animate([
+        { transform: "scale(1)" }, { transform: "scale(1.4)" }, { transform: "scale(1)" },
+      ], { duration: 340, easing: "cubic-bezier(.3,1.4,.4,1)" });
+    };
+  }, 700);
+}
+/* Every automatic (not manually tapped-to-inspect) post-craft popup routes
+   through here instead of calling showCardPop()/showCardPopThenSettle()
+   directly, so Settings' "Auto card inspection" toggle only has to be
+   read in one place. Capstones are untouched -- celebrate() is a
+   deliberately different, rarer "big moment" this toggle isn't about. */
+function autoCardPop(entry){
+  if (prefs.autoCardInspection === false) showCardPopThenSettle(entry);
+  else showCardPop(entry);
+}
 /* Reveals any shop item(s) a craft unlocked but held back while its own
    card-inspection popup was open (see the craft click handler) -- no-op
    when nothing is pending, so safe to call from every cardPop dismissal
@@ -10079,7 +10144,7 @@ function flyIngredientsAndReveal(entry){
     setTimeout(() => cards.forEach(c => { if (c.parentNode) c.remove(); }), 400);
     setTimeout(() => {
       render();
-      if (entry.tier === "CAPSTONE") celebrate(entry); else showCardPop(entry);
+      if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry);
     }, 260);
   }, lastArrivesAt + 220);
 }
@@ -10209,7 +10274,7 @@ function handleScreenClick(ev){
       } else {
         craftBatch(entry, qty, []);
         render();
-        showCardPop(entry);
+        autoCardPop(entry);
       }
       return;
     }
@@ -10248,7 +10313,7 @@ function handleScreenClick(ev){
       } else {
         render();
         if (entry.tier === "CAPSTONE") celebrate(entry);
-        else showCardPop(entry);
+        else autoCardPop(entry);
       }
     }
     return;
@@ -11957,6 +12022,7 @@ const setUnlimitedBox = document.getElementById("setUnlimited");
 const setDiceInput = document.getElementById("setDice");
 const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
+const setAutoCardInspectionBox = document.getElementById("setAutoCardInspection");
 // Just opens the hub (see #settings' own HTML comment) -- the 3 sub-
 // screens each have their own open function/handler below.
 function openSettings(){
@@ -12002,6 +12068,7 @@ function openSettingsRules(){
   setDiceInput.value = TAKE;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
+  setAutoCardInspectionBox.checked = prefs.autoCardInspection !== false;
   openSettingsScreen("settingsRules");
 }
 document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
@@ -12028,6 +12095,7 @@ document.getElementById("setSave").addEventListener("click", () => {
   // stops any further tips immediately, mid-run included -- no separate
   // state to unwind.
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
+  prefs.autoCardInspection = setAutoCardInspectionBox.checked;
   savePrefs();
   applyVisitLimit();
   applyDiceCount();
