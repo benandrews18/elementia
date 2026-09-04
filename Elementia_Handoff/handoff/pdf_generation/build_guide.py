@@ -113,7 +113,7 @@ STATIONS = [
 
              ("🚲","Bicycle","CREATION","🦾 Aluminum Alloy + __WHEEL__ Wheel + __RUBBER__ Rubber",15),
              ("𖣘","Windmill","CREATION","☁️ Cloud + __CONCRETE__ Concrete + __TURBINEBLADE__ Turbine Blade + 🔋 Battery",20)],
-     "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",20)},
+     "capstone":("🏡","Homestead","CAPSTONE","🚜 Tractor + 🐔 Chicken + 🌾 Grain + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",20)},
 
     {"emoji":"💎","name":"Deep Mine","suit":"mine",
      "dice":["Ni", "Si", "Al", "Fe", "C", "Mg"],
