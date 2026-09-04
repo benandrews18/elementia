@@ -38,7 +38,7 @@
      cards, which the hub bar itself never needed a shade for. */
   --line:#2a5a72; --line2:#1c4257; --bg:#0f2733; --card:#163544;
   --bg-soft:#122e3c; --sunken:#1c4257; --pip:#c9d3e0;
-  --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c;
+  --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c; --ok-bright:#4fe583;
   --bad:#f0674c; --bad-soft:#371913;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
   --hub-map:#4d7cf2; --hub-travel:#3aa9a0;
@@ -217,22 +217,34 @@ body[data-picking] #topbar{display:none}
    below) -- gives every button a defined edge of its own regardless of
    position, rather than only the two side-by-side ones in a .hub-side
    group having any visible boundary. */
+/* Filled with the hub bar's own color family (was fully transparent) --
+   a touch lighter than the bar itself (#2a5a72, the bar's own border/
+   accent color, down to #1c4257, its top gradient stop) so the button
+   reads as slightly raised off the bar rather than blending into it, plus
+   an inset highlight/shadow pair for the actual "pop out" bevel and a
+   small outer drop shadow to lift it off the bar underneath. Hover/press/
+   active states are layered ON TOP of this same base gradient (a second
+   background-image, not a plain background color) so they tint it rather
+   than replacing it outright. */
 .hubbtn{
   flex:1; max-width:100px; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:2px;
   padding:6px 4px; margin-top:calc(-1 * var(--hub-overhang)); border-radius:15px;
-  background:transparent; border:1.5px solid rgba(255,255,255,.22); color:#fff; position:relative;
+  background:linear-gradient(180deg, #2a5a72, #1c4257);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.28), inset 0 -3px 5px rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.25);
+  border:1.5px solid rgba(255,255,255,.22); color:#fff; position:relative;
   transition:background .1s ease, filter .12s ease;
 }
-.hubbtn:hover{background:rgba(255,255,255,.06)}
+.hubbtn:hover{background:linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)), linear-gradient(180deg, #2a5a72, #1c4257)}
 .hubbtn:disabled{opacity:.35; cursor:not-allowed}
-.hubbtn:disabled:hover{background:transparent}
-/* No shadow to collapse into any more (there's no raised card left) -- a
-   quick background flash + the same small press-down travel every other
-   hub control uses instead, so tapping still reads as a real press. */
+.hubbtn:disabled:hover{background:linear-gradient(180deg, #2a5a72, #1c4257)}
+/* Sinks INTO its own bevel (the inset highlight/shadow above flips
+   direction) rather than collapsing to nothing, plus the same small
+   press-down travel every other hub control uses. */
 .hubbtn:not(:disabled):active{
   transform:translateY(2px);
-  background:rgba(255,255,255,.12);
+  background:linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)), linear-gradient(180deg, #2a5a72, #1c4257);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.35), inset 0 -1px 2px rgba(255,255,255,.12);
 }
 /* Fixed width/height would defeat the point of the flex-scaling above (a
    glyph swap can't reflow the CARD since its size comes from the flex
@@ -243,7 +255,7 @@ body[data-picking] #topbar{display:none}
   font-size:32px; line-height:1;
 }
 .hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px; color:#fff}
-.hubbtn.active{background:rgba(63,180,108,.22)}
+.hubbtn.active{background:linear-gradient(rgba(63,180,108,.28), rgba(63,180,108,.28)), linear-gradient(180deg, #2a5a72, #1c4257)}
 .hubbtn.active .hl{color:var(--ok)}
 .hubbtn:disabled .hi{filter:grayscale(.5) brightness(.85)}
 
@@ -885,16 +897,16 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(3px);
   box-shadow:0 1px 0 rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2);
 }
-/* Same green a craftable item's own border uses in the shop (.item.can --
-   var(--ok-line)), layered on top of the tile's own drop shadow rather
-   than replacing it, so an owned square still reads as the same kind of
-   raised sticker as every other square. */
+/* Bright green ring (var(--ok-bright), not the muted --ok-line) so a
+   completed square reads unmistakably at a glance, layered on top of the
+   tile's own drop shadow rather than replacing it -- an owned square
+   still reads as the same kind of raised sticker as every other square. */
 .bingo-cell.owned{
   background:var(--ok-soft);
-  box-shadow:0 4px 0 rgba(0,0,0,.4), 0 6px 10px rgba(0,0,0,.25), inset 0 0 0 3px var(--ok-line);
+  box-shadow:0 4px 0 rgba(0,0,0,.4), 0 6px 10px rgba(0,0,0,.25), inset 0 0 0 3px var(--ok-bright);
 }
 .bingo-cell.owned:active{
-  box-shadow:0 1px 0 rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2), inset 0 0 0 3px var(--ok-line);
+  box-shadow:0 1px 0 rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2), inset 0 0 0 3px var(--ok-bright);
 }
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
@@ -2189,7 +2201,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-arrow:not(:disabled){
   cursor:pointer;
   background:radial-gradient(circle at 32% 26%, var(--ok-soft) 0%, var(--ok-soft) 70%);
-  border-color:var(--ok-line); color:var(--ok);
+  border-color:var(--ok-bright); color:var(--ok);
 }
 .convert-arrow:not(:disabled):active{
   transform:translateY(2px);
@@ -2681,21 +2693,22 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   /* same top-clip-safe centering as .sheetbox -- see its comment */
 }
 /* White card, plain black frame -- images/item card redesign 0904.png's
-   own look, replacing the old dark-face/suit-colored-top-stripe card. */
+   own look, replacing the old dark-face/suit-colored-top-stripe card.
+   Border thickened (was 5px) to read as a real frame, closer to how
+   heavy .el-pop-card's own 20px suit-colored border is. */
 .pc-card{
   width:100%; aspect-ratio:5/7; background:#f7f5f0; color:#181614; border-radius:22px;
-  border:5px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
+  border:8px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
   position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
 }
-/* Tangent to the card's own INNER border face, not straddling/overhanging
-   past its outer edge -- images/item card redesign 0904.png's own layout.
-   top/right offsets of 0 on an absolutely-positioned child resolve
-   against the nearest positioned ancestor's PADDING box, which for
-   .pc-card (padding:20px 20px 16px) IS exactly the border's inner face --
-   same convention the Bingo card's own corner badges already use (see
-   .bc-station). */
+/* Straddles the card's own border (was tangent to its INNER face) -- same
+   overhang language .el-pop-bubble already uses on the element-card
+   popup (a negative offset, not a width/height change, so the circle can
+   grow without affecting how far it hangs past the edge), so a badge
+   here visually sits ON the black frame the same way those sit on their
+   own suit-colored one. */
 .pc-badge{
-  position:absolute; top:0; right:0; width:60px; height:60px; border-radius:50%;
+  position:absolute; top:-18px; right:-18px; width:60px; height:60px; border-radius:50%;
   background:#f6cc4d; border:4px solid #000; color:#181614;
   display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
@@ -2704,7 +2717,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-badge .l{font-size:7px; font-weight:800; letter-spacing:.5px; margin-top:1px; color:#5a4c14}
 /* Bottom-right -- the station this card was made at. */
 .pc-station-badge{
-  position:absolute; bottom:0; right:0; width:60px; height:60px; border-radius:50%;
+  position:absolute; bottom:-18px; right:-18px; width:60px; height:60px; border-radius:50%;
   background:#fff; border:4px solid #000; color:#181614;
   display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
@@ -2716,7 +2729,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    (unlike the other two badges) -- the reference shows them as flat
    solid-color fills sitting directly against the card's own black frame. */
 .pc-suitcosts{
-  position:absolute; top:0; left:0; z-index:2;
+  position:absolute; top:-18px; left:-18px; z-index:2;
   display:flex; flex-direction:column; gap:8px;
 }
 .pc-suitcost-badge{
@@ -2729,7 +2742,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Centered, with symmetric side padding clearing BOTH corner circles now
    (was right-only, back when only the points badge existed). */
 .pc-title{font-size:24px; font-weight:800; line-height:1.15; text-align:center; padding:0 72px; margin-top:6px}
-.pc-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center; min-height:0}
+/* Fixed at exactly half the card's own content height (was flex:1, which
+   just grabbed whatever space was left over) -- pins the title's own top
+   edge (the very next sibling below this) to the card's vertical
+   halfway point instead of wherever the icon happened to push it. */
+.pc-icon-wrap{flex:0 0 50%; display:flex; align-items:center; justify-content:center; min-height:0}
 .pc-icon{font-size:100px; line-height:1}
 /* Gemstone Collection's custom icon is too visually small at the shared
    100px size everywhere else it's used (shop cards, reference list) --
@@ -2748,11 +2765,44 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Sits below the card itself (see .pc-card-wrap), not inside it -- its own
    tap target, so it can stopPropagation away from the card's tap-anywhere-
    to-dismiss behavior without fighting the card's own click handling. */
+/* Holds Item Info alongside the (usually hidden) Back button -- a plain
+   row, not .pc-card-wrap's own column, so the two sit side by side
+   whenever Back is showing. */
+.pc-actions{display:flex; gap:10px; align-items:stretch}
+/* Same green-fill/offset-drop-shadow "ledge" look as .bigbtn (the mode-
+   select screen's own Continue button) -- was a muted soft-green outline
+   button, now the same real chrome-button language everything else in
+   this pass uses. Shorter than .bigbtn's own 12px vertical padding (8px)
+   -- explicitly asked to be a shorter button than that shared default.
+   flex:1 (was width:100%) -- it shares .pc-actions with the Back button
+   now instead of always owning the row alone. */
 .pc-tree-btn{
-  width:100%; padding:12px; border-radius:12px; border:2px solid var(--ok-line);
-  background:var(--ok-soft); color:var(--ok); font-size:14px; font-weight:800;
-  letter-spacing:.2px; cursor:pointer;
+  flex:1; padding:8px; border-radius:11px; border:none;
+  background:var(--ok); color:#fff; font-size:14px; font-weight:800;
+  letter-spacing:.2px; cursor:pointer; box-shadow:0 3px 0 #24774a;
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1), filter .15s ease;
 }
+.pc-tree-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
+/* Back button -- a left arrow next to a small circle repeating the
+   previous card's own icon (see updateCardPopBackBtn()), one tappable
+   unit. Same ledge-button language as .pc-tree-btn beside it, just its
+   own neutral (not green) fill since this isn't the primary action. */
+.pc-back-btn{
+  flex:none; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:0 12px; border-radius:11px; border:none;
+  background:var(--sunken); color:var(--ink); cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.22);
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
+}
+.pc-back-btn[hidden]{display:none}
+.pc-back-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
+.pc-back-arrow{font-size:20px; font-weight:800; line-height:1}
+.pc-back-icon{
+  width:34px; height:34px; border-radius:50%; flex:none; overflow:hidden;
+  background:#fff; border:2px solid #000; color:#181614;
+  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
+}
+.pc-back-icon img{width:70%; height:70%; object-fit:contain}
 /* First-craft fly-and-stack mini cards (see flyIngredientsAndReveal()) --
    same visual language as the real inspection cards, just smaller: .fc-item
    mirrors .pc-card (dark face, thick suit-colored top stripe), .fc-el
@@ -2775,7 +2825,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .fc-el .fc-sym{font-size:26px; font-weight:800; color:#2b2822; line-height:1}
 .fc-el .fc-name{font-size:9.5px; font-weight:700; color:#5a5548; line-height:1.2}
-.pc-tree-btn:hover{background:var(--ok); color:#0d1f14}
 
 /* Hard Mode tiered re-craft borders (see craftTier()) -- only ever applied
    here, on the tap-to-inspect popup, never on the item's icon anywhere
@@ -3651,7 +3700,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <div class="pc-label">Components:</div>
       <div class="pc-ingredients" id="cpIngredients"></div>
     </div>
-    <button type="button" class="pc-tree-btn" id="cpTreeBtn">📖 Item Info</button>
+    <div class="pc-actions">
+      <!-- Only shown once a "Components:" tap has drilled into another
+           item's card (see the #cpIngredients click handler) -- hidden for
+           the very first card of any viewing. Displays the item being
+           drilled IN FROM (see updateCardPopBackBtn()); tapping it steps
+           back out to that card. -->
+      <button type="button" class="pc-back-btn" id="cpBackBtn" hidden aria-label="Back to previous item">
+        <span class="pc-back-arrow">←</span>
+        <span class="pc-back-icon" id="cpBackIcon"></span>
+      </button>
+      <button type="button" class="pc-tree-btn" id="cpTreeBtn">📖 Item Info</button>
+    </div>
   </div>
 </div>
 
@@ -9364,6 +9424,14 @@ let cardPopTimer;
 // see its own click handler below) knows what to jump to in Item Reference
 // without needing to re-derive it from the DOM.
 let cardPopEntry = null;
+// Stack of entries drilled IN FROM (see the #cpIngredients click handler)
+// -- only its top is ever shown (see updateCardPopBackBtn()), but kept as
+// a real stack so backing out repeatedly after drilling several levels
+// deep still steps back one card at a time instead of straight to the
+// very first. Reset to empty on every FRESH open (see showCardPop()'s own
+// keepBackStack param) so a new "look something up" session never starts
+// with a stale Back button left over from the last one.
+let cardPopBackStack = [];
 // The just-tapped Craft button's own shop card, captured by every craft
 // click handler right before craft()/render() moves or collapses it --
 // read (and cleared) by settleIntoShop() when "Auto card inspection" is
@@ -9372,8 +9440,14 @@ let cardPopEntry = null;
 let preCraftCardRect = null;
 /* autoDismiss: true for the "just crafted this" popup after a purchase
    (existing behavior, unchanged); false when opened by tapping an item in
-   the inventory, where it should just sit there until dismissed. */
-function showCardPop(entry, autoDismiss = true){
+   the inventory, where it should just sit there until dismissed.
+   keepBackStack: true only when this call IS itself a drill-in or a Back
+   step (see the #cpIngredients/#cpBackBtn click handlers) -- every other
+   call site is a fresh look-up with no "previous card" of its own, so the
+   default clears cardPopBackStack rather than leaving Back pointing at
+   whatever the last unrelated viewing session happened to leave behind. */
+function showCardPop(entry, autoDismiss = true, keepBackStack = false){
+  if (!keepBackStack) cardPopBackStack = [];
   cardPopEntry = entry;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
@@ -9419,9 +9493,19 @@ function showCardPop(entry, autoDismiss = true){
         })();
     return (i ? '<span class="pc-plus">+</span>' : "") + body;
   }).join("");
+  updateCardPopBackBtn();
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
+}
+/* Shows/hides #cpBackBtn based on cardPopBackStack -- the icon inside it
+   is always the entry on top of the stack (the card this one was drilled
+   in FROM), never the card currently showing. */
+function updateCardPopBackBtn(){
+  const btn = document.getElementById("cpBackBtn");
+  const prev = cardPopBackStack[cardPopBackStack.length - 1];
+  btn.hidden = !prev;
+  if (prev) document.getElementById("cpBackIcon").innerHTML = em(prev.emoji);
 }
 /* The post-craft alternative to showCardPop() when Settings' "Auto card
    inspection" is off (see autoCardPop() below) -- the real inspection
@@ -9555,7 +9639,12 @@ document.getElementById("cpIngredients").addEventListener("click", ev => {
   if (itemBtn){
     ev.stopPropagation();
     clearTimeout(cardPopTimer);
-    showCardPop(ENTRIES[+itemBtn.dataset.itemCard], false);
+    // Drilling IN -- the card showing right now becomes the "previous"
+    // one Back returns to (see #cpBackBtn), so it's pushed before
+    // swapping to the new card. keepBackStack:true so showCardPop()
+    // doesn't wipe the very push just made.
+    if (cardPopEntry) cardPopBackStack.push(cardPopEntry);
+    showCardPop(ENTRIES[+itemBtn.dataset.itemCard], false, true);
     return;
   }
   const elBtn = ev.target.closest("[data-elem]");
@@ -9565,6 +9654,17 @@ document.getElementById("cpIngredients").addEventListener("click", ev => {
     closeOverlay("cardPop");
     showElCardPop(elBtn.dataset.elem);
   }
+});
+/* Back button (see updateCardPopBackBtn()) -- pops the stack and shows
+   whatever's now on top. keepBackStack:true so showCardPop() doesn't
+   clear the rest of the trail on the way back out, in case drilling went
+   more than one level deep. */
+document.getElementById("cpBackBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopBackStack.length) return;
+  const prev = cardPopBackStack.pop();
+  clearTimeout(cardPopTimer);
+  showCardPop(prev, false, true);
 });
 /* "View Item Tree" -- jumps to this same item's row in Item Reference,
    one level of its own breakdown already expanded (see goToRefItem()).
