@@ -164,11 +164,14 @@ body[data-picking] #topbar{display:none}
    positioned (bottom:0) top edge up or down. Tuned empirically against
    the real rendered geometry, not derived algebraically. */
 :root{ --hub-overhang:11.5px; }
+/* Teal-navy bar, matching images/game ui reference 0903.png's bottom nav
+   (was var(--card), a near-black navy -- this is the same family but
+   visibly blue rather than reading as plain dark chrome). */
 #hub{
   position:fixed; left:0; right:0; bottom:0; z-index:72;
   padding:6px 6px calc(6px + env(safe-area-inset-bottom));
-  background:var(--card); border-top:1.5px solid var(--line);
-  box-shadow:0 -6px 20px rgba(0,0,0,.12);
+  background:linear-gradient(180deg, #1c4257, #163544); border-top:1.5px solid #2a5a72;
+  box-shadow:0 -6px 20px rgba(0,0,0,.25);
   display:flex; justify-content:center; align-items:flex-end; gap:0;
 }
 /* touch-action:manipulation (drops the ~300ms tap-delay/double-tap-zoom
@@ -189,32 +192,35 @@ body[data-picking] #topbar{display:none}
    opts the outer button out of the shared button:active fallback (see
    its own comment) so that fallback can't also scale the whole column. */
 .hubbtn:not(:disabled):active{transform:none}
-/* Chunky glossy icon badge (see images/Button Hub UI reference.png) --
-   fixed width/height (not sized to the glyph) so swapping the icon (e.g.
-   #hubHome's own rotating Roll/Map/Market/Close faces) can never reflow
-   the badge itself. Radial gradient + inset highlight/shadow for the
-   glossy-bevel look, gold ring border, offset drop shadow underneath. */
+/* Rectangular (squircle) icon badge, matching images/game ui reference
+   0903.png's 4 side nav buttons -- light card face instead of a vivid
+   gradient fill, same "raised chip" idea the reference uses for To-Do
+   List/Inventory/Items/Settings. #hubHome (the center Map button) stays
+   its own separate round "coin" treatment below, deliberately untouched
+   by this. Fixed width/height (not sized to the glyph) so swapping the
+   icon can never reflow the badge itself. */
 .hubbtn .hi{
-  width:58px; height:58px; border-radius:50%;
+  width:52px; height:52px; border-radius:15px;
   display:flex; align-items:center; justify-content:center;
-  font-size:44px; line-height:1; flex:none;
-  background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
-  border:4px solid #f2a93a;
-  box-shadow:inset 0 3px 4px rgba(255,255,255,.4), inset 0 -5px 8px rgba(0,0,0,.22),
-    0 4px 0 rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.28);
+  font-size:32px; line-height:1; flex:none;
+  background:linear-gradient(180deg, #eef4fb 0%, #cfdff0 100%);
+  border:3px solid #6fa3d8;
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.7), inset 0 -3px 5px rgba(0,0,0,.08),
+    0 3px 0 rgba(15,40,55,.5), 0 4px 8px rgba(0,0,0,.28);
   transition:box-shadow .1s cubic-bezier(.3,.8,.4,1), filter .12s ease;
 }
-.hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px}
+.hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px; color:#fff}
 .hubbtn.active{color:var(--ok)}
-.hubbtn.active .hi{filter:brightness(1.12) saturate(1.15)}
-.hubbtn:disabled .hi{filter:grayscale(.6) brightness(.85)}
+.hubbtn.active .hi{filter:saturate(1.2); border-color:var(--ok)}
+.hubbtn:disabled .hi{filter:grayscale(.5) brightness(.85)}
 /* Same press-in-and-sink feel as the .bigbtn/.craftbtn "ledge" buttons
    (see the shared block near the top of this stylesheet), applied to the
    icon badge itself rather than the whole flex column -- otherwise the
    label text would shift too, which reads as the button jumping rather
    than the icon depressing. */
 .hubbtn:not(:disabled):active .hi{
-  transform:translateY(2px); box-shadow:inset 0 2px 3px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+  transform:translateY(2px);
+  box-shadow:inset 0 2px 3px rgba(0,0,0,.12), inset 0 -1px 2px rgba(255,255,255,.35);
 }
 
 #hubHome{
@@ -1705,6 +1711,23 @@ body[data-screen="market"] #trackedPill{display:none}
    equal specificity otherwise, and craftable's green ring is a real
    status signal that should keep winning here. */
 .shop .item:not(.can){ border-width:2px; border-color:var(--pip); }
+/* Shop-list-only light card face, matching images/game ui reference
+   0903.png's own item rows -- every OTHER .item context (Quest Log, Job
+   Board, the New Items reveal, capstone boxes) keeps the game's normal
+   dark theme; this is deliberately scoped to just the shop's own list so
+   it doesn't ripple into screens the reference never showed. */
+.shop .item{
+  background:linear-gradient(to right, #dde7f4, #c9daee);
+  box-shadow:0 2px 5px rgba(0,0,0,.18);
+}
+.shop .item.can{background:linear-gradient(to right, #d9f0e0, #c2e6cd)}
+.shop .item .iname{color:#1c2b3d}
+.shop .item .tier{background:rgba(255,255,255,.6); color:#3a4a5c}
+.shop .item .recipe, .shop .item .plus{color:#4d6076}
+.shop .item .iem{
+  background:radial-gradient(circle at 32% 26%, #fff 0%, #eef4fb 100%);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.9), inset 0 -3px 5px rgba(0,0,0,.08);
+}
 /* Same green ring as the topbar's job chips -- lets a player tap between
    their job items and see which of this station's items feed into
    whichever one is selected, without the shop rows shifting around.
@@ -1794,36 +1817,31 @@ body[data-screen="market"] #trackedPill{display:none}
   font-size:9.5px; font-weight:800;
   display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--card);
 }
-/* Fills the entire end of the card, edge-to-edge top-to-bottom (see
-   .item/.irow above) -- a flush panel rather than a pill-shaped button, so
-   it reads as part of the card's own structure. Its own right corners
-   round to match .item's border-radius (.item itself deliberately has no
-   overflow:hidden -- see above -- so this rounding has to happen on the
-   button, not by clipping). The shared bounce/ledge button treatment (see
-   the .craftbtn rules further down, ~line 1213) would put a 3D "lift"
-   shadow right at this panel's own edges, at odds with sitting flush
-   against the card -- overridden below, right after that shared block,
-   with a plain brightness/scale press instead. */
 .craftbtn{
   flex:none; align-self:center; width:60px; margin:0 10px 0 2px;
   display:flex; align-items:center; justify-content:center; text-align:center;
   border:none; border-radius:10px;
   padding:10px 5px; font-size:13px; font-weight:800; line-height:1.15; background:var(--sunken); color:var(--mute);
 }
-/* Chunky glossy "go" state -- gradient fill, inset top highlight, and a
+/* Chunky glossy "go" state -- gold/orange gradient (matching images/game
+   ui reference 0903.png's own Craft button, not the game's usual green
+   "you can do this" language -- kept as a distinct primary-CTA color so
+   the button itself pops, the way status signals like .tok.have/the
+   owned checkmark stay green regardless), inset top highlight, and a
    solid offset shadow it visibly sinks into on press (same ledge/lift
    language .bigbtn uses, see the shared block below; this used to opt
    out of that entirely because it was flush-mounted to the card's own
    edge -- now that it's a real standalone rounded button with its own
    margin, that conflict is gone and it can share the treatment). */
 .craftbtn.go{
-  background:linear-gradient(180deg, #57d488, var(--ok) 62%); color:#fff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 3px 0 #184a29;
+  background:linear-gradient(180deg, #ffce6b, #f0a428 62%); color:#fff;
+  text-shadow:0 1px 2px rgba(120,60,0,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #a05d12;
 }
 .craftbtn.go:hover{filter:brightness(1.05)}
 .craftbtn.go:not(:disabled):active{
   transform:translateY(3px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 transparent;
 }
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
 .craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
@@ -2874,9 +2892,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   flex:none; align-self:flex-start; width:34px; height:34px; border-radius:9px;
   border:1.5px solid var(--line); background:var(--card); font-size:15px; cursor:pointer;
   opacity:.5; filter:grayscale(1);
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+  transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), opacity .12s, filter .12s, border-color .12s, background .12s;
 }
 .refpin:hover{opacity:.85}
 .refpin.active{opacity:1; filter:none; border-color:var(--gold); background:var(--gold-soft)}
+.refpin:active{transform:translateY(2px); box-shadow:0 0 0 transparent}
 /* Top-left corner badge on station shop cards (was inline with the item
    name) -- mirrors .item-pin-badge's own corner treatment on the
    opposite side, so both of an item card's "special" indicators read as
@@ -7321,8 +7342,11 @@ function tokenHTML(r, groupedEls){
       (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</button>";
   }
   const ok = owns(r.name);
-  const hint = ok ? "" : ` data-hint="${esc(r.name)}" data-hintkind="item" tabindex="0" role="button" title="Tap to see where to build it"`;
-  return `<span class="tok ${ok ? "have" : "need"}"${hint}>${em(r.emoji)} ${esc(r.name)}` +
+  const hint = ok ? "" : ` data-hint="${esc(r.name)}" data-hintkind="item" tabindex="0" role="button"`;
+  // Icon only now, matching the reference recipe list's own icon+fraction
+  // look (no name text) -- the name still surfaces via title, same as
+  // every other icon-only control in the game.
+  return `<span class="tok ${ok ? "have" : "need"}"${hint} title="${esc(r.name)}${ok ? "" : " — tap to see where to build it"}">${em(r.emoji)}` +
     (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</span>";
 }
 
