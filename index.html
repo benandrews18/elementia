@@ -1902,15 +1902,20 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 0 0 2px var(--card); z-index:2;
 }
-/* Black border/text, no fill -- replaces the old green(have)/red(need)
-   treatment now that ownership reads from .tok-check (a checkmark) and a
-   shortfall reads from .tok-convert-badge (the convert icon) instead of
-   from the token's own color. Scoped to the shop specifically (station
-   shop recipe lists) -- every OTHER .tok.el context (Quest Log, Job
-   Board, ...) keeps the original green/red language, same reasoning
-   .shop .item's own light-card scoping above already uses. */
-.shop .tok.el, .shop .tok.el.have, .shop .tok.el.need{
+/* Black border/text, no fill -- replaces the old green(have) treatment
+   now that ownership reads from .tok-check (a checkmark) instead of from
+   the token's own color. Scoped to the shop specifically (station shop
+   recipe lists) -- every OTHER .tok.el context (Quest Log, Job Board,
+   ...) keeps the original green/red language, same reasoning .shop .item's
+   own light-card scoping above already uses. */
+.shop .tok.el, .shop .tok.el.have{
   background:transparent; border-color:#1c2b3d; color:#1c2b3d;
+}
+/* Needed elements keep a colored (red) border/text rather than going
+   black too -- confirmed as the one state that should still stand out
+   at a glance, unlike "have" which reads fine as plain black+checkmark. */
+.shop .tok.el.need{
+  background:transparent; border-color:var(--bad); color:var(--bad);
 }
 /* Real pushable button -- solid offset "ledge" shadow it sinks into on
    press, same language as the craft button/pin toggle. Border uses the
@@ -1933,16 +1938,20 @@ body[data-screen="market"] #trackedPill{display:none}
    ring so it reads unmistakably as "tap Convert, then tap me" rather than
    just another ordinary missing element. */
 .tok.el.need:has(.tok-convert-badge){box-shadow:0 2px 0 rgba(0,0,0,.25), 0 0 0 3px rgba(240,103,76,.45)}
-.shop .tok.el.need:has(.tok-convert-badge){box-shadow:0 0 0 3px rgba(28,43,61,.35)}
+.shop .tok.el.need:has(.tok-convert-badge){box-shadow:0 0 0 3px rgba(240,103,76,.35)}
 .tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
 /* Bare icon now -- no pill/card chrome and no conversion count any more,
    just the convert-arrows glyph itself sitting in the token's corner as a
    quiet "tap Convert" hint. */
+/* Sized up to match .tok-check's own visual footprint (its 15px circle
+   plus its 2px ring reads closer to ~19-20px) -- the bare convert icon
+   had no fill/ring of its own to match that with, so its own box needed
+   to grow instead. */
 .tok-convert-badge{
-  position:absolute; top:-8px; right:-8px; width:15px; height:15px;
+  position:absolute; top:-9px; right:-9px; width:20px; height:20px;
   display:flex; align-items:center; justify-content:center; z-index:2;
 }
-.tok-convert-badge .converticon{width:15px; height:15px}
+.tok-convert-badge .converticon{width:20px; height:20px}
 /* Tapping a not-yet-craftable Craft button -- see bounceMissingItems(). */
 .missing-items-note{
   position:fixed; z-index:80; pointer-events:none; white-space:nowrap;
@@ -2161,26 +2170,43 @@ body[data-screen="market"] #trackedPill{display:none}
   font-size:15px; font-weight:800; color:inherit; text-align:center; padding:0 6px;
 }
 /* Doubles as the "Convert" action itself (see #convert's own HTML
-   comment) -- greyed out and inert until both sides are picked and
-   affordable, same disabled language every other .bigbtn uses, then
-   flips to --ok green so the arrow itself reads as "tap to confirm"
-   once it's actually live. */
+   comment) -- now styled identically to the floating Convert button
+   (#quickConvertBtn/.floatbtn) rather than a plain borderless glyph, so
+   the same circular gold-bordered "chrome button" reads as the same
+   control in both places. Greyed out and inert until both sides are
+   picked and affordable (same disabled language every other .bigbtn
+   uses), then flips to the same --ok green .floatbtn.active uses so the
+   arrow itself reads as "tap to confirm" once it's actually live. */
 .convert-arrow{
-  font-size:26px; color:var(--mute); font-weight:800; flex:none;
-  background:none; border:none; padding:12px; margin:-12px; border-radius:50%;
-  transition:color .12s, background .12s, transform .08s;
+  width:56px; height:56px; border-radius:50%; flex:none; padding:0; margin:0;
+  background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--card) 70%);
+  border:3px solid var(--gold); color:var(--ink);
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.28);
+  transition:background .2s ease, color .2s ease, border-color .2s ease, transform .08s, box-shadow .1s cubic-bezier(.3,.8,.4,1);
 }
-.convert-arrow:not(:disabled){color:var(--ok); cursor:pointer}
-.convert-arrow:not(:disabled):hover{background:var(--ok-soft)}
-.convert-arrow:not(:disabled):active{transform:scale(.9)}
-.convert-arrow:disabled{cursor:not-allowed}
-/* Wraps each side of the row (and the arrow between them) in an identical
-   label-then-content column -- the arrow's own wrapper carries a hidden
-   "1x" spacer of the same size as the real labels, so all three columns
-   share one top edge and .convert-row's align-items:center lands the
-   arrow level with the boxes' own vertical middle instead of the middle
-   of the taller (label + box) columns beside it. */
+.convert-arrow:hover{background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--bg-soft) 70%)}
+.convert-arrow:not(:disabled){
+  cursor:pointer;
+  background:radial-gradient(circle at 32% 26%, var(--ok-soft) 0%, var(--ok-soft) 70%);
+  border-color:var(--ok-line); color:var(--ok);
+}
+.convert-arrow:not(:disabled):active{
+  transform:translateY(2px);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.12), inset 0 -1px 3px rgba(0,0,0,.1);
+}
+.convert-arrow:disabled{cursor:not-allowed; opacity:.7}
+/* Wraps each side of the row, and the arrow between them, in one column.
+   The two element boxes no longer carry their own "3x"/"1x" labels (the
+   ratio's said once now, see .convert-qty below) -- just the button/box
+   itself, so .convert-row's align-items:center centers each column
+   against the row's tallest one (the arrow's own column, button + label
+   together). */
 .convert-col{display:flex; flex-direction:column; align-items:center; gap:8px}
+/* Was "3x"/"1x" above each element box; now the single "3:1" ratio
+   underneath the arrow instead (see #convert's own HTML) -- same size/
+   weight/color as before, just relocated to say it once instead of
+   twice. */
 .convert-qty{font-size:24px; font-weight:800; color:#fff; line-height:1}
 /* FROM box: 3 diagonally-stacked squares (matches the "trade 3 of these"
    reference). The 2 ghosts are real sibling elements placed BEFORE the
@@ -2530,12 +2556,21 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    wrap to its own row. */
 #settings .btnrow{flex-wrap:nowrap}
 #settings .btnrow .bigbtn{flex:1 1 0; padding:12px 6px; font-size:13.5px; white-space:nowrap}
-/* Convert tray -- same slide-up-from-behind-the-hub language as #pinsTray
-   (no scrim, shop/map stays visible and scrollable underneath), just
-   anchored bottom-full-width like that tray rather than centered like the
-   dialogs it used to share styling with. z-index 33, same as #pinsTray --
-   above .floatbtn's base 32 so it covers #pinsBtn while open (which stays
-   hidden itself via .cross-hide, see updateHub()), but BELOW
+/* Same dimmed-backdrop language as #jobScrim, just for Convert -- sits
+   below #convert's own z-index (33) so the tray and its pinned goal card
+   (see #convertGoalCard, which straddles #convert's own top edge) stay
+   fully lit, but above everything else so the shop/map underneath reads
+   as backgrounded while the tray is open. Below #quickConvertBtn's own
+   z-index (36) too, so that button -- the tray's own trigger -- also
+   stays undimmed rather than fading along with everything it's not part
+   of. */
+#convertScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:32; display:none}
+#convertScrim.open{display:block}
+/* Convert tray -- same slide-up-from-behind-the-hub language as #pinsTray,
+   just anchored bottom-full-width like that tray rather than centered
+   like the dialogs it used to share styling with. z-index 33, same as
+   #pinsTray -- above .floatbtn's base 32 so it covers #pinsBtn while open
+   (which stays hidden itself via .cross-hide, see updateHub()), but BELOW
    #quickConvertBtn's own 36 so that button stays visible on top of its
    own tray rather than being covered by it. */
 #convert{
@@ -3438,7 +3473,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     max-width:768px; margin:0 auto;
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
-  #backdrop, #topbar, #hub, #pinsTray, #convert, #jobScrim, #scrim,
+  #backdrop, #topbar, #hub, #pinsTray, #convert, #convertScrim, #jobScrim, #scrim,
   #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
@@ -3896,6 +3931,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      up from behind the hub, same tray language as #pinsTray, so the shop
      or map underneath stays visible and scrollable (no scrim) instead of
      the previous full-screen dialog blocking everything behind it. -->
+<div id="convertScrim"></div>
 <aside id="convert" aria-label="Convert Elements" aria-hidden="true">
   <div class="dhead">
     <h2 id="convertTitle">🔄 Convert Elements 3:1</h2>
@@ -3906,13 +3942,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
          element inside a specific item's recipe (see the .tok.el.need
          click handler) -- a duplicate of that item's own shop card,
          reusing itemHTML() wholesale, unmodified, so it's pixel-identical
-         to the real thing. Sits directly on top of this tray's own gold
-         border (see .convert-goal-card's own CSS), not inline in the
-         list -- a card resting on the rim, not one more row inside it.
-         Empty/hidden for every other way Convert gets opened -- the
-         floating button, the inventory drawer's icon -- where there's no
-         specific item context to show. -->
-    <div class="convert-goal-card" id="convertGoalCard"></div>
+         to the real thing. The "shop" class is what makes it pixel-
+         identical -- itemHTML()'s own light-card/black-border/icon
+         styling is scoped to .shop everywhere else (see .shop .item etc.),
+         and this card lives inside #convert, not a real station shop
+         list, so without it here it would silently fall back to the
+         plain dark-theme .item look instead of matching. Sits directly on
+         top of this tray's own gold border (see .convert-goal-card's own
+         CSS), not inline in the list -- a card resting on the rim, not
+         one more row inside it. Empty/hidden for every other way Convert
+         gets opened -- the floating button, the inventory drawer's icon --
+         where there's no specific item context to show. -->
+    <div class="convert-goal-card shop" id="convertGoalCard"></div>
     <!-- Same 8-column grid as the Inventory drawer's own element display
          (see renderDrawer()) -- tapping a suitable (3+) element here sets
          it as the FROM side directly, a shortcut alongside the "Pick
@@ -3923,7 +3964,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="elgrid" id="convertQuickGrid"></div>
     <div class="convert-row">
       <div class="convert-col">
-        <div class="convert-qty">3x</div>
         <div class="convert-stack" id="convFromStack">
           <span class="convert-ghost"></span>
           <span class="convert-ghost"></span>
@@ -3934,11 +3974,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         </div>
       </div>
       <div class="convert-col">
-        <div class="convert-qty" aria-hidden="true" style="visibility:hidden">1x</div>
         <button type="button" class="convert-arrow" id="convertGo" disabled aria-label="Convert">➜</button>
+        <div class="convert-qty">3:1</div>
       </div>
       <div class="convert-col">
-        <div class="convert-qty">1x</div>
         <button type="button" class="convert-box" id="convToBox">
           <span class="convert-sym" id="convToSym">+</span>
           <span class="convert-label" id="convToLabel">Pick element</span>
@@ -4596,7 +4635,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "🏡",
     "Homestead",
     "CAPSTONE",
-    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + 🧑‍🌾 Farm + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",
+    "🚜 Tractor + 🐔 Chicken + 🌾 Grain + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",
     20
    ]
   },
@@ -5363,146 +5402,146 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
-  "Turquoise": 13.9,
-  "Opal": 11.0,
-  "Pearl": 13.6,
-  "Limestone": 2.6,
-  "Clock": 8.2,
-  "Bee": 8.1,
-  "Furnace": 4.3,
-  "Solar System": 15.6,
-  "Life": 16.5,
-  "Renewable Grid": 29.5,
-  "Milk": 8.9,
-  "Tree": 4.8,
-  "Tractor": 16.0,
-  "Book": 11.7,
-  "Building": 8.2,
-  "Wheel": 10.5,
-  "Volcano": 13.4,
-  "Compass": 7.4,
-  "Space Station": 23.4,
-  "Wire": 3.5,
-  "Telescope": 11.6,
-  "Knit Scarf": 20.2,
-  "Dinosaur": 12.0,
-  "Red Dye": 14.4,
-  "Croissant": 12.4,
-  "Library": 13.7,
-  "Log Cabin": 7.2,
-  "Sheep": 7.3,
-  "Flour": 8.8,
-  "Éclair": 13.9,
-  "Cream": 10.8,
-  "Sailboat": 8.7,
-  "Mushroom": 5.0,
-  "Turbine Blade": 16.5,
-  "Fiberglass": 10.2,
-  "Deer": 6.2,
-  "Sand": 2.9,
-  "Magnet": 4.9,
-  "Water": 2.3,
-  "Robot": 17.8,
-  "Amber": 10.7,
-  "Cruise Ship": null,
-  "Black Dye": 16.0,
-  "Ruby": 12.9,
-  "Bone": 4.9,
-  "Solar Panel": 8.3,
-  "Glass Vial": 10.1,
-  "Rope": 6.8,
-  "Glass": 5.2,
-  "Wool": 7.5,
-  "Brass": null,
-  "Bicycle": 14.6,
-  "Skyscraper": 15.8,
-  "DNA": 3.7,
-  "Strawberries": 10.4,
-  "Oven": 11.3,
-  "Grand Banquet": 23.1,
-  "Sugar": 3.0,
-  "Yeast": 4.9,
-  "Fabric": 8.1,
-  "Windmill": 19.0,
-  "Car": 17.0,
-  "Central Station": 24.7,
-  "Blueberries": 13.2,
-  "Fertilizer": 3.0,
-  "Diamond": 12.6,
-  "Biofuel": 10.4,
-  "Beach Town": 26.5,
-  "Canoe": 5.6,
-  "Honey": 7.8,
-  "Apple Pie": 12.8,
-  "Bridge": 6.9,
-  "Rocket": 21.3,
-  "Yarn": 12.9,
-  "Cloud": 5.1,
-  "Berry Cupcakes": 21.8,
-  "Chicken": 10.6,
-  "Helicopter": 20.9,
-  "Planet": 8.3,
-  "Soil": 4.5,
-  "Star": 13.7,
-  "Bread": 12.4,
-  "Orca": 13.3,
-  "Cake": 13.2,
-  "Maglev Train": 15.7,
+  "Helicopter": 21.0,
+  "Rainbow": 14.5,
+  "Diamond": 12.3,
+  "Knit Scarf": 20.6,
+  "Biofuel": 10.9,
+  "Banana": 6.9,
+  "Telescope": 11.9,
+  "Water": 2.4,
   "Dough": 9.0,
-  "Banana Bread": 17.1,
-  "Motorcycle": 17.7,
-  "Coral Reef": 16.9,
-  "Fruit Cake": 20.2,
-  "Water Turbine": 21.8,
-  "Aluminum Alloy": 5.2,
-  "Fireworks": 4.0,
-  "Salmon": 11.5,
-  "Rainbow": 14.9,
-  "Natural Gas": 2.7,
-  "Basket": 7.8,
-  "Rubber": 5.2,
-  "Engine": 7.2,
-  "Metropolis": 21.6,
-  "Seaweed": 4.8,
-  "Statue": 7.3,
-  "Computer": 15.3,
-  "Yellow Dye": 15.5,
-  "Chocolate Cake": 13.3,
-  "Clay": 2.4,
-  "Speedboat": 16.8,
-  "Banana": 6.8,
-  "Paper": 11.8,
-  "Cow": 7.9,
-  "Chocolate": 8.9,
-  "Sushi Restaurant": 18.6,
-  "Battery": 4.7,
-  "Blue Dye": 17.7,
-  "Museum": 17.8,
-  "Microchip": 8.4,
-  "Satellite Dish": 10.9,
-  "Apple": 6.5,
-  "Gemstone Collection": 19.4,
-  "Stainless Steel": 5.1,
-  "Steel": 2.7,
+  "Yellow Dye": 15.3,
   "Tools": 3.9,
-  "Grain": 8.0,
-  "Plant Fiber": 6.8,
-  "Plastic": 8.2,
-  "Light Bulb": 7.1,
-  "Concrete": 5.2,
-  "Homestead": 20.0,
-  "Butter": 10.9,
-  "Lighthouse": 13.2,
-  "Pretzel": 11.1,
+  "Croissant": 12.3,
+  "Geothermal Pump": 16.0,
+  "Blue Dye": 17.0,
+  "Star": 14.1,
   "Egg": 5.6,
-  "Farm": 7.5,
-  "Sunflower": 16.8,
+  "Log Cabin": 7.2,
+  "Ecosystem": 22.0,
+  "Car": 17.0,
+  "Yeast": 4.8,
+  "Banana Bread": 17.4,
+  "Wool": 7.3,
+  "Grand Banquet": 23.5,
+  "Ruby": 13.5,
+  "Glass Vial": 10.1,
+  "Fiberglass": 10.6,
+  "Soil": 4.5,
+  "Seaweed": 5.0,
+  "Motorcycle": 18.6,
+  "Plant Fiber": 6.9,
+  "Flour": 9.1,
+  "Mushroom": 4.9,
+  "Salmon": 11.3,
+  "Blackberries": 10.2,
+  "Sheep": 7.5,
+  "Apple": 6.4,
+  "Satellite Dish": 11.2,
+  "Opal": 10.8,
   "Titanium Alloy": 5.5,
-  "Ecosystem": 21.9,
-  "Fossil": 10.5,
-  "Geothermal Pump": 15.6,
+  "Magnet": 4.7,
+  "Limestone": 2.5,
+  "Blueberries": 13.3,
+  "Glass": 5.1,
+  "Cake": 13.0,
+  "Turbine Blade": 16.8,
+  "Furnace": 4.5,
+  "Pearl": 13.8,
+  "Windmill": 18.8,
+  "Book": 11.4,
+  "Tree": 5.0,
+  "Honey": 7.7,
+  "Sugar": 2.9,
+  "Amber": 10.7,
+  "Dinosaur": 11.9,
+  "Renewable Grid": 29.1,
+  "Light Bulb": 7.1,
+  "Bicycle": 14.6,
+  "Volcano": 13.4,
+  "Bone": 5.0,
+  "Fertilizer": 3.0,
+  "Sushi Restaurant": 18.7,
+  "DNA": 3.7,
+  "Lighthouse": 13.6,
+  "Canoe": 7.6,
+  "Bridge": 7.0,
+  "Red Dye": 14.3,
+  "Sunflower": 17.7,
+  "Wheel": 10.3,
+  "Turquoise": 14.4,
+  "Library": 13.6,
+  "Apple Pie": 12.7,
+  "Deer": 6.2,
+  "Rubber": 5.2,
+  "Statue": 7.2,
+  "Life": 17.0,
+  "Aluminum Alloy": 4.9,
+  "Butter": 10.8,
+  "Coral Reef": 17.1,
+  "Fabric": 8.1,
+  "Compass": 7.3,
+  "Fruit Cake": 20.1,
+  "Maglev Train": 16.1,
+  "Fossil": 10.7,
+  "Gemstone Collection": 19.2,
+  "Cow": 7.9,
+  "Clock": 8.2,
+  "Computer": 15.3,
+  "Beach Town": 27.6,
+  "Robot": 17.7,
+  "Bread": 12.7,
+  "Berry Cupcakes": 21.7,
+  "Rope": 6.8,
+  "Chocolate Cake": 13.4,
+  "Black Dye": 16.2,
+  "Metropolis": 22.1,
+  "Sailboat": 8.7,
+  "Yarn": 13.1,
+  "Cruise Ship": null,
+  "Speedboat": 21.4,
+  "Grain": 7.7,
+  "Clay": 2.4,
+  "Stainless Steel": 5.0,
+  "Chocolate": 8.4,
+  "Oven": 11.2,
+  "Pretzel": 11.3,
+  "Concrete": 5.0,
+  "Natural Gas": 2.7,
+  "Homestead": 20.2,
+  "Rocket": 21.6,
+  "Engine": 7.0,
+  "Skyscraper": 15.7,
+  "Cream": 10.7,
+  "Plastic": 8.2,
+  "Chicken": 10.6,
+  "Central Station": 27.3,
+  "Basket": 8.0,
+  "Tractor": 16.1,
+  "Fireworks": 4.0,
   "Trumpet": null,
-  "Blackberries": 10.2
+  "Sand": 2.8,
+  "Bee": 7.8,
+  "Orca": 12.9,
+  "Battery": 4.5,
+  "Éclair": 13.5,
+  "Microchip": 8.1,
+  "Paper": 11.4,
+  "Museum": 18.0,
+  "Strawberries": 10.4,
+  "Farm": 7.3,
+  "Steel": 2.8,
+  "Milk": 8.9,
+  "Building": 8.0,
+  "Space Station": 23.2,
+  "Solar Panel": 8.2,
+  "Solar System": 15.8,
+  "Wire": 3.7,
+  "Water Turbine": 22.4,
+  "Planet": 8.1,
+  "Cloud": 4.9,
+  "Brass": null
  }
 }/*__GAME_DATA_END__*/;
 
@@ -9180,6 +9219,11 @@ function openOverlay(id){
   el.classList.add("open");
   const focusable = el.querySelector("button, input, [tabindex]");
   if (focusable) focusable.focus();
+  // Fades everything behind Convert (and its own pinned goal card, which
+  // sits above #convert's own box -- see #convertGoalCard's comment) while
+  // it's open -- same idea as #jobScrim for the Jobs sheet, just Convert
+  // never had one of its own until now.
+  if (id === "convert") document.getElementById("convertScrim").classList.add("open");
   updateHub(); // e.g. Settings' hub button going green while it's open
 }
 // The settings hub + its 3 sub-screens (see #settings' own HTML comment)
@@ -9233,6 +9277,7 @@ function closeOverlay(id){
   if (id === "convert"){
     convertGoalEntry = null;
     document.getElementById("convertGoalCard").innerHTML = "";
+    document.getElementById("convertScrim").classList.remove("open");
   }
   // showSummary() forces #backdrop on against state.lastStation's art even
   // when the current screen isn't "station" (see its own comment) -- put
@@ -12814,6 +12859,7 @@ document.getElementById("convertGo").addEventListener("click", () => {
   // player's already found and used it once.
 });
 document.getElementById("convertClose").addEventListener("click", () => closeOverlay("convert"));
+document.getElementById("convertScrim").addEventListener("click", () => closeOverlay("convert"));
 
 /* Convert-confirm choreography: a small punch on the button itself; the
    FROM stack pops out of existence while, simultaneously, the resulting
