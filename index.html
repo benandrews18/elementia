@@ -1190,7 +1190,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .map-canvas::before{
   content:""; position:absolute; inset:0;
   background:url("backdrops/diamond_map_full.webp") center/cover no-repeat;
-  opacity:.75;
+  opacity:.96;
 }
 .map-paths{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none}
 /* Gold with a dark halo (drop-shadow, not a plain stroke color) so the
@@ -1745,7 +1745,16 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
 }
-.item .iem{font-size:38px; line-height:1.15; width:34px; text-align:center; flex:none}
+/* Glossy bevelled icon "slot" -- same suit-colored border language as the
+   card's own outer border, radial gradient + inset highlight/shadow for
+   the same raised-badge look .hubbtn .hi already uses elsewhere. */
+.item .iem{
+  font-size:30px; line-height:1; width:52px; height:52px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:12px; border:2.5px solid var(--suit);
+  background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--sunken) 100%);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.1), inset 0 -3px 5px rgba(0,0,0,.3);
+}
 .item .ibody{flex:1; min-width:0}
 .item .itop{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
@@ -1796,16 +1805,28 @@ body[data-screen="market"] #trackedPill{display:none}
    against the card -- overridden below, right after that shared block,
    with a plain brightness/scale press instead. */
 .craftbtn{
-  flex:none; align-self:stretch; width:72px;
+  flex:none; align-self:center; width:60px; margin:0 10px 0 2px;
   display:flex; align-items:center; justify-content:center; text-align:center;
-  border:none; border-left:1.5px solid var(--line);
-  border-radius:0 10px 10px 0;
-  padding:4px 6px; font-size:13px; font-weight:800; line-height:1.15; background:var(--card);
+  border:none; border-radius:10px;
+  padding:10px 5px; font-size:13px; font-weight:800; line-height:1.15; background:var(--sunken); color:var(--mute);
 }
-.craftbtn.go{background:var(--ok); border-left-color:var(--ok); color:#fff}
-.craftbtn.go:hover{filter:brightness(1.07)}
-.craftbtn:disabled{background:var(--sunken); color:var(--mute); border-left-color:var(--line2)}
-.craftbtn.done{background:var(--ok-soft); border-left-color:var(--ok-line); color:var(--ok); animation:none}
+/* Chunky glossy "go" state -- gradient fill, inset top highlight, and a
+   solid offset shadow it visibly sinks into on press (same ledge/lift
+   language .bigbtn uses, see the shared block below; this used to opt
+   out of that entirely because it was flush-mounted to the card's own
+   edge -- now that it's a real standalone rounded button with its own
+   margin, that conflict is gone and it can share the treatment). */
+.craftbtn.go{
+  background:linear-gradient(180deg, #57d488, var(--ok) 62%); color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 3px 0 #184a29;
+}
+.craftbtn.go:hover{filter:brightness(1.05)}
+.craftbtn.go:not(:disabled):active{
+  transform:translateY(3px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 0 0 transparent;
+}
+.craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
+.craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
 /* Batch crafting's quantity strip -- a second panel stacked under the
    Craft button rather than beside it, so the button keeps its own full-
    width tap target (see .craftbtn above) instead of shrinking to share a
@@ -2283,13 +2304,10 @@ button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
 button.setting-row:not(:disabled):active, .mode-card:active{
   transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent;
 }
-/* Craft button opt-out from the shared ledge/lift look (see the block just
-   above) -- it now fills the card's own right edge flush, so a 3D lift
-   shadow would stick out past the card's own rounded bottom edge instead
-   of reading as part of it. Flat panel instead, with a brightness dip
-   standing in for the "pressed" feedback. */
-.craftbtn{box-shadow:none}
-.craftbtn:not(:disabled):active{transform:none; filter:brightness(.88)}
+/* Craft button now defines its own box-shadow/active treatment directly
+   (see .craftbtn.go) -- it's a real standalone rounded button with its
+   own margin now, not flush-mounted to the card's edge, so the shared
+   ledge/lift look above no longer conflicts and doesn't need overriding. */
 #convert .bigbtn, #convert .tbtn, #convertPicker .bigbtn, #convertPicker .tbtn{
   animation:none; box-shadow:none; transition:transform .12s cubic-bezier(.3,.8,.4,1);
 }
