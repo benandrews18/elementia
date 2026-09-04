@@ -39,7 +39,7 @@
   --line:#2a5a72; --line2:#1c4257; --bg:#0f2733; --card:#163544;
   --bg-soft:#122e3c; --sunken:#1c4257; --pip:#c9d3e0;
   --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c; --ok-bright:#4fe583;
-  --bad:#f0674c; --bad-soft:#371913;
+  --bad:#f0674c; --bad-soft:#371913; --bad-dark:#a3311d;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
   --hub-map:#4d7cf2; --hub-travel:#3aa9a0;
   --jobcard-bg:#2a1a30;
@@ -341,7 +341,10 @@ body[data-picking] #topbar{display:none}
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }
-#hubHome.face-close{background:var(--sunken); color:#000; box-shadow:none}
+/* Same pale blue-grey as the station shop's own item cards (see .shop
+   .item) -- was var(--sunken), the game's plain dark panel color, which
+   read as just another dark disc rather than a deliberately "inert" one. */
+#hubHome.face-close{background:linear-gradient(to right, #dde7f4, #c9daee); color:#000; box-shadow:none}
 #hubHome.face-close:hover{filter:none}
 #hubHome .hub-badge{top:-2px; right:-2px}
 .hub-badge{
@@ -422,6 +425,11 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .map-job-chip:hover{background:var(--bg-soft)}
 .map-job-chip.selected{border-color:var(--ok-line); background:var(--ok-soft); color:var(--ok)}
+/* Marks the one pinned chip currently being tracked -- the pin toggle
+   itself moved to a magnifying-glass icon (see #pinsBtn) since "tracking"
+   reads more like "looking this up" than "pinning" now, so the selected
+   chip gets its own small glass badge to match. */
+.mj-search-badge{font-size:13px; line-height:1}
 .mj-em{font-size:16px; line-height:1}
 .map-job-empty-note{margin-bottom:18px}
 /* The one instruction on the "choose your first station" screen -- the
@@ -1744,7 +1752,12 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 /* Halved from the old 10px on every side so the icon slot (see .item .iem
    below) sits roughly twice as close to the card's own outer border. */
-.item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:center; padding:5px 10px 5px 5px}
+/* align-items:stretch (was center) -- .ibody now spans the exact same
+   height as .iem (see its own flex-column/space-between below) instead
+   of floating centered against it, so the name's own top edge lines up
+   with the icon box's top border and the recipe's own bottom edge lines
+   up with its bottom border. */
+.item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:stretch; padding:5px 10px 5px 5px}
 .capbox .item .irow{padding:0}
 .item.can{background:var(--ok-soft); border-color:var(--ok-line)}
 /* Station shop lists specifically -- a thin pale grey border instead of
@@ -1806,19 +1819,15 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 /* "Needed for [selected pinned item]" badge -- the SELECTED item's own
    icon, not this card's, so it reads as a pointer back to what it's
-   feeding into. True top-right corner now (was offset in from it to dodge
-   the pin toggle, which has since moved to the opposite corner -- see
-   .shop-pin) -- same 28px size as the owned checkmark below (both now
-   match .crafted-row .station-item-icon's own footprint) and a higher
-   z-index so it wins whenever the two genuinely overlap (an owned item
-   that's also the tracked one itself, not just a component of it) --
-   it used to render behind the checkmark (plain DOM/paint order put the
-   checkmark, a ::after pseudo-element, above an earlier real sibling),
-   silently hiding the more informative of the two badges. */
+   feeding into. Bottom-left corner now (was top-right, sharing that
+   corner with the owned checkmark/stock count) and sized up (28px ->
+   36px) so it reads clearly on its own -- the bottom-left corner was
+   sitting empty otherwise (top-left is .shop-pin, top-right is the
+   owned checkmark/stock badge). */
 .item-pin-badge{
-  position:absolute; top:-8px; right:-8px; width:28px; height:28px;
+  position:absolute; bottom:-8px; left:-8px; width:36px; height:36px;
   border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
 }
 /* Glossy bevelled icon "slot", matching images/game ui reference
@@ -1856,19 +1865,33 @@ body[data-screen="market"] #trackedPill{display:none}
   font-size:42px; line-height:1; pointer-events:none;
   box-shadow:inset 0 2px 3px rgba(255,255,255,.25), inset 0 -4px 6px rgba(0,0,0,.25);
 }
-.item .ibody{flex:1; min-width:0}
-.item .itop{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+/* flex column + space-between -- pins .itop (the name) to this box's own
+   top edge and .recipe to its bottom edge, rather than letting the two
+   sit stacked with whatever gap their own content naturally left. Paired
+   with .irow's own align-items:stretch above, this box's top/bottom now
+   land exactly on .iem's own border. */
+.item .ibody{flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between}
+.item .itop{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 /* 5+ point items only (see itemSuitCosts()) -- small suit-colored circles
    next to the item name, depicting the mechanic being considered (spend
    elements of these suits alongside crafting) without yet wiring up any
-   actual cost -- purely a preview of the idea. */
-.isuit-costs{display:inline-flex; gap:3px; vertical-align:middle}
+   actual cost -- purely a preview of the idea. Gap to the name bumped
+   from .itop's own 9px (now 12px) for a bit more breathing room between
+   the two. */
+.isuit-costs{display:inline-flex; gap:4px; vertical-align:middle}
+/* Sized up a notch (18px -> 22px) for better legibility next to the name. */
 .isuit-badge{
-  width:18px; height:18px; border-radius:50%; flex:none;
+  width:22px; height:22px; border-radius:50%; flex:none;
   display:flex; align-items:center; justify-content:center;
   background:var(--suit); box-shadow:inset 0 1px 2px rgba(255,255,255,.35), inset 0 -1px 2px rgba(0,0,0,.25);
 }
+/* Greyed out once the player doesn't hold enough of that suit's elements
+   yet to cover this badge's own slot (see heldOfSuit()/suitCostBadgesHTML())
+   -- desaturates the fill AND dims the icon on top of it, rather than
+   just fading the whole badge, so it still reads as "this suit, just not
+   enough of it" instead of a generic disabled look. */
+.isuit-badge.need{filter:grayscale(.7) brightness(.75)}
 /* SUIT_ICON's art is a black glyph on transparent (built for sitting on
    the element-card popup's own white bubble) -- inverted to white here so
    it reads against this badge's own solid suit-color fill instead. */
@@ -1880,7 +1903,7 @@ body[data-screen="market"] #trackedPill{display:none}
    a gutter to keep the list away from, and left-justifying against the
    title reads as one coherent block rather than the list drifting off to
    whatever the longest line happens to be. */
-.recipe{font-size:14px; color:var(--ink2); margin-top:4px; display:flex; flex-wrap:wrap;
+.recipe{font-size:14px; color:var(--ink2); margin-top:8px; display:flex; flex-wrap:wrap;
   align-items:center; justify-content:flex-start; gap:5px}
 .plus{color:#fff; font-weight:700}
 /* Item ingredient tokens are icon-only now -- no border/background/text,
@@ -1921,13 +1944,13 @@ body[data-screen="market"] #trackedPill{display:none}
    ...) keeps the original green/red language, same reasoning .shop .item's
    own light-card scoping above already uses. */
 .shop .tok.el, .shop .tok.el.have{
-  background:transparent; border-color:#1c2b3d; color:#1c2b3d;
+  background:#fff; border-color:#1c2b3d; color:#1c2b3d;
 }
 /* Needed elements keep a colored (red) border/text rather than going
    black too -- confirmed as the one state that should still stand out
    at a glance, unlike "have" which reads fine as plain black+checkmark. */
 .shop .tok.el.need{
-  background:transparent; border-color:var(--bad); color:var(--bad);
+  background:#fff; border-color:var(--bad-dark); color:var(--bad-dark);
 }
 /* Real pushable button -- solid offset "ledge" shadow it sinks into on
    press, same language as the craft button/pin toggle. Border uses the
@@ -2701,36 +2724,56 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   border:8px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
   position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
 }
-/* Straddles the card's own border (was tangent to its INNER face) -- same
-   overhang language .el-pop-bubble already uses on the element-card
-   popup (a negative offset, not a width/height change, so the circle can
-   grow without affecting how far it hangs past the edge), so a badge
-   here visually sits ON the black frame the same way those sit on their
-   own suit-colored one. */
+/* Tangent to the card's own INNER border face (was a negative-offset
+   straddle/overhang) -- a 0 offset on an absolutely-positioned child
+   resolves against the nearest positioned ancestor's PADDING box, which
+   for .pc-card (padding:20px 20px 16px) IS exactly the border's inner
+   face, so the badge now sits fully inside the frame, tangent to it,
+   rather than half hanging past its outer edge. */
 .pc-badge{
-  position:absolute; top:-18px; right:-18px; width:60px; height:60px; border-radius:50%;
+  position:absolute; top:0; right:0; width:60px; height:60px; border-radius:50%;
   background:#f6cc4d; border:4px solid #000; color:#181614;
   display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
 }
 .pc-badge .n{font-size:20px; font-weight:800}
 .pc-badge .l{font-size:7px; font-weight:800; letter-spacing:.5px; margin-top:1px; color:#5a4c14}
-/* Bottom-right -- the station this card was made at. */
+/* Bottom-right -- the station this card was made at. Icon filled out to
+   the badge's own edge (see its img rule below) and a "Station:" label
+   added to its left, at the same 8px inset as the badge's own tangent
+   offset above. */
 .pc-station-badge{
-  position:absolute; bottom:-18px; right:-18px; width:60px; height:60px; border-radius:50%;
+  position:absolute; bottom:0; right:0; width:60px; height:60px; border-radius:50%;
   background:#fff; border:4px solid #000; color:#181614;
   display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
 }
-.pc-station-badge img, .pc-station-badge svg{width:1em; height:1em}
+/* Fills the circle right up to its own border now (was 1em against a
+   26px font-size, leaving visible padding around it) -- matches how
+   .pc-suitcost-badge's own art already fills most of ITS circle. */
+.pc-station-badge img, .pc-station-badge svg{width:82%; height:82%}
+/* "Station:" label -- sits to the left of the badge, same bottom-right
+   corner group, at the card's own inner-border inset. */
+.pc-station-label{
+  position:absolute; bottom:14px; right:66px; font-size:11px; font-weight:800;
+  letter-spacing:.4px; color:#5a5548; z-index:2;
+}
 /* Suit-cost badges (see itemSuitCosts()) -- up to 3 stacked circles in the
    top-left corner, images/item card redesign 0904.png's own layout.
    Empty/hidden for a 4-points-or-under item. No border of their own
    (unlike the other two badges) -- the reference shows them as flat
-   solid-color fills sitting directly against the card's own black frame. */
+   solid-color fills sitting directly against the card's own black frame.
+   Nudged down (see its own top value) to leave room for the "Cost:"
+   label above it. */
 .pc-suitcosts{
-  position:absolute; top:-18px; left:-18px; z-index:2;
+  position:absolute; top:26px; left:0; z-index:2;
   display:flex; flex-direction:column; gap:8px;
+}
+/* "Cost:" label -- sits directly above the suit-cost stack, in the strip
+   .pc-suitcosts' own 26px top offset now leaves clear above it. */
+.pc-cost-label{
+  position:absolute; top:0; left:2px; font-size:11px; font-weight:800;
+  letter-spacing:.4px; color:#5a5548; z-index:2;
 }
 .pc-suitcost-badge{
   width:48px; height:48px; border-radius:50%; flex:none;
@@ -2768,16 +2811,17 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Holds Item Info alongside the (usually hidden) Back button -- a plain
    row, not .pc-card-wrap's own column, so the two sit side by side
    whenever Back is showing. */
-.pc-actions{display:flex; gap:10px; align-items:stretch}
+.pc-actions{display:flex; gap:10px; align-items:center; justify-content:center}
 /* Same green-fill/offset-drop-shadow "ledge" look as .bigbtn (the mode-
-   select screen's own Continue button) -- was a muted soft-green outline
-   button, now the same real chrome-button language everything else in
-   this pass uses. Shorter than .bigbtn's own 12px vertical padding (8px)
-   -- explicitly asked to be a shorter button than that shared default.
-   flex:1 (was width:100%) -- it shares .pc-actions with the Back button
-   now instead of always owning the row alone. */
+   select screen's own Continue button). Shorter than .bigbtn's own 12px
+   vertical padding (8px) -- explicitly asked to be a shorter button than
+   that shared default. flex:none + horizontal padding (was flex:1,
+   stretching to fill the row) -- sized to just fit its own text now,
+   with .pc-actions' own justify-content:center keeping it (and the Back
+   button beside it) centered under the card instead of hugging the row's
+   left edge once neither one stretches to fill it any more. */
 .pc-tree-btn{
-  flex:1; padding:8px; border-radius:11px; border:none;
+  flex:none; padding:8px 22px; border-radius:11px; border:none;
   background:var(--ok); color:#fff; font-size:14px; font-weight:800;
   letter-spacing:.2px; cursor:pointer; box-shadow:0 3px 0 #24774a;
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1), filter .15s ease;
@@ -2785,18 +2829,22 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-tree-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
 /* Back button -- a left arrow next to a small circle repeating the
    previous card's own icon (see updateCardPopBackBtn()), one tappable
-   unit. Same ledge-button language as .pc-tree-btn beside it, just its
-   own neutral (not green) fill since this isn't the primary action. */
+   unit. No card/background of its own any more (was the same ledge-
+   button fill as .pc-tree-btn, just neutral-colored) -- just the two
+   pieces sitting directly on whatever's behind them, so only the real
+   action (Item Info) reads as a button. */
 .pc-back-btn{
   flex:none; display:flex; align-items:center; justify-content:center; gap:6px;
-  padding:0 12px; border-radius:11px; border:none;
-  background:var(--sunken); color:var(--ink); cursor:pointer;
-  box-shadow:0 3px 0 rgba(0,0,0,.22);
-  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
+  padding:0; border:none; background:none; color:var(--ink); cursor:pointer;
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), opacity .12s ease;
 }
 .pc-back-btn[hidden]{display:none}
-.pc-back-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
-.pc-back-arrow{font-size:20px; font-weight:800; line-height:1}
+.pc-back-btn:not(:disabled):active{transform:scale(.9); opacity:.7}
+/* Bigger and bolder (was 20px/800-weight alone) -- a stroke on top of the
+   already-bold weight is what actually reads as "thicker" at a glyph
+   this size, weight alone plateaus well before it looks like a different
+   stroke width. */
+.pc-back-arrow{font-size:32px; font-weight:800; line-height:1; -webkit-text-stroke:1.5px currentColor}
 .pc-back-icon{
   width:34px; height:34px; border-radius:50%; flex:none; overflow:hidden;
   background:#fff; border:2px solid #000; color:#181614;
@@ -2805,21 +2853,24 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-back-icon img{width:70%; height:70%; object-fit:contain}
 /* First-craft fly-and-stack mini cards (see flyIngredientsAndReveal()) --
    same visual language as the real inspection cards, just smaller: .fc-item
-   mirrors .pc-card (dark face, thick suit-colored top stripe), .fc-el
-   mirrors .el-pop-card (white face, thick suit-colored border all round).
-   Position/size are set inline per-card in JS (start point, fan offsets);
-   this only owns the fixed "what a card of this kind looks like" shape. */
+   mirrors .pc-card's current look (white face, plain black frame, was a
+   dark face with a thick suit-colored top stripe matching the card's own
+   OLD design before that got reworked), .fc-el still mirrors .el-pop-card
+   (white face, thick suit-colored border all round) -- that one wasn't
+   part of this round's redesign, so it's untouched. Sized up (92px ->
+   120px) to read more clearly mid-flight. Position/size are set inline
+   per-card in JS (start point, fan offsets); this only owns the fixed
+   "what a card of this kind looks like" shape. */
 .fc-card{
-  width:92px; aspect-ratio:5/7; display:flex; flex-direction:column;
+  width:120px; aspect-ratio:5/7; display:flex; flex-direction:column;
   align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.45);
-  gap:4px; padding:10px 6px 8px; text-align:center; box-sizing:border-box;
+  gap:4px; padding:12px 8px 10px; text-align:center; box-sizing:border-box;
 }
 .fc-item{
-  background:var(--card); border-radius:14px; border:2px solid var(--suit, #4a4f5c);
-  border-top-width:12px;
+  background:#f7f5f0; border-radius:16px; border:4px solid #000;
 }
-.fc-item .fc-icon{font-size:32px; line-height:1}
-.fc-item .fc-name{font-size:10.5px; font-weight:800; color:#fff; line-height:1.2}
+.fc-item .fc-icon{font-size:40px; line-height:1}
+.fc-item .fc-name{font-size:11.5px; font-weight:800; color:#181614; line-height:1.2}
 .fc-el{
   background:#fff; border-radius:14px; border:7px solid var(--suit, #4a4f5c);
 }
@@ -3466,10 +3517,20 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   padding:12px 14px; background:var(--card);
 }
 .arr-tray-card{
-  width:100%; aspect-ratio:1; max-height:150px;
+  position:relative; width:100%; aspect-ratio:1; max-height:150px;
   background:var(--jobcard-bg); border:2.5px solid var(--gold); border-radius:14px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   padding:8px; text-align:center;
+}
+/* Inventory drawer's own crafted-items grid reuses this exact card/grid
+   language (see renderDrawer()) rather than inventing a second "simple
+   item card" style -- .inv-item-grid resets the couple of .arr-tray
+   properties (flex-scrolling panel sizing) that only made sense inside
+   Arrange Items' own fixed-height tray, since here the drawer's own
+   .dbody already owns scrolling. */
+.inv-item-grid{flex:none; min-height:0; overflow:visible; max-height:none; padding:0; background:none}
+.inv-card-qty{
+  position:absolute; top:4px; right:6px; font-size:11px; font-weight:800; color:var(--mute);
 }
 .arr-tray-card .em{font-size:38px; line-height:1}
 .arr-tray-card .nm{font-size:12px; font-weight:800; color:#fff; line-height:1.2}
@@ -3618,7 +3679,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="marketArc" aria-hidden="true"></div>
 
 <!-- floating pins + convert buttons, sitting just above the hub -->
-<button type="button" class="floatbtn" id="pinsBtn" title="Pinned items" aria-label="Pinned items" aria-expanded="false">📌</button>
+<!-- Magnifying glass now (was 📌) -- scoped to just this one button;
+     every OTHER pin glyph in the game (the shop's own pin toggle, the
+     Bingo card's corner pin, the "needed for X" badge, ...) stays the
+     literal pushpin it always was. -->
+<button type="button" class="floatbtn" id="pinsBtn" title="Pinned items" aria-label="Pinned items" aria-expanded="false">🔍</button>
 <button type="button" class="floatbtn" id="quickConvertBtn" title="Convert Elements" aria-label="Convert Elements">🔄</button>
 
 <!-- pinned-items tray, slides up from behind the hub (see #pinsTray CSS) -->
@@ -3691,7 +3756,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
   <div class="pc-card-wrap">
     <div class="pc-card" id="cpCard">
+      <div class="pc-cost-label" id="cpCostLabel" hidden>Cost:</div>
       <div class="pc-suitcosts" id="cpSuitCosts"></div>
+      <div class="pc-station-label">Station:</div>
       <div class="pc-station-badge" id="cpStationBadge"></div>
       <div class="pc-badge"><span class="n" id="cpPts"></span><span class="l">PTS</span></div>
       <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
@@ -3710,7 +3777,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="pc-back-arrow">←</span>
         <span class="pc-back-icon" id="cpBackIcon"></span>
       </button>
-      <button type="button" class="pc-tree-btn" id="cpTreeBtn">📖 Item Info</button>
+      <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
     </div>
   </div>
 </div>
@@ -5960,14 +6027,29 @@ function itemSuitCosts(name){
   const qty = itemSuitCostQty(name);
   return ITEM_SUIT_COSTS[name] = qty ? Array(qty).fill(itemSuitOf(name)) : [];
 }
+// Total raw elements currently held belonging to one suit -- e.g. every
+// organic element's own count summed together, not any one symbol alone,
+// since the extra cost can be paid with any mix of that suit's elements.
+function heldOfSuit(suit){
+  return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
+    .reduce((sum, el) => sum + count(el), 0);
+}
 /* Same leaf/flame/anvil/mountain art as the element-card popup's own suit
    glyphs (SUIT_ICON, defined below) -- reused here rather than a second
-   icon set, so a suit reads as the same symbol everywhere it appears. */
+   icon set, so a suit reads as the same symbol everywhere it appears.
+   Each badge is its own little meter slot -- the i-th badge (0-based)
+   lights up once total held-of-that-suit exceeds i, so a player sitting
+   on 1 of 2 required sees exactly one badge lit and one greyed instead of
+   an all-or-nothing readout. */
 function suitCostBadgesHTML(name){
   const costs = itemSuitCosts(name);
   if (!costs.length) return "";
-  return `<span class="isuit-costs">${costs.map(s =>
-    `<span class="isuit-badge" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost">${SUIT_ICON[s]}</span>`).join("")}</span>`;
+  const heldCache = {};
+  return `<span class="isuit-costs">${costs.map((s, i) => {
+    if (!(s in heldCache)) heldCache[s] = heldOfSuit(s);
+    const have = heldCache[s] > i;
+    return `<span class="isuit-badge${have ? "" : " need"}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
+  }).join("")}</span>`;
 }
 const ORGANIC_ICON_B64 = "iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAYAAACLz2ctAAAj30lEQVR4nO1dC1yN9/9/nlMoRbkWGVoXKUqyLlKIpnRz68K0iBWbH2O/tDEq/LeSSy4JK7FsqLy2CLuYwub2KzOUFc2wCcllUlTnfP+vz3ffb3s6S8I5nefU9/N6Pa9Ol3N6nu/zfj7X9+fz5TgmTJgwYcKESTNKVFSUhOM4OJgwaV5JT0/XoK/5Zv7fTFqxIIQkPM+jv1+i18PDw2tVfU5MWols2bKlDXzV0tLi8vPzp4aEhDzp27dvqqrPi0kr0HrDhw/XJK/7b9q06UtXV1esBYcOHZqo6vNj0rL9POzraWpqcvv3758dHBx8u1u3bgC+qo4dO8qWLFmyTdXnyaQFCUKIz8nJ0aTRrUQi4W7cuOE4efLkr/v164e1HsdxtRKJRNqhQweUmpoarepzZtJCgBcVFYXNLIiGhgb38OFDx+XLl2fY29sjTU1NAF4Nz/MyiUSCgainpye1t7c3Vu2ZM1F34f39/etSKggh7cuXL7/z4Ycf7h05ciRq3749gE0GWo9Gv/SriYmJNC0trZ9qT5+JOgov9O9AEEK6J0+efDc6OvrXESNGoLZt2wrNLX2ND/r9G2+8IX3y5Im5ai+FidqYWACdUNuBmUUIdYiNjZ0zderUooEDB1KQ1RDggeZD8oeGhgb+6unpWYsQMquz20yYyIMuIyNDUlBQwPM8DwljKfm51okTJ7wzMzO9Bg8e7PrHH3+8XlZWBr+Swh/yPK8pk8k4OBoTY2NjADPDH5N/azqheSU/73zt2jW/rVu3JgYHB9+wtLREbdq0qTOzPM9L5U3tsw6IgMEPnD17dgFCqAtDYCsHHM/zkLOTBAQEcAAkgabTv379+pCDBw9OnjVrlvf58+e7X7p0iXvw4AFH/wa/meM0EELw9036nzKZTKahoSGRSqW/8DxfzgDYygDHcRyfm5sryc3NBQDhWmxAQABoME4qlWqfOHFi1OnTp6dMnz7dubi4uPevv/7K3bt3D/4MbCqkUQBwLwQ6eWnfvj1nbm7eBs6HAbAV0J6srKx4gS9HUyMAoPagwb777rsxhw8ffnPSpEmjr1y5Ynz58mWusrKyHuggrwxltef5do0JKEwAra6uLmdmZtaepGSYtMRqhP/fEWs9vh1CqB1CqO/ly5fnfPHFF2sWL178h7Ozc3nPnj3r+XRCv47m7RRxkM+qNTU1RTk5Oe/DOTEN2IKi1ZiYGJrwraWpktra2l4XL17sc+7cuYC4uLiRv/76q9WFCxck169f50j0CoJTJhKJBPt0oOVexcQ+TwPq6+sjbW3t4/AzBkA1M6fR0dEcHKWlpRpbt26lgMNBQYcOHbi//vpLNz8/3/PIkSPmFRUVY8eNG2dWVlbWraSkhLt9+zb9KCkBHI52wbQCMF7FvL6IGBsb8zY2Np3gNSOkilgQQpKMjAzQcNydO3f4o0eP1iNwEsB1/uGHH5xPnjzZv7S01P/ixYs9Hz161PPGjRvc/fv3IbCAP6VJYR4iUKrdFK3hnidg0mUyGfL39y9LT0934nn+d6YBxRWhcrm5uRpQRwXQQPFe7m+MOI7rmJSUpFdRURF87Nix1z09PV1++eUXnerqaq68vJz+KQUqL4Hw9u8AAgOOAFIlAikYYuJ/43n+KpwXA6CKQRcdHY3TIjQlQsHTtm1b7unTpza3b9/ueuzYMacrV644hoeHO5WUlHQuLCwEzcc9fvy47qNI4IBNKlQjKOCay6w2Vdq0acMNGTJELzMzE6cRGQCb2aSC/waAO3r0KESF2BcD5YAQAsq6YUFBweiTJ0/a3bp1a1hQUFD/O3futC0uLubu3r0LgMQfQz5OSk2qTCYD7Ql5Nfp/OLEJDUC0tbU5PT29PDDH/v7+TAMqUyBhC/4bVBlIGoKqIxmwhGtqanp89tlnfW7cuOE7d+7coAsXLnSprKzsCAEDJH8JkOpsJphTUBskSsXKQ5Um9SUEde3aFXzTLLg2S0tLFoMoiRFcr5ZKTSpCyCYiImJwREREvLW19R4nJ6eq7t27o06dOgnzZZhNAtgCRomic3GqOkituGbo0KHo7NmzM2BNYK2YCVaAD0dSIlBkx+RL8jtw/t1//PHHPoWFhUHffPONppubm0tRURE2pzU1NUJTCfQl+HvQCKL1315FEEI4AKmsrLxja2t7CH6Wm5uLfQcmLyjAGElMTKyXFmnXrh335MmT7sePH5/4ww8/mNy9e9f35s2bZhAw/P7770L/ra4UJvm7rsqL0WdTtMDDCQ+ll5fXzSNHjhhVVVXhH6v6vNTatELg8PjxY7u0tLRVU6dO/drb2/svW1tb1LFjR2FZC5tUiHJbijnlXq4MhwOuOXPmFJCACxMjVHdX1azDS5j8zcnJGbZ48eJ1gYGB5xwdHRHUUgV8uBrSgCMF9m9rBRz376NaV1cXeXt7L4Z1tLOzw43qzAd8xtAckpcDrQWRZpeff/75zc8//9yqpKTE+7333rOB1EhtbZ0FrhUkfTEjWNVJXzGmYPT09DhfX1+UnZ0NAIQJCao+NfFIA4022gUFBTMSEhL2vP3227fAtGppadGnWaosxgjXAg8SnMm6du1atWbNmtfJEjPzC9pO2M8KcvPmzf4bNmxYFxQUVAgpA9JaWM+0NpV+zg4OrwFtUHJycoJGpK7kAedbu7arWwAwDXv37n0rPDz8oK2t7RPIzRHwUDNc11DNDu5lNCAmwpqYmOwHTmKrdf2EwIMpTQgh41WrVoW5u7vnGxsb1wskmKbjFPmw1UCvsJ+fH54FY2lp2ZZrhcDD0ayOjg7k67x37NhxxMPD46+GtB3z6ThFa3opAHD+/Pm4AiLsL24NES1W91AELy4u9omLizvq7u6O2rVrV0/bMdBxygpA4KvMwMBAFhgYaEJujaTFA4/OpIMUwPXr1z0WLVp01NnZmY6NkNFaKwMep1S/lkxCkLm5ucFU1MGCMmXLE7gwYVRbVVXVd8qUKWsFwKNmlgUTXLNGwLJJkyZdRQj1AJ0gjIA1W5KfR8o9UHPstXTp0gWOjo5hRUVFOk+ePKmrvTZlbAQTxbKggSjbu3fvYp7nSyHXSu5Ti/Lz8BMFLYfJycmrPD09H0DnFfXxmMbjVKLxaYce0M127NiRCpqvxQQgwqGI0Oi8b9++wLfffvtOr169hMFFgxOa2ME1KwAHDBiADhw44C6/RYPaitCJRQi9tmzZsv9ZW1sLNR4DHqf6B41YnlpfX9/qmpqa0eR+qTcA6ROEENLZvXt3uKOj4xWSUsEaj0W1nOgoWCEhIVeI0lDf8huJnLDmq66uHvLxxx//JDf4WuULzg5Ofg1qQTmsXLlyP/TAqG3+jzw9Emjpy87ODnjrrbegqQdfYGv283ieFy0ThyiEpxYWFhCAzIL7SPiVamtyJZs3b860sbER0qFUvtCquLESNUigEz8cJuE/Ki0tdRBkLNRHaMgOpIHAwMCvyCYnrcrc8jxPAYcfOuHv+vTpg8zMzESpCallCgkJuSsIPP7lA4pWJUIpLSMjo7akpMQlJCTk4FdffaVbXV0tpcnkliw8z1MWsYwccJ/4jh07cl26dHk0aNCgW87Ozn2uXbvW9uDBg5ht/PewUvEIQkiqq6uraWho+D2cO9xP+dk2ogQgGRsrOX78eO2XX37pNnPmzKycnBxdYnIx3b2liuTv4T0AuLqgy8jISNKjRw/QdPmOjo6nTE1NtU+dOuWWkpLCw8hcKmLqrCMPD6+joyMzMjLKAD4g5GyPHj3KiVrIomtCsLFv375NQ4YMoeqcjrBocQf/zzy/OvMKTU6jR49Gs2bNupiZmflBTU2N5759+xYEBAScALMrfK/YTC8c1EVycHBApP4rfv+Pgg8mCCQmJm62srLCN6YlJpUJcKSQUaLfw95pNjY2VaGhobk7duxYjhAaBH0pn3zyyVsjRow4C1qQvB9PzRIj8ATXh/10Ly+vU5CvJYPMxeUjPAt8sbGxSSYmJnAh1S0JfCSYgNdS0l+CAHSmpqYyBweHrxYuXBgOVR1orIOga926daEuLi5XDAwM6GdIxQ48eQZ0eHj4R3B/KTVOzODTgERlTEzMpt69e1PwtSTg0ZEd+IGCyNXFxeXanDlzVnz//fcwqJGuhcWXX365c8qUKbUCjYe779QEeNQlkPbu3fvp1q1brURNQKDgg1nGCxcuTCJEghYBPpKGoPtu4AFE0MT+/vvv/5yVlbUQ9uHg/lkHGDr50fTp05GgRUBdmdrYl+3Xr9+PJP0iavBpguaLiIjYDI53SwAfnQJFv4eHys/P71ZycvLeGzdujIBmKMEa6CcmJs7z8PAoJhpPRskUagi8OgDCuS9duvTHv/v0RQpAPJ5VU5OLi4vb9Nprr6k1+OTMLG7AMTIyqgoJCTm6bds2P4SQofDCIbjYtm2b+8SJE38jDx4cat/kTs69Bu7nzp07cflNvu9aFAInBdOkUlNTN5mbm6st+OSAh2D2yahRo2D+yfp169aZwBwZoYCpPXv27Ltz584t6t69u1TNTe2z+j9qfHx8qhFCo0VZ/42KisI9odnZ2csGDx4MJ/xUTcFXF81CiXDUqFEP58+fnwANUMT0gODFBx+3sLDQcfHixRdhB3HhZ/AtAHhya4IiIyN/F2XaharjzZs3u1pYWFSoG3lUXuOB+ZwwYcJfq1evXlNVVVW3/byHhwd0/9M6dpdPPvkkw8nJST6qlan6ehS9NmDJjIyMUFpa2jp4CEVlfimr5dq1a8Pc3NwqiMqWqRnwsMaDfhM7O7v8hISEFZCzo9fo7+/flo4dg3Efa9asWWRvb38LTLOgFVTl18Mpkf08atSomvv3748QFftZQKkymT9//iN1Kq8JgQdJYXd39z/fe++9IGFbQFhYWBs4aAP8Tz/9FOnq6npYmMtrqcDj/lkn/HDNnz//Fpn/QnZzFUmuDyK/jz/+OBu0Ac/z4HiLfUExcCjw/Pz8HmzevDkBIVQ3XmzLli1t4KDXeuvWLfcFCxYcIWVEpG4uBveK9WzwhVeuXPlf4WAAlQvcIPAHsrKyEgiFvlrM4BMMGpfCaLbRo0dXgI+HEOpDrwky+3LtoF1jY2NXenp60gZ4OpZX5dfDNS/5oKaysrKPaMgHtARz6NChHtbW1lViJhcIWCl4bgzMj0lKSsqV8/E0hNMXgKeXnp4+ycPD45yhoWGrAx73z4EbwqZNmwbrBRZBUxSmF9QwZPu9vLx+Ik+KVMRarxryWIaGhg/Hjh27trS01Av8ORC4DjLMUtgOahIZGfmNpaVl3U1o6X4e1/Da4WuHEuL27dvn0PXixBJ4JCUlHeratSsSo2YQ+nkwH3DChAk/7d69Gw/QIYLnmAg78uAJT09P3+jh4fFY0BjVovJ53IsBEM9+sbOzuwZ+PtkYkRcF+C5cuDDDwcEBaxcR3iDMTtHR0UGenp5lO3fujKJ1WniC6TVQrQd+bElJif38+fMLhOUzEV4XamYA4tbLefPmbYM1UjnzRRD1tp89e/Zt2sUlogXDzT2wRT0kh2NjY/chhAzI6cO4D4n86A8ooa1bty7O1dWVavFWEd1yTSReDBgwoPrnn3/2IuunWvMLmgNKTzt37lxJqEWiML2CncUxNWrcuHHZBQUFrqRhmmbtefn5JVevXu07Y8YMqN3WJZPFcD2cCA7q04eGht4muT8QXuUzmBFC1n5+fhh8YtAUxE+pAa1nZ2f3Z0xMzFwKPHmfRaD1Om3ZsiXaysqqlHyO6HOXXPOuKV6Trl27SlNSUjYILYbKBE4AGooiIiIy2rZtC5y2GhEsEg4yTE1NUXR0dMGTJ0/MyOnW+XkgBIQYiOXl5Z7//e9/z7z++uv0c5jW4xoePOnh4YFoqkqluT96Mw8fPmzZr1+/p6o2vZQ0AA6yn59f5cGDB1fTPXbl0wSCUqHG9u3b3x4/fjz1byB4UrkG50QafGhra6Ply5efRghpqTT4oLx/CMNnzpx5GNITdG8IFSxMXYQL/SXLly/PRwg5ywcZAqFBh/aHH364r3///vT9ovBdOREetLnKzs4OnTlzxlPlc/+o7T9+/HjoG2+8obKkLNVakFB2d3evTUlJmUz9O/knlJAJNCF1UFpa6ubv738ZnujWQBzgXv3AD2dgYOAJsBoq136gVSDtsmDBghLiL0lV1Gdb27dvX2joPnH37l13QZBRT+tRLQiBSGZmZpKLiws9X6b1uOevNSgY4P3FxcWNhXVUKQBp+uLcuXOhhO3brBqELgjtxP/000+XIoRglEeDhEhBlGu1ZMmS70k/itrQwzgVH9S1cnBwyIW2CpUGHrRMBRomJiamGAimzXkjKXMFCKL+/v6/nT59eiY9N3mfBM6TkkVPnTplOXXq1FIyyLxV1nC5l1tv+FoNlaD169eHw1qqNPVCx67ev39/8JAhQ542J+OXAh24eu+8886XCCEjOCcghsrXIoVP6dixYweZm5v/ST5HjCVCJPbUi5eX1y0680WldV+K/mnTpkVBTZXn+epmegox+MzMzB6tXr06mp5PQ5GYYMZgz7Vr137RvXt3bK5Zbo974XWH+9utWzfptm3bNsGaCsm4zS40cQvDZ4YMGXIVngxlVz2oCYAod+zYsbcSEhKs4VzAtDbki9B8HzytCxcupCQCPNxH1dpE3Q4JYQ6FhoZC4nmkylMvVLOkpKQsJHVSpZaqKO0HTO6iRYug9jhACDL5h4P2aBQVFblOmTLlJpThmMnlXvrBh+ADaHWbNm1Kglq/ylkvZMslbuLEiadJkb5W2f5et27dauPj4zMp+BpygIU+yd69e2Ebh/vkc1g5jXulh1/q7u5eBjXyZyT0m09oXu3SpUsjbWxswKdS2o7iFHzGxsaVY8aMGS1/DkIRUKm0oqKi5sCEduFnsIN7Ke0H1q1Lly4oPj5+GVln1ZMOQNNs2LAhFU5MGeZXSCQYOXJk5ZYtW7DfQWj+ksY2sNm4cWMOIRKIgo3TAihXUl9f34eg/QQMcdUI6fWEk+gQEhJymzRtS5Xx1EGw8dZbbz0uLCwcDv+U5vEaSS7rzJ079xiZpq+W82Y4ER1UCYDvt3r16rdhjVXu+1FNU1BQMBYqD4qufNCLJlu8X0cIjWhsyA1dkMrKyt5ubm5HoZWScfc4hdwLiUSCSR0eHh4ngGYnimYjYn41kpOTk6mmUTSZABjLs2fPPghaVggyeaGR7r1797ymTJnyiIKXJZc5RdLtUV5e3oe0EZ9TsWD7q6Ojw82bN+9PRTr4FHww0DEmJmY/5e49K9dEwZebm+vr6+uLfUVIFTDwcYqyRFKg1c2bN+8k0O1VbnrlokwbV1fXB6T0JlPUvmIwnHzTpk3ZZKhNg6E+4R7iEW9paWm+hMkCUTiLdDnFWiJXV1cErpZo9vmlflhWVtY0kuJ45eiX7ikGe8Dt2rXrAOmsfyb4KIF02bJl3gMHDoQUULPTv1rywRM3Rk9PD23duvUU7FwgijEbIKCGIQseGhq6iJI3FVHdgK0KUlJS5iKEsGZrKM0iKP1JVq9ePd3Y2Bh8z2Zl37SGgyezC0eMGAF7/PZWedJZTvCWqVOnTj1PT/ZVezZgktTatWsDyec3mGOimg++Hjp0KB2o4M1Re25tB0/SXwYGBrINGzZMFEXSWU4ABFoGBgbnyElLX8XsDho0CMA3GT4Y/LqGwEeePgkEPpmZmXsgKiNjfRn4OIUDEG8wM27cuB3CQE8UQp3QtLQ0RxMTE6y9Xsb/E4Jv/fr1kxu7UKr5YEhQamrqHjrejQzDZgen+LTL6NGjYcB4f1h3MZneulzczJkzZ2hpab2U/0fNrr29vWzPnj0BjVU3BCM++OTk5HQGPk7pphfKl19//XUyrL8oks5yguu/CxYs+FbYh/Gi4IOuuQMHDgQ2QfNh8O3atYtqPkad55QGwFpQKtOnT/8OshCkyUwE83XrC34izMzM0l8UgNTswvar27dvb4rZxcnuffv27SF9uqyuyykHfOTeVA8bNux+SUmJtWhyfs9IgfR0dnbGFZCmBgFU80HkumnTpqDngY/0dLQF8FlbW2PwMZ+PU6bprYbNE4FYDPdADOW2fwl1Rs+cOdOPEBDq5gI3hcoDSeadO3c2anbJ/8F5wL17966ytbWFz3jKwMcpDXxgeoG8ERYWlgLVJ1FFvQ0BMDY2dmCPHj2w5nteBEw7qAYOHIhSU1Mb1XzC38XFxfmamppWEToWS7VwSjO9uJE/KCgIJpt2FVvCuUFwZGRkrIaO+OeV4GhIb2xsXBMXFze5sWhXqPYPHDjgbWtri31LlufjlAI8wf2pfvPNN1FxcbG3GBPODQJwxYoVG8m852cCkBILoMKRkZGRKnx/Q0Iv/MyZMz4jR46k9H5WXuOU6/f16dMHffbZZ0thPImowSfUXlOmTFlLtp2qaeziYOD37t27gVLVjtL3GyM3/Pbbb74+Pj6Y/Mg0H6d0vw+IBqtWrToPmQZRDBV/ntA+DE9Pz2TBRiwNga8W+HzJycnAasEzY54HPhidNmPGDLwxDNN8XHON1L1I9jDG+55wYhYKINjvIzIy8kFD/hkFH0xHWLx4MTCZ2zRWyhHwCrUDAwNPQ6SrDtt3qfMhIRkJb2/v+wih7sL7oDYAnD179iN5AFK1Do3fH3zwwZXG+HyCz8Pj3BYuXJhLTDpjMnNKBR/OxY4ZMwaCjumi3Ei6KQAMDg7+Sx6A9HV4ePhjhNDwxjLpgkSzxoYNG47T7a2Y5uOUDb6nkNTfu3cvnh4m+qDjWQCcNGlSPQDSMs6oUaMqSktLRzyvjEOp9IsWLZoD43MZ+Dilml2SxK+FQsCGDRvmCe+BWgLQz8+vDoB0TrCjoyM6fPiwj7CS0ZBQlb9///53CKcP6rss0cwpTfPhB1xfX1+2dOnSSMhIkGBS3BFvYwD08vLCACQVihqYNpWRkZEMkVRjuT6qFW/fvh3i4+ODF4aBT6lmF74+JYMkD3DqLEIAenp6YgCC9urQoQOwmS+SDV/q9th4FqMZRqQFBwffZumW5tF8RkZGKCEhIQfGFRO2ufgj3ucBcOzYsX9BwAAR77x580rJlKp/DQEXvpeofY2IiIgC2LOD9e4qHXzVoPni4+Nh7972wnuo9gD08fF5CBrM3t7+5pUrVwY0gTuGf/fuu+/G0HnMLOJVruYzNDQEs3uEbJ3aYIeh2gLQxcXlHtC209LSXJ6XS4LfQQdddnb2UsZobp5US8+ePaHK8R/S3opbWDl1FwEAO4aFhaGPPvoIb0zXWNBBgXnt2rXRsO0VI5Uq3ezWAtt8z549R0h9V73NrlDohXz11Vf6x48fP0C4Y88s49DJ+Qghy5CQkD/YjD6l79khBbZ5ZmbmYhhPpxb1XWUK5AKBiBAVFfUdTLlS1Z5xLfngBcM7YVvc77//PpSuf4vRfA3J87qlqFlev349rXQ8ZUGHUkxuNWQixo8fX1haWhpESb0tGnzPExoNnzp1ysXc3PweIRiwSodiwSeDSBcob5GRkRcQQgZi7eFtVhHQq14LDw+vgKeU9XMo3ORK4TX4eytWrPgUIdRNtF1szSmCZLPO0qVLs4FexZLNitd6bdq0QWPGjCn99ttv59O1Vws+n7IlLy8PP4GHDh2KJa2UrIlcwYFGz549UVRUVCFCyALWWi1JBcoQMsmUq66uHubl5QWtlGxqlQIDDU1NTWRvb1+1bdu2dYToq15cPmUKGZULOSfdd99993+wWGSqukKjvtaYVOY4TgaNXXPmzMm/efOmK1nyllHZUJTQlMunn34aTTYBZHXeVzC3/N/DPqUwedbX11e2e/fueAo4eNDJ/ixMhKa3sLAwZNiwYczvewXgSUi/BryGyWFr1qw5UlFR4UGQJt5pBaoS8lRCQrrPrFmz/oBuK9ZO+VIaT0bbW4G7N3Xq1COFhYVvwlBwEObrPUNgYYDlkpSU9AVpKmK7jr+Aj0fTKvC9iYkJbEVWGh8f7wVTYInwohuPJhahT+WVK1cmu7i4/Mv0srLbMzUe3c4WA8/c3BxNmzbtFiEQdCHLK2HAe45QdnNgYOD5Bma44CGUxJ8Bs6zyqFIk/l3dFAnoTps3b97trKysaMoqAhHFLkRiF8GAotUdO3b8V9QLr/v27YuAdi+4EXi7VNAArUE7yoEOP5zQO2NhYfEgLCzsYF5enj+dSgAS1cjcHCYCoabhzJkzwwcNGgQJZ7yZCSwwXXB/f/+nZ8+enQT0+5EjR56xsLCQwqgOwQ3CN4X4QSoHixL8OinVdvAQQh5v4sSJ92JiYlaWl5e/JkyjMOC9XK23Q2hoaB4sLk0403IRUO7T09N9Be/ROHv2rGVcXFzyzJkzSwcOHFhLcoVwUH8Im2oyF0attBw5Z3wNtFwGQIR18PT0rJo5c2bK119/HSTUdkAUhQeZabyXDDzS0tKWQ9QmjHrBBwRALliwYBekD8BMC6lB8NRDQ/SlS5eGbN26NfL9998/O27cOASDx8lMGApIDGTSLywKs01SJTiAEJhVPL+QnjOYV9jvJCAgQLZs2bK8I0eOwHZjlkJtB+vBcnmvaHphhNq4ceOqhVEvNTtjxox5QCI54TQsmkCt51y3a9cOPssxJydnUlJS0v533nnnZwAkNDrBrGI5/xGDnQAea0u6jxk14wKQNFmLyr9H8Fl43zlSkagl/7sugIBSI7gUkLPz8PBAwcHBJxMTEzPz8vK8EEK2NH9HhGk7RQg8vdB4vmTJkm9pTy81N3BzQCPu27fvk8YSp2ByIHlNNGM9hxuo+6AxtmzZYrFq1aoPAwMDE4cOHfqTq6trRefOnWuBVU0CHvmjpoGj9gUP+ffXA2mXLl0Q/H8TE5Mnbm5uN6ytrRPj4+PXr1u3zhZ2EurQAe+lLRR46PAcRYUsfiuRZ0ZgkBrIyMiQZmVlOUdERBwvLi4GDQE+DEdMJGxa89vKlSudo6Ojy6Kjo6kWapJWTUxM5I8ePQpAqCfER+q0a9euPvr6+m+mpqZKu3fvPlYikbyel5cnKysra9+rVy+Dhw8fcg8ePOAqKiqAjcPV1NTAe+sd5PPgfPFr+ArmER4q0Fi6urqcnp4e17lzZ+7u3buP9PT0yuzt7TXKy8t/0tfXP+fj48MbGhrutrKyusfzfEVDa+Tv7w9faa6PiSIACCAICAiAxKhuUFDQL3v27OkDWk8mk/FwE2UyWa2zszOMWPMePHjwQQBVQEAAmK6X2n8kOjoadj6XVFRU8Pn5+aCN6kn79u25x48f81Cor6qq0i8rK3szPz+fu3jxoqSoqEjWq1cvMwsLC6/y8nJZVVWVpLKykpNKpRiUIFBl0NLSAtDJDAwMJKWlpfnnz58/bmlpKenfv7902LBhvJ6e3v+0tbWvwvvbtWsnA1DLCfhy8FUG5ysIwpgoWqg5jYqKet/AwACbPOpjwSRTMIuRkZFJAEZFU8KJycY+JHw2mU/93FwZaLamHk0QPGwJ+pvFum1VixXwYQjPb8CYMWPKCfiEOT+pp6dnLUKoryrYGgAGAgx8gG9JKgmSFzg0SHSKDwq05rwOJs/x0aKjozOF81zoKN5u3bqh2NjYcNAkrITERKFCtUBhYaG3o6PjU1JKo6YXfDxZQEBAAaGHM5IkE8WJYHi4Xmxs7G/QhUXJBnR3TFNTUxgBEQx/z/hqTJRieo8dO+YAuxzRuq1Q+4WFhUFnFisnMVGKaGpoaHDDhg1LB7DRpDPVfpaWlig7O3sq/CHjrTFRqFBzmp2dPQ3KYnJpF1ybnTZt2q90N+2mpEWYMGmKUDDJAFy7du1adPXqVQAd5OIomYAzMTHhPT09V0AOkLyHJWCZKFb7ff755zMI20Wo/aA4jyZMmADaT0sAWCZMFCISov20cnJyIktKSgB0EoH2k+nr63PW1tb/x/P8k+HDhzPtx0TxkpWVNY3OcRZqPwCng4MD7P/Wjmk/JsoQ0Hbahw8f/qi4uBjYIlj7gYD209XV5cePH/+NRCJ56u/vD6aX+X5MFCtFRUX/IVOt6vJ+dI8xFxeXp48ePXIjc0lY5xYTxUtISEgK0I9ob4PA/MJE/D8YwZKJUsXKyuoOAZ1MmHju27ev9NChQzCJEzN9lXsWTFqrSK5fv96NRLw4vUIAqOHk5CTz8PDYQL5nbF8myhEHBwe8/RYQD0iTTq2urq5s48aNsNFdW1Z2Y6JMkYSHhy+1sbGRyGQynOMD2r2TkxM/YcKEKJ7n/8VLZ8JEoQINOgkJCR84OzuXderUqRbm/W3cuHEjBB9M+zHhlCz/D8DY5YJwqTQzAAAAAElFTkSuQmCC";
 const REACTIVE_ICON_B64 = "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";
@@ -7790,13 +7872,13 @@ function itemHTML(entry, idx){
       <button type="button" class="batch-qty-btn" data-batch-inc="${idx}" aria-label="More">+</button>
     </div>` : "";
   const craftCol = batchOn ? `<div class="craft-col">${btn}${batchRow}</div>` : btn;
-  // Tier (MATERIAL/COMPONENT/CREATION) no longer shown -- the CAPSTONE tag
-  // stays, since that one's a meaningful "this is the big one" signal
-  // rather than a classification most players never cared about. UTILITY
-  // (Hard Mode only, see UTILITY_ITEMS) is the same kind of exception --
-  // "this never gets spent" changes how you play around it.
-  const tierTag = entry.tier === "CAPSTONE" ? '<span class="cap-tag">CAPSTONE</span>'
-    : (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
+  // Tier (MATERIAL/COMPONENT/CREATION/CAPSTONE) no longer shown here at
+  // all -- the card's own icon/points/context already say enough, and the
+  // CAPSTONE tag specifically read as redundant clutter next to the name.
+  // UTILITY (Hard Mode only, see UTILITY_ITEMS) stays -- unlike a plain
+  // tier label, "this never gets spent" is information that changes how
+  // you play around the item, not just a classification.
+  const tierTag = (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}"${batchOn && stock > 0 ? ` data-stock="×${stock}"` : ""}>
     <button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
       title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>
@@ -8078,6 +8160,7 @@ function renderPinsTray(){
         const entry = ENTRIES.find(e => e.name === name);
         const sel = selectedJobItem === name;
         return `<button type="button" class="map-job-chip ${sel ? "selected" : ""}" data-select-job="${esc(name)}" aria-pressed="${sel}">
+          ${sel ? '<span class="mj-search-badge" title="Currently tracked">🔍</span>' : ""}
           <span class="mj-em">${em(entry.emoji)}</span><span class="mj-name">${esc(name)}</span>
         </button>`;
       }).join("")
@@ -8892,24 +8975,26 @@ function renderDrawer(){
     : '<p class="empty">No loose elements — visit a station and hit PLAY.</p>';
 
   const tiers = ["MATERIAL","COMPONENT","CREATION","CAPSTONE"];
+  // Simplified card view now (was a flat icon+name+qty row list) -- same
+  // arr-tray/arr-tray-card grid Arrange Items already uses for its own
+  // item picker (see .inv-item-grid's own comment), rows of 3.
   const itemHTMLs = tiers.map(t => {
     const names = state.items.filter(n => ITEM_TIER[n] === t);
     if (!names.length) return "";
     const counts = {};
     names.forEach(n => counts[n] = (counts[n] || 0) + 1);
     const unique = [...new Set(names)];
-    return `<div class="sec-label">${t} · ${names.length}</div><div class="itemlist">${
-      unique.map(n => `<button type="button" class="ientry" data-item="${esc(n)}"><span class="iem">${em(ITEM_EMOJI[n])}</span>${esc(n)}${
-        counts[n] > 1 ? `<span class="iqty">×${counts[n]}</span>` : ""}</button>`).join("")
+    return `<div class="sec-label">${t} · ${names.length}</div><div class="arr-tray inv-item-grid">${
+      unique.map(n => `<button type="button" class="arr-tray-card" data-item="${esc(n)}">${
+        counts[n] > 1 ? `<span class="inv-card-qty">×${counts[n]}</span>` : ""}<span class="em">${em(ITEM_EMOJI[n])}</span><span class="nm">${esc(n)}</span></button>`).join("")
     }</div>`;
   }).join("");
 
-  const arrangeBtn = state.items.length
-    ? `<button type="button" class="convert-trigger arrange-trigger" id="openArrangeBtn">🎨 Arrange Items</button>`
-    : "";
+  // "Convert Elements" and "Arrange Items" both dropped from this view --
+  // Convert has its own dedicated entry point elsewhere (the floating
+  // button, and the "needed element" shortcut from a shop recipe), and
+  // Arrange Items wasn't earning its place here alongside them.
   return `<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
-    <button type="button" class="convert-trigger" id="openConvertBtn">🔄 Convert Elements</button>
-    ${arrangeBtn}
     ${itemHTMLs || '<div class="sec-label">CRAFTED · kept forever</div><p class="empty">Nothing crafted yet.</p>'}`;
 }
 
@@ -9197,9 +9282,10 @@ function updateHub(){
   // Marketplace, so re-flagging Home for them would just be a second,
   // redundant "look here" nagging at a screen the player already knows
   // to check.
-  if (face === "roll" && state.pendingRoll){
-    setHubBadge("hubHome", String(state.pendingRoll), true);
-  } else if (face === "market" && !state.marketVisited){
+  // The Roll face's own pending-dice-count badge is gone -- the die glyph
+  // and "Roll" label already say what tapping it does, and the number
+  // duplicated that without adding anything the player needed here.
+  if (face === "market" && !state.marketVisited){
     setHubBadge("hubHome", "!");
   } else {
     setHubBadge("hubHome", null);
@@ -9459,8 +9545,11 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   // the top-right points circle's own size/shape -- see .pc-station-badge).
   document.getElementById("cpStationBadge").innerHTML = em(STATION_BY_NAME[entry.station].emoji);
   // Top-left corner stack: up to 3 suit-cost circles (see itemSuitCosts()),
-  // empty for a 4-points-or-under item.
-  document.getElementById("cpSuitCosts").innerHTML = itemSuitCosts(entry.name).map(s =>
+  // empty for a 4-points-or-under item -- the "Cost:" label above it
+  // hides right along with it in that case, same condition either way.
+  const suitCosts = itemSuitCosts(entry.name);
+  document.getElementById("cpCostLabel").hidden = suitCosts.length === 0;
+  document.getElementById("cpSuitCosts").innerHTML = suitCosts.map(s =>
     `<span class="pc-suitcost-badge" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost">${SUIT_ICON[s]}</span>`).join("");
   document.getElementById("cpName").textContent = entry.name;
   const cpIconEl = document.getElementById("cpIcon");
