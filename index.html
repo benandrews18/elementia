@@ -1851,20 +1851,6 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--sunken);
   box-shadow:inset 0 2px 3px rgba(255,255,255,.25), inset 0 -4px 6px rgba(0,0,0,.25);
 }
-/* "Auto card inspection" off's own settle animation (see settleIntoShop())
-   -- a lightweight standalone ghost, same dark-slot look as the real
-   .item .iem it's standing in for, so the flight itself reads as "the
-   icon slot detaching and flying to its new home" rather than a generic
-   blob. position:fixed and its own left/top/width/height come from inline
-   style (set per-flight in JS); z-index above the hub (72) so it's never
-   clipped mid-flight by anything. */
-.craft-settle-ghost{
-  position:fixed; z-index:73; border-radius:12px; border:3px solid var(--line);
-  background:var(--sunken);
-  display:flex; align-items:center; justify-content:center;
-  font-size:42px; line-height:1; pointer-events:none;
-  box-shadow:inset 0 2px 3px rgba(255,255,255,.25), inset 0 -4px 6px rgba(0,0,0,.25);
-}
 /* flex column + space-between -- pins .itop (the name) to this box's own
    top edge and .recipe to its bottom edge, rather than letting the two
    sit stacked with whatever gap their own content naturally left. Paired
@@ -7659,8 +7645,6 @@ document.getElementById("batchConfirmSwapGrid").addEventListener("click", ev => 
 document.getElementById("batchConfirmCancel").addEventListener("click", () => closeOverlay("batchConfirm"));
 document.getElementById("batchConfirmGo").addEventListener("click", () => {
   const conversions = batchConfirmGroups.flatMap(g => Array(g.count).fill({from: g.from, to: g.to}));
-  const preCraftIem = document.querySelector(`[data-item-card="${ENTRIES.indexOf(batchConfirmEntry)}"] .iem`);
-  preCraftCardRect = preCraftIem ? preCraftIem.getBoundingClientRect() : null;
   craftBatch(batchConfirmEntry, batchConfirmQty, conversions);
   closeOverlay("batchConfirm");
   render();
@@ -9657,12 +9641,6 @@ let cardPopEntry = null;
 // keepBackStack param) so a new "look something up" session never starts
 // with a stale Back button left over from the last one.
 let cardPopBackStack = [];
-// The just-tapped Craft button's own shop card, captured by every craft
-// click handler right before craft()/render() moves or collapses it --
-// read (and cleared) by settleIntoShop() when "Auto card inspection" is
-// off. null whenever there's nothing to read (e.g. reduced motion never
-// bothered capturing it, or settleIntoShop() already consumed it).
-let preCraftCardRect = null;
 /* autoDismiss: true for the "just crafted this" popup after a purchase
    (existing behavior, unchanged); false when opened by tapping an item in
    the inventory, where it should just sit there until dismissed.
@@ -9733,53 +9711,19 @@ function updateCardPopBackBtn(){
   btn.hidden = !prev;
   if (prev) document.getElementById("cpBackIcon").innerHTML = em(prev.emoji);
 }
-/* The post-craft alternative to showCardPop() when Settings' "Auto card
-   inspection" is off (see autoCardPop() below) -- the real inspection
-   card/#cardPop overlay is NEVER opened at all in this path, not even
-   briefly. Instead: a small icon-only ghost, styled like the shop card's
-   own icon slot (see .item .iem, whose real on-screen rect this actually
-   IS -- preCraftCardRect, stashed by the craft click handler before
-   render() moved or collapsed it away), flies from there to wherever the
-   item now actually sits in the shop -- the collapsed crafted-items row,
-   or its own full card if that section is expanded; both render with the
-   same [data-item-card] marker, so no separate lookup is needed for
-   either state. Falls straight through to just punching the target in
-   place if there's no captured start position, no target (e.g. the
-   player already navigated away), or the browser prefers reduced motion. */
-function settleIntoShop(entry){
-  const startRect = preCraftCardRect;
-  preCraftCardRect = null;
-  const target = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
-  flushPendingReveal();
-  if (!target) return;
-  const punch = () => target.animate([
-    { transform: "scale(1)" }, { transform: "scale(1.4)" }, { transform: "scale(1)" },
-  ], { duration: 340, easing: "cubic-bezier(.3,1.4,.4,1)" });
-  if (!startRect || matchMedia("(prefers-reduced-motion: reduce)").matches){ punch(); return; }
-  const t = target.getBoundingClientRect();
-  const ghost = document.createElement("div");
-  ghost.className = "craft-settle-ghost";
-  ghost.style.cssText = `left:${startRect.left}px; top:${startRect.top}px; ` +
-    `width:${startRect.width}px; height:${startRect.height}px; --item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}`;
-  ghost.innerHTML = em(entry.emoji); // em() can return an <img> tag for custom icons -- textContent would show that markup as literal text
-  document.body.appendChild(ghost);
-  const dx = (t.left + t.width / 2) - (startRect.left + startRect.width / 2);
-  const dy = (t.top + t.height / 2) - (startRect.top + startRect.height / 2);
-  ghost.animate([
-    { transform: "translate(0,0) scale(1)", opacity: 1 },
-    { transform: `translate(${dx}px, ${dy}px) scale(.35)`, opacity: 0 },
-  ], { duration: 420, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" }).onfinish = () => {
-    ghost.remove();
-    punch();
-  };
-}
 /* Every automatic (not manually tapped-to-inspect) post-craft popup routes
-   through here instead of calling showCardPop()/settleIntoShop() directly,
-   so Settings' "Auto card inspection" toggle only has to be read in one
-   place. Capstones are untouched -- celebrate() is a deliberately
-   different, rarer "big moment" this toggle isn't about. */
+   through here instead of calling showCardPop() directly, so Settings'
+   "Auto card inspection" toggle only has to be read in one place.
+   Capstones are untouched -- celebrate() is a deliberately different,
+   rarer "big moment" this toggle isn't about. With inspection off, the
+   real card/#cardPop overlay is never opened at all -- performSingleCraft()'s
+   own bounceCardClosed()/bounceCardAppear() sequence already gave the
+   craft its on-screen feedback (see that function's own comment; this
+   used to also fly a ghost icon into place here, now redundant with that
+   sequence and removed), so all that's left to do is flush whatever item-
+   unlock reveal the craft queued up. */
 function autoCardPop(entry){
-  if (prefs.autoCardInspection === false) settleIntoShop(entry);
+  if (prefs.autoCardInspection === false) flushPendingReveal();
   else showCardPop(entry);
 }
 /* Reveals any shop item(s) a craft unlocked but held back while its own
@@ -10881,10 +10825,10 @@ function flyIngredientsAndReveal(entry){
     // the real cleanup, this is just insurance against a dropped frame
     // leaving stray cards stuck in the DOM forever.
     setTimeout(() => cards.forEach(c => { if (c.parentNode) c.remove(); }), 400);
-    // No render() here any more -- performSingleCraft() already rendered
-    // the moment the craft itself went through, before this animation even
-    // started (see its own comment), so the shop is already showing the
-    // post-craft state throughout the whole sequence above.
+    // No render() here any more -- performSingleCraft() renders on its own,
+    // shortly after the craft went through via its bounceCardClosed()
+    // sequence, running independently of (not gated behind) this whole
+    // animation -- see that function's own comment.
     setTimeout(() => {
       if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry);
     }, 260);
@@ -10942,12 +10886,54 @@ function resetCurrentModeRun(){
 
 /* The actual craft + reveal, factored out of the [data-craft] click
    handler below so it can fire either right away (no suit cost) or once
-   the suit-spend picker's own Confirm goes through (see
-   openSuitSpendPicker()) -- an item with a suit cost stops at that sheet
-   first, and none of this runs until the player's made their picks.
-   entry.name must already be craftable and, if it has one, its suit cost
-   already spent by the time this is called -- craft() itself still does
-   its own real recipe check regardless. */
+   the suit-spend balloon auto-confirms (see openSuitSpendBalloon()) -- an
+   item with a suit cost stops at that balloon first, and none of this
+   runs until the player's made their picks. entry.name must already be
+   craftable and, if it has one, its suit cost already spent by the time
+   this is called -- craft() itself still does its own real recipe check
+   regardless. */
+/* "Bounce closed" -- the shop card that's about to leave for Crafted
+   Items pops up slightly, then collapses away in place, instead of just
+   vanishing outright the instant render() swaps the DOM underneath it.
+   Runs on the REAL card element (captured by performSingleCraft() before
+   craft()/render() touch anything), so it shows exactly where the card
+   was actually sitting. Per-keyframe easing (not one top-level curve) --
+   the pop-out and the collapse-in are two different feels, not one curve
+   stretched across both halves. onDone always fires, even with nothing to
+   animate (no element, or reduced motion) -- callers can rely on it as
+   "safe to render now" regardless of whether anything actually played.
+   setTimeout, not .animate()'s own onfinish -- same reasoning
+   flyIngredientsAndReveal() already uses its own setTimeout for: onfinish
+   never fires for an animation whose timeline never actually starts
+   ticking (e.g. a backgrounded/inactive tab), which would leave the craft
+   permanently stuck showing its old, already-owned card forever. A plain
+   timer keyed off this animation's own duration fires regardless. */
+function bounceCardClosed(cardEl, onDone){
+  const DURATION = 300;
+  if (!cardEl || matchMedia("(prefers-reduced-motion: reduce)").matches){ onDone(); return; }
+  cardEl.style.pointerEvents = "none";
+  cardEl.animate([
+    { transform: "scale(1)", opacity: 1, offset: 0, easing: "cubic-bezier(.3,1.4,.4,1)" },
+    { transform: "scale(1.05)", opacity: 1, offset: .3, easing: "cubic-bezier(.55,0,.75,.1)" },
+    { transform: "scale(0)", opacity: 0, offset: 1 },
+  ], { duration: DURATION, fill: "forwards" });
+  setTimeout(onDone, DURATION);
+}
+/* "Bounce appearance" -- the crafted item's new home (its compact icon in
+   the Crafted Items strip, or its own "✓ Owned" card if that section is
+   expanded -- both share the same [data-item-card] marker, see
+   craftedIconsHTML()/itemHTML()) pops in right after bounceCardClosed()
+   above finishes and render() has swapped the DOM. No-op if the item
+   isn't actually on screen (station navigated away from mid-animation) or
+   under reduced motion. */
+function bounceCardAppear(targetEl){
+  if (!targetEl || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  targetEl.animate([
+    { transform: "scale(0)", opacity: 0 },
+    { transform: "scale(1.18)", opacity: 1, offset: .6 },
+    { transform: "scale(1)", opacity: 1 },
+  ], { duration: 320, easing: "cubic-bezier(.3,1.4,.4,1)" });
+}
 function performSingleCraft(entry){
   // First-ever craft gets the ingredient fly-and-stack reveal (see
   // flyIngredientsAndReveal()) -- checked before craft() changes what
@@ -10958,6 +10944,10 @@ function performSingleCraft(entry){
   const beforeRevealed = new Set(
     entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
   );
+  // The shop card about to disappear -- captured before craft()/render()
+  // touch anything, so bounceCardClosed() below animates the real element
+  // sitting at its actual current position, not a guess.
+  const preCraftCard = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
   if (craft(entry)){
     const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
     // !state.seenItems[n] -- same "new to the player, not just to this
@@ -10977,24 +10967,30 @@ function performSingleCraft(entry){
     // second surprise.
     state.stationLastSeen[current] = afterRevealed;
 
-    // Reflects the craft in the shop list right away -- the item leaves
-    // its not-yet-owned row for Crafted Items the instant this runs, not
-    // whenever flyIngredientsAndReveal()'s own animation happens to finish
-    // (that used to be the only thing calling render() on this path, so
-    // the row sat there, still tappable, for as long as the animation
-    // played). Safe to render before that animation even starts: its mini
-    // cards are built from entry.reqs and positioned off viewport size
-    // alone, never off a real shop-card element's on-screen position.
-    render();
+    // Ingredient fly-in/firework spectacle -- kicked off right away,
+    // running independently alongside the shop-list bounce sequence below
+    // rather than waiting on it (or it waiting on the fireworks): the two
+    // touch entirely separate DOM (this animates fresh nodes appended to
+    // <body>, never the real shop card), so there's nothing stopping them
+    // from playing at the same time.
     const firstCraftReveal = !wasOwnedBefore &&
       !matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (firstCraftReveal){
-      flyIngredientsAndReveal(entry);
-    } else if (entry.tier === "CAPSTONE"){
-      celebrate(entry);
-    } else {
-      autoCardPop(entry);
-    }
+    if (firstCraftReveal) flyIngredientsAndReveal(entry);
+
+    // Shop-list housekeeping: bounce the old card closed, then (once
+    // render() has actually swapped it into Crafted Items) bounce its new
+    // compact icon in -- replaces the old instant DOM swap with a real,
+    // quick transition, entirely independent of whichever "big reveal"
+    // (celebrate()/autoCardPop(), including flyIngredientsAndReveal()'s
+    // own delayed one below) plays out afterward.
+    bounceCardClosed(preCraftCard, () => {
+      render();
+      bounceCardAppear(document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`));
+      if (!firstCraftReveal){
+        if (entry.tier === "CAPSTONE") celebrate(entry);
+        else autoCardPop(entry);
+      }
+    });
   }
 }
 
@@ -11091,17 +11087,13 @@ document.getElementById("suitSpendRows").addEventListener("click", ev => {
   const ready = Object.keys(need).every(s => suitSpendPickedForSuit(s) === need[s]);
   if (!ready){ renderSuitSpendBalloon(); return; }
   // Every row satisfied -- spend the picks for real and hand off to the
-  // exact same post-craft pipeline the item's Craft tap normally does,
-  // same re-stash-right-before-moving-on reasoning as batchConfirmGo's
-  // own preCraftCardRect capture.
+  // exact same post-craft pipeline the item's Craft tap normally does.
   Object.keys(suitSpendPicks).forEach(pickedSym => {
     state.elements[pickedSym] = count(pickedSym) - suitSpendPicks[pickedSym];
     if (state.elements[pickedSym] <= 0) delete state.elements[pickedSym];
   });
   save();
   closeSuitSpendBalloon();
-  const preCraftIem = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"] .iem`);
-  preCraftCardRect = preCraftIem ? preCraftIem.getBoundingClientRect() : null;
   performSingleCraft(entry);
 });
 // Any click that doesn't land inside the balloon itself cancels it with
@@ -11212,16 +11204,6 @@ function handleScreenClick(ev){
       return;
     }
     const entry = ENTRIES[+cBtn.dataset.craft];
-    // Stash the shop card's position BEFORE craft()/render() moves or
-    // collapses it -- read by settleIntoShop() if "Auto card inspection"
-    // is off (see its own comment), so that animation can fly from where
-    // the real card was sitting rather than guessing. Captured here,
-    // before either branch below, since it covers every path that can
-    // eventually call autoCardPop() for this same tap. The icon slot
-    // specifically (not the whole card) -- gives the settle ghost its
-    // exact real start position/size instead of an approximation.
-    const preCraftIem = cBtn.closest("[data-item-card]")?.querySelector(".iem");
-    preCraftCardRect = preCraftIem ? preCraftIem.getBoundingClientRect() : null;
     // Batch crafting: a quantity of more than 1 skips the single-craft
     // flow below entirely -- exact-stock batches craft straight away
     // (same immediate feel as a normal Craft tap, just qty times over),
