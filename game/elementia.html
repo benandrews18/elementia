@@ -1808,9 +1808,9 @@ body[data-screen="market"] #trackedPill{display:none}
    consistent "you already have this" language everywhere ownership shows.
    Sized to match .crafted-row .station-item-icon (22px glyph + 3px
    padding each side = 28px) -- same size language as the shop's own
-   "crafted items" icon row, not an arbitrary badge size. z-index below
-   .item-pin-badge's (see below) so the tracked-item badge always wins
-   wherever the two corner badges happen to overlap. */
+   "crafted items" icon row, not an arbitrary badge size. Top-right, so it
+   never competes with the top-left slot .shop-pin/.item-pin-badge share
+   (see below). */
 .item.owned::after{
   content:"✓"; position:absolute; top:-8px; right:-8px; width:28px; height:28px;
   border-radius:50%; background:var(--ok); color:#fff; font-size:15px; font-weight:800;
@@ -1819,16 +1819,16 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 /* "Needed for [selected pinned item]" badge -- the SELECTED item's own
    icon, not this card's, so it reads as a pointer back to what it's
-   feeding into. Bottom-left corner now (was top-right, sharing that
-   corner with the owned checkmark/stock count) and sized up (28px ->
-   36px) so it reads clearly on its own -- the bottom-left corner was
-   sitting empty otherwise (top-left is .shop-pin, top-right is the
-   owned checkmark/stock badge). */
+   feeding into. Takes over .shop-pin's own top-left corner slot (same
+   28px size/position) instead of sitting alongside it as a second corner
+   badge -- a card either offers the manual pin toggle (.shop-pin) or
+   already reads as "feeds the tracked item" (this badge), never both at
+   once, see itemHTML(). */
 .item-pin-badge{
-  position:absolute; bottom:-8px; left:-8px; width:36px; height:36px;
+  position:absolute; top:-9px; left:-9px; z-index:3; width:28px; height:28px;
   border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
-  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:2;
+  display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
 }
 /* Glossy bevelled icon "slot", matching images/game ui reference
    0903.png's own rarity-colored slots for shape/bevel. Sized up and the
@@ -2745,33 +2745,35 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 /* White card, plain black frame -- images/item card redesign 0904.png's
    own look, replacing the old dark-face/suit-colored-top-stripe card.
-   Border thickened (was 5px) to read as a real frame, closer to how
-   heavy .el-pop-card's own 20px suit-colored border is. */
+   Border thickened again (was 8px) to read as a heavier frame, closer to
+   how heavy .el-pop-card's own 20px suit-colored border is. */
 .pc-card{
   width:100%; aspect-ratio:5/7; background:#f7f5f0; color:#181614; border-radius:22px;
-  border:8px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
+  border:16px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
   position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
 }
-/* Tangent to the card's own INNER border face (was a negative-offset
-   straddle/overhang) -- a 0 offset on an absolutely-positioned child
-   resolves against the nearest positioned ancestor's PADDING box, which
-   for .pc-card (padding:20px 20px 16px) IS exactly the border's inner
-   face, so the badge now sits fully inside the frame, tangent to it,
-   rather than half hanging past its outer edge. */
+/* Straddling the card's own OUTER edge (was tangent to the border's inner
+   face) -- offset is exactly -(border-width), so each badge's bounding
+   box reaches precisely to the card's outer boundary without overshooting
+   it, and the entire border strip it crosses sits visibly underneath the
+   circle instead of stopping short of it. Same language .el-pop-bubble
+   uses on the element card popup, just offset by the border width exactly
+   rather than a few px short of it (that card's border is a flat color,
+   this one's is black, so there's no partial-reveal sliver to preserve). */
 .pc-badge{
-  position:absolute; top:0; right:0; width:60px; height:60px; border-radius:50%;
+  position:absolute; top:-16px; left:-16px; width:60px; height:60px; border-radius:50%;
   background:#f6cc4d; border:4px solid #000; color:#181614;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
+  display:flex; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
 }
-.pc-badge .n{font-size:20px; font-weight:800}
-.pc-badge .l{font-size:7px; font-weight:800; letter-spacing:.5px; margin-top:1px; color:#5a4c14}
+/* No more "PTS" label alongside it -- just the number, sized up to
+   actually fill the circle now that it's the only thing in it. */
+.pc-badge .n{font-size:30px; font-weight:800}
 /* Bottom-right -- the station this card was made at. Icon filled out to
-   the badge's own edge (see its img rule below) and a "Station:" label
-   added to its left, at the same 8px inset as the badge's own tangent
-   offset above. */
+   the badge's own edge (see its img rule below); same straddle offset as
+   every other corner circle. */
 .pc-station-badge{
-  position:absolute; bottom:0; right:0; width:60px; height:60px; border-radius:50%;
+  position:absolute; bottom:-16px; right:-16px; width:60px; height:60px; border-radius:50%;
   background:#fff; border:4px solid #000; color:#181614;
   display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
@@ -2780,32 +2782,20 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    26px font-size, leaving visible padding around it) -- matches how
    .pc-suitcost-badge's own art already fills most of ITS circle. */
 .pc-station-badge img, .pc-station-badge svg{width:82%; height:82%}
-/* "Station:" label -- sits to the left of the badge, same bottom-right
-   corner group, at the card's own inner-border inset. */
-.pc-station-label{
-  position:absolute; bottom:14px; right:66px; font-size:11px; font-weight:800;
-  letter-spacing:.4px; color:#5a5548; z-index:2;
-}
-/* Suit-cost badges (see itemSuitCosts()) -- up to 3 stacked circles in the
-   top-left corner, images/item card redesign 0904.png's own layout.
-   Empty/hidden for a 4-points-or-under item. No border of their own
-   (unlike the other two badges) -- the reference shows them as flat
-   solid-color fills sitting directly against the card's own black frame.
-   Nudged down (see its own top value) to leave room for the "Cost:"
-   label above it. */
+/* Suit-cost badges (see itemSuitCosts()) -- up to 3 stacked circles, now
+   top-RIGHT (was top-left, sharing that corner with the points badge --
+   the two swapped corners so this stack sits in the same slot language
+   .pc-badge/.pc-station-badge already use). Empty for a 4-points-or-under
+   item. Same size/border/straddle-offset as the other two corner circles
+   now (was smaller and borderless) so all three read as one consistent
+   badge language. */
 .pc-suitcosts{
-  position:absolute; top:26px; left:0; z-index:2;
+  position:absolute; top:-16px; right:-16px; z-index:2;
   display:flex; flex-direction:column; gap:8px;
 }
-/* "Cost:" label -- sits directly above the suit-cost stack, in the strip
-   .pc-suitcosts' own 26px top offset now leaves clear above it. */
-.pc-cost-label{
-  position:absolute; top:0; left:2px; font-size:11px; font-weight:800;
-  letter-spacing:.4px; color:#5a5548; z-index:2;
-}
 .pc-suitcost-badge{
-  width:48px; height:48px; border-radius:50%; flex:none;
-  background:var(--suit);
+  width:60px; height:60px; border-radius:50%; flex:none;
+  background:var(--suit); border:4px solid #000;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 2px 6px rgba(0,0,0,.3);
 }
@@ -3784,11 +3774,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
   <div class="pc-card-wrap">
     <div class="pc-card" id="cpCard">
-      <div class="pc-cost-label" id="cpCostLabel" hidden>Cost:</div>
       <div class="pc-suitcosts" id="cpSuitCosts"></div>
-      <div class="pc-station-label">Station:</div>
       <div class="pc-station-badge" id="cpStationBadge"></div>
-      <div class="pc-badge"><span class="n" id="cpPts"></span><span class="l">PTS</span></div>
+      <div class="pc-badge"><span class="n" id="cpPts"></span></div>
       <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
       <div class="pc-title" id="cpName"></div>
       <div class="pc-divider"></div>
@@ -7962,6 +7950,12 @@ function itemHTML(entry, idx){
       if (selEntry) pinBadge = `<span class="item-pin-badge" title="Needed for ${esc(selectedJobItem)}">${em(selEntry.emoji)}</span>`;
     }
   }
+  // The badge above takes over the pin button's own top-left corner slot
+  // (see .item-pin-badge's CSS) instead of sitting alongside it -- a card
+  // reads as either manually pinnable or already flagged as feeding the
+  // tracked item, never both, so the pin button itself is skipped here.
+  const pinSlot = pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
+      title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>`;
   const btn = done
     ? '<span class="craftbtn done">✓ Owned</span>'
     // Not a real disabled button any more -- it needs to keep receiving
@@ -7989,9 +7983,7 @@ function itemHTML(entry, idx){
   // you play around the item, not just a classification.
   const tierTag = (state.mode === "hard" && UTILITY_ITEMS.has(entry.name)) ? '<span class="utility-tag">UTILITY</span>' : "";
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}"${batchOn && stock > 0 ? ` data-stock="×${stock}"` : ""}>
-    <button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
-      title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>
-    ${pinBadge}
+    ${pinSlot}
     <div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
@@ -9651,13 +9643,11 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   const tier = craftTier(entry.name);
   if (tier) cpCard.classList.add("tier-" + tier);
   // Bottom-right corner circle: the station this item is made at (matches
-  // the top-right points circle's own size/shape -- see .pc-station-badge).
+  // every other corner circle's own size/shape -- see .pc-station-badge).
   document.getElementById("cpStationBadge").innerHTML = em(STATION_BY_NAME[entry.station].emoji);
-  // Top-left corner stack: up to 3 suit-cost circles (see itemSuitCosts()),
-  // empty for a 4-points-or-under item -- the "Cost:" label above it
-  // hides right along with it in that case, same condition either way.
+  // Top-right corner stack: up to 3 suit-cost circles (see itemSuitCosts()),
+  // empty for a 4-points-or-under item.
   const suitCosts = itemSuitCosts(entry.name);
-  document.getElementById("cpCostLabel").hidden = suitCosts.length === 0;
   document.getElementById("cpSuitCosts").innerHTML = suitCosts.map(s =>
     `<span class="pc-suitcost-badge" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost">${SUIT_ICON[s]}</span>`).join("");
   document.getElementById("cpName").textContent = entry.name;
