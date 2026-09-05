@@ -2914,7 +2914,10 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .fc-item{
   background:#f7f5f0; border-radius:16px; border:4px solid #000;
 }
-.fc-item .fc-icon{font-size:40px; line-height:1}
+/* Doubled (40px -> 80px) so the item's own art reads clearly mid-flight,
+   same "make it big enough to actually see while it's moving" reasoning
+   .fc-card's own earlier size bump above already used. */
+.fc-item .fc-icon{font-size:80px; line-height:1}
 .fc-item .fc-name{font-size:11.5px; font-weight:800; color:#181614; line-height:1.2}
 .fc-el{
   background:#fff; border-radius:14px; border:7px solid var(--suit, #4a4f5c);
@@ -10878,8 +10881,11 @@ function flyIngredientsAndReveal(entry){
     // the real cleanup, this is just insurance against a dropped frame
     // leaving stray cards stuck in the DOM forever.
     setTimeout(() => cards.forEach(c => { if (c.parentNode) c.remove(); }), 400);
+    // No render() here any more -- performSingleCraft() already rendered
+    // the moment the craft itself went through, before this animation even
+    // started (see its own comment), so the shop is already showing the
+    // post-craft state throughout the whole sequence above.
     setTimeout(() => {
-      render();
       if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry);
     }, 260);
   }, lastArrivesAt + 220);
@@ -10971,14 +10977,23 @@ function performSingleCraft(entry){
     // second surprise.
     state.stationLastSeen[current] = afterRevealed;
 
+    // Reflects the craft in the shop list right away -- the item leaves
+    // its not-yet-owned row for Crafted Items the instant this runs, not
+    // whenever flyIngredientsAndReveal()'s own animation happens to finish
+    // (that used to be the only thing calling render() on this path, so
+    // the row sat there, still tappable, for as long as the animation
+    // played). Safe to render before that animation even starts: its mini
+    // cards are built from entry.reqs and positioned off viewport size
+    // alone, never off a real shop-card element's on-screen position.
+    render();
     const firstCraftReveal = !wasOwnedBefore &&
       !matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (firstCraftReveal){
       flyIngredientsAndReveal(entry);
+    } else if (entry.tier === "CAPSTONE"){
+      celebrate(entry);
     } else {
-      render();
-      if (entry.tier === "CAPSTONE") celebrate(entry);
-      else autoCardPop(entry);
+      autoCardPop(entry);
     }
   }
 }
