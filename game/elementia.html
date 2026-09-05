@@ -2377,11 +2377,18 @@ body[data-screen="market"] #trackedPill{display:none}
 .histnone{font-size:13px; color:var(--mute); font-weight:700}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
 .histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
-.histturns{display:flex; flex-direction:column; gap:4px; max-height:40vh; overflow-y:auto}
-.histturn{display:flex; align-items:baseline; gap:8px; font-size:12.5px; line-height:1.4; flex-shrink:0}
+.histturns{display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto}
+/* One block per station visit -- a head line (turn number + station) plus
+   two detail lines (what was rolled there, what got crafted there). Was a
+   single row of station+crafted-items only; split into its own block now
+   that there's a second thing (collected elements) worth showing per turn. */
+.histturn{display:flex; flex-direction:column; gap:1px; font-size:12.5px; line-height:1.4; flex-shrink:0}
+.histturn + .histturn{border-top:1px solid var(--line); padding-top:7px}
+.histturn-head{display:flex; align-items:baseline; gap:8px}
 .histturn-n{flex:none; width:18px; color:var(--mute); font-weight:800; text-align:right}
 .histturn-station{flex:none; font-weight:700; white-space:nowrap}
-.histturn-items{color:var(--ink2); min-width:0}
+.histturn-line{padding-left:26px; color:var(--ink2); min-width:0}
+.histturn-label{font-weight:800; color:var(--mute); margin-right:5px}
 
 /* ---------------------------------------------------------- guided tour --- */
 /* A straight image slideshow of the designer's own annotated screenshots
@@ -2886,9 +2893,9 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    same visual language as the real inspection cards, just smaller: .fc-item
    mirrors .pc-card's current look (white face, plain black frame, was a
    dark face with a thick suit-colored top stripe matching the card's own
-   OLD design before that got reworked), .fc-el still mirrors .el-pop-card
-   (white face, thick suit-colored border all round) -- that one wasn't
-   part of this round's redesign, so it's untouched. Sized up (92px ->
+   OLD design before that got reworked), .fc-el mirrors .el-pop-card (white
+   face, thick suit-colored border, corner bubbles, suit pill) at mini-card
+   scale -- see miniIngredientCardHTML()'s own comment. Sized up (92px ->
    120px) to read more clearly mid-flight. Position/size are set inline
    per-card in JS (start point, fan offsets); this only owns the fixed
    "what a card of this kind looks like" shape. */
@@ -2906,10 +2913,38 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .fc-item .fc-icon{font-size:80px; line-height:1}
 .fc-item .fc-name{font-size:11.5px; font-weight:800; color:#181614; line-height:1.2}
 .fc-el{
-  background:#fff; border-radius:14px; border:7px solid var(--suit, #4a4f5c);
+  background:#fff; border-radius:14px; border:8px solid var(--suit, #4a4f5c);
+  position:relative;
 }
-.fc-el .fc-sym{font-size:26px; font-weight:800; color:#2b2822; line-height:1}
-.fc-el .fc-name{font-size:9.5px; font-weight:700; color:#5a5548; line-height:1.2}
+.fc-el .fc-sym{font-size:36px; font-weight:800; color:#1f1c17; line-height:1; letter-spacing:-.01em}
+.fc-el .fc-name{font-size:8.5px; font-weight:700; color:#5a5548; line-height:1.2}
+/* Same 4-corner-bubble language as the full element card popup
+   (.el-pop-bubble) -- atomic number on the top-left/bottom-right corners,
+   the suit's own glyph on the other two -- shrunk to fit a 120px mini
+   card, with a straddle-the-border offset scaled down from that card's
+   own -18px against a 20px border. */
+.fc-el-bubble{
+  position:absolute; width:22px; height:22px; border-radius:50%;
+  background:#fff; border:3px solid var(--suit, #4a4f5c);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; color:#2b2822; line-height:1;
+}
+.fc-el-bubble.tl{top:-7px; left:-7px}
+.fc-el-bubble.tr{top:-7px; right:-7px}
+.fc-el-bubble.bl{bottom:-7px; left:-7px}
+.fc-el-bubble.br{bottom:-7px; right:-7px}
+.fc-el-bubble img{width:58%; height:58%; object-fit:contain}
+/* Metal's own suit glyph, same as the full popup's own suit-icon-big --
+   reads small against the other three suits at the shared bubble scale. */
+.fc-el-bubble.big img{width:87%; height:87%}
+/* Suit-name pill, pinned to the card's bottom edge same as the full
+   popup's own .el-pop-pill -- margin-top:auto pushes it to the end of
+   .fc-card's own flex column regardless of that rule's justify-content. */
+.fc-el-pill{
+  margin-top:auto; font-size:6.5px; font-weight:800; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; background:var(--suit, #4a4f5c);
+  padding:2px 6px; border-radius:999px; white-space:nowrap;
+}
 
 /* Hard Mode tiered re-craft borders (see craftTier()) -- only ever applied
    here, on the tap-to-inspect popup, never on the item's icon anywhere
@@ -7061,9 +7096,8 @@ function recordHistory(){
     score: score(),
     capstones: CAPSTONES.filter(owns),
     // Deep-copied, not a live reference -- state is about to be wiped/
-    // reused by whatever called this. Dice rolls are never in here at
-    // all (see visitLog's own comment) -- just station + what got
-    // crafted there, on purpose, per how this is meant to be read/exported.
+    // reused by whatever called this. Station + what was rolled there +
+    // what got crafted there, per how this is meant to be read/exported.
     visitLog: JSON.parse(JSON.stringify(state.visitLog || [])),
   });
   history.length = Math.min(history.length, HISTORY_MAX);
@@ -7071,16 +7105,28 @@ function recordHistory(){
 }
 
 let histExpanded = new Set();
+// {sym:count} -> "H×2, O" (bare symbol once count is 1, same "only show
+// the number when it's actually informative" convention itemHTML()'s own
+// suit-cost badges use) -- shared by histTurnsHTML() below.
+function elementTallyText(elements){
+  const syms = Object.keys(elements || {});
+  if (!syms.length) return null;
+  return syms.map(sym => elements[sym] > 1 ? `${sym}×${elements[sym]}` : sym).join(", ");
+}
 function histTurnsHTML(h){
   if (!h.visitLog || !h.visitLog.length){
     return '<p class="empty">No turn-by-turn detail recorded for this run.</p>';
   }
   return `<div class="histturns">${h.visitLog.map((t, i) => {
     const st = STATION_BY_NAME[t.station];
+    const elementsText = elementTallyText(t.elements);
     return `<div class="histturn">
-      <span class="histturn-n">${i + 1}</span>
-      <span class="histturn-station">${st ? em(st.emoji) : ""} ${esc(t.station)}</span>
-      <span class="histturn-items">${t.items.length ? esc(t.items.join(", ")) : '<span class="histnone">—</span>'}</span>
+      <div class="histturn-head">
+        <span class="histturn-n">${i + 1}</span>
+        <span class="histturn-station">${st ? em(st.emoji) : ""} ${esc(t.station)}</span>
+      </div>
+      <div class="histturn-line"><span class="histturn-label">Collected</span> ${elementsText ? esc(elementsText) : '<span class="histnone">—</span>'}</div>
+      <div class="histturn-line"><span class="histturn-label">Crafted</span> ${t.items.length ? esc(t.items.join(", ")) : '<span class="histnone">—</span>'}</div>
     </div>`;
   }).join("")}</div>`;
 }
@@ -7110,10 +7156,10 @@ function freshState(){
   return {
     elements: {},      // symbol -> count (consumed)
     items: [],         // crafted item names (permanent)
-    visitLog: [],       // [{station, items:[name,...]}, ...] one entry per goStation() call
-                         // (pushed there), items appended by craft()'s own tail -- dice rolls
-                         // deliberately never recorded here. Feeds History's per-run turn
-                         // breakdown/export (see recordHistory()/renderHistory()).
+    visitLog: [],       // [{station, items:[name,...], elements:{sym:count}}, ...] one entry
+                         // per goStation() call (pushed there); items appended by craft()'s own
+                         // tail, elements tallied by doRoll()'s own tail. Feeds History's
+                         // per-run turn breakdown/export (see recordHistory()/renderHistory()).
     visits: 0,
     lastStation: null,   // where the player is standing right now (map screen's anchor)
     priorStation: null,  // where they were BEFORE lastStation -- the "no repeat" rule now
@@ -10222,10 +10268,11 @@ function goStation(name){
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
   // One new turn-log entry per real visit -- craft()'s own tail appends
-  // into whichever entry is last, so this must land before any crafting
-  // this turn could possibly happen.
+  // into whichever entry is last (and doRoll()'s own tail tallies into
+  // elements), so this must land before any crafting or rolling this turn
+  // could possibly happen.
   if (!state.visitLog) state.visitLog = [];
-  state.visitLog.push({station: name, items: []});
+  state.visitLog.push({station: name, items: [], elements: {}});
   // Defensive reset: if the player navigated here mid-flight from a
   // previous roll's dice animation (tapping Map/Travel before
   // flyToInventory()'s onfinish had a chance to fire -- its target cards
@@ -10549,6 +10596,14 @@ function doRoll(rollCount){
   }
   if (isOceanFirstRoll) state.oceanFirstRollDone = true;
   state.rolledHere = true; state.lastRoll = out;
+  // Tallied into this visit's own turn-log entry (see goStation()'s own
+  // push) -- History's per-turn breakdown reads this to show what was
+  // collected here alongside what got crafted.
+  if (state.visitLog && state.visitLog.length){
+    const turn = state.visitLog[state.visitLog.length - 1];
+    if (!turn.elements) turn.elements = {};
+    out.forEach(({sym}) => { turn.elements[sym] = (turn.elements[sym] || 0) + 1; });
+  }
   save();
   // Unlock the Map button immediately (it can smoothly transition, see
   // #hubHome's own CSS) rather than waiting for the animation's deferred
@@ -10702,10 +10757,24 @@ function itemSuitColor(name){
 }
 function miniIngredientCardHTML(req){
   if (req.kind === "element"){
-    const suit = ELEMENT_COLOR[req.name] || "#4a4f5c";
-    return `<div class="fc-card fc-el" style="--suit:${suit}">
+    // Same data/markup shape as the full element-card popup itself (see
+    // showElCardPop()) -- atomic number opposite corners, the suit's own
+    // glyph on the other two, a suit-name pill at the bottom -- just at
+    // mini-card scale, so a rolled element flying in reads as the exact
+    // same card the player already knows from tapping it elsewhere.
+    const suit = ELEMENT_SUIT[req.name];
+    const color = ELEMENT_COLOR[req.name] || "#4a4f5c";
+    const num = ATOMIC_NUMBER[req.name] || "";
+    const icon = SUIT_ICON[suit] || "";
+    const big = suit === "metal" ? " big" : "";
+    return `<div class="fc-card fc-el" style="--suit:${color}">
+      <span class="fc-el-bubble tl">${esc(num)}</span>
+      <span class="fc-el-bubble br">${esc(num)}</span>
+      <span class="fc-el-bubble tr${big}">${icon}</span>
+      <span class="fc-el-bubble bl${big}">${icon}</span>
       <div class="fc-sym">${esc(req.name)}</div>
       <div class="fc-name">${esc(ELEMENT_NAMES[req.name] || req.name)}</div>
+      <div class="fc-el-pill">${esc(ELEMENT_SUIT_LABEL[suit] || "")}</div>
     </div>`;
   }
   const ing = ENTRIES.find(e => e.name === req.name);
