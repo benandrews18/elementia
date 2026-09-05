@@ -1874,12 +1874,17 @@ body[data-screen="market"] #trackedPill{display:none}
 .item .itop{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
 .iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
 /* 5+ point items only (see itemSuitCosts()) -- small suit-colored circles
-   next to the item name, depicting the mechanic being considered (spend
-   elements of these suits alongside crafting) without yet wiring up any
-   actual cost -- purely a preview of the idea. Gap to the name bumped
-   from .itop's own 9px (now 12px) for a bit more breathing room between
-   the two. */
+   next to the item name. Gap to the name bumped from .itop's own 9px (now
+   12px) for a bit more breathing room between the two. */
 .isuit-costs{display:inline-flex; gap:4px; vertical-align:middle}
+/* Tappable once the recipe and the suit cost are both actually payable
+   (see itemHTML()'s own "can") -- opens the suit-spend balloon right from
+   here (see the .isuit-costs branch in handleScreenClick), same as
+   tapping Craft does. A subtle lift on hover is the only affordance
+   needed; the badges' own per-suit "need" greying already communicates
+   the not-ready-yet state when this class is absent. */
+.isuit-costs.interactive{cursor:pointer}
+.isuit-costs.interactive:hover{transform:translateY(-1px)}
 /* Sized up a notch (18px -> 22px) for better legibility next to the name. */
 .isuit-badge{
   width:22px; height:22px; border-radius:50%; flex:none;
@@ -2307,23 +2312,45 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-pick .pickqty{
   font-size:13px; font-weight:800; color:var(--ink);
 }
-/* Suit-spend picker (see openSuitSpendPicker()) -- one of these per suit
-   the item's cost demands, each with its own progress readout above a
-   .convert-picker-grid of that suit's own elements. */
-.suitspend-section{margin-bottom:14px}
-.suitspend-head{
-  display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800;
-  letter-spacing:.3px; color:var(--ink); margin-bottom:6px;
+/* Suit-spend balloon (see openSuitSpendBalloon()) -- a small speech-bubble
+   popover anchored to whichever suit-cost badge opened it, not a full
+   dialog: no backdrop, no title/label text anywhere, just rows of
+   .convert-pick elements (one row per suit the cost demands, each row
+   always that suit's own fixed 4 core elements -- see SUIT_CORE_ELEMENTS).
+   Positioned by placeSuitSpendBalloon(), same above-target/flip-below-if-
+   clipped logic as #hint's own placeHint(). */
+#suitSpendBalloon{
+  position:absolute; z-index:80; background:var(--card); border:2px solid var(--line);
+  border-radius:16px; padding:12px; box-shadow:0 10px 28px rgba(0,0,0,.4);
+  display:none;
 }
-.suitspend-head .isuit-badge{width:20px; height:20px}
-.suitspend-progress{margin-left:auto; font-weight:800; color:var(--mute)}
-.suitspend-progress.full{color:var(--ok-bright)}
+#suitSpendBalloon.open{display:block}
+/* Solid-color diamond half-tucked behind the bubble's own top/bottom seam
+   -- z-index:-1 keeps it from ever painting over the bubble's content,
+   and the bubble's own border simply continues across the seam rather
+   than being replicated onto the tail itself. */
+#suitSpendBalloon .ssb-tail{
+  position:absolute; width:16px; height:16px; left:50%; margin-left:-8px;
+  background:var(--card); transform:rotate(45deg); z-index:-1;
+}
+#suitSpendBalloon.above .ssb-tail{ bottom:-7px; }
+#suitSpendBalloon.below .ssb-tail{ top:-7px; }
+#suitSpendRows{display:flex; flex-direction:column; gap:10px}
+.ssb-row{display:flex; gap:8px}
 /* Sits over a .convert-pick once at least one unit of that element is
-   picked -- same idea as .tok-check, just counting instead of a plain
-   checkmark. */
-.convert-pick .suitspend-picked{
-  font-size:12px; font-weight:800; color:var(--ok-bright);
+   picked -- a bare checkmark glyph (not a text label) so the balloon
+   stays free of any actual words, same language .tok-check already uses
+   for "you have this" elsewhere. */
+.convert-pick .ssb-picked{
+  position:absolute; top:-4px; right:-4px; width:18px; height:18px; border-radius:50%;
+  background:var(--ok-bright); color:#0f2733; font-size:11px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card);
 }
+/* .convert-pick itself has no positioning context by default -- needed so
+   .ssb-picked's absolute corner badge resolves against ITS OWN box, not
+   the row/balloon. */
+.ssb-row .convert-pick{position:relative}
 #invFilter::placeholder{color:var(--mute)}
 .itemlist{display:flex; flex-direction:column; gap:1px}
 .ientry{
@@ -4161,26 +4188,20 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
-<!-- Suit-spend picker: shown instead of crafting immediately when Craft is
-     tapped on an item carrying a suit cost (see ITEM_SUIT_COST_TABLE /
-     openSuitSpendPicker()) -- picks specific held elements of the required
-     suit(s) to spend. Modeled closely on #convertPicker's own FROM-side
-     grid (.convert-picker-grid/.convert-pick/.elsym/.pickqty), just with
-     several tappable elements per suit instead of one pick-and-close. Every
-     animation/inspection trigger a craft normally fires (flyIngredients-
-     AndReveal, celebrate, autoCardPop) waits behind this sheet's own
-     Confirm -- see the [data-craft] click handler and suitSpendGo below. -->
-<div class="overlay" id="suitSpendPicker" role="dialog" aria-modal="true" aria-labelledby="suitSpendTitle">
-  <div class="sheetbox">
-    <div class="convert-picker-kicker">Spend Elements</div>
-    <h2 id="suitSpendTitle">Craft?</h2>
-    <p class="convert-picker-sub">Choose which elements to spend to craft this item -- tap to add one, tap again once full to clear it.</p>
-    <div id="suitSpendSections"></div>
-    <div class="btnrow">
-      <button type="button" class="bigbtn sec" id="suitSpendCancel">Cancel</button>
-      <button type="button" class="bigbtn" id="suitSpendGo" disabled>Confirm & Craft</button>
-    </div>
-  </div>
+<!-- Suit-spend balloon: a small speech-bubble popover (not a full dialog --
+     no backdrop, no title/body text) anchored directly to whichever item's
+     suit-cost badge (.isuit-costs, see suitCostBadgesHTML()) triggered it,
+     opened either by tapping that badge directly or by tapping Craft on a
+     cost-bearing item (see ITEM_SUIT_COST_TABLE / openSuitSpendBalloon()).
+     One row of that suit's own 4 core elements per suit the cost demands
+     (2 suits -> 2 rows, etc), each tappable to spend it -- nothing else on
+     screen, per design. Auto-confirms and closes itself the instant every
+     row is fully picked, so there's no separate Confirm control; tapping
+     anywhere outside it cancels with no state change (see the dedicated
+     document click listener right after renderSuitSpendBalloon()). -->
+<div id="suitSpendBalloon" role="dialog" aria-label="Choose elements to spend">
+  <div class="ssb-tail"></div>
+  <div id="suitSpendRows"></div>
 </div>
 
 <!-- Arrange Items: freeform scene builder opened from the inventory
@@ -5999,6 +6020,14 @@ const ELEMENT_SUIT_LABEL = {organic:"ORGANIC", reactive:"REACTIVE", earth:"EARTH
 // itemHTML()) uses this, not a per-element color, since an item is made
 // of several elements at once.
 const SUIT_COLOR = {organic:"#3aab6d", reactive:"#e2543b", earth:"#e2a83e", metal:"#4d7cf2"};
+// Every suit's own fixed 4 CORE elements (see CORE_ELEMENT_SYMS -- Zn is
+// metal's 5th element but isn't core, so metal has exactly 4 here too) --
+// the suit-spend balloon (see openSuitSpendBalloon()) always lists all 4
+// of a suit's own elements, not just whichever ones happen to be held.
+const SUIT_CORE_ELEMENTS = {};
+Object.keys(ELEMENT_SUIT_LABEL).forEach(suit => {
+  SUIT_CORE_ELEMENTS[suit] = CORE_ELEMENT_SYMS.filter(sym => ELEMENT_SUIT[sym] === suit);
+});
 /* Every item gets exactly one of the 4 element suits, derived (not hand-
    authored) from what it's actually built out of: walk its own recipe,
    tally which suit each raw element belongs to (an item ingredient
@@ -6097,18 +6126,19 @@ function suitCostNeed(entry){
 }
 // How many of `suit`'s elements are still free to spend on a suit cost
 // once the recipe's own element needs (which have to stay held/spent for
-// the recipe itself to fire) are set aside -- the suit-spend picker
-// (openSuitSpendPicker()) only ever offers this much per suit, so paying a
-// suit cost can never eat into what the base recipe still needs.
+// the recipe itself to fire) are set aside -- the suit-spend balloon
+// (openSuitSpendBalloon()) only ever offers this much per suit, so paying
+// a suit cost can never eat into what the base recipe still needs.
 function suitSurplusOfSuit(suit, reserved){
   return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
     .reduce((sum, el) => sum + Math.max(0, count(el) - (reserved[el] || 0)), 0);
 }
-// Gate for the Craft button/bounceMissingItems -- true once every suit an
-// item's cost demands has enough surplus (beyond the recipe's own needs)
-// sitting in inventory right now. Doesn't spend anything itself; actual
-// spending only happens once the player picks specific elements to spend
-// (see openSuitSpendPicker()).
+// Gate for the Craft button/bounceMissingItems (and for whether the
+// suit-cost badge itself is tappable, see suitCostBadgesHTML()) -- true
+// once every suit an item's cost demands has enough surplus (beyond the
+// recipe's own needs) sitting in inventory right now. Doesn't spend
+// anything itself; actual spending only happens once the player picks
+// specific elements to spend (see openSuitSpendBalloon()).
 function suitCostPayable(entry){
   const need = suitCostNeed(entry);
   if (!Object.keys(need).length) return true;
@@ -6124,11 +6154,16 @@ function suitCostPayable(entry){
    a single shared position in the array) lights up once total held-of-
    that-suit exceeds N, so a player sitting on 1 of 2 required sees exactly
    one badge lit and one greyed instead of an all-or-nothing readout. */
-function suitCostBadgesHTML(name){
+function suitCostBadgesHTML(name, interactive){
   const costs = itemSuitCosts(name);
   if (!costs.length) return "";
   const heldCache = {}, seenCount = {};
-  return `<span class="isuit-costs">${costs.map(s => {
+  // interactive (see itemHTML()'s own "can" -- true once the recipe AND
+  // the suit cost are both actually payable right now) marks this badge
+  // as the tap target for the suit-spend balloon (see the .isuit-costs
+  // branch in handleScreenClick) -- inert otherwise, matching the badges'
+  // own greyed "need" look for that same not-ready-yet case.
+  return `<span class="isuit-costs${interactive ? " interactive" : ""}">${costs.map(s => {
     if (!(s in heldCache)) heldCache[s] = heldOfSuit(s);
     const idx = seenCount[s] || 0;
     seenCount[s] = idx + 1;
@@ -7987,7 +8022,7 @@ function itemHTML(entry, idx){
     <div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry.name)}${tierTag}</div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry.name, can)}${tierTag}</div>
         <div class="recipe">${recipeHTML(entry)}</div>
       </div>
     </div>${craftCol}</div>`;
@@ -10949,39 +10984,64 @@ function performSingleCraft(entry){
 }
 
 /* =====================================================================
-   Suit-spend picker -- shown instead of crafting immediately when Craft is
-   tapped on an item carrying a suit cost (see ITEM_SUIT_COST_TABLE up top).
-   Modeled closely on #convertPicker's own FROM-side grid -- a
-   .convert-picker-grid of tappable .convert-pick elements per suit the
-   cost demands -- just letting several taps accumulate (one per suit
-   section, up to that suit's own needed count) instead of picking one and
-   closing. Nothing about the craft itself (performSingleCraft() above, or
-   the elements this sheet spends) happens until Confirm.
+   Suit-spend balloon -- a speech-bubble popover anchored to whichever
+   suit-cost badge (.isuit-costs, see suitCostBadgesHTML()) opened it,
+   shown either by tapping that badge directly or by tapping Craft on an
+   item carrying a suit cost (see ITEM_SUIT_COST_TABLE up top and the
+   [data-craft]/.isuit-costs branches in handleScreenClick). One row of
+   .convert-pick elements per suit the cost demands, always that suit's
+   own fixed 4 core elements (SUIT_CORE_ELEMENTS) -- no title, label, or
+   progress text anywhere in it, by design. Tapping a symbol spends it
+   toward its suit's requirement; the balloon auto-confirms (actually
+   deducts the picks, then runs performSingleCraft()) the instant every
+   row is fully picked, rather than needing a separate Confirm control.
    ===================================================================== */
-let suitSpendEntry = null, suitSpendPicks = {}, suitSpendOnConfirm = null;
+let suitSpendEntry = null, suitSpendPicks = {}, suitSpendAnchor = null;
 function suitSpendPickedForSuit(suit){
   return Object.keys(suitSpendPicks).filter(sym => ELEMENT_SUIT[sym] === suit)
     .reduce((sum, sym) => sum + suitSpendPicks[sym], 0);
 }
-function openSuitSpendPicker(entry, onConfirm){
+function closeSuitSpendBalloon(){
+  document.getElementById("suitSpendBalloon").classList.remove("open", "above", "below");
+  suitSpendEntry = null; suitSpendPicks = {}; suitSpendAnchor = null;
+}
+/* Same above-target/flip-below-if-it-would-run-off-the-top logic as
+   #hint's own placeHint() -- centered on the anchor badge horizontally.
+   Re-run after every render (content height can change a little as
+   .ssb-picked badges appear), same as placeHint() re-running per showHint(). */
+function placeSuitSpendBalloon(anchor){
+  const b = document.getElementById("suitSpendBalloon");
+  const r = anchor.getBoundingClientRect();
+  const br = b.getBoundingClientRect();
+  let left = r.left + window.scrollX + r.width / 2 - br.width / 2;
+  left = Math.max(8, Math.min(left, window.scrollX + window.innerWidth - br.width - 8));
+  let top = r.top + window.scrollY - br.height - 12;
+  const above = top >= window.scrollY + 4;
+  if (!above) top = r.bottom + window.scrollY + 12;
+  b.classList.toggle("above", above);
+  b.classList.toggle("below", !above);
+  b.style.left = left + "px";
+  b.style.top = top + "px";
+  // Tail stays centered on the real anchor badge, not the bubble's own
+  // (possibly re-centered-to-stay-onscreen) box, so it keeps pointing at
+  // the actual badge even once the bubble has shifted sideways to fit.
+  const anchorCenter = r.left + window.scrollX + r.width / 2;
+  b.querySelector(".ssb-tail").style.left = Math.max(14, Math.min(anchorCenter - left, br.width - 14)) + "px";
+}
+function openSuitSpendBalloon(entry, anchor){
   suitSpendEntry = entry;
   suitSpendPicks = {};
-  suitSpendOnConfirm = onConfirm;
-  renderSuitSpendPicker();
-  openOverlay("suitSpendPicker");
+  suitSpendAnchor = anchor;
+  document.getElementById("suitSpendBalloon").classList.add("open");
+  renderSuitSpendBalloon();
 }
-function renderSuitSpendPicker(){
+function renderSuitSpendBalloon(){
   const entry = suitSpendEntry;
-  document.getElementById("suitSpendTitle").textContent = `Craft ${entry.name}?`;
   const need = suitCostNeed(entry);
   const {els: reserved} = needsOf(entry.reqs);
   const SUIT_ORDER = Object.keys(ELEMENT_SUIT_LABEL);
-  const wrap = document.getElementById("suitSpendSections");
-  wrap.innerHTML = SUIT_ORDER.filter(s => need[s]).map(suit => {
-    const picked = suitSpendPickedForSuit(suit);
-    const needed = need[suit];
-    const syms = Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit && count(el) > 0);
-    const grid = syms.map(sym => {
+  document.getElementById("suitSpendRows").innerHTML = SUIT_ORDER.filter(s => need[s]).map(suit => {
+    const row = SUIT_CORE_ELEMENTS[suit].map(sym => {
       const avail = Math.max(0, count(sym) - (reserved[sym] || 0));
       const have = suitSpendPicks[sym] || 0;
       const suitStyle = `style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"`;
@@ -10989,27 +11049,21 @@ function renderSuitSpendPicker(){
       return `<button type="button" class="convert-pick ${inert ? "invalid" : ""}" data-sym="${esc(sym)}" data-suit="${suit}" ${inert ? "disabled" : ""} title="${esc(ELEMENT_NAMES[sym] || sym)}">
           <span class="elsym" ${suitStyle}>${esc(sym)}${elSuitBadgeHTML(sym)}</span>
           <span class="pickqty">×${avail}</span>
-          ${have > 0 ? `<span class="suitspend-picked">${have} picked</span>` : ""}
+          ${have > 0 ? `<span class="ssb-picked">${have}</span>` : ""}
         </button>`;
     }).join("");
-    return `<div class="suitspend-section">
-        <div class="suitspend-head">
-          <span class="isuit-badge" style="--suit:${SUIT_COLOR[suit]}">${SUIT_ICON[suit]}</span>
-          ${ELEMENT_SUIT_LABEL[suit]}
-          <span class="suitspend-progress ${picked >= needed ? "full" : ""}">${picked}/${needed}</span>
-        </div>
-        <div class="convert-picker-grid">${grid || `<p class="empty">You don't have any ${ELEMENT_SUIT_LABEL[suit].toLowerCase()} elements yet.</p>`}</div>
-      </div>`;
+    return `<div class="ssb-row">${row}</div>`;
   }).join("");
-  const ready = SUIT_ORDER.every(s => !need[s] || suitSpendPickedForSuit(s) === need[s]);
-  document.getElementById("suitSpendGo").disabled = !ready;
+  if (suitSpendAnchor) placeSuitSpendBalloon(suitSpendAnchor);
 }
-document.getElementById("suitSpendSections").addEventListener("click", ev => {
+document.getElementById("suitSpendRows").addEventListener("click", ev => {
   const btn = ev.target.closest("[data-sym]");
   if (!btn || !suitSpendEntry) return;
+  ev.stopPropagation();
+  const entry = suitSpendEntry;
   const sym = btn.dataset.sym, suit = btn.dataset.suit;
-  const {els: reserved} = needsOf(suitSpendEntry.reqs);
-  const need = suitCostNeed(suitSpendEntry);
+  const {els: reserved} = needsOf(entry.reqs);
+  const need = suitCostNeed(entry);
   const avail = Math.max(0, count(sym) - (reserved[sym] || 0));
   const have = suitSpendPicks[sym] || 0;
   const othersPickedForSuit = suitSpendPickedForSuit(suit) - have;
@@ -11019,29 +11073,29 @@ document.getElementById("suitSpendSections").addEventListener("click", ev => {
   // is already covering everything its suit still needs from it.
   const next = have >= maxForSym ? 0 : have + 1;
   if (next === 0) delete suitSpendPicks[sym]; else suitSpendPicks[sym] = next;
-  renderSuitSpendPicker();
-});
-document.getElementById("suitSpendCancel").addEventListener("click", () => {
-  closeOverlay("suitSpendPicker");
-  suitSpendEntry = null; suitSpendPicks = {}; suitSpendOnConfirm = null;
-});
-document.getElementById("suitSpendGo").addEventListener("click", () => {
-  const entry = suitSpendEntry, onConfirm = suitSpendOnConfirm;
-  if (!entry) return;
-  Object.keys(suitSpendPicks).forEach(sym => {
-    state.elements[sym] = count(sym) - suitSpendPicks[sym];
-    if (state.elements[sym] <= 0) delete state.elements[sym];
+  const ready = Object.keys(need).every(s => suitSpendPickedForSuit(s) === need[s]);
+  if (!ready){ renderSuitSpendBalloon(); return; }
+  // Every row satisfied -- spend the picks for real and hand off to the
+  // exact same post-craft pipeline the item's Craft tap normally does,
+  // same re-stash-right-before-moving-on reasoning as batchConfirmGo's
+  // own preCraftCardRect capture.
+  Object.keys(suitSpendPicks).forEach(pickedSym => {
+    state.elements[pickedSym] = count(pickedSym) - suitSpendPicks[pickedSym];
+    if (state.elements[pickedSym] <= 0) delete state.elements[pickedSym];
   });
   save();
-  closeOverlay("suitSpendPicker");
-  suitSpendEntry = null; suitSpendPicks = {}; suitSpendOnConfirm = null;
-  // Re-stashed here (not relying on the click handler's earlier capture),
-  // same reasoning as batchConfirmGo's own re-stash: this sheet can sit
-  // open for a while, and the shop card's real position is only ever
-  // trustworthy read fresh, right before whatever happens next moves it.
+  closeSuitSpendBalloon();
   const preCraftIem = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"] .iem`);
   preCraftCardRect = preCraftIem ? preCraftIem.getBoundingClientRect() : null;
-  if (onConfirm) onConfirm();
+  performSingleCraft(entry);
+});
+// Any click that doesn't land inside the balloon itself cancels it with
+// no state change -- same tap-anywhere-else-closes-it convention #hint's
+// own hideHint() uses (both listen on every document click; the balloon's
+// own open/close taps stopPropagation() so they don't immediately
+// re-trigger this same listener on the same event).
+document.addEventListener("click", ev => {
+  if (suitSpendEntry && !ev.target.closest("#suitSpendBalloon")) closeSuitSpendBalloon();
 });
 
 document.getElementById("pinsTrayBody").addEventListener("click", ev => {
@@ -11174,16 +11228,39 @@ function handleScreenClick(ev){
       return;
     }
     // An item carrying a suit cost (see ITEM_SUIT_COST_TABLE) stops here
-    // for the player to choose which held elements to spend -- the actual
-    // craft, and everything it normally triggers (performSingleCraft()),
-    // waits behind that sheet's own Confirm instead of firing immediately.
-    // suitCostPayable() already gated the button itself, so this is only
-    // ever reached once paying is actually possible.
+    // for the player to choose which held elements to spend, via the same
+    // speech-balloon its own suit-cost badge opens (see the .isuit-costs
+    // branch below) -- the actual craft, and everything it normally
+    // triggers (performSingleCraft()), waits behind that choice instead of
+    // firing immediately. suitCostPayable() already gated the button
+    // itself, so this is only ever reached once paying is actually
+    // possible.
     if (itemSuitCosts(entry.name).length){
-      openSuitSpendPicker(entry, () => performSingleCraft(entry));
+      const badge = cBtn.closest("[data-item-card]")?.querySelector(".isuit-costs");
+      // stopPropagation -- without it this same click keeps bubbling past
+      // this handler up to document, straight into the balloon's own
+      // outside-click-closes-it listener (see below), closing the balloon
+      // on the exact same tap that just opened it.
+      if (badge){ ev.stopPropagation(); openSuitSpendBalloon(entry, badge); }
       return;
     }
     performSingleCraft(entry);
+    return;
+  }
+
+  // The suit-cost badge itself (see suitCostBadgesHTML()) -- an equally
+  // valid way to reach the exact same balloon Craft opens above, so the
+  // choice can be made before ever tapping Craft. Same payability gate as
+  // the Craft button's own "can" (see itemHTML()); not payable yet bounces
+  // the same "Missing Items!" note Craft itself would, rather than
+  // silently doing nothing or falling through to the card popup below.
+  const suitBadge = ev.target.closest(".isuit-costs");
+  if (suitBadge){
+    ev.stopPropagation();
+    const card = suitBadge.closest("[data-item-card]");
+    const entry = card && ENTRIES[+card.dataset.itemCard];
+    if (entry && canCraft(entry) && suitCostPayable(entry)) openSuitSpendBalloon(entry, suitBadge);
+    else if (entry) bounceMissingItems(suitBadge);
     return;
   }
 
