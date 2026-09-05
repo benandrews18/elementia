@@ -2307,6 +2307,23 @@ body[data-screen="market"] #trackedPill{display:none}
 .convert-pick .pickqty{
   font-size:13px; font-weight:800; color:var(--ink);
 }
+/* Suit-spend picker (see openSuitSpendPicker()) -- one of these per suit
+   the item's cost demands, each with its own progress readout above a
+   .convert-picker-grid of that suit's own elements. */
+.suitspend-section{margin-bottom:14px}
+.suitspend-head{
+  display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800;
+  letter-spacing:.3px; color:var(--ink); margin-bottom:6px;
+}
+.suitspend-head .isuit-badge{width:20px; height:20px}
+.suitspend-progress{margin-left:auto; font-weight:800; color:var(--mute)}
+.suitspend-progress.full{color:var(--ok-bright)}
+/* Sits over a .convert-pick once at least one unit of that element is
+   picked -- same idea as .tok-check, just counting instead of a plain
+   checkmark. */
+.convert-pick .suitspend-picked{
+  font-size:12px; font-weight:800; color:var(--ok-bright);
+}
 #invFilter::placeholder{color:var(--mute)}
 .itemlist{display:flex; flex-direction:column; gap:1px}
 .ientry{
@@ -4152,6 +4169,28 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="batchConfirmCancel">Cancel</button>
       <button type="button" class="bigbtn" id="batchConfirmGo">Confirm & Craft</button>
+    </div>
+  </div>
+</div>
+
+<!-- Suit-spend picker: shown instead of crafting immediately when Craft is
+     tapped on an item carrying a suit cost (see ITEM_SUIT_COST_TABLE /
+     openSuitSpendPicker()) -- picks specific held elements of the required
+     suit(s) to spend. Modeled closely on #convertPicker's own FROM-side
+     grid (.convert-picker-grid/.convert-pick/.elsym/.pickqty), just with
+     several tappable elements per suit instead of one pick-and-close. Every
+     animation/inspection trigger a craft normally fires (flyIngredients-
+     AndReveal, celebrate, autoCardPop) waits behind this sheet's own
+     Confirm -- see the [data-craft] click handler and suitSpendGo below. -->
+<div class="overlay" id="suitSpendPicker" role="dialog" aria-modal="true" aria-labelledby="suitSpendTitle">
+  <div class="sheetbox">
+    <div class="convert-picker-kicker">Spend Elements</div>
+    <h2 id="suitSpendTitle">Craft?</h2>
+    <p class="convert-picker-sub">Choose which elements to spend to craft this item -- tap to add one, tap again once full to clear it.</p>
+    <div id="suitSpendSections"></div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="suitSpendCancel">Cancel</button>
+      <button type="button" class="bigbtn" id="suitSpendGo" disabled>Confirm & Craft</button>
     </div>
   </div>
 </div>
@@ -6015,28 +6054,43 @@ function itemSuitOf(name){
   ITEM_SUIT[name] = best;
   return best;
 }
-/* Suit-cost mechanic (still visual-only -- no crafting logic spends these
-   elements yet): every 5+ point item costs some extra elements of its own
-   suit (itemSuitOf()) on top of its normal recipe, tiered by points --
-   5-9pts costs 1, 10-19pts costs 2, and CAPSTONE items cost 3 regardless
-   of their own points (some capstones land in the 10-19 band on points
-   alone, but the tier itself is what decides 3 here, not the point
-   count). Depicted as that many copies of the item's own suit icon next
-   to its name in the shop card (see itemHTML()) and in the top-left of
-   the full inspection card (see showCardPop()). */
-function itemSuitCostQty(name){
-  const entry = ENTRIES.find(e => e.name === name);
-  if (entry && entry.tier === "CAPSTONE") return 3;
-  const pts = ITEM_POINTS[name] || 0;
-  if (pts >= 10) return 2;
-  if (pts >= 5) return 1;
-  return 0;
-}
-const ITEM_SUIT_COSTS = {};
+/* Suit-cost mechanic: crafting an item worth 5+ points also spends this
+   many extra elements of specific suits, on top of its normal recipe --
+   real now, actually gated/spent (see suitCostPayable(), craftWithSuitCost()
+   below), not just a preview. Which suit(s) and how many is a hand-curated
+   table (not derived from the recipe the way itemSuitOf() is), built from a
+   real-world "what is this actually made of" pass over the Classic core
+   set: 5-9 point items cost 1 suit, 10-19 cost 2 (sometimes two DIFFERENT
+   suits, e.g. Fossil = earth+reactive), and every CAPSTONE costs 3
+   regardless of its own points. Anything not listed here (everything at 4
+   points or under) costs nothing. Depicted as that many suit-icon badges
+   next to the item's name in the shop card (see suitCostBadgesHTML()) and
+   in the top-left of the full inspection card (see showCardPop()). */
+const ITEM_SUIT_COST_TABLE = {
+  Canoe: ["earth"], Egg: ["organic"], Cloud: ["organic"], Apple: ["organic"],
+  Deer: ["earth"], "Log Cabin": ["earth"], Bridge: ["metal"], Compass: ["metal"],
+  Banana: ["organic"], Engine: ["metal"], "Light Bulb": ["reactive"], Grain: ["earth"],
+  "Solar Panel": ["metal"], Farm: ["earth"], Building: ["earth"], Clock: ["reactive"],
+  Plastic: ["reactive"], Flour: ["organic"], Dough: ["organic"], Microchip: ["metal"],
+  Wheel: ["metal"], Fiberglass: ["reactive"],
+
+  Chicken: ["organic", "earth"], Fossil: ["earth", "reactive"], Salmon: ["organic", "organic"],
+  Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
+  Diamond: ["earth", "earth"], Bread: ["organic", "reactive"], Orca: ["organic", "organic"],
+  Cake: ["organic", "reactive"], Lighthouse: ["earth", "reactive"], Star: ["organic", "reactive"],
+  Rainbow: ["organic", "reactive"], Speedboat: ["metal", "metal"], Computer: ["metal", "reactive"],
+  Tractor: ["metal", "earth"], Skyscraper: ["earth", "metal"], "Turbine Blade": ["metal", "reactive"],
+  Life: ["organic", "earth"], Car: ["metal", "reactive"], "Banana Bread": ["organic", "organic"],
+  Museum: ["earth", "metal"], Helicopter: ["metal", "metal"], Rocket: ["metal", "reactive"],
+
+  "Maglev Train": ["metal", "earth", "reactive"], Homestead: ["organic", "earth", "metal"],
+  "Coral Reef": ["organic", "organic", "organic"], Robot: ["metal", "metal", "reactive"],
+  "Fruit Cake": ["organic", "organic", "reactive"], Ecosystem: ["earth", "earth", "organic"],
+  Metropolis: ["metal", "earth", "reactive"], "Space Station": ["metal", "reactive", "organic"],
+};
+const NO_SUIT_COST = [];
 function itemSuitCosts(name){
-  if (name in ITEM_SUIT_COSTS) return ITEM_SUIT_COSTS[name];
-  const qty = itemSuitCostQty(name);
-  return ITEM_SUIT_COSTS[name] = qty ? Array(qty).fill(itemSuitOf(name)) : [];
+  return ITEM_SUIT_COST_TABLE[name] || NO_SUIT_COST;
 }
 // Total raw elements currently held belonging to one suit -- e.g. every
 // organic element's own count summed together, not any one symbol alone,
@@ -6045,20 +6099,52 @@ function heldOfSuit(suit){
   return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
     .reduce((sum, el) => sum + count(el), 0);
 }
+// Tally of a craft's suit cost by suit -- e.g. Fossil (earth+reactive) ->
+// {earth:1, reactive:1}; Coral Reef (organic x3) -> {organic:3}. Empty for
+// anything with no cost.
+function suitCostNeed(entry){
+  const need = {};
+  itemSuitCosts(entry.name).forEach(s => { need[s] = (need[s] || 0) + 1; });
+  return need;
+}
+// How many of `suit`'s elements are still free to spend on a suit cost
+// once the recipe's own element needs (which have to stay held/spent for
+// the recipe itself to fire) are set aside -- the suit-spend picker
+// (openSuitSpendPicker()) only ever offers this much per suit, so paying a
+// suit cost can never eat into what the base recipe still needs.
+function suitSurplusOfSuit(suit, reserved){
+  return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
+    .reduce((sum, el) => sum + Math.max(0, count(el) - (reserved[el] || 0)), 0);
+}
+// Gate for the Craft button/bounceMissingItems -- true once every suit an
+// item's cost demands has enough surplus (beyond the recipe's own needs)
+// sitting in inventory right now. Doesn't spend anything itself; actual
+// spending only happens once the player picks specific elements to spend
+// (see openSuitSpendPicker()).
+function suitCostPayable(entry){
+  const need = suitCostNeed(entry);
+  if (!Object.keys(need).length) return true;
+  const {els: reserved} = needsOf(entry.reqs);
+  return Object.keys(need).every(s => suitSurplusOfSuit(s, reserved) >= need[s]);
+}
 /* Same leaf/flame/anvil/mountain art as the element-card popup's own suit
    glyphs (SUIT_ICON, defined below) -- reused here rather than a second
    icon set, so a suit reads as the same symbol everywhere it appears.
-   Each badge is its own little meter slot -- the i-th badge (0-based)
-   lights up once total held-of-that-suit exceeds i, so a player sitting
-   on 1 of 2 required sees exactly one badge lit and one greyed instead of
-   an all-or-nothing readout. */
+   Each badge is its own little meter slot -- the Nth badge OF THAT SAME
+   SUIT (0-based among just its own suit's badges, since a mixed-suit cost
+   like Fossil's earth+reactive tracks each suit's own count separately, not
+   a single shared position in the array) lights up once total held-of-
+   that-suit exceeds N, so a player sitting on 1 of 2 required sees exactly
+   one badge lit and one greyed instead of an all-or-nothing readout. */
 function suitCostBadgesHTML(name){
   const costs = itemSuitCosts(name);
   if (!costs.length) return "";
-  const heldCache = {};
-  return `<span class="isuit-costs">${costs.map((s, i) => {
+  const heldCache = {}, seenCount = {};
+  return `<span class="isuit-costs">${costs.map(s => {
     if (!(s in heldCache)) heldCache[s] = heldOfSuit(s);
-    const have = heldCache[s] > i;
+    const idx = seenCount[s] || 0;
+    seenCount[s] = idx + 1;
+    const have = heldCache[s] > idx;
     return `<span class="isuit-badge${have ? "" : " need"}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
   }).join("")}</span>`;
 }
@@ -7849,7 +7935,7 @@ function itemHTML(entry, idx){
   const batchOn = state.mode === "hard" && state.batchCraftUnlocked;
   const qty = batchOn ? batchQtyOf(entry.name) : 1;
   const has = owns(entry.name);
-  const can = batchOn ? canCraftQty(entry, qty) : canCraft(entry);
+  const can = batchOn ? canCraftQty(entry, qty) : (canCraft(entry) && suitCostPayable(entry));
   const done = has && !batchOn;
   const stock = state.mode === "hard" ? itemStock(entry.name) : (has ? 1 : 0);
   const cls = [done ? "owned" : (can ? "can" : "")];
@@ -10823,6 +10909,151 @@ function resetCurrentModeRun(){
   startFreshMode(mode);
 }
 
+/* The actual craft + reveal, factored out of the [data-craft] click
+   handler below so it can fire either right away (no suit cost) or once
+   the suit-spend picker's own Confirm goes through (see
+   openSuitSpendPicker()) -- an item with a suit cost stops at that sheet
+   first, and none of this runs until the player's made their picks.
+   entry.name must already be craftable and, if it has one, its suit cost
+   already spent by the time this is called -- craft() itself still does
+   its own real recipe check regardless. */
+function performSingleCraft(entry){
+  // First-ever craft gets the ingredient fly-and-stack reveal (see
+  // flyIngredientsAndReveal()) -- checked before craft() changes what
+  // owns() would report. Every re-craft after the first (wasOwnedBefore
+  // already true) skips straight to the existing immediate reveal,
+  // unchanged.
+  const wasOwnedBefore = owns(entry.name);
+  const beforeRevealed = new Set(
+    entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
+  );
+  if (craft(entry)){
+    const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
+    // !state.seenItems[n] -- same "new to the player, not just to this
+    // station's shop" rule goStation()'s own reveal check uses.
+    const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name && !state.seenItems[n]);
+    if (newlyRevealed.length){
+      pendingRevealNames = newlyRevealed;
+      pendingRevealStation = current;
+    }
+    // Without this, goStation()'s own "newly appeared since last visit"
+    // check (which only ever updates stationLastSeen on ARRIVAL, not
+    // here) would compare against a stale snapshot from before this
+    // craft next time the player re-enters this station -- so an item
+    // the player just watched get celebrated above would immediately
+    // re-trigger the exact same "New Items Unlocked" splash a second
+    // time on the very next arrival, reading as a bug rather than a
+    // second surprise.
+    state.stationLastSeen[current] = afterRevealed;
+
+    const firstCraftReveal = !wasOwnedBefore &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (firstCraftReveal){
+      flyIngredientsAndReveal(entry);
+    } else {
+      render();
+      if (entry.tier === "CAPSTONE") celebrate(entry);
+      else autoCardPop(entry);
+    }
+  }
+}
+
+/* =====================================================================
+   Suit-spend picker -- shown instead of crafting immediately when Craft is
+   tapped on an item carrying a suit cost (see ITEM_SUIT_COST_TABLE up top).
+   Modeled closely on #convertPicker's own FROM-side grid -- a
+   .convert-picker-grid of tappable .convert-pick elements per suit the
+   cost demands -- just letting several taps accumulate (one per suit
+   section, up to that suit's own needed count) instead of picking one and
+   closing. Nothing about the craft itself (performSingleCraft() above, or
+   the elements this sheet spends) happens until Confirm.
+   ===================================================================== */
+let suitSpendEntry = null, suitSpendPicks = {}, suitSpendOnConfirm = null;
+function suitSpendPickedForSuit(suit){
+  return Object.keys(suitSpendPicks).filter(sym => ELEMENT_SUIT[sym] === suit)
+    .reduce((sum, sym) => sum + suitSpendPicks[sym], 0);
+}
+function openSuitSpendPicker(entry, onConfirm){
+  suitSpendEntry = entry;
+  suitSpendPicks = {};
+  suitSpendOnConfirm = onConfirm;
+  renderSuitSpendPicker();
+  openOverlay("suitSpendPicker");
+}
+function renderSuitSpendPicker(){
+  const entry = suitSpendEntry;
+  document.getElementById("suitSpendTitle").textContent = `Craft ${entry.name}?`;
+  const need = suitCostNeed(entry);
+  const {els: reserved} = needsOf(entry.reqs);
+  const SUIT_ORDER = Object.keys(ELEMENT_SUIT_LABEL);
+  const wrap = document.getElementById("suitSpendSections");
+  wrap.innerHTML = SUIT_ORDER.filter(s => need[s]).map(suit => {
+    const picked = suitSpendPickedForSuit(suit);
+    const needed = need[suit];
+    const syms = Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit && count(el) > 0);
+    const grid = syms.map(sym => {
+      const avail = Math.max(0, count(sym) - (reserved[sym] || 0));
+      const have = suitSpendPicks[sym] || 0;
+      const suitStyle = `style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"`;
+      const inert = avail <= 0 && have === 0;
+      return `<button type="button" class="convert-pick ${inert ? "invalid" : ""}" data-sym="${esc(sym)}" data-suit="${suit}" ${inert ? "disabled" : ""} title="${esc(ELEMENT_NAMES[sym] || sym)}">
+          <span class="elsym" ${suitStyle}>${esc(sym)}${elSuitBadgeHTML(sym)}</span>
+          <span class="pickqty">×${avail}</span>
+          ${have > 0 ? `<span class="suitspend-picked">${have} picked</span>` : ""}
+        </button>`;
+    }).join("");
+    return `<div class="suitspend-section">
+        <div class="suitspend-head">
+          <span class="isuit-badge" style="--suit:${SUIT_COLOR[suit]}">${SUIT_ICON[suit]}</span>
+          ${ELEMENT_SUIT_LABEL[suit]}
+          <span class="suitspend-progress ${picked >= needed ? "full" : ""}">${picked}/${needed}</span>
+        </div>
+        <div class="convert-picker-grid">${grid || `<p class="empty">You don't have any ${ELEMENT_SUIT_LABEL[suit].toLowerCase()} elements yet.</p>`}</div>
+      </div>`;
+  }).join("");
+  const ready = SUIT_ORDER.every(s => !need[s] || suitSpendPickedForSuit(s) === need[s]);
+  document.getElementById("suitSpendGo").disabled = !ready;
+}
+document.getElementById("suitSpendSections").addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-sym]");
+  if (!btn || !suitSpendEntry) return;
+  const sym = btn.dataset.sym, suit = btn.dataset.suit;
+  const {els: reserved} = needsOf(suitSpendEntry.reqs);
+  const need = suitCostNeed(suitSpendEntry);
+  const avail = Math.max(0, count(sym) - (reserved[sym] || 0));
+  const have = suitSpendPicks[sym] || 0;
+  const othersPickedForSuit = suitSpendPickedForSuit(suit) - have;
+  const maxForSym = Math.min(avail, need[suit] - othersPickedForSuit);
+  if (maxForSym <= 0) return;
+  // Tap-to-cycle: +1 each tap, wrapping back to 0 once this symbol alone
+  // is already covering everything its suit still needs from it.
+  const next = have >= maxForSym ? 0 : have + 1;
+  if (next === 0) delete suitSpendPicks[sym]; else suitSpendPicks[sym] = next;
+  renderSuitSpendPicker();
+});
+document.getElementById("suitSpendCancel").addEventListener("click", () => {
+  closeOverlay("suitSpendPicker");
+  suitSpendEntry = null; suitSpendPicks = {}; suitSpendOnConfirm = null;
+});
+document.getElementById("suitSpendGo").addEventListener("click", () => {
+  const entry = suitSpendEntry, onConfirm = suitSpendOnConfirm;
+  if (!entry) return;
+  Object.keys(suitSpendPicks).forEach(sym => {
+    state.elements[sym] = count(sym) - suitSpendPicks[sym];
+    if (state.elements[sym] <= 0) delete state.elements[sym];
+  });
+  save();
+  closeOverlay("suitSpendPicker");
+  suitSpendEntry = null; suitSpendPicks = {}; suitSpendOnConfirm = null;
+  // Re-stashed here (not relying on the click handler's earlier capture),
+  // same reasoning as batchConfirmGo's own re-stash: this sheet can sit
+  // open for a while, and the shop card's real position is only ever
+  // trustworthy read fresh, right before whatever happens next moves it.
+  const preCraftIem = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"] .iem`);
+  preCraftCardRect = preCraftIem ? preCraftIem.getBoundingClientRect() : null;
+  if (onConfirm) onConfirm();
+});
+
 document.getElementById("pinsTrayBody").addEventListener("click", ev => {
   const jobSelectBtn = ev.target.closest("[data-select-job]");
   if (jobSelectBtn) toggleJobSelect(jobSelectBtn.dataset.selectJob);
@@ -10952,44 +11183,17 @@ function handleScreenClick(ev){
       }
       return;
     }
-    // First-ever craft gets the ingredient fly-and-stack reveal (see
-    // flyIngredientsAndReveal()) -- checked before craft() changes what
-    // owns() would report. Every re-craft after the first (wasOwnedBefore
-    // already true) skips straight to the existing immediate reveal,
-    // unchanged.
-    const wasOwnedBefore = owns(entry.name);
-    const beforeRevealed = new Set(
-      entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
-    );
-    if (craft(entry)){
-      const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
-      // !state.seenItems[n] -- same "new to the player, not just to this
-      // station's shop" rule goStation()'s own reveal check uses.
-      const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name && !state.seenItems[n]);
-      if (newlyRevealed.length){
-        pendingRevealNames = newlyRevealed;
-        pendingRevealStation = current;
-      }
-      // Without this, goStation()'s own "newly appeared since last visit"
-      // check (which only ever updates stationLastSeen on ARRIVAL, not
-      // here) would compare against a stale snapshot from before this
-      // craft next time the player re-enters this station -- so an item
-      // the player just watched get celebrated above would immediately
-      // re-trigger the exact same "New Items Unlocked" splash a second
-      // time on the very next arrival, reading as a bug rather than a
-      // second surprise.
-      state.stationLastSeen[current] = afterRevealed;
-
-      const firstCraftReveal = !wasOwnedBefore &&
-        !matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (firstCraftReveal){
-        flyIngredientsAndReveal(entry);
-      } else {
-        render();
-        if (entry.tier === "CAPSTONE") celebrate(entry);
-        else autoCardPop(entry);
-      }
+    // An item carrying a suit cost (see ITEM_SUIT_COST_TABLE) stops here
+    // for the player to choose which held elements to spend -- the actual
+    // craft, and everything it normally triggers (performSingleCraft()),
+    // waits behind that sheet's own Confirm instead of firing immediately.
+    // suitCostPayable() already gated the button itself, so this is only
+    // ever reached once paying is actually possible.
+    if (itemSuitCosts(entry.name).length){
+      openSuitSpendPicker(entry, () => performSingleCraft(entry));
+      return;
     }
+    performSingleCraft(entry);
     return;
   }
 
