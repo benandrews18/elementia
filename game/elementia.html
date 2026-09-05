@@ -1883,6 +1883,12 @@ body[data-screen="market"] #trackedPill{display:none}
    just fading the whole badge, so it still reads as "this suit, just not
    enough of it" instead of a generic disabled look. */
 .isuit-badge.need{filter:grayscale(.7) brightness(.75)}
+/* Live progress ring while the suit-spend balloon is open (see
+   updateSuitBadgeProgress()) -- a bright green ring on every slot this
+   badge's own suit still hasn't picked enough elements for, gone the
+   instant it has. Overrides .need's own grayscale/dim so the active pick
+   target always reads clearly regardless of that state. */
+.isuit-badge.picking{filter:none; box-shadow:0 0 0 3px var(--ok-bright), inset 0 1px 2px rgba(255,255,255,.35), inset 0 -1px 2px rgba(0,0,0,.25)}
 /* Corner-mounted version for element squares (dice-pool chips, inventory
    boxes, the Convert picker, ...) -- see elSuitBadgeHTML(). Small and
    overhanging slightly past the square's own outer edge (its border is
@@ -2326,9 +2332,11 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Sits over a .convert-pick once at least one unit of that element is
    picked -- a bare checkmark glyph (not a text label) so the balloon
    stays free of any actual words, same language .tok-check already uses
-   for "you have this" elsewhere. */
+   for "you have this" elsewhere. Top-LEFT (not top-right, which is
+   .el-suit-badge's own corner on the .elsym square underneath it, see
+   elSuitBadgeHTML()) so the two never sit on top of each other. */
 .convert-pick .ssb-picked{
-  position:absolute; top:-4px; right:-4px; width:18px; height:18px; border-radius:50%;
+  position:absolute; top:-4px; left:-4px; width:18px; height:18px; border-radius:50%;
   background:var(--ok-bright); color:#0f2733; font-size:11px; font-weight:800;
   display:flex; align-items:center; justify-content:center; line-height:1;
   box-shadow:0 0 0 2px var(--card);
@@ -6192,7 +6200,7 @@ function suitCostBadgesHTML(name, interactive){
     const idx = seenCount[s] || 0;
     seenCount[s] = idx + 1;
     const have = heldCache[s] > idx;
-    return `<span class="isuit-badge${have ? "" : " need"}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
+    return `<span class="isuit-badge${have ? "" : " need"}" data-suit="${s}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
   }).join("")}</span>`;
 }
 /* Small corner badge marking an element square's own suit -- same
@@ -11084,6 +11092,29 @@ function suitSpendPickedForSuit(suit){
 function closeSuitSpendBalloon(){
   document.getElementById("suitSpendBalloon").classList.remove("open", "above", "below");
   suitSpendEntry = null; suitSpendPicks = {}; suitSpendAnchor = null;
+  clearSuitBadgeProgress();
+}
+/* While the balloon is open, the shop card's own suit-cost badges (see
+   suitCostBadgesHTML()) get a live green ring on every slot not yet fully
+   picked, gone the instant that slot's own suit catches up to what it
+   needs -- a progress readout on the exact badges that started this,
+   updated straight on those real DOM nodes (not a full render()) so the
+   balloon itself, anchored to one of them, is never rebuilt out from
+   under the player mid-pick. */
+function updateSuitBadgeProgress(){
+  if (!suitSpendEntry) return;
+  const group = document.querySelector(`[data-item-card="${ENTRIES.indexOf(suitSpendEntry)}"] .isuit-costs`);
+  if (!group) return;
+  const seenCount = {};
+  group.querySelectorAll(".isuit-badge").forEach(badge => {
+    const suit = badge.dataset.suit;
+    const idx = seenCount[suit] || 0;
+    seenCount[suit] = idx + 1;
+    badge.classList.toggle("picking", suitSpendPickedForSuit(suit) <= idx);
+  });
+}
+function clearSuitBadgeProgress(){
+  document.querySelectorAll(".isuit-badge.picking").forEach(b => b.classList.remove("picking"));
 }
 /* Same above-target/flip-below-if-it-would-run-off-the-top logic as
    #hint's own placeHint() -- centered on the anchor badge horizontally.
@@ -11135,6 +11166,7 @@ function renderSuitSpendBalloon(){
     return `<div class="ssb-row">${row}</div>`;
   }).join("");
   if (suitSpendAnchor) placeSuitSpendBalloon(suitSpendAnchor);
+  updateSuitBadgeProgress();
 }
 document.getElementById("suitSpendRows").addEventListener("click", ev => {
   const btn = ev.target.closest("[data-sym]");
@@ -11314,12 +11346,38 @@ function handleScreenClick(ev){
     return;
   }
 
-  // The suit-cost badge itself (see suitCostBadgesHTML()) -- an equally
-  // valid way to reach the exact same balloon Craft opens above, so the
-  // choice can be made before ever tapping Craft. Same payability gate as
-  // the Craft button's own "can" (see itemHTML()); not payable yet bounces
-  // the same "Missing Items!" note Craft itself would, rather than
+  // A single suit-cost badge that's still short (see suitCostBadgesHTML()'s
+  // own "need" class) -- opens Convert, same "I'm short on this, Convert
+  // solves it" parity as the .tok.el.need handler just below, defaulting
+  // the target to whichever of that suit's own 4 elements is currently
+  // held least (there's no one single element a whole suit maps to, so
+  // this is the closest equivalent to that handler's exact-symbol target
+  // -- the player can still freely change it via the normal picker).
+  // Checked before the whole-badge-group handler right after it, so a
+  // still-short slot always gets this instead of that one's bounce.
+  const needSuitBadge = ev.target.closest(".isuit-badge.need");
+  if (needSuitBadge){
+    ev.stopPropagation();
+    const suit = needSuitBadge.dataset.suit;
+    const members = SUIT_CORE_ELEMENTS[suit] || [];
+    openConvertScreen();
+    convertTo = members.slice().sort((a, b) => count(a) - count(b))[0] || null;
+    updateConvertUI();
+    const itemCard = needSuitBadge.closest("[data-item-card]");
+    const idx = itemCard && +itemCard.dataset.itemCard;
+    convertGoalEntry = itemCard ? ENTRIES[idx] : null;
+    renderConvertGoalCard();
+    return;
+  }
+
+  // The suit-cost badge group itself (see suitCostBadgesHTML()) -- an
+  // equally valid way to reach the exact same balloon Craft opens above,
+  // so the choice can be made before ever tapping Craft. Same payability
+  // gate as the Craft button's own "can" (see itemHTML()); not payable yet
+  // bounces the same "Missing Items!" note Craft itself would, rather than
   // silently doing nothing or falling through to the card popup below.
+  // (A still-short individual badge is caught by needSuitBadge above
+  // before reaching here.)
   const suitBadge = ev.target.closest(".isuit-costs");
   if (suitBadge){
     ev.stopPropagation();
