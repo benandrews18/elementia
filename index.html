@@ -941,11 +941,21 @@ body[data-screen="market"] #trackedPill{display:none}
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
   font-size:40px; line-height:1;
 }
+/* bottom:-6px (not 2px) nudges the name past the cell's own edge into part
+   of .bingo-grid's 9px row gap -- some emoji (compass, tree, wheat sheaf,
+   house) render visually taller than their 40px font-box and were bleeding
+   into a same-height name sitting flush at the bottom, so this buys real
+   clearance from the icon above without touching its own centering, while
+   leaving ~3px before it'd touch the next row's cell. box-pack:end then
+   bottom-aligns a single short line within the 22px box (2-line names fill
+   it entirely either way), pushing it as close to that lower edge as
+   possible for the most breathing room from the icon. */
 .bc-name{
-  position:absolute; left:2px; right:2px; bottom:2px; height:22px;
+  position:absolute; left:2px; right:2px; bottom:-6px; height:22px;
   line-height:11px; font-size:8px; font-weight:700; text-align:center;
   color:#181614; overflow:hidden; padding:0 2px;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  -webkit-box-pack:end;
 }
 /* Bare pin glyph now -- no circular badge/border/background any more (the
    pin itself still shows, just without the chrome wrapped around it), so
