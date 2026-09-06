@@ -1,0 +1,80 @@
+Item,Suit(s)
+Clay,-
+Natural Gas,-
+Steel,-
+Water,-
+Limestone,-
+Tools,-
+Fertilizer,-
+Sugar,-
+DNA,-
+Sand,-
+Wire,-
+Aluminum Alloy,-
+Stainless Steel,-
+Titanium Alloy,-
+Rubber,-
+Furnace,-
+Soil,-
+Bone,-
+Tree,-
+Yeast,-
+Concrete,-
+Glass,-
+Magnet,-
+Seaweed,-
+Battery,-
+Canoe,earth
+Egg,organic
+Cloud,organic
+Apple,organic
+Deer,earth
+Log Cabin,earth
+Bridge,metal
+Compass,metal
+Banana,organic
+Engine,metal
+Light Bulb,reactive
+Grain,earth
+Solar Panel,reactive
+Farm,earth
+Building,earth
+Clock,reactive
+Plastic,reactive
+Flour,organic
+Dough,organic
+Microchip,metal
+Wheel,earth
+Fiberglass,reactive
+Chicken,organic
+Fossil,earth
+Salmon,organic
+Oven,metal + reactive
+Satellite Dish,metal + reactive
+Telescope,metal + metal
+Diamond,earth + earth
+Bread,organic + reactive
+Orca,organic + organic
+Cake,organic + reactive
+Lighthouse,earth + reactive
+Star,organic + reactive
+Rainbow,organic + reactive
+Speedboat,metal + metal
+Computer,metal + reactive
+Tractor,metal + earth
+Skyscraper,earth + metal
+Turbine Blade,metal + reactive
+Life,Organic + Earth
+Car,metal + reactive
+Banana Bread,organic + organic
+Museum,earth + metal
+Helicopter,metal + metal
+Rocket,metal + reactive
+Maglev Train,metal + earth + reactive
+Homestead,Organic + Earth + Metal
+Coral Reef,Oragnic + Organic + Organic
+Robot,Metal + Metal + Reactive
+Fruit Cake,Organic + Organic + Reactive
+Ecosystem,Earth + Earth + Organic
+Metropolis,metal + earth + reactive
+Space Station,Metal + Reactive + Organic
