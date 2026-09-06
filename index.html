@@ -6109,21 +6109,24 @@ function itemSuitOf(name){
    below), not just a preview. Which suit(s) and how many is a hand-curated
    table (not derived from the recipe the way itemSuitOf() is), built from a
    real-world "what is this actually made of" pass over the Classic core
-   set: 5-9 point items cost 1 suit, 10-19 cost 2 (sometimes two DIFFERENT
-   suits, e.g. Fossil = earth+reactive), and every CAPSTONE costs 3
-   regardless of its own points. Anything not listed here (everything at 4
-   points or under) costs nothing. Depicted as that many suit-icon badges
-   next to the item's name in the shop card (see suitCostBadgesHTML()) and
-   in the top-left of the full inspection card (see showCardPop()). */
+   set: 5-9 point items cost 1 suit, 10-19 usually cost 2 (sometimes two
+   DIFFERENT suits, e.g. Oven = metal+reactive) -- Chicken/Fossil/Salmon are
+   hand-tuned exceptions, only 1 suit despite being 10-point items -- and
+   every CAPSTONE costs 3 regardless of its own points. Anything not listed
+   here (everything at 4 points or under) costs nothing. Depicted as that
+   many suit-icon badges next to the item's name in the shop card (see
+   suitCostBadgesHTML()) and in the top-left of the full inspection card
+   (see showCardPop()). See Elementia_Handoff/classic_mode_element_suits.csv
+   for the source list this table is transcribed from. */
 const ITEM_SUIT_COST_TABLE = {
   Canoe: ["earth"], Egg: ["organic"], Cloud: ["organic"], Apple: ["organic"],
   Deer: ["earth"], "Log Cabin": ["earth"], Bridge: ["metal"], Compass: ["metal"],
   Banana: ["organic"], Engine: ["metal"], "Light Bulb": ["reactive"], Grain: ["earth"],
-  "Solar Panel": ["metal"], Farm: ["earth"], Building: ["earth"], Clock: ["reactive"],
+  "Solar Panel": ["reactive"], Farm: ["earth"], Building: ["earth"], Clock: ["reactive"],
   Plastic: ["reactive"], Flour: ["organic"], Dough: ["organic"], Microchip: ["metal"],
-  Wheel: ["metal"], Fiberglass: ["reactive"],
+  Wheel: ["earth"], Fiberglass: ["reactive"], Chicken: ["organic"], Fossil: ["earth"],
+  Salmon: ["organic"],
 
-  Chicken: ["organic", "earth"], Fossil: ["earth", "reactive"], Salmon: ["organic", "organic"],
   Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
   Diamond: ["earth", "earth"], Bread: ["organic", "reactive"], Orca: ["organic", "organic"],
   Cake: ["organic", "reactive"], Lighthouse: ["earth", "reactive"], Star: ["organic", "reactive"],
