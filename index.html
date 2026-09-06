@@ -2374,11 +2374,27 @@ body[data-screen="market"] #trackedPill{display:none}
    than the list scrolling -- this pins each row to its real content
    height so overflow (not shrinkage) is what handles a long list. */
 .histentry{border:1.5px solid var(--line); border-radius:11px; background:var(--bg-soft); overflow:hidden; flex-shrink:0}
+/* Holds the toggle row and its own per-run export button side by side --
+   a button can't nest inside another button, so this is a sibling, not a
+   child, of .histrow (see histrow-export's own comment). */
+.histrow-line{display:flex; align-items:stretch}
 .histrow{
-  display:flex; align-items:center; gap:12px; padding:10px 13px; width:100%;
+  display:flex; align-items:center; gap:12px; padding:10px 13px; flex:1; min-width:0;
   border:none; border-radius:0; background:transparent; cursor:pointer; color:inherit;
 }
 .histrow:hover{background:rgba(255,255,255,.04)}
+/* Per-run export -- copies just THIS run as JSON (see the historyList
+   click handler's data-hist-export branch), for handing a single run to
+   an outside conversation without pasting the entire history export's
+   #historyExport button still covers. Same icon-only footprint/border
+   language as .shop-pin, sitting flush against .histrow's own right edge
+   rather than floating separately. */
+.histrow-export{
+  flex:none; width:38px; border:none; border-left:1.5px solid var(--line);
+  background:transparent; color:var(--mute); font-size:15px; cursor:pointer;
+}
+.histrow-export:hover{background:rgba(255,255,255,.04); color:var(--ink)}
+.histrow-export.done{color:var(--ok)}
 .histvisits{font-weight:800; font-size:13.5px; white-space:nowrap}
 .histscore{font-weight:800; font-size:13.5px; color:var(--gold); white-space:nowrap}
 .histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
@@ -7110,6 +7126,11 @@ function recordHistory(){
     // reused by whatever called this. Station + what was rolled there +
     // what got crafted there, per how this is meant to be read/exported.
     visitLog: JSON.parse(JSON.stringify(state.visitLog || [])),
+    // Classic Mode's hidden Bingo card -- null/empty outside Classic. This
+    // is the "why did the player prioritize THIS item over an equally
+    // reachable one" context visitLog alone can never carry on its own.
+    bingoCard: state.bingoCard ? [...state.bingoCard] : null,
+    bingoLinesCompleted: [...(state.bingoLinesCompleted || [])],
   });
   history.length = Math.min(history.length, HISTORY_MAX);
   saveHistory();
@@ -7150,14 +7171,17 @@ function renderHistory(){
   list.innerHTML = `<div class="histrows">${history.map((h, i) => {
     const open = histExpanded.has(i);
     return `<div class="histentry">
-      <button type="button" class="histrow" data-hist-toggle="${i}" aria-expanded="${open}">
-        <span class="histvisits">${h.visits} turn${h.visits === 1 ? "" : "s"}</span>
-        <span class="histscore">${h.score} pts</span>
-        <span class="histcaps">${h.capstones.length
-          ? h.capstones.map(n => em(ITEM_EMOJI[n])).join("")
-          : '<span class="histnone">—</span>'}</span>
-        <span class="histarrow">${open ? "▾" : "▸"}</span>
-      </button>
+      <div class="histrow-line">
+        <button type="button" class="histrow" data-hist-toggle="${i}" aria-expanded="${open}">
+          <span class="histvisits">${h.visits} turn${h.visits === 1 ? "" : "s"}</span>
+          <span class="histscore">${h.score} pts</span>
+          <span class="histcaps">${h.capstones.length
+            ? h.capstones.map(n => em(ITEM_EMOJI[n])).join("")
+            : '<span class="histnone">—</span>'}</span>
+          <span class="histarrow">${open ? "▾" : "▸"}</span>
+        </button>
+        <button type="button" class="histrow-export" data-hist-export="${i}" title="Copy just this run as JSON" aria-label="Export this run">⧉</button>
+      </div>
       <div class="histdetail" ${open ? "" : "hidden"}>${open ? histTurnsHTML(h) : ""}</div>
     </div>`;
   }).join("")}</div>`;
@@ -13290,6 +13314,23 @@ document.getElementById("modeHistoryBtn").addEventListener("click", () => {
 });
 document.getElementById("historyClose").addEventListener("click", () => closeOverlay("history"));
 document.getElementById("historyList").addEventListener("click", ev => {
+  // Per-run export -- copies just this ONE run (mode/date/score/capstones/
+  // Bingo card/full turn log, same shape #historyExport dumps for every
+  // stored run at once) as JSON, for handing a single run to an outside
+  // conversation without pasting the entire history array and picking the
+  // relevant one out by hand.
+  const exportBtn = ev.target.closest("[data-hist-export]");
+  if (exportBtn){
+    const h = history[+exportBtn.dataset.histExport];
+    if (!h) return;
+    const json = JSON.stringify(h, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      exportBtn.textContent = "✓";
+      exportBtn.classList.add("done");
+    }).catch(() => window.prompt("Copy this text:", json));
+    setTimeout(() => { exportBtn.textContent = "⧉"; exportBtn.classList.remove("done"); }, 1800);
+    return;
+  }
   const btn = ev.target.closest("[data-hist-toggle]");
   if (!btn) return;
   const i = +btn.dataset.histToggle;
