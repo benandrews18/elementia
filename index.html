@@ -1590,6 +1590,18 @@ body[data-screen="market"] #trackedPill{display:none}
 .sheet-head .em{font-size:44px; line-height:1}
 .sheet-head h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff}
 .sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
+/* Experimental (prefs.expTractorHarvest) -- purely decorative, unlike
+   .travel-btn right next to it (a real button); tapping the gather row's
+   own chips is the actual interaction, see handleScreenClick()'s own
+   [data-elem] branch. */
+.station-tractor-badge{font-size:26px; line-height:1; flex:none}
+/* Same small-pill language .mn-here-label already uses elsewhere for a
+   short status readout riding along a label row. */
+.tractor-taps-left{
+  display:inline-block; margin-left:8px; padding:2px 9px; border-radius:999px;
+  background:var(--gold-soft); color:var(--gold); font-size:11px; font-weight:800;
+  letter-spacing:.04em; text-transform:none; vertical-align:middle;
+}
 /* Sub-zone travel button -- appears in a main station's header once the
    player owns that station's unlock item (Rocket/Sailboat/Library, see
    SUBZONE_TRAVEL); reused as the "<- Back" button on a sub-zone's own
@@ -4193,6 +4205,28 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="setting-label">Classroom Mode</span>
       </span>
       <input type="checkbox" id="setClassroomMode" class="switch" aria-label="Classroom Mode">
+    </div>
+    <p class="setnote">Experimental mechanics -- off changes nothing.</p>
+    <div class="setting-row">
+      <span class="setting-ico">🧭</span>
+      <span class="setting-body">
+        <span class="setting-label">Compass-gated tracking</span>
+      </span>
+      <input type="checkbox" id="setExpCompassTracking" class="switch" aria-label="Require a Compass to track an item">
+    </div>
+    <div class="setting-row">
+      <span class="setting-ico">🔥</span>
+      <span class="setting-body">
+        <span class="setting-label">Tiered element conversion</span>
+      </span>
+      <input type="checkbox" id="setExpTieredConversion" class="switch" aria-label="Furnace/Oven/Star tiered conversion rates">
+    </div>
+    <div class="setting-row">
+      <span class="setting-ico">🚜</span>
+      <span class="setting-body">
+        <span class="setting-label">Tractor harvest taps</span>
+      </span>
+      <input type="checkbox" id="setExpTractorHarvest" class="switch" aria-label="Tap elements to harvest with a Tractor">
     </div>
 
     <div class="btnrow">
@@ -7295,7 +7329,16 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:6, pinnedItems:[], minigame
   // resumes into -- set every time chooseMode() actually lands on a mode
   // (see resumeMode()/startFreshMode()), null only pre-migration/before
   // any mode's ever been picked at all.
-  lastActiveMode:null};
+  lastActiveMode:null,
+  // Experimental mechanics, each fully toggleable so they can be tested
+  // with/without before committing to any of them for real -- see Dev
+  // Tools' own new "Experimental" rows and each flag's own call sites
+  // (toggleJobSelect()/conversionRate()/the Tractor-harvest [data-elem]
+  // handling). Off by default -- flipping them on never changes anything
+  // for a save that never opts in.
+  expCompassTracking:false,
+  expTieredConversion:false,
+  expTractorHarvest:false};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -7314,7 +7357,13 @@ let refFilterQuery = "";
 let refSortMode = "az"; // "az" (default) | "points_asc" | "points_desc"
 /* Shared by the topbar's job chips and the (legacy, now-unreachable)
    [data-select-job] case in #screen's own click handler. */
+// Experimental (prefs.expCompassTracking, off by default) -- gates
+// STARTING to track something behind owning a Compass; untracking (tapping
+// the already-tracked chip again) always stays allowed even without one,
+// so a player who loses eligibility mid-track isn't left with a control
+// that only half-works.
 function toggleJobSelect(name){
+  if (prefs.expCompassTracking && !owns("Compass") && selectedJobItem !== name) return;
   selectedJobItem = selectedJobItem === name ? null : name;
   render();
 }
@@ -7664,11 +7713,31 @@ function loadAll(){
 
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
-// Total 3-for-1 conversions available right now, summed across every
-// element -- the same number the Convert button's own hub badge shows
-// (see updateHub()) and what tokenHTML() repeats on a recipe's own
-// missing-element tokens.
-const totalConvertibleCount = () => [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / 3), 0);
+/* Experimental (prefs.expTieredConversion, off by default): how many
+   elements one conversion costs, keyed off the best conversion TOOL the
+   player currently owns -- Star (1:1) beats Oven (2:1) beats Furnace
+   (3:1). Toggle off keeps today's flat 3:1 regardless of ownership. Null
+   (toggle on, no tool owned yet) means conversion is fully unavailable --
+   the mechanic is framed as something Furnace *unlocks*, not a rate that
+   also applies with nothing built yet. Every conversion call site (the
+   quick-grid/picker gates, the manual Convert screen, batch-crafting's
+   own auto-conversion) reads this instead of a hardcoded 3. */
+function conversionRate(){
+  if (!prefs.expTieredConversion) return 3;
+  if (owns("Star")) return 1;
+  if (owns("Oven")) return 2;
+  if (owns("Furnace")) return 3;
+  return null;
+}
+// Total conversions available right now at the current conversionRate(),
+// summed across every element -- the same number the Convert button's own
+// hub badge shows (see updateHub()) and what tokenHTML() repeats on a
+// recipe's own missing-element tokens.
+const totalConvertibleCount = () => {
+  const rate = conversionRate();
+  if (!rate) return 0;
+  return [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / rate), 0);
+};
 
 /* Group a recipe's requirements: elements accumulate, items are unique. */
 function needsOf(reqs){
@@ -7806,20 +7875,22 @@ function planBatchConversion(entry, qty){
   }
   const stock = {...state.elements};
   const shortfallOf = sym => Math.max(0, (neededTotal[sym] || 0) - (stock[sym] || 0));
-  const conversions = []; // [{from, to}], one 3-for-1 conversion each
+  const conversions = []; // [{from, to}], one conversionRate()-for-1 conversion each
+  const rate = conversionRate();
   let feasible = true, guard = 0;
   while (Object.keys(neededTotal).some(sym => shortfallOf(sym) > 0)){
+    if (rate == null){ feasible = false; break; } // no conversion tool owned -- can't cover any shortfall
     if (++guard > 999){ feasible = false; break; } // pathological safety valve, never expected to fire
     const target = Object.keys(neededTotal).find(sym => shortfallOf(sym) > 0);
     let donor = null, donorMax = 0;
     for (const sym in stock){
       if (sym === target || shortfallOf(sym) > 0) continue; // still needed for this same batch itself
       const c = stock[sym] || 0;
-      if (c < 4) continue; // excludes both <3 (can't convert at all) and exactly-3 (the protected "last 3")
+      if (c < rate + 1) continue; // excludes both <rate (can't convert at all) and exactly-rate (the protected "last rate")
       if (c > donorMax){ donorMax = c; donor = sym; }
     }
     if (!donor){ feasible = false; break; }
-    stock[donor] -= 3;
+    stock[donor] -= rate;
     stock[target] = (stock[target] || 0) + 1;
     conversions.push({from: donor, to: target});
   }
@@ -7846,8 +7917,9 @@ function canCraftQty(entry, qty){
    each craft() call below (batch:true bypasses the single-copy guard) is
    guaranteed to succeed. */
 function craftBatch(entry, qty, conversions){
+  const rate = conversionRate();
   conversions.forEach(({from, to}) => {
-    state.elements[from] = count(from) - 3;
+    state.elements[from] = count(from) - rate;
     if (state.elements[from] <= 0) delete state.elements[from];
     state.elements[to] = count(to) + 1;
   });
@@ -9334,9 +9406,13 @@ function renderStation(name){
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
         <div><h1>${esc(s.name)}</h1></div>
+        ${prefs.expTractorHarvest && owns("Tractor")
+          ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
       </div>
-      <div class="col-label elements-label">ELEMENTS FOUND HERE:</div>
+      <div class="col-label elements-label">ELEMENTS FOUND HERE:${
+        prefs.expTractorHarvest && owns("Tractor")
+          ? ` <span class="tractor-taps-left">${state.tractorTapsLeft || 0} taps left</span>` : ""}</div>
       <div class="gather">${gather}</div>
       ${playBar}
     </div>
@@ -9628,6 +9704,16 @@ function updateHub(){
   const totalConvertible = totalConvertibleCount();
   const canConvert = totalConvertible > 0;
   setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
+  // Experimental (prefs.expTieredConversion) -- the button's own center
+  // icon reflects whichever conversion tool is actually driving the rate
+  // right now (Star/Oven/Furnace), falling back to the plain convert-
+  // arrows art when the toggle's off or nothing's owned yet.
+  {
+    const tool = prefs.expTieredConversion
+      ? (owns("Star") ? "Star" : owns("Oven") ? "Oven" : owns("Furnace") ? "Furnace" : null)
+      : null;
+    document.getElementById("quickConvertBtn").innerHTML = tool ? em(ITEM_EMOJI[tool]) : em("__CONVERT__");
+  }
   // Once revealed, Convert stays on-screen for good -- even after the
   // player spends their 3rd of an element back down to 0/1/2, the button
   // shouldn't vanish again and force them to rediscover it. state.jobs'
@@ -10553,6 +10639,12 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
+  // Experimental (prefs.expTractorHarvest) -- a fresh set of 6 taps
+  // (matching TAKE, the normal per-visit dice count) every real new visit;
+  // NOT reset by the free "Shop" re-entry (see hubHomeFace()'s own "shop"
+  // face, which bypasses goStation() entirely) since that's the same
+  // visit continuing, not a new one.
+  state.tractorTapsLeft = 6;
   // One new turn-log entry per real visit -- craft()'s own tail appends
   // into whichever entry is last (and doRoll()'s own tail tallies into
   // elements), so this must land before any crafting or rolling this turn
@@ -11705,7 +11797,30 @@ function handleScreenClick(ev){
   // shop item's recipe (see tokenHTML()). Same card the inventory drawer
   // opens, so an element looks the same wherever it's tapped.
   const elemBtn = ev.target.closest("[data-elem]");
-  if (elemBtn){ showElCardPop(elemBtn.dataset.elem); return; }
+  if (elemBtn){
+    // Experimental (prefs.expTractorHarvest) -- taps the STATION'S OWN
+    // dice-pool chip specifically (.gchip, not a recipe token elsewhere on
+    // this same screen, see tokenHTML()) harvest 1 of that element instead
+    // of opening its card, as long as a Tractor's owned and this visit's
+    // taps aren't spent yet -- same visitLog tally doRoll() itself uses,
+    // so History's per-turn breakdown counts a harvested element too.
+    if (prefs.expTractorHarvest && elemBtn.classList.contains("gchip")
+        && owns("Tractor") && state.tractorTapsLeft > 0){
+      const sym = elemBtn.dataset.elem;
+      state.elements[sym] = count(sym) + 1;
+      state.tractorTapsLeft--;
+      if (state.visitLog && state.visitLog.length){
+        const turn = state.visitLog[state.visitLog.length - 1];
+        if (!turn.elements) turn.elements = {};
+        turn.elements[sym] = (turn.elements[sym] || 0) + 1;
+      }
+      save();
+      render();
+      return;
+    }
+    showElCardPop(elemBtn.dataset.elem);
+    return;
+  }
 
   // Pin toggle inline on a station shop card's own title row (see
   // itemHTML()) -- checked before the data-item-card fallback below so
@@ -12015,11 +12130,12 @@ function closePinsTray(){
 }
 document.getElementById("pinsBtn").addEventListener("click", () => hubPanelClick("pins", openPinsTray));
 document.getElementById("pinsTrayClose").addEventListener("click", closePinsTray);
-// Real custom convert-arrows art (CUSTOM_ICONS's __CONVERT__ token) in place
-// of the plain 🔄 emoji the markup ships with -- em() returns an <img> tag
-// here, hence innerHTML rather than editing the static HTML text directly
-// (same reasoning as Home's own __MARKETPLACE__ face, see setHubHomeFace()).
-document.getElementById("quickConvertBtn").innerHTML = em("__CONVERT__");
+// Icon itself is set in updateHub() (real custom convert-arrows art from
+// CUSTOM_ICONS's __CONVERT__ token, replacing the plain 🔄 emoji the
+// markup ships with -- or, experimentally, the current conversion tool's
+// own icon, see updateHub()'s own comment) -- updateHub() already runs on
+// every render(), including the very first one, so no separate one-time
+// assignment is needed here.
 document.getElementById("quickConvertBtn").addEventListener("click", () => hubPanelClick("convert", openConvertScreen));
 
 /* -------------------------------------------------------- drawer --- */
@@ -13412,8 +13528,10 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     // besides floating it to the top of Item Reference (isPinned()), also
     // select it as the map's tracked job item so its green ingredient
     // ring shows up in the topbar row and every station shop immediately,
-    // not just after a separate tap there too.
-    if (isPinned(name)) selectedJobItem = name;
+    // not just after a separate tap there too. Same Compass gate as
+    // toggleJobSelect() (prefs.expCompassTracking) -- pinning shouldn't be
+    // a second, ungated way to start tracking when the experiment is on.
+    if (isPinned(name) && (!prefs.expCompassTracking || owns("Compass"))) selectedJobItem = name;
     renderJobBoard();
     render();
     return;
@@ -13481,9 +13599,15 @@ document.getElementById("setClose").addEventListener("click", () => closeOverlay
 
 const setForceModesBox = document.getElementById("setForceModes");
 const setClassroomModeBox = document.getElementById("setClassroomMode");
+const setExpCompassTrackingBox = document.getElementById("setExpCompassTracking");
+const setExpTieredConversionBox = document.getElementById("setExpTieredConversion");
+const setExpTractorHarvestBox = document.getElementById("setExpTractorHarvest");
 function openSettingsDev(){
   setForceModesBox.checked = !!prefs.devForceModesUnlocked;
   setClassroomModeBox.checked = !!prefs.classroomMode;
+  setExpCompassTrackingBox.checked = !!prefs.expCompassTracking;
+  setExpTieredConversionBox.checked = !!prefs.expTieredConversion;
+  setExpTractorHarvestBox.checked = !!prefs.expTractorHarvest;
   openSettingsScreen("settingsDev");
 }
 document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
@@ -13498,6 +13622,19 @@ setForceModesBox.addEventListener("change", () => {
 });
 setClassroomModeBox.addEventListener("change", () => {
   prefs.classroomMode = setClassroomModeBox.checked;
+  savePrefs();
+});
+setExpCompassTrackingBox.addEventListener("change", () => {
+  prefs.expCompassTracking = setExpCompassTrackingBox.checked;
+  savePrefs();
+});
+setExpTieredConversionBox.addEventListener("change", () => {
+  prefs.expTieredConversion = setExpTieredConversionBox.checked;
+  savePrefs();
+  updateHub(); // Convert button's own icon reflects the new rate immediately
+});
+setExpTractorHarvestBox.addEventListener("change", () => {
+  prefs.expTractorHarvest = setExpTractorHarvestBox.checked;
   savePrefs();
 });
 
@@ -13757,8 +13894,9 @@ function renderConvertQuickGrid(){
   if (!grid) return;
   const syms = Object.keys(state.elements).filter(k => state.elements[k] > 0)
     .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
+  const rate = conversionRate();
   grid.innerHTML = syms.map(s => {
-    const valid = count(s) >= 3;
+    const valid = rate != null && count(s) >= rate;
     return `<button type="button" class="elbox ${valid ? "" : "invalid"}" data-elem="${esc(s)}" ${valid ? "" : "disabled"} style="--suit:${ELEMENT_COLOR[s]}">` +
       `<span class="elsym">${esc(s)}${elSuitBadgeHTML(s)}</span><span class="elqty">${count(s)}</span></button>`;
   }).join("");
@@ -13787,7 +13925,8 @@ function updateConvertUI(){
     convertTo ? (ELEMENT_NAMES[convertTo] || convertTo) : "Pick element";
   paintElement(toBox, convertTo);
 
-  const ready = convertFrom && convertTo && convertFrom !== convertTo && count(convertFrom) >= 3;
+  const rate = conversionRate();
+  const ready = convertFrom && convertTo && convertFrom !== convertTo && rate != null && count(convertFrom) >= rate;
   document.getElementById("convertGo").disabled = !ready;
 }
 function renderConvertPicker(){
@@ -13824,7 +13963,8 @@ function renderConvertPicker(){
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
       </button>`;
-    const valid = count(s) >= 3;
+    const rate = conversionRate();
+    const valid = rate != null && count(s) >= rate;
     return `<button type="button" class="convert-pick ${valid ? "" : "invalid"}" data-sym="${esc(s)}" ${valid ? "" : "disabled"} title="${esc(ELEMENT_NAMES[s] || s)}">
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
@@ -13846,8 +13986,9 @@ document.getElementById("convertPickerGrid").addEventListener("click", ev => {
 });
 document.getElementById("convertPickerClose").addEventListener("click", () => closeOverlay("convertPicker"));
 document.getElementById("convertGo").addEventListener("click", () => {
-  if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < 3) return;
-  state.elements[convertFrom] = count(convertFrom) - 3;
+  const rate = conversionRate();
+  if (!convertFrom || !convertTo || convertFrom === convertTo || rate == null || count(convertFrom) < rate) return;
+  state.elements[convertFrom] = count(convertFrom) - rate;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
   save();
