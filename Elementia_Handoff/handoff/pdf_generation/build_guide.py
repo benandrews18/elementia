@@ -86,7 +86,7 @@ STATIONS = [
              ("🌐","Renewable Grid","CREATION","🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",29)],
      "capstone":("🤖","Robot","CAPSTONE","💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy + 💡 Light Bulb",23)},
 
-    {"emoji":"🌱","name":"Greenhouse","suit":"greenhouse",
+    {"emoji":"🌻","name":"Greenhouse","suit":"greenhouse",
      "dice":["C", "H", "O", "K", "N", "P"],
      "shop":[("🪨","Limestone","MATERIAL","Ca + C + O",2),
              ("♻️","Fertilizer","MATERIAL","N + P + K",3),

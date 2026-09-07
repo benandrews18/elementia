@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "elementia-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8777"],
+      "port": 8777
+    },
+    {
+      "name": "boardgame",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8732"],
+      "port": 8732,
+      "autoPort": true
+    }
+  ]
+}
