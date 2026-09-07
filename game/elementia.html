@@ -1372,16 +1372,22 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Doubled (28px/16px -> 56px/32px) for visibility on the map. Same
    "points back at the tracked item" circle as .item-pin-badge in a
    station shop, just anchored above the map pin instead of a card corner
-   -- see renderMap()'s own comment. Moved further up (top -28px -> -40px)
-   and given a NEGATIVE z-index (was +3, above everything) so it now
-   tucks in BEHIND the station node's own circle -- .map-node itself sets
-   z-index:0 to establish a stacking context for this negative value to
-   actually paint under its own background rather than under the whole
-   page, so only the top slice of the badge that clears the circle's own
-   edge is visible, like a marker peeking out from behind the node,
-   instead of a separate disc floating in front of it. */
+   -- see renderMap()'s own comment. A TRUE SIBLING of its station's
+   .map-node now (was a child) -- carries the exact same left/top %
+   anchor (see renderMap()) and centers on that same point via the same
+   translate(-50%,-50%) technique .map-node itself uses, with an extra
+   -42px added to the Y half so it lands above the node instead of on
+   top of it. This has to be a sibling, not a child: a NEGATIVE z-index
+   CHILD only paints above its own parent's background (CSS stacking
+   order puts a stacking-context root's own background/border below its
+   negative-z-index children, not above), so it could never actually
+   look "behind" the node's own circle fill that way, only behind
+   whatever sits further back than the node. Compared as true siblings,
+   z-index:-1 vs. .map-node's own 0 (up to 3 for .here/.selected) always
+   keeps this behind, so only the slice that clears the circle's edge is
+   visible -- a marker peeking out from behind the node. */
 .map-node-tracked-badge{
-  position:absolute; top:-40px; left:50%; transform:translateX(-50%);
+  position:absolute; transform:translate(-50%, calc(-50% - 42px));
   width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
   display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
@@ -1395,7 +1401,7 @@ body[data-screen="market"] #trackedPill{display:none}
    badge's own size/position/stacking (see its own comment) so the two
    stay consistent whichever one shows. */
 .map-node-capstone-badge{
-  position:absolute; top:-40px; left:50%; transform:translateX(-50%);
+  position:absolute; transform:translate(-50%, calc(-50% - 42px));
   width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
   display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
@@ -8404,13 +8410,22 @@ function renderMap(){
     // -- the two never render on top of each other, and during THIS
     // window (the tracked item is always itself one of the very capstones
     // being previewed) the capstone badge is the more specific signal.
+    // Siblings of the node button now, NOT children of it (see their own
+    // CSS comment) -- both carry the exact same left/top anchor point as
+    // the node itself so they still center on it, but true sibling
+    // z-index comparison is what actually lets them render behind the
+    // node's own circle. A NEGATIVE z-index on a CHILD only paints above
+    // its own parent's background (CSS stacking order puts a stacking-
+    // context root's own background/border below its negative-z-index
+    // children, not above) -- it can never look "behind" that parent's
+    // fill, only behind whatever's further back than the parent. Only a
+    // true sibling comparison (this element vs. .map-node itself) does
+    // what "tucked behind the circle" actually needs.
     const capstoneBadge = state.mode === "classic" && state.lastStation === null
-      ? `<span class="map-node-capstone-badge" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
+      ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${y}%" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
-      ? `<span class="map-node-tracked-badge" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
-    return `<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
-      ${trackedBadge}
-      ${capstoneBadge}
+      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${y}%" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
+    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${identityKnown ? em(s.emoji) : "❓"}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
