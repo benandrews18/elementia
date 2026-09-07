@@ -6797,7 +6797,16 @@ function drawBingoCard(){
 }
 function ensureBingoCard(){
   const need = BINGO_SIZE * BINGO_SIZE;
-  if (!state.bingoCard || state.bingoCard.length !== need){
+  // Also redraw if a content update since this card was drawn removed one
+  // of its items from CORE_SET (e.g. a save from before a rebalance patch
+  // still has last week's Bread/Cake/Titanium Alloy on it) -- bingoCardHTML()
+  // looks up CORE_ITEM_STATION[name] for every square, which is undefined
+  // for a no-longer-core item and throws, aborting the tray's own open
+  // sequence (openJobSheet() calls renderJobBoard() BEFORE it toggles the
+  // sheet's own "open" class) -- so a stale card doesn't just show wrong,
+  // it silently keeps the whole Bingo tray from ever opening again.
+  const stale = state.bingoCard && state.bingoCard.some(n => !CORE_ITEM_NAMES.has(n));
+  if (!state.bingoCard || state.bingoCard.length !== need || stale){
     state.bingoCard = drawBingoCard();
   }
   return state.bingoCard;
