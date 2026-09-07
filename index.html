@@ -1641,26 +1641,45 @@ body[data-screen="market"] #trackedPill{display:none}
    rather than the chip's own cqw-responsive scaling since it doesn't need
    to grow, just stay legible at the chip's smallest width. */
 .gname{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
-/* Base grid layout shared by both dice contexts below -- sizing/border
-   are context-specific (legend vs. roll), see each. */
-.die{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
-.pip{width:7px; height:7px; border-radius:50%; margin:auto}
-.pip.on{background:var(--pip)}
+/* Base box shared by both dice contexts below -- sizing/border are
+   context-specific (legend vs. roll), see each. No grid/child layout any
+   more -- see .die-1..6 below for how the dots themselves are drawn. */
+.die{background-repeat:no-repeat}
+/* A die's dots, drawn as CSS radial-gradient backgrounds instead of 9
+   child <span class="pip"> nodes -- there are only 6 possible faces
+   (PIPS, shared with the Python guide generator), so each is just a
+   fixed background recipe keyed by class, with zero per-instance DOM
+   nodes. background-position/-size are both percentages, so the same
+   6 rules scale correctly whether they're drawing a 24px legend die or a
+   roll-animation die sized off the gather row's own gchip -- no JS
+   involved in placing a single dot. Position grid (as "x% y%"): 20/50/80
+   along each axis for left/center/right or top/middle/bottom. */
+.die-1{background-image:radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:50% 50%; background-size:30% 30%}
+.die-2{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 80%; background-size:30% 30%, 30% 30%}
+.die-3{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 50% 50%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%}
+.die-4{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%}
+.die-5{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 50% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
+.die-6{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 20% 50%, 80% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
 /* Legend die -- a small, clearly-bordered indicator under each gchip
    showing which roll face that element lands on. Its own little box
    (not sized/framed by anything else), unlike the roll-animation die
    below, so it needs a visible border of its own to read as a die. */
 .gcol > .die{
-  width:min(24px, 60cqw); height:min(24px, 60cqw); padding:3px; margin:0 auto;
-  background:var(--card); border:2px solid var(--line); border-radius:6px;
+  width:min(24px, 60cqw); height:min(24px, 60cqw); margin:0 auto;
+  background-color:var(--card); border:2px solid var(--line); border-radius:6px;
 }
-.gcol > .die .pip{width:min(4px, 10cqw); height:min(4px, 10cqw)}
 /* Roll-animation die -- no border/background of its own; .rollcard is
    already the one visible bordered square around it (see below), so a
    second nested border here read as two concentric squares. Sized in JS
    (playRollAnimation()) to match the gather row's own gchip size, and set
    via inline width/height there rather than a fixed CSS size. */
-.rollcard .die{width:100%; height:100%; background:none; border:none; padding:8px; box-sizing:border-box}
+.rollcard .die{width:100%; height:100%; background-color:transparent; border:none; box-sizing:border-box}
 @keyframes tumble{
   0%{transform:rotate(0) scale(1)} 25%{transform:rotate(-18deg) scale(1.12)}
   50%{transform:rotate(14deg) scale(.94)} 75%{transform:rotate(-8deg) scale(1.06)}
@@ -1701,7 +1720,7 @@ body[data-screen="market"] #trackedPill{display:none}
   flex:0 0 calc((100% - 50px) / 6); max-width:104px; aspect-ratio:1; container-type:inline-size;
   box-sizing:border-box; background:var(--ok-soft); border:1.5px solid var(--ok-line); border-radius:9px;
   animation:pop .28s cubic-bezier(.2,1.4,.4,1) both;
-  transition:background .2s, border-color .2s, border-width .2s;
+  transition:background .2s, border-color .2s, box-shadow .2s;
 }
 @keyframes pop{from{opacity:0; transform:scale(.6) translateY(8px)}to{opacity:1; transform:none}}
 /* Symbol starts hidden -- the die is what's showing while it tumbles.
@@ -1717,7 +1736,14 @@ body[data-screen="market"] #trackedPill{display:none}
   display:none; width:100%; height:100%; align-items:center; justify-content:center;
   font-weight:800; color:#221f1a; font-size:min(32px, 55cqw);
 }
-.rollcard.revealed{background:#fff; border-color:var(--suit); border-width:5px}
+/* box-shadow (inset), not border-width -- a thicker ring drawn this way is
+   pure paint, not a layout-affecting property, so revealing up to 6 of
+   these at once (see playRollAnimation()) doesn't force a layout pass on
+   top of the fly-away animations already running. Visually identical to
+   bumping border-width itself (same 5px total ring, box never resizes,
+   box-sizing:border-box was never actually doing the layout-avoidance
+   work here -- border-width still triggers layout under border-box too). */
+.rollcard.revealed{background:#fff; border-color:var(--suit); box-shadow:inset 0 0 0 3.5px var(--suit)}
 .rollcard.revealed .die{display:none}
 .rollcard.revealed .sym{display:flex; animation:sym-pop .3s cubic-bezier(.3,1.4,.4,1)}
 @keyframes sym-pop{from{opacity:0; transform:scale(.5) rotate(-8deg)}to{opacity:1; transform:none}}
@@ -8020,11 +8046,14 @@ const em = e => CUSTOM_ICONS[e] || esc(e);
 // ENLARGED_ICONS (see showCardPop()'s pc-icon-lg toggle).
 const PDF_ENLARGED_ICONS = new Set(["Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"]);
 
+/* No child pip spans any more (was 9 DOM nodes per die, most of them
+   empty/off) -- a die's dots are drawn as CSS background-image radial-
+   gradients on the .die element itself (see .die-1..6), keyed off the
+   same fixed PIPS lookup, since a die only ever has 6 possible faces.
+   The biggest single DOM-weight cut in the whole roll animation: up to
+   6 dice per roll each went from 9 pip nodes down to zero. */
 function dieFace(v){
-  const on = PIPS[v];
-  return '<div class="die">' +
-    Array.from({length:9}, (_,i) => `<span class="pip${on.includes(i) ? " on" : ""}"></span>`).join("") +
-    "</div>";
+  return `<div class="die die-${v}"></div>`;
 }
 
 function tokenHTML(r, groupedEls){
