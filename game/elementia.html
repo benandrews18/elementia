@@ -186,6 +186,13 @@ body[data-picking] #topbar{display:none}
   box-shadow:0 -6px 20px rgba(0,0,0,.25);
   display:flex; justify-content:space-between; align-items:flex-end; gap:0;
 }
+/* Classic Mode's opening beat only (see playMapIntroScroll()/
+   startBingoCapstonePicker()/closeBingoIntroTray()) -- the pan and the
+   capstone-picker sequence both play with the hub bar out of the way
+   entirely, a dedicated flag rather than reusing body[data-picking]
+   (which stays true for the whole "no station chosen yet" resting state a
+   player could sit in indefinitely, not just this one scripted beat). */
+body[data-intro-sequence] #hub{display:none}
 /* The 4 side buttons (To-Do List+Inventory on the left, Items+Settings on
    the right) each live in their own flush flex group so their own badges
    touch each other directly -- #hubHome (the center Map/Roll/Market/
@@ -616,6 +623,19 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(-100%);
 }
 #jobSheet.top-tray.open{transform:none}
+/* Classic's opening beat only (see closeBingoIntroTray()) -- a quick pop-
+   then-shrink-away, same "bounce" character as bounceCardAppear()/
+   bounceCardClosed() elsewhere use for individual cards, just applied to
+   the whole tray. Plain CSS animation, not WAAPI, specifically so it can
+   never leave a lingering fill:"forwards" effect fighting the tray's own
+   persistent transform/transition pair once the class is removed again
+   (see closeBingoIntroTray()'s own comment). */
+@keyframes tray-bounce-away{
+  0%{transform:scale(1); opacity:1}
+  30%{transform:scale(1.03); opacity:1}
+  100%{transform:scale(.85); opacity:0}
+}
+#jobSheet.bounce-away{animation:tray-bounce-away .32s cubic-bezier(.3,.8,.4,1) forwards}
 /* Tighter than .dbody's own base 40px -- this tray shrink-wraps to its
    content (no fixed height, just the max-height cap above), so that
    generic padding was leaving a visible gap between the last real content
@@ -894,6 +914,11 @@ body[data-screen="market"] #trackedPill{display:none}
 .bingo-grid{
   display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-top:2px;
 }
+/* The opening's 8-way capstone-choice grid (bingoCapstonePickerHTML()) --
+   same .bingo-cell squares, just 4 wide/2 tall instead of the real card's
+   5x5, since there are always exactly 8 choices (one capstone per core
+   station). */
+.bingo-pick-grid{grid-template-columns:repeat(4,1fr)}
 /* Parchment-white face (was the dark --sunken teal every other panel in
    the game uses) -- Bingo's own card-game object, not another dark UI
    surface, so it gets a paper-colored face like the printed item/element
@@ -6081,6 +6106,15 @@ function newGameForMode(mode){
    ===================================================================== */
 function playMapIntroScroll(){
   screen = "map"; current = null; selectedMapStation = null;
+  // Classic Mode's own opening beat (pan -> capstone picker -> card reveal,
+  // see startBingoCapstonePicker()) plays with the hub bar and the map's
+  // own "Tap on a station to start!" hint both out of the way for the
+  // WHOLE beat, not just this pan -- set before the render() just below so
+  // even this very first frame already has both hidden (see
+  // body[data-intro-sequence]'s own CSS comment and renderMap()'s hint).
+  // closeBingoIntroTray() is what eventually clears it again.
+  const classicIntro = state.mode === "classic";
+  if (classicIntro) document.body.setAttribute("data-intro-sequence", "");
   render(true); // resets scroll to the top
 
   const startY = window.scrollY;
@@ -6113,7 +6147,12 @@ function playMapIntroScroll(){
       showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "bottom-left", "#hubHome");
     }
     window.scrollTo({top: endY, behavior: "instant"});
-    render(); // no resetScroll -- keep the bottom position just set above
+    // Classic hands off to the capstone-picker sequence instead of just
+    // landing quietly -- that function (via closeBingoIntroTray() at its
+    // own end) is what finally clears data-intro-sequence and reveals the
+    // hint text/hub bar, not this render() call.
+    if (classicIntro) startBingoCapstonePicker();
+    else render(); // no resetScroll -- keep the bottom position just set above
   };
   const tapSkip = ev => { ev.preventDefault(); ev.stopPropagation(); finish(); };
   document.addEventListener("click", tapSkip, true);
@@ -6778,17 +6817,28 @@ function bingoEligibleItems(){
 // third staying rare doesn't also force a second to stay rare.
 const BINGO_SECOND_CAPSTONE_CHANCE = 0.65;
 const BINGO_THIRD_CAPSTONE_CHANCE = 0.15;
-function drawBingoCard(){
+// Every capstone the center square could possibly be -- one per core
+// station, so with 8 stations this is always exactly 8 items. Classic
+// Mode's opening now shows these as a 2x4 pick-your-own grid (see
+// startBingoCapstonePicker()) instead of silently randomizing the center;
+// ensureBingoCard()'s own auto-redraw path (a stale/missing card) still
+// falls back to drawBingoCard()'s own random pick with no argument.
+function bingoCapstoneChoices(){
+  return bingoEligibleItems().filter(n => ITEM_TIER[n] === "CAPSTONE");
+}
+function drawBingoCard(chosenCenter){
   const eligible = bingoEligibleItems();
-  const capstones = shuffle(eligible.filter(n => ITEM_TIER[n] === "CAPSTONE").slice());
+  const capstonePool = shuffle(eligible.filter(n => ITEM_TIER[n] === "CAPSTONE").slice());
   const nonCapstones = eligible.filter(n => ITEM_TIER[n] !== "CAPSTONE");
-  const cardCapstones = [capstones[0]];
+  const centerCap = chosenCenter || capstonePool[0];
+  // Never re-offer the center's own capstone as one of the "extra" bonus
+  // capstones below -- it's already spoken for.
+  const remainingCapstones = capstonePool.filter(n => n !== centerCap);
+  const extras = [];
   if (Math.random() < BINGO_SECOND_CAPSTONE_CHANCE){
-    cardCapstones.push(capstones[1]);
-    if (Math.random() < BINGO_THIRD_CAPSTONE_CHANCE) cardCapstones.push(capstones[2]);
+    extras.push(remainingCapstones[0]);
+    if (Math.random() < BINGO_THIRD_CAPSTONE_CHANCE) extras.push(remainingCapstones[1]);
   }
-  const centerCap = cardCapstones[0];
-  const extras = cardCapstones.slice(1);
   const need = BINGO_SIZE * BINGO_SIZE;
   const fillCount = need - 1 - extras.length;
   const others = shuffle([...extras, ...shuffle(nonCapstones).slice(0, fillCount)]);
@@ -6850,6 +6900,33 @@ function bingoCardHTML(){
   return `<h3 class="bingo-title">Elementia BINGO</h3>
     <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
     <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span></p>`;
+}
+// True only during Classic Mode's opening beat, between the map's intro
+// pan landing and the player actually picking their card's center
+// capstone -- see startBingoCapstonePicker()/pickBingoCapstone(). Swaps
+// what the SAME tray (#jobSheet, "full" variant) shows via renderJobBoard()
+// below, rather than inventing a second tray/overlay just for this one
+// scripted moment.
+let bingoPickerActive = false;
+/* The 2x4 capstone-choice grid Classic's opening shows before the real
+   Bingo card exists at all -- one cell per bingoCapstoneChoices() entry
+   (always exactly 8, one per core station), styled identically to a real
+   .bingo-cell (see bingoCardHTML()) minus the owned/pin states, since
+   nothing's owned yet at game start. Tapping a cell hands off to
+   pickBingoCapstone() (see #jobSheetBody's own click handler). */
+function bingoCapstonePickerHTML(){
+  const choices = bingoCapstoneChoices();
+  const cells = choices.map(name => {
+    const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
+    return `<div class="bingo-cell" data-capstone-pick="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+      <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
+      <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
+      <span class="bc-name">${esc(name)}</span>
+    </div>`;
+  }).join("");
+  return `<h3 class="bingo-title">Choose Your Capstone</h3>
+    <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
+    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>`;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -8446,10 +8523,14 @@ function renderMap(){
          <button type="button" class="tbtn" id="showSummaryBtn" style="margin-left:8px">See results</button></p>`
     : "";
 
-  const hint = state.lastStation === null
+  // Stays blank for the whole Classic-opening beat (pan + capstone picker,
+  // see body[data-intro-sequence]'s own CSS comment) -- it's the reveal at
+  // the END of that sequence (closeBingoIntroTray()), not something to
+  // show underneath the pan/tray the whole time.
+  const hint = state.lastStation === null && !document.body.hasAttribute("data-intro-sequence")
     ? `<p class="map-sub map-pick-note">${forcedStart
         ? "Every journey starts at The Ocean."
-        : "Tap a station to choose where your journey begins."}</p>`
+        : "Tap on a station to start!"}</p>`
     : "";
 
   const cardHTML = selectedMapStation ? `<div class="map-card-wrap">${mapCardHTML(selectedMapStation)}</div>` : "";
@@ -10405,7 +10486,13 @@ document.addEventListener("click", ev => {
    whenever that happens to be -- no rigged dice behind any of it. */
 function maybeShowFirstVisitHint(){
   if (current === null || openPanelName()) return;
-  if (state.visits === 1 && !state.rolledHere){
+  // Classic Mode's own opening (the Bingo capstone-picker sequence, see
+  // startBingoCapstonePicker()) already walks a first-timer through the
+  // very first moves -- these two generic "tap Roll"/"tap the Map" coach-
+  // marks would just be redundant noise layered on top of that, so they're
+  // reserved for Adventure/Zen, which have no equivalent intro of their own.
+  const classicOpening = state.mode === "classic" && state.visits === 1;
+  if (!classicOpening && state.visits === 1 && !state.rolledHere){
     showMouseTipOnce("firstroll", 3, "Tap Roll for your first dice!", "bottom-left", "#hubHome");
     return;
   }
@@ -10419,7 +10506,7 @@ function maybeShowFirstVisitHint(){
   // button is still sitting right there read as rushing them out before
   // they'd actually exhausted their own options.
   const hasCraftable = entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e));
-  if (state.visits === 1 && !hasCraftable
+  if (!classicOpening && state.visits === 1 && !hasCraftable
       && showMouseTipOnce("afterroll", 12, "Tap the Map when you're ready to leave.", "bottom-left", "#hubHome")) return;
   // Convert's own first-appearance tip now lives in updateHub(), right
   // where state.convertRevealed actually flips true -- that's the real
@@ -12221,7 +12308,14 @@ function renderJobBoard(){
           // matters, it just earns its own score bonus now instead
           // (STATIONS_VISITED_BONUS, badge on the progress card right
           // above) rather than unlocking anything.
-          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`
+          //
+          // bingoPickerActive short-circuits ALL of that for Classic's own
+          // opening beat (see startBingoCapstonePicker()) -- the capstone-
+          // choice grid takes over the whole tray body until the player
+          // actually picks one, at which point pickBingoCapstone() clears
+          // the flag and this falls through to the real card again.
+          ? (bingoPickerActive ? bingoCapstonePickerHTML()
+              : `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`)
           : classicPinsAndJobsHTML())
       : hard
         ? (full ? adventureMarketTrayHTML() : questsBodyHTML(true))
@@ -12322,6 +12416,77 @@ function closeJobBoard(){
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
   updateHub();
+}
+
+/* =====================================================================
+   Classic Mode's opening beat: capstone-choice grid -> real Bingo card.
+   See playMapIntroScroll()'s own Classic-mode finish() branch for what
+   kicks this off (right as the intro pan lands), and
+   body[data-intro-sequence] (renderMap()'s hint/CSS for #hub) for how the
+   hub bar and "Tap on a station to start!" hint both stay hidden for the
+   whole beat, not just the pan itself.
+   ===================================================================== */
+function startBingoCapstonePicker(){
+  bingoPickerActive = true;
+  openJobSelectTray();
+}
+const BINGO_REVEAL_STAGGER_MS = 18;
+const BINGO_REVEAL_HOLD_MS = 500;
+const BINGO_BOUNCE_AWAY_MS = 320;
+/* Tapping a capstone-choice cell (see #jobSheetBody's own [data-capstone-
+   pick] handler) -- builds the real card around that pick, swaps the
+   tray's body over to it (bingoPickerActive now false falls through to
+   the normal branch in renderJobBoard()), then bounces every square into
+   place before bouncing the whole tray away to reveal the map underneath. */
+function pickBingoCapstone(name){
+  state.bingoCard = drawBingoCard(name);
+  bingoPickerActive = false;
+  save();
+  renderJobBoard();
+  runBingoRevealSequence();
+}
+function runBingoRevealSequence(){
+  const cells = [...document.querySelectorAll("#jobSheetBody .bingo-cell")];
+  const centerIdx = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BINGO_SIZE / 2);
+  cells.forEach((cell, i) => {
+    // Center pops immediately (it's the pick that was just made -- no
+    // reason to make the player wait through the stagger for their own
+    // choice); every other square bounces in right after, in a quick
+    // staggered wave (per-cell setTimeout keyed off a known duration, not
+    // .animate().onfinish -- see bounceCardClosed()'s own comment for why
+    // that pattern is the established one here: onfinish never fires for
+    // an animation whose timeline never actually starts ticking, e.g. a
+    // backgrounded tab).
+    if (i === centerIdx){ bounceCardAppear(cell); return; }
+    const order = i < centerIdx ? i : i - 1; // stagger order skips the center's own index
+    setTimeout(() => bounceCardAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
+  });
+  const lastStaggerMs = (cells.length - 1) * BINGO_REVEAL_STAGGER_MS;
+  setTimeout(closeBingoIntroTray, lastStaggerMs + BINGO_REVEAL_HOLD_MS);
+}
+/* Bounces the whole tray away (a plain CSS @keyframes animation, not
+   WAAPI -- #jobSheet already owns a persistent WAAPI-free transform/
+   transition pair for its normal open/close slide, see .top-tray's own
+   CSS, and layering a WAAPI .animate() on top of that risks its
+   fill:"forwards" effect silently overriding that same transform property
+   the next time the tray opens normally). Once the bounce finishes, snaps
+   straight to the real closed state via the same transition-disabled
+   reflow trick openJobSheet() itself uses, so there's no second, visible
+   slide-up on top of the bounce that just played. */
+function closeBingoIntroTray(){
+  jobSheet.classList.add("bounce-away");
+  setTimeout(() => {
+    jobSheet.style.transition = "none";
+    jobSheet.classList.remove("bounce-away", "open");
+    jobScrim.classList.remove("open");
+    jobSheet.offsetHeight; // force reflow
+    jobSheet.style.transition = "";
+    jobSheet.setAttribute("aria-hidden", "true");
+    document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
+    document.body.removeAttribute("data-intro-sequence");
+    updateHub();
+    render(); // now shows the map's real hint text + the hub bar again
+  }, BINGO_BOUNCE_AWAY_MS);
 }
 
 /* Marketplace directory -- tapping the Job Board row hands off to the
@@ -13205,6 +13370,12 @@ document.getElementById("planetPicker").addEventListener("click", ev => {
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
+  // Classic's opening beat only -- see bingoCapstonePickerHTML()/
+  // pickBingoCapstone(). Checked first since bingoPickerActive replaces
+  // everything else this tray would normally show.
+  const capstonePickBtn = ev.target.closest("[data-capstone-pick]");
+  if (capstonePickBtn){ pickBingoCapstone(capstonePickBtn.dataset.capstonePick); return; }
+
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
