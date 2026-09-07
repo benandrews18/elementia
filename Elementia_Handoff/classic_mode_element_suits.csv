@@ -12,7 +12,6 @@ Sand,-
 Wire,-
 Aluminum Alloy,-
 Stainless Steel,-
-Titanium Alloy,-
 Rubber,-
 Furnace,-
 Soil,-
@@ -53,15 +52,14 @@ Oven,metal + reactive
 Satellite Dish,metal + reactive
 Telescope,metal + metal
 Diamond,earth + earth
-Bread,organic + reactive
 Orca,organic + organic
-Cake,organic + reactive
 Lighthouse,earth + reactive
 Star,organic + reactive
 Rainbow,organic + reactive
 Speedboat,metal + metal
 Computer,metal + reactive
 Tractor,metal + earth
+Bicycle,metal + earth
 Skyscraper,earth + metal
 Turbine Blade,metal + reactive
 Life,Organic + Earth
@@ -70,6 +68,8 @@ Banana Bread,organic + organic
 Museum,earth + metal
 Helicopter,metal + metal
 Rocket,metal + reactive
+Fish Cakes,organic + organic
+Apple Pie,organic + organic
 Maglev Train,metal + earth + reactive
 Homestead,Organic + Earth + Metal
 Coral Reef,Oragnic + Organic + Organic
