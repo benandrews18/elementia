@@ -41,7 +41,7 @@
   --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c; --ok-bright:#4fe583;
   --bad:#f0674c; --bad-soft:#371913; --bad-dark:#a3311d;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
-  --hub-map:#4d7cf2; --hub-travel:#3aa9a0;
+  --hub-map:#4d7cf2; --hub-travel:#3aa9a0; --hub-shop:#e0793c;
   --jobcard-bg:#2a1a30;
   --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
   --farm-bg:#2b2317; --farm-line:#7a5a2c; --farm-ink:#d9a15c;
@@ -314,15 +314,18 @@ body[data-picking] #topbar{display:none}
    beats inheritance regardless of the two rules' relative specificity, so
    the face's own color:#000 was silently losing to that white every time. */
 #hubHome .hl{font-size:10px; color:#000}
-/* Home's five resting faces (see hubHomeFace()) -- each gets its own
+/* Home's six resting faces (see hubHomeFace()) -- each gets its own
    color so the coin-flip between them reads as "something changed"
    rather than the same green disc relabeling itself. Roll keeps the
    game's established green "go" color since that's exactly what it
    still means here; Market reuses the gold already used for the Job
-   Board/Trade Market elsewhere; Travel reuses Ocean's teal (Helicopter's
-   own fast-travel already reads as a "journey" color game-wide); Map is
-   a neutral blue untied to any one station's suit (a global action, not
-   a zone); Close stays the deliberately inert grey it always was. */
+   Board/Trade Market elsewhere; Shop gets its own warm orange (--hub-shop)
+   distinct from all the others, since it's neither a real purchase-flow
+   destination (Market's gold) nor a journey (Travel's teal); Travel
+   reuses Ocean's teal (Helicopter's own fast-travel already reads as a
+   "journey" color game-wide); Map is a neutral blue untied to any one
+   station's suit (a global action, not a zone); Close stays the
+   deliberately inert grey it always was. */
 /* Each face sets --face-color to its own established color, then shares
    one glossy radial-gradient recipe (same highlight/shadow shape as the
    default green face and the 4 small nav badges) built off that variable
@@ -335,9 +338,10 @@ body[data-picking] #topbar{display:none}
    face's own background color is. */
 #hubHome.face-roll{--face-color:var(--ok); color:#000}
 #hubHome.face-market{--face-color:var(--gold); color:#000}
+#hubHome.face-shop{--face-color:var(--hub-shop); color:#000}
 #hubHome.face-travel{--face-color:var(--hub-travel); color:#000}
 #hubHome.face-map{--face-color:var(--hub-map); color:#000}
-#hubHome.face-roll, #hubHome.face-market, #hubHome.face-travel, #hubHome.face-map{
+#hubHome.face-roll, #hubHome.face-market, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-map{
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }
@@ -1365,15 +1369,17 @@ body[data-screen="market"] #trackedPill{display:none}
   content:""; position:absolute; inset:-14px; border-radius:50%;
   border:4px solid var(--gold); animation:here-pulse 1.4s ease-out infinite;
 }
-/* Same 28px "points back at the tracked item" circle as .item-pin-badge
+/* Doubled (28px/16px -> 56px/32px, top offset doubled to match so it
+   keeps the same half-overlapping-the-node look) for visibility on the
+   map. Same "points back at the tracked item" circle as .item-pin-badge
    in a station shop, just anchored above the map pin instead of a card
    corner -- see renderMap()'s own comment. z-index above the pulsing
    .here::after ring (2) and the node itself so it never gets clipped
    under either. */
 .map-node-tracked-badge{
-  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-  width:28px; height:28px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
 /* Classic Mode's initial station-pick screen only (see renderMap()'s own
@@ -1381,11 +1387,12 @@ body[data-screen="market"] #trackedPill{display:none}
    regular gameplay (the two never render on the same node at once, see
    renderMap()'s own comment), gold border rather than the tracked
    badge's green so the two still read as different signals wherever a
-   player has seen both across a session. */
+   player has seen both across a session. Doubled in lockstep with that
+   badge's own size so the two stay consistent whichever one shows. */
 .map-node-capstone-badge{
-  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-  width:28px; height:28px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
-  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:3;
 }
 /* The station card overlays the map as a floating panel pinned to the top
@@ -1423,13 +1430,18 @@ body[data-screen="market"] #trackedPill{display:none}
   padding:3px 10px; border-radius:999px; border:3px solid var(--gold);
   background:var(--gold-soft); font-size:12.5px; font-weight:800; color:var(--ink);
 }
+.mct-glass{font-size:13px; line-height:1; flex:none}
 .mct-em{font-size:15px; line-height:1; flex:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .pool{display:flex; gap:5px; flex-wrap:wrap}
+/* Box and symbol text doubled (28px/13px -> 56px/26px) for readability on
+   the map's own preview card -- border WIDTH (5px) and the corner
+   .el-suit-badge dot stay exactly as they were, so the ring/badge don't
+   look oversized or out of proportion next to the now-bigger square. */
 .pchip{
-  position:relative; display:inline-flex; align-items:center; justify-content:center; aspect-ratio:1; min-width:28px;
-  background:#fff; color:#221f1a; font-size:13px; font-weight:800;
+  position:relative; display:inline-flex; align-items:center; justify-content:center; aspect-ratio:1; min-width:56px;
+  background:#fff; color:#221f1a; font-size:26px; font-weight:800;
   padding:2px; border-radius:7px; letter-spacing:.2px; border:5px solid var(--suit);
 }
 /* Every item sold at this station, icon-only, always visible -- sits right
@@ -1603,22 +1615,32 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .gcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
   align-items:center; gap:7px; container-type:inline-size}
-/* Symbol-only now (no element name label) -- a square white "mini card"
-   the same shape/border weight as every other element box in the game
-   (--suit set inline per chip, see the gather map in renderStation()),
-   sized off its own width via aspect-ratio so it stays square across the
-   .gcol column's responsive width range. Font-size in container-query
-   width units (cqw, relative to .gcol's own rendered width, set as a
-   query container above) so the symbol actually shrinks together with
-   the chip on a station with many elements instead of overflowing it --
-   min() caps it at the original 26px so chips don't balloon past their
-   old size on a roomy station with few elements. */
+/* A square white "mini card" the same shape/border weight as every other
+   element box in the game (--suit set inline per chip, see the gather map
+   in renderStation()), sized off its own width via aspect-ratio so it
+   stays square across the .gcol column's responsive width range.
+   Font-size in container-query width units (cqw, relative to .gcol's own
+   rendered width, set as a query container above) so the symbol actually
+   shrinks together with the chip on a station with many elements instead
+   of overflowing it -- min() caps it at the original 26px so chips don't
+   balloon past their old size on a roomy station with few elements. */
 .gchip{
   position:relative; width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
   text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
   display:flex; align-items:center; justify-content:center;
 }
 .gchip .gsym{line-height:1; font-size:min(32px, 55cqw)}
+/* Atomic number, top-left corner -- plain small numeral (not a colored
+   badge shape like .el-suit-badge, which already owns the opposite
+   corner) so the two don't visually compete for the same "little corner
+   marker" language on one chip. */
+.gnum{position:absolute; top:2px; left:4px; font-size:9px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
+/* Element's full name, back underneath the chip (see .gcol's own
+   flex-column stacking) -- same small stacked-label convention as
+   .cm-name/.fc-name elsewhere in the game, sized as plain fixed text
+   rather than the chip's own cqw-responsive scaling since it doesn't need
+   to grow, just stay legible at the chip's smallest width. */
+.gname{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
 /* Base grid layout shared by both dice contexts below -- sizing/border
    are context-specific (legend vs. roll), see each. */
 .die{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr)}
@@ -1904,8 +1926,9 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center;
   background:var(--suit); box-shadow:inset 0 1px 2px rgba(255,255,255,.35), inset 0 -1px 2px rgba(0,0,0,.25);
 }
-/* Greyed out once the player doesn't hold enough of that suit's elements
-   yet to cover this badge's own slot (see heldOfSuit()/suitCostBadgesHTML())
+/* Greyed out once the player doesn't hold enough SURPLUS of that suit's
+   elements -- beyond whatever the recipe itself already needs -- to cover
+   this badge's own slot (see suitSurplusOfSuit()/suitCostBadgesHTML())
    -- desaturates the fill AND dims the icon on top of it, rather than
    just fading the whole badge, so it still reads as "this suit, just not
    enough of it" instead of a generic disabled look. */
@@ -2916,6 +2939,13 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1), filter .15s ease;
 }
 .pc-tree-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
+/* Reuses .refpin's own toggle-button look (grey/desaturated off, gold when
+   active) rather than .pc-tree-btn's green CTA style, since this is a
+   toggle, not an action -- sits to Item Info's right in the same row.
+   Overrides .refpin's own align-self:flex-start (tuned for its usual home
+   in a job/quest row) back to center so it lines up with the other
+   buttons in .pc-actions' own centered row. */
+.pc-pin-btn{align-self:center}
 /* Back button -- a left arrow next to a small circle repeating the
    previous card's own icon (see updateCardPopBackBtn()), one tappable
    unit. No card/background of its own any more (was the same ledge-
@@ -3896,6 +3926,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="pc-back-icon" id="cpBackIcon"></span>
       </button>
       <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
+      <button type="button" class="pc-pin-btn refpin" id="cpPinBtn" aria-label="Pin to To-Do List" aria-pressed="false">📌</button>
     </div>
   </div>
 </div>
@@ -4732,7 +4763,7 @@ const DATA = /*__GAME_DATA_START__*/{
    ]
   },
   {
-   "emoji": "🌱",
+   "emoji": "🌻",
    "name": "Greenhouse",
    "suit": "greenhouse",
    "dice": [
@@ -5663,145 +5694,145 @@ const DATA = /*__GAME_DATA_START__*/{
   }
  ],
  "avgVisits": {
+  "Clock": 8.2,
+  "Cruise Ship": null,
   "Helicopter": 21.0,
-  "Rainbow": 14.5,
+  "Wool": 7.3,
+  "Chicken": 10.6,
+  "Motorcycle": 18.6,
+  "Life": 17.0,
+  "Light Bulb": 7.1,
+  "Water": 2.4,
   "Diamond": 12.3,
+  "Paper": 11.4,
+  "Titanium Alloy": 5.5,
+  "Trumpet": null,
+  "Beach Town": 27.6,
+  "Homestead": 20.2,
+  "Cream": 10.7,
+  "Compass": 7.3,
+  "Sailboat": 8.7,
+  "Amber": 10.7,
+  "Sunflower": 17.7,
+  "Seaweed": 5.0,
+  "Museum": 18.0,
+  "Bicycle": 14.6,
+  "Dinosaur": 11.9,
+  "Butter": 10.8,
+  "Canoe": 7.6,
+  "Rainbow": 14.5,
+  "Ruby": 13.5,
+  "Star": 14.1,
+  "Yarn": 13.1,
+  "Berry Cupcakes": 21.7,
+  "Microchip": 8.1,
+  "Blackberries": 10.2,
+  "Water Turbine": 22.4,
+  "Egg": 5.6,
+  "Bread": 12.7,
+  "Turquoise": 14.4,
+  "Magnet": 4.7,
+  "Planet": 8.1,
+  "Soil": 4.5,
+  "Basket": 8.0,
+  "Cow": 7.9,
+  "Tree": 5.0,
+  "Milk": 8.9,
+  "Apple Pie": 12.7,
+  "Flour": 9.1,
+  "Wheel": 10.3,
+  "Satellite Dish": 11.2,
+  "Rubber": 5.2,
+  "Fertilizer": 3.0,
+  "Sugar": 2.9,
+  "Bee": 7.8,
+  "Honey": 7.7,
+  "Pearl": 13.8,
+  "Blueberries": 13.3,
+  "Limestone": 2.5,
+  "Red Dye": 14.3,
+  "Mushroom": 4.9,
+  "Volcano": 13.4,
+  "Wire": 3.7,
+  "Renewable Grid": 29.1,
+  "Blue Dye": 17.0,
+  "Concrete": 5.0,
+  "Fruit Cake": 20.1,
+  "Statue": 7.2,
+  "Natural Gas": 2.7,
+  "Bridge": 7.0,
+  "Deer": 6.2,
+  "Metropolis": 22.1,
+  "Space Station": 23.2,
+  "Farm": 7.3,
+  "Clay": 2.4,
+  "Telescope": 11.9,
+  "Speedboat": 21.4,
+  "Plastic": 8.2,
+  "Steel": 2.8,
+  "Éclair": 13.5,
+  "Stainless Steel": 5.0,
   "Knit Scarf": 20.6,
   "Biofuel": 10.9,
-  "Banana": 6.9,
-  "Telescope": 11.9,
-  "Water": 2.4,
+  "Windmill": 18.8,
+  "Aluminum Alloy": 4.9,
+  "Lighthouse": 13.6,
+  "Grain": 7.7,
+  "Cloud": 4.9,
+  "Log Cabin": 7.2,
+  "Book": 11.4,
+  "Solar Panel": 8.2,
+  "Fiberglass": 10.6,
+  "Sand": 2.8,
+  "Chocolate Cake": 13.4,
+  "Rocket": 21.6,
+  "Solar System": 15.8,
+  "Plant Fiber": 6.9,
+  "Tractor": 16.1,
+  "Turbine Blade": 16.8,
+  "Sushi Restaurant": 18.7,
+  "Orca": 12.9,
+  "Geothermal Pump": 16.0,
+  "Skyscraper": 15.7,
+  "Opal": 10.8,
+  "Bone": 5.0,
+  "Salmon": 11.3,
+  "Cake": 13.0,
+  "Rope": 6.8,
+  "Robot": 17.7,
+  "Banana Bread": 17.4,
+  "Croissant": 12.3,
+  "Glass": 5.1,
+  "Oven": 11.2,
+  "Central Station": 27.3,
+  "Building": 8.0,
   "Dough": 9.0,
   "Yellow Dye": 15.3,
-  "Tools": 3.9,
-  "Croissant": 12.3,
-  "Geothermal Pump": 16.0,
-  "Blue Dye": 17.0,
-  "Star": 14.1,
-  "Egg": 5.6,
-  "Log Cabin": 7.2,
+  "Gemstone Collection": 19.2,
+  "Fossil": 10.7,
+  "Engine": 7.0,
+  "Strawberries": 10.4,
   "Ecosystem": 22.0,
   "Car": 17.0,
-  "Yeast": 4.8,
-  "Banana Bread": 17.4,
-  "Wool": 7.3,
-  "Grand Banquet": 23.5,
-  "Ruby": 13.5,
-  "Glass Vial": 10.1,
-  "Fiberglass": 10.6,
-  "Soil": 4.5,
-  "Seaweed": 5.0,
-  "Motorcycle": 18.6,
-  "Plant Fiber": 6.9,
-  "Flour": 9.1,
-  "Mushroom": 4.9,
-  "Salmon": 11.3,
-  "Blackberries": 10.2,
-  "Sheep": 7.5,
-  "Apple": 6.4,
-  "Satellite Dish": 11.2,
-  "Opal": 10.8,
-  "Titanium Alloy": 5.5,
-  "Magnet": 4.7,
-  "Limestone": 2.5,
-  "Blueberries": 13.3,
-  "Glass": 5.1,
-  "Cake": 13.0,
-  "Turbine Blade": 16.8,
-  "Furnace": 4.5,
-  "Pearl": 13.8,
-  "Windmill": 18.8,
-  "Book": 11.4,
-  "Tree": 5.0,
-  "Honey": 7.7,
-  "Sugar": 2.9,
-  "Amber": 10.7,
-  "Dinosaur": 11.9,
-  "Renewable Grid": 29.1,
-  "Light Bulb": 7.1,
-  "Bicycle": 14.6,
-  "Volcano": 13.4,
-  "Bone": 5.0,
-  "Fertilizer": 3.0,
-  "Sushi Restaurant": 18.7,
-  "DNA": 3.7,
-  "Lighthouse": 13.6,
-  "Canoe": 7.6,
-  "Bridge": 7.0,
-  "Red Dye": 14.3,
-  "Sunflower": 17.7,
-  "Wheel": 10.3,
-  "Turquoise": 14.4,
   "Library": 13.6,
-  "Apple Pie": 12.7,
-  "Deer": 6.2,
-  "Rubber": 5.2,
-  "Statue": 7.2,
-  "Life": 17.0,
-  "Aluminum Alloy": 4.9,
-  "Butter": 10.8,
-  "Coral Reef": 17.1,
-  "Fabric": 8.1,
-  "Compass": 7.3,
-  "Fruit Cake": 20.1,
-  "Maglev Train": 16.1,
-  "Fossil": 10.7,
-  "Gemstone Collection": 19.2,
-  "Cow": 7.9,
-  "Clock": 8.2,
-  "Computer": 15.3,
-  "Beach Town": 27.6,
-  "Robot": 17.7,
-  "Bread": 12.7,
-  "Berry Cupcakes": 21.7,
-  "Rope": 6.8,
-  "Chocolate Cake": 13.4,
+  "Banana": 6.9,
+  "Tools": 3.9,
+  "DNA": 3.7,
   "Black Dye": 16.2,
-  "Metropolis": 22.1,
-  "Sailboat": 8.7,
-  "Yarn": 13.1,
-  "Cruise Ship": null,
-  "Speedboat": 21.4,
-  "Grain": 7.7,
-  "Clay": 2.4,
-  "Stainless Steel": 5.0,
-  "Chocolate": 8.4,
-  "Oven": 11.2,
+  "Sheep": 7.5,
   "Pretzel": 11.3,
-  "Concrete": 5.0,
-  "Natural Gas": 2.7,
-  "Homestead": 20.2,
-  "Rocket": 21.6,
-  "Engine": 7.0,
-  "Skyscraper": 15.7,
-  "Cream": 10.7,
-  "Plastic": 8.2,
-  "Chicken": 10.6,
-  "Central Station": 27.3,
-  "Basket": 8.0,
-  "Tractor": 16.1,
-  "Fireworks": 4.0,
-  "Trumpet": null,
-  "Sand": 2.8,
-  "Bee": 7.8,
-  "Orca": 12.9,
+  "Coral Reef": 17.1,
+  "Furnace": 4.5,
+  "Apple": 6.4,
+  "Glass Vial": 10.1,
+  "Computer": 15.3,
+  "Chocolate": 8.4,
+  "Grand Banquet": 23.5,
+  "Fabric": 8.1,
+  "Yeast": 4.8,
+  "Maglev Train": 16.1,
   "Battery": 4.5,
-  "Éclair": 13.5,
-  "Microchip": 8.1,
-  "Paper": 11.4,
-  "Museum": 18.0,
-  "Strawberries": 10.4,
-  "Farm": 7.3,
-  "Steel": 2.8,
-  "Milk": 8.9,
-  "Building": 8.0,
-  "Space Station": 23.2,
-  "Solar Panel": 8.2,
-  "Solar System": 15.8,
-  "Wire": 3.7,
-  "Water Turbine": 22.4,
-  "Planet": 8.1,
-  "Cloud": 4.9,
+  "Fireworks": 4.0,
   "Brass": null
  }
 }/*__GAME_DATA_END__*/;
@@ -6187,13 +6218,6 @@ const NO_SUIT_COST = [];
 function itemSuitCosts(name){
   return ITEM_SUIT_COST_TABLE[name] || NO_SUIT_COST;
 }
-// Total raw elements currently held belonging to one suit -- e.g. every
-// organic element's own count summed together, not any one symbol alone,
-// since the extra cost can be paid with any mix of that suit's elements.
-function heldOfSuit(suit){
-  return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
-    .reduce((sum, el) => sum + count(el), 0);
-}
 // Tally of a craft's suit cost by suit -- e.g. Fossil (earth+reactive) ->
 // {earth:1, reactive:1}; Coral Reef (organic x3) -> {organic:3}. Empty for
 // anything with no cost.
@@ -6229,23 +6253,27 @@ function suitCostPayable(entry){
    Each badge is its own little meter slot -- the Nth badge OF THAT SAME
    SUIT (0-based among just its own suit's badges, since a mixed-suit cost
    like Fossil's earth+reactive tracks each suit's own count separately, not
-   a single shared position in the array) lights up once total held-of-
-   that-suit exceeds N, so a player sitting on 1 of 2 required sees exactly
-   one badge lit and one greyed instead of an all-or-nothing readout. */
-function suitCostBadgesHTML(name, interactive){
-  const costs = itemSuitCosts(name);
+   a single shared position in the array) lights up once SURPLUS held-of-
+   that-suit (see suitSurplusOfSuit() -- total held minus whatever the
+   recipe itself already needs) exceeds N, so a player sitting on 1 of 2
+   required sees exactly one badge lit and one greyed. This used to check
+   raw heldOfSuit() instead, which could light a badge up even when every
+   one of those elements was already spoken for by the item's own recipe
+   -- looked affordable while the item genuinely wasn't craftable yet. */
+function suitCostBadgesHTML(entry, interactive){
+  const costs = itemSuitCosts(entry.name);
   if (!costs.length) return "";
-  const heldCache = {}, seenCount = {};
+  const {els: reserved} = needsOf(entry.reqs);
+  const seenCount = {};
   // interactive (see itemHTML()'s own "can" -- true once the recipe AND
   // the suit cost are both actually payable right now) marks this badge
   // as the tap target for the suit-spend balloon (see the .isuit-costs
   // branch in handleScreenClick) -- inert otherwise, matching the badges'
   // own greyed "need" look for that same not-ready-yet case.
   return `<span class="isuit-costs${interactive ? " interactive" : ""}">${costs.map(s => {
-    if (!(s in heldCache)) heldCache[s] = heldOfSuit(s);
     const idx = seenCount[s] || 0;
     seenCount[s] = idx + 1;
-    const have = heldCache[s] > idx;
+    const have = suitSurplusOfSuit(s, reserved) > idx;
     return `<span class="isuit-badge${have ? "" : " need"}" data-suit="${s}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
   }).join("")}</span>`;
 }
@@ -6715,9 +6743,12 @@ function bingoLines(){
   lines.push(Array.from({length:n}, (_, i) => at(i, n - 1 - i)));
   return lines;
 }
-/* Tapping a square pins it -- reuses #jobSheetBody's existing [data-pin]
-   click delegation (same one job/quest rows already use), so no new event
-   wiring is needed here at all; togglePin()+render() already happen there.
+/* Tapping a square opens that item's own inspection card (see
+   #jobSheetBody's [data-item-card] handling, same lookup-by-ENTRIES-index
+   convention every other card trigger in the game uses) -- pinning now
+   only happens from inside that card's own pin button (see #cpPinBtn), not
+   from the square itself; the 📌 glyph here is purely a read-only "this is
+   on your list" indicator, reflecting isPinned() rather than toggling it.
    "Owned" (green border, full color) reflects real inventory (owns())
    directly, lighting up the instant that ONE item is owned rather than
    waiting on its whole line -- bingoLines() itself now also drives real
@@ -6729,7 +6760,8 @@ function bingoCardHTML(){
   const cells = card.map(name => {
     const cls = owns(name) ? "bingo-cell owned" : "bingo-cell";
     const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
-    return `<div class="${cls}" data-pin="${esc(name)}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+    const idx = ENTRIES.findIndex(e => e.name === name);
+    return `<div class="${cls}" data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       ${isPinned(name) ? `<span class="bc-pin">📌</span>` : ""}
       <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
       <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
@@ -6738,7 +6770,7 @@ function bingoCardHTML(){
   }).join("");
   return `<h3 class="bingo-title">Elementia BINGO</h3>
     <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
-    <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span><span class="bingo-hint-line">📌 Tap an item to add it to your To-Do List.</span></p>`;
+    <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span></p>`;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -8116,7 +8148,7 @@ function itemHTML(entry, idx){
     <div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry.name, can)}${tierTag}</div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can)}${tierTag}</div>
         <div class="recipe">${recipeHTML(entry)}</div>
       </div>
     </div>${craftCol}</div>`;
@@ -8225,7 +8257,7 @@ function mapCardHTML(name){
   // whatever those rings are marking.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
   const trackedPill = trackedEntry
-    ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
+    ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-glass">🔍</span><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
     : "";
   // Never-visited: icon becomes "?", the station's own name, its dice pool,
   // and the item shop/capstone preview all stay hidden -- nothing about a
@@ -9113,7 +9145,7 @@ function renderStation(name){
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().
   const gather = sortedDice(s).map((sym, i) =>
-    `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button>${dieFace(i + 1)}</div>`).join("");
+    `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span>${dieFace(i + 1)}</div>`).join("");
 
   // Empty placeholder, not a button -- rolling now happens via Home's own
   // Roll face in the bottom hub (see triggerRoll()). This div just stays
@@ -9335,6 +9367,11 @@ function setHubHomeFace(face){
     // em() returns real HTML here (an <img> tag), which is why apply()
     // below sets .innerHTML, not .textContent, for this span.
     market: { hi: em("__MARKETPLACE__"), hl: "Market" },
+    // Free re-entry into the station you're already standing at (see
+    // hubHomeFace()'s own comment) -- a shopping cart, distinct from
+    // Market's own reserved marketplace-stall art above, so the two
+    // buttons never look interchangeable.
+    shop:   { hi: "🛒", hl: "Shop" },
     travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
@@ -9348,7 +9385,7 @@ function setHubHomeFace(face){
     // other face's plain emoji renders identically either way.
     home.querySelector(".hi").innerHTML = target.hi;
     home.querySelector(".hl").textContent = target.hl;
-    home.classList.remove("face-roll", "face-market", "face-travel", "face-map", "face-close");
+    home.classList.remove("face-roll", "face-market", "face-shop", "face-travel", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
   if (isCoinPair && !matchMedia("(prefers-reduced-motion: reduce)").matches){
@@ -9499,6 +9536,7 @@ function updateHub(){
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
     : face === "market" ? "Open the Marketplace"
+    : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : "Back to the station map";
   // Home doubles as the Marketplace shortcut on the map screen (see its
@@ -9530,7 +9568,7 @@ function updateHub(){
 function canTravelTo(name){
   return !!name && name !== state.lastStation && canReachStation(state.lastStation, name) && !sessionOver();
 }
-/* Single source of truth for which of Home's five faces is showing right
+/* Single source of truth for which of Home's six faces is showing right
    now. Both updateHub() (styling, see setHubHomeFace()) and the hubHome
    click handler (behavior) read this, so the two can never drift out of
    sync with each other.
@@ -9538,8 +9576,11 @@ function canTravelTo(name){
      roll   -- at a station, this visit's dice not yet rolled.
      market -- standing on the map screen with no station selected --
                Market is one tap from home base any time.
-     travel -- on the map screen with a reachable station selected; tap
-               travels there (see canTravelTo()).
+     shop   -- on the map screen with the CURRENT station selected (the one
+               state.lastStation already points at); tap re-enters it for
+               free -- no visit spent, exact shop state as left it.
+     travel -- on the map screen with a different, reachable station
+               selected; tap travels there (see canTravelTo()).
      map    -- rolled, still off the map screen -- time to leave. Also
                the Marketplace SCREEN's own resting face: standing there
                is itself a stop along the way, not a side lookup like
@@ -9567,6 +9608,13 @@ function hubHomeFace(){
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
+  // Selecting the station you're already standing at can't be a "travel"
+  // (canTravelTo() explicitly refuses state.lastStation as a target) --
+  // this used to fall through to the generic "market" face, which read as
+  // wrong/unrelated to what was actually selected. "shop" instead: a free,
+  // no-visit-cost re-entry into that same station (see the click handler
+  // below), landing back on its exact shop state rather than re-rolling.
+  if (screen === "map" && selectedMapStation && selectedMapStation === state.lastStation) return "shop";
   if (screen === "map") return (selectedMapStation && canTravelTo(selectedMapStation)) ? "travel" : "market";
   return "map";
 }
@@ -9805,6 +9853,9 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
     return (i ? '<span class="pc-plus">+</span>' : "") + body;
   }).join("");
   updateCardPopBackBtn();
+  const pinBtn = document.getElementById("cpPinBtn");
+  pinBtn.classList.toggle("active", isPinned(entry.name));
+  pinBtn.setAttribute("aria-pressed", isPinned(entry.name));
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
@@ -9956,6 +10007,18 @@ document.getElementById("cpTreeBtn").addEventListener("click", ev => {
   closeOverlay("cardPop");
   flushPendingReveal();
   goToRefItem(name);
+});
+/* Toggle only -- unlike Item Info/Back, stays on the card (no close, no
+   navigation) so pinning/unpinning while browsing several items in a row
+   (via Components-tap drill-in) doesn't keep kicking the player back out. */
+document.getElementById("cpPinBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopEntry) return;
+  togglePin(cardPopEntry.name);
+  const pinned = isPinned(cardPopEntry.name);
+  ev.currentTarget.classList.toggle("active", pinned);
+  ev.currentTarget.setAttribute("aria-pressed", pinned);
+  render();
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -11740,6 +11803,11 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // shares Classic's top-tray doorway too (see adventureMarketTrayHTML());
   // only Zen still opens the old full-screen Marketplace.
   if (face === "market"){ (state.mode === "zen" ? openMarket : openJobSelectTray)(); return; }
+  // Free re-entry into the station already stood at (see hubHomeFace()'s
+  // own comment) -- goStation() is deliberately NOT called here, since
+  // that always spends a visit; this just re-points current/screen at
+  // the same station, landing back on its exact shop/dice-pool state.
+  if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
   // Job Select reads as "Map" rather than "Close" while open in Classic
   // Mode (see hubHomeFace()'s own comment) but still needs the tray
@@ -13079,6 +13147,17 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   const dotBtn = ev.target.closest("[data-tray-panel]");
   if (dotBtn){ marketTrayPanel = +dotBtn.dataset.trayPanel; renderJobBoard(); return; }
 
+  // Bingo squares open the item's own inspection card (see
+  // bingoCardHTML()'s own comment) rather than pinning -- checked before
+  // the generic [data-pin] handling below since a bingo cell no longer
+  // carries a [data-pin] attribute at all.
+  const bingoCell = ev.target.closest(".bingo-cell[data-item-card]");
+  if (bingoCell){
+    const entry = ENTRIES[+bingoCell.dataset.itemCard];
+    if (entry) showCardPop(entry, false);
+    return;
+  }
+
   const pinBtn = ev.target.closest("[data-pin]");
   if (pinBtn){
     const name = pinBtn.dataset.pin;
@@ -13087,12 +13166,8 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     // besides floating it to the top of Item Reference (isPinned()), also
     // select it as the map's tracked job item so its green ingredient
     // ring shows up in the topbar row and every station shop immediately,
-    // not just after a separate tap there too. Bingo cells are the one
-    // exception: tapping a square there is "add this to my To-Do List",
-    // not "swap what I'm tracking" -- without this exception it silently
-    // replaced whatever the player was already tracking every time they
-    // tapped a different square.
-    if (isPinned(name) && !pinBtn.closest(".bingo-cell")) selectedJobItem = name;
+    // not just after a separate tap there too.
+    if (isPinned(name)) selectedJobItem = name;
     renderJobBoard();
     render();
     return;
