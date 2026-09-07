@@ -1470,7 +1470,12 @@ body[data-screen="market"] #trackedPill{display:none}
 .mct-em{font-size:15px; line-height:1; flex:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.pool{display:flex; gap:5px; flex-wrap:wrap}
+.pool{display:flex; gap:8px; flex-wrap:wrap}
+/* One column per element -- chip, then its name underneath, same .gcol
+   stacking shape renderStation()'s own dice pool uses (see .gather/.gcol
+   there), just without that one's container-query responsive sizing
+   since .pchip's own min-width is already fixed. */
+.pcol{display:flex; flex-direction:column; align-items:center; gap:5px}
 /* Box and symbol text doubled (28px/13px -> 56px/26px) for readability on
    the map's own preview card -- border WIDTH (5px) and the corner
    .el-suit-badge dot stay exactly as they were, so the ring/badge don't
@@ -1480,6 +1485,12 @@ body[data-screen="market"] #trackedPill{display:none}
   background:#fff; color:#221f1a; font-size:26px; font-weight:800;
   padding:2px; border-radius:7px; letter-spacing:.2px; border:5px solid var(--suit);
 }
+/* Atomic number, top-left corner -- same treatment as .gnum (the station
+   shop's own dice pool), scaled up to match .pchip's own doubled size. */
+.pnum{position:absolute; top:3px; left:5px; font-size:12px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
+/* Element's full name, stacked below the chip in its own .pcol column --
+   same small-label convention as .gname/.cm-name/.fc-name elsewhere. */
+.pname{font-size:10px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
 /* Every item sold at this station, icon-only, always visible -- sits right
    under the dice pool. When a job item is selected in the map's job row
    (see renderMap()/stationItemIconsHTML()), whichever of these belong to
@@ -8505,8 +8516,12 @@ function mapCardHTML(name){
       <span class="cap-name">${esc(capName)}</span>
       ${done ? "<span>✓</span>" : ""}
     </div>` : ""}`;
+  // Atomic number (top-left corner, inside the chip) + full element name
+  // (below it) -- same .gnum/.gname treatment the station's own dice pool
+  // already uses (see renderStation()'s gather markup), just under .pnum/
+  // .pname names since .pchip's own sizing differs from .gchip's.
   const poolHTML = !identityKnown ? "" :
-    `<div class="pool">${sortedDice(s).map(d => `<button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}">${esc(d)}${elSuitBadgeHTML(d)}</button>`).join("")}</div>`;
+    `<div class="pool">${sortedDice(s).map(d => `<div class="pcol"><button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}"><span class="pnum">${ATOMIC_NUMBER[d]}</span>${esc(d)}${elSuitBadgeHTML(d)}</button><span class="pname">${esc(ELEMENT_NAMES[d] || d)}</span></div>`).join("")}</div>`;
   return `<div class="map-card" style="--suit:${su.color}">
     <div class="row1"><span class="em">${identityKnown ? em(s.emoji) : "❓"}</span><h2>${identityKnown ? esc(name) : "???"}</h2>${trackedPill}</div>
     ${poolHTML}
