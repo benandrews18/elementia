@@ -913,12 +913,21 @@ body[data-screen="market"] #trackedPill{display:none}
    than getting clipped by the next cell over). */
 .bingo-grid{
   display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin-top:2px;
+  /* Lets bingoCellFlipAppear()'s rotateY() read as a real card flipping
+     open in 3D depth rather than just squashing flat -- harmless
+     everywhere else since it only affects children under a 3D transform. */
+  perspective:700px;
 }
 /* The opening's 8-way capstone-choice grid (bingoCapstonePickerHTML()) --
    same .bingo-cell squares, just 4 wide/2 tall instead of the real card's
    5x5, since there are always exactly 8 choices (one capstone per core
    station). */
 .bingo-pick-grid{grid-template-columns:repeat(4,1fr)}
+/* Standalone below the 4x2 grid rather than a 9th cell -- a lone tile on
+   its own third row would read as an unbalanced leftover, where a full-
+   width button reads as its own clearly-separate "or skip the choice
+   entirely" action. */
+.bingo-random-btn{display:block; width:100%; margin-top:12px}
 /* Parchment-white face (was the dark --sunken teal every other panel in
    the game uses) -- Bingo's own card-game object, not another dark UI
    surface, so it gets a paper-colored face like the printed item/element
@@ -6963,6 +6972,11 @@ function bingoCardHTML(){
 // below, rather than inventing a second tray/overlay just for this one
 // scripted moment.
 let bingoPickerActive = false;
+// Sentinel data-capstone-pick value for the picker's own "Random" button
+// (see bingoCapstonePickerHTML()) -- pickBingoCapstone() below resolves it
+// to an actual random choice rather than ever using this string as a real
+// item name.
+const BINGO_RANDOM_CAPSTONE = "__RANDOM__";
 /* The 2x4 capstone-choice grid Classic's opening shows before the real
    Bingo card exists at all -- one cell per bingoCapstoneChoices() entry
    (always exactly 8, one per core station), styled identically to a real
@@ -6981,6 +6995,7 @@ function bingoCapstonePickerHTML(){
   }).join("");
   return `<h3 class="bingo-title">Choose Your Capstone</h3>
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
+    <button type="button" class="bigbtn sec bingo-random-btn" data-capstone-pick="${BINGO_RANDOM_CAPSTONE}">🎲 Random</button>
     <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>`;
 }
 
@@ -11406,6 +11421,22 @@ function bounceCardAppear(targetEl){
     { transform: "scale(1)", opacity: 1 },
   ], { duration: 320, easing: "cubic-bezier(.3,1.4,.4,1)" });
 }
+/* Bingo reveal only (runBingoRevealSequence()) -- a dedicated primitive
+   rather than reusing bounceCardAppear() above, since that one's shared
+   with unrelated UI (the crafted-item strip) that should keep its own
+   plain pop-in untouched. Starts edge-on (rotateY -100deg, effectively
+   invisible from square-on) and rotates open to 0deg, reading as the
+   card flipping over from a blank square rather than just bouncing in --
+   .bingo-grid's own perspective (see its CSS) is what gives the rotation
+   real 3D depth instead of a flat squash. */
+function bingoCellFlipAppear(cell){
+  if (!cell || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  cell.animate([
+    { transform: "rotateY(-100deg) scale(.85)", opacity: 0, offset: 0 },
+    { transform: "rotateY(20deg) scale(1.05)", opacity: 1, offset: .7 },
+    { transform: "rotateY(0deg) scale(1)", opacity: 1, offset: 1 },
+  ], { duration: 480, easing: "cubic-bezier(.3,1.1,.4,1)" });
+}
 function performSingleCraft(entry){
   // First-ever craft gets the ingredient fly-and-stack reveal (see
   // flyIngredientsAndReveal()) -- checked before craft() changes what
@@ -12580,15 +12611,19 @@ function startBingoCapstonePicker(){
   bingoPickerActive = true;
   openJobSelectTray();
 }
-const BINGO_REVEAL_STAGGER_MS = 18;
-const BINGO_REVEAL_HOLD_MS = 500;
-const BINGO_BOUNCE_AWAY_MS = 320;
+const BINGO_REVEAL_STAGGER_MS = 30;
+const BINGO_REVEAL_HOLD_MS = 650;
+const BINGO_BOUNCE_AWAY_MS = 380;
 /* Tapping a capstone-choice cell (see #jobSheetBody's own [data-capstone-
    pick] handler) -- builds the real card around that pick, swaps the
    tray's body over to it (bingoPickerActive now false falls through to
    the normal branch in renderJobBoard()), then bounces every square into
    place before bouncing the whole tray away to reveal the map underneath. */
 function pickBingoCapstone(name){
+  if (name === BINGO_RANDOM_CAPSTONE){
+    const choices = bingoCapstoneChoices();
+    name = choices[Math.floor(Math.random() * choices.length)];
+  }
   state.bingoCard = drawBingoCard(name);
   bingoPickerActive = false;
   save();
@@ -12599,17 +12634,17 @@ function runBingoRevealSequence(){
   const cells = [...document.querySelectorAll("#jobSheetBody .bingo-cell")];
   const centerIdx = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BINGO_SIZE / 2);
   cells.forEach((cell, i) => {
-    // Center pops immediately (it's the pick that was just made -- no
+    // Center flips immediately (it's the pick that was just made -- no
     // reason to make the player wait through the stagger for their own
-    // choice); every other square bounces in right after, in a quick
-    // staggered wave (per-cell setTimeout keyed off a known duration, not
+    // choice); every other square flips open right after, in a staggered
+    // wave (per-cell setTimeout keyed off a known duration, not
     // .animate().onfinish -- see bounceCardClosed()'s own comment for why
     // that pattern is the established one here: onfinish never fires for
     // an animation whose timeline never actually starts ticking, e.g. a
     // backgrounded tab).
-    if (i === centerIdx){ bounceCardAppear(cell); return; }
+    if (i === centerIdx){ bingoCellFlipAppear(cell); return; }
     const order = i < centerIdx ? i : i - 1; // stagger order skips the center's own index
-    setTimeout(() => bounceCardAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
+    setTimeout(() => bingoCellFlipAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
   });
   const lastStaggerMs = (cells.length - 1) * BINGO_REVEAL_STAGGER_MS;
   setTimeout(closeBingoIntroTray, lastStaggerMs + BINGO_REVEAL_HOLD_MS);
