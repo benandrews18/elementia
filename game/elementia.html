@@ -1408,8 +1408,11 @@ body[data-screen="market"] #trackedPill{display:none}
    .map-node now (was a child) -- carries the exact same left/top %
    anchor (see renderMap()) and centers on that same point via the same
    translate(-50%,-50%) technique .map-node itself uses, with an extra
-   -42px added to the Y half so it lands above the node instead of on
-   top of it. This has to be a sibling, not a child: a NEGATIVE z-index
+   -60px added to the Y half so it sits mostly clear above the node,
+   with only about the bottom 1/8 of its own disc actually tucked behind
+   the node's circle (was -42px, which buried nearly half the badge --
+   too much of it read as "hidden" rather than "floating above"). This
+   has to be a sibling, not a child: a NEGATIVE z-index
    CHILD only paints above its own parent's background (CSS stacking
    order puts a stacking-context root's own background/border below its
    negative-z-index children, not above), so it could never actually
@@ -1419,7 +1422,7 @@ body[data-screen="market"] #trackedPill{display:none}
    keeps this behind, so only the slice that clears the circle's edge is
    visible -- a marker peeking out from behind the node. */
 .map-node-tracked-badge{
-  position:absolute; transform:translate(-50%, calc(-50% - 42px));
+  position:absolute; transform:translate(-50%, calc(-50% - 60px));
   width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
   display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
@@ -1433,7 +1436,7 @@ body[data-screen="market"] #trackedPill{display:none}
    badge's own size/position/stacking (see its own comment) so the two
    stay consistent whichever one shows. */
 .map-node-capstone-badge{
-  position:absolute; transform:translate(-50%, calc(-50% - 42px));
+  position:absolute; transform:translate(-50%, calc(-50% - 60px));
   width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
   display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
@@ -1477,36 +1480,25 @@ body[data-screen="market"] #trackedPill{display:none}
 .mct-em{font-size:15px; line-height:1; flex:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.pool{display:flex; gap:8px; flex-wrap:wrap}
-/* One column per element -- chip, then its name underneath, same .gcol
-   stacking shape renderStation()'s own dice pool uses (see .gather/.gcol
-   there), just without that one's container-query responsive sizing
-   since .pchip's own min-width is already fixed. */
-.pcol{display:flex; flex-direction:column; align-items:center; gap:5px}
-/* Box doubled (28px -> 56px min-width) for readability on the map's own
-   preview card -- border WIDTH (5px) and the corner .el-suit-badge dot
-   stay exactly as they were, so the ring/badge don't look oversized next
-   to the now-bigger square. Unlike .gchip (a flex item with no width of
-   its own, sized purely by however many chips fit in a row -- hence its
-   .gsym using a container-query formula), .pchip has a fixed box size
-   regardless of context, so its symbol is a plain fixed size too: the
-   exact value .gsym's own formula resolves to at a box this size (its
-   32px cap), not a re-run of the responsive formula itself (which would
-   need container-type:inline-size on .pcol -- and a flex item can't size
-   ITSELF off its own content while under that containment, so it
-   collapses to zero width instead of the intended 56px). */
+/* Same shrink-to-fit-one-row behavior as .gather/.gcol/.gchip (the
+   station's own dice pool) -- this used to be a fixed/doubled size that
+   couldn't shrink, which wrapped to two rows on a station with a full
+   6-element pool on a narrow phone screen. .pool/.pcol/.pchip/.pnum/
+   .pname now mirror .gather/.gcol/.gchip/.gnum/.gname's rules exactly
+   (values copied, not shared -- .pchip/.gchip stay separate classes so
+   the tractor-harvest tap gate, which specifically checks for .gchip,
+   never fires on this preview card's own copy). */
+.pool{display:flex; gap:10px; justify-content:center; flex-wrap:nowrap}
+.pcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
+  align-items:center; gap:7px; container-type:inline-size}
 .pchip{
-  position:relative; display:inline-flex; align-items:center; justify-content:center; aspect-ratio:1; min-width:56px;
-  background:#fff; color:#221f1a; font-weight:800;
-  padding:2px; border-radius:7px; border:5px solid var(--suit);
+  position:relative; width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
+  text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
+  display:flex; align-items:center; justify-content:center;
 }
-.pchip .psym{line-height:1; font-size:32px}
-/* Atomic number, top-left corner -- same treatment as .gnum (the station
-   shop's own dice pool), scaled up to match .pchip's own doubled size. */
-.pnum{position:absolute; top:3px; left:5px; font-size:12px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
-/* Element's full name, stacked below the chip in its own .pcol column --
-   same small-label convention as .gname/.cm-name/.fc-name elsewhere. */
-.pname{font-size:10px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
+.pchip .psym{line-height:1; font-size:min(32px, 55cqw)}
+.pnum{position:absolute; top:2px; left:4px; font-size:9px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
+.pname{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
 /* Every item sold at this station, icon-only, always visible -- sits right
    under the dice pool. When a job item is selected in the map's job row
    (see renderMap()/stationItemIconsHTML()), whichever of these belong to
@@ -3877,6 +3869,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   .gather,.playbar{padding-left:16px; padding-right:16px; margin:12px 0 0}
   .gather{margin:12px 16px 0; padding:0 6px; gap:4px}
   .gcol{max-width:none; gap:4px}
+  .pool{gap:4px}
+  .pcol{max-width:none; gap:4px}
   .makewrap{padding:18px 6px 22px}
   /* Station screen goes edge-to-edge on phones -- no outer gutter around
      the card, no rounded/bordered sides. main keeps its own bottom padding
@@ -12559,6 +12553,15 @@ function openJobBoard(){
   openJobSheet();
 }
 function closeJobBoard(){
+  // Classic's opening capstone pick (bingoPickerActive) must run to
+  // completion -- a scrim tap or Escape here (this function is every
+  // dismissal path: the X button, the scrim, and Escape all route through
+  // it) would close the tray without ever calling pickBingoCapstone(), so
+  // data-intro-sequence's hub/hint hiding (see renderMap()'s own comment)
+  // would never get cleared and the player would be stuck with no hub and
+  // no way to reopen the tray. The only way out of this screen is
+  // runBingoRevealSequence() -> closeBingoIntroTray(), never this.
+  if (bingoPickerActive) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
