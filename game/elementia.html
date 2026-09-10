@@ -1325,7 +1325,14 @@ body[data-screen="market"] #trackedPill{display:none}
   stroke:#ffce54; stroke-width:5.2;
   filter:drop-shadow(0 0 .5px rgba(0,0,0,.9)) drop-shadow(0 0 1px rgba(0,0,0,.7));
 }
-.map-nodes{position:absolute; inset:0}
+/* z-index:0 (not just position:absolute) matters here: it makes .map-nodes
+   its own stacking context, so the tracked/capstone badges' negative
+   z-index (see .map-node-tracked-badge's own comment) only ever compares
+   against their sibling .map-node within this box. Without it, a negative
+   z-index child escapes to whatever ancestor DOES establish a stacking
+   context (much further up the DOM), which can bury the badge behind
+   unrelated page content instead of just tucking it behind its own node. */
+.map-nodes{position:absolute; inset:0; z-index:0}
 /* Node buttons are fully opaque (not translucent) so state (here /
    reachable / unreachable) reads from the button's OWN color rather than
    blending with whatever's on the art underneath -- that's why
@@ -1476,15 +1483,24 @@ body[data-screen="market"] #trackedPill{display:none}
    there), just without that one's container-query responsive sizing
    since .pchip's own min-width is already fixed. */
 .pcol{display:flex; flex-direction:column; align-items:center; gap:5px}
-/* Box and symbol text doubled (28px/13px -> 56px/26px) for readability on
-   the map's own preview card -- border WIDTH (5px) and the corner
-   .el-suit-badge dot stay exactly as they were, so the ring/badge don't
-   look oversized or out of proportion next to the now-bigger square. */
+/* Box doubled (28px -> 56px min-width) for readability on the map's own
+   preview card -- border WIDTH (5px) and the corner .el-suit-badge dot
+   stay exactly as they were, so the ring/badge don't look oversized next
+   to the now-bigger square. Unlike .gchip (a flex item with no width of
+   its own, sized purely by however many chips fit in a row -- hence its
+   .gsym using a container-query formula), .pchip has a fixed box size
+   regardless of context, so its symbol is a plain fixed size too: the
+   exact value .gsym's own formula resolves to at a box this size (its
+   32px cap), not a re-run of the responsive formula itself (which would
+   need container-type:inline-size on .pcol -- and a flex item can't size
+   ITSELF off its own content while under that containment, so it
+   collapses to zero width instead of the intended 56px). */
 .pchip{
   position:relative; display:inline-flex; align-items:center; justify-content:center; aspect-ratio:1; min-width:56px;
-  background:#fff; color:#221f1a; font-size:26px; font-weight:800;
-  padding:2px; border-radius:7px; letter-spacing:.2px; border:5px solid var(--suit);
+  background:#fff; color:#221f1a; font-weight:800;
+  padding:2px; border-radius:7px; border:5px solid var(--suit);
 }
+.pchip .psym{line-height:1; font-size:32px}
 /* Atomic number, top-left corner -- same treatment as .gnum (the station
    shop's own dice pool), scaled up to match .pchip's own doubled size. */
 .pnum{position:absolute; top:3px; left:5px; font-size:12px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
@@ -5037,7 +5053,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "🏡",
     "Homestead",
     "CAPSTONE",
-    "🚲 Bicycle + 🐔 Chicken + 🌾 Grain + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",
+    "🚲 Bicycle + 🐔 Chicken + 🥧 Apple Pie + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",
     20
    ]
   },
@@ -5149,7 +5165,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚜",
      "Tractor",
      "CREATION",
-     "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber + 🧑‍🌾 Farm",
+     "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",
      14
     ],
     [
@@ -5797,7 +5813,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚀",
      "Rocket",
      "CREATION",
-     "💻 Computer + 🔆 Solar Panel + Ti",
+     "💻 Computer + __FIBERGLASS__ Fiberglass + Ti",
      19
     ]
    ],
@@ -5805,7 +5821,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "🛰️",
     "Space Station",
     "CAPSTONE",
-    "🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish",
+    "🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish + 🔆 Solar Panel",
     29
    ]
   }
@@ -8521,7 +8537,7 @@ function mapCardHTML(name){
   // already uses (see renderStation()'s gather markup), just under .pnum/
   // .pname names since .pchip's own sizing differs from .gchip's.
   const poolHTML = !identityKnown ? "" :
-    `<div class="pool">${sortedDice(s).map(d => `<div class="pcol"><button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}"><span class="pnum">${ATOMIC_NUMBER[d]}</span>${esc(d)}${elSuitBadgeHTML(d)}</button><span class="pname">${esc(ELEMENT_NAMES[d] || d)}</span></div>`).join("")}</div>`;
+    `<div class="pool">${sortedDice(s).map(d => `<div class="pcol"><button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}"><span class="pnum">${ATOMIC_NUMBER[d]}</span><span class="psym">${esc(d)}</span>${elSuitBadgeHTML(d)}</button><span class="pname">${esc(ELEMENT_NAMES[d] || d)}</span></div>`).join("")}</div>`;
   return `<div class="map-card" style="--suit:${su.color}">
     <div class="row1"><span class="em">${identityKnown ? em(s.emoji) : "❓"}</span><h2>${identityKnown ? esc(name) : "???"}</h2>${trackedPill}</div>
     ${poolHTML}
@@ -8537,11 +8553,12 @@ function renderMap(){
   // node reads as unreachable during this window rather than the normal
   // "anywhere is fine" pre-start state (see mustStartAtOcean()).
   const forcedStart = mustStartAtOcean();
-  // Same tracked-item closure stationItemIconsHTML() rings on the station
-  // preview card -- mirrored here so a station carrying something that
-  // feeds the tracked item reads at a glance on the map overview itself,
-  // not just after tapping in to that one station's own preview.
-  const jobTree = selectedJobItem ? new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]) : null;
+  // Unlike stationItemIconsHTML()'s own tracked-item ring inside a
+  // station's preview card (which highlights every ingredient still
+  // needed anywhere in the tree), this map-level badge marks only the ONE
+  // station where the tracked item itself is actually crafted -- a single
+  // unambiguous breadcrumb for "go here to make it," not a trail of every
+  // station that happens to sell a component somewhere upstream.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
 
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
@@ -8572,8 +8589,7 @@ function renderMap(){
     // badge is the only breadcrumb pointing at its own home station at
     // all, and dropping it right there left the trail going cold exactly
     // at the destination that mattered most.
-    const hasTracked = jobTree && !unvisited && entriesAt(name)
-      .some(e => isRevealed(e) && jobTree.has(e.name));
+    const hasTracked = !unvisited && trackedEntry && trackedEntry.station === name && isRevealed(trackedEntry);
     // Classic Mode's initial station-pick screen only (state.lastStation
     // === null, nothing confirmed yet) -- every node's own capstone shows
     // in the SAME top-center slot the tracked-item badge below uses
