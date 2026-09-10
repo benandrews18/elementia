@@ -3819,6 +3819,166 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   background:var(--suit, #4a4f5c); border:2.5px solid rgba(255,255,255,.4);
 }
 
+/* =====================================================================
+   Display Mat (Classic Mode only) -- see the JS module of the same name
+   near CORE_ITEM_STATION, and renderMatScreen()/openMatScreen() further
+   down. Same full-screen-overlay shell as Arrange Items (#arrangeScreen)
+   above -- head bar, a scrolling content area, a bottom sheet tray that
+   slides via transform -- but the content area is a fixed 8-slot grid
+   rather than a free-form canvas, so cards are dragged between slots
+   (re-ordering) rather than placed at an arbitrary point. Card visuals
+   (white face, black frame, corner badges) reuse #cardPop's own printed-
+   card language (.pc-card et al) rather than inventing a third "card"
+   look, just at grid-cell size instead of a single full-detail popup. */
+#matScreen{position:fixed; inset:0; z-index:80; display:none; flex-direction:column; background:#0c0f14}
+#matScreen.open{display:flex}
+.mat-head{
+  flex:none; display:flex; align-items:center; gap:10px; padding:14px 16px;
+  border-bottom:2.5px solid var(--gold); background:var(--card);
+}
+.mat-head h2{font-size:18px; font-weight:800; color:#fff; flex:1}
+.mat-body{flex:1; position:relative; min-height:0; overflow:hidden}
+.mat-content{position:absolute; inset:0; overflow-y:auto; padding:14px 14px 40vh; container-type:inline-size}
+.mat-score{
+  display:flex; flex-direction:column; gap:6px; padding:10px 12px; margin-bottom:12px;
+  background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
+}
+.mat-combos{display:flex; flex-wrap:wrap; gap:6px; min-height:24px}
+.mm-combo{
+  display:inline-flex; align-items:center; gap:4px; padding:3px 8px 3px 3px; border-radius:999px;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
+  font-size:11px; font-weight:800;
+}
+.mm-combo.col{background:var(--collection-soft); border-color:var(--collection); color:var(--collection)}
+.mm-cico{width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
+.mm-cico :is(img,svg){width:12px; height:12px}
+.mm-cico.star{background:none; font-size:14px}
+.mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
+.mat-score-line{display:flex; align-items:baseline; gap:8px; font-weight:800; font-variant-numeric:tabular-nums}
+.mat-score-line .ms-base{font-size:18px; color:var(--ink)}
+.mat-score-line .ms-col{font-size:13px; color:var(--gold)}
+.mat-score-line .ms-mult{font-size:18px; color:var(--ink2)}
+.mat-score-line .ms-eq{color:var(--mute)}
+.mat-score-line .ms-total{font-size:24px; color:var(--gold)}
+.mat-zone-title{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; letter-spacing:.4px;
+  text-transform:uppercase; color:var(--ink2); margin-bottom:8px}
+.mat-zone-title b{color:var(--ink); font-variant-numeric:tabular-nums}
+.mm-clear-btn{margin-left:auto; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px;
+  background:var(--sunken); border:1.5px solid var(--line); color:var(--ink2)}
+/* Row height is computed explicitly (via .mat-content's own
+   container-type:inline-size above) rather than from aspect-ratio on
+   each cell: a wide (capstone, span 2) cell needs the SAME height as its
+   single-width siblings with roughly double the width, and aspect-ratio
+   applied per-cell would instead make a wide cell roughly twice as TALL
+   too (its own width feeding its own ratio). grid-auto-rows applies one
+   height per row regardless of how many columns a cell spans, which is
+   exactly what's needed here. (cqw, not the viewport's own vw, since
+   this needs to track .mat-content's width specifically -- a grid-
+   auto-rows:1fr was tried first and blew every row up to the scrolling
+   container's full height, since fr tracks have no real "remaining
+   space" to divide when the grid's own block-size is auto.) */
+.mat-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr);
+  grid-auto-rows:calc(((100cqw - 24px) / 4) * 1.4);
+  gap:8px; touch-action:none;
+}
+.mat-grid.dragging .mm-card{pointer-events:none}
+.mm-slot{position:relative}
+.mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
+.mm-slot.wide{grid-column:span 2}
+
+.mm-card{
+  position:relative; width:100%; height:100%; background:#f7f5f0; color:#181614;
+  border-radius:12px; border:4px solid #000; padding:5px 3px 3px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; overflow:hidden; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.35);
+}
+.mm-card.cap{border-color:#7a5a12; box-shadow:0 0 0 2px var(--gold), 0 3px 10px rgba(0,0,0,.35)}
+.mm-pts{
+  position:absolute; top:-3px; left:-3px; z-index:2; min-width:22px; height:22px; padding:0 3px;
+  border-radius:999px; display:flex; align-items:center; justify-content:center;
+  background:var(--gold); color:#181614; border:2px solid #000;
+  font-size:10.5px; font-weight:900; font-variant-numeric:tabular-nums;
+}
+.mm-card.complete .mm-pts{box-shadow:0 0 0 2px var(--gold), 0 0 6px rgba(226,178,90,.85)}
+.mm-pips{position:absolute; top:-3px; right:-3px; z-index:2; display:flex; flex-direction:column; gap:2px}
+.mm-pip{
+  width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--suit); border:1.5px solid #000; font-size:8px; color:#fff; line-height:1;
+}
+.mm-pip :is(img,svg){width:9px; height:9px}
+.mm-pip.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 4px rgba(226,178,90,.85)}
+.mm-icon{font-size:22px; line-height:1; margin-top:3px}
+.mm-icon :is(img,svg){width:22px; height:22px; object-fit:contain}
+.mm-name{
+  font-size:7px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+.mm-comp{display:flex; align-items:center; justify-content:center; gap:0; width:100%; padding:1px 14px 0 0; overflow:hidden}
+.mm-cmp{display:flex; align-items:center; justify-content:center; flex:none}
+.mm-cmp :is(img,svg){width:9px; height:9px; object-fit:contain}
+.mm-cmp.el{min-width:9px; height:9px; padding:0 1px; border-radius:2px; background:var(--el); color:#fff;
+  font-size:5px; font-weight:900; line-height:9px}
+.mm-cmp.lit{background:var(--gold); border-radius:2px; box-shadow:0 0 0 1px var(--gold)}
+.mm-cmp.el.lit{background:var(--el)}
+.mm-plus{font-style:normal; font-size:6px; font-weight:900; color:#9aa1ad; flex:none}
+.mm-comp[data-n="4"] .mm-cmp :is(img,svg){width:7px; height:7px}
+.mm-comp[data-n="5"] .mm-cmp :is(img,svg){width:6px; height:6px}
+.mm-station{
+  position:absolute; bottom:-3px; right:-3px; z-index:2; width:16px; height:16px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:9px;
+}
+.mm-station :is(img,svg){width:10px; height:10px; object-fit:contain}
+.mm-station.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(226,178,90,.85)}
+.mm-card.on::after{
+  content:"ON MAT"; position:absolute; top:3px; left:50%; transform:translateX(-50%);
+  font-size:5.5px; font-weight:800; letter-spacing:.03em; color:#04150c; background:var(--ok);
+  padding:1px 5px; border-radius:999px; z-index:3; white-space:nowrap;
+}
+.mm-card.on{filter:brightness(.6) saturate(.7)}
+
+.mat-tray-panel{
+  position:absolute; left:0; right:0; bottom:0; z-index:5; max-height:52vh;
+  display:flex; flex-direction:column;
+  background:var(--card); border-top:2.5px solid var(--gold); border-radius:16px 16px 0 0;
+  box-shadow:0 -8px 20px rgba(0,0,0,.3);
+  transform:translateY(0); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.mat-tray-panel.collapsed{transform:translateY(calc(100% - 34px))}
+.mat-tray-handle{
+  flex:none; width:100%; height:34px; display:flex; align-items:center; justify-content:center; gap:8px;
+  background:none; border:none; cursor:pointer; position:relative;
+}
+.mat-tray-chevron{width:36px; height:5px; border-radius:3px; background:var(--line2)}
+.mat-tray-handle:hover .mat-tray-chevron{background:var(--gold)}
+.mat-tray-label{font-size:11px; font-weight:800; color:var(--ink2); position:absolute; right:14px}
+.mat-tray-label b{color:var(--ink)}
+.mat-tray{
+  flex:1; min-height:0; overflow-x:hidden; overflow-y:auto;
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; align-content:start;
+  padding:4px 14px 16px;
+}
+.mm-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
+
+.mat-drag-ghost{position:fixed; z-index:90; pointer-events:none; opacity:.94; filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+
+.mat-toast{
+  position:absolute; left:50%; bottom:calc(52vh + 14px); transform:translateX(-50%); z-index:8;
+  background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
+  box-shadow:0 4px 14px rgba(0,0,0,.4); white-space:nowrap;
+}
+
+/* Drawer's own launch button (see renderDrawer()) -- same "quick-action
+   row" language as .setting-row, distinct from the plain item/element
+   grid below it. */
+.drawer-mat-btn{
+  display:flex; align-items:center; gap:10px; width:100%; padding:12px 14px; margin-bottom:14px;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); border-radius:12px;
+  color:var(--gold); font-size:14px; font-weight:800; text-align:left;
+}
+.drawer-mat-btn .dmb-score{margin-left:auto; font-size:12.5px; font-weight:800; color:var(--ink2)}
+
 /* Forces an iPad-portrait-width frame on desktop browsers -- this whole UI
    was built mobile-first, and left unconstrained on a wide window it just
    stretches full-bleed, which is both ugly and not what testing against an
@@ -3846,7 +4006,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
   #backdrop, #topbar, #hub, #pinsTray, #convert, #convertScrim, #jobScrim, #scrim,
-  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, .confetti{
+  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #matScreen, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
@@ -4475,6 +4635,42 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <div class="arr-tray" id="arrTray"></div>
     </div>
   </div>
+</div>
+
+<!-- Display Mat (Classic Mode only) -- see the JS module of the same
+     name near CORE_ITEM_STATION, and renderMatScreen()/openMatScreen(). -->
+<div id="matScreen" role="dialog" aria-modal="true" aria-label="Display Mat">
+  <div class="mat-head">
+    <h2>🀄 Display Mat</h2>
+    <button type="button" class="tbtn ghost" id="matScreenClose" aria-label="Close Display Mat">✕</button>
+  </div>
+  <div class="mat-body">
+    <div class="mat-content">
+      <div class="mat-score">
+        <div class="mat-combos" id="matCombos"></div>
+        <div class="mat-score-line">
+          <span class="ms-base" id="matBase">0</span>
+          <span class="ms-col" id="matColBonus" hidden></span>
+          <span class="ms-mult" id="matMult">×1</span>
+          <span class="ms-eq">=</span>
+          <span class="ms-total" id="matTotal">0</span>
+        </div>
+      </div>
+      <div class="mat-zone-title">Display mat <b id="matSlotsUsed">0/8</b>
+        <button type="button" class="mm-clear-btn" id="matClearBtn">Clear</button>
+      </div>
+      <div class="mat-grid" id="matGrid"></div>
+    </div>
+    <div class="mat-tray-panel" id="matTrayPanel">
+      <button type="button" class="mat-tray-handle" id="matTrayHandle" aria-expanded="true" aria-label="Collapse item tray">
+        <span class="mat-tray-chevron"></span>
+        <span class="mat-tray-label">Your items <b id="matTrayCount">0</b></span>
+      </button>
+      <div class="mat-tray" id="matTray"></div>
+    </div>
+    <div class="mat-toast" id="matToast" hidden></div>
+  </div>
+  <div class="mat-drag-ghost" id="matGhost" hidden></div>
 </div>
 
 <!-- guided tour: an image slideshow of the designer's own annotated
@@ -6848,6 +7044,180 @@ const CORE_ITEM_STATION = Object.fromEntries([...CORE_SET].map(s => {
   return [name, station];
 }));
 
+/* =====================================================================
+   Display Mat (Classic Mode only) -- a Bazaar-shaped scoring layer on
+   top of the crafted-item collection: 8 slots (a capstone takes 2),
+   arranged by the player, scored as (points + collection bonuses) x
+   combo multiplier. Ported from the cardgame/mat.html prototype, but
+   reading this game's own live data/state throughout instead of that
+   prototype's scripted recorded-run stand-in -- no separate data file
+   needed, since every field a mat card requires (points, tier, station,
+   suit pips, direct recipe) already lives on ENTRIES/CORE_SET/
+   ITEM_SUIT_COST_TABLE. See renderMatScreen() further down for the
+   screen itself.
+
+   No dice/Quarks reward is wired to a mat score yet -- deliberately: the
+   prototype's own reward was bonus dice, but this game's real payout is
+   meant to be a not-yet-built Quarks/Empty Elements economy, and wiring
+   the prototype's throwaway mechanic now would just mean ripping it out
+   later. This ships as a pure arrange-and-score screen until that
+   economy exists. */
+const MAT_SLOTS_COLS = 4, MAT_SLOTS_ROWS = 2;
+const MAT_SLOTS_TOTAL = MAT_SLOTS_COLS * MAT_SLOTS_ROWS;
+const MAT_CAPSTONE_SLOTS = 2;
+const MAT_COMBO_TIERS = [ {k:3, b:1}, {k:4, b:2}, {k:5, b:4}, {k:6, b:6} ];
+
+/* One card per CORE_SET item -- every Classic item is eligible for the
+   mat regardless of whether it's owned yet (ownership only decides what
+   shows up in the tray, see matInventory()). Built once at boot: the
+   card's own shape never changes over a run, only ownership does. */
+const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
+  const station = CORE_ITEM_STATION[name];
+  const entry = ENTRIES.find(e => e.name === name && e.station === station);
+  return {
+    name,
+    points: ITEM_POINTS[name],
+    tier: ITEM_TIER[name],
+    emoji: ITEM_EMOJI[name],
+    station,
+    pips: itemSuitCosts(name),
+    components: entry ? entry.reqs : [],
+  };
+});
+const MAT_CARD_BY_NAME = {};
+MAT_CARDS.forEach(c => { MAT_CARD_BY_NAME[c.name] = c; });
+
+const matIsCapstone = c => c.tier === "CAPSTONE";
+const matSlotsOf = c => matIsCapstone(c) ? MAT_CAPSTONE_SLOTS : 1;
+const matComboTier = k => {
+  let b = 0;
+  MAT_COMBO_TIERS.forEach(t => { if (k >= t.k) b = t.b; });
+  return b;
+};
+
+/* Left-to-right packing, same rule the prototype's packCells() used: a
+   capstone is two cells wide and never straddles a row break, so when
+   only one column is left the rest of that row pads out -- the pad still
+   costs a slot, which is why occupancy comes from the packing, not a
+   plain sum of widths. */
+function matPackCells(cards){
+  const cells = [];
+  let col = 0;
+  cards.forEach((c, i) => {
+    const w = matSlotsOf(c);
+    if (col + w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
+    cells.push({card:c, idx:i, w});
+    col = (col + w) % MAT_SLOTS_COLS;
+  });
+  return cells;
+}
+const matOccupancy = cards => matPackCells(cards).reduce((n, c) => n + c.w, 0);
+const matFits = cards => matOccupancy(cards) <= MAT_SLOTS_TOTAL;
+
+/* A card's own DIRECT recipe items, nothing further up the tree -- two
+   cards "share a component" only if the same name appears on both
+   recipes, exactly what the icon strip along a card's own bottom shows. */
+const matDirectItems = c => new Set(c.components.filter(x => x.kind === "item").map(x => x.name));
+
+function matGroupsOf(mat){
+  const st = {}, su = {}, cp = {};
+  mat.forEach(c => {
+    st[c.station] = (st[c.station] || 0) + 1;
+    new Set(c.pips).forEach(s => { su[s] = (su[s] || 0) + 1; });
+    matDirectItems(c).forEach(n => { cp[n] = (cp[n] || 0) + 1; });
+  });
+  return { st, su, cp };
+}
+/* Every group clearing the 3-alike floor, not just the single biggest --
+   two different suit groups, or a station group alongside a component
+   group, all stack together into the same multiplier. */
+function matAllGroups(map){
+  return Object.keys(map)
+    .map(name => ({ name, k: map[name], bonus: matComboTier(map[name]) }))
+    .filter(g => g.bonus > 0)
+    .sort((a, b) => b.k - a.k || a.name.localeCompare(b.name));
+}
+/* A card's full direct recipe also sitting on the mat doubles its own
+   points -- a real slot cost, since every ingredient has to be displayed
+   at once. A card with no item-kind components (a pure-element MATERIAL)
+   never qualifies -- an empty set's every() is vacuously true, which
+   would double it for free otherwise. */
+function matIsComplete(c, mat){
+  const need = matDirectItems(c);
+  if (!need.size) return false;
+  const names = new Set(mat.map(m => m.name));
+  return [...need].every(n => names.has(n));
+}
+
+/* Hand-curated named sets, ported as-is from the cardgame/mat.html
+   prototype (already checked there against the Classic 79). "Five cards
+   from one station" is already what the combo multiplier pays for, so a
+   collection instead asks for a specific, memorable set worth building
+   toward over most of a run -- the identity the Bingo card already
+   supplies for a normal run, here for anyone using the mat instead. */
+const MAT_COLLECTIONS_RAW = [
+  { id:"deeptime",  name:"Deep Time",        items:["Fossil","Bone","Diamond","DNA","Clay"] },
+  { id:"starchart", name:"Star Charts",      items:["Star","Telescope","Satellite Dish","Rocket","Space Station"] },
+  { id:"rolling",   name:"Rolling Stock",    items:["Car","Helicopter","Speedboat","Maglev Train","Tractor"] },
+  { id:"bakery",    name:"The Bakery Line",  items:["Flour","Dough","Yeast","Bread","Oven"] },
+  { id:"sweet",     name:"Sweet Tooth",      items:["Sugar","Cake","Banana Bread","Fruit Cake","Apple"] },
+  { id:"alloys",    name:"Alloy Works",      items:["Steel","Stainless Steel","Aluminum Alloy","Titanium Alloy","Fiberglass"] },
+  { id:"livewire",  name:"Live Wire",        items:["Wire","Battery","Microchip","Computer","Light Bulb"] },
+  { id:"skyline",   name:"Skyline",          items:["Concrete","Glass","Building","Skyscraper","Metropolis"] },
+  { id:"openwater", name:"Open Water",       items:["Water","Seaweed","Salmon","Orca","Coral Reef"] },
+  { id:"homestead", name:"The Homestead",    items:["Farm","Grain","Chicken","Log Cabin","Homestead"] },
+  { id:"wild",      name:"Wild Things",      items:["Deer","Salmon","Orca","Chicken","Tree"] },
+  { id:"weather",   name:"Weather Front",    items:["Cloud","Rainbow","Star","Water"] },
+  { id:"instrum",   name:"Fine Instruments", items:["Clock","Compass","Magnet","Telescope"] },
+  { id:"growth",    name:"Green Growth",     items:["Soil","Tree","Seaweed","Grain","Farm"] },
+  { id:"powergrid", name:"Power Grid",       items:["Battery","Solar Panel","Turbine Blade","Engine","Light Bulb"] },
+  { id:"firstlight",name:"First Light",      items:["Furnace","Glass","Light Bulb","Star","Lighthouse"] },
+  { id:"machine",   name:"The Machine",      items:["Engine","Wheel","Rubber","Tools","Robot"] },
+  { id:"genesis",   name:"Genesis",          items:["DNA","Egg","Life","Ecosystem","Tree"] },
+  { id:"flight",    name:"Flight",           items:["Rocket","Helicopter","Satellite Dish","Turbine Blade","Compass"] },
+];
+const matCollectionBonus = col =>
+  Math.round(col.items.reduce((n, i) => n + (MAT_CARD_BY_NAME[i] ? MAT_CARD_BY_NAME[i].points : 0), 0) * 0.3);
+function buildMatCollections(){
+  const out = [];
+  MAT_COLLECTIONS_RAW.forEach(c => {
+    const missing = c.items.filter(i => !MAT_CARD_BY_NAME[i]);
+    if (missing.length){
+      console.warn(`Mat collection "${c.name}" drops: ${missing.join(", ")} (not in the Classic deck)`);
+      return;
+    }
+    out.push({
+      ...c,
+      slots: matOccupancy(c.items.map(i => MAT_CARD_BY_NAME[i])),
+      bonus: matCollectionBonus(c),
+      hint: c.items.join(", "),
+      // Every member must be ON THE MAT, not merely owned -- that is what
+      // makes a collection compete for slots against raw points.
+      done: mat => c.items.every(i => mat.some(m => m.name === i)),
+    });
+  });
+  return out;
+}
+const MAT_COLLECTIONS = buildMatCollections();
+const matCompletedIn = mat => MAT_COLLECTIONS.filter(col => col.done(mat));
+
+function matScore(mat){
+  const base = mat.reduce((n, c) => n + c.points * (matIsComplete(c, mat) ? 2 : 1), 0);
+  const completeNames = new Set(mat.filter(c => matIsComplete(c, mat)).map(c => c.name));
+  const g = matGroupsOf(mat);
+  const combos = {
+    station: matAllGroups(g.st),
+    suit: matAllGroups(g.su),
+    component: matAllGroups(g.cp),
+  };
+  const comboBonus = [...combos.station, ...combos.suit, ...combos.component]
+    .reduce((n, grp) => n + grp.bonus, 0);
+  const cols = matCompletedIn(mat);
+  const colBonus = cols.reduce((n, c) => n + c.bonus, 0);
+  const mult = 1 + comboBonus;
+  return { base, combos, completeNames, cols, colBonus, mult, total: (base + colBonus) * mult };
+}
+
 /* Item Bingo (draft) -- Classic Mode's Job Select tray, see bingoCardHTML().
    Eligible pool is every core item worth BINGO_MIN_POINTS or more (the
    cheap 2-4pt staples would make nearly every square a formality); drawn
@@ -7538,6 +7908,12 @@ function freshState(){
     // whether Ocean is this run's actual first station.
     oceanFirstRollDone: false,
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
+    mat: [], // Display Mat (Classic only) -- item names, in display order. See
+             // matScore()/renderMatScreen(). Distinct from COLLECTIONS/
+             // collectionsCompleted above, which is a wholly separate,
+             // pre-existing Adventure/Zen mechanic.
+    matUnlockedCollections: [], // [collectionId, ...] ever completed on the mat -- see
+                                 // MAT_COLLECTIONS, lifetime like collectionsCompleted.
     collectionsCompleted: [], // [collectionId, ...] -- see checkCollections()/COLLECTIONS. Lifetime,
                                // never un-completes even if a member item is later spent in Hard Mode.
     tradeOffers: [], // [{reward, demand}, ...] -- Hard Mode's Trade Market board (see
@@ -9527,8 +9903,15 @@ function renderDrawer(){
   // "Convert Elements" and "Arrange Items" both dropped from this view --
   // Convert has its own dedicated entry point elsewhere (the floating
   // button, and the "needed element" shortcut from a shop recipe), and
-  // Arrange Items wasn't earning its place here alongside them.
-  return `<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
+  // Arrange Items wasn't earning its place here alongside them. Display
+  // Mat gets its own launch row here instead (Classic Mode only, see
+  // MAT_CARDS) -- unlike those two, it's meant to be a frequent, central
+  // destination from this same screen, not an occasional side trip.
+  const matBtn = state.mode === "classic"
+    ? `<button type="button" class="drawer-mat-btn" id="openMatBtn">🀄 <span>Display Mat</span>
+        <span class="dmb-score">${matScore(matOnMat()).total.toLocaleString()} pts</span></button>`
+    : "";
+  return `${matBtn}<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
     ${itemHTMLs || '<div class="sec-label">CRAFTED · kept forever</div><p class="empty">Nothing crafted yet.</p>'}`;
 }
 
@@ -12212,6 +12595,7 @@ document.getElementById("invFilter").addEventListener("input", applyInvFilter);
 document.getElementById("drawerBody").addEventListener("click", ev => {
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
+  if (ev.target.closest("#openMatBtn")){ closeDrawer(); openMatScreen(); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const iBtn = ev.target.closest("[data-item]");
@@ -12434,6 +12818,241 @@ document.getElementById("arrToolbar").addEventListener("click", ev => {
   } else return;
   save();
   renderArrangeCanvas();
+});
+
+/* =====================================================================
+   Display Mat -- screen wiring (see the scoring module of the same name
+   near CORE_ITEM_STATION for MAT_CARDS/matScore()/etc). Classic Mode
+   only, launched from the Inventory drawer (see renderDrawer()/the
+   #openMatBtn branch in #drawerBody's own click handler).
+   ===================================================================== */
+const matInventory = () =>
+  MAT_CARDS.filter(c => owns(c.name)).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
+const matOnMat = () => state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+
+/* Which stations, suits and components are actually paying out right
+   now -- a Set per kind, since multiple groups of the same kind can
+   stack (see matAllGroups()). Every card feeding any of them lights that
+   icon up, on the mat and in the tray alike. */
+let matLive = { station: new Set(), suit: new Set(), component: new Set() };
+function setMatLive(mat){
+  const c = matScore(mat).combos;
+  matLive = {
+    station:   new Set(c.station.map(g => g.name)),
+    suit:      new Set(c.suit.map(g => g.name)),
+    component: new Set(c.component.map(g => g.name)),
+  };
+}
+
+function matCardHTML(name, opts = {}){
+  const c = MAT_CARD_BY_NAME[name];
+  if (!c) return "";
+  const cap = matIsCapstone(c);
+  const onMat = state.mat.includes(name);
+  const pts = opts.complete ? c.points * 2 : c.points;
+  const pipsHTML = c.pips.map(s =>
+    `<span class="mm-pip${matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
+  const compParts = c.components.map(x => x.kind === "item"
+    ? `<span class="mm-cmp${matLive.component.has(x.name) ? " lit" : ""}" title="${esc(x.name)}">${ITEM_EMOJI[x.name] ? em(ITEM_EMOJI[x.name]) : esc(x.name)}</span>`
+    : `<span class="mm-cmp el${matLive.component.has(x.name) ? " lit" : ""}" style="--el:${ELEMENT_COLOR[x.name] || "#7b8598"}" title="${
+         esc(ELEMENT_NAMES[x.name] || x.name)}">${esc(x.name)}</span>`);
+  const compHTML = compParts.length
+    ? `<span class="mm-comp" data-n="${compParts.length}">${compParts.join(`<i class="mm-plus">+</i>`)}</span>` : "";
+  const stMeta = STATION_BY_NAME[c.station];
+  const stColor = DATA.suits[stMeta.suit].color;
+  const stLit = matLive.station.has(c.station) ? " lit" : "";
+  const cls = ["mm-card", cap ? "cap" : "", opts.complete ? "complete" : "",
+               opts.tray && onMat ? "on" : "", opts.cls || ""].join(" ");
+  return `<button type="button" class="${cls}" data-mat-card="${esc(name)}"
+      title="${esc(name)} — ${c.points} pts${opts.complete ? ` (doubled to ${pts} -- every ingredient is on the mat)` : ""}, ${esc(c.station)}">
+    <span class="mm-pts">${pts}</span>
+    ${pipsHTML ? `<span class="mm-pips">${pipsHTML}</span>` : ""}
+    <span class="mm-icon">${em(c.emoji)}</span>
+    <span class="mm-name">${esc(name)}</span>
+    ${compHTML}
+    <span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(c.station)}">${em(stMeta.emoji)}</span>
+  </button>`;
+}
+
+function matComboChipHTML(g, kind){
+  const st = STATION_BY_NAME[g.name];
+  const icon =
+    kind === "station" ? `<span class="mm-cico" style="--st:${DATA.suits[st.suit].color}">${em(st.emoji)}</span>`
+    : kind === "suit"  ? `<span class="mm-cico" style="--suit:${SUIT_COLOR[g.name]}">${SUIT_ICON[g.name]}</span>`
+    : `<span class="mm-cico">${ITEM_EMOJI[g.name] ? em(ITEM_EMOJI[g.name]) : esc(g.name)}</span>`;
+  const label = kind === "suit" ? ELEMENT_SUIT_LABEL[g.name] : g.name;
+  return `<span class="mm-combo" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b><i>+${g.bonus}</i></span>`;
+}
+
+/* Drawn on its own so a drag can re-flow the mat without rebuilding the
+   tray underneath it. Returns the score, since renderMatScreen() needs
+   it for the score band right after calling this. */
+function renderMatGrid(){
+  const mat = matOnMat();
+  setMatLive(mat);
+  const s = matScore(mat);
+  const cells = matPackCells(mat);
+  const html = cells.map(cell => cell.card
+    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${
+        matCardHTML(cell.card.name, { complete: s.completeNames.has(cell.card.name) })}</div>`
+    : `<div class="mm-slot empty"></div>`);
+  for (let n = cells.reduce((a, c) => a + c.w, 0); n < MAT_SLOTS_TOTAL; n++){
+    html.push(`<div class="mm-slot empty"></div>`);
+  }
+  document.getElementById("matGrid").innerHTML = html.join("");
+  document.getElementById("matSlotsUsed").textContent = `${matOccupancy(mat)}/${MAT_SLOTS_TOTAL}`;
+
+  // Lifetime unlock, same rule state.collectionsCompleted already uses
+  // for the separate Adventure/Zen collections mechanic: once completed
+  // it stays marked even if a member card is later taken off the mat.
+  let changed = false;
+  s.cols.forEach(c => {
+    if (!state.matUnlockedCollections.includes(c.id)){ state.matUnlockedCollections.push(c.id); changed = true; }
+  });
+  if (changed) save();
+  return s;
+}
+
+function renderMatScoreBand(s){
+  const chips =
+    s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
+    s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
+    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
+    s.cols.map(c => `<span class="mm-combo col" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
+  document.getElementById("matCombos").innerHTML = chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`;
+  document.getElementById("matBase").textContent = s.base;
+  document.getElementById("matColBonus").hidden = !s.colBonus;
+  document.getElementById("matColBonus").textContent = `+${s.colBonus}`;
+  document.getElementById("matMult").textContent = "×" + s.mult;
+  document.getElementById("matTotal").textContent = s.total.toLocaleString();
+}
+
+function renderMatTray(){
+  const inv = matInventory();
+  document.getElementById("matTrayCount").textContent = inv.length;
+  document.getElementById("matTray").innerHTML = inv.length
+    ? inv.map(c => matCardHTML(c.name, { tray: true })).join("")
+    : `<p class="mm-empty">Nothing crafted yet -- items you craft in Classic Mode show up here.</p>`;
+}
+
+function renderMatScreen(){
+  const s = renderMatGrid();
+  renderMatScoreBand(s);
+  renderMatTray();
+}
+
+function toggleMatCard(name){
+  const i = state.mat.indexOf(name);
+  if (i !== -1){ state.mat.splice(i, 1); renderMatScreen(); save(); return; }
+  const card = MAT_CARD_BY_NAME[name];
+  if (!card || !owns(name)) return;
+  if (!matFits(matOnMat().concat([card]))){
+    showMatToast(matIsCapstone(card) ? "A capstone needs two free slots." : "The display mat is full.");
+    return;
+  }
+  state.mat.push(name);
+  renderMatScreen(); save();
+}
+
+function matClear(){ state.mat = []; renderMatScreen(); save(); }
+
+let matToastTimer = null;
+function showMatToast(msg){
+  const el = document.getElementById("matToast");
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(matToastTimer);
+  matToastTimer = setTimeout(() => { el.hidden = true; }, 1900);
+}
+
+function openMatScreen(){
+  document.getElementById("matScreen").classList.add("open");
+  renderMatScreen();
+}
+function closeMatScreen(){
+  document.getElementById("matScreen").classList.remove("open");
+}
+document.getElementById("matScreenClose").addEventListener("click", closeMatScreen);
+document.getElementById("matClearBtn").addEventListener("click", matClear);
+document.getElementById("matTrayHandle").addEventListener("click", () => {
+  document.getElementById("matTrayPanel").classList.toggle("collapsed");
+});
+document.getElementById("matTray").addEventListener("click", ev => {
+  const card = ev.target.closest("[data-mat-card]");
+  if (card) toggleMatCard(card.dataset.matCard);
+});
+
+/* Pointer-driven drag to re-arrange, same approach as the cardgame/
+   mat.html prototype this was ported from: the grid re-renders on every
+   hover change so other cards visibly shuffle aside, and a native HTML5
+   drag does not survive its own source element being replaced mid-drag.
+   A pointerdown that never clears the 6px threshold below is a tap, and
+   toggles the card off via the pointerup fallback instead. */
+let matDrag = null;
+function matSlotUnder(x, y){
+  const grid = document.getElementById("matGrid");
+  for (const el of document.elementsFromPoint(x, y)){
+    const slot = el.closest && el.closest(".mm-slot");
+    if (slot && slot.parentElement === grid) return slot;
+  }
+  return null;
+}
+document.getElementById("matGrid").addEventListener("pointerdown", ev => {
+  if (ev.button) return;
+  const slot = ev.target.closest(".mm-slot.filled");
+  if (!slot) return;
+  ev.preventDefault();
+  const r = slot.getBoundingClientRect();
+  matDrag = {
+    idx: +slot.dataset.idx,
+    name: slot.querySelector("[data-mat-card]").dataset.matCard,
+    x0: ev.clientX, y0: ev.clientY,
+    w: r.width, h: r.height,
+    dx: ev.clientX - r.left, dy: ev.clientY - r.top,
+    live: false,
+  };
+});
+document.addEventListener("pointermove", ev => {
+  if (!matDrag) return;
+  if (!matDrag.live){
+    if (Math.hypot(ev.clientX - matDrag.x0, ev.clientY - matDrag.y0) < 6) return;
+    matDrag.live = true;
+    const g = document.getElementById("matGhost");
+    g.style.width = matDrag.w + "px";
+    g.style.height = matDrag.h + "px";
+    g.innerHTML = matCardHTML(matDrag.name);
+    g.hidden = false;
+    document.getElementById("matGrid").classList.add("dragging");
+  }
+  const g = document.getElementById("matGhost");
+  g.style.left = (ev.clientX - matDrag.dx) + "px";
+  g.style.top  = (ev.clientY - matDrag.dy) + "px";
+
+  const slot = matSlotUnder(ev.clientX, ev.clientY);
+  if (!slot) return;
+  const to = slot.dataset.idx !== undefined ? +slot.dataset.idx : state.mat.length - 1;
+  if (to === matDrag.idx) return;
+  const [n] = state.mat.splice(matDrag.idx, 1);
+  state.mat.splice(to, 0, n);
+  // Moving a capstone can force a row pad a full mat has no room for;
+  // refuse that placement rather than growing a third row.
+  if (!matFits(matOnMat())){
+    state.mat.splice(to, 1);
+    state.mat.splice(matDrag.idx, 0, n);
+    return;
+  }
+  matDrag.idx = to;
+  renderMatGrid();
+});
+document.addEventListener("pointerup", () => {
+  if (!matDrag) return;
+  const was = matDrag;
+  matDrag = null;
+  document.getElementById("matGhost").hidden = true;
+  document.getElementById("matGhost").innerHTML = "";
+  document.getElementById("matGrid").classList.remove("dragging");
+  if (was.live){ renderMatScreen(); save(); }
+  else toggleMatCard(was.name);
 });
 
 /* ------------------------------------------------------ overlays --- */
