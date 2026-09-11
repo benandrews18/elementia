@@ -2261,10 +2261,23 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
   transform:translateY(100%);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1), top .3s cubic-bezier(.34,1.56,.64,1);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column;
 }
 #drawer.open{transform:translateY(0)}
+/* top has no base value (the tray is normally positioned by bottom
+   alone, height following its own content) -- .expanded is the only
+   rule that ever sets it, to pin the top edge to the actual screen top.
+   Deliberately NOT transitioned (removed from the list above): a CSS
+   transition into/out of a property with no stylesheet-declared default
+   has nothing defined to animate TO once the class comes off, and in
+   testing this left `top` stuck at whatever pixel value the transition
+   had reached, permanently overriding the tray's real bottom-anchored
+   position -- which broke translateY(100%) on the very next close, since
+   that closed the tray by sliding it down from an incorrectly pinned
+   top:380px rather than its real position, landing it staged mid-screen
+   instead of off the bottom. Snapping this one property instantly avoids
+   that; only the open/close slide (transform, above) needs to be smooth. */
 /* Classic Mode's two-stage tray (see renderClassicDrawer()/the
    #matExpandBtn handler): collapsed/"peeked" by default -- .dbody (the
    filter bar + scrollable item grid) is hidden entirely, so #drawer
@@ -2278,18 +2291,27 @@ body[data-screen="market"] #trackedPill{display:none}
    revealed list scrolls under it. Legacy (non-Classic) drawer content
    has no such peek stage at all -- renderLegacyDrawer() adds this class
    unconditionally so .dbody is simply always visible there. */
-#drawer.expanded{top:0}
+/* max-height:none is required here, not just top:0 -- the base rule's
+   82vh cap otherwise still wins whenever the real available span
+   (top:0 to bottom:var(--hub-h)) exceeds it, which it does on most
+   phones, leaving the tray's own true bottom edge short of the hub and
+   exposing a gap of whatever's behind it (the map, and #pinsBtn/
+   #trackedPill floating in it) instead of the tray's own background. */
+#drawer.expanded{top:0; max-height:none}
 #drawer:not(.expanded) .dbody{display:none}
 .dhead{display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line)}
-/* Hidden everywhere (Inventory/Pinned/Convert/Marketplace/To-Do List all
-   share this one .dhead shape) -- the title text was pure decoration once
-   each tray's own contents already say what it is, and dropping it lets
-   .dhead shrink to a much more compact strip (see its own reduced
-   padding below). Kept in the DOM rather than deleted: #jobTitle's own
-   JS sets textContent/innerHTML on it every render regardless of mode
-   (Marketplace/To-Do List/Quests), and removing the element outright
-   would need touching every one of those call sites for no visual gain. */
-.dhead h2{display:none}
+/* The whole header strip is hidden now, not just its title text --
+   close button and (Inventory's own) point total included -- everywhere
+   it appears (Inventory/Pinned/Convert/Marketplace/To-Do List all share
+   this one .dhead shape). Safe everywhere: every one of those trays
+   already closes on an outside tap (#scrim/#convertScrim/#jobScrim) or,
+   Pinned's own case, by tapping its own trigger button again (#pinsBtn
+   toggles), so losing the X button strands nobody. Kept in the DOM
+   rather than deleted: #jobTitle's own JS sets textContent/innerHTML on
+   it every render regardless of mode, and #drawerScoreCount's is set by
+   the main render() loop -- removing either element outright would need
+   touching every one of those call sites for no visual gain. */
+.dhead{display:none}
 /* Doubled from the shared 1em .marketicon default (18px -> 36px), just
    for this one appearance -- the Marketplace tray/Bingo card's own title
    icon, top-left of the tray. vertical-align:-.15em (the shared rule's
@@ -3859,7 +3881,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    reuse #cardPop's own printed-card language (.pc-card et al) rather
    than inventing a third "card" look, just at grid-cell size instead of
    a single full-detail popup. */
-#drawerTop{container-type:inline-size}
+/* Same side padding .dbody itself uses -- #drawerTop lost this the
+   moment it moved OUTSIDE .dbody (see its own HTML comment) to become a
+   non-scrolling header sibling instead of .dbody's first child, which is
+   exactly why its own content (the held-elements grid in particular) was
+   sitting flush against the tray's edges and reading oversized: more
+   available width per grid column, with nothing to indicate that was a
+   bug rather than a redesign. */
+#drawerTop{container-type:inline-size; padding:16px 18px 0}
 /* Combo chips and the point total share ONE row (was two stacked rows,
    score above total) -- chips wrap on the left, the total stays pinned
    right via justify-content:space-between so it never gets pushed
@@ -12702,7 +12731,14 @@ const openDrawer = () => {
   updateHub();
 };
 const closeDrawer = () => {
-  drawer.classList.remove("open"); scrim.classList.remove("open");
+  // .expanded (top:0, near-viewport-height) has to come off HERE, not
+  // just wait for the next openDrawer() to reset it -- translateY(100%)
+  // only ever shifts a box by its OWN height, so closing while still
+  // expanded lands the box's top edge exactly where its bottom edge used
+  // to be (just above the hub) instead of off the bottom of the screen,
+  // leaving the header strip visibly sitting there instead of closed.
+  drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
+  matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
   updateHub();
 };
@@ -13067,8 +13103,10 @@ function renderMatTop(){
   // chips (not stacked below them) -- two lines: points and the
   // multiplier they earned on one, the final Quark payout (the number
   // that will actually matter once Quarks/Empty Elements exists -- for
-  // now just this same total, relabeled) prominent on the other.
-  const scoreRowHTML = `<div class="mat-score-row">
+  // now just this same total, relabeled) prominent on the other. Only
+  // for the mat view itself -- it's the mat's own score, so it has
+  // nothing to say while looking at held elements instead.
+  const scoreRowHTML = matDrawerView !== "mat" ? "" : `<div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
       <div class="mat-score-block">
         <div class="msb-line1">${s.base.toLocaleString()} pts${s.mult > 1 ? ` ×${s.mult}` : ""}</div>
