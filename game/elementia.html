@@ -489,13 +489,15 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(2px);
   box-shadow:inset 0 2px 3px rgba(255,255,255,.12), inset 0 -1px 3px rgba(0,0,0,.1);
 }
-/* Pins button (and its trackedPill readout, see below) sit ABOVE both
-   #pinsTray (z-index 33) AND #jobSheet (69, the Marketplace dropdown
-   tray) -- unlike Convert's button, which #pinsTray covers while open,
-   Pins keeps its own trigger and tracked-item readout visible on top of
-   every tray, including the Marketplace one. Below #hub's own 72, so the
-   bottom nav bar still wins. */
-#pinsBtn{left:16px; z-index:71}
+/* Pins button (and its trackedPill readout, see below) used to sit above
+   EVERY tray (71/70, higher than #jobSheet's 69) so its own trigger and
+   tracked-item readout stayed visible no matter what else was open --
+   unlike Convert's button, which #pinsTray covers while open. That read
+   as a stray magnifying glass floating in front of Inventory's own
+   content once #drawer (60) grew to hold the Display Mat, so both are
+   now BELOW #drawer specifically (still above #pinsTray's own 33). Below
+   #hub's own 72 regardless, so the bottom nav bar always wins. */
+#pinsBtn{left:16px; z-index:59}
 /* z-index 36 -- above #convert's own tray (33), so the button stays
    visible on top of its own tray while open instead of being covered
    by it (see #convert's comment). */
@@ -518,7 +520,7 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Pinned-items tray -- rests just above the hub already (same bottom
    offset #jobSheet uses). z-index 33 -- ABOVE Convert's own floating
    button (.floatbtn's 32; the tray covers it while open), but BELOW
-   #pinsBtn/#trackedPill's own 71/70 -- Pins keeps its trigger and
+   #pinsBtn/#trackedPill's own 59/58 -- Pins keeps its trigger and
    tracked-item readout visible on top of its own tray the whole time
    it's open, unlike Convert. #hub itself is z-index 72, so it still sits
    above everything here regardless. Closed state is translateY(100%) off
@@ -546,7 +548,7 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Tracked-item readout riding alongside #pinsBtn. Same white border and
    card fill as the button so the two read as one object. A full stadium
    shape (not just the right end rounded) -- its left portion sits behind
-   the button (z-index 70 vs the button's 71, plus a left inset that
+   the button (z-index 58 vs the button's 59, plus a left inset that
    starts it inside the button's footprint) so that half is invisible
    regardless, but the visible right end now reads as a real pill instead
    of a flat-edged tab. Smaller than the button and bottom-aligned to it
@@ -559,7 +561,7 @@ body[data-screen="market"] #trackedPill{display:none}
    toggles with .show so it doesn't swallow taps meant for the button it
    overlaps while hidden/translated off it. */
 #trackedPill{
-  position:fixed; z-index:70; pointer-events:none;
+  position:fixed; z-index:58; pointer-events:none;
   bottom:calc(var(--hub-h, 67px) + 14px);
   left:56px; height:34px; max-width:calc(100vw - 140px);
   display:flex; align-items:center; gap:6px; padding:0 13px 0 20px;
@@ -2258,12 +2260,36 @@ body[data-screen="market"] #trackedPill{display:none}
   bottom:var(--hub-h, 67px); max-height:82vh;
   background:var(--card); border-top:2.5px solid var(--gold);
   border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
-  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), top .3s cubic-bezier(.34,1.56,.64,1);
   display:flex; flex-direction:column;
 }
 #drawer.open{transform:translateY(0)}
-.dhead{display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line)}
-.dhead h2{font-size:18px; font-weight:800; flex:1; display:flex; align-items:center; gap:4px}
+/* Classic Mode's two-stage tray (see renderClassicDrawer()/the
+   #matExpandBtn handler): collapsed/"peeked" by default -- .dbody (the
+   filter bar + scrollable item grid) is hidden entirely, so #drawer
+   sizes itself around just .dhead + #drawerTop (the mat/elements zone
+   and its own toggle row), reading as a compact panel rather than the
+   full inventory. Tapping "View Full Inventory" adds this class, which
+   pins the tray's own top edge to the actual top of the screen (top:0,
+   overriding max-height's cap so it fills exactly that space) and
+   reveals .dbody below the still-non-scrolling #drawerTop -- see that
+   element's own comment for why it stays frozen in place while the
+   revealed list scrolls under it. Legacy (non-Classic) drawer content
+   has no such peek stage at all -- renderLegacyDrawer() adds this class
+   unconditionally so .dbody is simply always visible there. */
+#drawer.expanded{top:0}
+#drawer:not(.expanded) .dbody{display:none}
+.dhead{display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line)}
+/* Hidden everywhere (Inventory/Pinned/Convert/Marketplace/To-Do List all
+   share this one .dhead shape) -- the title text was pure decoration once
+   each tray's own contents already say what it is, and dropping it lets
+   .dhead shrink to a much more compact strip (see its own reduced
+   padding below). Kept in the DOM rather than deleted: #jobTitle's own
+   JS sets textContent/innerHTML on it every render regardless of mode
+   (Marketplace/To-Do List/Quests), and removing the element outright
+   would need touching every one of those call sites for no visual gain. */
+.dhead h2{display:none}
 /* Doubled from the shared 1em .marketicon default (18px -> 36px), just
    for this one appearance -- the Marketplace tray/Bingo card's own title
    icon, top-left of the tray. vertical-align:-.15em (the shared rule's
@@ -2793,11 +2819,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    a Bingo square now opens this popup right on top of that tray (see the
    [data-item-card] branch in #jobSheetBody's own click handler), and the
    base .overlay z-index (65) used to leave it rendering underneath the
-   still-open tray instead of over it. Level with #trackedPill (70, the
-   next rung up) rather than pinsBtn/hub above that -- this only needs to
-   clear the tray it can now open over, not outrank the hub chrome every
-   other overlay already intentionally stays below (see .overlay's own
-   comment). */
+   still-open tray instead of over it. Also comfortably above #drawer's
+   own 60, so the Display Mat's own tap-to-inspect (toggleMatCard()) can
+   open this over Inventory the same way. Nowhere near pinsBtn/hub above
+   that -- this only needs to clear whichever tray it can now open over,
+   not outrank the hub chrome every other overlay already intentionally
+   stays below (see .overlay's own comment). */
 #cardPop{z-index:70}
 /* Gold border, same design language as the map screen's reachable-node
    rings (.map-node.reachable) and the capstone-celebration card that
@@ -3843,36 +3870,54 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
 }
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
+/* Icon on top, its own raw shared-icon count below it (was an inline
+   pill: icon, count, "+bonus") -- a small vertical tile per group
+   instead, matching "just the count, no +x" (see matComboChipHTML()). */
 .mm-combo{
-  display:inline-flex; align-items:center; gap:4px; padding:3px 8px 3px 3px; border-radius:999px;
-  background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
-  font-size:11px; font-weight:800;
+  display:flex; flex-direction:column; align-items:center; gap:1px; padding:3px 5px; border-radius:8px;
+  background:var(--gold-soft); border:1px solid var(--gold-line); color:var(--gold);
+  min-width:30px;
 }
-.mm-combo.col{background:var(--collection-soft); border-color:var(--collection); color:var(--collection)}
+.mm-combo b{font-size:12px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums}
+/* Collections stay a horizontal pill (icon, name, +bonus) rather than
+   the narrow vertical icon/count tile above -- a named collection needs
+   room to actually show its name, which a column layout has no space
+   for. */
+.mm-combo.col{
+  flex-direction:row; align-items:center; gap:4px; padding:3px 8px 3px 3px; border-radius:999px;
+  background:var(--collection-soft); border-color:var(--collection); color:var(--collection);
+}
+.mm-combo.col b{font-size:11px; font-weight:800; white-space:nowrap}
+.mm-combo.col i{font-style:normal; font-size:11px; font-weight:800}
 .mm-cico{width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:11px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
 .mm-cico :is(img,svg){width:12px; height:12px}
 .mm-cico.star{background:none; font-size:14px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
-.mat-score-total{
-  flex:none; display:flex; align-items:baseline; gap:6px; font-weight:800;
-  font-variant-numeric:tabular-nums; margin-left:auto;
+/* Score/multiplier/Quarks -- two lines, right-aligned, sharing this same
+   row with the combo tiles rather than sitting on a row of its own. */
+.mat-score-block{
+  flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:2px;
+  font-weight:800; font-variant-numeric:tabular-nums; margin-left:auto;
 }
-.mat-score-total b{font-size:22px; color:var(--gold)}
-.mat-score-total .mst-mult{font-size:12px; color:var(--ink2)}
+.msb-line1{font-size:12px; color:var(--ink2)}
+.msb-line2{font-size:16px; font-weight:900; color:var(--gold); white-space:nowrap}
 .mat-zone-title{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; letter-spacing:.4px;
   text-transform:uppercase; color:var(--ink2); margin-bottom:8px}
 .mat-zone-title b{color:var(--ink); font-variant-numeric:tabular-nums}
-.mm-clear-btn{margin-left:auto; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px;
-  background:var(--sunken); border:1.5px solid var(--line); color:var(--ink2)}
-/* Full-width action below the mat/elements zone (see renderMatTop()) --
-   toggles #drawerTop between the 8-slot Display Mat and the plain held-
-   elements grid, so the same screen space serves both without a
-   separate button or screen for either. */
+/* Two equal-width buttons sharing one row below the mat/elements zone
+   (see renderMatTop()) -- View Held Elements toggles #drawerTop between
+   the 8-slot Display Mat and the plain held-elements grid; View Full
+   Inventory (was full-width alone) reveals #drawer's own scrollable item
+   list below (see #drawer.expanded). Independent of each other, so the
+   pair reads as one "reveal more" control strip rather than one button
+   doing two unrelated jobs. */
+.mat-toggle-row{display:flex; gap:8px; margin-top:8px}
 .mat-view-toggle{
-  display:block; width:100%; margin-top:4px; padding:10px; border-radius:10px;
+  flex:1; min-width:0; padding:10px 6px; border-radius:10px;
   background:var(--sunken); border:1.5px solid var(--line); color:var(--ink2);
-  font-size:12.5px; font-weight:800; text-align:center;
+  font-size:12px; font-weight:800; text-align:center; white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis;
 }
 /* Row height is computed explicitly (via #drawerTop's own
    container-type:inline-size above) rather than from aspect-ratio on
@@ -3934,48 +3979,50 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-results-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
 .mat-results-grid .mm-card{width:100%; height:auto; aspect-ratio:5/7}
 
+/* Parchment face (was plain white) -- same #f2e6cc BINGO's own cards use
+   (see .bingo-cell), so this reads as the same physical "card stock" the
+   rest of the game already established rather than a fourth material.
+   No overflow:hidden any more -- it was clipping the corner badges'
+   own slightly-negative offsets (see .mm-pts/.mm-pips/.mm-station below),
+   which is exactly why they used to read as sitting BEHIND the card's own
+   border instead of straddling on top of it. Nothing left inside that
+   still needs clipping once the component row is gone and the name is a
+   single short line. */
 .mm-card{
-  position:relative; width:100%; height:100%; background:#f7f5f0; color:#181614;
+  position:relative; width:100%; height:100%; background:#f2e6cc; color:#181614;
   border-radius:12px; border:4px solid #000; padding:5px 3px 3px;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; overflow:hidden; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.35);
+  text-align:center; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.35);
 }
-.mm-card.cap{border-color:#7a5a12; box-shadow:0 0 0 2px var(--gold), 0 3px 10px rgba(0,0,0,.35)}
+/* Corner badges are 25% bigger across the board (points/pips/station),
+   and the main icon below is doubled -- both per explicit request, not
+   just a bigger card overall (the card's own aspect-ratio is unchanged;
+   see .mat-grid/.mat-results-grid). */
 .mm-pts{
-  position:absolute; top:-3px; left:-3px; z-index:2; min-width:22px; height:22px; padding:0 3px;
+  position:absolute; top:-3px; left:-3px; z-index:2; min-width:28px; height:28px; padding:0 4px;
   border-radius:999px; display:flex; align-items:center; justify-content:center;
   background:var(--gold); color:#181614; border:2px solid #000;
-  font-size:10.5px; font-weight:900; font-variant-numeric:tabular-nums;
+  font-size:13px; font-weight:900; font-variant-numeric:tabular-nums;
 }
 .mm-card.complete .mm-pts{box-shadow:0 0 0 2px var(--gold), 0 0 6px rgba(226,178,90,.85)}
 .mm-pips{position:absolute; top:-3px; right:-3px; z-index:2; display:flex; flex-direction:column; gap:2px}
 .mm-pip{
-  width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:var(--suit); border:1.5px solid #000; font-size:8px; color:#fff; line-height:1;
+  width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--suit); border:1.5px solid #000; font-size:10px; color:#fff; line-height:1;
 }
-.mm-pip :is(img,svg){width:9px; height:9px}
+.mm-pip :is(img,svg){width:11px; height:11px}
 .mm-pip.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 4px rgba(226,178,90,.85)}
-.mm-icon{font-size:22px; line-height:1; margin-top:3px}
-.mm-icon :is(img,svg){width:22px; height:22px; object-fit:contain}
+.mm-icon{font-size:44px; line-height:1; margin-top:3px}
+.mm-icon :is(img,svg){width:44px; height:44px; object-fit:contain}
 .mm-name{
   font-size:7px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
 }
-.mm-comp{display:flex; align-items:center; justify-content:center; gap:0; width:100%; padding:1px 14px 0 0; overflow:hidden}
-.mm-cmp{display:flex; align-items:center; justify-content:center; flex:none}
-.mm-cmp :is(img,svg){width:9px; height:9px; object-fit:contain}
-.mm-cmp.el{min-width:9px; height:9px; padding:0 1px; border-radius:2px; background:var(--el); color:#fff;
-  font-size:5px; font-weight:900; line-height:9px}
-.mm-cmp.lit{background:var(--gold); border-radius:2px; box-shadow:0 0 0 1px var(--gold)}
-.mm-cmp.el.lit{background:var(--el)}
-.mm-plus{font-style:normal; font-size:6px; font-weight:900; color:#9aa1ad; flex:none}
-.mm-comp[data-n="4"] .mm-cmp :is(img,svg){width:7px; height:7px}
-.mm-comp[data-n="5"] .mm-cmp :is(img,svg){width:6px; height:6px}
 .mm-station{
-  position:absolute; bottom:-3px; right:-3px; z-index:2; width:16px; height:16px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:9px;
+  position:absolute; bottom:-3px; right:-3px; z-index:2; width:20px; height:20px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:11px;
 }
-.mm-station :is(img,svg){width:10px; height:10px; object-fit:contain}
+.mm-station :is(img,svg){width:13px; height:13px; object-fit:contain}
 .mm-station.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(226,178,90,.85)}
 .mm-card.on::after{
   content:"ON MAT"; position:absolute; top:3px; left:50%; transform:translateX(-50%);
@@ -3988,8 +4035,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    sensibly above the drawer regardless of scroll position, right above
    the hub bar it would otherwise sit behind. */
 .mat-drag-ghost{position:fixed; z-index:90; pointer-events:none; opacity:.94; filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+/* Above #cardPop's own 70 -- toggleMatCard() (a full mat, a capstone
+   needing two slots) can now fire from the Add/Remove-from-Mat button
+   INSIDE that popup (see #cpMatBtn), so this has to be able to show up
+   over it, not just over the drawer underneath. */
 .mat-toast{
-  position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:65;
+  position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:75;
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
   box-shadow:0 4px 14px rgba(0,0,0,.4); white-space:nowrap;
 }
@@ -4089,11 +4140,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     </div>
     <button type="button" class="tbtn ghost" id="closeDrawer" aria-label="Close inventory">✕</button>
   </div>
+  <!-- Classic Mode only -- Display Mat (or, toggled, held elements) plus
+       its own score band and the peek/full-inventory toggle row. Empty/
+       untouched in every other mode; see renderDrawer()/
+       renderClassicDrawer(). OUTSIDE .dbody on purpose: a flex:none
+       header sibling of .dbody (flex:1, the only part that scrolls) is
+       what keeps this "frozen" above the scrollable item list once the
+       tray is expanded, with no sticky-positioning trick needed. Also
+       what #drawer sizes itself around while collapsed/"peeked" (see
+       #drawer:not(.expanded) .dbody{display:none}) -- collapsed, this
+       is the entire visible tray. -->
+  <div id="drawerTop"></div>
   <div class="dbody">
-    <!-- Classic Mode only -- Display Mat (or, toggled, held elements) plus
-         its own score band. Empty/untouched in every other mode; see
-         renderDrawer()/renderClassicDrawer(). -->
-    <div id="drawerTop"></div>
     <!-- Classic Mode only -- station/suit/search/sort filter bar for the
          item grid in #drawerBody below, adapted from cardgame/mat.html's
          own filter row. Built once (see buildMatFilterBar()), never
@@ -4239,6 +4297,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="pc-back-icon" id="cpBackIcon"></span>
       </button>
       <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
+      <!-- Classic Mode only, and only for an owned Display Mat card (see
+           showCardPop()'s own visibility check) -- tapping a card in the
+           Inventory tray now opens this popup instead of directly toggling
+           mat membership (see toggleMatCard()'s own call sites), so this
+           button is the only way left to add/remove one. -->
+      <button type="button" class="pc-pin-btn refpin" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false">🀄</button>
       <button type="button" class="pc-pin-btn refpin" id="cpPinBtn" aria-label="Pin to To-Do List" aria-pressed="false">📌</button>
     </div>
   </div>
@@ -7126,7 +7190,13 @@ function matGroupsOf(mat){
   const st = {}, su = {}, cp = {};
   mat.forEach(c => {
     st[c.station] = (st[c.station] || 0) + 1;
-    new Set(c.pips).forEach(s => { su[s] = (su[s] || 0) + 1; });
+    // Every pip counts, not just every distinct suit -- a card carrying
+    // two organic pips (e.g. Fruit Cake) contributes 2 to the organic
+    // count, not 1, same as if two separate organic cards were on the
+    // mat. Direct contrast with matDirectItems() below, which DOES
+    // dedupe -- a recipe listing the same ingredient twice still only
+    // "shares" it once.
+    c.pips.forEach(s => { su[s] = (su[s] || 0) + 1; });
     matDirectItems(c).forEach(n => { cp[n] = (cp[n] || 0) + 1; });
   });
   return { st, su, cp };
@@ -9902,6 +9972,9 @@ function renderLegacyDrawer(){
   document.getElementById("drawerTop").innerHTML = "";
   document.getElementById("matFilters").hidden = true;
   document.getElementById("invFilter").hidden = false;
+  // No peek/full-inventory stage here (see #drawer.expanded's own
+  // comment) -- .dbody is simply always visible in every other mode.
+  document.getElementById("drawer").classList.add("expanded");
 
   const elHTML = elementsGridHTML();
   const tiers = ["MATERIAL","COMPONENT","CREATION","CAPSTONE"];
@@ -10530,6 +10603,19 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   const pinBtn = document.getElementById("cpPinBtn");
   pinBtn.classList.toggle("active", isPinned(entry.name));
   pinBtn.setAttribute("aria-pressed", isPinned(entry.name));
+  // Classic Mode's Display Mat button -- only for a card that's both
+  // Classic-legal (MAT_CARD_BY_NAME) and actually owned (nothing to place
+  // otherwise). See toggleMatCard()'s own comment for why this is the
+  // only add/remove entry point left now that a tap opens this popup.
+  const matBtn = document.getElementById("cpMatBtn");
+  const matEligible = state.mode === "classic" && !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
+  matBtn.hidden = !matEligible;
+  if (matEligible){
+    const onMat = state.mat.includes(entry.name);
+    matBtn.classList.toggle("active", onMat);
+    matBtn.setAttribute("aria-pressed", onMat);
+    matBtn.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
+  }
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
@@ -10693,6 +10779,20 @@ document.getElementById("cpPinBtn").addEventListener("click", ev => {
   ev.currentTarget.classList.toggle("active", pinned);
   ev.currentTarget.setAttribute("aria-pressed", pinned);
   render();
+});
+/* Toggle only, same reasoning as #cpPinBtn above -- stays on the card so
+   browsing several items in a row (Components-tap drill-in) doesn't keep
+   kicking the player back out. toggleMatCard() already refreshes the
+   drawer's own mat/results grid itself (see its own definition); no
+   broader render() needed here. */
+document.getElementById("cpMatBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopEntry) return;
+  toggleMatCard(cardPopEntry.name);
+  const onMat = state.mat.includes(cardPopEntry.name);
+  ev.currentTarget.classList.toggle("active", onMat);
+  ev.currentTarget.setAttribute("aria-pressed", onMat);
+  ev.currentTarget.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -12589,6 +12689,14 @@ document.getElementById("quickConvertBtn").addEventListener("click", () => hubPa
 /* -------------------------------------------------------- drawer --- */
 const drawer = document.getElementById("drawer"), scrim = document.getElementById("scrim");
 const openDrawer = () => {
+  // Classic Mode's tray always starts "peeked" (see #drawer.expanded's
+  // own comment) -- a fresh open never lands already showing the full
+  // item list. Set directly here, not left for the next render() to
+  // pick up via renderClassicDrawer()'s own toggle -- render() runs
+  // constantly in the background even while the drawer is closed, so its
+  // LAST pass could easily have left .expanded on from a previous open.
+  matTrayExpanded = false;
+  drawer.classList.toggle("expanded", state.mode !== "classic");
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
@@ -12605,9 +12713,10 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
   // Classic Mode's own results grid (see renderClassicDrawer()) -- tap
-  // to add/remove a card from the Display Mat.
+  // opens the card's own inspection popup (see openMatCardPop()); adding/
+  // removing it from the mat happens from a button inside that popup now.
   const matCard = ev.target.closest("[data-mat-card]");
-  if (matCard){ toggleMatCard(matCard.dataset.matCard); return; }
+  if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const iBtn = ev.target.closest("[data-item]");
@@ -12844,38 +12953,34 @@ const matInventory = () =>
   MAT_CARDS.filter(c => owns(c.name)).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 const matOnMat = () => state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
 
-/* Which stations, suits and components are actually paying out right
-   now -- a Set per kind, since multiple groups of the same kind can
-   stack (see matAllGroups()). Every card feeding any of them lights that
-   icon up, on the mat and in the tray alike. */
-let matLive = { station: new Set(), suit: new Set(), component: new Set() };
+/* Which stations and suits are actually paying out right now -- a Set
+   per kind, since multiple groups of the same kind can stack (see
+   matAllGroups()). Every card feeding either one lights that icon up, on
+   the mat and in the tray alike. No "component" set any more -- that
+   only ever lit up the component row on a card, which is gone now that
+   cards no longer show their own recipe. */
+let matLive = { station: new Set(), suit: new Set() };
 function setMatLive(mat){
   const c = matScore(mat).combos;
   matLive = {
-    station:   new Set(c.station.map(g => g.name)),
-    suit:      new Set(c.suit.map(g => g.name)),
-    component: new Set(c.component.map(g => g.name)),
+    station: new Set(c.station.map(g => g.name)),
+    suit:    new Set(c.suit.map(g => g.name)),
   };
 }
 
 function matCardHTML(name, opts = {}){
   const c = MAT_CARD_BY_NAME[name];
   if (!c) return "";
-  const cap = matIsCapstone(c);
   const onMat = state.mat.includes(name);
   const pts = opts.complete ? c.points * 2 : c.points;
   const pipsHTML = c.pips.map(s =>
     `<span class="mm-pip${matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
-  const compParts = c.components.map(x => x.kind === "item"
-    ? `<span class="mm-cmp${matLive.component.has(x.name) ? " lit" : ""}" title="${esc(x.name)}">${ITEM_EMOJI[x.name] ? em(ITEM_EMOJI[x.name]) : esc(x.name)}</span>`
-    : `<span class="mm-cmp el${matLive.component.has(x.name) ? " lit" : ""}" style="--el:${ELEMENT_COLOR[x.name] || "#7b8598"}" title="${
-         esc(ELEMENT_NAMES[x.name] || x.name)}">${esc(x.name)}</span>`);
-  const compHTML = compParts.length
-    ? `<span class="mm-comp" data-n="${compParts.length}">${compParts.join(`<i class="mm-plus">+</i>`)}</span>` : "";
   const stMeta = STATION_BY_NAME[c.station];
   const stColor = DATA.suits[stMeta.suit].color;
   const stLit = matLive.station.has(c.station) ? " lit" : "";
-  const cls = ["mm-card", cap ? "cap" : "", opts.complete ? "complete" : "",
+  // No .cap modifier any more -- capstones no longer get a distinct gold
+  // border, so the class had nothing left to do.
+  const cls = ["mm-card", opts.complete ? "complete" : "",
                opts.tray && onMat ? "on" : "", opts.cls || ""].join(" ");
   return `<button type="button" class="${cls}" data-mat-card="${esc(name)}"
       title="${esc(name)} — ${c.points} pts${opts.complete ? ` (doubled to ${pts} -- every ingredient is on the mat)` : ""}, ${esc(c.station)}">
@@ -12883,7 +12988,6 @@ function matCardHTML(name, opts = {}){
     ${pipsHTML ? `<span class="mm-pips">${pipsHTML}</span>` : ""}
     <span class="mm-icon">${em(c.emoji)}</span>
     <span class="mm-name">${esc(name)}</span>
-    ${compHTML}
     <span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(c.station)}">${em(stMeta.emoji)}</span>
   </button>`;
 }
@@ -12895,7 +12999,10 @@ function matComboChipHTML(g, kind){
     : kind === "suit"  ? `<span class="mm-cico" style="--suit:${SUIT_COLOR[g.name]}">${SUIT_ICON[g.name]}</span>`
     : `<span class="mm-cico">${ITEM_EMOJI[g.name] ? em(ITEM_EMOJI[g.name]) : esc(g.name)}</span>`;
   const label = kind === "suit" ? ELEMENT_SUIT_LABEL[g.name] : g.name;
-  return `<span class="mm-combo" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b><i>+${g.bonus}</i></span>`;
+  // Just the raw shared-icon count, stacked below the icon -- no "+bonus"
+  // suffix any more (the bonus it earns shows once, aggregated into the
+  // ×mult on the score block's own right side, not repeated per chip).
+  return `<span class="mm-combo" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b></span>`;
 }
 
 /* Fills #matGrid alone (not the score band/toggle around it), so a
@@ -12920,6 +13027,10 @@ function renderMatGridCells(s){
 // half (see renderMatTop()). View state only, like matFilt below -- not
 // persisted, so a reloaded run never opens onto a hidden collection.
 let matDrawerView = "mat";
+// Whether the tray is showing the full scrollable item list below the
+// mat/elements zone, or "peeked" (that zone only) -- see #drawer.expanded
+// and openDrawer(), which resets this to false on every fresh open.
+let matTrayExpanded = false;
 // Cached so a mid-drag reorder (renderMatGridCells() above) doesn't have
 // to recompute the score on every pointermove -- reordering never
 // changes it, only adding/removing/toggling views does, and each of
@@ -12952,21 +13063,37 @@ function renderMatTop(){
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
     s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
     s.cols.map(c => `<span class="mm-combo col" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
+  // Score/multiplier/Quarks on the right, in the same row as the combo
+  // chips (not stacked below them) -- two lines: points and the
+  // multiplier they earned on one, the final Quark payout (the number
+  // that will actually matter once Quarks/Empty Elements exists -- for
+  // now just this same total, relabeled) prominent on the other.
   const scoreRowHTML = `<div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
-      <div class="mat-score-total"><b>${s.total.toLocaleString()}</b>${s.mult > 1 ? `<span class="mst-mult">×${s.mult}</span>` : ""}</div>
+      <div class="mat-score-block">
+        <div class="msb-line1">${s.base.toLocaleString()} pts${s.mult > 1 ? ` ×${s.mult}` : ""}</div>
+        <div class="msb-line2">⚛️ ${s.total.toLocaleString()} Quarks</div>
+      </div>
     </div>`;
 
+  // No title/occupancy/Clear row above the grid any more -- the slot
+  // count and a way to clear it weren't earning their place once the
+  // tray already shows the mat directly.
   const zoneHTML = matDrawerView === "mat"
-    ? `<div class="mat-zone-title">Display mat <b>${matOccupancy(mat)}/${MAT_SLOTS_TOTAL}</b>
-         <button type="button" class="mm-clear-btn" id="matClearBtn">Clear</button></div>
-       <div class="mat-grid" id="matGrid"></div>`
+    ? `<div class="mat-grid" id="matGrid"></div>`
     : `<div class="mat-zone-title">Held Elements</div>${elementsGridHTML()}`;
 
-  const toggleHTML = `<button type="button" class="mat-view-toggle" id="matViewToggle">${
-    matDrawerView === "mat" ? "🔷 View Held Elements" : "🀄 View Display Mat"}</button>`;
+  // Two buttons sharing one row now, not one -- View Held Elements swaps
+  // what THIS zone shows; View Full Inventory (see #drawer.expanded)
+  // reveals the filter bar + scrollable item grid below, independently.
+  const toggleRowHTML = `<div class="mat-toggle-row">
+      <button type="button" class="mat-view-toggle" id="matViewToggle">${
+        matDrawerView === "mat" ? "🔷 View Held Elements" : "🀄 View Display Mat"}</button>
+      <button type="button" class="mat-view-toggle" id="matExpandBtn">${
+        matTrayExpanded ? "📋 Hide Full Inventory" : "📋 View Full Inventory"}</button>
+    </div>`;
 
-  document.getElementById("drawerTop").innerHTML = scoreRowHTML + zoneHTML + toggleHTML;
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML + zoneHTML + toggleRowHTML;
   if (matDrawerView === "mat") renderMatGridCells(s);
 }
 
@@ -13042,6 +13169,7 @@ function syncMatFilterBar(){
 function renderClassicDrawer(){
   document.getElementById("invFilter").hidden = true;
   document.getElementById("matFilters").hidden = false;
+  document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
   buildMatFilterBar();
   syncMatFilterBar();
   renderMatTop();
@@ -13061,7 +13189,16 @@ function toggleMatCard(name){
   renderMatTop(); renderMatResultsGrid(); save();
 }
 
-function matClear(){ state.mat = []; renderMatTop(); renderMatResultsGrid(); save(); }
+/* A tap on any Display Mat card (the browse grid below the mat, or the
+   mat's own 8 slots) opens its normal card-inspection popup now, instead
+   of directly toggling mat membership -- see #cpMatBtn for the button
+   that moved into. Same canonical-station lookup MAT_CARDS itself was
+   built from (CORE_ITEM_STATION), so this always finds the one real
+   ENTRIES row a Classic item's card data came from. */
+function openMatCardPop(name){
+  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+  if (entry) showCardPop(entry, false);
+}
 
 let matToastTimer = null;
 function showMatToast(msg){
@@ -13078,9 +13215,14 @@ function showMatToast(msg){
    #drawerTop itself (a stable element that's never replaced wholesale)
    rather than attached to any of those regenerated children directly. */
 document.getElementById("drawerTop").addEventListener("click", ev => {
-  if (ev.target.closest("#matClearBtn")){ matClear(); return; }
   if (ev.target.closest("#matViewToggle")){
     matDrawerView = matDrawerView === "mat" ? "elements" : "mat";
+    renderMatTop();
+    return;
+  }
+  if (ev.target.closest("#matExpandBtn")){
+    matTrayExpanded = !matTrayExpanded;
+    document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
     renderMatTop();
     return;
   }
@@ -13187,7 +13329,7 @@ document.addEventListener("pointerup", () => {
   const grid = document.getElementById("matGrid");
   if (grid) grid.classList.remove("dragging");
   if (was.live){ renderMatTop(); renderMatResultsGrid(); save(); }
-  else toggleMatCard(was.name);
+  else openMatCardPop(was.name);
 });
 
 /* ------------------------------------------------------ overlays --- */
