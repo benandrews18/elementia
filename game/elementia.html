@@ -2247,22 +2247,21 @@ body[data-screen="market"] #trackedPill{display:none}
 /* ------------------------------------------------------- inventory --- */
 #scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
 #scrim.open{display:block}
-/* Stops above the hub (same --hub-h figure #jobSheet already uses) rather
-   than running the full height behind it -- bottom:0 let the hub's higher
-   z-index paint over the drawer's own last stretch of content, so the
-   final inventory rows were there but unreadable. */
-/* Mirror of #jobSheet's own overhang note (right:-24px + 24px added to
-   width, compensating padding-right so visible content lands unchanged)
-   -- this one hangs over the right edge, where it slides in from. */
+/* Bottom sheet now (was a right-side slide-in) -- same slide-up-from-
+   behind-the-hub language as #convert, since it now holds the Display
+   Mat (Classic Mode) alongside the plain element/item lists, and a
+   side drawer never had the width to fit an 8-slot grid plus a filter
+   bar plus a scrollable card list. Taller max-height than #convert's own
+   60vh since there's simply more content to fit above the fold. */
 #drawer{
-  position:fixed; top:0; right:-24px; width:calc(min(400px,92vw) + 24px); z-index:60;
-  padding-right:24px; box-sizing:border-box;
-  bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
-  background:var(--card); border-left:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
-  border-radius:0 0 0 14px; transform:translateX(100%);
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1); display:flex; flex-direction:column;
+  position:fixed; left:0; right:0; z-index:60;
+  bottom:var(--hub-h, 67px); max-height:82vh;
+  background:var(--card); border-top:2.5px solid var(--gold);
+  border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
+  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  display:flex; flex-direction:column;
 }
-#drawer.open{transform:none}
+#drawer.open{transform:translateY(0)}
 .dhead{display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line)}
 .dhead h2{font-size:18px; font-weight:800; flex:1; display:flex; align-items:center; gap:4px}
 /* Doubled from the shared 1em .marketicon default (18px -> 36px), just
@@ -3821,29 +3820,29 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 /* =====================================================================
    Display Mat (Classic Mode only) -- see the JS module of the same name
-   near CORE_ITEM_STATION, and renderMatScreen()/openMatScreen() further
-   down. Same full-screen-overlay shell as Arrange Items (#arrangeScreen)
-   above -- head bar, a scrolling content area, a bottom sheet tray that
-   slides via transform -- but the content area is a fixed 8-slot grid
-   rather than a free-form canvas, so cards are dragged between slots
-   (re-ordering) rather than placed at an arbitrary point. Card visuals
-   (white face, black frame, corner badges) reuse #cardPop's own printed-
-   card language (.pc-card et al) rather than inventing a third "card"
-   look, just at grid-cell size instead of a single full-detail popup. */
-#matScreen{position:fixed; inset:0; z-index:80; display:none; flex-direction:column; background:#0c0f14}
-#matScreen.open{display:flex}
-.mat-head{
-  flex:none; display:flex; align-items:center; gap:10px; padding:14px 16px;
-  border-bottom:2.5px solid var(--gold); background:var(--card);
-}
-.mat-head h2{font-size:18px; font-weight:800; color:#fff; flex:1}
-.mat-body{flex:1; position:relative; min-height:0; overflow:hidden}
-.mat-content{position:absolute; inset:0; overflow-y:auto; padding:14px 14px 40vh; container-type:inline-size}
-.mat-score{
-  display:flex; flex-direction:column; gap:6px; padding:10px 12px; margin-bottom:12px;
+   near CORE_ITEM_STATION, and renderClassicDrawer()/renderMatTop()
+   further down. Lives INSIDE the Inventory drawer (#drawer, now a
+   bottom sheet -- see its own CSS above) rather than a separate
+   full-screen overlay: the 8-slot grid and the "held elements" toggle
+   sit at the top of #drawerTop, a filter bar (#matFilters, styled after
+   cardgame/mat.html's own station/suit/search/sort row) comes next, then
+   the scrollable "which owned items to place" grid fills #drawerBody
+   below that -- same #drawerBody the non-Classic legacy inventory list
+   already used. Card visuals (white face, black frame, corner badges)
+   reuse #cardPop's own printed-card language (.pc-card et al) rather
+   than inventing a third "card" look, just at grid-cell size instead of
+   a single full-detail popup. */
+#drawerTop{container-type:inline-size}
+/* Combo chips and the point total share ONE row (was two stacked rows,
+   score above total) -- chips wrap on the left, the total stays pinned
+   right via justify-content:space-between so it never gets pushed
+   around by however many chips are currently showing. */
+.mat-score-row{
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 10px;
+  padding:10px 12px; margin-bottom:12px;
   background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
 }
-.mat-combos{display:flex; flex-wrap:wrap; gap:6px; min-height:24px}
+.mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 .mm-combo{
   display:inline-flex; align-items:center; gap:4px; padding:3px 8px 3px 3px; border-radius:999px;
   background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
@@ -3855,18 +3854,27 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-cico :is(img,svg){width:12px; height:12px}
 .mm-cico.star{background:none; font-size:14px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
-.mat-score-line{display:flex; align-items:baseline; gap:8px; font-weight:800; font-variant-numeric:tabular-nums}
-.mat-score-line .ms-base{font-size:18px; color:var(--ink)}
-.mat-score-line .ms-col{font-size:13px; color:var(--gold)}
-.mat-score-line .ms-mult{font-size:18px; color:var(--ink2)}
-.mat-score-line .ms-eq{color:var(--mute)}
-.mat-score-line .ms-total{font-size:24px; color:var(--gold)}
+.mat-score-total{
+  flex:none; display:flex; align-items:baseline; gap:6px; font-weight:800;
+  font-variant-numeric:tabular-nums; margin-left:auto;
+}
+.mat-score-total b{font-size:22px; color:var(--gold)}
+.mat-score-total .mst-mult{font-size:12px; color:var(--ink2)}
 .mat-zone-title{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; letter-spacing:.4px;
   text-transform:uppercase; color:var(--ink2); margin-bottom:8px}
 .mat-zone-title b{color:var(--ink); font-variant-numeric:tabular-nums}
 .mm-clear-btn{margin-left:auto; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px;
   background:var(--sunken); border:1.5px solid var(--line); color:var(--ink2)}
-/* Row height is computed explicitly (via .mat-content's own
+/* Full-width action below the mat/elements zone (see renderMatTop()) --
+   toggles #drawerTop between the 8-slot Display Mat and the plain held-
+   elements grid, so the same screen space serves both without a
+   separate button or screen for either. */
+.mat-view-toggle{
+  display:block; width:100%; margin-top:4px; padding:10px; border-radius:10px;
+  background:var(--sunken); border:1.5px solid var(--line); color:var(--ink2);
+  font-size:12.5px; font-weight:800; text-align:center;
+}
+/* Row height is computed explicitly (via #drawerTop's own
    container-type:inline-size above) rather than from aspect-ratio on
    each cell: a wide (capstone, span 2) cell needs the SAME height as its
    single-width siblings with roughly double the width, and aspect-ratio
@@ -3874,10 +3882,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    too (its own width feeding its own ratio). grid-auto-rows applies one
    height per row regardless of how many columns a cell spans, which is
    exactly what's needed here. (cqw, not the viewport's own vw, since
-   this needs to track .mat-content's width specifically -- a grid-
+   this needs to track #drawerTop's width specifically -- a grid-
    auto-rows:1fr was tried first and blew every row up to the scrolling
-   container's full height, since fr tracks have no real "remaining
-   space" to divide when the grid's own block-size is auto.) */
+   drawer's full height, since fr tracks have no real "remaining space"
+   to divide when the grid's own block-size is auto.) */
 .mat-grid{
   display:grid; grid-template-columns:repeat(4, 1fr);
   grid-auto-rows:calc(((100cqw - 24px) / 4) * 1.4);
@@ -3887,6 +3895,44 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-slot{position:relative}
 .mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
 .mm-slot.wide{grid-column:span 2}
+
+/* Filter bar (station/suit toggle icons, search, sort) -- adapted from
+   cardgame/mat.html's own .filters/.frow/.fbtn/.fsearch/.fsort, themed
+   to this game's own palette. Separates the mat/elements zone above from
+   the scrollable "which owned items to place" grid below (#drawerBody),
+   same visual job mat.html's own filter row does between its mat section
+   and its Collection grid. Built once (see buildMatFilterBar()) and only
+   ever toggled/read after that -- never regenerated via innerHTML -- so
+   a search keystroke can never lose its own input's focus. */
+.mat-filters{margin:14px 0 10px}
+.mat-filters .frow{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px}
+.mat-fbtn{
+  width:28px; height:28px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+  background:var(--st, var(--suit, var(--sunken))); border:1.5px solid var(--line); font-size:13px;
+  opacity:.5; filter:saturate(.4); overflow:hidden;
+}
+/* em()/SUIT_ICON can both return a raw <img> (a Noto icon at its own
+   full intrinsic size, e.g. 160x160) rather than a sized glyph -- without
+   this, an unconstrained icon blows out of this 28px circle entirely,
+   which is exactly what happened here in testing (a giant, low-opacity
+   station icon bleeding across the whole drawer behind everything else). */
+.mat-fbtn :is(img,svg){width:16px; height:16px; object-fit:contain}
+.mat-fbtn.on{opacity:1; filter:none; box-shadow:0 0 0 2px var(--gold)}
+.mat-frow-search{display:flex; gap:8px}
+.mat-fsearch{
+  flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
+  background:var(--sunken); color:var(--ink); font-size:13px;
+}
+.mat-fsort{
+  flex:none; padding:8px 6px; border-radius:8px; border:1.5px solid var(--line);
+  background:var(--sunken); color:var(--ink); font-size:12px;
+}
+/* The scrollable "which owned items to place" grid itself -- lives in
+   #drawerBody, the exact container the non-Classic legacy inventory list
+   already scrolled inside of (see .dbody{overflow-y:auto}), so no new
+   scroll container is needed. */
+.mat-results-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
+.mat-results-grid .mm-card{width:100%; height:auto; aspect-ratio:5/7}
 
 .mm-card{
   position:relative; width:100%; height:100%; background:#f7f5f0; color:#181614;
@@ -3938,46 +3984,15 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .mm-card.on{filter:brightness(.6) saturate(.7)}
 
-.mat-tray-panel{
-  position:absolute; left:0; right:0; bottom:0; z-index:5; max-height:52vh;
-  display:flex; flex-direction:column;
-  background:var(--card); border-top:2.5px solid var(--gold); border-radius:16px 16px 0 0;
-  box-shadow:0 -8px 20px rgba(0,0,0,.3);
-  transform:translateY(0); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-}
-.mat-tray-panel.collapsed{transform:translateY(calc(100% - 34px))}
-.mat-tray-handle{
-  flex:none; width:100%; height:34px; display:flex; align-items:center; justify-content:center; gap:8px;
-  background:none; border:none; cursor:pointer; position:relative;
-}
-.mat-tray-chevron{width:36px; height:5px; border-radius:3px; background:var(--line2)}
-.mat-tray-handle:hover .mat-tray-chevron{background:var(--gold)}
-.mat-tray-label{font-size:11px; font-weight:800; color:var(--ink2); position:absolute; right:14px}
-.mat-tray-label b{color:var(--ink)}
-.mat-tray{
-  flex:1; min-height:0; overflow-x:hidden; overflow-y:auto;
-  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; align-content:start;
-  padding:4px 14px 16px;
-}
-.mm-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
-
+/* Fixed to the viewport (not absolute within #drawer) so it floats
+   sensibly above the drawer regardless of scroll position, right above
+   the hub bar it would otherwise sit behind. */
 .mat-drag-ghost{position:fixed; z-index:90; pointer-events:none; opacity:.94; filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
-
 .mat-toast{
-  position:absolute; left:50%; bottom:calc(52vh + 14px); transform:translateX(-50%); z-index:8;
+  position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:65;
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
   box-shadow:0 4px 14px rgba(0,0,0,.4); white-space:nowrap;
 }
-
-/* Drawer's own launch button (see renderDrawer()) -- same "quick-action
-   row" language as .setting-row, distinct from the plain item/element
-   grid below it. */
-.drawer-mat-btn{
-  display:flex; align-items:center; gap:10px; width:100%; padding:12px 14px; margin-bottom:14px;
-  background:var(--gold-soft); border:1.5px solid var(--gold-line); border-radius:12px;
-  color:var(--gold); font-size:14px; font-weight:800; text-align:left;
-}
-.drawer-mat-btn .dmb-score{margin-left:auto; font-size:12.5px; font-weight:800; color:var(--ink2)}
 
 /* Forces an iPad-portrait-width frame on desktop browsers -- this whole UI
    was built mobile-first, and left unconstrained on a wide window it just
@@ -4006,13 +4021,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
   #backdrop, #topbar, #hub, #pinsTray, #convert, #convertScrim, #jobScrim, #scrim,
-  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #matScreen, .confetti{
+  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #drawer, .confetti{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
   #jobSheet.top-tray{left:50%; right:auto; width:768px; margin-left:-384px}
   #collectionToast, #eventToast{left:50%; margin-left:-192px}
-  #drawer{left:auto; right:calc(50% - 408px)}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
   #trackedPill{left:calc(50% - 328px)}
@@ -4076,9 +4090,34 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <button type="button" class="tbtn ghost" id="closeDrawer" aria-label="Close inventory">✕</button>
   </div>
   <div class="dbody">
+    <!-- Classic Mode only -- Display Mat (or, toggled, held elements) plus
+         its own score band. Empty/untouched in every other mode; see
+         renderDrawer()/renderClassicDrawer(). -->
+    <div id="drawerTop"></div>
+    <!-- Classic Mode only -- station/suit/search/sort filter bar for the
+         item grid in #drawerBody below, adapted from cardgame/mat.html's
+         own filter row. Built once (see buildMatFilterBar()), never
+         regenerated, so a search keystroke never loses focus. -->
+    <div class="mat-filters" id="matFilters" hidden>
+      <div class="frow" id="matFStations"></div>
+      <div class="frow" id="matFSuits"></div>
+      <div class="frow mat-frow-search">
+        <input type="search" id="matFSearch" class="mat-fsearch" placeholder="Search items…"
+               autocomplete="off" spellcheck="false">
+        <select id="matFSort" class="mat-fsort" aria-label="Sort">
+          <option value="points">Points</option>
+          <option value="name">A–Z</option>
+          <option value="station">Station</option>
+        </select>
+      </div>
+    </div>
+    <!-- Every other mode -- unchanged simple text filter over the legacy
+         tier-grouped list (see renderLegacyDrawer()). -->
     <input id="invFilter" type="search" placeholder="Filter items…" aria-label="Filter inventory">
     <div id="drawerBody"></div>
   </div>
+  <div class="mat-toast" id="matToast" hidden></div>
+  <div class="mat-drag-ghost" id="matGhost" hidden></div>
 </aside>
 
 <!-- bottom hub: every global action, reachable from every screen -->
@@ -4635,42 +4674,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <div class="arr-tray" id="arrTray"></div>
     </div>
   </div>
-</div>
-
-<!-- Display Mat (Classic Mode only) -- see the JS module of the same
-     name near CORE_ITEM_STATION, and renderMatScreen()/openMatScreen(). -->
-<div id="matScreen" role="dialog" aria-modal="true" aria-label="Display Mat">
-  <div class="mat-head">
-    <h2>🀄 Display Mat</h2>
-    <button type="button" class="tbtn ghost" id="matScreenClose" aria-label="Close Display Mat">✕</button>
-  </div>
-  <div class="mat-body">
-    <div class="mat-content">
-      <div class="mat-score">
-        <div class="mat-combos" id="matCombos"></div>
-        <div class="mat-score-line">
-          <span class="ms-base" id="matBase">0</span>
-          <span class="ms-col" id="matColBonus" hidden></span>
-          <span class="ms-mult" id="matMult">×1</span>
-          <span class="ms-eq">=</span>
-          <span class="ms-total" id="matTotal">0</span>
-        </div>
-      </div>
-      <div class="mat-zone-title">Display mat <b id="matSlotsUsed">0/8</b>
-        <button type="button" class="mm-clear-btn" id="matClearBtn">Clear</button>
-      </div>
-      <div class="mat-grid" id="matGrid"></div>
-    </div>
-    <div class="mat-tray-panel" id="matTrayPanel">
-      <button type="button" class="mat-tray-handle" id="matTrayHandle" aria-expanded="true" aria-label="Collapse item tray">
-        <span class="mat-tray-chevron"></span>
-        <span class="mat-tray-label">Your items <b id="matTrayCount">0</b></span>
-      </button>
-      <div class="mat-tray" id="matTray"></div>
-    </div>
-    <div class="mat-toast" id="matToast" hidden></div>
-  </div>
-  <div class="mat-drag-ghost" id="matGhost" hidden></div>
 </div>
 
 <!-- guided tour: an image slideshow of the designer's own annotated
@@ -9876,14 +9879,31 @@ function shopBodyHTML(shopEntries, idx){
   return toggle + row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
-function renderDrawer(){
+/* Raw element boxes -- shared by the legacy drawer (always shown there)
+   and Classic's own "held elements" toggle view inside the Display Mat
+   zone (see renderMatTop()), so the one format only exists in one place. */
+function elementsGridHTML(){
   const syms = Object.keys(state.elements).filter(k => state.elements[k] > 0)
     .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
-  const elHTML = syms.length
+  return syms.length
     ? `<div class="elgrid">${syms.map(s =>
         `<button type="button" class="elbox" data-elem="${esc(s)}" style="--suit:${ELEMENT_COLOR[s]}"><span class="elsym">${esc(s)}${elSuitBadgeHTML(s)}</span><span class="elqty">${state.elements[s]}</span></button>`).join("")}</div>`
     : '<p class="empty">No loose elements — visit a station and hit PLAY.</p>';
+}
 
+/* Classic Mode routes to renderClassicDrawer() (Display Mat + filter bar
+   + scrollable item grid, see the Display Mat wiring further down);
+   every other mode keeps the original tier-grouped list untouched. */
+function renderDrawer(){
+  return state.mode === "classic" ? renderClassicDrawer() : renderLegacyDrawer();
+}
+
+function renderLegacyDrawer(){
+  document.getElementById("drawerTop").innerHTML = "";
+  document.getElementById("matFilters").hidden = true;
+  document.getElementById("invFilter").hidden = false;
+
+  const elHTML = elementsGridHTML();
   const tiers = ["MATERIAL","COMPONENT","CREATION","CAPSTONE"];
   // Simplified card view now (was a flat icon+name+qty row list) -- same
   // arr-tray/arr-tray-card grid Arrange Items already uses for its own
@@ -9900,18 +9920,7 @@ function renderDrawer(){
     }</div>`;
   }).join("");
 
-  // "Convert Elements" and "Arrange Items" both dropped from this view --
-  // Convert has its own dedicated entry point elsewhere (the floating
-  // button, and the "needed element" shortcut from a shop recipe), and
-  // Arrange Items wasn't earning its place here alongside them. Display
-  // Mat gets its own launch row here instead (Classic Mode only, see
-  // MAT_CARDS) -- unlike those two, it's meant to be a frequent, central
-  // destination from this same screen, not an occasional side trip.
-  const matBtn = state.mode === "classic"
-    ? `<button type="button" class="drawer-mat-btn" id="openMatBtn">🀄 <span>Display Mat</span>
-        <span class="dmb-score">${matScore(matOnMat()).total.toLocaleString()} pts</span></button>`
-    : "";
-  return `${matBtn}<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
+  return `<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
     ${itemHTMLs || '<div class="sec-label">CRAFTED · kept forever</div><p class="empty">Nothing crafted yet.</p>'}`;
 }
 
@@ -12595,7 +12604,10 @@ document.getElementById("invFilter").addEventListener("input", applyInvFilter);
 document.getElementById("drawerBody").addEventListener("click", ev => {
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
-  if (ev.target.closest("#openMatBtn")){ closeDrawer(); openMatScreen(); return; }
+  // Classic Mode's own results grid (see renderClassicDrawer()) -- tap
+  // to add/remove a card from the Display Mat.
+  const matCard = ev.target.closest("[data-mat-card]");
+  if (matCard){ toggleMatCard(matCard.dataset.matCard); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const iBtn = ev.target.closest("[data-item]");
@@ -12823,8 +12835,10 @@ document.getElementById("arrToolbar").addEventListener("click", ev => {
 /* =====================================================================
    Display Mat -- screen wiring (see the scoring module of the same name
    near CORE_ITEM_STATION for MAT_CARDS/matScore()/etc). Classic Mode
-   only, launched from the Inventory drawer (see renderDrawer()/the
-   #openMatBtn branch in #drawerBody's own click handler).
+   only. Lives INSIDE the Inventory drawer now (#drawerTop for the mat/
+   elements zone + score band, #matFilters for the filter bar, #drawerBody
+   for the scrollable "which owned items to place" grid -- see
+   renderClassicDrawer()) rather than a separate full-screen overlay.
    ===================================================================== */
 const matInventory = () =>
   MAT_CARDS.filter(c => owns(c.name)).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
@@ -12884,13 +12898,13 @@ function matComboChipHTML(g, kind){
   return `<span class="mm-combo" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b><i>+${g.bonus}</i></span>`;
 }
 
-/* Drawn on its own so a drag can re-flow the mat without rebuilding the
-   tray underneath it. Returns the score, since renderMatScreen() needs
-   it for the score band right after calling this. */
-function renderMatGrid(){
+/* Fills #matGrid alone (not the score band/toggle around it), so a
+   mid-drag reorder can re-flow just the 8 slots without touching
+   anything else -- reordering never changes the score, so the caller
+   passes in whatever matScore() it already has rather than this
+   recomputing it every pointermove. */
+function renderMatGridCells(s){
   const mat = matOnMat();
-  setMatLive(mat);
-  const s = matScore(mat);
   const cells = matPackCells(mat);
   const html = cells.map(cell => cell.card
     ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${
@@ -12900,7 +12914,29 @@ function renderMatGrid(){
     html.push(`<div class="mm-slot empty"></div>`);
   }
   document.getElementById("matGrid").innerHTML = html.join("");
-  document.getElementById("matSlotsUsed").textContent = `${matOccupancy(mat)}/${MAT_SLOTS_TOTAL}`;
+}
+
+// "mat" | "elements" -- which view currently fills #drawerTop's lower
+// half (see renderMatTop()). View state only, like matFilt below -- not
+// persisted, so a reloaded run never opens onto a hidden collection.
+let matDrawerView = "mat";
+// Cached so a mid-drag reorder (renderMatGridCells() above) doesn't have
+// to recompute the score on every pointermove -- reordering never
+// changes it, only adding/removing/toggling views does, and each of
+// those already calls renderMatTop() to refresh it.
+let matLastScore = null;
+
+/* Rebuilds #drawerTop: the score row (combos left, total right -- ONE
+   line, not stacked, so the total never gets pushed below the fold by
+   however many combo chips are showing), then either the 8-slot mat or
+   the held-elements grid depending on matDrawerView, then the toggle
+   button that switches between them. Called on every add/remove/drag-
+   drop and whenever the toggle itself is tapped. */
+function renderMatTop(){
+  const mat = matOnMat();
+  setMatLive(mat);
+  const s = matScore(mat);
+  matLastScore = s;
 
   // Lifetime unlock, same rule state.collectionsCompleted already uses
   // for the separate Adventure/Zen collections mechanic: once completed
@@ -12910,40 +12946,111 @@ function renderMatGrid(){
     if (!state.matUnlockedCollections.includes(c.id)){ state.matUnlockedCollections.push(c.id); changed = true; }
   });
   if (changed) save();
-  return s;
-}
 
-function renderMatScoreBand(s){
   const chips =
     s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
     s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
     s.cols.map(c => `<span class="mm-combo col" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
-  document.getElementById("matCombos").innerHTML = chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`;
-  document.getElementById("matBase").textContent = s.base;
-  document.getElementById("matColBonus").hidden = !s.colBonus;
-  document.getElementById("matColBonus").textContent = `+${s.colBonus}`;
-  document.getElementById("matMult").textContent = "×" + s.mult;
-  document.getElementById("matTotal").textContent = s.total.toLocaleString();
+  const scoreRowHTML = `<div class="mat-score-row">
+      <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
+      <div class="mat-score-total"><b>${s.total.toLocaleString()}</b>${s.mult > 1 ? `<span class="mst-mult">×${s.mult}</span>` : ""}</div>
+    </div>`;
+
+  const zoneHTML = matDrawerView === "mat"
+    ? `<div class="mat-zone-title">Display mat <b>${matOccupancy(mat)}/${MAT_SLOTS_TOTAL}</b>
+         <button type="button" class="mm-clear-btn" id="matClearBtn">Clear</button></div>
+       <div class="mat-grid" id="matGrid"></div>`
+    : `<div class="mat-zone-title">Held Elements</div>${elementsGridHTML()}`;
+
+  const toggleHTML = `<button type="button" class="mat-view-toggle" id="matViewToggle">${
+    matDrawerView === "mat" ? "🔷 View Held Elements" : "🀄 View Display Mat"}</button>`;
+
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML + zoneHTML + toggleHTML;
+  if (matDrawerView === "mat") renderMatGridCells(s);
 }
 
-function renderMatTray(){
-  const inv = matInventory();
-  document.getElementById("matTrayCount").textContent = inv.length;
-  document.getElementById("matTray").innerHTML = inv.length
-    ? inv.map(c => matCardHTML(c.name, { tray: true })).join("")
-    : `<p class="mm-empty">Nothing crafted yet -- items you craft in Classic Mode show up here.</p>`;
+// View state, like matDrawerView above -- not persisted. Mirrors
+// cardgame/mat.html's own filt object (station/suit toggles ORed within
+// a group, ANDed across groups; a name search; a sort mode).
+let matFilt = { stations: new Set(), suits: new Set(), q: "", sort: "points" };
+function matVisibleInventory(){
+  let list = matInventory();
+  if (matFilt.stations.size) list = list.filter(c => matFilt.stations.has(c.station));
+  if (matFilt.suits.size)    list = list.filter(c => c.pips.some(p => matFilt.suits.has(p)));
+  if (matFilt.q){
+    const q = matFilt.q.toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q));
+  }
+  const sorts = {
+    points:  (a, b) => b.points - a.points || a.name.localeCompare(b.name),
+    name:    (a, b) => a.name.localeCompare(b.name),
+    station: (a, b) => a.station.localeCompare(b.station) || b.points - a.points,
+  };
+  return list.sort(sorts[matFilt.sort] || sorts.points);
+}
+/* The scrollable "which owned items to place" grid -- fills #drawerBody,
+   the exact container the non-Classic legacy list already scrolled
+   inside of. A pure string builder (matResultsGridHTML()) plus a tiny
+   DOM-writing wrapper, so both renderClassicDrawer() (returns the string,
+   matching renderLegacyDrawer()'s own shape) and the filter bar's own
+   change handlers (which need to update #drawerBody directly, without
+   re-running the whole drawer render) can share one implementation. */
+function matResultsGridHTML(){
+  const inv = matVisibleInventory();
+  if (inv.length){
+    return `<div class="mat-results-grid">${inv.map(c => matCardHTML(c.name, { tray: true, cls: "small" })).join("")}</div>`;
+  }
+  return `<p class="empty">${matInventory().length
+    ? "Nothing matches those filters."
+    : "Nothing crafted yet — items you craft show up here."}</p>`;
+}
+function renderMatResultsGrid(){
+  document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
 }
 
-function renderMatScreen(){
-  const s = renderMatGrid();
-  renderMatScoreBand(s);
-  renderMatTray();
+/* Station/suit filter buttons are built once and only ever toggled/read
+   after that (see syncMatFilterBar()) -- never regenerated via innerHTML
+   on every render, which is what lets #matFSearch keep its own focus and
+   cursor position while the player is mid-keystroke (only #drawerBody's
+   results actually re-render on an "input" event, never the search box
+   itself -- see the "input" listener further down). */
+let matFilterBarBuilt = false;
+function buildMatFilterBar(){
+  if (matFilterBarBuilt) return;
+  const stations = [...new Set(MAT_CARDS.map(c => c.station))].sort();
+  document.getElementById("matFStations").innerHTML = stations.map(s => {
+    const m = STATION_BY_NAME[s];
+    return `<button type="button" class="mat-fbtn" data-mat-fstation="${esc(s)}" title="${esc(s)}"
+        style="--st:${DATA.suits[m.suit].color}">${em(m.emoji)}</button>`;
+  }).join("");
+  document.getElementById("matFSuits").innerHTML = Object.keys(ELEMENT_SUIT_LABEL).map(s =>
+    `<button type="button" class="mat-fbtn" data-mat-fsuit="${s}" title="${ELEMENT_SUIT_LABEL[s]}"
+        style="--suit:${SUIT_COLOR[s]}">${SUIT_ICON[s]}</button>`).join("");
+  matFilterBarBuilt = true;
+}
+function syncMatFilterBar(){
+  document.querySelectorAll("[data-mat-fstation]").forEach(b =>
+    b.classList.toggle("on", matFilt.stations.has(b.dataset.matFstation)));
+  document.querySelectorAll("[data-mat-fsuit]").forEach(b =>
+    b.classList.toggle("on", matFilt.suits.has(b.dataset.matFsuit)));
+}
+
+/* The Classic-only drawer body: Display Mat/Held Elements zone + score
+   band (#drawerTop), the filter bar (#matFilters), and the scrollable
+   item grid (returned, same as renderLegacyDrawer(), for #drawerBody). */
+function renderClassicDrawer(){
+  document.getElementById("invFilter").hidden = true;
+  document.getElementById("matFilters").hidden = false;
+  buildMatFilterBar();
+  syncMatFilterBar();
+  renderMatTop();
+  return matResultsGridHTML();
 }
 
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
-  if (i !== -1){ state.mat.splice(i, 1); renderMatScreen(); save(); return; }
+  if (i !== -1){ state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return; }
   const card = MAT_CARD_BY_NAME[name];
   if (!card || !owns(name)) return;
   if (!matFits(matOnMat().concat([card]))){
@@ -12951,10 +13058,10 @@ function toggleMatCard(name){
     return;
   }
   state.mat.push(name);
-  renderMatScreen(); save();
+  renderMatTop(); renderMatResultsGrid(); save();
 }
 
-function matClear(){ state.mat = []; renderMatScreen(); save(); }
+function matClear(){ state.mat = []; renderMatTop(); renderMatResultsGrid(); save(); }
 
 let matToastTimer = null;
 function showMatToast(msg){
@@ -12965,21 +13072,44 @@ function showMatToast(msg){
   matToastTimer = setTimeout(() => { el.hidden = true; }, 1900);
 }
 
-function openMatScreen(){
-  document.getElementById("matScreen").classList.add("open");
-  renderMatScreen();
-}
-function closeMatScreen(){
-  document.getElementById("matScreen").classList.remove("open");
-}
-document.getElementById("matScreenClose").addEventListener("click", closeMatScreen);
-document.getElementById("matClearBtn").addEventListener("click", matClear);
-document.getElementById("matTrayHandle").addEventListener("click", () => {
-  document.getElementById("matTrayPanel").classList.toggle("collapsed");
+/* #drawerTop's own contents (score row, mat/elements zone, toggle
+   button, Clear button) are fully regenerated by renderMatTop() on
+   every change, so their click/drag listeners are delegated to
+   #drawerTop itself (a stable element that's never replaced wholesale)
+   rather than attached to any of those regenerated children directly. */
+document.getElementById("drawerTop").addEventListener("click", ev => {
+  if (ev.target.closest("#matClearBtn")){ matClear(); return; }
+  if (ev.target.closest("#matViewToggle")){
+    matDrawerView = matDrawerView === "mat" ? "elements" : "mat";
+    renderMatTop();
+    return;
+  }
+  const elBtn = ev.target.closest("[data-elem]");
+  if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
 });
-document.getElementById("matTray").addEventListener("click", ev => {
-  const card = ev.target.closest("[data-mat-card]");
-  if (card) toggleMatCard(card.dataset.matCard);
+document.getElementById("matFStations").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-mat-fstation]");
+  if (!b) return;
+  const s = b.dataset.matFstation;
+  matFilt.stations.has(s) ? matFilt.stations.delete(s) : matFilt.stations.add(s);
+  syncMatFilterBar();
+  renderMatResultsGrid();
+});
+document.getElementById("matFSuits").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-mat-fsuit]");
+  if (!b) return;
+  const s = b.dataset.matFsuit;
+  matFilt.suits.has(s) ? matFilt.suits.delete(s) : matFilt.suits.add(s);
+  syncMatFilterBar();
+  renderMatResultsGrid();
+});
+document.getElementById("matFSearch").addEventListener("input", ev => {
+  matFilt.q = ev.target.value.trim();
+  renderMatResultsGrid();
+});
+document.getElementById("matFSort").addEventListener("change", ev => {
+  matFilt.sort = ev.target.value;
+  renderMatResultsGrid();
 });
 
 /* Pointer-driven drag to re-arrange, same approach as the cardgame/
@@ -12987,17 +13117,21 @@ document.getElementById("matTray").addEventListener("click", ev => {
    hover change so other cards visibly shuffle aside, and a native HTML5
    drag does not survive its own source element being replaced mid-drag.
    A pointerdown that never clears the 6px threshold below is a tap, and
-   toggles the card off via the pointerup fallback instead. */
+   toggles the card off via the pointerup fallback instead. Delegated to
+   #drawerTop (stable) rather than #matGrid itself, since #matGrid only
+   exists in the DOM while matDrawerView === "mat" and is recreated by
+   every renderMatTop() call. */
 let matDrag = null;
 function matSlotUnder(x, y){
   const grid = document.getElementById("matGrid");
+  if (!grid) return null;
   for (const el of document.elementsFromPoint(x, y)){
     const slot = el.closest && el.closest(".mm-slot");
     if (slot && slot.parentElement === grid) return slot;
   }
   return null;
 }
-document.getElementById("matGrid").addEventListener("pointerdown", ev => {
+document.getElementById("drawerTop").addEventListener("pointerdown", ev => {
   if (ev.button) return;
   const slot = ev.target.closest(".mm-slot.filled");
   if (!slot) return;
@@ -13042,7 +13176,7 @@ document.addEventListener("pointermove", ev => {
     return;
   }
   matDrag.idx = to;
-  renderMatGrid();
+  renderMatGridCells(matLastScore);
 });
 document.addEventListener("pointerup", () => {
   if (!matDrag) return;
@@ -13050,8 +13184,9 @@ document.addEventListener("pointerup", () => {
   matDrag = null;
   document.getElementById("matGhost").hidden = true;
   document.getElementById("matGhost").innerHTML = "";
-  document.getElementById("matGrid").classList.remove("dragging");
-  if (was.live){ renderMatScreen(); save(); }
+  const grid = document.getElementById("matGrid");
+  if (grid) grid.classList.remove("dragging");
+  if (was.live){ renderMatTop(); renderMatResultsGrid(); save(); }
   else toggleMatCard(was.name);
 });
 
