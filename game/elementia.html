@@ -10746,15 +10746,19 @@ function hubHomeFace(){
   // this doorway now too (Zen still uses the old full-screen Marketplace,
   // so it's excluded here same as before).
   if (panel === "jobs" && (state.mode === "classic" || state.mode === "hard") && jobSheetVariant === "full") return "map";
-  // Revised 2026-09-12: restricted to specifically the travel doorway (a
-  // different, reachable station actually selected on the map) -- opening
-  // the Display Mat any other time (browsing it mid-visit at a station,
-  // say) isn't "about to travel" at all, and showing Lock In there read as
-  // wrong/came out of nowhere. See the "travel" face's own click-handler
-  // comment below for the other half of this: tapping Travel now opens the
-  // mat first, which is what actually gets here in the real flow.
+  // Revised 2026-09-12: restricted to specifically the travel doorway --
+  // opening the Display Mat any other time (browsing it mid-visit at a
+  // station, or opening Inventory directly off the map while a travel
+  // target just happens to be selected) isn't "about to travel" at all,
+  // and showing Lock In there read as wrong/came out of nowhere.
+  // travelPromptFor === selectedMapStation is the actual gate: it's only
+  // ever set by the "travel" face's own click handler below, so this can
+  // never be true unless the player got here by tapping Travel itself --
+  // the screen/canTravelTo checks alone weren't enough, since they stay
+  // true regardless of which button opened the drawer.
   if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat"
-      && screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)) return "lockin";
+      && screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)
+      && travelPromptFor === selectedMapStation) return "lockin";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -13033,9 +13037,11 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // opens the Display Mat (Home becomes "lockin" from there, see
   // hubHomeFace()) instead of leaving immediately, so there's always a
   // chance to lock in before the trip -- exactly the "half-view inventory
-  // should appear" ask. A second tap (travelPromptFor already matches this
-  // same target, whether or not the player actually locked in) goes
-  // straight through to goStation() as before.
+  // should appear" ask. Actually locking in now travels on its own (see
+  // finishLockIn()) -- this second branch only still matters if the
+  // player backs out of the mat WITHOUT locking in (closes the drawer via
+  // its own X/scrim) and then taps Travel again: travelPromptFor still
+  // matches, so that second tap goes straight through to goStation().
   if (face === "travel"){
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
@@ -13479,11 +13485,15 @@ let matLastScore = null;
    git history) -- tapping Travel on a newly-selected station opens the
    Display Mat instead of leaving immediately (see the "travel" face's own
    click-handler comment), and ONLY then does Home's face become "lockin"
-   (see hubHomeFace()'s own added condition). Tapping it locks in whatever
-   score the mat currently reads for a reward of Empty Elements
-   (state.emptyElements), then closes the drawer -- a second tap on Travel
-   (travelPromptFor already matches the selected station) then actually
-   goes. Nothing spends Empty Elements yet -- the real economy this is
+   (gated on travelPromptFor matching the selected station, not just a
+   station being selected -- see hubHomeFace()'s own comment; opening the
+   mat any other way, including the plain Inventory button while a travel
+   target happens to be selected, never shows Lock In). Tapping it locks
+   in whatever score the mat currently reads for a reward of Empty
+   Elements (state.emptyElements), then travels straight to the station
+   on its own (see finishLockIn()) -- no second Travel tap needed, since
+   reaching "lockin" at all already means the player committed to this
+   trip. Nothing spends Empty Elements yet -- the real economy this is
    meant to feed doesn't exist yet either -- so for now this is purely an
    accumulating stat plus a soft "would this have ended your run" warning
    (see
@@ -13595,16 +13605,31 @@ function confirmLockIn(){
 // Just banks the reward and closes the drawer -- travel is the player's
 // own separate next decision (or not: they can keep browsing/crafting
 // and lock in again later), not something this triggers on their behalf.
+// Revised 2026-09-12: Lock In is only ever reachable via the travel
+// doorway now (see hubHomeFace()'s own travelPromptFor check), so there's
+// no longer a real "keep browsing, travel later" case to preserve --
+// finishing here now goes straight on to the station instead of making
+// the player tap Travel a second time for a trip they already committed
+// to. dest is captured up front since selectedMapStation could in theory
+// change before the delayed goStation() below actually runs.
 function finishLockIn(reward){
   state.emptyElements = (state.emptyElements || 0) + reward;
   save();
+  const dest = selectedMapStation;
+  const proceed = () => {
+    closeDrawer();
+    travelPromptFor = null;
+    // Let the drawer's own slide-away transition (.3s, see #drawer's CSS)
+    // mostly finish before the station screen swaps in underneath it.
+    setTimeout(() => goStation(dest), 320);
+  };
   if (reward > 0){
     showMatToast(`+${reward} Empty Element${reward === 1 ? "" : "s"}!`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
-    setTimeout(closeDrawer, 900);
+    setTimeout(proceed, 900);
   } else {
-    closeDrawer();
+    proceed();
   }
 }
 
