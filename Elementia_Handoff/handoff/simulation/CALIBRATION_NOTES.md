@@ -15,6 +15,20 @@ It was calibrated against real Classic Mode session exports (from
 History → Export, or History → the per-run ⧉ button next to a single
 run once that shipped) reproduced below for reference.
 
+**On "6 runs" vs "9 runs" (clarified 2026-09-12):** the user's own count is
+6 runs from an earlier session's analysis + 3 more (D/E/F) added today =
+9 real runs played so far. What's actually usable *here*, though, is only
+the subset with a full per-visit item log attached to the export — that's
+Run A/B/C (from the earlier session) plus D/E/F (today), i.e. 6 runs
+total. The other 3 of the original 6 only ever had their AGGREGATE stats
+(mean/min/max Display-Mat ceiling per round) captured, for the separate
+Lock In calibration in `game/elementia.html`'s own `LOCKIN_ROUND_ANCHORS`
+comment — not a full visitLog, so they can't be replayed through this
+simulator or rescored against a new point curve. If those 3 still have a
+History export sitting around, they'd upgrade this file from 6 usable
+runs to 9; otherwise, new runs (which the user is already planning to
+play) are equally good going forward.
+
 ## Reference runs
 
 | | Run A | Run B | Run C | Run D | Run E | Run F |
@@ -124,6 +138,21 @@ rather than tuning genuine player-behavior heuristics.
    reference table's own writeup above for why neither moved the number.
    Left both unchanged; the real fix is a lookahead/element-reservation
    mechanic neither lever can fake.
+
+5. **Found and fixed a stale `CORE_SET` (2026-09-12)**, while building the
+   Point Curve tool's Classic-only item list: this script's own hand-
+   transcribed `CORE_SET` still listed Greenhouse's core item as "Tractor"
+   (should be Bicycle — Tractor moved to Deep Mine a while back) and
+   Deep Mine's as "Titanium Alloy" (should be Tractor), and The Bakery's
+   as "Bread"/"Cake" (both retired from the game entirely, in favor of
+   Apple Pie/Fish Cakes). All three were simply never updated here when
+   `elementia.html`'s own `CORE_SET` changed. Fixed to match; re-running
+   after the fix moved the baseline only slightly (mean score 308→306,
+   capstone mean 0.87→0.80) — not enough to invalidate anything above,
+   but worth knowing this file's `CORE_SET` needs to be hand-resynced
+   against `game/elementia.html`'s own copy (search `CORE_SET = new Set`)
+   whenever that changes, since nothing currently catches drift between
+   them automatically.
 
 ## Known limitation — read before trusting this for anything but pacing
 

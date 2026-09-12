@@ -70,12 +70,12 @@ CORE_SET = {
     ("Greenhouse", "Fertilizer"), ("Greenhouse", "Sugar"), ("Greenhouse", "DNA"),
     ("Greenhouse", "Soil"), ("Greenhouse", "Farm"), ("Greenhouse", "Chicken"),
     ("Greenhouse", "Apple"), ("Greenhouse", "Grain"), ("Greenhouse", "Solar Panel"),
-    ("Greenhouse", "Tractor"), ("Greenhouse", "Homestead"),
+    ("Greenhouse", "Bicycle"), ("Greenhouse", "Homestead"),
 
     ("Deep Mine", "Clay"), ("Deep Mine", "Natural Gas"), ("Deep Mine", "Steel"),
     ("Deep Mine", "Tools"), ("Deep Mine", "Furnace"), ("Deep Mine", "Aluminum Alloy"),
     ("Deep Mine", "Stainless Steel"), ("Deep Mine", "Diamond"),
-    ("Deep Mine", "Titanium Alloy"), ("Deep Mine", "Rubber"), ("Deep Mine", "Maglev Train"),
+    ("Deep Mine", "Tractor"), ("Deep Mine", "Rubber"), ("Deep Mine", "Maglev Train"),
 
     ("Old Growth Forest", "Clay"), ("Old Growth Forest", "Sand"), ("Old Growth Forest", "Bone"),
     ("Old Growth Forest", "Soil"), ("Old Growth Forest", "Salmon"), ("Old Growth Forest", "Tree"),
@@ -84,7 +84,7 @@ CORE_SET = {
 
     ("The Bakery", "Sugar"), ("The Bakery", "Water"), ("The Bakery", "Yeast"),
     ("The Bakery", "Egg"), ("The Bakery", "Flour"), ("The Bakery", "Dough"),
-    ("The Bakery", "Oven"), ("The Bakery", "Bread"), ("The Bakery", "Cake"),
+    ("The Bakery", "Oven"), ("The Bakery", "Apple Pie"), ("The Bakery", "Fish Cakes"),
     ("The Bakery", "Banana Bread"), ("The Bakery", "Fruit Cake"),
 
     ("The City", "Clay"), ("The City", "Limestone"), ("The City", "Steel"),
