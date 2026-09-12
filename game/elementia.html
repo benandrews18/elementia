@@ -187,11 +187,13 @@ body[data-picking] #topbar{display:none}
   display:flex; justify-content:space-between; align-items:flex-end; gap:0;
 }
 /* Classic Mode's opening beat only (see playMapIntroScroll()/
-   startBingoCapstonePicker()/closeBingoIntroTray()) -- the pan and the
-   capstone-picker sequence both play with the hub bar out of the way
-   entirely, a dedicated flag rather than reusing body[data-picking]
-   (which stays true for the whole "no station chosen yet" resting state a
-   player could sit in indefinitely, not just this one scripted beat). */
+   startBingoCapstonePicker()/runBingoRevealSequence()) -- the pan and the
+   BINGO card's own staggered reveal both play with the hub bar out of the
+   way entirely, cleared the moment the reveal finishes (not once a
+   capstone's actually chosen -- the player is free to add one later). A
+   dedicated flag rather than reusing body[data-picking] (which stays true
+   for the whole "no station chosen yet" resting state a player could sit
+   in indefinitely, not just this one scripted beat). */
 body[data-intro-sequence] #hub{display:none}
 /* The 4 side buttons (To-Do List+Inventory on the left, Items+Settings on
    the right) each live in their own flush flex group so their own badges
@@ -971,6 +973,27 @@ body[data-screen="market"] #trackedPill{display:none}
    above), so the name needs to stay light there rather than switching to
    .bc-name's own new dark-ink default. */
 .bingo-cell.owned .bc-name{color:#fff}
+/* The center square before a capstone's ever been chosen (see
+   bingoCardHTML()'s own "Add Capstone" placeholder) -- dashed border
+   instead of the solid parchment face every other square uses, same
+   "empty, tap to fill" language the Display Mat's own open slots
+   (.mm-slot.empty) already use elsewhere, so it reads as an invitation
+   rather than a square that simply failed to load an item. Gently
+   pulses (unless reduced motion) to actually draw the eye there, since
+   it's the one square on the whole card that needs a tap RIGHT NOW. */
+.bingo-cell-addcap{
+  background:transparent; border:3px dashed var(--gold); box-shadow:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  animation:bingoAddcapPulse 1.8s ease-in-out infinite;
+}
+.bingo-cell-addcap:active{background:var(--gold-soft)}
+.bc-addcap-ic{font-size:22px; line-height:1; color:var(--gold)}
+.bc-addcap-label{font-size:9px; font-weight:800; line-height:1.2; color:var(--gold); text-align:center}
+@keyframes bingoAddcapPulse{
+  0%, 100%{box-shadow:0 0 0 0 rgba(226,178,90,.5)}
+  50%{box-shadow:0 0 0 6px rgba(226,178,90,0)}
+}
+@media (prefers-reduced-motion: reduce){.bingo-cell-addcap{animation:none}}
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
 /* Icon is absolutely positioned over the CELL'S FULL bounds (not a flex
@@ -1029,11 +1052,14 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; align-items:center; justify-content:center; line-height:1;
   z-index:2;
 }
-/* Thin black outline on the item's own art (custom-icon images only --
-   plain unicode emoji have no real bounding box to outline) so it reads
-   clearly against the light parchment face behind it, same reasoning as
-   the item/mat cards' own black card frame. */
-.bc-icon :is(img,svg){border:1.5px solid #000; border-radius:8px}
+/* Outlines the actual rendered shape of the item's own art -- glyph or
+   image alpha channel -- not a rectangular bounding box, so it reads as
+   a tight silhouette against the parchment rather than a boxy frame with
+   dead space inside it. Same drop-shadow-stack technique as .tok-icon
+   (see its own comment): filter follows real pixel edges identically for
+   an <img> and for a plain emoji character, where a CSS border could
+   only ever draw a rectangle regardless of what's inside it. */
+.bc-icon{filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)}
 /* Adventure Mode's own Marketplace tray (see adventureMarketTrayHTML()) --
    two swipeable panels (Quests, then Collection Bundles) in the same
    top-tray slot Classic's Bingo card fills. .market-tray-track holds both
@@ -2862,6 +2888,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   padding:20px 20px calc(20px + var(--hub-h, 67px) + env(safe-area-inset-bottom));
 }
 .overlay.open{display:flex}
+/* Above #jobSheet's own 69 -- this overlay is meant to float on top of
+   the (still fully visible) BINGO tray, not compete with it at the same
+   level the way every other .overlay (which never appears alongside
+   #jobSheet at all) safely can. */
+#capstoneOverlay{z-index:70}
 /* confirm sits above other overlays -- it's usually raised FROM one
    (e.g. the reset button inside Settings), and it precedes them in the
    DOM, so without this the parent overlay would paint over it. Still
@@ -3136,6 +3167,24 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    in a job/quest row) back to center so it lines up with the other
    buttons in .pc-actions' own centered row. */
 .pc-pin-btn{align-self:center}
+/* Large, full-width, its own row below Item Info/Pin (see the HTML's own
+   comment) -- explicitly asked to be much easier to hit than a third
+   small icon squeezed into .pc-actions' row. Purple (--collection),
+   tying it visually to the Display Mat's other purple accents (the hub's
+   own "Lock In" face, the mat's Empty Elements line) as one connected
+   identity, distinct from Item Info's green CTA and Pin's neutral toggle.
+   Same glossy ledge-button language as .pc-tree-btn otherwise. */
+.pc-matbtn-lg{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; padding:14px; border:none; border-radius:14px;
+  background:var(--collection); color:#fff; font-size:15px; font-weight:800;
+  letter-spacing:.2px; cursor:pointer; box-shadow:0 4px 0 var(--collection-line);
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
+}
+.pc-matbtn-lg[hidden]{display:none}
+.pc-matbtn-lg.active{background:color-mix(in srgb, var(--collection) 80%, black)}
+.pc-matbtn-lg:not(:disabled):active{transform:translateY(4px); box-shadow:0 0 0 transparent}
+.cp-matbtn-ic{font-size:17px; line-height:1}
 /* Back button -- a left arrow next to a small circle repeating the
    previous card's own icon (see updateCardPopBackBtn()), one tappable
    unit. No card/background of its own any more (was the same ledge-
@@ -4492,14 +4541,19 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="pc-back-icon" id="cpBackIcon"></span>
       </button>
       <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
-      <!-- Classic Mode only, and only for an owned Display Mat card (see
-           showCardPop()'s own visibility check) -- tapping a card in the
-           Inventory tray now opens this popup instead of directly toggling
-           mat membership (see toggleMatCard()'s own call sites), so this
-           button is the only way left to add/remove one. -->
-      <button type="button" class="pc-pin-btn refpin" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false">🀄</button>
       <button type="button" class="pc-pin-btn refpin" id="cpPinBtn" aria-label="Pin to To-Do List" aria-pressed="false">📌</button>
     </div>
+    <!-- Classic Mode only, and only for an owned Display Mat card (see
+         showCardPop()'s own visibility check) -- tapping a card in the
+         Inventory tray now opens this popup instead of directly toggling
+         mat membership (see toggleMatCard()'s own call sites), so this
+         button is the only way left to add/remove one. Its own full-width
+         row below Item Info/Pin (was squeezed in alongside them at the
+         same small icon-button size) -- explicitly asked to be large and
+         easy to hit, not a third small icon in that row. Label text is
+         set by setMatBtnState(), never left as static markup here, so it
+         can never drift out of sync with the button's own add/remove state. -->
+    <button type="button" class="pc-matbtn-lg" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false"></button>
   </div>
 </div>
 
@@ -4571,6 +4625,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <button type="button" class="bigbtn sec" id="planetPickerClose">Cancel</button>
     </div>
   </div>
+</div>
+
+<!-- Classic Mode's capstone-choice grid -- a floating overlay ON TOP of
+     the (fully visible) BINGO tray underneath, reachable any time the
+     card's own center square is tapped (see bingoCardHTML()'s "Add
+     Capstone" square, openCapstoneOverlay()/chooseBingoCapstone()) --
+     turn 1 or turn 20 alike, not a one-shot intro screen. Higher z-index
+     than #jobSheet's own 69 (see its own CSS) is what actually puts it
+     visually above the tray rather than the two competing at the same
+     level. -->
+<div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
+  <div class="sheetbox" id="capstoneOverlayBody"></div>
 </div>
 
 <!-- settings -->
@@ -6634,7 +6700,8 @@ function playMapIntroScroll(){
   // WHOLE beat, not just this pan -- set before the render() just below so
   // even this very first frame already has both hidden (see
   // body[data-intro-sequence]'s own CSS comment and renderMap()'s hint).
-  // closeBingoIntroTray() is what eventually clears it again.
+  // runBingoRevealSequence() is what eventually clears it again, once the
+  // card's own staggered reveal finishes.
   const classicIntro = state.mode === "classic";
   if (classicIntro) document.body.setAttribute("data-intro-sequence", "");
   render(true); // resets scroll to the top
@@ -6669,10 +6736,11 @@ function playMapIntroScroll(){
       showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "bottom-left", "#hubHome");
     }
     window.scrollTo({top: endY, behavior: "instant"});
-    // Classic hands off to the capstone-picker sequence instead of just
-    // landing quietly -- that function (via closeBingoIntroTray() at its
-    // own end) is what finally clears data-intro-sequence and reveals the
-    // hint text/hub bar, not this render() call.
+    // Classic hands off to the BINGO reveal sequence instead of just
+    // landing quietly -- that function is what finally clears
+    // data-intro-sequence and reveals the hint text/hub bar (once the
+    // reveal itself finishes, not once a capstone's chosen), not this
+    // render() call.
     if (classicIntro) startBingoCapstonePicker();
     else render(); // no resetScroll -- keep the bottom position just set above
   };
@@ -7563,6 +7631,34 @@ function ensureBingoCard(){
   }
   return state.bingoCard;
 }
+const BINGO_CENTER_IDX = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BINGO_SIZE / 2);
+/* Sets (or changes) just the card's center square -- called from the
+   capstone-choice overlay (see openCapstoneOverlay()), reachable at any
+   point in the game, not only during the opening beat. Unlike
+   drawBingoCard() (the whole-card generator), this never touches the
+   other 24 squares except to resolve a collision: the center's own
+   bonus "extras" (see drawBingoCard()'s own comment) were drawn against
+   whatever the PREVIOUS center was, so the newly chosen name could
+   already be sitting in one of those slots -- swapping that one slot for
+   a fresh non-capstone filler keeps the card from ever showing the same
+   item twice. */
+function setBingoCenter(name){
+  if (name === BINGO_RANDOM_CAPSTONE){
+    const choices = bingoCapstoneChoices();
+    name = choices[Math.floor(Math.random() * choices.length)];
+  }
+  const card = ensureBingoCard().slice();
+  const dupIdx = card.findIndex((n, i) => i !== BINGO_CENTER_IDX && n === name);
+  if (dupIdx !== -1){
+    const used = new Set(card);
+    const filler = shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE" && !used.has(n)))[0];
+    if (filler) card[dupIdx] = filler;
+  }
+  card[BINGO_CENTER_IDX] = name;
+  state.bingoCard = card;
+  state.bingoCenterChosen = true;
+  save();
+}
 // Every row/column/diagonal as a flat array of cell indices -- purely a
 // function of BINGO_SIZE, so it's cheap to recompute on every render
 // rather than caching it anywhere.
@@ -7588,12 +7684,30 @@ function bingoLines(){
    green-bordered cells, no extra highlight tying them together. */
 function bingoCardHTML(){
   const card = ensureBingoCard();
-  const cells = card.map(name => {
+  const cells = card.map((name, i) => {
+    // The center square before it's ever been chosen (see setBingoCenter()/
+    // state.bingoCenterChosen) -- a standing "Add Capstone" invitation
+    // instead of whatever placeholder name drawBingoCard() quietly picked
+    // to fill that slot internally (never shown). data-add-capstone (not
+    // data-item-card) is what routes a tap to openCapstoneOverlay()
+    // instead of the plain item-inspection popup.
+    if (i === BINGO_CENTER_IDX && !state.bingoCenterChosen){
+      return `<div class="bingo-cell bingo-cell-addcap" data-add-capstone="1" title="Add a capstone to anchor your BINGO card">
+        <span class="bc-addcap-ic">➕</span>
+        <span class="bc-addcap-label">Add<br>Capstone</span>
+      </div>`;
+    }
     const cls = owns(name) ? "bingo-cell owned" : "bingo-cell";
     const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
     const idx = ENTRIES.findIndex(e => e.name === name);
     const pinned = isPinned(name);
-    return `<div class="${cls}" data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+    // The center square STAYS reachable via the capstone overlay even
+    // after it's been chosen (see openCapstoneOverlay()'s own comment on
+    // why a re-pick is allowed at any point in the game) -- data-add-
+    // capstone rides alongside data-item-card here rather than replacing
+    // it, since #jobSheetBody's own click handler checks it first.
+    const centerAttr = i === BINGO_CENTER_IDX ? ` data-add-capstone="1"` : "";
+    return `<div class="${cls}"${centerAttr} data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
         aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
       <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
@@ -7605,24 +7719,20 @@ function bingoCardHTML(){
     <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
     <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span></p>`;
 }
-// True only during Classic Mode's opening beat, between the map's intro
-// pan landing and the player actually picking their card's center
-// capstone -- see startBingoCapstonePicker()/pickBingoCapstone(). Swaps
-// what the SAME tray (#jobSheet, "full" variant) shows via renderJobBoard()
-// below, rather than inventing a second tray/overlay just for this one
-// scripted moment.
-let bingoPickerActive = false;
 // Sentinel data-capstone-pick value for the picker's own "Random" button
-// (see bingoCapstonePickerHTML()) -- pickBingoCapstone() below resolves it
-// to an actual random choice rather than ever using this string as a real
-// item name.
+// (see bingoCapstonePickerHTML()) -- chooseBingoCapstone()/setBingoCenter()
+// resolve it to an actual random choice rather than ever using this
+// string as a real item name.
 const BINGO_RANDOM_CAPSTONE = "__RANDOM__";
-/* The 2x4 capstone-choice grid Classic's opening shows before the real
-   Bingo card exists at all -- one cell per bingoCapstoneChoices() entry
-   (always exactly 8, one per core station), styled identically to a real
-   .bingo-cell (see bingoCardHTML()) minus the owned/pin states, since
-   nothing's owned yet at game start. Tapping a cell hands off to
-   pickBingoCapstone() (see #jobSheetBody's own click handler). */
+/* The 2x4 capstone-choice grid -- one cell per bingoCapstoneChoices()
+   entry (always exactly 8, one per core station), styled identically to
+   a real .bingo-cell (see bingoCardHTML()) minus the owned/pin states,
+   since this is a choice of WHICH item to anchor the card with, not a
+   report on one already owned. Lives inside #capstoneOverlay (see
+   openCapstoneOverlay()) as a floating layer on top of the BINGO tray,
+   not a replacement for the tray's own content the way this used to
+   work -- tapping a cell hands off to chooseBingoCapstone() (see
+   #capstoneOverlay's own click handler). */
 function bingoCapstonePickerHTML(){
   const choices = bingoCapstoneChoices();
   const cells = choices.map(name => {
@@ -7633,10 +7743,13 @@ function bingoCapstonePickerHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<h3 class="bingo-title">Choose Your Capstone</h3>
+  return `<h3 class="bingo-title" id="capstoneOverlayTitle">Choose Your Capstone</h3>
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
     <button type="button" class="bigbtn sec bingo-random-btn" data-capstone-pick="${BINGO_RANDOM_CAPSTONE}">🎲 Random</button>
-    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>`;
+    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>
+    <div class="row" style="margin-top:14px">
+      <button type="button" class="bigbtn sec" id="capstoneOverlayClose">Cancel</button>
+    </div>`;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -8203,6 +8316,13 @@ function freshState(){
                        // confirmLockIn()/LOCKIN_ROUND_ANCHORS). Earned 1-3 at a time each time
                        // the player locks in their Display Mat before traveling; nothing spends
                        // it yet (the economy this is meant to feed doesn't exist yet either).
+    bingoCenterChosen: false, // Whether the BINGO card's own center square has ever been
+                       // picked (see setBingoCenter()) -- false shows the "Add Capstone"
+                       // placeholder there instead of a real item. Stays true forever once
+                       // set, even though the item underneath can still change (tapping the
+                       // center re-opens the picker at any point in the game, not just once).
+                       // See the migration just below freshState() for saves from before this
+                       // field existed.
   };
 }
 
@@ -8377,6 +8497,13 @@ function loadAll(){
   // board isn't worth preserving across this shape change.
   if (!Array.isArray(state.jobBoard)) state.jobBoard = [];
   if (!Array.isArray(state.jobBoardUnseen)) state.jobBoardUnseen = [];
+  // A save from before bingoCenterChosen existed has no such key, so
+  // Object.assign(freshState(), saved) left it at freshState()'s own
+  // false default -- correct for a genuinely brand-new game, wrong for
+  // an in-progress one, which already picked a real center under the old
+  // flow (there was no "Add Capstone" placeholder state to have skipped).
+  // Any already-drawn bingoCard is proof a real choice already happened.
+  if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
   // "Fictional World" -> "Wardrobe" rename (see SUBZONES) -- a player who'd
   // already visited it has that fact recorded under the old key; carry it
   // forward under the new one so they don't find it re-locked. Guarded on
@@ -10846,12 +10973,7 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   const matBtn = document.getElementById("cpMatBtn");
   const matEligible = state.mode === "classic" && !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
   matBtn.hidden = !matEligible;
-  if (matEligible){
-    const onMat = state.mat.includes(entry.name);
-    matBtn.classList.toggle("active", onMat);
-    matBtn.setAttribute("aria-pressed", onMat);
-    matBtn.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
-  }
+  if (matEligible) setMatBtnState(matBtn, state.mat.includes(entry.name));
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
@@ -11025,10 +11147,7 @@ document.getElementById("cpMatBtn").addEventListener("click", ev => {
   ev.stopPropagation();
   if (!cardPopEntry) return;
   toggleMatCard(cardPopEntry.name);
-  const onMat = state.mat.includes(cardPopEntry.name);
-  ev.currentTarget.classList.toggle("active", onMat);
-  ev.currentTarget.setAttribute("aria-pressed", onMat);
-  ev.currentTarget.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
+  setMatBtnState(ev.currentTarget, state.mat.includes(cardPopEntry.name));
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -12951,6 +13070,18 @@ const closeDrawer = () => {
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
+  // #matSortBtn/#matFilterBtn are standalone fixed-position elements, not
+  // children of #drawer -- closing the drawer doesn't touch them on its
+  // own, and their only other hidden-state owner (renderMatTop()) doesn't
+  // necessarily run again before the next time the player looks at this
+  // corner of the screen. Left unset here, a drawer that was expanded
+  // when closed left these two sitting on top of #pinsBtn/
+  // #quickConvertBtn indefinitely. closeMatSideTrays() (hoisted function
+  // declaration, defined further down) covers their own slide-out trays
+  // the same way, in case one was left open.
+  document.getElementById("matSortBtn").hidden = true;
+  document.getElementById("matFilterBtn").hidden = true;
+  closeMatSideTrays();
   updateHub();
 };
 document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
@@ -13334,15 +13465,27 @@ let matLastScore = null;
    size can clear it, a hard, guaranteed-Game-Over wall. Still first-pass
    in the sense that no real run has ever actually PLAYED past round 20
    with this mechanic live -- the shape is grounded in real data, the
-   far end (25+) is this session's own extrapolation of it, not measured. */
+   far end (25+) is this session's own extrapolation of it, not measured.
+   Revised 2026-09-12: the 1-die floor stayed literally 0 only through
+   round 1, so a bare one-card mat (a lone MATERIAL, 2-5ish points --
+   exactly what visit 2 or 3 of a real run often is; several of the 6
+   reference runs crafted NOTHING at all by visit 2, see the mean/min
+   table above) could already fall short of the round-2 bar once
+   interpolated toward round 5's 15 -- a real playtest hit exactly this
+   with a lone Sand card. The added round-3 anchor holds 1-die at 0
+   through round 5 instead of round 1 alone -- "opening moves can't
+   fail" is the actual intent, not merely "turn 1 can't fail" -- and
+   2-/3-dice were eased down to match rather than left towering over an
+   otherwise-forgiving 1-die bar. */
 const MAT_ABSOLUTE_CEILING = 2660;
 const LOCKIN_ROUND_ANCHORS = [
   // [round, oneDieMin, twoDiceMin, threeDiceMin]
   [1,      0,    5,    15],
-  [5,     15,   60,   130],
-  [10,   150,  350,   550],
-  [15,   500,  950,  1600],
-  [20,  1200, 1850,  2150],
+  [3,      0,   10,    30],
+  [5,      0,   40,    90],
+  [10,   100,  300,   500],
+  [15,   450,  900,  1550],
+  [20,  1150, 1800,  2100],
   [25,  2000, 2350,  2600],
   [30,  2550, 2650,  2660],
   [31,  2700, 2900,  3000], // 1-die alone already exceeds MAT_ABSOLUTE_CEILING -- impossible
@@ -13581,6 +13724,16 @@ function renderClassicDrawer(){
   return matResultsGridHTML();
 }
 
+/* Shared by showCardPop() (initial paint) and #cpMatBtn's own click
+   handler (after a toggle) -- keeps the button's label text, aria state,
+   and active styling from ever drifting out of sync with each other. */
+function setMatBtnState(btn, onMat){
+  btn.classList.toggle("active", onMat);
+  btn.setAttribute("aria-pressed", onMat);
+  const label = onMat ? "Remove from Display Mat" : "Add to Display Mat";
+  btn.setAttribute("aria-label", label);
+  btn.innerHTML = `<span class="cp-matbtn-ic">${onMat ? "➖" : "➕"}</span>${esc(label)}`;
+}
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
   if (i !== -1){ state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return; }
@@ -13725,7 +13878,12 @@ document.getElementById("drawerTop").addEventListener("pointerdown", ev => {
 document.addEventListener("pointermove", ev => {
   if (!matDrag) return;
   if (!matDrag.live){
-    if (Math.hypot(ev.clientX - matDrag.x0, ev.clientY - matDrag.y0) < 6) return;
+    // 12px, not 6 -- a mouse (or a synthetic test event) has ~zero jitter,
+    // but a real fingertip on a capacitive screen routinely drifts more
+    // than 6px during what's meant to read as a plain tap, silently
+    // reclassifying it as a drag (which, going nowhere, opens nothing and
+    // looks like the card simply doesn't respond to taps at all).
+    if (Math.hypot(ev.clientX - matDrag.x0, ev.clientY - matDrag.y0) < 12) return;
     matDrag.live = true;
     const g = document.getElementById("matGhost");
     g.style.width = matDrag.w + "px";
@@ -13823,13 +13981,14 @@ function renderJobBoard(){
           // (STATIONS_VISITED_BONUS, badge on the progress card right
           // above) rather than unlocking anything.
           //
-          // bingoPickerActive short-circuits ALL of that for Classic's own
-          // opening beat (see startBingoCapstonePicker()) -- the capstone-
-          // choice grid takes over the whole tray body until the player
-          // actually picks one, at which point pickBingoCapstone() clears
-          // the flag and this falls through to the real card again.
-          ? (bingoPickerActive ? bingoCapstonePickerHTML()
-              : `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`)
+          // Always the real card now, even before a capstone's ever been
+          // chosen -- bingoCardHTML() itself renders the center square as
+          // an "Add Capstone" invitation until then (see its own comment)
+          // instead of this tray swapping its ENTIRE body over to a
+          // separate picker screen the way it used to. The picker is a
+          // floating overlay on top of this now (see openCapstoneOverlay()),
+          // never a replacement for what's showing underneath.
+          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`
           : classicPinsAndJobsHTML())
       : hard
         ? (full ? adventureMarketTrayHTML() : questsBodyHTML(true))
@@ -13926,15 +14085,15 @@ function openJobBoard(){
   openJobSheet();
 }
 function closeJobBoard(){
-  // Classic's opening capstone pick (bingoPickerActive) must run to
-  // completion -- a scrim tap or Escape here (this function is every
-  // dismissal path: the X button, the scrim, and Escape all route through
-  // it) would close the tray without ever calling pickBingoCapstone(), so
-  // data-intro-sequence's hub/hint hiding (see renderMap()'s own comment)
-  // would never get cleared and the player would be stuck with no hub and
-  // no way to reopen the tray. The only way out of this screen is
-  // runBingoRevealSequence() -> closeBingoIntroTray(), never this.
-  if (bingoPickerActive) return;
+  // Blocks dismissal only while the opening reveal (runBingoRevealSequence())
+  // is actively flipping cards open -- a scrim tap or Escape mid-flip would
+  // leave some squares frozen edge-on. Once that finishes, the tray is
+  // freely dismissible even before a capstone's ever been chosen: the
+  // center square's own "Add Capstone" invitation (see bingoCardHTML())
+  // stays reachable any time this tray is reopened, on turn 1 or turn 20
+  // alike, so there's no risk of stranding the player the way there used
+  // to be when picking one was the only way out of this screen.
+  if (bingoRevealInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
@@ -13942,54 +14101,94 @@ function closeJobBoard(){
 }
 
 /* =====================================================================
-   Classic Mode's opening beat: capstone-choice grid -> real Bingo card.
-   See playMapIntroScroll()'s own Classic-mode finish() branch for what
-   kicks this off (right as the intro pan lands), and
+   Classic Mode's opening beat: the Marketplace/BINGO tray opens directly
+   (no separate "Choose Your Capstone" screen first) with all 24 non-
+   center squares flipping over from blank in a staggered wave; the
+   center stays a standing "Add Capstone" invitation (see bingoCardHTML())
+   until tapped -- open to the player on turn 1 or turn 20 alike (see
+   openCapstoneOverlay()), not a one-shot intro. See playMapIntroScroll()'s
+   own Classic-mode finish() branch for what kicks this off, and
    body[data-intro-sequence] (renderMap()'s hint/CSS for #hub) for how the
-   hub bar and "Tap on a station to start!" hint both stay hidden for the
-   whole beat, not just the pan itself.
+   hub bar and "Tap on a station to start!" hint both stay hidden until
+   the REVEAL itself finishes -- not until a capstone's chosen, which the
+   player is now free to leave for later.
    ===================================================================== */
+// True only while runBingoRevealSequence()'s own staggered flip-in is
+// actively playing -- blocks closeJobBoard() for that brief window (see
+// its own comment) and does nothing else.
+let bingoRevealInProgress = false;
+// True only between the scripted turn-1 opener below and whenever a
+// capstone actually gets chosen -- the one thing that still cares
+// whether this is literally the player's first-ever choice: choosing on
+// turn 1 auto-retracts the tray a beat later, same as this whole sequence
+// always has; choosing at any other point leaves the tray open, since the
+// player deliberately came back to it (see chooseBingoCapstone()).
+let bingoIntroActive = false;
 function startBingoCapstonePicker(){
-  bingoPickerActive = true;
+  bingoIntroActive = true;
   openJobSelectTray();
-}
-const BINGO_REVEAL_STAGGER_MS = 30;
-const BINGO_REVEAL_HOLD_MS = 650;
-const BINGO_BOUNCE_AWAY_MS = 380;
-/* Tapping a capstone-choice cell (see #jobSheetBody's own [data-capstone-
-   pick] handler) -- builds the real card around that pick, swaps the
-   tray's body over to it (bingoPickerActive now false falls through to
-   the normal branch in renderJobBoard()), then bounces every square into
-   place before bouncing the whole tray away to reveal the map underneath. */
-function pickBingoCapstone(name){
-  if (name === BINGO_RANDOM_CAPSTONE){
-    const choices = bingoCapstoneChoices();
-    name = choices[Math.floor(Math.random() * choices.length)];
-  }
-  state.bingoCard = drawBingoCard(name);
-  bingoPickerActive = false;
-  save();
-  renderJobBoard();
   runBingoRevealSequence();
 }
+const BINGO_REVEAL_STAGGER_MS = 30;
+const BINGO_BOUNCE_AWAY_MS = 380;
+/* Flips every square but the center open in a staggered wave (per-cell
+   setTimeout keyed off a known duration, not .animate().onfinish -- see
+   bounceCardClosed()'s own comment for why that pattern is the
+   established one here: onfinish never fires for an animation whose
+   timeline never actually starts ticking, e.g. a backgrounded tab). Only
+   ever called once per card, from the scripted turn-1 opener above --
+   ensureBingoCard() keeps returning that same card from then on, so
+   there's never a second "still blank" reveal to run. */
 function runBingoRevealSequence(){
   const cells = [...document.querySelectorAll("#jobSheetBody .bingo-cell")];
-  const centerIdx = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BINGO_SIZE / 2);
+  bingoRevealInProgress = true;
   cells.forEach((cell, i) => {
-    // Center flips immediately (it's the pick that was just made -- no
-    // reason to make the player wait through the stagger for their own
-    // choice); every other square flips open right after, in a staggered
-    // wave (per-cell setTimeout keyed off a known duration, not
-    // .animate().onfinish -- see bounceCardClosed()'s own comment for why
-    // that pattern is the established one here: onfinish never fires for
-    // an animation whose timeline never actually starts ticking, e.g. a
-    // backgrounded tab).
-    if (i === centerIdx){ bingoCellFlipAppear(cell); return; }
-    const order = i < centerIdx ? i : i - 1; // stagger order skips the center's own index
+    if (i === BINGO_CENTER_IDX) return; // stays a static placeholder -- see bingoCardHTML()
+    const order = i < BINGO_CENTER_IDX ? i : i - 1; // stagger order skips the center's own index
     setTimeout(() => bingoCellFlipAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
   });
   const lastStaggerMs = (cells.length - 1) * BINGO_REVEAL_STAGGER_MS;
-  setTimeout(closeBingoIntroTray, lastStaggerMs + BINGO_REVEAL_HOLD_MS);
+  // +480: bingoCellFlipAppear()'s own animation duration -- waits for the
+  // very LAST square to actually finish flipping, not just start, before
+  // handing the hub/hint back to the player.
+  setTimeout(() => {
+    bingoRevealInProgress = false;
+    document.body.removeAttribute("data-intro-sequence");
+    updateHub();
+    render();
+  }, lastStaggerMs + 480);
+}
+/* Tapping a capstone-choice cell inside the overlay (see #capstoneOverlay's
+   own click handler) or its "Random" button -- sets the card's center
+   (see setBingoCenter()), closes the overlay, and flips the now-real
+   center square into place with the exact same animation every other
+   square already used for its own reveal. Turn 1 only (bingoIntroActive),
+   the whole tray also retracts a beat later, exactly like the old one-
+   shot intro always did unconditionally; any other time, the tray is left
+   open -- the player came back to this deliberately, so there's nothing
+   to whisk away. */
+function chooseBingoCapstone(name){
+  setBingoCenter(name);
+  closeCapstoneOverlay();
+  renderJobBoard();
+  const centerCell = document.querySelectorAll("#jobSheetBody .bingo-cell")[BINGO_CENTER_IDX];
+  bingoCellFlipAppear(centerCell);
+  if (bingoIntroActive){
+    bingoIntroActive = false;
+    setTimeout(closeBingoIntroTray, 1000);
+  }
+}
+/* The capstone-choice grid as a floating overlay ON TOP of the (fully
+   visible) BINGO tray underneath, rather than replacing its content the
+   way the very first version of this feature worked -- reachable any
+   time the card's own center square is tapped (see bingoCardHTML()'s
+   [data-add-capstone]), turn 1 or turn 20 alike. */
+function openCapstoneOverlay(){
+  document.getElementById("capstoneOverlayBody").innerHTML = bingoCapstonePickerHTML();
+  openOverlay("capstoneOverlay");
+}
+function closeCapstoneOverlay(){
+  closeOverlay("capstoneOverlay");
 }
 /* Bounces the whole tray away (a plain CSS @keyframes animation, not
    WAAPI -- #jobSheet already owns a persistent WAAPI-free transform/
@@ -13999,7 +14198,10 @@ function runBingoRevealSequence(){
    the next time the tray opens normally). Once the bounce finishes, snaps
    straight to the real closed state via the same transition-disabled
    reflow trick openJobSheet() itself uses, so there's no second, visible
-   slide-up on top of the bounce that just played. */
+   slide-up on top of the bounce that just played. data-intro-sequence is
+   NOT this function's job any more -- runBingoRevealSequence() clears it
+   the moment the reveal itself finishes, well before any capstone is
+   necessarily chosen. */
 function closeBingoIntroTray(){
   jobSheet.classList.add("bounce-away");
   setTimeout(() => {
@@ -14010,9 +14212,8 @@ function closeBingoIntroTray(){
     jobSheet.style.transition = "";
     jobSheet.setAttribute("aria-hidden", "true");
     document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
-    document.body.removeAttribute("data-intro-sequence");
     updateHub();
-    render(); // now shows the map's real hint text + the hub bar again
+    render();
   }, BINGO_BOUNCE_AWAY_MS);
 }
 
@@ -14894,14 +15095,28 @@ document.getElementById("planetPicker").addEventListener("click", ev => {
   if (goBtn){ closePlanetPicker(); goStation(goBtn.dataset.subzoneGo); }
 });
 
+// Delegated (not bound at load) since #capstoneOverlayClose and every
+// [data-capstone-pick] cell only exist once openCapstoneOverlay() has
+// actually injected bingoCapstonePickerHTML() into #capstoneOverlayBody.
+document.getElementById("capstoneOverlay").addEventListener("click", ev => {
+  if (ev.target === ev.currentTarget){ closeCapstoneOverlay(); return; } // scrim tap
+  if (ev.target.closest("#capstoneOverlayClose")){ closeCapstoneOverlay(); return; }
+  const pickBtn = ev.target.closest("[data-capstone-pick]");
+  if (pickBtn) chooseBingoCapstone(pickBtn.dataset.capstonePick);
+});
+
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
 jobScrim.addEventListener("click", closeJobBoard);
 document.getElementById("jobSheetBody").addEventListener("click", ev => {
-  // Classic's opening beat only -- see bingoCapstonePickerHTML()/
-  // pickBingoCapstone(). Checked first since bingoPickerActive replaces
-  // everything else this tray would normally show.
-  const capstonePickBtn = ev.target.closest("[data-capstone-pick]");
-  if (capstonePickBtn){ pickBingoCapstone(capstonePickBtn.dataset.capstonePick); return; }
+  // The BINGO card's own center square -- opens the capstone-choice
+  // overlay (see openCapstoneOverlay()) whether it's still showing the
+  // "Add Capstone" placeholder or already has a real item on it (a
+  // re-pick is allowed at any point in the game, not just once). Checked
+  // before the generic [data-item-card] handling just below, since the
+  // center carries both attributes once chosen (see bingoCardHTML()'s own
+  // comment) and this one should always win there.
+  const addCapstoneBtn = ev.target.closest("[data-add-capstone]");
+  if (addCapstoneBtn){ openCapstoneOverlay(); return; }
 
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
