@@ -3996,12 +3996,15 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Icon on top, its own raw shared-icon count below it (was an inline
    pill: icon, count, "+bonus") -- a small vertical tile per group
    instead, matching "just the count, no +x" (see matComboChipHTML()). */
+/* Revised 2026-09-12: dropped the tile's own gold background/border --
+   just the icon and its count now, no card chrome around the pair -- and
+   both bumped 50% larger to read clearly at the smaller size this frees
+   up. */
 .mm-combo{
-  display:flex; flex-direction:column; align-items:center; gap:1px; padding:3px 5px; border-radius:8px;
-  background:var(--gold-soft); border:1px solid var(--gold-line); color:var(--gold);
-  min-width:30px;
+  display:flex; flex-direction:column; align-items:center; gap:1px; padding:2px 3px;
+  color:var(--gold); min-width:30px;
 }
-.mm-combo b{font-size:12px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums}
+.mm-combo b{font-size:18px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums}
 /* Collections stay a horizontal pill (icon, name, +bonus) rather than
    the narrow vertical icon/count tile above -- a named collection needs
    room to actually show its name, which a column layout has no space
@@ -4012,10 +4015,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .mm-combo.col b{font-size:11px; font-weight:800; white-space:nowrap}
 .mm-combo.col i{font-style:normal; font-size:11px; font-weight:800}
-.mm-cico{width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:11px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
-.mm-cico :is(img,svg){width:12px; height:12px}
-.mm-cico.star{background:none; font-size:14px}
+.mm-cico{width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:16.5px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
+.mm-cico :is(img,svg){width:18px; height:18px}
+.mm-cico.star{background:none; font-size:21px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
 /* Score/multiplier/Quarks -- two lines, right-aligned, sharing this same
    row with the combo tiles rather than sitting on a row of its own. */
@@ -4025,11 +4028,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .msb-line1{font-size:12px; color:var(--ink2)}
 .msb-line2{font-size:16px; font-weight:900; color:var(--gold); white-space:nowrap}
-/* Empty Elements running total (see the Lock In mechanic's own JS
-   comment) -- small and quiet, well under Quarks' own weight, since this
-   is a background stat the player mostly just watches accumulate rather
-   than something to act on every visit. */
-.msb-line3{font-size:11px; font-weight:700; color:var(--collection); white-space:nowrap}
+/* Quark Meter (replaces the old msb-line3 lock-icon/count 2026-09-12) --
+   4 small segments previewing how many Empty Elements (0-3) locking in
+   the mat right now would earn (see renderMatTop()'s own qmTier/qmSegs).
+   Quiet and small, well under Quarks' own weight -- a preview to check
+   before locking in, not a running total to watch grow. */
+.quark-meter{display:flex; gap:2px; align-self:flex-end}
+.qm-seg{width:13px; height:6px; border-radius:3px; background:var(--line)}
+.qm-seg.lit{background:var(--collection)}
 /* Round "pull tab" -- half straddling #drawer's own top edge (see its
    own HTML comment). translate(-50%,-50%) centers it on that exact
    border regardless of how tall the peeked tray's content currently is,
@@ -4104,10 +4110,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    use for whichever tab isn't currently in front. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(-4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
-/* Held elements inside their own page -- tighter grid than the legacy
-   drawer's own .elgrid (which has a whole scrolling tray to itself) so
-   it doesn't feel cramped inside this shorter, fixed-height box. */
-.mat-zone-page .elgrid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
+/* Reverted 2026-09-12: the 4-column override below blew the squares up
+   far past .elbox's own sizing (font/border/icon all still set for an
+   8-across row), reading as "the borders got scaled way up" rather than
+   as the tighter grid it was meant to be. Held elements inside the
+   Display Mat's own page now match the legacy drawer's .elgrid exactly --
+   2 tidy rows of 8, same as before this override existed. */
 
 /* Search box only now -- station/suit toggles and the sort mode both
    moved into their own slide-out trays (#matFilterTray/#matSortTray,
@@ -4214,23 +4222,28 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .mm-card.complete .mm-pts{box-shadow:0 0 0 2px var(--gold), 0 0 6px rgba(226,178,90,.85)}
 .mm-pips{position:absolute; top:-3px; right:-3px; z-index:2; display:flex; flex-direction:column; gap:2px}
+/* mm-pip/mm-name/mm-station all bumped +50% 2026-09-12 (icons/text were
+   reading as too small to actually recognize at a glance, in both the
+   Display Mat and the full-inventory browse grid, which share this same
+   card markup) -- mm-pts/mm-icon are untouched, this round only covers
+   the station badge, suit pips, and the name label. */
 .mm-pip{
-  width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:var(--suit); border:1.5px solid #000; font-size:10px; color:#fff; line-height:1;
+  width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--suit); border:1.5px solid #000; font-size:15px; color:#fff; line-height:1;
 }
-.mm-pip :is(img,svg){width:11px; height:11px}
+.mm-pip :is(img,svg){width:16px; height:16px}
 .mm-pip.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 4px rgba(226,178,90,.85)}
 .mm-icon{font-size:44px; line-height:1; margin-top:3px}
 .mm-icon :is(img,svg){width:44px; height:44px; object-fit:contain}
 .mm-name{
-  font-size:7px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
+  font-size:10.5px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
 }
 .mm-station{
-  position:absolute; bottom:-3px; right:-3px; z-index:2; width:20px; height:20px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:11px;
+  position:absolute; bottom:-3px; right:-3px; z-index:2; width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:16.5px;
 }
-.mm-station :is(img,svg){width:13px; height:13px; object-fit:contain}
+.mm-station :is(img,svg){width:19.5px; height:19.5px; object-fit:contain}
 .mm-station.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(226,178,90,.85)}
 /* No more "ON MAT" pill -- the faded filter below already reads as
    "already placed" on its own; a label repeating the same fact was
@@ -7701,12 +7714,13 @@ function bingoCardHTML(){
     const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
     const idx = ENTRIES.findIndex(e => e.name === name);
     const pinned = isPinned(name);
-    // The center square STAYS reachable via the capstone overlay even
-    // after it's been chosen (see openCapstoneOverlay()'s own comment on
-    // why a re-pick is allowed at any point in the game) -- data-add-
-    // capstone rides alongside data-item-card here rather than replacing
-    // it, since #jobSheetBody's own click handler checks it first.
-    const centerAttr = i === BINGO_CENTER_IDX ? ` data-add-capstone="1"` : "";
+    // Revised 2026-09-12: the capstone choice is a ONE-TIME pick again --
+    // once state.bingoCenterChosen is true, the center square goes back to
+    // being a perfectly normal cell (plain data-item-card tap opens its
+    // own item-inspection popup, same as any other cell), with no way to
+    // reopen the overlay and change it. Only the pre-choice placeholder
+    // cell above (the "Add Capstone" invitation) ever routes there.
+    const centerAttr = "";
     return `<div class="${cls}"${centerAttr} data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
         aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
@@ -8044,6 +8058,12 @@ const HISTORY_MAX = 50;
 
 let state, screen = "map", current = null;
 let selectedMapStation = null; // ephemeral: which node's card is showing on the map
+// Which travel target has already had its "open the Display Mat first"
+// prompt shown (see the "travel" face's click handler) -- compared by
+// value against selectedMapStation, not a plain boolean, so selecting a
+// DIFFERENT station always shows the mat again while re-tapping Travel on
+// the SAME still-selected one goes straight through to goStation().
+let travelPromptFor = null;
 // Classic Mode's initial station-pick preview (see syncInitialPickCapstoneTracking())
 // -- whichever capstone name THIS mechanism itself last auto-pinned/tracked,
 // so it can be cleanly un-done (only that one, never a genuine manual pin
@@ -8613,6 +8633,19 @@ function craft(entry, opts={}){
   // }
 
   state.items.push(entry.name);
+  // A brand-new Display Mat sitting empty for a player's first several
+  // turns reads as broken, not as an invitation -- auto-place each of the
+  // first 8 items a Classic run crafts (Classic never re-crafts an owned
+  // item, so state.items.length here is exactly "how many distinct items
+  // crafted so far this run"), same matFits() check toggleMatCard() uses
+  // so a 2-slot capstone drawn early can't overfill it. Past the 8th
+  // craft, players arrange the mat manually from here on.
+  if (state.mode === "classic" && state.items.length <= 8){
+    const matCard = MAT_CARD_BY_NAME[entry.name];
+    if (matCard && !state.mat.includes(entry.name) && matFits(matOnMat().concat([matCard]))){
+      state.mat.push(entry.name);
+    }
+  }
   if (state.mode === "hard"){
     state.craftCounts[entry.name] = (state.craftCounts[entry.name] || 0) + 1;
     // ARCHIVED 2026-09, alongside the item-spending block above -- batch
@@ -10713,7 +10746,15 @@ function hubHomeFace(){
   // this doorway now too (Zen still uses the old full-screen Marketplace,
   // so it's excluded here same as before).
   if (panel === "jobs" && (state.mode === "classic" || state.mode === "hard") && jobSheetVariant === "full") return "map";
-  if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat") return "lockin";
+  // Revised 2026-09-12: restricted to specifically the travel doorway (a
+  // different, reachable station actually selected on the map) -- opening
+  // the Display Mat any other time (browsing it mid-visit at a station,
+  // say) isn't "about to travel" at all, and showing Lock In there read as
+  // wrong/came out of nowhere. See the "travel" face's own click-handler
+  // comment below for the other half of this: tapping Travel now opens the
+  // mat first, which is what actually gets here in the real flow.
+  if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat"
+      && screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)) return "lockin";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -12988,7 +13029,23 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // that always spends a visit; this just re-points current/screen at
   // the same station, landing back on its exact shop/dice-pool state.
   if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
-  if (face === "travel"){ goStation(selectedMapStation); return; }
+  // Revised 2026-09-12: the first tap on a newly-selected travel target
+  // opens the Display Mat (Home becomes "lockin" from there, see
+  // hubHomeFace()) instead of leaving immediately, so there's always a
+  // chance to lock in before the trip -- exactly the "half-view inventory
+  // should appear" ask. A second tap (travelPromptFor already matches this
+  // same target, whether or not the player actually locked in) goes
+  // straight through to goStation() as before.
+  if (face === "travel"){
+    if (travelPromptFor !== selectedMapStation){
+      travelPromptFor = selectedMapStation;
+      matDrawerView = "mat";
+      openDrawer();
+      return;
+    }
+    goStation(selectedMapStation);
+    return;
+  }
   // The drawer is already open and showing the mat by the time this face
   // can even show (see hubHomeFace()'s own comment) -- nothing to open,
   // just evaluate and grant/deny the reward. See confirmLockIn().
@@ -13416,18 +13473,20 @@ let matTrayExpanded = false;
 let matLastScore = null;
 
 /* =====================================================================
-   Lock In (Classic Mode only, testing phase) -- Balatro-style beat, but
-   decoupled from travel itself into two separate player decisions rather
-   than one bundled action: whenever the Inventory drawer is open and
-   showing the Display Mat specifically, Home's own face becomes "lockin"
-   (see hubHomeFace()) -- tapping it locks in whatever score the mat
-   currently reads for a reward of Empty Elements (state.emptyElements),
-   then closes the drawer. Traveling is untouched and entirely separate:
-   Home's own "travel" face on the map screen still just travels,
-   whether or not the player ever opened the mat first. Nothing spends
-   Empty Elements yet -- the real economy this is meant to feed doesn't
-   exist yet either -- so for now this is purely an accumulating stat
-   plus a soft "would this have ended your run" warning (see
+   Lock In (Classic Mode only, testing phase) -- Balatro-style beat.
+   Revised 2026-09-12: re-coupled to the travel doorway specifically
+   (was fully decoupled -- see the archived paragraph this replaces in
+   git history) -- tapping Travel on a newly-selected station opens the
+   Display Mat instead of leaving immediately (see the "travel" face's own
+   click-handler comment), and ONLY then does Home's face become "lockin"
+   (see hubHomeFace()'s own added condition). Tapping it locks in whatever
+   score the mat currently reads for a reward of Empty Elements
+   (state.emptyElements), then closes the drawer -- a second tap on Travel
+   (travelPromptFor already matches the selected station) then actually
+   goes. Nothing spends Empty Elements yet -- the real economy this is
+   meant to feed doesn't exist yet either -- so for now this is purely an
+   accumulating stat plus a soft "would this have ended your run" warning
+   (see
    LOCKIN_ROUND_ANCHORS' own comment on why 0 doesn't actually end
    anything yet). */
 /* Calibrated 2026-09-11 against the player's own last 6 Classic runs'
@@ -13582,12 +13641,22 @@ function renderMatTop(){
   // now just this same total, relabeled) prominent on the other. Only
   // for the mat view itself -- it's the mat's own score, so it has
   // nothing to say while looking at held elements instead.
+  // Revised 2026-09-12: the old msb-line3 showed state.emptyElements' own
+  // running TOTAL next to a lock icon -- a background stat with no clear
+  // relationship to what was on the mat right now (it only ever grows,
+  // reads as an unexplained, occasionally-large number). Replaced with a
+  // 4-section "Quark Meter" previewing what locking in RIGHT NOW would
+  // actually earn (emptyElementsForScore(), 0-3) -- lit segments = tier.
+  // The running total itself isn't lost, just relocated: see the Empty
+  // Elements feature's own station-header/Elements-tab display.
+  const qmTier = emptyElementsForScore(s.total, state.visits);
+  const qmSegs = [1, 2, 3, 4].map(n => `<span class="qm-seg${qmTier >= n ? " lit" : ""}"></span>`).join("");
   const scoreRowHTML = matDrawerView !== "mat" ? "" : `<div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
       <div class="mat-score-block">
         <div class="msb-line1">${s.base.toLocaleString()} pts${s.mult > 1 ? ` ×${s.mult}` : ""}</div>
         <div class="msb-line2">⚛️ ${s.total.toLocaleString()} Quarks</div>
-        <div class="msb-line3" title="Earned by locking in your Display Mat before traveling">🔒 ${(state.emptyElements || 0).toLocaleString()}</div>
+        <div class="quark-meter" title="Locking in your Display Mat right now would earn ${qmTier} Empty Element${qmTier === 1 ? "" : "s"}">${qmSegs}</div>
       </div>
     </div>`;
 
