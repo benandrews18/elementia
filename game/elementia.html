@@ -3981,17 +3981,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    is a background stat the player mostly just watches accumulate rather
    than something to act on every visit. */
 .msb-line3{font-size:11px; font-weight:700; color:var(--collection); white-space:nowrap}
-/* The Lock In call-to-action -- only rendered while a lock-in is actually
-   pending (see openLockInDrawer()), sitting above everything else in the
-   peeked tray since it's the one thing this whole view exists for right
-   now. Same purple as the hub's own "lockin" face, so the two read as
-   one connected action rather than two unrelated purple accents. */
-.mat-lockin-btn{
-  display:block; width:100%; padding:12px; margin-bottom:12px; border-radius:12px;
-  background:var(--collection); color:#fff; font-size:14px; font-weight:800;
-  text-align:center; box-shadow:0 3px 0 var(--collection-line), 0 6px 14px rgba(0,0,0,.35);
-}
-.mat-lockin-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--collection-line)}
 /* Round "pull tab" -- half straddling #drawer's own top edge (see its
    own HTML comment). translate(-50%,-50%) centers it on that exact
    border regardless of how tall the peeked tray's content currently is,
@@ -10518,7 +10507,7 @@ function updateHub(){
     : face === "market" ? "Open the Marketplace"
     : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
-    : face === "lockin" ? `Lock in your Display Mat before traveling to ${selectedMapStation}`
+    : face === "lockin" ? "Lock in your Display Mat"
     : "Back to the station map";
   // Home doubles as the Marketplace shortcut on the map screen (see its
   // own "market" face above) -- flags it with the same red "!" every
@@ -10561,7 +10550,18 @@ function canTravelTo(name){
                state.lastStation already points at); tap re-enters it for
                free -- no visit spent, exact shop state as left it.
      travel -- on the map screen with a different, reachable station
-               selected; tap travels there (see canTravelTo()).
+               selected; tap travels there (see canTravelTo()). Unchanged
+               by the Lock In mechanic below -- traveling and locking in
+               are two separate decisions now, not one bundled action.
+     lockin -- Classic Mode only: the Inventory drawer is open and
+               specifically showing the Display Mat (not Held Elements,
+               not any other panel) -- Home becomes "lock in whatever's
+               on the mat right now" instead of the generic "close this
+               panel", since that's the one thing worth doing while
+               looking at the mat. See confirmLockIn(). Checked before
+               the generic "any panel -> close" rule below, since a
+               plain openPanelName() read can't distinguish which of
+               #drawer's two views (mat vs elements) is actually showing.
      map    -- rolled, still off the map screen -- time to leave. Also
                the Marketplace SCREEN's own resting face: standing there
                is itself a stop along the way, not a side lookup like
@@ -10586,6 +10586,7 @@ function hubHomeFace(){
   // this doorway now too (Zen still uses the old full-screen Marketplace,
   // so it's excluded here same as before).
   if (panel === "jobs" && (state.mode === "classic" || state.mode === "hard") && jobSheetVariant === "full") return "map";
+  if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat") return "lockin";
   if (panel && panel !== "market") return "close";
   if (screen === "market" && marketSection) return "close";
   if (mapLocked()) return "roll";
@@ -10596,12 +10597,7 @@ function hubHomeFace(){
   // no-visit-cost re-entry into that same station (see the click handler
   // below), landing back on its exact shop state rather than re-rolling.
   if (screen === "map" && selectedMapStation && selectedMapStation === state.lastStation) return "shop";
-  // Classic Mode only -- every other mode has no Display Mat to lock in,
-  // so Home keeps going straight to "travel" there. See openLockInDrawer()
-  // for what tapping this face actually does.
-  if (screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)){
-    return state.mode === "classic" ? "lockin" : "travel";
-  }
+  if (screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)) return "travel";
   if (screen === "map") return "market";
   return "map";
 }
@@ -12874,7 +12870,10 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // the same station, landing back on its exact shop/dice-pool state.
   if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
   if (face === "travel"){ goStation(selectedMapStation); return; }
-  if (face === "lockin"){ openLockInDrawer(); return; }
+  // The drawer is already open and showing the mat by the time this face
+  // can even show (see hubHomeFace()'s own comment) -- nothing to open,
+  // just evaluate and grant/deny the reward. See confirmLockIn().
+  if (face === "lockin"){ confirmLockIn(); return; }
   // Job Select reads as "Map" rather than "Close" while open in Classic
   // Mode (see hubHomeFace()'s own comment) but still needs the tray
   // itself actually closed -- the map underneath was never navigated
@@ -12951,10 +12950,6 @@ const closeDrawer = () => {
   // leaving the header strip visibly sitting there instead of closed.
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
-  // Backing out of a pending Lock In (scrim tap, Home's own "Close" face)
-  // without confirming just cancels it -- selectedMapStation is untouched,
-  // so Home reverts to showing the "lockin" face again, ready to reopen.
-  pendingLockIn = false; lockInTarget = null;
   drawer.setAttribute("aria-hidden", "true");
   updateHub();
 };
@@ -13290,38 +13285,20 @@ let matTrayExpanded = false;
 let matLastScore = null;
 
 /* =====================================================================
-   Lock In (Classic Mode only, testing phase) -- Balatro-style beat
-   inserted before every station-to-station travel: instead of traveling
-   immediately, Home's own "travel" face becomes "lockin" (see
-   hubHomeFace()), which opens the Inventory drawer already showing the
-   Display Mat so the player can arrange it one last time, then locks in
-   whatever score it currently reads for a reward of Empty Elements
-   (state.emptyElements) before actually traveling. Nothing spends Empty
-   Elements yet -- the real economy this is meant to feed doesn't exist
-   yet either -- so for now this is purely an accumulating stat plus a
-   soft "would this have ended your run" warning (see LOCKIN_ROUND_ANCHORS'
-   own comment on why 0 doesn't actually end anything yet). */
-// Transient (not persisted, like matDrawerView above) -- true only while
-// the drawer is open specifically FOR a lock-in, as opposed to a normal
-// browse. Reset to false by closeDrawer() (covers canceling out via the
-// scrim or Home's own "Close" face) and by finishLockIn() once resolved.
-let pendingLockIn = false;
-let lockInTarget = null; // the station name travel resumes to once locked in
-function openLockInDrawer(){
-  pendingLockIn = true;
-  lockInTarget = selectedMapStation;
-  matDrawerView = "mat"; // always the mat itself, never left on "elements"
-  openDrawer();
-  // openDrawer() itself never touches #drawerTop/#drawerBody's own
-  // content -- every other opener of this same drawer relies on some
-  // OTHER state change just before it (crafting, rolling, traveling)
-  // having already run render() recently enough that the drawer happens
-  // to already be current (render() unconditionally refreshes it on
-  // every call, drawer open or not). Setting pendingLockIn alone isn't
-  // one of those, so without this call the lock-in banner wouldn't
-  // actually appear until something else unrelated forced a re-render.
-  render();
-}
+   Lock In (Classic Mode only, testing phase) -- Balatro-style beat, but
+   decoupled from travel itself into two separate player decisions rather
+   than one bundled action: whenever the Inventory drawer is open and
+   showing the Display Mat specifically, Home's own face becomes "lockin"
+   (see hubHomeFace()) -- tapping it locks in whatever score the mat
+   currently reads for a reward of Empty Elements (state.emptyElements),
+   then closes the drawer. Traveling is untouched and entirely separate:
+   Home's own "travel" face on the map screen still just travels,
+   whether or not the player ever opened the mat first. Nothing spends
+   Empty Elements yet -- the real economy this is meant to feed doesn't
+   exist yet either -- so for now this is purely an accumulating stat
+   plus a soft "would this have ended your run" warning (see
+   LOCKIN_ROUND_ANCHORS' own comment on why 0 doesn't actually end
+   anything yet). */
 /* Calibrated 2026-09-11 against the player's own last 6 Classic runs'
    real History exports: replayed each run's actual visitLog (which items
    got crafted, in order) through this same file's own matScore()/
@@ -13397,10 +13374,11 @@ function emptyElementsForScore(total, round){
    and either grants the reward outright or, on a would-be Game Over,
    asks first -- see askConfirm()'s own generic Yes/Cancel dialog, reused
    here rather than inventing a second confirmation UI. Cancel just backs
-   out of the confirm and leaves the mat exactly as it was, still pending,
-   so the player can rearrange it and lock in again. */
+   out of the confirm and leaves the mat and drawer exactly as they were,
+   so the player can rearrange it and lock in again whenever they like --
+   locking in doesn't have a deadline of its own, since it's no longer
+   tied to an imminent travel. */
 function confirmLockIn(){
-  if (!pendingLockIn) return;
   const s = matScore(matOnMat());
   const reward = emptyElementsForScore(s.total, state.visits);
   if (reward === 0){
@@ -13412,18 +13390,19 @@ function confirmLockIn(){
   }
   finishLockIn(reward);
 }
+// Just banks the reward and closes the drawer -- travel is the player's
+// own separate next decision (or not: they can keep browsing/crafting
+// and lock in again later), not something this triggers on their behalf.
 function finishLockIn(reward){
   state.emptyElements = (state.emptyElements || 0) + reward;
   save();
-  const target = lockInTarget;
-  pendingLockIn = false; lockInTarget = null;
   if (reward > 0){
     showMatToast(`+${reward} Empty Element${reward === 1 ? "" : "s"}!`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
-    setTimeout(() => { closeDrawer(); goStation(target); }, 900);
+    setTimeout(closeDrawer, 900);
   } else {
-    closeDrawer(); goStation(target);
+    closeDrawer();
   }
 }
 
@@ -13498,14 +13477,10 @@ function renderMatTop(){
   // distinct physical pages.
   const pageHTML = `<div class="mat-zone-page zone-${matDrawerView}">${zoneHTML}</div>`;
 
-  // Only while a Lock In is actually pending (see openLockInDrawer()) --
-  // a normal browse of the drawer never shows this. Sits above the score
-  // row so it's the very first thing the player sees on opening, since
-  // it's the one action this whole view exists for right now.
-  const lockInBannerHTML = !pendingLockIn ? "" : `<button type="button" class="mat-lockin-btn" id="matLockInBtn">
-      🔒 Lock In &amp; Travel to ${esc(lockInTarget)}</button>`;
-
-  document.getElementById("drawerTop").innerHTML = lockInBannerHTML + scoreRowHTML +
+  // No in-tray Lock In button any more -- Home's own center button
+  // becomes the "lockin" face whenever this view is showing (see
+  // hubHomeFace()), so there's no separate control to render here.
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML +
     `<div class="mat-zone-wrap">${pageHTML}${tabsHTML}</div>`;
   document.getElementById("matAllItemsBtn").hidden = matTrayExpanded;
   // Sort/Filter only mean anything once the full scrollable item list is
@@ -13647,7 +13622,6 @@ function showMatToast(msg){
    exception -- it lives OUTSIDE #drawerTop now (see its own HTML
    comment), wired separately just below. */
 document.getElementById("drawerTop").addEventListener("click", ev => {
-  if (ev.target.closest("#matLockInBtn")){ confirmLockIn(); return; }
   const tabBtn = ev.target.closest("[data-mat-view]");
   if (tabBtn){
     matDrawerView = tabBtn.dataset.matView;
