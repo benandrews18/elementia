@@ -154,6 +154,23 @@ rather than tuning genuine player-behavior heuristics.
    whenever that changes, since nothing currently catches drift between
    them automatically.
 
+6. **Found deeper recipe drift while building the point-curve rebalance
+   (2026-09-12), NOT fixed here.** `model.py` loads its recipes from
+   `build_guide.py` (the PDF-guide source), and 4 of those have drifted
+   from `elementia.html`'s real, live recipes: Homestead (real recipe
+   uses Apple Pie, `build_guide.py` has Grain), Rocket (real: Fiberglass,
+   `build_guide.py`: Solar Panel), Tractor (real recipe has no Farm
+   ingredient at all; `build_guide.py` still lists one), and Space
+   Station (real recipe adds a Solar Panel ingredient `build_guide.py`
+   is missing). Of these, only Homestead's mismatch actually changes a
+   computed recipe-depth (6 → 8, via Apple Pie's own depth of 7) — the
+   other three's differing ingredient was never the deepest one either
+   way. The point curve above uses the CORRECTED depth for Homestead
+   (patched by hand in the one-off rebalance script, not in this file);
+   `build_guide.py` itself was left alone since regenerating the PDF
+   guide was explicitly out of scope for that pass. Fix `build_guide.py`
+   directly next time PDFs are actually being touched.
+
 ## Known limitation — read before trusting this for anything but pacing
 
 **This cannot see a player's Bingo card.** Real Classic Mode runs are
