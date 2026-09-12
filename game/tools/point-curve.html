@@ -1,0 +1,456 @@
+<meta charset="utf-8">
+<title>Elementia Point Curve — Classic Set</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f6f2e9; --surface:#fffdf8; --surface-2:#efe8d9; --ink:#24211a; --ink-soft:#726b5a;
+  --line:#e2d9c4; --accent:#2f6f5e; --accent-soft:#dbe9e2; --gold:#b9822f; --gold-soft:#f1e2c4;
+  --s0:#8b95a6; --s1:#3f8f9c; --s2:#7a5cb9; --s3:#b9822f;
+  --s0-soft:#eceef0; --s1-soft:#e1eff1; --s2-soft:#eae5f5; --s3-soft:#f1e2c4;
+  --good:#2f6f5e; --bad:#a5453a;
+  --shadow: rgba(36,33,26,.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151915; --surface:#1c2119; --surface-2:#242a21; --ink:#eef0e8; --ink-soft:#a2ab9b;
+    --line:#333a2f; --accent:#6bc2a5; --accent-soft:#233129; --gold:#e0ab55; --gold-soft:#332918;
+    --s0:#9aa6b8; --s1:#5cb2c0; --s2:#a996e0; --s3:#e0ab55;
+    --s0-soft:#262b26; --s1-soft:#1e2c2d; --s2-soft:#28223a; --s3-soft:#332918;
+    --good:#6bc2a5; --bad:#e08a7d;
+    --shadow: rgba(0,0,0,.4); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151915; --surface:#1c2119; --surface-2:#242a21; --ink:#eef0e8; --ink-soft:#a2ab9b;
+  --line:#333a2f; --accent:#6bc2a5; --accent-soft:#233129; --gold:#e0ab55; --gold-soft:#332918;
+  --s0:#9aa6b8; --s1:#5cb2c0; --s2:#a996e0; --s3:#e0ab55;
+  --s0-soft:#262b26; --s1-soft:#1e2c2d; --s2-soft:#28223a; --s3-soft:#332918;
+  --good:#6bc2a5; --bad:#e08a7d;
+  --shadow: rgba(0,0,0,.4); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); margin:0; padding:0; font-family:"IBM Plex Sans", system-ui, sans-serif}
+.wrap{max-width:1180px; margin:0 auto; padding:44px 32px 80px}
+header{display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; justify-content:space-between; margin-bottom:28px}
+.eyebrow{font-family:"IBM Plex Mono", monospace; font-size:11.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin:0 0 10px}
+.title-block h1{font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:38px; letter-spacing:-.5px; line-height:1.05; margin:0 0 8px; text-wrap:balance}
+.title-block p{margin:0; color:var(--ink-soft); font-size:14.5px; max-width:56ch}
+.stats{display:flex; flex-wrap:wrap; background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 6px 20px var(--shadow)}
+.stat{padding:14px 20px; border-right:1px solid var(--line); min-width:110px}
+.stat:last-child{border-right:none}
+.stat .n{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:23px; font-weight:600; display:block; line-height:1.1}
+.stat .l{font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.07em; margin-top:3px; display:block}
+
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px 26px 20px; margin-top:22px; box-shadow:0 10px 28px var(--shadow)}
+.panel h2{font-family:"Fraunces", Georgia, serif; font-weight:600; font-size:20px; margin:0 0 4px; letter-spacing:-.2px}
+.panel .sub{color:var(--ink-soft); font-size:13px; margin:0 0 16px; line-height:1.5}
+
+/* ---- controls ---- */
+.bands{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin-bottom:16px}
+.band{border:1.5px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:7px}
+.band .band-label{display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700}
+.band-dot{width:10px; height:10px; border-radius:50%; flex:none}
+.band-row{display:flex; align-items:center; gap:6px}
+.band-row input{width:56px; padding:5px 6px; border:1px solid var(--line); border-radius:7px; background:var(--surface-2); color:var(--ink); font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600}
+.band-row span{color:var(--ink-soft); font-size:12px}
+.exp-row{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:4px}
+.exp-row label{font-size:12.5px; font-weight:600; color:var(--ink-soft)}
+.exp-row input[type=range]{width:220px; accent-color:var(--accent)}
+.exp-val{font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:13px; background:var(--accent-soft); color:var(--accent); padding:2px 9px; border-radius:999px}
+.btnrow{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+button.act{
+  font-family:inherit; font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:9px; cursor:pointer;
+  border:1.5px solid var(--line); background:var(--surface-2); color:var(--ink); transition:background .12s,border-color .12s;
+}
+button.act:hover{border-color:var(--accent)}
+button.act.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.override-note{font-size:12px; color:var(--ink-soft)}
+.override-note b{color:var(--ink)}
+
+/* ---- chart ---- */
+.legend{display:flex; gap:16px; flex-wrap:wrap; margin-bottom:8px}
+.legend-item{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); font-weight:500}
+.legend-swatch{width:10px; height:10px; border-radius:3px; flex:none}
+.chart-scroll{overflow-x:auto; padding-bottom:4px; margin:0 -4px}
+.chart-scroll svg{display:block}
+.bar-seg{cursor:pointer}
+.bar-seg.override{stroke:var(--ink); stroke-width:1.5px}
+.axis-label{font-family:"IBM Plex Mono", monospace; font-size:9.5px; fill:var(--ink-soft)}
+.gridline{stroke:var(--line); stroke-width:1}
+.axis-title{font-family:"IBM Plex Mono", monospace; font-size:10px; fill:var(--ink-soft); letter-spacing:.06em}
+.curve-line{fill:none; stroke:var(--ink); stroke-width:1.3; opacity:.35}
+.tooltip{
+  position:fixed; pointer-events:none; z-index:50; background:var(--ink); color:var(--bg);
+  font-size:12px; padding:8px 11px; border-radius:8px; max-width:220px; opacity:0;
+  transform:translate(-50%,-100%) translateY(-10px); transition:opacity .1s; box-shadow:0 8px 20px rgba(0,0,0,.3);
+}
+.tooltip.show{opacity:1}
+.tooltip b{display:block; margin-bottom:2px}
+
+/* ---- real runs ---- */
+.runs{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px}
+.run-card{border:1.5px solid var(--line); border-radius:14px; padding:16px; background:var(--surface-2)}
+.run-card h3{margin:0 0 4px; font-size:14px; font-family:"Fraunces",serif; font-weight:600}
+.run-caps{font-size:11.5px; color:var(--ink-soft); margin-bottom:12px; line-height:1.4}
+.run-score-row{display:flex; align-items:baseline; justify-content:space-between; margin-top:6px}
+.run-score-row .lbl{font-size:11.5px; color:var(--ink-soft)}
+.run-score-row .val{font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:16px}
+.run-delta{font-size:12px; font-weight:700; margin-top:10px; text-align:right}
+.run-delta.up{color:var(--good)}
+.run-delta.down{color:var(--bad)}
+.foot-note{font-size:11.5px; color:var(--ink-soft); margin-top:14px; line-height:1.5}
+
+/* ---- table ---- */
+.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px}
+.toolbar input[type="search"]{flex:1 1 200px; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); border-radius:9px; padding:8px 12px; font-size:13px; font-family:inherit}
+.chip-filter{display:flex; align-items:center; gap:5px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink-soft); padding:6px 11px; border-radius:999px; font-size:11.5px; font-weight:600; cursor:pointer; user-select:none}
+.chip-filter.active{background:var(--accent-soft); color:var(--ink); border-color:var(--accent)}
+.table-wrap{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:13px}
+thead th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); font-weight:600; padding:8px 10px; border-bottom:1.5px solid var(--line); white-space:nowrap; cursor:pointer; position:sticky; top:0; background:var(--surface)}
+thead th.num{text-align:right}
+tbody td{padding:7px 10px; border-bottom:1px solid var(--line); vertical-align:middle}
+tbody tr:hover{background:var(--surface-2)}
+td.num{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums}
+.item-em{font-size:16px; margin-right:8px; vertical-align:middle}
+.tier-pill{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.03em; padding:2px 7px; border-radius:999px}
+.pts-input{width:52px; padding:4px 6px; border-radius:6px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink); font-family:"IBM Plex Mono",monospace; font-weight:700; text-align:right; font-size:13px}
+.pts-input.override{border-color:var(--gold); background:var(--gold-soft)}
+.reset-cell{font-size:14px; cursor:pointer; color:var(--ink-soft); opacity:.4; padding-left:4px}
+.reset-cell.show{opacity:1}
+.reset-cell:hover{color:var(--bad)}
+.station-tag{color:var(--ink-soft); font-size:12px}
+.result-count{font-size:11.5px; color:var(--ink-soft); margin-top:8px}
+footer{margin-top:36px; text-align:center; color:var(--ink-soft); font-size:11.5px}
+@media (max-width:640px){ .wrap{padding:28px 16px 60px} .title-block h1{font-size:29px} .panel{padding:18px 14px 14px} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <p class="eyebrow">Elementia &middot; Game Data &middot; v2</p>
+      <h1>The Point Curve</h1>
+      <p>Only the 79-item Classic set now, grouped by element-suit cost instead of build tier. Everything below is
+        live — move the band/curve controls or edit a value directly and the chart, table, and real-run scores
+        all update together.</p>
+    </div>
+    <div class="stats" id="statStrip"></div>
+  </header>
+
+  <div class="panel">
+    <h2>1 &middot; My proposed rebalance</h2>
+    <p class="sub">Your two criteria applied together: each suit-count group gets its own 10-point band (0 suits
+      0–9, 1 suit 10–19, 2 suits 20–29, capstones 30–39), and within each band items are ranked by real recipe
+      depth (steps back to raw elements) and placed on an exponential curve — most items sit near their band's
+      floor, only the deepest reach the ceiling. Drag the curve steepness to feel the difference; it's currently
+      set to my own recommended value.</p>
+    <div class="bands" id="bandControls"></div>
+    <div class="exp-row">
+      <label for="expSlider">Curve steepness</label>
+      <input type="range" id="expSlider" min="1" max="4" step="0.1" value="2.3">
+      <span class="exp-val" id="expVal">2.3</span>
+      <span class="override-note">1.0 = flat/linear inside each band &middot; 4.0 = almost everything sits at the band floor</span>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="act primary" id="applyFormulaBtn">Recompute all from formula</button>
+      <button type="button" class="act" id="resetOverridesBtn">Clear my manual edits (<span id="overrideCount">0</span>)</button>
+      <button type="button" class="act" id="resetDefaultBtn">Reset to my recommended default</button>
+      <button type="button" class="act" id="copyTableBtn" style="margin-left:auto">Copy full table for Excel</button>
+    </div>
+    <p class="override-note" id="copyStatus" style="margin-top:8px"></p>
+  </div>
+
+  <div class="panel">
+    <h2>2 &middot; Items by point value</h2>
+    <p class="sub">One bar per item, grouped by suit count and sorted low → high within each group. The thin line
+      traces the curve's shape; a gold outline marks a value you've hand-edited.</p>
+    <div class="legend" id="legend"></div>
+    <div class="chart-scroll"><svg id="chart"></svg></div>
+  </div>
+
+  <div class="panel">
+    <h2>3 &middot; What this does to real runs</h2>
+    <p class="sub">Your own three latest exports (D/E/F), rescored using only the item points above — no BINGO-line
+      or collection bonuses included, so this won't match the exact final score you saw in-game, but it isolates
+      exactly what the point curve itself is doing to a real capstone-heavy run.</p>
+    <div class="runs" id="runsPanel"></div>
+    <p class="foot-note" id="simNote"></p>
+  </div>
+
+  <div class="panel">
+    <h2>4 &middot; Full catalog</h2>
+    <p class="sub">Search, sort, or edit any value directly — typing a number here overrides the formula for that
+      one item (shown with a gold border); click the ↺ to drop back to the formula.</p>
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="Search item or station&hellip;">
+      <div class="chip-filter active" data-suit="ALL">All</div>
+      <div class="chip-filter" data-suit="0"><span class="legend-swatch" style="background:var(--s0)"></span>0 suits</div>
+      <div class="chip-filter" data-suit="1"><span class="legend-swatch" style="background:var(--s1)"></span>1 suit</div>
+      <div class="chip-filter" data-suit="2"><span class="legend-swatch" style="background:var(--s2)"></span>2 suits</div>
+      <div class="chip-filter" data-suit="3"><span class="legend-swatch" style="background:var(--s3)"></span>capstone</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th data-sort="name">Item</th><th data-sort="station">Station</th><th data-sort="suit">Suits</th>
+          <th class="num" data-sort="depth">Depth</th><th class="num" data-sort="old_points">Old pts</th>
+          <th class="num" data-sort="points">Points</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="result-count" id="resultCount"></p>
+  </div>
+
+  <footer>Classic Mode's 79-item set only &middot; suit-cost and recipe data transcribed from Elementia's live game data</footer>
+</div>
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const ITEMS = [{"name": "Aluminum Alloy", "suit": 0, "depth": 3, "old_points": 4, "stations": ["Deep Mine"], "tag": "MATERIAL", "new_points": 7, "emoji": "🦾"}, {"name": "Apple", "suit": 1, "depth": 4, "old_points": 6, "stations": ["Greenhouse"], "tag": "CREATION", "new_points": 11, "emoji": "🍎"}, {"name": "Apple Pie", "suit": 2, "depth": 7, "old_points": 23, "stations": ["The Bakery"], "tag": "CREATION", "new_points": 29, "emoji": "🥧"}, {"name": "Banana", "suit": 1, "depth": 4, "old_points": 6, "stations": ["The Ocean"], "tag": "CREATION", "new_points": 12, "emoji": "🍌"}, {"name": "Banana Bread", "suit": 2, "depth": 7, "old_points": 16, "stations": ["The Bakery"], "tag": "CREATION", "new_points": 28, "emoji": "🍌"}, {"name": "Battery", "suit": 0, "depth": 1, "old_points": 4, "stations": ["The Power Plant"], "tag": "MATERIAL", "new_points": 2, "emoji": "🔋"}, {"name": "Bicycle", "suit": 2, "depth": 5, "old_points": 15, "stations": ["Greenhouse"], "tag": "CREATION", "new_points": 22, "emoji": "🚲"}, {"name": "Bone", "suit": 0, "depth": 1, "old_points": 4, "stations": ["Old Growth Forest"], "tag": "MATERIAL", "new_points": 2, "emoji": "🦴"}, {"name": "Bridge", "suit": 1, "depth": 4, "old_points": 6, "stations": ["The City"], "tag": "CREATION", "new_points": 12, "emoji": "🌉"}, {"name": "Building", "suit": 1, "depth": 4, "old_points": 7, "stations": ["The City"], "tag": "CREATION", "new_points": 14, "emoji": "🏢"}, {"name": "Canoe", "suit": 1, "depth": 4, "old_points": 5, "stations": ["Old Growth Forest"], "tag": "COMPONENT", "new_points": 11, "emoji": "🛶"}, {"name": "Car", "suit": 2, "depth": 5, "old_points": 15, "stations": ["The Power Plant"], "tag": "CREATION", "new_points": 23, "emoji": "🚗"}, {"name": "Chicken", "suit": 1, "depth": 4, "old_points": 9, "stations": ["Greenhouse"], "tag": "CREATION", "new_points": 15, "emoji": "🐔"}, {"name": "Clay", "suit": 0, "depth": 1, "old_points": 2, "stations": ["Deep Mine", "Old Growth Forest", "The City"], "tag": "MATERIAL", "new_points": 1, "emoji": "🏺"}, {"name": "Clock", "suit": 1, "depth": 3, "old_points": 7, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 10, "emoji": "🕐"}, {"name": "Cloud", "suit": 1, "depth": 2, "old_points": 5, "stations": ["The Ocean"], "tag": "COMPONENT", "new_points": 10, "emoji": "☁️"}, {"name": "Compass", "suit": 1, "depth": 3, "old_points": 6, "stations": ["The Observatory"], "tag": "COMPONENT", "new_points": 10, "emoji": "🧭"}, {"name": "Computer", "suit": 2, "depth": 4, "old_points": 13, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 20, "emoji": "💻"}, {"name": "Concrete", "suit": 0, "depth": 2, "old_points": 4, "stations": ["The City"], "tag": "COMPONENT", "new_points": 4, "emoji": "🧱"}, {"name": "Coral Reef", "suit": 3, "depth": 6, "old_points": 21, "stations": ["The Ocean"], "tag": "CAPSTONE", "new_points": 31, "emoji": "🪸"}, {"name": "DNA", "suit": 0, "depth": 2, "old_points": 3, "stations": ["Greenhouse"], "tag": "MATERIAL", "new_points": 3, "emoji": "🧬"}, {"name": "Deer", "suit": 1, "depth": 4, "old_points": 6, "stations": ["Old Growth Forest"], "tag": "CREATION", "new_points": 13, "emoji": "🦌"}, {"name": "Diamond", "suit": 2, "depth": 4, "old_points": 11, "stations": ["Deep Mine"], "tag": "COMPONENT", "new_points": 20, "emoji": "💎"}, {"name": "Dough", "suit": 1, "depth": 6, "old_points": 8, "stations": ["The Bakery"], "tag": "COMPONENT", "new_points": 19, "emoji": "🫓"}, {"name": "Ecosystem", "suit": 3, "depth": 6, "old_points": 27, "stations": ["Old Growth Forest"], "tag": "CAPSTONE", "new_points": 32, "emoji": "🌍"}, {"name": "Egg", "suit": 1, "depth": 3, "old_points": 5, "stations": ["The Bakery"], "tag": "COMPONENT", "new_points": 10, "emoji": "🥚"}, {"name": "Engine", "suit": 1, "depth": 3, "old_points": 6, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 10, "emoji": "⚙️"}, {"name": "Farm", "suit": 1, "depth": 3, "old_points": 7, "stations": ["Greenhouse"], "tag": "CREATION", "new_points": 11, "emoji": "🧑‍🌾"}, {"name": "Fertilizer", "suit": 0, "depth": 1, "old_points": 3, "stations": ["Greenhouse"], "tag": "MATERIAL", "new_points": 1, "emoji": "♻️"}, {"name": "Fiberglass", "suit": 1, "depth": 4, "old_points": 9, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 15, "emoji": "🧊"}, {"name": "Fish Cakes", "suit": 2, "depth": 6, "old_points": 12, "stations": ["The Bakery"], "tag": "CREATION", "new_points": 26, "emoji": "🐟"}, {"name": "Flour", "suit": 1, "depth": 5, "old_points": 8, "stations": ["The Bakery"], "tag": "COMPONENT", "new_points": 18, "emoji": "🌾"}, {"name": "Fossil", "suit": 1, "depth": 4, "old_points": 10, "stations": ["Old Growth Forest"], "tag": "COMPONENT", "new_points": 17, "emoji": "🦴"}, {"name": "Fruit Cake", "suit": 3, "depth": 7, "old_points": 24, "stations": ["The Bakery"], "tag": "CAPSTONE", "new_points": 36, "emoji": "🎂"}, {"name": "Furnace", "suit": 0, "depth": 2, "old_points": 4, "stations": ["Deep Mine"], "tag": "CREATION", "new_points": 4, "emoji": "🔥"}, {"name": "Glass", "suit": 0, "depth": 2, "old_points": 4, "stations": ["The City"], "tag": "COMPONENT", "new_points": 5, "emoji": "🪟"}, {"name": "Grain", "suit": 1, "depth": 4, "old_points": 7, "stations": ["Greenhouse"], "tag": "COMPONENT", "new_points": 14, "emoji": "🌾"}, {"name": "Helicopter", "suit": 2, "depth": 6, "old_points": 18, "stations": ["The City"], "tag": "CREATION", "new_points": 27, "emoji": "🚁"}, {"name": "Homestead", "suit": 3, "depth": 6, "old_points": 20, "stations": ["Greenhouse"], "tag": "CAPSTONE", "new_points": 31, "emoji": "🏡"}, {"name": "Life", "suit": 2, "depth": 5, "old_points": 15, "stations": ["The Ocean"], "tag": "CREATION", "new_points": 24, "emoji": "🧬"}, {"name": "Light Bulb", "suit": 1, "depth": 3, "old_points": 6, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 10, "emoji": "💡"}, {"name": "Lighthouse", "suit": 2, "depth": 4, "old_points": 12, "stations": ["The Ocean"], "tag": "CREATION", "new_points": 20, "emoji": "🏮"}, {"name": "Limestone", "suit": 0, "depth": 1, "old_points": 2, "stations": ["The City", "The Ocean"], "tag": "MATERIAL", "new_points": 1, "emoji": "🪨"}, {"name": "Log Cabin", "suit": 1, "depth": 4, "old_points": 6, "stations": ["Old Growth Forest"], "tag": "CREATION", "new_points": 13, "emoji": "🏚️"}, {"name": "Maglev Train", "suit": 3, "depth": 5, "old_points": 20, "stations": ["Deep Mine"], "tag": "CAPSTONE", "new_points": 30, "emoji": "🚄"}, {"name": "Magnet", "suit": 0, "depth": 1, "old_points": 4, "stations": ["The Observatory"], "tag": "COMPONENT", "new_points": 2, "emoji": "🧲"}, {"name": "Metropolis", "suit": 3, "depth": 7, "old_points": 27, "stations": ["The City"], "tag": "CAPSTONE", "new_points": 39, "emoji": "🌆"}, {"name": "Microchip", "suit": 1, "depth": 2, "old_points": 8, "stations": ["The Observatory"], "tag": "COMPONENT", "new_points": 10, "emoji": "🖥️"}, {"name": "Museum", "suit": 2, "depth": 5, "old_points": 16, "stations": ["The City"], "tag": "CREATION", "new_points": 24, "emoji": "🏛️"}, {"name": "Natural Gas", "suit": 0, "depth": 1, "old_points": 2, "stations": ["Deep Mine"], "tag": "MATERIAL", "new_points": 1, "emoji": "🛢️"}, {"name": "Orca", "suit": 2, "depth": 5, "old_points": 11, "stations": ["The Ocean"], "tag": "CREATION", "new_points": 21, "emoji": "🐋"}, {"name": "Oven", "suit": 2, "depth": 4, "old_points": 10, "stations": ["The Bakery"], "tag": "CREATION", "new_points": 20, "emoji": "🔥"}, {"name": "Plastic", "suit": 1, "depth": 3, "old_points": 7, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 11, "emoji": "🥤"}, {"name": "Rainbow", "suit": 2, "depth": 5, "old_points": 13, "stations": ["The Observatory"], "tag": "CREATION", "new_points": 21, "emoji": "🌈"}, {"name": "Robot", "suit": 3, "depth": 5, "old_points": 23, "stations": ["The Power Plant"], "tag": "CAPSTONE", "new_points": 30, "emoji": "🤖"}, {"name": "Rocket", "suit": 2, "depth": 5, "old_points": 19, "stations": ["The Observatory"], "tag": "CREATION", "new_points": 25, "emoji": "🚀"}, {"name": "Rubber", "suit": 0, "depth": 2, "old_points": 4, "stations": ["Deep Mine"], "tag": "COMPONENT", "new_points": 6, "emoji": "⚫"}, {"name": "Salmon", "suit": 1, "depth": 4, "old_points": 9, "stations": ["Old Growth Forest"], "tag": "CREATION", "new_points": 16, "emoji": "🐟"}, {"name": "Sand", "suit": 0, "depth": 1, "old_points": 3, "stations": ["Old Growth Forest", "The Ocean"], "tag": "MATERIAL", "new_points": 1, "emoji": "⏳"}, {"name": "Satellite Dish", "suit": 2, "depth": 4, "old_points": 9, "stations": ["The Observatory"], "tag": "COMPONENT", "new_points": 20, "emoji": "📡"}, {"name": "Seaweed", "suit": 0, "depth": 1, "old_points": 4, "stations": ["The Ocean"], "tag": "MATERIAL", "new_points": 3, "emoji": "🌿"}, {"name": "Skyscraper", "suit": 2, "depth": 5, "old_points": 14, "stations": ["The City"], "tag": "CREATION", "new_points": 21, "emoji": "🗼"}, {"name": "Soil", "suit": 0, "depth": 2, "old_points": 4, "stations": ["Greenhouse", "Old Growth Forest"], "tag": "COMPONENT", "new_points": 6, "emoji": "🌱"}, {"name": "Solar Panel", "suit": 1, "depth": 3, "old_points": 7, "stations": ["Greenhouse"], "tag": "COMPONENT", "new_points": 11, "emoji": "🔆"}, {"name": "Space Station", "suit": 3, "depth": 6, "old_points": 29, "stations": ["The Observatory"], "tag": "CAPSTONE", "new_points": 34, "emoji": "🛰️"}, {"name": "Speedboat", "suit": 2, "depth": 6, "old_points": 13, "stations": ["The Ocean"], "tag": "CREATION", "new_points": 26, "emoji": "🚤"}, {"name": "Stainless Steel", "suit": 0, "depth": 3, "old_points": 4, "stations": ["Deep Mine"], "tag": "MATERIAL", "new_points": 8, "emoji": "🔩"}, {"name": "Star", "suit": 2, "depth": 4, "old_points": 13, "stations": ["The Observatory"], "tag": "CREATION", "new_points": 21, "emoji": "⭐"}, {"name": "Steel", "suit": 0, "depth": 1, "old_points": 2, "stations": ["Deep Mine", "The City"], "tag": "MATERIAL", "new_points": 1, "emoji": "🔗"}, {"name": "Sugar", "suit": 0, "depth": 1, "old_points": 3, "stations": ["Greenhouse", "The Bakery"], "tag": "MATERIAL", "new_points": 2, "emoji": "🍬"}, {"name": "Telescope", "suit": 2, "depth": 4, "old_points": 10, "stations": ["The Observatory"], "tag": "CREATION", "new_points": 20, "emoji": "🔭"}, {"name": "Tools", "suit": 0, "depth": 2, "old_points": 3, "stations": ["Deep Mine", "The Observatory"], "tag": "CREATION", "new_points": 4, "emoji": "🛠️"}, {"name": "Tractor", "suit": 2, "depth": 5, "old_points": 14, "stations": ["Deep Mine"], "tag": "CREATION", "new_points": 22, "emoji": "🚜"}, {"name": "Tree", "suit": 0, "depth": 3, "old_points": 4, "stations": ["Old Growth Forest"], "tag": "COMPONENT", "new_points": 9, "emoji": "🌳"}, {"name": "Turbine Blade", "suit": 2, "depth": 5, "old_points": 14, "stations": ["The Power Plant"], "tag": "COMPONENT", "new_points": 22, "emoji": "🌀"}, {"name": "Water", "suit": 0, "depth": 1, "old_points": 2, "stations": ["The Bakery", "The Ocean"], "tag": "MATERIAL", "new_points": 1, "emoji": "💧"}, {"name": "Wheel", "suit": 1, "depth": 4, "old_points": 9, "stations": ["The Observatory"], "tag": "MATERIAL", "new_points": 17, "emoji": "🛞"}, {"name": "Wire", "suit": 0, "depth": 1, "old_points": 3, "stations": ["The Power Plant"], "tag": "MATERIAL", "new_points": 2, "emoji": "🔌"}, {"name": "Yeast", "suit": 0, "depth": 2, "old_points": 4, "stations": ["The Bakery"], "tag": "COMPONENT", "new_points": 7, "emoji": "🦠"}];
+
+const SUIT_COLOR = {0:"var(--s0)", 1:"var(--s1)", 2:"var(--s2)", 3:"var(--s3)"};
+const SUIT_SOFT  = {0:"var(--s0-soft)", 1:"var(--s1-soft)", 2:"var(--s2-soft)", 3:"var(--s3-soft)"};
+const SUIT_LABEL = {0:"0 suits", 1:"1 suit", 2:"2 suits", 3:"Capstone (3 suits)"};
+const DEFAULT_BANDS = {0:[1,9], 1:[10,19], 2:[20,29], 3:[30,39]};
+const DEFAULT_EXP = 2.3;
+
+let bands = JSON.parse(JSON.stringify(DEFAULT_BANDS));
+let exponent = DEFAULT_EXP;
+let overrides = {}; // name -> manual point value
+
+// Precompute rank within each suit group once -- doesn't depend on bands/exponent
+const ranksBySuit = {0:[], 1:[], 2:[], 3:[]};
+ITEMS.forEach(it => ranksBySuit[it.suit].push(it));
+Object.values(ranksBySuit).forEach(list => list.sort((a,b) => (a.depth - b.depth) || (a.old_points - b.old_points)));
+const rankOf = {}, groupSizeOf = {};
+Object.entries(ranksBySuit).forEach(([suit, list]) => {
+  list.forEach((it, i) => { rankOf[it.name] = i; groupSizeOf[it.name] = list.length; });
+});
+
+function formulaPoints(it){
+  const [lo, hi] = bands[it.suit];
+  const n = groupSizeOf[it.name];
+  const frac = n > 1 ? rankOf[it.name] / (n - 1) : 1;
+  return Math.round(lo + (hi - lo) * Math.pow(frac, exponent));
+}
+function effectivePoints(it){
+  return overrides.hasOwnProperty(it.name) ? overrides[it.name] : formulaPoints(it);
+}
+
+// ---- real runs D/E/F (full crafted-item lists from actual History exports) ----
+const REAL_RUNS = {
+  D: {label:"Run D — 2026-09-12", reportedScore:369, capstones:["Robot","Metropolis"], items:["Wire","Clay","Steel","Furnace","Sand","Water","Cloud","Soil","Tree","Stainless Steel","Aluminum Alloy","Limestone","Natural Gas","Rubber","Plastic","Glass","Concrete","Building","Tools","Wheel","Satellite Dish","Telescope","Microchip","Bicycle","Bone","Canoe","Log Cabin","Fiberglass","Turbine Blade","Engine","Car","Light Bulb","Bridge","Skyscraper","Helicopter","Magnet","Battery","Clock","Computer","Robot","Fossil","Deer","Museum","Metropolis"]},
+  E: {label:"Run E — 2026-09-12", reportedScore:366, capstones:["Space Station"], items:["Steel","Water","Cloud","Sand","Clay","Soil","Furnace","Tools","Aluminum Alloy","Wire","Natural Gas","Rubber","Stainless Steel","Battery","Clock","Plastic","Engine","Microchip","Satellite Dish","Limestone","Glass","Concrete","Fiberglass","Computer","Tree","Log Cabin","Canoe","Apple","Farm","Solar Panel","Sugar","Wheel","Star","Rocket","Space Station","Seaweed","Tractor","Diamond","Turbine Blade","Car","Light Bulb","Building","Skyscraper","Telescope","Rainbow"]},
+  F: {label:"Run F — 2026-09-12", reportedScore:299, capstones:["Robot","Maglev Train","Metropolis"], items:["Clay","Steel","Water","Sand","Seaweed","Soil","Tree","Tools","Furnace","Stainless Steel","Wire","Natural Gas","Rubber","Aluminum Alloy","Battery","Engine","Plastic","Limestone","Glass","Concrete","Bridge","Building","Wheel","Satellite Dish","Magnet","Compass","Fiberglass","Turbine Blade","Helicopter","Car","Microchip","Computer","Light Bulb","Robot","Maglev Train","Tractor","Cloud","Skyscraper","Metropolis"]},
+};
+const OLD_POINTS = {}; ITEMS.forEach(it => OLD_POINTS[it.name] = it.old_points);
+
+function renderStats(){
+  const pts = ITEMS.map(effectivePoints);
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const avg = pts.reduce((a,b)=>a+b,0)/pts.length;
+  const stats = [[ITEMS.length,"Items"],[min+"–"+max,"Point range"],[avg.toFixed(1),"Average points"],
+    [Object.keys(overrides).length, "Manual overrides"]];
+  document.getElementById("statStrip").innerHTML = stats.map(([n,l]) =>
+    `<div class="stat"><span class="n">${n}</span><span class="l">${l}</span></div>`).join("");
+}
+
+function renderBandControls(){
+  document.getElementById("bandControls").innerHTML = [0,1,2,3].map(suit => `
+    <div class="band">
+      <div class="band-label"><span class="band-dot" style="background:${SUIT_COLOR[suit]}"></span>${SUIT_LABEL[suit]}</div>
+      <div class="band-row">
+        <input type="number" min="0" max="60" data-band="${suit}" data-edge="lo" value="${bands[suit][0]}"> <span>&ndash;</span>
+        <input type="number" min="0" max="60" data-band="${suit}" data-edge="hi" value="${bands[suit][1]}"> <span>pts</span>
+      </div>
+    </div>`).join("");
+  document.querySelectorAll("[data-band]").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const suit = +inp.dataset.band, edge = inp.dataset.edge;
+      const v = Math.max(0, Math.min(60, +inp.value || 0));
+      bands[suit][edge === "lo" ? 0 : 1] = v;
+      renderAll();
+    });
+  });
+}
+
+function renderLegend(){
+  document.getElementById("legend").innerHTML = [0,1,2,3].map(s =>
+    `<div class="legend-item"><span class="legend-swatch" style="background:${SUIT_COLOR[s]}"></span>${SUIT_LABEL[s]}</div>`).join("");
+}
+
+function renderChart(){
+  const sorted = [0,1,2,3].flatMap(suit => ranksBySuit[suit]);
+  const barW = 9, gap = 2, chartH = 280, padTop = 16, padBottom = 22, padLeft = 40, padRight = 12;
+  const svgW = padLeft + padRight + sorted.length * (barW + gap) - gap;
+  const svgH = padTop + chartH + padBottom;
+  const svg = document.getElementById("chart");
+  svg.setAttribute("viewBox", `0 0 ${svgW} ${svgH}`);
+  svg.setAttribute("width", svgW); svg.setAttribute("height", svgH);
+
+  const maxV = 40;
+  let parts = "";
+  for (let s = 0; s <= 4; s++){
+    const val = s * 10;
+    const y = padTop + chartH - (val / maxV) * chartH;
+    parts += `<line class="gridline" x1="${padLeft}" y1="${y}" x2="${svgW-padRight}" y2="${y}"/>`;
+    parts += `<text class="axis-label" x="${padLeft-6}" y="${y+3}" text-anchor="end">${val}</text>`;
+  }
+  parts += `<text class="axis-title" x="${padLeft}" y="10">POINTS</text>`;
+
+  let pathPts = [];
+  sorted.forEach((it, i) => {
+    const v = effectivePoints(it);
+    const x = padLeft + i * (barW + gap);
+    const h = (v / maxV) * chartH;
+    const y = padTop + chartH - h;
+    const isOverride = overrides.hasOwnProperty(it.name);
+    parts += `<rect class="bar-seg${isOverride ? " override" : ""}" data-name="${it.name}" x="${x}" y="${y}" width="${barW}" height="${Math.max(h,1)}" fill="${SUIT_COLOR[it.suit]}"/>`;
+    pathPts.push([x + barW/2, y]);
+  });
+  parts += `<polyline class="curve-line" points="${pathPts.map(p=>p.join(",")).join(" ")}"/>`;
+  parts += `<text class="axis-title" x="${svgW-padRight}" y="${svgH-4}" text-anchor="end">0 SUITS &rarr; 1 &rarr; 2 &rarr; CAPSTONE</text>`;
+  svg.innerHTML = parts;
+
+  const tooltip = document.getElementById("tooltip");
+  svg.querySelectorAll(".bar-seg").forEach(seg => {
+    seg.addEventListener("mousemove", ev => {
+      const it = ITEMS.find(x => x.name === seg.dataset.name);
+      tooltip.innerHTML = `<b>${it.emoji} ${it.name} &middot; ${effectivePoints(it)} pts</b>${it.stations.join(", ")} &middot; ${SUIT_LABEL[it.suit]} &middot; depth ${it.depth} &middot; was ${it.old_points}`;
+      tooltip.style.left = ev.clientX+"px"; tooltip.style.top = ev.clientY+"px";
+      tooltip.classList.add("show");
+    });
+    seg.addEventListener("mouseleave", () => tooltip.classList.remove("show"));
+  });
+}
+
+function scoreRun(items){ return items.reduce((s,n) => s + effectivePoints(ITEMS.find(it => it.name===n) || {name:n}), 0); }
+function scoreRunOld(items){ return items.reduce((s,n) => s + (OLD_POINTS[n]||0), 0); }
+
+function renderRuns(){
+  const cards = Object.values(REAL_RUNS).map(run => {
+    const oldS = scoreRunOld(run.items);
+    const newS = scoreRun(run.items);
+    const delta = newS - oldS;
+    const pct = oldS ? (delta/oldS*100) : 0;
+    return `<div class="run-card">
+      <h3>${run.label}</h3>
+      <div class="run-caps">🏆 ${run.capstones.join(", ")} &middot; reported final score ${run.reportedScore}</div>
+      <div class="run-score-row"><span class="lbl">Old point curve</span><span class="val">${oldS}</span></div>
+      <div class="run-score-row"><span class="lbl">This curve</span><span class="val">${newS}</span></div>
+      <div class="run-delta ${delta>=0?"up":"down"}">${delta>=0?"+":""}${delta} (${pct>=0?"+":""}${pct.toFixed(0)}%)</div>
+    </div>`;
+  }).join("");
+  document.getElementById("runsPanel").innerHTML = cards;
+
+  const oldMeans = Object.values(REAL_RUNS).map(r => scoreRunOld(r.items));
+  const newMeans = Object.values(REAL_RUNS).map(r => scoreRun(r.items));
+  const avgOld = oldMeans.reduce((a,b)=>a+b,0)/oldMeans.length;
+  const avgNew = newMeans.reduce((a,b)=>a+b,0)/newMeans.length;
+  document.getElementById("simNote").innerHTML =
+    `Average of these 3 real runs: <b>${avgOld.toFixed(0)} pts</b> under the old curve &rarr; <b>${avgNew.toFixed(0)} pts</b> under this one ` +
+    `(${(avgNew/avgOld*100-100).toFixed(0)}% change). A full 500-run simulator pass (see CALIBRATION_NOTES.md) found this kind of ` +
+    `per-item rescale raises every run's score fairly evenly regardless of capstone count -- capstones are still only 0-4 of the ` +
+    `~30-50 items a run crafts, so a bigger capstone ceiling alone won't make a 3-capstone run tower over a 0-capstone one the way a ` +
+    `dedicated completion bonus would. Worth a separate conversation if that's the feeling you're chasing.`;
+}
+
+let sortKey = "points", sortDir = -1, suitFilter = "ALL", query = "";
+function renderTable(){
+  let rows = ITEMS.filter(it => suitFilter === "ALL" || String(it.suit) === suitFilter);
+  if (query) rows = rows.filter(it => (it.name+" "+it.stations.join(" ")).toLowerCase().includes(query));
+  rows = rows.slice().sort((a,b) => {
+    const av = sortKey === "points" ? effectivePoints(a) : a[sortKey];
+    const bv = sortKey === "points" ? effectivePoints(b) : b[sortKey];
+    if (typeof av === "number") return (av-bv)*sortDir;
+    return String(av).localeCompare(String(bv))*sortDir;
+  });
+  document.getElementById("tbody").innerHTML = rows.map(it => {
+    const isOv = overrides.hasOwnProperty(it.name);
+    return `<tr>
+      <td><span class="item-em">${it.emoji}</span>${it.name}</td>
+      <td class="station-tag">${it.stations.join(", ")}</td>
+      <td><span class="tier-pill" style="background:${SUIT_SOFT[it.suit]}; color:${SUIT_COLOR[it.suit]}">${SUIT_LABEL[it.suit]}</span></td>
+      <td class="num">${it.depth}</td>
+      <td class="num">${it.old_points}</td>
+      <td class="num"><input class="pts-input${isOv?" override":""}" type="number" min="0" max="99" data-item="${it.name}" value="${effectivePoints(it)}"></td>
+      <td><span class="reset-cell${isOv?" show":""}" data-reset="${it.name}" title="Reset to formula">↺</span></td>
+    </tr>`;
+  }).join("");
+  document.getElementById("resultCount").textContent = `${rows.length} of ${ITEMS.length} items`;
+
+  document.querySelectorAll(".pts-input").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const v = Math.max(0, Math.min(99, +inp.value || 0));
+      overrides[inp.dataset.item] = v;
+      renderAll();
+    });
+  });
+  document.querySelectorAll("[data-reset]").forEach(el => {
+    el.addEventListener("click", () => { delete overrides[el.dataset.reset]; renderAll(); });
+  });
+}
+
+function renderAll(){
+  renderStats(); renderChart(); renderRuns(); renderTable();
+  document.getElementById("overrideCount").textContent = Object.keys(overrides).length;
+}
+
+document.getElementById("expSlider").addEventListener("input", ev => {
+  exponent = +ev.target.value;
+  document.getElementById("expVal").textContent = exponent.toFixed(1);
+  renderAll();
+});
+document.getElementById("applyFormulaBtn").addEventListener("click", () => { overrides = {}; renderAll(); });
+document.getElementById("resetOverridesBtn").addEventListener("click", () => { overrides = {}; renderAll(); });
+document.getElementById("resetDefaultBtn").addEventListener("click", () => {
+  bands = JSON.parse(JSON.stringify(DEFAULT_BANDS)); exponent = DEFAULT_EXP; overrides = {};
+  document.getElementById("expSlider").value = exponent;
+  document.getElementById("expVal").textContent = exponent.toFixed(1);
+  renderBandControls(); renderAll();
+});
+// Plain tab-separated text, not a table screenshot or a copy of live <input>
+// elements -- pasting a webpage table with real inputs into Excel drops
+// whatever's typed into them (Excel only sees an input's static markup, not
+// its current value), which is exactly what happened to the first version
+// of this tool. This builds the export as one big string instead, so every
+// current point value (formula or hand-edited) actually survives the trip.
+document.getElementById("copyTableBtn").addEventListener("click", async () => {
+  const rows = [["Item", "Station", "Suits", "Depth", "Old pts", "Points"]];
+  ITEMS.slice().sort((a,b) => a.suit - b.suit || effectivePoints(a) - effectivePoints(b)).forEach(it => {
+    rows.push([it.name, it.stations.join(", "), it.suit, it.depth, it.old_points, effectivePoints(it)]);
+  });
+  const tsv = rows.map(r => r.join("\t")).join("\n");
+  const statusEl = document.getElementById("copyStatus");
+  try {
+    await navigator.clipboard.writeText(tsv);
+    statusEl.textContent = "Copied — paste directly into Excel/Sheets, values included this time.";
+  } catch (e) {
+    statusEl.textContent = "Clipboard blocked by the browser — select and copy this instead:";
+    const pre = document.createElement("textarea");
+    pre.value = tsv; pre.style.width = "100%"; pre.style.height = "160px"; pre.style.marginTop = "8px";
+    pre.style.fontFamily = "monospace"; pre.style.fontSize = "11px";
+    statusEl.insertAdjacentElement("afterend", pre);
+    pre.select();
+  }
+});
+document.getElementById("search").addEventListener("input", ev => { query = ev.target.value.trim().toLowerCase(); renderTable(); });
+document.querySelectorAll(".chip-filter").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip-filter").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active"); suitFilter = chip.dataset.suit; renderTable();
+  });
+});
+document.querySelectorAll("thead th[data-sort]").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.sort;
+    sortDir = (sortKey === key) ? -sortDir : 1; sortKey = key; renderTable();
+  });
+});
+
+renderBandControls();
+renderLegend();
+renderAll();
+</script>
