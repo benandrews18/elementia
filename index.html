@@ -8211,7 +8211,7 @@ function freshState(){
                        // checkBingoLines()/BINGO_LINE_BONUS. Lifetime, never un-completes even
                        // if a member item is later spent (Classic never spends items anyway).
     emptyElements: 0, // Classic only -- the Lock In mechanic's own running total (see
-                       // confirmLockIn()/EMPTY_ELEMENT_TIERS). Earned 1-3 at a time each time
+                       // confirmLockIn()/LOCKIN_ROUND_ANCHORS). Earned 1-3 at a time each time
                        // the player locks in their Display Mat before traveling; nothing spends
                        // it yet (the economy this is meant to feed doesn't exist yet either).
   };
@@ -13299,7 +13299,7 @@ let matLastScore = null;
    (state.emptyElements) before actually traveling. Nothing spends Empty
    Elements yet -- the real economy this is meant to feed doesn't exist
    yet either -- so for now this is purely an accumulating stat plus a
-   soft "would this have ended your run" warning (see EMPTY_ELEMENT_TIERS'
+   soft "would this have ended your run" warning (see LOCKIN_ROUND_ANCHORS'
    own comment on why 0 doesn't actually end anything yet). */
 // Transient (not persisted, like matDrawerView above) -- true only while
 // the drawer is open specifically FOR a lock-in, as opposed to a normal
@@ -13322,20 +13322,74 @@ function openLockInDrawer(){
   // actually appear until something else unrelated forced a re-render.
   render();
 }
-// TUNE ME: first-pass thresholds only, not yet calibrated against real
-// play -- the Display Mat's own score range (base points x combo
-// multiplier) was never measured against a real run the way the old
-// total-run score was (see Elementia_Handoff/handoff/simulation/
-// CALIBRATION_NOTES.md), so these are an order-of-magnitude guess meant
-// to be dialed in from actual playtesting, not a final balance pass.
-// Below the lowest tier's min -> 0, a would-be Game Over.
-const EMPTY_ELEMENT_TIERS = [
-  { min: 60, reward: 3 },
-  { min: 30, reward: 2 },
-  { min: 10, reward: 1 },
+/* Calibrated 2026-09-11 against the player's own last 6 Classic runs'
+   real History exports: replayed each run's actual visitLog (which items
+   got crafted, in order) through this same file's own matScore()/
+   matFits(), searching for the BEST possible 8-slot Display Mat
+   achievable from whatever was owned after each visit -- not what the
+   player's mat actually scored (Display Mat didn't exist yet when these
+   were played), but the ceiling a perfect arrangement could have hit at
+   that point. Across the 6 runs, that ceiling's mean/min/max per round
+   (1-indexed, matching state.visits at lock-in time) was:
+     round:   1   5    10   15    20
+     mean:    1  76   439  1075  1936
+     min:     0  22   215   696  1674
+     max:     3 148   561  1656  2162
+   -- a fast-then-saturating climb, since the pool it draws from is
+   capped: CORE_SET has only 79 distinct items, and a search over ALL 79
+   at once (i.e. an entire run's worth of crafting, however long) tops
+   out at 2,660 (MAT_ABSOLUTE_CEILING below) -- a Star Charts collection
+   (Star+Telescope+Satellite Dish+Rocket+Space Station) stacked with an
+   Observatory station combo and 3 simultaneous suit combos. Notably,
+   NONE of the 6 real runs ever crafted Rocket or Space Station at all
+   (see the session's own written analysis) -- that ceiling assumes a
+   catalog-complete run no real 20-visit game has actually produced, so
+   it's used here only as the hard cap the curve must never exceed, not
+   as a realistic per-round target.
+   Anchors only (rounds in between are linearly interpolated by
+   lockInTiersForRound()) -- rounds 1-20 track the real min/mean/max
+   above (1-die near the real min so a normal run keeps clearing it;
+   2-dice near the mean; 3-dice near the max, i.e. only a near-optimal
+   mat), then rounds 25-30 climb to approach MAT_ABSOLUTE_CEILING (by
+   design -- "only the best possible layout still clears 1 die" once
+   runs push that far past today's 20-visit norm) and round 31's 1-die
+   bar (2,700) deliberately EXCEEDS the ceiling: no arrangement of any
+   size can clear it, a hard, guaranteed-Game-Over wall. Still first-pass
+   in the sense that no real run has ever actually PLAYED past round 20
+   with this mechanic live -- the shape is grounded in real data, the
+   far end (25+) is this session's own extrapolation of it, not measured. */
+const MAT_ABSOLUTE_CEILING = 2660;
+const LOCKIN_ROUND_ANCHORS = [
+  // [round, oneDieMin, twoDiceMin, threeDiceMin]
+  [1,      0,    5,    15],
+  [5,     15,   60,   130],
+  [10,   150,  350,   550],
+  [15,   500,  950,  1600],
+  [20,  1200, 1850,  2150],
+  [25,  2000, 2350,  2600],
+  [30,  2550, 2650,  2660],
+  [31,  2700, 2900,  3000], // 1-die alone already exceeds MAT_ABSOLUTE_CEILING -- impossible
 ];
-function emptyElementsForScore(total){
-  for (const t of EMPTY_ELEMENT_TIERS) if (total >= t.min) return t.reward;
+function lockInTiersForRound(round){
+  const a = LOCKIN_ROUND_ANCHORS;
+  if (round <= a[0][0]) return { one: a[0][1], two: a[0][2], three: a[0][3] };
+  if (round >= a[a.length - 1][0]){
+    const last = a[a.length - 1];
+    return { one: last[1], two: last[2], three: last[3] };
+  }
+  for (let i = 0; i < a.length - 1; i++){
+    const [r0, o0, t0, h0] = a[i], [r1, o1, t1, h1] = a[i + 1];
+    if (round >= r0 && round <= r1){
+      const f = (round - r0) / (r1 - r0);
+      return { one: o0 + (o1 - o0) * f, two: t0 + (t1 - t0) * f, three: h0 + (h1 - h0) * f };
+    }
+  }
+}
+function emptyElementsForScore(total, round){
+  const t = lockInTiersForRound(round);
+  if (total >= t.three) return 3;
+  if (total >= t.two) return 2;
+  if (total >= t.one) return 1;
   return 0;
 }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
@@ -13348,7 +13402,7 @@ function emptyElementsForScore(total){
 function confirmLockIn(){
   if (!pendingLockIn) return;
   const s = matScore(matOnMat());
-  const reward = emptyElementsForScore(s.total);
+  const reward = emptyElementsForScore(s.total, state.visits);
   if (reward === 0){
     askConfirm(
       `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any Empty Elements. Once this system is finished, that would end your run here. Continue playing anyway?`,
