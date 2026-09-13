@@ -4432,17 +4432,36 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Empty Elements counter, next to a station's own title (see
    emptyElBadgeHTML()/renderStation()). Dimmed + a real disabled state at 0
    held rather than hidden outright, so the control stays discoverable even
-   before the player has ever earned one. */
+   before the player has ever earned one. No pill/background of its own --
+   just the same square every other element uses (sized to match via
+   syncEmptyElBadgeSize()) with its own count stacked below, same as
+   .gcol/.gname on the real elements right underneath it. */
 .empty-el-badge{
-  display:inline-flex; align-items:center; gap:5px; margin-left:10px;
-  padding:4px 10px 4px 4px; border-radius:999px; border:none;
-  background:#f4f1ea; color:#181614; font-weight:800; font-size:14px;
+  display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+  margin-left:10px; padding:0; border:none; background:none;
   vertical-align:middle; cursor:pointer; opacity:.45;
-  box-shadow:0 2px 4px rgba(0,0,0,.35);
 }
 .empty-el-badge:disabled{cursor:default}
-.empty-el-badge.active{opacity:1; background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
-.empty-el-badge b{font-size:14px; font-weight:900}
+.empty-el-badge.active{opacity:1}
+.empty-el-badge.active .empty-el-square{box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
+.empty-el-badge b{font-size:12px; font-weight:900; color:#fff; line-height:1}
+.empty-el-badge.active b{color:var(--gold)}
+/* Cash-in "spotlight" mode (see enterEmptyElCashIn()) -- everything on
+   the station screen fades and stops accepting taps except the real
+   "Elements Found Here" row and this badge, so cashing in reads as
+   picking one of the row's own elements rather than opening a whole new
+   surface. .station-title-text is the station name ALONE (split out from
+   the badge, which is its own sibling inside the same <h1>) so the name
+   can dim independently without dragging the badge’s own opacity down
+   with it (opacity on a shared ancestor would take the badge with it). */
+body.empty-el-cashin #topbar, body.empty-el-cashin .sheet-head .em,
+body.empty-el-cashin .sheet-head .station-title-text,
+body.empty-el-cashin .station-tractor-badge, body.empty-el-cashin .travel-btn,
+body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
+  opacity:.15; pointer-events:none; transition:opacity .2s;
+}
+.empty-el-cashin-hint{display:none; text-align:center; font-weight:700; font-size:15px; color:#fff; margin:12px 26px 0}
+body.empty-el-cashin .empty-el-cashin-hint{display:block}
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Icon on top, its own raw shared-icon count below it (was an inline
    pill: icon, count, "+bonus") -- a small vertical tile per group
@@ -5186,7 +5205,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="sumgrid" id="sumGrid"></div>
     <div id="sumCapsWrap"></div>
     <div class="btnrow">
-      <button type="button" class="bigbtn" id="sumNew">Start a new session</button>
+      <button type="button" class="bigbtn" id="sumContinue">▶ Continue Playing</button>
+      <button type="button" class="bigbtn sec" id="sumNew">Start a new session</button>
       <button type="button" class="bigbtn sec" id="sumReview">Review my collection</button>
     </div>
   </div>
@@ -5230,12 +5250,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      level. -->
 <div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
   <div class="sheetbox" id="capstoneOverlayBody"></div>
-</div>
-
-<!-- Empty Elements cash-in -- see openEmptyElOverlay()/emptyElBadgeHTML().
-     Same floating-layer-on-top pattern #capstoneOverlay uses above. -->
-<div class="overlay" id="emptyElOverlay" role="dialog" aria-modal="true" aria-labelledby="emptyElOverlayTitle">
-  <div class="sheetbox" id="emptyElOverlayBody"></div>
 </div>
 
 <!-- Craft-from-Bingo -- tapping a not-yet-owned Bingo square opens the
@@ -9010,6 +9024,16 @@ function freshState(){
                        // center re-opens the picker at any point in the game, not just once).
                        // See the migration just below freshState() for saves from before this
                        // field existed.
+    pastVisitLimit: false, // True once the player has chosen "Continue Playing" off the
+                       // round-MAX_VISITS summary screen (see showSummary()/sessionOver()) --
+                       // from here on sessionOver() reports false again (unblocking travel),
+                       // and confirmLockIn() switches from "can't fail before the limit" to
+                       // "must earn at least 1 Empty Element each Lock-In or the run ends".
+    finalGameOver: false, // True only once a post-limit Lock-In actually scored 0 Empty
+                       // Elements and the player confirmed ending the run there (see
+                       // confirmLockIn()) -- distinct from the ordinary round-limit ending,
+                       // so showSummary() can word it accordingly and skip offering another
+                       // Continue Playing option.
   };
 }
 
@@ -9978,9 +10002,44 @@ function mapPathsHTML(here){
   const lines = MAP_EDGES.filter(([a, b]) => edgeUnlocked(a, b)).map(([a, b]) => {
     const [x1, y1] = MAP_NODE_POS[a], [x2, y2] = MAP_NODE_POS[b];
     const active = here === null || a === here || b === here;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="map-path-line${active ? " active" : ""}"/>`;
+    // data-a/data-b: MAP_NODE_POS's own raw percentages, used as the
+    // initial y1/y2 here, don't account for the per-station mm nudge the
+    // node's own icon renders with (MAP_NODE_MM_SHIFT/mapNodeTopStyle()) --
+    // see syncMapPaths() for why that correction can only happen after
+    // the canvas is actually in the DOM, and how these two attributes are
+    // what lets it find each line's real endpoints again to fix up.
+    return `<line data-a="${esc(a)}" data-b="${esc(b)}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="map-path-line${active ? " active" : ""}"/>`;
   }).join("");
   return `<svg class="map-paths" viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>`;
+}
+// CSS mm -> px is a fixed ratio regardless of device/zoom (96 reference
+// px per inch, 25.4mm per inch) -- see MAP_NODE_MM_SHIFT's own comment on
+// why the node icons themselves are nudged in real physical mm rather
+// than viewBox percent.
+const MM_TO_PX = 96 / 25.4;
+/* mapPathsHTML() draws every edge from MAP_NODE_POS's raw percentages, but
+   a station's own icon (mapNodeTopStyle()) sits MAP_NODE_MM_SHIFT further
+   down than that -- a real physical offset the SVG's 0-100 viewBox can't
+   express ahead of time, since percent-of-viewBox only matches percent-
+   of-canvas once you know the canvas's own actual rendered height (which
+   changes with viewport, see .map-canvas's own comment). Re-measures that
+   height right after the map's DOM lands and nudges each line's y1/y2 by
+   the equivalent percent, so every line ends exactly on the real icon
+   center regardless of screen size. Called from render() and the window
+   resize handler (map-canvas height can change without a fresh render). */
+function syncMapPaths(){
+  const canvas = document.querySelector(".map-canvas");
+  const svg = document.querySelector(".map-paths");
+  if (!canvas || !svg) return;
+  const h = canvas.getBoundingClientRect().height;
+  if (!h) return;
+  svg.querySelectorAll("line[data-a]").forEach(line => {
+    const a = line.dataset.a, b = line.dataset.b;
+    const y1 = MAP_NODE_POS[a][1] + (MAP_NODE_MM_SHIFT[a] * MM_TO_PX / h) * 100;
+    const y2 = MAP_NODE_POS[b][1] + (MAP_NODE_MM_SHIFT[b] * MM_TO_PX / h) * 100;
+    line.setAttribute("y1", y1);
+    line.setAttribute("y2", y2);
+  });
 }
 
 /* Path-map station card: shown at the top of the screen when a node is
@@ -10975,7 +11034,7 @@ function renderStation(name){
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
-        <div><h1>${esc(s.name)}${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1></div>
+        <div><h1><span class="station-title-text">${esc(s.name)}</span>${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1></div>
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
@@ -10984,6 +11043,7 @@ function renderStation(name){
         prefs.expTractorHarvest && owns("Tractor")
           ? ` <span class="tractor-taps-left">${state.tractorTapsLeft || 0} taps left</span>` : ""}</div>
       <div class="gather">${gather}</div>
+      <p class="empty-el-cashin-hint">Which element should be created?</p>
       ${playBar}
     </div>
     <div class="makewrap">
@@ -11105,6 +11165,9 @@ function render(resetScroll){
   applyInvFilter();
   applyRefFilter();
   hideHint();
+  if (screen === "station") syncEmptyElBadgeSize();
+  else if (emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
+  if (screen === "map") syncMapPaths();
   // Deferred one tick, not called inline: several render() callers open a
   // full-screen overlay (showCardPop()/celebrate()) or queue one to open
   // (flushPendingReveal()) synchronously right AFTER this render() call
@@ -11581,15 +11644,29 @@ function closeOverlay(id){
 const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
 
 /* --------------------------------------------------- session end --- */
-function sessionOver(){ return state.visits >= MAX_VISITS; }
+// state.pastVisitLimit (set by #sumContinue, see showSummary()) keeps this
+// false forever after the player chooses to keep playing past the round
+// limit -- travel/the map's own "over" gate (renderMap()) both read this
+// directly, so continuing really does unblock them rather than just
+// dismissing the summary and immediately re-triggering it.
+function sessionOver(){ return state.visits >= MAX_VISITS && !state.pastVisitLimit; }
 
 function showSummary(){
   const caps = CAPSTONES.filter(owns);
   const elementsHeld = Object.values(state.elements).reduce((a,b) => a+b, 0);
   const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
 
-  document.getElementById("sumSub").textContent =
-    `All ${visitLimitLabel()} visits used. Here's what you built:`;
+  document.getElementById("sumSub").textContent = state.finalGameOver
+    ? `Game over -- no Empty Elements earned on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
+    : `All ${visitLimitLabel()} visits used. Here's what you built:`;
+
+  // Continue Playing only makes sense the FIRST time this screen appears
+  // for a run that just hit the round limit -- once the player has
+  // already taken that option (state.pastVisitLimit) travel is already
+  // unblocked, and once the run has genuinely ended for real
+  // (state.finalGameOver, see confirmLockIn()) there's nothing left to
+  // continue into.
+  document.getElementById("sumContinue").hidden = state.pastVisitLimit || state.finalGameOver;
 
   document.getElementById("sumGrid").innerHTML = `
     <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
@@ -13424,7 +13501,10 @@ function handleScreenClick(ev){
 
   if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
 
-  if (ev.target.closest("#emptyElBadgeBtn")){ openEmptyElOverlay(); return; }
+  if (ev.target.closest("#emptyElBadgeBtn")){
+    emptyElCashInMode ? exitEmptyElCashIn() : enterEmptyElCashIn();
+    return;
+  }
 
   const subzoneOpenBtn = ev.target.closest("[data-subzone-open]");
   if (subzoneOpenBtn){
@@ -13623,6 +13703,14 @@ function handleScreenClick(ev){
   // opens, so an element looks the same wherever it's tapped.
   const elemBtn = ev.target.closest("[data-elem]");
   if (elemBtn){
+    // Cash-in spotlight mode (see enterEmptyElCashIn()) checked first --
+    // while it's active the row's own chips trade an Empty Element for
+    // that symbol instead of their usual open-the-card/Tractor-harvest
+    // behavior below.
+    if (emptyElCashInMode && elemBtn.classList.contains("gchip")){
+      cashInEmptyElement(elemBtn.dataset.elem);
+      return;
+    }
     // Experimental (prefs.expTractorHarvest) -- taps the STATION'S OWN
     // dice-pool chip specifically (.gchip, not a recipe token elsewhere on
     // this same screen, see tokenHTML()) harvest 1 of that element instead
@@ -13920,6 +14008,12 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // its own X/scrim) and then taps Travel again: travelPromptFor still
   // matches, so that second tap goes straight through to goStation().
   if (face === "travel"){
+    // Nothing owned yet means the Display Mat can only be blank -- asking
+    // a brand-new player to "Lock In" an empty mat before their very
+    // first couple of trips reads as broken/confusing rather than a real
+    // choice, so skip the whole Lock-In doorway and just travel outright
+    // until they've actually crafted something to put on it.
+    if (state.items.length === 0){ goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
@@ -14632,21 +14726,33 @@ function emptyElementsForScore(total, round){
   return 0;
 }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
-   could be stale if this fires from a code path that skipped a render)
-   and either grants the reward outright or, on a would-be Game Over,
-   asks first -- see askConfirm()'s own generic Yes/Cancel dialog, reused
-   here rather than inventing a second confirmation UI. Cancel just backs
-   out of the confirm and leaves the mat and drawer exactly as they were,
-   so the player can rearrange it and lock in again whenever they like --
-   locking in doesn't have a deadline of its own, since it's no longer
-   tied to an imminent travel. */
+   could be stale if this fires from a code path that skipped a render).
+   A 0-reward Lock-In means something different depending on the round:
+   before the round limit (state.visits < MAX_VISITS) it's consequence-free
+   -- the player hasn't even reached the point where a Game Over is
+   possible yet, so this just proceeds silently, same as any other
+   Lock-In. From the round limit on (only reachable at all once the
+   player has chosen Continue Playing off the summary screen, see
+   showSummary()/sessionOver()), scoring 0 for real ends the run -- see
+   askConfirm()'s own generic Yes/Cancel dialog, reused here rather than
+   inventing a second confirmation UI. Cancel just backs out of the
+   confirm and leaves the mat and drawer exactly as they were, so the
+   player can rearrange it and lock in again whenever they like before
+   committing to end things. */
 function confirmLockIn(){
   const s = matScore(matOnMat());
   const reward = emptyElementsForScore(s.total, state.visits);
   if (reward === 0){
+    if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any Empty Elements. Once this system is finished, that would end your run here. Continue playing anyway?`,
-      () => finishLockIn(0)
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any Empty Elements. You're past your visit limit, so this ends your run here. End it now?`,
+      () => {
+        state.finalGameOver = true;
+        save();
+        closeDrawer();
+        travelPromptFor = null;
+        showSummary();
+      }
     );
     return;
   }
@@ -14774,7 +14880,11 @@ document.getElementById("lockInBannerSub").innerHTML =
 // Classic Mode only (state.emptyElements is never touched outside it, see
 // finishLockIn()'s own comment) -- rendered next to the station title
 // (renderStation()'s own sheet-head) regardless of count so it's always
-// discoverable, dimmed/disabled at 0 rather than hidden entirely.
+// discoverable, dimmed/disabled at 0 rather than hidden entirely. Icon on
+// top, its own count below (same stacked language .gcol/.gname already use
+// for the real elements right below it, see syncEmptyElBadgeSize() for how
+// the icon itself is kept the same rendered size as those) -- no pill/
+// background of its own any more now that the count isn't inline beside it.
 function emptyElBadgeHTML(){
   const n = state.emptyElements || 0;
   return `<button type="button" class="empty-el-badge${n > 0 ? " active" : ""}" id="emptyElBadgeBtn"
@@ -14782,42 +14892,61 @@ function emptyElBadgeHTML(){
       title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
       aria-label="${n} Empty Elements held">${emptyElSquareHTML(20)}<b>${n}</b></button>`;
 }
-/* Same gcol/gchip/gname markup language the station's own "Elements Found
-   Here" row (renderStation()'s gather) already uses, so a cashed-in choice
-   reads as pulled straight from that same pool, not a separate system with
-   its own visual language. data-cashin-elem (not data-elem, which would
-   collide with the real gather row's own tap-for-card-inspection
-   behavior elsewhere) is what #emptyElOverlay's own click handler below
-   looks for. */
-function emptyElCashInHTML(stationName){
-  const s = STATION_BY_NAME[stationName];
-  const syms = sortedDice(s);
-  const n = state.emptyElements || 0;
-  return `<h3 class="bingo-title" id="emptyElOverlayTitle">Cash In an Empty Element</h3>
-    <p class="bingo-hint">Trade 1 ❓ Empty Element (${n} held) for one of the elements found at ${esc(stationName)} -- no roll needed.</p>
-    <div class="gather">${syms.map(sym =>
-      `<div class="gcol"><button type="button" class="gchip" data-cashin-elem="${esc(sym)}" title="${esc(sym)}" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span></button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span></div>`).join("")}</div>
-    <button type="button" class="bigbtn sec" id="emptyElOverlayClose">Cancel</button>`;
+// The row of real elements right below the badge (see renderStation()'s
+// own .gather) shrinks/grows with how many of them there are (see .gcol's
+// own comment) -- that final rendered size can only be known after layout,
+// not computed ahead of time, so this re-measures the first real .gchip
+// and stretches the badge's own icon (and its corner suit badge/font) to
+// match exactly, every render. Called from render() itself; no-ops
+// harmlessly outside a station screen (or Zen/Hard, which never show the
+// badge at all) since the selectors just find nothing.
+function syncEmptyElBadgeSize(){
+  const square = document.querySelector("#emptyElBadgeBtn .empty-el-square");
+  const chip = document.querySelector(".gather .gchip");
+  if (!square || !chip) return;
+  const px = chip.getBoundingClientRect().width;
+  if (!px) return;
+  square.style.width = px + "px";
+  square.style.height = px + "px";
+  square.style.fontSize = Math.round(px * 0.55) + "px";
+  const suitBadge = square.querySelector(".el-suit-badge");
+  if (suitBadge){
+    const suitPx = Math.round(px * 0.42);
+    suitBadge.style.width = suitPx + "px";
+    suitBadge.style.height = suitPx + "px";
+  }
 }
-function openEmptyElOverlay(){
+/* Cash-in "spotlight" mode -- rather than a separate dialog, the real
+   "Elements Found Here" row right there on the station screen (and the
+   tapped Empty Element icon itself) simply keep full opacity while
+   everything else on screen fades and stops accepting taps (see
+   body.empty-el-cashin's own CSS), with a one-line prompt appearing right
+   under the row. Tapping one of the row's own chips (handleScreenClick()'s
+   [data-elem] branch, checked first) cashes it in directly; tapping
+   anywhere else (the document-level listener below) backs out untouched,
+   same as Lock In's own Cancel. */
+let emptyElCashInMode = false;
+function enterEmptyElCashIn(){
   if (!((state.emptyElements || 0) > 0) || !current) return;
-  document.getElementById("emptyElOverlayBody").innerHTML = emptyElCashInHTML(current);
-  openOverlay("emptyElOverlay");
+  emptyElCashInMode = true;
+  document.body.classList.add("empty-el-cashin");
 }
-function closeEmptyElOverlay(){ closeOverlay("emptyElOverlay"); }
+function exitEmptyElCashIn(){
+  emptyElCashInMode = false;
+  document.body.classList.remove("empty-el-cashin");
+}
 function cashInEmptyElement(sym){
   if (!((state.emptyElements || 0) > 0)) return;
   state.emptyElements -= 1;
   state.elements[sym] = (state.elements[sym] || 0) + 1;
   save();
-  closeEmptyElOverlay();
+  exitEmptyElCashIn();
   render();
 }
-document.getElementById("emptyElOverlay").addEventListener("click", ev => {
-  if (ev.target === ev.currentTarget){ closeEmptyElOverlay(); return; } // scrim tap
-  if (ev.target.closest("#emptyElOverlayClose")){ closeEmptyElOverlay(); return; }
-  const chip = ev.target.closest("[data-cashin-elem]");
-  if (chip) cashInEmptyElement(chip.dataset.cashinElem);
+document.addEventListener("click", ev => {
+  if (!emptyElCashInMode) return;
+  if (ev.target.closest(".gather") || ev.target.closest("#emptyElBadgeBtn")) return;
+  exitEmptyElCashIn();
 });
 
 /* Rebuilds #drawerTop: the score row (combos left, total right -- ONE
@@ -16942,6 +17071,12 @@ document.getElementById("setSave").addEventListener("click", () => {
   render();
 });
 
+document.getElementById("sumContinue").addEventListener("click", () => {
+  state.pastVisitLimit = true;
+  save();
+  closeOverlay("summary");
+  render();
+});
 document.getElementById("sumNew").addEventListener("click", () => {
   closeOverlay("summary"); resetCurrentModeRun();
 });
@@ -16972,6 +17107,7 @@ document.getElementById("confirmNo").addEventListener("click", () => {
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
+    if (emptyElCashInMode){ exitEmptyElCashIn(); return; }
     const open = document.querySelector(".overlay.open");
     if (open){ closeOverlay(open.id); return; }
     if (jobSheet.classList.contains("open")){ closeJobBoard(); return; }
@@ -17516,6 +17652,7 @@ document.getElementById("mouseTipNext").addEventListener("click", () => {
 // up pointing at empty space.
 window.addEventListener("resize", () => {
   if (document.getElementById("tutCoach").classList.contains("open")) positionTutCoach();
+  if (screen === "map") syncMapPaths();
 });
 
 document.getElementById("tourBtn").addEventListener("click", () => {
