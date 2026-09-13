@@ -3256,13 +3256,30 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    -- Place/Remove (.pc-mat-toggles) are the only controls this view
    needs, and losing that row is what frees up the room to stretch the
    card the rest of the way down in the first place. */
-#cardPop.mat-panel{background:transparent; justify-content:flex-end; align-items:stretch}
+/* Revised 2026-09-12 (again): the card was rendering full-size/uncontrolled
+   instead of scaled down. Root cause -- .pc-card-scale's old height:100%
+   (plus width:auto;aspect-ratio:5/7) can never resolve to a real number
+   here: .pc-card-wrap is a flex item with width:auto, so ITS OWN width is
+   indeterminate (sized to content, not to a fixed value); that makes the
+   grid's "1fr" card column indeterminate too; and since .pc-card itself is
+   pulled out of flow (position:absolute), .pc-card-scale has no in-flow
+   content to size around either. With every dimension in that chain
+   indeterminate, height:100% falls back to some small, arbitrary
+   leftover value with no real relationship to the actual available
+   space -- not a browser bug, just CSS with no definite anchor anywhere.
+   Fixed by giving positionCardPopMatPanel() ownership of BOTH dimensions:
+   it computes the real available height in plain arithmetic and sets
+   .pc-card-scale's width/height directly as pixels, so there's nothing
+   left for the grid/flex/aspect-ratio machinery to guess at. */
+#cardPop.mat-panel{background:transparent; justify-content:flex-end; align-items:stretch; padding-right:14px}
 #cardPop.mat-panel .pc-card-wrap{
   display:grid; grid-template-columns:auto 1fr; grid-template-areas:"toggles card";
   gap:12px; width:auto; max-width:none; margin:0; height:100%;
 }
 #cardPop.mat-panel .pc-card-scale{
-  grid-area:card; display:block; position:relative; height:100%; width:auto; aspect-ratio:5/7;
+  grid-area:card; display:block; position:relative;
+  /* width/height set directly by positionCardPopMatPanel() -- see the
+     comment above this whole block for why CSS alone can't do it. */
 }
 /* Revised 2026-09-12: was transform:scale(var(--cp-mat-scale)), a custom
    property set from JS -- in testing, updating that variable's value
@@ -11277,27 +11294,39 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
 }
 /* Docks #cardPop's own content to sit just under #drawerTop (the mat/
-   score card) and flush with #drawer's own right edge -- see the CSS
-   block's own comment above #cardPop.mat-panel for why this can't just be
-   a fixed CSS position. Recomputed on every open (combo count/mat state
-   changes #drawerTop's own height constantly) rather than cached. */
+   score card), then scales .pc-card evenly to fill the space left down to
+   the hub -- see the CSS block's own comment above #cardPop.mat-panel for
+   why the box has to be sized here in JS rather than in CSS. Recomputed on
+   every open (combo count/mat state changes #drawerTop's own height
+   constantly) rather than cached.
+   Note there's no horizontal math here any more: #drawer and .overlay
+   (#cardPop's own class) are BOTH in the exact same left/right/width rule
+   at the top of the file (the "768px desktop frame" media query, plus
+   identical full-width base rules below 769px), so they always share the
+   same real right edge on screen at any viewport size -- #cardPop.mat-panel's
+   own padding-right:14px (see its CSS) is already the correct flush-against-
+   the-drawer gap with nothing to compute. (The previous version computed
+   padding-right from window.innerWidth, which double-counted that shared
+   frame margin on any viewport wider than the 768px frame itself.) */
 function positionCardPopMatPanel(){
-  const drawerTop = document.getElementById("drawerTop").getBoundingClientRect();
-  const drawer = document.getElementById("drawer").getBoundingClientRect();
   const cardPop = document.getElementById("cardPop");
-  cardPop.style.paddingTop = Math.max(0, drawerTop.bottom + 10) + "px";
-  cardPop.style.paddingRight = Math.max(0, window.innerWidth - drawer.right + 14) + "px";
-  // .pc-card-scale's own height:100% (see its CSS) already stretches it
-  // to fill everything from that padding-top down to .overlay's own
-  // padding-bottom (the same "leave room for the hub" reservation every
-  // overlay already has) -- CSS alone can't tell .pc-card's fixed 300x420
-  // box what SCALE to render at to fill a box whose pixel height it has
-  // no way to know ahead of time, so this measures the real, already-laid-
-  // out result and sets that scale directly. .pc-card's own natural
-  // height (420 = 300 * 7/5, its own aspect-ratio) is the only fixed
-  // reference point this needs.
-  const boxH = document.querySelector(".pc-card-scale").getBoundingClientRect().height;
-  const scale = boxH > 0 ? (boxH / 420) : 0.5;
+  const drawerTopBottom = document.getElementById("drawerTop").getBoundingClientRect().bottom;
+  const paddingTop = Math.max(0, drawerTopBottom + 10);
+  cardPop.style.paddingTop = paddingTop + "px";
+  // Available height = the real viewport height, minus the padding-top
+  // just set and the hub-reservation padding-bottom every overlay already
+  // carries (see .overlay's own comment). .pc-card-scale gets both
+  // dimensions assigned directly in pixels (width derived from the
+  // card's own 5:7 ratio) rather than being asked to resolve them itself
+  // -- see the CSS block's own comment for why that can't work here.
+  const hubPad = parseFloat(getComputedStyle(cardPop).paddingBottom) || 0;
+  const availH = Math.max(0, window.innerHeight - paddingTop - hubPad);
+  const scaleBox = document.querySelector(".pc-card-scale");
+  scaleBox.style.height = availH + "px";
+  scaleBox.style.width = (availH * 5 / 7) + "px";
+  // .pc-card's own natural height (420 = 300 * 7/5, its own aspect ratio)
+  // is the only fixed reference point this needs.
+  const scale = availH > 0 ? (availH / 420) : 0.5;
   document.getElementById("cpCard").style.transform = `scale(${scale})`;
 }
 /* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
