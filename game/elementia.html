@@ -3305,16 +3305,36 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    it computes the real available height in plain arithmetic and sets
    .pc-card-scale's width/height directly as pixels, so there's nothing
    left for the grid/flex/aspect-ratio machinery to guess at. */
+/* Revised 2026-09-13: padding-bottom used to inherit .overlay's generic
+   calc(20px + hub-h + safe-area) -- correct for a centered dialog with
+   breathing room on every side, but this card is meant to sit flush
+   against the tray's own real corner above the hub (same "flush, not
+   inset" treatment padding-right:14px already gets), so the extra 20px
+   baseline just left it stopping noticeably short of that corner
+   (close enough to fixed screen-corner buttons like Sort/Filter -- see
+   .floatbtn's own bottom:calc(hub-h + 14px) -- to read as "snapped to
+   THEM" instead). Pinned to var(--hub-h) alone now, same flush-to-hub
+   convention #drawer itself already uses when expanded. */
 #cardPop.mat-panel{
   background:rgba(10,14,20,.72); background-clip:content-box;
-  justify-content:flex-end; align-items:flex-end; padding-right:14px;
+  padding-right:14px; padding-bottom:var(--hub-h, 67px);
 }
+/* Revised 2026-09-13: was a flex row (toggles, then card) with
+   justify-content/align-items:flex-end -- on a screen with enough spare
+   vertical room, the card's height-driven width could exceed what was
+   left over after the toggle stack's own space, and since the card was
+   flex:none (never shrinks) while the toggles used flex's own default
+   shrink:1, the toggles absorbed ALL of that overflow, shrinking toward
+   zero width and reading as "hidden behind the card." Both children are
+   independently position:absolute now, sized/placed entirely by
+   positionCardPopMatPanel() (which already caps the card's own width
+   against exactly this scenario -- see its own comment) rather than
+   negotiated through flex-shrink at all. */
 #cardPop.mat-panel .pc-card-wrap{
-  display:flex; flex-direction:row; align-items:flex-end; justify-content:flex-end;
-  gap:12px; width:auto; max-width:none; margin:0; height:100%;
+  position:relative; width:100%; height:100%; margin:0; max-width:none;
 }
 #cardPop.mat-panel .pc-card-scale{
-  display:block; position:relative; flex:none;
+  display:block; position:absolute; right:0; bottom:0;
   /* width/height set directly by positionCardPopMatPanel() -- see the
      comment above this whole block for why CSS alone can't do it. */
 }
@@ -3333,8 +3353,14 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #cardPop.mat-panel .pc-actions, #cardPop.mat-panel #cpMatBtn{display:none}
 .pc-card-scale{display:contents}
 .pc-mat-toggles{display:none}
+/* position:absolute, left/bottom set directly by positionCardPopMatPanel()
+   -- centered in whatever's left of .pc-card-wrap's own width between the
+   card's own left edge and the screen's left edge, and vertically centered
+   against the card's own height, since it's no longer a flex sibling of
+   the card sharing its row's width budget (see .pc-card-wrap's own
+   comment for why that changed). */
 .mat-panel .pc-mat-toggles{
-  grid-area:toggles; display:flex; flex-direction:column; justify-content:center; align-self:stretch; gap:10px;
+  position:absolute; display:flex; flex-direction:column; justify-content:center; gap:10px;
 }
 /* Dim/inert by default -- only the action that actually applies right now
    (per setMatToggleState(), called on open and after every toggle) is
@@ -4292,12 +4318,34 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-grid{
   display:grid; grid-template-columns:repeat(4, 1fr);
   grid-auto-rows:var(--mat-row-h);
-  gap:8px; touch-action:none;
+  gap:8px;
 }
-.mat-grid.dragging .mm-card{pointer-events:none}
 .mm-slot{position:relative}
 .mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
 .mm-slot.wide{grid-column:span 2}
+/* Move-arrows selection (2026-09-13, replacing pointer-drag entirely --
+   see the click handler's own comment for why) -- a gold outline on the
+   selected card's own slot, with up to 4 small round arrow buttons
+   poking out from its edges, one per direction that's actually a legal
+   move (see matMoveArrowsHTML()/matMoveTargetIdx()); a direction that
+   would push the card off the grid simply has no button rendered, per
+   explicit request, rather than a disabled-looking one. */
+.mm-slot.move-selected{outline:3px solid var(--gold); outline-offset:2px; border-radius:12px; z-index:4}
+.mm-move-arrow{
+  position:absolute; z-index:5; width:28px; height:28px; border-radius:50%; padding:0; border:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--gold); color:#181614; font-size:14px; font-weight:900;
+  border:2px solid var(--gold-line); box-shadow:0 2px 6px rgba(0,0,0,.45); cursor:pointer;
+}
+.mm-move-arrow:active{transform:scale(.9)}
+.mm-move-arrow.up{top:-14px; left:50%; transform:translateX(-50%)}
+.mm-move-arrow.up:active{transform:translateX(-50%) scale(.9)}
+.mm-move-arrow.down{bottom:-14px; left:50%; transform:translateX(-50%)}
+.mm-move-arrow.down:active{transform:translateX(-50%) scale(.9)}
+.mm-move-arrow.left{left:-14px; top:50%; transform:translateY(-50%)}
+.mm-move-arrow.left:active{transform:translateY(-50%) scale(.9)}
+.mm-move-arrow.right{right:-14px; top:50%; transform:translateY(-50%)}
+.mm-move-arrow.right:active{transform:translateY(-50%) scale(.9)}
 
 /* The mat/elements zone as a physical "page" now, with two folder tabs
    (Elements/Display Mat) attached at its TOP-right (moved up from the
@@ -4511,10 +4559,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    redundant, per explicit request. */
 .mm-card.on{filter:brightness(.6) saturate(.7)}
 
-/* Fixed to the viewport (not absolute within #drawer) so it floats
-   sensibly above the drawer regardless of scroll position, right above
-   the hub bar it would otherwise sit behind. */
-.mat-drag-ghost{position:fixed; z-index:90; pointer-events:none; opacity:.94; filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
 /* Above #cardPop's own 70 -- toggleMatCard() (a full mat, a capstone
    needing two slots) can now fire from the Add/Remove-from-Mat button
    INSIDE that popup (see #cpMatBtn), so this has to be able to show up
@@ -4671,7 +4715,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div id="drawerBody"></div>
   </div>
   <div class="mat-toast" id="matToast" hidden></div>
-  <div class="mat-drag-ghost" id="matGhost" hidden></div>
 </aside>
 
 <!-- Sort/Filter -- Classic's full-inventory view only (see renderMatTop()'s
@@ -6691,7 +6734,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚀",
      "Rocket",
      "CREATION",
-     "💻 Computer + __FIBERGLASS__ Fiberglass + Ti",
+     "💻 Computer + __FIBERGLASS__ Fiberglass + __FURNACE__ Furnace + Ti",
      28
     ]
    ],
@@ -7811,6 +7854,10 @@ function matGroupsOf(mat){
     // dedupe -- a recipe listing the same ingredient twice still only
     // "shares" it once.
     c.pips.forEach(s => { su[s] = (su[s] || 0) + 1; });
+    // A card counts toward its OWN name's group too, not just the cards
+    // that use it as a component -- three "Chicken"s (or two Chickens
+    // plus one card that USES Chicken) alike all still share Chicken.
+    cp[c.name] = (cp[c.name] || 0) + 1;
     matDirectItems(c).forEach(n => { cp[n] = (cp[n] || 0) + 1; });
   });
   return { st, su, cp };
@@ -11402,15 +11449,17 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
    why the box has to be sized here in JS rather than in CSS. Recomputed on
    every open (combo count/mat state changes #drawerTop's own height
    constantly) rather than cached.
-   Note there's no horizontal math here any more: #drawer and .overlay
-   (#cardPop's own class) are BOTH in the exact same left/right/width rule
-   at the top of the file (the "768px desktop frame" media query, plus
-   identical full-width base rules below 769px), so they always share the
-   same real right edge on screen at any viewport size -- #cardPop.mat-panel's
-   own padding-right:14px (see its CSS) is already the correct flush-against-
-   the-drawer gap with nothing to compute. (The previous version computed
-   padding-right from window.innerWidth, which double-counted that shared
-   frame margin on any viewport wider than the 768px frame itself.) */
+   Note there's no horizontal math for the CARD's own right edge: #drawer
+   and .overlay (#cardPop's own class) are BOTH in the exact same left/
+   right/width rule at the top of the file (the "768px desktop frame"
+   media query, plus identical full-width base rules below 769px), so they
+   always share the same real right edge on screen at any viewport size --
+   #cardPop.mat-panel's own padding-right:14px (see its CSS) is already
+   the correct flush-against-the-drawer gap with nothing to compute.
+   There IS horizontal math for the card's own WIDTH, though (see
+   maxCardW below) and for the toggle stack's position -- both now live
+   here instead of being negotiated through flex-shrink, see
+   .pc-card-wrap's own CSS comment for why. */
 function positionCardPopMatPanel(){
   const cardPop = document.getElementById("cardPop");
   const drawerTopBottom = document.getElementById("drawerTop").getBoundingClientRect().bottom;
@@ -11418,19 +11467,40 @@ function positionCardPopMatPanel(){
   cardPop.style.paddingTop = paddingTop + "px";
   // Available height = the real viewport height, minus the padding-top
   // just set and the hub-reservation padding-bottom every overlay already
-  // carries (see .overlay's own comment). .pc-card-scale gets both
-  // dimensions assigned directly in pixels (width derived from the
-  // card's own 5:7 ratio) rather than being asked to resolve them itself
-  // -- see the CSS block's own comment for why that can't work here.
+  // carries (see .overlay's own comment).
   const hubPad = parseFloat(getComputedStyle(cardPop).paddingBottom) || 0;
   const availH = Math.max(0, window.innerHeight - paddingTop - hubPad);
+  // The card's own width is capped three ways: never taller than the
+  // available height allows (availH*5/7, its own 5:7 ratio), never bigger
+  // than its real native size (300 -- upscaling past that read as "not
+  // actually scaled down" for a tall/short-header screen with lots of
+  // spare vertical room), and never so wide it leaves no room for the
+  // toggle stack (66px, see .pc-mat-toggle-btn's own width) plus a little
+  // breathing room on both sides of it -- without this last cap, a screen
+  // with enough spare height let the card grow wide enough to squeeze the
+  // toggle stack down toward zero width (flex's own default shrink:1),
+  // reading as "the buttons are hidden behind the card."
+  const contentW = cardPop.clientWidth - 20 - 14; // .overlay's own left padding (20) + this panel's own right padding (14)
+  const toggleStackW = 66;
+  const maxCardW = Math.max(0, Math.min(300, availH * 5 / 7, contentW - toggleStackW - 24));
   const scaleBox = document.querySelector(".pc-card-scale");
-  scaleBox.style.height = availH + "px";
-  scaleBox.style.width = (availH * 5 / 7) + "px";
-  // .pc-card's own natural height (420 = 300 * 7/5, its own aspect ratio)
-  // is the only fixed reference point this needs.
-  const scale = availH > 0 ? (availH / 420) : 0.5;
+  scaleBox.style.width = maxCardW + "px";
+  scaleBox.style.height = (maxCardW * 7 / 5) + "px";
+  // .pc-card's own natural width (300, its own 5:7 ratio) is the only
+  // fixed reference point this needs.
+  const scale = maxCardW > 0 ? (maxCardW / 300) : 0.5;
   document.getElementById("cpCard").style.transform = `scale(${scale})`;
+  // Toggle stack: centered in the gap between the card's own left edge
+  // and the screen's left edge (horizontally), and centered against the
+  // card's own height (vertically) -- both bottom-anchored to the same
+  // box, so a shared `bottom` value on each is what lines them up.
+  const cardW = maxCardW, cardH = maxCardW * 7 / 5;
+  const cardLeftEdge = contentW - cardW; // distance from the content box's own left edge to the card's left edge
+  const toggles = document.getElementById("cpMatToggles");
+  const togglesW = toggles.offsetWidth || toggleStackW;
+  const togglesH = toggles.offsetHeight;
+  toggles.style.left = Math.max(0, (cardLeftEdge - togglesW) / 2) + "px";
+  toggles.style.bottom = Math.max(0, (cardH - togglesH) / 2) + "px";
 }
 /* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
    onMat: whether the card is on the mat RIGHT NOW (after whatever just
@@ -11541,6 +11611,7 @@ document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
   flushPendingReveal();
+  clearMatMoveSelection();
 });
 /* Tapping a "Components:" ingredient icon (see showCardPop()'s own
    #cpIngredients markup) opens THAT ingredient's own card instead of
@@ -11650,6 +11721,7 @@ document.getElementById("cpMatCloseBtn").addEventListener("click", ev => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
   flushPendingReveal();
+  clearMatMoveSelection();
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -13993,17 +14065,109 @@ function matComboChipHTML(g, kind){
    anything else -- reordering never changes the score, so the caller
    passes in whatever matScore() it already has rather than this
    recomputing it every pointermove. */
+/* Tapping a mat card selects it for movement (see matMoveSelectedIdx,
+   set by the pointerup handler below) -- walks matPackCells()'s own flat
+   output rebuilding the (row, col) each cell actually lands on, using the
+   exact same running-column bookkeeping matPackCells() itself uses
+   internally (never exposed on its own output), so a wide capstone's
+   real footprint is accounted for here too. */
+function matCellPositions(cells){
+  const pos = [];
+  let col = 0, row = 0;
+  cells.forEach(cell => {
+    pos.push({row, col, w: cell.w, card: cell.card, idx: cell.idx});
+    col += cell.w;
+    if (col >= MAT_SLOTS_COLS){ col = 0; row++; }
+  });
+  return pos;
+}
+/* Where a move in `dir` from `mine` (one matCellPositions() entry) would
+   land: the array index to splice the selected card into (matching
+   exactly what state.mat.splice(from,1) + state.mat.splice(to,0,name)
+   already do for drag-and-drop elsewhere), or undefined if that direction
+   would push the card off the grid entirely -- the caller uses undefined
+   to skip rendering that arrow at all, per the explicit request that an
+   invalid direction simply not offer a button rather than offering one
+   that silently fails. */
+function matMoveTargetIdx(positions, mine, dir){
+  let row = mine.row, col = mine.col;
+  if (dir === "up") row -= 1;
+  else if (dir === "down") row += 1;
+  else if (dir === "left") col -= 1;
+  else if (dir === "right") col += mine.w;
+  if (row < 0 || row >= MAT_SLOTS_ROWS || col < 0 || col >= MAT_SLOTS_COLS) return undefined;
+  const occupant = positions.find(p => p.card && row === p.row && col >= p.col && col < p.col + p.w);
+  // An empty target has no array index of its own -- appending (same
+  // convention the old drag-and-drop hit-test used for an empty slot)
+  // naturally flows the card into wherever packing actually puts it.
+  return occupant ? occupant.idx : state.mat.length - 1;
+}
+const MAT_MOVE_ARROWS = [["up","▲"], ["down","▼"], ["left","◀"], ["right","▶"]];
+function matMoveArrowsHTML(mine, positions){
+  return MAT_MOVE_ARROWS.map(([dir, glyph]) => {
+    const target = matMoveTargetIdx(positions, mine, dir);
+    if (target === undefined) return "";
+    return `<button type="button" class="mm-move-arrow ${dir}" data-mat-move="${dir}" aria-label="Move ${dir}">${glyph}</button>`;
+  }).join("");
+}
+/* Selected card's own index in state.mat, or null -- set on a plain tap
+   (see the pointerup handler below, which also opens the inspection
+   view), cleared wherever that popup closes (openMatCardPop() itself and
+   every #cardPop close path). Survives a move (reassigned to the card's
+   new index) so arrows re-render around wherever it just landed, letting
+   several taps in a row walk it across the grid. */
+let matMoveSelectedIdx = null;
 function renderMatGridCells(s){
   const mat = matOnMat();
   const cells = matPackCells(mat);
+  const positions = matCellPositions(cells);
   const html = cells.map(cell => cell.card
-    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${
-        matCardHTML(cell.card.name, { complete: s.completeNames.has(cell.card.name) })}</div>`
+    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""} ${cell.idx === matMoveSelectedIdx ? "move-selected" : ""}" data-idx="${cell.idx}">${
+        matCardHTML(cell.card.name, { complete: s.completeNames.has(cell.card.name) })}${
+        cell.idx === matMoveSelectedIdx
+          ? matMoveArrowsHTML(positions.find(p => p.idx === cell.idx), positions)
+          : ""}</div>`
     : `<div class="mm-slot empty"></div>`);
   for (let n = cells.reduce((a, c) => a + c.w, 0); n < MAT_SLOTS_TOTAL; n++){
     html.push(`<div class="mm-slot empty"></div>`);
   }
   document.getElementById("matGrid").innerHTML = html.join("");
+}
+/* Moves the selected card one step in `dir` -- the exact same splice-and-
+   revert-on-overflow logic the old pointer-drag used, just applied once
+   per arrow tap instead of continuously under a moving finger. */
+function matMoveCard(dir){
+  if (matMoveSelectedIdx === null) return;
+  const positions = matCellPositions(matPackCells(matOnMat()));
+  const mine = positions.find(p => p.card && p.idx === matMoveSelectedIdx);
+  if (!mine) return;
+  const to = matMoveTargetIdx(positions, mine, dir);
+  if (to === undefined || to === matMoveSelectedIdx) return;
+  const from = matMoveSelectedIdx;
+  const [n] = state.mat.splice(from, 1);
+  state.mat.splice(to, 0, n);
+  // Moving a capstone can force a row pad a full mat has no room for;
+  // refuse that placement rather than growing a third row.
+  if (!matFits(matOnMat())){
+    state.mat.splice(to, 1);
+    state.mat.splice(from, 0, n);
+    return;
+  }
+  matMoveSelectedIdx = to;
+  save();
+  renderMatTop();
+  renderMatResultsGrid();
+}
+/* Clears the move-arrows selection and re-renders the grid without them
+   -- called from every place #cardPop's mat-panel actually closes, so
+   arrows never linger around a card once its own inspection view (opened
+   alongside them on the same tap) is gone. No-op harmlessly if the mat
+   page isn't even showing right now (matGrid absent) or nothing was
+   selected. */
+function clearMatMoveSelection(){
+  if (matMoveSelectedIdx === null) return;
+  matMoveSelectedIdx = null;
+  if (matDrawerView === "mat" && document.getElementById("matGrid")) renderMatGridCells(matLastScore);
 }
 
 // "mat" | "elements" -- which view currently fills #drawerTop's lower
@@ -14455,6 +14619,8 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
+  const moveArrow = ev.target.closest("[data-mat-move]");
+  if (moveArrow){ matMoveCard(moveArrow.dataset.matMove); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
 });
@@ -14463,6 +14629,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
 // items list (or a saved layout) to place right back.
 function clearMatDisplay(){
   state.mat = [];
+  matMoveSelectedIdx = null;
   save();
   render();
 }
@@ -14629,113 +14796,52 @@ document.getElementById("matLayoutsExport").addEventListener("click", async () =
   setTimeout(() => { btn.textContent = "⧉ Export"; btn.classList.remove("done"); }, 1800);
 });
 
-/* Pointer-driven drag to re-arrange, same approach as the cardgame/
-   mat.html prototype this was ported from: the grid re-renders on every
-   hover change so other cards visibly shuffle aside, and a native HTML5
-   drag does not survive its own source element being replaced mid-drag.
-   A pointerdown that never clears the 6px threshold below is a tap, and
-   toggles the card off via the pointerup fallback instead. Delegated to
-   #drawerTop (stable) rather than #matGrid itself, since #matGrid only
-   exists in the DOM while matDrawerView === "mat" and is recreated by
-   every renderMatTop() call. */
-let matDrag = null;
-function matSlotUnder(x, y){
-  const grid = document.getElementById("matGrid");
-  if (!grid) return null;
-  for (const el of document.elementsFromPoint(x, y)){
-    const slot = el.closest && el.closest(".mm-slot");
-    if (slot && slot.parentElement === grid) return slot;
-  }
-  return null;
-}
+/* Tapping a mat card selects it (see matMoveSelectedIdx/matMoveArrowsHTML)
+   and opens its inspection view at once, per explicit request -- replaces
+   the previous pointer-drag-to-rearrange entirely, which real touchscreens
+   kept misreading as a tap (see the git history above this comment for
+   the two escalating jitter-threshold/preventDefault attempts at fixing
+   drag-vs-tap detection) even after those fixes. A plain tap detector is
+   far simpler to get right than a continuous drag ever was: no ghost
+   element, no live hit-testing under a moving finger, just "did the
+   pointer move more than a small jitter amount between down and up."
+   Delegated to #drawerTop (stable) rather than #matGrid itself, since
+   #matGrid only exists in the DOM while matDrawerView === "mat" and is
+   recreated by every renderMatTop() call. */
+let matTapStart = null;
 document.getElementById("drawerTop").addEventListener("pointerdown", ev => {
   if (ev.button) return;
   const slot = ev.target.closest(".mm-slot.filled");
   if (!slot) return;
-  ev.preventDefault();
-  const r = slot.getBoundingClientRect();
-  matDrag = {
+  matTapStart = {
     idx: +slot.dataset.idx,
     name: slot.querySelector("[data-mat-card]").dataset.matCard,
     x0: ev.clientX, y0: ev.clientY,
-    w: r.width, h: r.height,
-    dx: ev.clientX - r.left, dy: ev.clientY - r.top,
-    live: false,
   };
 });
+// No preventDefault here (unlike the old drag's own pointerdown) -- a
+// real scroll gesture starting on a mat card should scroll the page
+// normally instead of being hijacked, now that there's no ghost drag to
+// protect. The pointermove check below abandons the tap the moment it
+// looks like anything other than a stationary press anyway.
 document.addEventListener("pointermove", ev => {
-  if (!matDrag) return;
-  if (!matDrag.live){
-    // 18px, not 12 (itself raised from an original 6) -- a mouse (or a
-    // synthetic test event) has ~zero jitter, but a real fingertip on a
-    // capacitive screen routinely drifts more than either smaller value
-    // during what's meant to read as a plain tap, silently reclassifying
-    // it as a drag (which, going nowhere, opens nothing and looks like
-    // the card simply doesn't respond to taps at all -- the exact bug
-    // report that prompted raising this a second time). preventDefault()
-    // on the matching pointerup below closes the other half of that same
-    // failure mode: a real touchscreen's own synthesized "click" landing
-    // on whatever now sits at that spot (the just-opened popup) and
-    // immediately closing it again.
-    if (Math.hypot(ev.clientX - matDrag.x0, ev.clientY - matDrag.y0) < 18) return;
-    matDrag.live = true;
-    const g = document.getElementById("matGhost");
-    g.style.width = matDrag.w + "px";
-    g.style.height = matDrag.h + "px";
-    g.innerHTML = matCardHTML(matDrag.name);
-    g.hidden = false;
-    document.getElementById("matGrid").classList.add("dragging");
-  }
-  const g = document.getElementById("matGhost");
-  g.style.left = (ev.clientX - matDrag.dx) + "px";
-  g.style.top  = (ev.clientY - matDrag.dy) + "px";
-
-  // Hit-test against the dragged CARD's own visual center, not the raw
-  // finger/cursor position -- matDrag.dx/dy is wherever within the card
-  // it was originally grabbed, which is rarely dead-center, so using the
-  // pointer directly made the drop target consistently lag behind (or
-  // lead) the card's actual on-screen position by that same offset. That
-  // mismatch was hardest to feel at a grid edge (the top-right slot in
-  // particular): there's no further slot beyond it for a lagging ghost to
-  // still land in, so any offset there reads as "this corner just won't
-  // register" instead of merely feeling a bit imprecise like a middle
-  // slot would.
-  const cx = ev.clientX - matDrag.dx + matDrag.w / 2;
-  const cy = ev.clientY - matDrag.dy + matDrag.h / 2;
-  const slot = matSlotUnder(cx, cy);
-  if (!slot) return;
-  const to = slot.dataset.idx !== undefined ? +slot.dataset.idx : state.mat.length - 1;
-  if (to === matDrag.idx) return;
-  const [n] = state.mat.splice(matDrag.idx, 1);
-  state.mat.splice(to, 0, n);
-  // Moving a capstone can force a row pad a full mat has no room for;
-  // refuse that placement rather than growing a third row.
-  if (!matFits(matOnMat())){
-    state.mat.splice(to, 1);
-    state.mat.splice(matDrag.idx, 0, n);
-    return;
-  }
-  matDrag.idx = to;
-  renderMatGridCells(matLastScore);
+  if (!matTapStart) return;
+  if (Math.hypot(ev.clientX - matTapStart.x0, ev.clientY - matTapStart.y0) >= 18) matTapStart = null;
 });
 document.addEventListener("pointerup", ev => {
-  if (!matDrag) return;
-  // Same reasoning as pointerdown's own preventDefault -- without it, a
-  // real touchscreen can still synthesize a compatibility "click" from
+  if (!matTapStart) return;
+  // A real touchscreen can still synthesize a compatibility "click" from
   // this same gesture afterward, landing on whatever's now at that same
-  // screen position. Since a plain tap just opened #cardPop right there
+  // screen position -- since a plain tap just opened #cardPop right there
   // (see openMatCardPop() below), that stray click could land on the
-  // popup's own scrim/background and close it again immediately --
-  // reading as "tapping a mat card to inspect it doesn't work."
+  // popup's own scrim/background and close it again immediately, reading
+  // as "tapping a mat card to inspect it doesn't work."
   ev.preventDefault();
-  const was = matDrag;
-  matDrag = null;
-  document.getElementById("matGhost").hidden = true;
-  document.getElementById("matGhost").innerHTML = "";
-  const grid = document.getElementById("matGrid");
-  if (grid) grid.classList.remove("dragging");
-  if (was.live){ renderMatTop(); renderMatResultsGrid(); save(); }
-  else openMatCardPop(was.name);
+  const was = matTapStart;
+  matTapStart = null;
+  matMoveSelectedIdx = was.idx;
+  renderMatTop();
+  openMatCardPop(was.name);
 });
 
 /* ------------------------------------------------------ overlays --- */
