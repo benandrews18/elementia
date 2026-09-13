@@ -4543,6 +4543,27 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    scroll container is needed. */
 .mat-results-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
 .mat-results-grid .mm-card{width:100%; height:auto; aspect-ratio:5/7}
+/* Point-based tier breaklines (see MAT_TIER_BANDS) -- a labeled divider
+   line per section, collapsible via the same border-drawn chevron used
+   everywhere else in the game (.collapse-chevron, see the Job Board's own
+   comment on it). One section's own bottom margin is what separates it
+   from the next section's line, so no extra section-level gap is needed. */
+.mat-tier-section{margin-bottom:14px}
+.mat-tier-section:last-child{margin-bottom:0}
+.mat-tier-heading{
+  display:flex; align-items:center; gap:8px; width:100%; margin:0 0 10px;
+  padding:6px 0; border:none; background:none; cursor:pointer;
+  font-size:13px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
+  -webkit-user-select:none; user-select:none;
+}
+.mat-tier-line{flex:1; height:2px; background:var(--line2)}
+.mat-tier-heading .collapse-chevron{flex:none}
+/* Job Board's own chevron defaults to the CLOSED (pointing-right) shape;
+   this list's sections default OPEN, so the "expanded" rotation is the
+   resting state here, and .collapsed flips it back to closed instead. */
+.mat-tier-heading .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
+.mat-tier-section.collapsed .mat-tier-heading .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
+.mat-tier-section.collapsed .mat-results-grid{display:none}
 
 /* Parchment face (was plain white) -- same #f2e6cc BINGO's own cards use
    (see .bingo-cell), so this reads as the same physical "card stock" the
@@ -13830,6 +13851,15 @@ document.getElementById("invFilter").addEventListener("input", applyInvFilter);
 document.getElementById("drawerBody").addEventListener("click", ev => {
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
+  // Tier breakline (see MAT_TIER_BANDS/matTierCollapsed) -- collapses/
+  // expands just that one section's own grid.
+  const tierHeading = ev.target.closest("[data-mat-tier]");
+  if (tierHeading){
+    const key = tierHeading.dataset.matTier;
+    matTierCollapsed.has(key) ? matTierCollapsed.delete(key) : matTierCollapsed.add(key);
+    renderMatResultsGrid();
+    return;
+  }
   // Classic Mode's own results grid (see renderClassicDrawer()) -- tap
   // opens the card's own inspection popup (see openMatCardPop()); adding/
   // removing it from the mat happens from a button inside that popup now.
@@ -14552,21 +14582,52 @@ function matVisibleInventory(){
   };
   return list.sort(sorts[matFilt.sort] || sorts.points);
 }
+/* Point-based tiers (explicit request, distinct from ITEM_TIER's own
+   MATERIAL/COMPONENT/CREATION/CAPSTONE categories used elsewhere -- those
+   don't line up with these exact point thresholds) -- highest first,
+   matching the tray's own default points-descending sort. */
+const MAT_TIER_BANDS = [
+  { key: "capstone", label: "Capstones", min: 30, max: Infinity },
+  { key: "t3", label: "Tier 3", min: 20, max: 29 },
+  { key: "t2", label: "Tier 2", min: 10, max: 19 },
+  { key: "t1", label: "Tier 1", min: 0, max: 9 },
+];
+// Collapsed tier keys -- plain in-memory Set (same convention as matFilt),
+// not persisted past this page load, so a section a player collapses
+// stays collapsed across other tray actions (placing a card, searching,
+// re-sorting) that re-render #drawerBody, without needing to survive a
+// full reload.
+let matTierCollapsed = new Set();
 /* The scrollable "which owned items to place" grid -- fills #drawerBody,
    the exact container the non-Classic legacy list already scrolled
    inside of. A pure string builder (matResultsGridHTML()) plus a tiny
    DOM-writing wrapper, so both renderClassicDrawer() (returns the string,
    matching renderLegacyDrawer()'s own shape) and the filter bar's own
    change handlers (which need to update #drawerBody directly, without
-   re-running the whole drawer render) can share one implementation. */
+   re-running the whole drawer render) can share one implementation.
+   Grouped into MAT_TIER_BANDS sections (each its own collapsible
+   breakline) rather than one flat grid -- items keep whatever order the
+   current sort/filter already gave them within their own band, so this
+   groups cleanly under every sort mode (points/name/station), not just
+   the default points sort. */
 function matResultsGridHTML(){
   const inv = matVisibleInventory();
-  if (inv.length){
-    return `<div class="mat-results-grid">${inv.map(c => matCardHTML(c.name, { tray: true, cls: "small" })).join("")}</div>`;
+  if (!inv.length){
+    return `<p class="empty">${matInventory().length
+      ? "Nothing matches those filters."
+      : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
-  return `<p class="empty">${matInventory().length
-    ? "Nothing matches those filters."
-    : "Nothing crafted yet — items you craft show up here."}</p>`;
+  return MAT_TIER_BANDS.map(band => {
+    const items = inv.filter(c => c.points >= band.min && c.points <= band.max);
+    if (!items.length) return "";
+    const collapsed = matTierCollapsed.has(band.key);
+    return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
+        <button type="button" class="mat-tier-heading" data-mat-tier="${band.key}">
+          <span class="mat-tier-line"></span>${esc(band.label)}<span class="collapse-chevron"></span><span class="mat-tier-line"></span>
+        </button>
+        <div class="mat-results-grid">${items.map(c => matCardHTML(c.name, { tray: true, cls: "small" })).join("")}</div>
+      </div>`;
+  }).join("");
 }
 function renderMatResultsGrid(){
   document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
