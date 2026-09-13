@@ -4243,13 +4243,23 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   display:flex; flex-direction:column; gap:8px; padding:10px 12px; margin-bottom:12px;
   background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
 }
-/* Combo chips and the point total share ONE row (was two stacked rows,
-   score above total) -- chips wrap on the left, the total stays pinned
-   right via justify-content:space-between so it never gets pushed
-   around by however many chips are currently showing. */
+/* Just the combo chips now (see .mat-score-stats for the points/
+   multiplier/Quarks breakdown, moved to its own row above this one). */
 .mat-score-row{
-  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 10px;
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px;
 }
+/* Points on Display x Combo Multiplier = Quarks, spelled out explicitly
+   on one line above the combo chips (was two small right-aligned lines
+   squeezed into the same row as the chips, with no labels of their own
+   explaining what the two numbers even were). */
+.mat-score-stats{
+  display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:6px 10px;
+}
+.mss-stat{display:flex; flex-direction:column; align-items:center; gap:1px}
+.mss-val{font-size:17px; font-weight:900; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
+.mss-stat.quarks .mss-val{color:var(--gold)}
+.mss-label{font-size:9.5px; font-weight:700; letter-spacing:.2px; color:var(--ink2); text-transform:uppercase; white-space:nowrap}
+.mss-op{align-self:center; font-size:15px; font-weight:800; color:var(--mute)}
 /* Quark Meter -- 4 distinct "broken pill" segments (real gaps between
    them, not one continuous bar) spanning the full width of the score
    card, sitting above the combo/score row. Each segment is its own small
@@ -4302,14 +4312,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-cico :is(img,svg){width:18px; height:18px}
 .mm-cico.star{background:none; font-size:21px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
-/* Score/multiplier/Quarks -- two lines, right-aligned, sharing this same
-   row with the combo tiles rather than sitting on a row of its own. */
-.mat-score-block{
-  flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:2px;
-  font-weight:800; font-variant-numeric:tabular-nums; margin-left:auto;
-}
-.msb-line1{font-size:12px; color:var(--ink2)}
-.msb-line2{font-size:16px; font-weight:900; color:var(--gold); white-space:nowrap}
 /* Redesigned from the ground up 2026-09-12 (see git history for the two
    earlier attempts, both position:absolute straddling #drawer's own top
    edge with an independent transform of its own). That approach had a
@@ -4409,10 +4411,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    single View Held Elements toggle button -- see renderMatTop(). Extra
    top margin on the wrap leaves room for the tabs, which sit ABOVE the
    page's own top edge (translateY(-100%)), so they read as sticking up
-   out of it rather than overlapping its content. Bottom margin instead
-   makes room for the new Clear/Layouts circular buttons (see
-   .mat-quick-actions below), which took over the tabs' old spot. */
-.mat-zone-wrap{position:relative; margin-top:32px; margin-bottom:36px}
+   out of it rather than overlapping its content. Revised 2026-09-13:
+   Clear/Layouts (.mat-quick-actions) moved up to that same top band too
+   (top-left, mirroring the tabs' own top-right), so no bottom margin is
+   needed here any more -- nothing hangs below the page now. */
+.mat-zone-wrap{position:relative; margin-top:32px}
 /* Fixed height (--mat-row-h, shared with .mat-grid -- see its own
    comment) regardless of which view is showing, so switching tabs never
    resizes or jumps the tray; a held-elements list too long to fit
@@ -4439,14 +4442,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    use for whichever tab isn't currently in front. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
-/* Clear/Layouts -- bottom-LEFT, in the spot the page tabs used to hang
-   from before they moved to the top (see .mat-zone-tabs' own comment),
-   just above the gold breakline (#drawer .dbody's own border-top) below.
-   Small circular icon buttons rather than folder tabs, since neither one
-   switches the page -- both are one-shot actions on whatever's currently
-   on the mat. Only shown on the Display Mat page itself (see
-   renderMatTop()), same as the Layouts trigger already was. */
-.mat-quick-actions{position:absolute; left:14px; bottom:0; transform:translateY(100%); display:flex; gap:8px; z-index:2}
+/* Clear/Layouts -- own normal-flow row directly above the tabs+page now
+   (was bottom-left, hanging below the page just above the gold breakline
+   -- explicit request to move them above the mat instead). Tried sharing
+   .mat-zone-tabs' own absolutely-positioned top-right corner first (same
+   anchor, opposite side), but "Clear Mat" 's own text-pill width plus the
+   Layouts circle didn't reliably fit alongside the tabs in the same band
+   on a narrower phone -- the two would overlap. A real block-level row
+   above the wrap has no such width contention: it always pushes the tabs/
+   page down below it rather than sharing their coordinate space. */
+.mat-quick-actions{display:flex; gap:8px; margin-bottom:8px}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   border:2px solid var(--gold-line); background:var(--gold); color:#181614; font-size:15px;
@@ -14551,14 +14556,36 @@ function renderMatTop(){
       title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmPassed} Empty Element${qmPassed === 1 ? "" : "s"} if you lock in now">
     ${qmSegs}
   </div>`;
+  // Revised 2026-09-13: was two small right-aligned lines sharing the
+  // combo-chip row ("12 pts ×3" / "36 Quarks") -- explicit request for a
+  // clearer, explicitly-labeled breakdown of how Quarks actually gets
+  // computed, on its own line ABOVE the chips instead of squeezed beside
+  // them. "Points on Display" is base + colBonus, not just s.base --
+  // matScore()'s own total is (base + colBonus) * mult, so colBonus (a
+  // named-collection bonus) has to be folded in here too or the displayed
+  // formula wouldn't actually multiply out to the Quarks total shown.
+  const pointsOnDisplay = s.base + s.colBonus;
+  const statsRowHTML = `<div class="mat-score-stats">
+      <div class="mss-stat">
+        <div class="mss-val">${pointsOnDisplay.toLocaleString()}</div>
+        <div class="mss-label">Points on Display</div>
+      </div>
+      <div class="mss-op">×</div>
+      <div class="mss-stat">
+        <div class="mss-val">${s.mult.toLocaleString()}</div>
+        <div class="mss-label">Combo Multiplier</div>
+      </div>
+      <div class="mss-op">=</div>
+      <div class="mss-stat quarks">
+        <div class="mss-val">⚛️ ${s.total.toLocaleString()}</div>
+        <div class="mss-label">Quarks</div>
+      </div>
+    </div>`;
   const scoreRowHTML = `<div class="mat-score-card">
     ${quarkMeterHTML}
+    ${statsRowHTML}
     <div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
-      <div class="mat-score-block">
-        <div class="msb-line1">${s.base.toLocaleString()} pts${s.mult > 1 ? ` ×${s.mult}` : ""}</div>
-        <div class="msb-line2">⚛️ ${s.total.toLocaleString()} Quarks</div>
-      </div>
     </div>
   </div>`;
 
@@ -14583,9 +14610,11 @@ function renderMatTop(){
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
   // Clear/Layouts -- only on the Display Mat page itself (clearing/saving
-  // an ARRANGEMENT has nothing to do with the Elements page). See
-  // .mat-quick-actions' own CSS comment for why these moved here (the page
-  // tabs' old spot) once the tabs themselves moved to the top.
+  // an ARRANGEMENT has nothing to do with the Elements page). Its own
+  // normal-flow row directly above the tabs+page (see .mat-quick-actions'
+  // own CSS comment) -- sharing the tabs' absolutely-positioned top-right
+  // corner left too little width for both on a narrower phone, so this
+  // gets a dedicated line instead of fighting them for the same band.
   const quickActionsHTML = matDrawerView === "mat" ? `<div class="mat-quick-actions">
       <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear Mat</button>
       <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
@@ -14602,8 +14631,8 @@ function renderMatTop(){
   // No in-tray Lock In button any more -- Home's own center button
   // becomes the "lockin" face whenever this view is showing (see
   // hubHomeFace()), so there's no separate control to render here.
-  document.getElementById("drawerTop").innerHTML = scoreRowHTML +
-    `<div class="mat-zone-wrap">${tabsHTML}${pageHTML}${quickActionsHTML}</div>`;
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML + quickActionsHTML +
+    `<div class="mat-zone-wrap">${tabsHTML}${pageHTML}</div>`;
   // #matAllItemsBtn's own visibility is pure CSS now (#drawer.open:not(.expanded),
   // see its own CSS comment) -- nothing to set here any more.
   // Sort/Filter only mean anything once the full scrollable item list is
