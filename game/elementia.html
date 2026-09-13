@@ -482,15 +482,14 @@ body[data-screen="market"] #trackedPill{display:none}
    reduced-motion via the global animation-duration override above. */
 .map-pick-note{
   position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5;
-  width:min(300px, 78%); margin:0; padding:18px 20px;
+  width:fit-content; max-width:78%; margin:0; padding:10px 18px;
   text-align:center; color:#fff; font-weight:800; font-size:19px; line-height:1.35;
-  /* Revised 2026-09-13: dropped the solid dark fill (was
-     rgba(15,20,28,.82)) per explicit request -- the map art shows through
-     now instead of a blacked-out rectangle sitting on top of it. Border
-     and the pulsing var(--ok-soft) glow (this comment block's own "given
-     real banner weight" reasoning still applies to those two) stay, so
-     the prompt still reads as a distinct, attention-grabbing object over
-     the art, just without a flat opaque panel behind the text. */
+  /* Revised 2026-09-13 (again): the borderless-fill look didn't read as
+     distinct enough against a busy map background -- back to a solid dark
+     fill, but the box itself now hugs the text (fit-content, trimmed
+     padding) rather than a fixed min-width, so the border traces close to
+     the words instead of framing a bunch of empty margin around them. */
+  background:rgba(15,20,28,.85);
   border:2px solid var(--ok); border-radius:16px;
   box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
   animation:pickNotePulse 2.2s ease-in-out infinite;
@@ -2387,6 +2386,25 @@ body[data-screen="market"] #trackedPill{display:none}
 
 /* ------------------------------------------------------- inventory --- */
 #scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
+/* Lock In's own full-width prompt above the peeked Display Mat -- see the
+   HTML's own comment and syncLockInBanner(). z-index below #drawer's own
+   60 (drawer sits in front where the two would ever overlap during the
+   slide transition) but above #scrim/the map underneath. bottom is set in
+   JS to the drawer's live top edge -- top:0 plus that is what makes this
+   read as "everything above the tray", not a fixed-height banner. */
+#lockInBanner{
+  display:none; position:fixed; left:0; right:0; top:0; z-index:59;
+  flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  padding:24px 28px; text-align:center;
+  background:rgba(10,14,20,.92); border-bottom:3px solid var(--gold);
+}
+#lockInBanner.show{display:flex}
+#lockInBannerText{
+  margin:0; color:#fff; font-weight:800; font-size:19px; line-height:1.4;
+}
+#lockInBannerResult{display:flex; flex-direction:column; align-items:center; gap:4px}
+#lockInBannerResult .lirq-em{font-size:40px; line-height:1}
+#lockInBannerResult .lirq-label{color:var(--gold); font-weight:800; font-size:16px}
 #scrim.open{display:block}
 /* Bottom sheet now (was a right-side slide-in) -- same slide-up-from-
    behind-the-hub language as #convert, since it now holds the Display
@@ -2404,6 +2422,10 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; flex-direction:column;
 }
 #drawer.open{transform:translateY(0)}
+/* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher
+   than the hub-flush position every other state of this tray uses, per
+   explicit request. */
+#drawer.open:not(.expanded){bottom:calc(var(--hub-h, 67px) + 2mm)}
 /* Combo Lab (2026-09-12) -- an experimentation sandbox reusing the real
    Display Mat/full-inventory drawer wholesale (see openComboLab()) rather
    than building a second copy of it: swaps `state` for a throwaway one
@@ -2536,6 +2558,12 @@ body[data-screen="market"] #trackedPill{display:none}
   font-weight:800; font-size:13px; color:#221f1a; background:#fff;
 }
 .elqty{font-weight:800; font-size:9px; color:var(--ink)}
+/* var(--ink) is the app's own light-on-dark body text color -- correct on
+   the legacy drawer's dark --card background (the only other place this
+   shared component renders), but the Classic Elements page sits on light
+   parchment (.mat-zone-page.zone-elements) instead, where that same light
+   color read as barely-visible. Scoped override, not a global recolor. */
+.mat-zone-page .elqty{color:#221f1a}
 /* Convert's quick-pick grid only (see #convertQuickGrid) -- an
    under-3-count element can't be the FROM side, faded the same way
    .convert-pick.invalid already fades that same case in the full picker. */
@@ -3034,7 +3062,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    that -- this only needs to clear whichever tray it can now open over,
    not outrank the hub chrome every other overlay already intentionally
    stays below (see .overlay's own comment). */
-#cardPop{z-index:70}
+/* One above #capstoneOverlay/#bingoCraftOverlay (both also 70) -- an item
+   inspection card drilled into FROM either of those has to paint on top of
+   them, not behind (same-z-index ties fall back to DOM order, and both of
+   those overlays' markup comes after this one). */
+#cardPop{z-index:71}
 /* Gold border, same design language as the map screen's reachable-node
    rings (.map-node.reachable) and the capstone-celebration card that
    already borrowed it (#celebrate .sheetbox) -- extended here to the
@@ -3423,9 +3455,20 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    .pc-card's transform directly as an inline style instead, which has no
    such staleness risk. transform-origin still belongs here, not inline,
    since it never changes. */
+/* animation:none is load-bearing, not cosmetic -- .pc-card's own base rule
+   (see @keyframes bounceIn) plays an entrance animation with fill:both,
+   and a CSS animation's fill-forwards value for a property outranks a
+   plain (non-!important) inline style in the cascade for as long as it's
+   "current" -- which for an unretriggered fill:both animation is forever.
+   That silently ate every transform positionCardPopMatPanel() ever set
+   (immediately, not just after the animation's own 220ms), so the card
+   always rendered at the bounce's own final scale(1) -- full native
+   300x420 -- regardless of the real, correctly-computed scale factor.
+   Root cause of the full-inventory (and Display Mat) card popup showing
+   oversized/undocked instead of shrunk to fit above the hub. */
 #cardPop.mat-panel .pc-card{
   width:300px; position:absolute; bottom:0; right:0; transform-origin:bottom right;
-  box-shadow:0 10px 28px rgba(0,0,0,.5);
+  box-shadow:0 10px 28px rgba(0,0,0,.5); animation:none;
 }
 #cardPop.mat-panel .pc-actions, #cardPop.mat-panel #cpMatBtn{display:none}
 .pc-card-scale{display:contents}
@@ -4337,19 +4380,53 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    every other lit combo/pip in this game uses) only once IT specifically
    fills all the way, so which breakpoints are actually banked reads at a
    glance separately from how close the next one is. */
-.quark-meter-wrap{display:flex; gap:3px; width:100%}
+.quark-meter-wrap{display:flex; gap:3px; width:100%; position:relative}
 .qm-seg{
   position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
   background:var(--line);
 }
+/* Gold only now (was var(--collection), a purple in-progress fill with
+   gold reserved for the "cleared" state) -- explicit request to drop the
+   two-color language entirely; a segment's own opacity is what now reads
+   as "still filling" vs the fully-opaque, glowing .lit state below. */
 .qm-seg-fill{
   position:absolute; inset:0; width:0; border-radius:6px;
-  background:var(--collection);
+  background:var(--gold); opacity:.55;
   transition:width .3s cubic-bezier(.3,.8,.4,1);
 }
 .qm-seg.lit .qm-seg-fill{
-  background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.7);
+  opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7);
 }
+/* Empty Element badges straddle the 3 real breakpoints between segments
+   (see quarkMeterHTML()) -- percentage left offsets rather than JS-measured
+   pixels since the 3px inter-segment gaps are negligible against the
+   meter's own width at any real screen size. Same black-border/light-face
+   badge language the Lock In reward icon uses elsewhere; lights up gold
+   once qmPassed (see emptyElementsForScore()) has actually reached that
+   break, i.e. locking in RIGHT NOW would bank an Empty Element that far. */
+.qm-break{
+  position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2;
+  width:22px; height:22px; border-radius:50%; background:#f4f1ea; border:3px solid #000;
+  display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; color:#181614;
+  box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+.qm-break.lit{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+/* Empty Elements counter, next to a station's own title (see
+   emptyElBadgeHTML()/renderStation()) -- black-border/light-face language
+   matches .qm-break above so the two read as the same currency wherever
+   either shows up. Dimmed + a real disabled state at 0 held rather than
+   hidden outright, so the control stays discoverable even before the
+   player has ever earned one. */
+.empty-el-badge{
+  display:inline-flex; align-items:center; gap:5px; margin-left:10px;
+  padding:4px 10px 4px 7px; border-radius:999px; border:2.5px solid #000;
+  background:#f4f1ea; color:#181614; font-weight:800; font-size:14px;
+  vertical-align:middle; cursor:pointer; opacity:.45;
+  box-shadow:0 2px 4px rgba(0,0,0,.35);
+}
+.empty-el-badge:disabled{cursor:default}
+.empty-el-badge.active{opacity:1; background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
+.empty-el-badge b{font-size:14px; font-weight:900}
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Icon on top, its own raw shared-icon count below it (was an inline
    pill: icon, count, "+bonus") -- a small vertical tile per group
@@ -4378,37 +4455,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-cico :is(img,svg){width:18px; height:18px}
 .mm-cico.star{background:none; font-size:21px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
-/* Redesigned from the ground up 2026-09-12 (see git history for the two
-   earlier attempts, both position:absolute straddling #drawer's own top
-   edge with an independent transform of its own). That approach had a
-   real bug, not just a look problem: with #drawer CLOSED (translateY of
-   its own full height, which can be 600px+), a child sitting near the
-   top of that box but ALSO shifted upward by its own separate transform
-   doesn't necessarily end up off-screen -- the two transforms don't
-   cancel out unless the child's own offset happens to be small relative
-   to the parent's height, so the button could sit visibly stranded
-   somewhere mid-screen with the actual (closed) tray nowhere near it.
-   Now a perfectly normal, first-in-flow child of #drawer instead of an
-   absolutely-positioned overlay on top of it -- no independent transform
-   of its own at all, so it moves with the drawer's own open/close
-   animation exactly like everything else inside it, and naturally
-   occupies real space at the tray's own top edge rather than floating
-   above/across it. display:none by default; #drawer.open:not(.expanded)
-   is the ONE place that reveals it -- a pure function of the drawer's own
-   classList, so it can never go stale independent of whether the drawer
-   is actually open, unlike the old matTrayExpanded-driven `hidden`
-   attribute (which renderMatTop() set on every render() pass regardless
-   of whether the drawer was even open at all). */
-.mat-alltab-btn{
-  display:none; width:calc(100% - 32px); margin:14px 16px 0; padding:12px;
-  border-radius:14px; background:var(--gold); border:3px solid #000; color:#181614;
-  font-size:15px; font-weight:900; letter-spacing:.3px;
-  align-items:center; justify-content:center;
-  box-shadow:0 4px 0 var(--gold-line);
-  cursor:pointer; transition:box-shadow .1s, transform .1s;
-}
-#drawer.open:not(.expanded) .mat-alltab-btn{display:flex}
-.mat-alltab-btn:active{transform:translateY(4px); box-shadow:0 0 0 transparent}
 
 /* Row height is computed explicitly (via #drawerTop's own
    container-type:inline-size above) rather than from aspect-ratio on
@@ -4471,17 +4517,24 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-move-arrow.right:active{transform:translateY(-50%) scale(.9)}
 
 /* The mat/elements zone as a physical "page" now, with two folder tabs
-   (Elements/Display Mat) attached at its TOP-right (moved up from the
-   bottom 2026-09-12 -- they used to hang below the page, competing with
-   the gold breakline/item list right underneath), replacing the old
-   single View Held Elements toggle button -- see renderMatTop(). Extra
-   top margin on the wrap leaves room for the tabs, which sit ABOVE the
-   page's own top edge (translateY(-100%)), so they read as sticking up
-   out of it rather than overlapping its content. Revised 2026-09-13:
-   Clear/Layouts (.mat-quick-actions) moved up to that same top band too
-   (top-left, mirroring the tabs' own top-right), so no bottom margin is
-   needed here any more -- nothing hangs below the page now. */
-.mat-zone-wrap{position:relative; margin-top:32px}
+   (Elements/Display Mat) -- replacing the old single View Held Elements
+   toggle button -- see renderMatTop(). Revised 2026-09-13 (again): tabs
+   and Clear/Layouts (.mat-quick-actions) now share ONE normal-flow row
+   (.mat-zone-topbar) directly above the page, instead of two separate
+   absolutely-positioned corners -- see that class's own comment for why
+   the width-contention that split them apart last time isn't a problem
+   here. No extra top margin needed on the wrap any more since nothing is
+   pulled out of flow to float above it. */
+.mat-zone-wrap{position:relative}
+/* One row, quick actions left / tabs right (space is negotiated by
+   .mat-quick-actions' own margin-right:auto below, not by this container),
+   sitting directly above .mat-zone-page in normal flow -- zero gap between
+   them is what makes the tabs' own missing bottom border actually read as
+   "attached to the page", same visual the old translateY(-100%) trick
+   produced, just without pulling anything out of flow to get it. Bottom-
+   aligned so a shorter quick-actions row doesn't stretch to the tabs' own
+   taller box. */
+.mat-zone-topbar{display:flex; align-items:flex-end; gap:8px}
 /* Fixed height (--mat-row-h, shared with .mat-grid -- see its own
    comment) regardless of which view is showing, so switching tabs never
    resizes or jumps the tray; a held-elements list too long to fit
@@ -4494,30 +4547,33 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   max-height:calc(var(--mat-row-h) * 2 + 8px + 20px); overflow-y:auto;
   border-radius:14px 14px 4px 14px; border:2px solid; padding:10px;
 }
-.mat-zone-page.zone-mat{background:#ead9c2; border-color:#c3a06a}
+.mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}
 .mat-zone-page.zone-elements{background:#f2e6cc; border-color:#c3a06a}
-.mat-zone-tabs{position:absolute; right:14px; top:0; transform:translateY(-100%); display:flex; gap:2px; z-index:2}
+/* margin-left:auto (not justify-content on the row) so the tabs land at
+   the row's right edge whether or not .mat-quick-actions is even present
+   (the Elements page has no Clear/Layouts row at all -- see
+   renderMatTop()) -- an auto margin claims the leftover space itself
+   regardless of how many siblings it has. */
+.mat-zone-tabs{display:flex; gap:2px; margin-left:auto}
 .mat-tab{
   padding:7px 14px 6px; border:2px solid; border-bottom:none; border-radius:10px 10px 0 0;
   font-size:11px; font-weight:800; letter-spacing:.3px; color:#3a2f1e; cursor:pointer;
 }
-.mat-tab.tab-mat{background:#ead9c2; border-color:#c3a06a}
+.mat-tab.tab-mat{background:#cda874; border-color:#a67c4a}
 .mat-tab.tab-elements{background:#f2e6cc; border-color:#c3a06a}
 /* The inactive tab reads as tucked behind the active page -- dimmed and
    nudged down under it, same "recessed" language browser/app tab strips
    use for whichever tab isn't currently in front. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
-/* Clear/Layouts -- own normal-flow row directly above the tabs+page now
-   (was bottom-left, hanging below the page just above the gold breakline
-   -- explicit request to move them above the mat instead). Tried sharing
-   .mat-zone-tabs' own absolutely-positioned top-right corner first (same
-   anchor, opposite side), but "Clear Mat" 's own text-pill width plus the
-   Layouts circle didn't reliably fit alongside the tabs in the same band
-   on a narrower phone -- the two would overlap. A real block-level row
-   above the wrap has no such width contention: it always pushes the tabs/
-   page down below it rather than sharing their coordinate space. */
-.mat-quick-actions{display:flex; gap:8px; margin-bottom:8px}
+/* Clear/Layouts -- left side of .mat-zone-topbar, tabs on the right (see
+   its own comment). The previous attempt at sharing one row (both
+   absolutely positioned, opposite corners) overlapped on a narrow phone
+   because the card's own width cap left too little room; this version has
+   no such contention since both are plain flex children negotiating real
+   layout space instead of two independently-positioned floats that don't
+   know about each other. */
+.mat-quick-actions{display:flex; gap:8px}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   border:2px solid var(--gold-line); background:var(--gold); color:#181614; font-size:15px;
@@ -4608,7 +4664,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
   padding-bottom:14px; margin-bottom:14px; border-bottom:1.5px solid var(--line);
 }
-.mat-filter-section.suits{grid-template-columns:repeat(2, 1fr); padding-bottom:0; margin-bottom:0; border-bottom:none}
+/* Revised 2026-09-13: back to the same 4-per-row grid and icon size the
+   station tiles above use (was 2x2 and bigger, "half as many so each gets
+   more room") -- explicit request for the two sections to read as one
+   consistent size language rather than suits getting special emphasis. */
+.mat-filter-section.suits{padding-bottom:0; margin-bottom:0; border-bottom:none}
 /* Square, icon-only now (was a wide pill with a name label beside the
    icon) -- 8 station emoji and 4 suit glyphs are each already distinct
    enough alone, and losing the text is what makes room for a real grid
@@ -4626,17 +4686,32 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    icon bleeding across the whole drawer behind everything else). */
 .mat-fbtn :is(img,svg){width:24px; height:24px; object-fit:contain; flex:none}
 .mat-fbtn.on{opacity:1; filter:none; box-shadow:0 0 0 2px var(--gold)}
-/* Suit buttons get the same treatment at a bigger size (per explicit
-   request -- half as many of them, in 2 rows of 2, so each has more room
-   than a station tile does). */
-.mat-filter-section.suits .mat-fbtn{font-size:32px}
-.mat-filter-section.suits .mat-fbtn :is(img,svg){width:34px; height:34px}
 /* The scrollable "which owned items to place" grid itself -- lives in
    #drawerBody, the exact container the non-Classic legacy inventory list
    already scrolled inside of (see .dbody{overflow-y:auto}), so no new
-   scroll container is needed. */
-.mat-results-grid{display:grid; grid-template-columns:repeat(4, 1fr); gap:8px}
-.mat-results-grid .mm-card{width:100%; height:auto; aspect-ratio:5/7}
+   scroll container is needed.
+   --mat-row-h duplicates #drawerTop's own declaration (see its comment)
+   rather than inheriting it -- #drawerBody is a sibling of #drawerTop, not
+   a descendant, so the custom property doesn't cascade down to it. Same
+   computed value either way: .dbody carries the identical 18px horizontal
+   padding #drawerTop has directly on itself, and #drawerBody (no padding
+   of its own) exactly fills .dbody's content box, so 100cqw resolves to
+   the same real width in both places. Needed so a capstone's "wide" cell
+   below gets the SAME per-row height the Display Mat's own grid uses,
+   instead of each row being sized off aspect-ratio alone (which would
+   make a wide, aspect-ratio-locked cell twice as TALL as its neighbors
+   too, not just twice as wide). */
+.mat-results-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  container-type:inline-size; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4);
+  grid-auto-rows:var(--mat-row-h);
+}
+.mat-results-grid .mm-card{width:100%; height:100%}
+/* Capstones span the same 2 columns here that they occupy on the Display
+   Mat itself (see matCardHTML()'s own "wide" class, gated on opts.tray so
+   the mat's own 8-slot grid -- which already gets this from .mm-slot.wide
+   -- isn't double-handled). */
+.mat-results-grid .mm-card.wide{grid-column:span 2}
 /* Point-based tier breaklines (see MAT_TIER_BANDS) -- a labeled divider
    line per section, collapsible via the same border-drawn chevron used
    everywhere else in the game (.collapse-chevron, see the Job Board's own
@@ -4820,6 +4895,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <main id="screen"></main>
 
 <div id="scrim"></div>
+<!-- Lock In's own prompt, shown ONLY above the half-view ("peeked") Display
+     Mat -- see syncLockInBanner()/confirmLockIn(). Sized in JS to exactly
+     fill the gap between the screen's own top edge and the peeked drawer's
+     top edge (its own bottom is set to match #drawer's live top position),
+     so it reads as one continuous dark panel with the mat sitting in the
+     open "window" below it, not a separate floating banner. The text swaps
+     out for the reward readout once Lock In is actually tapped -- see
+     playLockInSequence() -- border/background stay put the whole time. -->
+<div id="lockInBanner" aria-hidden="true">
+  <p id="lockInBannerText">Lock-In this Display Mat to continue!</p>
+  <div id="lockInBannerResult" hidden></div>
+</div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">
   <div class="dhead">
     <h2 id="drawerHead">🎒 Inventory</h2>
@@ -4838,16 +4925,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
        what #drawer sizes itself around while collapsed/"peeked" (see
        #drawer:not(.expanded) .dbody{display:none}) -- collapsed, this
        is the entire visible tray. -->
-  <!-- Redesigned 2026-09-12: a normal in-flow button, first child of
-       #drawer (before #drawerTop), not a position:absolute overlay -- see
-       .mat-alltab-btn's own CSS comment for the real bug the old approach
-       had (not just a look problem). Visibility is pure CSS
-       (#drawer.open:not(.expanded)), so it's structurally impossible for
-       this to show while the drawer is closed or already expanded.
-       Persistent (not regenerated by renderMatTop()'s innerHTML writes),
-       same reasoning as #matFSearch: its own click listener is attached
-       once, below. -->
-  <button type="button" class="mat-alltab-btn" id="matAllItemsBtn" aria-label="View full inventory">^ View All Items ^</button>
+  <!-- "View All Items" (the pull-tab that used to live here) is gone --
+       explicit request. Tapping the bottom hub's own Inventory button
+       while this half-view is showing now expands to the full view
+       instead (see #hubInv's own click handler), so there's no separate
+       control needed inside the tray itself for that any more. -->
   <div id="drawerTop"></div>
   <div class="dbody">
     <!-- Classic Mode only -- station/suit/search/sort filter bar for the
@@ -5161,6 +5243,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      level. -->
 <div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
   <div class="sheetbox" id="capstoneOverlayBody"></div>
+</div>
+
+<!-- Empty Elements cash-in -- see openEmptyElOverlay()/emptyElBadgeHTML().
+     Same floating-layer-on-top pattern #capstoneOverlay uses above. -->
+<div class="overlay" id="emptyElOverlay" role="dialog" aria-modal="true" aria-labelledby="emptyElOverlayTitle">
+  <div class="sheetbox" id="emptyElOverlayBody"></div>
 </div>
 
 <!-- Craft-from-Bingo -- tapping a not-yet-owned Bingo square opens the
@@ -7260,33 +7348,34 @@ function newGameForMode(mode){
 // since this one specifically only needs to suppress the map's own
 // capstone-preview badges for the first, shorter half of it.
 let classicIntroHideCapstones = false;
-const CLASSIC_INTRO_STEP_MS = 500;
+// Revised 2026-09-13: the bare-map beat (no logo, capstones suppressed)
+// dropped entirely -- the logo now bounces in immediately on open -- and
+// the wait before the Marketplace tray opens is its own longer constant
+// (was the same 500ms as the removed bare-map step).
+const CLASSIC_INTRO_LOGO_MS = 1000;
 /* Classic Mode's own opening beat, replacing the old pan entirely
    (explicit request -- there's no map scroll left to pan across since
    the whole map now fits on screen at once): the bare map (station icons
-   showing, capstone-preview badges suppressed) for CLASSIC_INTRO_STEP_MS,
-   then the Elementia logo bounces into view center-screen (#introLogo,
-   see its own CSS) for another CLASSIC_INTRO_STEP_MS, then the
-   Marketplace/BINGO tray opens exactly as startBingoCapstonePicker()
-   always has. body[data-intro-sequence] (see its own CSS) keeps the hub
-   bar and map nodes visible-but-untappable for this ENTIRE beat, tray
-   included -- not cleared until the tray itself actually closes (see
-   closeJobBoard()/closeBingoIntroTray()), whichever happens, so there's
-   no gap where the player could act on a station or hub button before
-   the whole sequence is actually done. */
+   showing, capstone-preview badges suppressed) renders, the Elementia logo
+   immediately bounces into view center-screen (#introLogo, see its own
+   CSS) for CLASSIC_INTRO_LOGO_MS, then the Marketplace/BINGO tray opens
+   exactly as startBingoCapstonePicker() always has. body[data-intro-sequence]
+   (see its own CSS) keeps the hub bar and map nodes visible-but-untappable
+   for this ENTIRE beat, tray included -- not cleared until the tray itself
+   actually closes (see closeJobBoard()/closeBingoIntroTray()), whichever
+   happens, so there's no gap where the player could act on a station or
+   hub button before the whole sequence is actually done. */
 function playClassicIntro(){
   screen = "map"; current = null; selectedMapStation = null;
   document.body.setAttribute("data-intro-sequence", "");
   classicIntroHideCapstones = true;
   render(true);
+  document.getElementById("introLogo").classList.add("show");
   setTimeout(() => {
-    document.getElementById("introLogo").classList.add("show");
-    setTimeout(() => {
-      document.getElementById("introLogo").classList.remove("show");
-      classicIntroHideCapstones = false;
-      startBingoCapstonePicker();
-    }, CLASSIC_INTRO_STEP_MS);
-  }, CLASSIC_INTRO_STEP_MS);
+    document.getElementById("introLogo").classList.remove("show");
+    classicIntroHideCapstones = false;
+    startBingoCapstonePicker();
+  }, CLASSIC_INTRO_LOGO_MS);
 }
 function playMapIntroScroll(){
   screen = "map"; current = null; selectedMapStation = null;
@@ -10899,7 +10988,7 @@ function renderStation(name){
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
-        <div><h1>${esc(s.name)}</h1></div>
+        <div><h1>${esc(s.name)}${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1></div>
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
@@ -11180,7 +11269,12 @@ function updateHub(){
   // inserting children that immediately transform relative to it.
   if (arcVisible){ positionMarketArc(); renderMarketArc(); }
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
-  document.getElementById("hubInv").classList.toggle("active", drawer.classList.contains("open"));
+  // Only the FULL inventory view lights this up now -- the half-view
+  // "peeked" stage (see openDrawer()'s own opts.peeked) is a Lock-In
+  // prompt, not really "you're looking at your Inventory", so it stays
+  // unlit the same way it would if the drawer were closed entirely.
+  document.getElementById("hubInv").classList.toggle("active",
+    drawer.classList.contains("open") && drawer.classList.contains("expanded"));
   // "compact" variant only (that's the real To-Do List -- see openJobBoard(),
   // the hubJobs click handler's own target, and renderJobBoard()'s title
   // logic). #jobSheet is the same element the Marketplace's own Job Select
@@ -13345,6 +13439,8 @@ function handleScreenClick(ev){
 
   if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
 
+  if (ev.target.closest("#emptyElBadgeBtn")){ openEmptyElOverlay(); return; }
+
   const subzoneOpenBtn = ev.target.closest("[data-subzone-open]");
   if (subzoneOpenBtn){
     const target = subzoneOpenBtn.dataset.subzoneOpen;
@@ -13859,7 +13955,22 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   if (face === "map" && openPanelName() === "jobs"){ closeJobBoard(); return; }
   goHome(); // face === "map"
 });
-document.getElementById("hubInv").addEventListener("click", () => hubPanelClick("drawer", openDrawer));
+document.getElementById("hubInv").addEventListener("click", () => {
+  // The half-view (peeked) stage reads as "you're mid Lock-In", not "you
+  // have the Inventory open" (see updateHub()'s own hubInv.active check
+  // just above), so tapping Inventory here should EXPAND to the full
+  // view instead of hubPanelClick()'s normal toggle-closed behavior --
+  // otherwise the very first tap while peeked just closed the tray.
+  if (drawer.classList.contains("open") && !drawer.classList.contains("expanded")){
+    matTrayExpanded = true;
+    drawer.classList.add("expanded");
+    renderMatTop();
+    updateHub();
+    syncLockInBanner();
+    return;
+  }
+  hubPanelClick("drawer", openDrawer);
+});
 document.getElementById("hubCodex").addEventListener("click", () => {
   const fromMarket = screen === "market";
   hubPanelClick("codex", () => { codexReturnScreen = fromMarket ? "market" : null; screen = "codex"; render(true); });
@@ -13929,7 +14040,27 @@ const openDrawer = (opts = {}) => {
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
+  syncLockInBanner();
 };
+/* Shows/hides/positions #lockInBanner -- see its own HTML comment. Only
+   the Lock In flow's own half-view (peeked) stage shows it (travelPromptFor
+   is set only by that flow's own "travel" face branch, see hubHomeFace()'s
+   comment); the full-inventory view and every other opener of this same
+   drawer never do. bottom is computed from #drawer's own computed `bottom`
+   CSS length plus its live rendered height -- both transform-independent
+   (the slide-open .3s transition only animates translateY, never layout
+   size or the `bottom` property itself), so this reads correctly even
+   called synchronously the instant the drawer starts sliding open, with no
+   need to wait out the transition first. */
+function syncLockInBanner(){
+  const banner = document.getElementById("lockInBanner");
+  const show = travelPromptFor !== null && drawer.classList.contains("open") && !drawer.classList.contains("expanded");
+  banner.classList.toggle("show", show);
+  if (!show) return;
+  const bottomPx = parseFloat(getComputedStyle(drawer).bottom) || 0;
+  const heightPx = drawer.getBoundingClientRect().height;
+  banner.style.bottom = (bottomPx + heightPx) + "px";
+}
 const closeDrawer = () => {
   // Combo Lab hides #hub entirely (see its own CSS), so this button --
   // normally just "close the tray" -- is the only exit the lab has;
@@ -13944,6 +14075,13 @@ const closeDrawer = () => {
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
+  syncLockInBanner();
+  // Reset back to the plain prompt text for next time -- otherwise backing
+  // out mid-animation (or right after a reward readout) and opening the
+  // half-view again later would show last run's leftover state for a
+  // frame before playLockInSequence() gets around to resetting it itself.
+  document.getElementById("lockInBannerText").hidden = false;
+  document.getElementById("lockInBannerResult").hidden = true;
   // #matSortBtn/#matFilterBtn are standalone fixed-position elements, not
   // children of #drawer -- closing the drawer doesn't touch them on its
   // own, and their only other hidden-state owner (renderMatTop()) doesn't
@@ -14303,8 +14441,13 @@ function matCardHTML(name, opts = {}){
   const stLit = matLive.station.has(c.station) ? " lit" : "";
   // No .cap modifier any more -- capstones no longer get a distinct gold
   // border, so the class had nothing left to do.
+  // "wide" (tray context only -- the Display Mat's own 8-slot grid already
+  // gets this from .mm-slot.wide instead, keyed off matSlotsOf() there) so
+  // a capstone spans the same 2 columns in the full-inventory list that it
+  // occupies on the mat itself, instead of squeezing into one.
   const cls = ["mm-card", opts.complete ? "complete" : "",
-               opts.tray && onMat ? "on" : "", opts.cls || ""].join(" ");
+               opts.tray && onMat ? "on" : "",
+               opts.tray && matIsCapstone(c) ? "wide" : "", opts.cls || ""].join(" ");
   return `<button type="button" class="${cls}" data-mat-card="${esc(name)}"
       title="${esc(name)} — ${c.points} pts${opts.complete ? ` (doubled to ${pts} -- every ingredient is on the mat)` : ""}, ${esc(c.station)}">
     <span class="mm-pts">${pts}</span>
@@ -14325,7 +14468,7 @@ function matComboChipHTML(g, kind){
   // Just the raw shared-icon count, stacked below the icon -- no "+bonus"
   // suffix any more (the bonus it earns shows once, aggregated into the
   // ×mult on the score block's own right side, not repeated per chip).
-  return `<span class="mm-combo" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b></span>`;
+  return `<span class="mm-combo" data-combo-kind="${kind}" data-combo-name="${esc(g.name)}" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b></span>`;
 }
 
 /* Fills #matGrid alone (not the score band/toggle around it), so a
@@ -14574,7 +14717,72 @@ function confirmLockIn(){
     );
     return;
   }
-  finishLockIn(reward);
+  playLockInSequence(reward);
+}
+/* Which real mat cards actually earned a given combo chip -- same grouping
+   logic matGroupsOf()/matScore() itself uses, just re-run here against the
+   live mat to recover MEMBERSHIP (matScore()'s own groups only keep the
+   key and count, not which cards contributed) so playLockInSequence() can
+   bounce the right cards alongside their chip. */
+function matCardsForCombo(kind, name){
+  const mat = matOnMat();
+  if (kind === "station") return mat.filter(c => c.station === name);
+  if (kind === "suit") return mat.filter(c => c.pips.includes(name));
+  if (kind === "component") return mat.filter(c => c.name === name || matDirectItems(c).has(name));
+  if (kind === "collection"){
+    const col = MAT_COLLECTIONS.find(c => c.id === name);
+    return col ? mat.filter(c => col.items.includes(c.name)) : [];
+  }
+  return [];
+}
+// A brief in-place punch (scale up and settle, no fade) -- distinct from
+// bounceCardAppear() above, which pops something in from invisible; every
+// target here is already on screen and should stay that way throughout.
+function bouncePulse(el){
+  if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  el.animate([
+    { transform: "scale(1)" },
+    { transform: "scale(1.35)", offset: .5 },
+    { transform: "scale(1)" },
+  ], { duration: LOCKIN_BOUNCE_DURATION_MS, easing: "cubic-bezier(.3,1.4,.4,1)" });
+}
+const LOCKIN_BOUNCE_STAGGER_MS = 220;
+const LOCKIN_BOUNCE_DURATION_MS = 380;
+/* Lock In's own celebration beat, played once a reward is actually confirmed
+   (reward === 0 skips straight to finishLockIn() via askConfirm above --
+   nothing to celebrate). Sequence: each combo chip bounces left-to-right,
+   staggered, along with whichever real mat cards actually earned it (see
+   matCardsForCombo()); once every chip's had its turn, the Quarks number
+   itself bounces; then the reward readout replaces the "Lock-In..." prompt
+   text inside #lockInBanner (border/background stay put throughout -- see
+   its own CSS comment); then the trip actually happens (finishLockIn(),
+   same bank-and-travel logic as ever, just with its own toast suppressed
+   since the banner already showed the reward). The setTimeout chain runs
+   at a fixed pace regardless of reduced motion -- bouncePulse() itself is
+   what no-ops the animation, not the sequence's own timing. */
+function playLockInSequence(reward){
+  document.getElementById("lockInBannerText").hidden = true;
+  const chips = [...document.querySelectorAll("#drawerTop .mat-combos .mm-combo")];
+  chips.forEach((chip, i) => {
+    setTimeout(() => {
+      bouncePulse(chip);
+      const kind = chip.dataset.comboKind, name = chip.dataset.comboName;
+      if (kind && name){
+        matCardsForCombo(kind, name).forEach(c => {
+          bouncePulse(document.querySelector(`#matGrid [data-mat-card="${cssEsc(c.name)}"]`));
+        });
+      }
+    }, i * LOCKIN_BOUNCE_STAGGER_MS);
+  });
+  const afterChips = chips.length * LOCKIN_BOUNCE_STAGGER_MS + LOCKIN_BOUNCE_DURATION_MS + 150;
+  setTimeout(() => bouncePulse(document.querySelector("#drawerTop .mss-stat.quarks")), afterChips);
+  const afterQuarks = afterChips + LOCKIN_BOUNCE_DURATION_MS + 250;
+  setTimeout(() => {
+    const result = document.getElementById("lockInBannerResult");
+    result.innerHTML = `<span class="lirq-em">❓</span><span class="lirq-label">+${reward} Empty Element${reward === 1 ? "" : "s"}!</span>`;
+    result.hidden = false;
+  }, afterQuarks);
+  setTimeout(() => finishLockIn(reward, { skipToast: true }), afterQuarks + 1400);
 }
 // Just banks the reward and closes the drawer -- travel is the player's
 // own separate next decision (or not: they can keep browsing/crafting
@@ -14586,7 +14794,7 @@ function confirmLockIn(){
 // the player tap Travel a second time for a trip they already committed
 // to. dest is captured up front since selectedMapStation could in theory
 // change before the delayed goStation() below actually runs.
-function finishLockIn(reward){
+function finishLockIn(reward, opts = {}){
   state.emptyElements = (state.emptyElements || 0) + reward;
   save();
   const dest = selectedMapStation;
@@ -14597,7 +14805,11 @@ function finishLockIn(reward){
     // mostly finish before the station screen swaps in underneath it.
     setTimeout(() => goStation(dest), 320);
   };
-  if (reward > 0){
+  // skipToast: playLockInSequence() already showed this same reward inside
+  // #lockInBanner -- the toast here is only for the reward===0 path (no
+  // sequence plays for that, see confirmLockIn()) and the odd caller that
+  // hands this reward directly without going through the sequence first.
+  if (reward > 0 && !opts.skipToast){
     showMatToast(`+${reward} Empty Element${reward === 1 ? "" : "s"}!`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
@@ -14606,6 +14818,64 @@ function finishLockIn(reward){
     proceed();
   }
 }
+
+/* =====================================================================
+   Empty Elements at Stations -- the first real sink for state.emptyElements
+   (earned via Lock In above), which until now was purely an accumulating
+   stat with nothing to spend it on. A held Empty Element trades 1-for-1
+   for any element actually found at the CURRENT station (its own die
+   faces, same pool sortedDice() already draws real rolls from) -- a
+   guaranteed, roll-free pickup rather than a random one, so it reads as
+   "spend a banked reward to skip a roll", not a new gacha of its own.
+   ===================================================================== */
+// Classic Mode only (state.emptyElements is never touched outside it, see
+// finishLockIn()'s own comment) -- rendered next to the station title
+// (renderStation()'s own sheet-head) regardless of count so it's always
+// discoverable, dimmed/disabled at 0 rather than hidden entirely.
+function emptyElBadgeHTML(){
+  const n = state.emptyElements || 0;
+  return `<button type="button" class="empty-el-badge${n > 0 ? " active" : ""}" id="emptyElBadgeBtn"
+      ${n > 0 ? "" : 'disabled aria-disabled="true"'}
+      title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
+      aria-label="${n} Empty Elements held">❓<b>${n}</b></button>`;
+}
+/* Same gcol/gchip/gname markup language the station's own "Elements Found
+   Here" row (renderStation()'s gather) already uses, so a cashed-in choice
+   reads as pulled straight from that same pool, not a separate system with
+   its own visual language. data-cashin-elem (not data-elem, which would
+   collide with the real gather row's own tap-for-card-inspection
+   behavior elsewhere) is what #emptyElOverlay's own click handler below
+   looks for. */
+function emptyElCashInHTML(stationName){
+  const s = STATION_BY_NAME[stationName];
+  const syms = sortedDice(s);
+  const n = state.emptyElements || 0;
+  return `<h3 class="bingo-title" id="emptyElOverlayTitle">Cash In an Empty Element</h3>
+    <p class="bingo-hint">Trade 1 ❓ Empty Element (${n} held) for one of the elements found at ${esc(stationName)} -- no roll needed.</p>
+    <div class="gather">${syms.map(sym =>
+      `<div class="gcol"><button type="button" class="gchip" data-cashin-elem="${esc(sym)}" title="${esc(sym)}" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span></button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span></div>`).join("")}</div>
+    <button type="button" class="bigbtn sec" id="emptyElOverlayClose">Cancel</button>`;
+}
+function openEmptyElOverlay(){
+  if (!((state.emptyElements || 0) > 0) || !current) return;
+  document.getElementById("emptyElOverlayBody").innerHTML = emptyElCashInHTML(current);
+  openOverlay("emptyElOverlay");
+}
+function closeEmptyElOverlay(){ closeOverlay("emptyElOverlay"); }
+function cashInEmptyElement(sym){
+  if (!((state.emptyElements || 0) > 0)) return;
+  state.emptyElements -= 1;
+  state.elements[sym] = (state.elements[sym] || 0) + 1;
+  save();
+  closeEmptyElOverlay();
+  render();
+}
+document.getElementById("emptyElOverlay").addEventListener("click", ev => {
+  if (ev.target === ev.currentTarget){ closeEmptyElOverlay(); return; } // scrim tap
+  if (ev.target.closest("#emptyElOverlayClose")){ closeEmptyElOverlay(); return; }
+  const chip = ev.target.closest("[data-cashin-elem]");
+  if (chip) cashInEmptyElement(chip.dataset.cashinElem);
+});
 
 /* Rebuilds #drawerTop: the score row (combos left, total right -- ONE
    line, not stacked, so the total never gets pushed below the fold by
@@ -14632,7 +14902,7 @@ function renderMatTop(){
     s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
     s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
-    s.cols.map(c => `<span class="mm-combo col" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
+    s.cols.map(c => `<span class="mm-combo col" data-combo-kind="collection" data-combo-name="${esc(c.id)}" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
   // Score/multiplier/Quarks on the right, in the same row as the combo
   // chips (not stacked below them) -- two lines: points and the
   // multiplier they earned on one, the final Quark payout (the number
@@ -14668,9 +14938,18 @@ function renderMatTop(){
   ];
   const qmSegs = qmSegPcts.map(pct =>
     `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`).join("");
+  // Empty Element badges straddle the 3 real breakpoints (between segments
+  // 1/2, 2/3, 3/4 -- the 4th segment is pure headroom past the last real
+  // tier, so it gets no break icon of its own after it). Percentage left
+  // offsets divide the 4-equal-flex-segment meter into quarters -- see
+  // .qm-break's own CSS comment for why pixel-measuring the real (3px)
+  // gaps isn't worth it. Lit once qmPassed has actually reached that many
+  // Empty Elements, i.e. locking in RIGHT NOW would bank one this far.
+  const qmBreaks = [1, 2, 3].map(i =>
+    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="Empty Element ${i}">❓</span>`).join("");
   const quarkMeterHTML = `<div class="quark-meter-wrap"
       title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmPassed} Empty Element${qmPassed === 1 ? "" : "s"} if you lock in now">
-    ${qmSegs}
+    ${qmSegs}${qmBreaks}
   </div>`;
   // Revised 2026-09-13: was two small right-aligned lines sharing the
   // combo-chip row ("12 pts ×3" / "36 Quarks") -- explicit request for a
@@ -14715,9 +14994,10 @@ function renderMatTop(){
   // Two folder-page "tabs" replace the old View Held Elements toggle
   // button -- same swap (matDrawerView) driven by which tab is tapped
   // instead of one button reading two different labels. View Full
-  // Inventory is gone from this row entirely now; see #matAllItemsBtn,
-  // the round pull-tab straddling the tray's own top edge instead. Both
-  // tabs render every time (not just the inactive one) so the pair reads
+  // Inventory is gone entirely now -- tapping the bottom hub's own
+  // Inventory button while the half-view is showing expands to it
+  // instead (see #hubInv's own click handler). Both tabs render every
+  // time (not just the inactive one) so the pair reads
   // as two physical folder pages sitting behind each other, not a single
   // toggle -- .mat-tab's own CSS gives the inactive one a visibly
   // recessed/dimmer look.
@@ -14726,15 +15006,17 @@ function renderMatTop(){
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
   // Clear/Layouts -- only on the Display Mat page itself (clearing/saving
-  // an ARRANGEMENT has nothing to do with the Elements page). Its own
-  // normal-flow row directly above the tabs+page (see .mat-quick-actions'
-  // own CSS comment) -- sharing the tabs' absolutely-positioned top-right
-  // corner left too little width for both on a narrower phone, so this
-  // gets a dedicated line instead of fighting them for the same band.
+  // an ARRANGEMENT has nothing to do with the Elements page). Revised
+  // 2026-09-13 (again): back to sharing one row with the tabs (explicit
+  // request) -- both are normal flow now, not absolutely positioned
+  // (see .mat-zone-topbar's own CSS comment for why that's what actually
+  // makes the width-contention that sent these to separate rows a
+  // non-issue this time).
   const quickActionsHTML = matDrawerView === "mat" ? `<div class="mat-quick-actions">
       <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear Mat</button>
       <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
     </div>` : "";
+  const topbarHTML = `<div class="mat-zone-topbar">${quickActionsHTML}${tabsHTML}</div>`;
   // The page itself: fixed height (the same 2-row mat-grid formula,
   // regardless of which view is inside) so switching tabs never resizes
   // or jumps the tray -- extra held-elements content scrolls inside its
@@ -14747,10 +15029,8 @@ function renderMatTop(){
   // No in-tray Lock In button any more -- Home's own center button
   // becomes the "lockin" face whenever this view is showing (see
   // hubHomeFace()), so there's no separate control to render here.
-  document.getElementById("drawerTop").innerHTML = scoreRowHTML + quickActionsHTML +
-    `<div class="mat-zone-wrap">${tabsHTML}${pageHTML}</div>`;
-  // #matAllItemsBtn's own visibility is pure CSS now (#drawer.open:not(.expanded),
-  // see its own CSS comment) -- nothing to set here any more.
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML +
+    `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}</div>`;
   // Sort/Filter only mean anything once the full scrollable item list is
   // actually showing (see #drawer.expanded) -- hidden the rest of the
   // time, same as the item list itself. Closing their trays here too:
@@ -14930,9 +15210,7 @@ function showMatToast(msg){
    are fully regenerated by renderMatTop() on every change, so their
    click/drag listeners are delegated to #drawerTop itself (a stable
    element that's never replaced wholesale) rather than attached to any
-   of those regenerated children directly. #matAllItemsBtn is the one
-   exception -- it lives OUTSIDE #drawerTop now (see its own HTML
-   comment), wired separately just below. */
+   of those regenerated children directly. */
 document.getElementById("drawerTop").addEventListener("click", ev => {
   const tabBtn = ev.target.closest("[data-mat-view]");
   if (tabBtn){
@@ -14946,6 +15224,30 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   if (moveArrow){ matMoveCard(moveArrow.dataset.matMove); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  // Tapping a filled mat slot selects it for movement and opens its
+  // inspection view -- see matMoveSelectedIdx/matMoveArrowsHTML. A plain
+  // "click" (checked LAST, after the move-arrow branch above, since the
+  // arrows themselves are rendered as children of this same .mm-slot and
+  // would otherwise also match .closest() here) rather than hand-rolled
+  // pointerdown/pointermove/pointerup tap detection -- every other button
+  // in this same tray (tabs, Clear, Layouts, the move arrows themselves)
+  // already relies on the browser's own native click synthesis and works
+  // fine on a real touchscreen, so a bespoke jitter-threshold reimplementation
+  // of "was this a tap" was always going to be the one thing on this page
+  // fighting the platform's own gesture recognizer instead of using it.
+  // Replaces the pointer-event version (2026-09-13) that kept reproducing
+  // as "tapping a mat card does nothing" on a real device across multiple
+  // fix attempts, never once on a synthetic mouse click.
+  const filledSlot = ev.target.closest(".mm-slot.filled");
+  if (filledSlot){
+    const cardBtn = filledSlot.querySelector("[data-mat-card]");
+    if (cardBtn){
+      matMoveSelectedIdx = +filledSlot.dataset.idx;
+      renderMatTop();
+      openMatCardPop(cardBtn.dataset.matCard);
+    }
+    return;
+  }
 });
 // One tap, no confirmation -- "quickly clear the display" is the explicit
 // ask, and every card it removes is still sitting safely in the owned-
@@ -14956,11 +15258,6 @@ function clearMatDisplay(){
   save();
   render();
 }
-document.getElementById("matAllItemsBtn").addEventListener("click", () => {
-  matTrayExpanded = true;
-  document.getElementById("drawer").classList.add("expanded");
-  renderMatTop();
-});
 document.getElementById("matFStations").addEventListener("click", ev => {
   const b = ev.target.closest("[data-mat-fstation]");
   if (!b) return;
@@ -15120,59 +15417,9 @@ document.getElementById("matLayoutsExport").addEventListener("click", async () =
 });
 
 /* Tapping a mat card selects it (see matMoveSelectedIdx/matMoveArrowsHTML)
-   and opens its inspection view at once, per explicit request -- replaces
-   the previous pointer-drag-to-rearrange entirely, which real touchscreens
-   kept misreading as a tap (see the git history above this comment for
-   the two escalating jitter-threshold/preventDefault attempts at fixing
-   drag-vs-tap detection) even after those fixes. A plain tap detector is
-   far simpler to get right than a continuous drag ever was: no ghost
-   element, no live hit-testing under a moving finger, just "did the
-   pointer move more than a small jitter amount between down and up."
-   Delegated to #drawerTop (stable) rather than #matGrid itself, since
-   #matGrid only exists in the DOM while matDrawerView === "mat" and is
-   recreated by every renderMatTop() call. */
-let matTapStart = null;
-document.getElementById("drawerTop").addEventListener("pointerdown", ev => {
-  if (ev.button) return;
-  const slot = ev.target.closest(".mm-slot.filled");
-  if (!slot) return;
-  matTapStart = {
-    idx: +slot.dataset.idx,
-    name: slot.querySelector("[data-mat-card]").dataset.matCard,
-    x0: ev.clientX, y0: ev.clientY,
-  };
-});
-// Revised 2026-09-13: no preventDefault here, relying on .mm-slot.filled's
-// own touch-action:none (see its CSS comment) to keep the browser from
-// hijacking the gesture instead -- preventDefault on pointerdown alone
-// still leaves a window for the browser's native scroll/pan recognizer to
-// win the race on some devices, where touch-action is a hard, upfront
-// opt-out that can't race at all. The pointermove check below still
-// abandons the tap the moment it looks like a real drag, same as ever.
-document.addEventListener("pointermove", ev => {
-  if (!matTapStart) return;
-  if (Math.hypot(ev.clientX - matTapStart.x0, ev.clientY - matTapStart.y0) >= 18) matTapStart = null;
-});
-// A cancelled pointer sequence (multi-touch, an OS gesture taking over,
-// etc.) must still clear matTapStart -- otherwise it can be left set from
-// an abandoned gesture and get misread as still in progress by whatever
-// pointerup fires next.
-document.addEventListener("pointercancel", () => { matTapStart = null; });
-document.addEventListener("pointerup", ev => {
-  if (!matTapStart) return;
-  // A real touchscreen can still synthesize a compatibility "click" from
-  // this same gesture afterward, landing on whatever's now at that same
-  // screen position -- since a plain tap just opened #cardPop right there
-  // (see openMatCardPop() below), that stray click could land on the
-  // popup's own scrim/background and close it again immediately, reading
-  // as "tapping a mat card to inspect it doesn't work."
-  ev.preventDefault();
-  const was = matTapStart;
-  matTapStart = null;
-  matMoveSelectedIdx = was.idx;
-  renderMatTop();
-  openMatCardPop(was.name);
-});
+   and opens its inspection view at once -- see the .mm-slot.filled branch
+   in #drawerTop's main click listener above (which also handles the
+   tabs/Clear/Layouts/move-arrow buttons in this same tray). */
 
 /* ------------------------------------------------------ overlays --- */
 document.getElementById("celebClose").addEventListener("click", () => closeOverlay("celebrate"));
@@ -15558,6 +15805,20 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
   if (tok){
     const tokEntry = ENTRIES[+tok.dataset.itemCard];
     if (tokEntry) showCardPop(tokEntry, false, true);
+    return;
+  }
+
+  // Tapping the card's own icon opens ITS OWN inspection card on top of
+  // this craft view too -- same "drill in on a tap" language as the
+  // ingredient tokens above, just for the item being crafted itself
+  // rather than one of its components. Checked before [data-shop-pin]/
+  // [data-craft] since the icon sits inside the same [data-item-card]
+  // wrapper those buttons do.
+  const iconTap = ev.target.closest(".iem");
+  if (iconTap){
+    const itemCard = iconTap.closest("[data-item-card]");
+    const entry = itemCard && ENTRIES[+itemCard.dataset.itemCard];
+    if (entry) showCardPop(entry, false, true);
     return;
   }
 
