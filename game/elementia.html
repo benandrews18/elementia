@@ -399,6 +399,19 @@ body[data-screen="map"] main{padding-top:0}
    node, so the generic +80px clearance the base main{} rule uses was
    redundant on top of that regardless). */
 body[data-screen="map"] main{padding-bottom:var(--hub-h, 67px)}
+/* Fills the real viewport exactly (dvh accounts for a mobile browser's
+   own address-bar chrome; the plain vh line right before it is a fallback
+   for browsers that don't support dvh, simply ignored by ones that do) and
+   lays its two children -- the hint text, then .map-canvas -- in a column
+   so the canvas (flex:1, see its own CSS) can claim exactly whatever
+   height is left over, instead of the canvas dictating its own height via
+   the background image's aspect ratio the way it used to. This is what
+   actually guarantees zero scrolling on the map screen, at any device
+   height, regardless of the art's own proportions. */
+body[data-screen="map"] main{
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh;
+}
 /* Item Reference and Marketplace are both plain static content with no
    z-index of their own, so without this they'd stack BELOW the floating
    pills/pins/convert buttons (any positioned z-index element beats
@@ -1338,25 +1351,34 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .mn-elname{font-weight:600; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 /* The path map: a single unmarked background image (game/backdrops/
-   diamond_map_full.webp) with round station buttons positioned over it by
-   percentage coords (MAP_NODE_POS), plus dashed connector lines and
-   direction arrows drawn on top from MAP_EDGES (see mapPathsHTML()) --
-   the art itself has no route markings baked in. Aspect ratio pinned to
-   the source image (853x1844, replaced 2026-09-12 with a shorter/wider
-   image sized so the whole map fits on a Pixel 9a screen without
-   scrolling -- was 794x1981, tall enough that Ocean and Observatory, the
-   two extreme ends of the zigzag, couldn't both be on screen at once) so
-   the percentage coords line up regardless of screen width. .map-node's
-   own size (see its own CSS) is a plain percentage of this canvas's WIDTH,
-   which didn't change -- only the height (via this aspect-ratio) did, so
-   every node/path stayed exactly the same pixel size for free; only
-   MAP_NODE_POS itself needed updating, to match where each station
-   actually sits on the new art. */
+   diamond_map_full.webp, 794x1981 -- its own real, tall aspect ratio) with
+   round station buttons positioned over it by percentage coords
+   (MAP_NODE_POS), plus dashed connector lines and direction arrows drawn
+   on top from MAP_EDGES (see mapPathsHTML()) -- the art itself has no
+   route markings baked in.
+   Reverted 2026-09-12 -- a shorter, purpose-drawn replacement image was
+   tried instead (so the whole map would fit on a Pixel 9a screen without
+   scrolling) and then dropped again in favor of squishing this original
+   art to fit: .map-canvas no longer derives its height from the image's
+   own aspect ratio at all -- it's a flex child of <main> (see
+   body[data-screen="map"] main below) sized to fill exactly whatever
+   vertical room is actually left after the hint text above it and the hub
+   below, so Ocean and Observatory (the two extreme ends of the zigzag)
+   are always both on screen with zero scrolling, at any screen height.
+   The background itself stretches to fill that box exactly
+   (background-size:100% 100% below, not cover/contain) rather than being
+   cropped, so it reads as this same art evenly squished vertically to
+   fit -- MAP_NODE_POS's own percentage coords still line up exactly,
+   since the image and the nodes both scale against the same box. Width is
+   untouched either way, so .map-node's own size (a plain percentage of
+   this canvas's WIDTH, see its own CSS) stays exactly the same regardless
+   of how much the height gets squished. */
 /* Full-bleed within <main>'s own side padding (18px, see main{} above) --
    the map is the one screen that should feel edge-to-edge rather than
    inset like every card-based screen elsewhere in the game. */
 .map-canvas{
-  position:relative; width:calc(100% + 36px); margin:0 -18px; aspect-ratio:853/1844;
+  position:relative; width:calc(100% + 36px); margin:0 -18px;
+  flex:1 1 auto; min-height:0;
   overflow:hidden; background:var(--card);
   border-top:1px solid var(--line); border-bottom:1px solid var(--line);
 }
@@ -1365,7 +1387,7 @@ body[data-screen="market"] #trackedPill{display:none}
    stay fully opaque instead of fading along with it. */
 .map-canvas::before{
   content:""; position:absolute; inset:0;
-  background:url("backdrops/diamond_map_full.webp") center/cover no-repeat;
+  background:url("backdrops/diamond_map_full.webp") center/100% 100% no-repeat;
   opacity:.96;
 }
 .map-paths{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none}
@@ -8686,18 +8708,18 @@ const isMapConnected = (a,b) => a === null ? !!b :
    standing somewhere). */
 const canReachStation = (a, b) => owns("Helicopter") || isMapConnected(a, b);
 
-/* Re-measured 2026-09-12 against the new, shorter backdrop (see
-   .map-canvas's own comment) -- same "read directly off the artwork" way
-   the original values were produced, just against the new image. */
+/* Reverted 2026-09-12 to the original tall backdrop's own coordinates --
+   see .map-canvas's own comment for why the shorter replacement image was
+   dropped in favor of squishing this original art to fit instead. */
 const MAP_NODE_POS = {
-  "The Observatory":    [47.0,  8.5],
-  "The Bakery":         [23.5, 23.5],
-  "The City":            [76.0, 22.5],
-  "Greenhouse":         [23.5, 40.0],
-  "The Power Plant":    [76.0, 40.0],
-  "Old Growth Forest":  [23.5, 59.0],
-  "Deep Mine":          [76.0, 59.0],
-  "The Ocean":          [47.0, 89.5],
+  "The Observatory":    [49.7,  9.1],
+  "The Bakery":         [20.4, 26.5],
+  "The City":            [79.5, 26.6],
+  "Greenhouse":         [20.4, 45.3],
+  "The Power Plant":    [79.8, 45.3],
+  "Old Growth Forest":  [20.4, 67.2],
+  "Deep Mine":          [79.3, 66.6],
+  "The Ocean":          [49.9, 89.2],
 };
 
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
