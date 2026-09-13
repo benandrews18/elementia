@@ -3238,17 +3238,49 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    No background dimming (background:transparent overrides .overlay's own
    scrim) -- explicit request: the game shouldn't fade behind this card
    the way it does for every other popup. */
-#cardPop.mat-panel{background:transparent; justify-content:flex-end}
+/* Revised 2026-09-12: was a hand-picked width:150px directly on .pc-card
+   -- shrinking just the WIDTH while every internal element (badges, icon,
+   name, ingredient icons) kept its own full-size absolute px values left
+   everything overlapping/overflowing its own corner, reading as squished
+   rather than small. .pc-card itself now stays its real, full natural
+   size (300x420) always -- .pc-card-scale (a display:contents no-op
+   everywhere else) gives it a real box here, sized to fill all the way
+   down to the hub (align-items:stretch below, same bottom padding as
+   every other overlay already reserves for the hub -- see .overlay's own
+   comment), and JS (setCardPopScale(), called by
+   positionCardPopMatPanel()) measures that box's real rendered height
+   once and applies transform:scale() to .pc-card so it fills it evenly
+   -- every element inside shrinks together by the same factor, exactly
+   like the original card photographed smaller, not redrawn cramped.
+   Item Info/Pin (.pc-actions) are dropped entirely per explicit request
+   -- Place/Remove (.pc-mat-toggles) are the only controls this view
+   needs, and losing that row is what frees up the room to stretch the
+   card the rest of the way down in the first place. */
+#cardPop.mat-panel{background:transparent; justify-content:flex-end; align-items:stretch}
 #cardPop.mat-panel .pc-card-wrap{
-  display:grid; grid-template-columns:auto 1fr; grid-template-areas:"toggles card" ". actions";
-  gap:10px 12px; width:auto; max-width:none; margin:0;
+  display:grid; grid-template-columns:auto 1fr; grid-template-areas:"toggles card";
+  gap:12px; width:auto; max-width:none; margin:0; height:100%;
 }
-#cardPop.mat-panel .pc-card{grid-area:card; width:150px; box-shadow:0 10px 28px rgba(0,0,0,.5)}
-#cardPop.mat-panel .pc-actions{grid-area:actions}
-#cardPop.mat-panel #cpMatBtn{display:none}
+#cardPop.mat-panel .pc-card-scale{
+  grid-area:card; display:block; position:relative; height:100%; width:auto; aspect-ratio:5/7;
+}
+/* Revised 2026-09-12: was transform:scale(var(--cp-mat-scale)), a custom
+   property set from JS -- in testing, updating that variable's value
+   didn't reliably re-trigger this transform (the computed --cp-mat-scale
+   VALUE read back correctly as the new number, but the actual applied
+   matrix() stayed at a stale earlier one). setCardPopScale() now sets
+   .pc-card's transform directly as an inline style instead, which has no
+   such staleness risk. transform-origin still belongs here, not inline,
+   since it never changes. */
+#cardPop.mat-panel .pc-card{
+  width:300px; position:absolute; top:0; left:0; transform-origin:top left;
+  box-shadow:0 10px 28px rgba(0,0,0,.5);
+}
+#cardPop.mat-panel .pc-actions, #cardPop.mat-panel #cpMatBtn{display:none}
+.pc-card-scale{display:contents}
 .pc-mat-toggles{display:none}
 .mat-panel .pc-mat-toggles{
-  grid-area:toggles; display:flex; flex-direction:column; justify-content:center; gap:10px;
+  grid-area:toggles; display:flex; flex-direction:column; justify-content:center; align-self:stretch; gap:10px;
 }
 /* Dim/inert by default -- only the action that actually applies right now
    (per setMatToggleState(), called on open and after every toggle) is
@@ -4146,39 +4178,37 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 .msb-line1{font-size:12px; color:var(--ink2)}
 .msb-line2{font-size:16px; font-weight:900; color:var(--gold); white-space:nowrap}
-/* Quark Meter (replaces the old msb-line3 lock-icon/count 2026-09-12) --
-   4 small segments previewing how many Empty Elements (0-3) locking in
-   the mat right now would earn (see renderMatTop()'s own qmTier/qmSegs).
-   Quiet and small, well under Quarks' own weight -- a preview to check
-   before locking in, not a running total to watch grow. */
-.quark-meter{display:flex; gap:2px; align-self:flex-end}
-.qm-seg{width:13px; height:6px; border-radius:3px; background:var(--line)}
-.qm-seg.lit{background:var(--collection)}
-/* Round "pull tab" -- half straddling #drawer's own top edge (see its
-   own HTML comment), same attached look this has always had.
-   Revised 2026-09-12 (twice, see git history for the detour in between):
-   a first pass tried moving this to float entirely above the drawer with
-   a fixed 40px gap, to dodge #hubHome sitting right behind it -- reported
-   back as reading as broken/detached rather than fixed, since it no
-   longer touched the tray at all. Reverted to the original attached
-   translate(-50%,-50%) straddle; the #hubHome collision (this button got
-   bigger, per explicit request, which only made the overlap worse) is
-   now handled in JS instead -- see positionAllItemsBtn(), called from
-   renderMatTop() -- which measures the real overlap against #hubHome's
-   actual rect and nudges this up by exactly however much is needed, only
-   when there actually is a collision. The common case (enough natural
-   clearance already) gets no nudge at all and stays touching the edge. */
+/* Redesigned from the ground up 2026-09-12 (see git history for the two
+   earlier attempts, both position:absolute straddling #drawer's own top
+   edge with an independent transform of its own). That approach had a
+   real bug, not just a look problem: with #drawer CLOSED (translateY of
+   its own full height, which can be 600px+), a child sitting near the
+   top of that box but ALSO shifted upward by its own separate transform
+   doesn't necessarily end up off-screen -- the two transforms don't
+   cancel out unless the child's own offset happens to be small relative
+   to the parent's height, so the button could sit visibly stranded
+   somewhere mid-screen with the actual (closed) tray nowhere near it.
+   Now a perfectly normal, first-in-flow child of #drawer instead of an
+   absolutely-positioned overlay on top of it -- no independent transform
+   of its own at all, so it moves with the drawer's own open/close
+   animation exactly like everything else inside it, and naturally
+   occupies real space at the tray's own top edge rather than floating
+   above/across it. display:none by default; #drawer.open:not(.expanded)
+   is the ONE place that reveals it -- a pure function of the drawer's own
+   classList, so it can never go stale independent of whether the drawer
+   is actually open, unlike the old matTrayExpanded-driven `hidden`
+   attribute (which renderMatTop() set on every render() pass regardless
+   of whether the drawer was even open at all). */
 .mat-alltab-btn{
-  position:absolute; left:50%; top:0; transform:translate(-50%,-50%); z-index:5;
-  min-width:208px; height:56px; padding:0 20px; border-radius:16px;
-  background:var(--gold); border:3px solid #000; color:#181614;
-  font-size:16px; font-weight:900; letter-spacing:.3px; white-space:nowrap;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 4px 0 var(--gold-line), 0 6px 14px rgba(0,0,0,.4);
-  cursor:pointer; transition:box-shadow .1s;
+  display:none; width:calc(100% - 32px); margin:14px 16px 0; padding:12px;
+  border-radius:14px; background:var(--gold); border:3px solid #000; color:#181614;
+  font-size:15px; font-weight:900; letter-spacing:.3px;
+  align-items:center; justify-content:center;
+  box-shadow:0 4px 0 var(--gold-line);
+  cursor:pointer; transition:box-shadow .1s, transform .1s;
 }
-.mat-alltab-btn:active{box-shadow:0 0 0 var(--gold-line), 0 3px 8px rgba(0,0,0,.35)}
-#drawer.expanded .mat-alltab-btn{display:none}
+#drawer.open:not(.expanded) .mat-alltab-btn{display:flex}
+.mat-alltab-btn:active{transform:translateY(4px); box-shadow:0 0 0 transparent}
 
 /* Row height is computed explicitly (via #drawerTop's own
    container-type:inline-size above) rather than from aspect-ratio on
@@ -4528,13 +4558,15 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
        what #drawer sizes itself around while collapsed/"peeked" (see
        #drawer:not(.expanded) .dbody{display:none}) -- collapsed, this
        is the entire visible tray. -->
-  <!-- Round "pull tab", half straddling #drawer's own top edge -- replaces
-       the old full-width "View Full Inventory" button in the toggle row.
+  <!-- Redesigned 2026-09-12: a normal in-flow button, first child of
+       #drawer (before #drawerTop), not a position:absolute overlay -- see
+       .mat-alltab-btn's own CSS comment for the real bug the old approach
+       had (not just a look problem). Visibility is pure CSS
+       (#drawer.open:not(.expanded)), so it's structurally impossible for
+       this to show while the drawer is closed or already expanded.
        Persistent (not regenerated by renderMatTop()'s innerHTML writes),
        same reasoning as #matFSearch: its own click listener is attached
-       once, below. Hidden whenever the tray is already expanded (see
-       #drawer.expanded .mat-alltab-btn) -- once expanded it would be
-       sitting off the top of the screen anyway. -->
+       once, below. -->
   <button type="button" class="mat-alltab-btn" id="matAllItemsBtn" aria-label="View full inventory">^ View All Items ^</button>
   <div id="drawerTop"></div>
   <div class="dbody">
@@ -4712,15 +4744,22 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
         <span class="pc-mat-toggle-ic">➖</span>Remove from Mat
       </button>
     </div>
-    <div class="pc-card" id="cpCard">
-      <div class="pc-suitcosts" id="cpSuitCosts"></div>
-      <div class="pc-station-badge" id="cpStationBadge"></div>
-      <div class="pc-badge"><span class="n" id="cpPts"></span></div>
-      <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
-      <div class="pc-title" id="cpName"></div>
-      <div class="pc-divider"></div>
-      <div class="pc-label">Components:</div>
-      <div class="pc-ingredients" id="cpIngredients"></div>
+    <!-- pc-card-scale: display:contents normally (a total no-op, .pc-card
+         behaves exactly as it always did) -- only #cardPop.mat-panel gives
+         it real box dimensions, so it can hold the correctly-sized empty
+         space for .pc-card's OWN transform:scale() to shrink into evenly.
+         See setCardPopScale(). -->
+    <div class="pc-card-scale">
+      <div class="pc-card" id="cpCard">
+        <div class="pc-suitcosts" id="cpSuitCosts"></div>
+        <div class="pc-station-badge" id="cpStationBadge"></div>
+        <div class="pc-badge"><span class="n" id="cpPts"></span></div>
+        <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
+        <div class="pc-title" id="cpName"></div>
+        <div class="pc-divider"></div>
+        <div class="pc-label">Components:</div>
+        <div class="pc-ingredients" id="cpIngredients"></div>
+      </div>
     </div>
     <div class="pc-actions">
       <!-- Only shown once a "Components:" tap has drilled into another
@@ -11229,6 +11268,11 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   }
   openOverlay("cardPop");
   if (cardPopMatPanel) positionCardPopMatPanel();
+  // Reset any inline scale left over from a previous mat-panel viewing --
+  // without this, jumping straight from a mat-panel card to a normal one
+  // (e.g. Item Reference while the tray happens to still be open) would
+  // render the normal full-screen card shrunk down too.
+  else document.getElementById("cpCard").style.transform = "";
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
 }
@@ -11243,6 +11287,18 @@ function positionCardPopMatPanel(){
   const cardPop = document.getElementById("cardPop");
   cardPop.style.paddingTop = Math.max(0, drawerTop.bottom + 10) + "px";
   cardPop.style.paddingRight = Math.max(0, window.innerWidth - drawer.right + 14) + "px";
+  // .pc-card-scale's own height:100% (see its CSS) already stretches it
+  // to fill everything from that padding-top down to .overlay's own
+  // padding-bottom (the same "leave room for the hub" reservation every
+  // overlay already has) -- CSS alone can't tell .pc-card's fixed 300x420
+  // box what SCALE to render at to fill a box whose pixel height it has
+  // no way to know ahead of time, so this measures the real, already-laid-
+  // out result and sets that scale directly. .pc-card's own natural
+  // height (420 = 300 * 7/5, its own aspect-ratio) is the only fixed
+  // reference point this needs.
+  const boxH = document.querySelector(".pc-card-scale").getBoundingClientRect().height;
+  const scale = boxH > 0 ? (boxH / 420) : 0.5;
+  document.getElementById("cpCard").style.transform = `scale(${scale})`;
 }
 /* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
    onMat: whether the card is on the mat RIGHT NOW (after whatever just
@@ -14079,8 +14135,8 @@ function renderMatTop(){
   // hubHomeFace()), so there's no separate control to render here.
   document.getElementById("drawerTop").innerHTML = scoreRowHTML +
     `<div class="mat-zone-wrap">${pageHTML}${tabsHTML}</div>`;
-  document.getElementById("matAllItemsBtn").hidden = matTrayExpanded;
-  if (!matTrayExpanded) positionAllItemsBtn();
+  // #matAllItemsBtn's own visibility is pure CSS now (#drawer.open:not(.expanded),
+  // see its own CSS comment) -- nothing to set here any more.
   // Sort/Filter only mean anything once the full scrollable item list is
   // actually showing (see #drawer.expanded) -- hidden the rest of the
   // time, same as the item list itself. Closing their trays here too:
@@ -14091,27 +14147,6 @@ function renderMatTop(){
   if (!matTrayExpanded) closeMatSideTrays();
   if (matDrawerView === "mat") renderMatGridCells(s);
 }
-/* Nudges #matAllItemsBtn up just enough to clear #hubHome when the two
-   actually collide -- see the CSS block's own comment above
-   .mat-alltab-btn for why this replaced a fixed-offset CSS approach.
-   Reset to the CSS default (plain straddle, no inline override) first so
-   a since-grown mat/score card that now has enough natural clearance on
-   its own doesn't stay nudged up from a stale previous measurement. */
-function positionAllItemsBtn(){
-  const btn = document.getElementById("matAllItemsBtn");
-  btn.style.transform = "";
-  const home = document.getElementById("hubHome");
-  const btnRect = btn.getBoundingClientRect();
-  const homeRect = home.getBoundingClientRect();
-  const margin = 8;
-  const overlapsVertically = btnRect.bottom > homeRect.top - margin && btnRect.top < homeRect.bottom + margin;
-  const overlapsHorizontally = btnRect.right > homeRect.left - margin && btnRect.left < homeRect.right + margin;
-  if (overlapsVertically && overlapsHorizontally){
-    const shiftUp = btnRect.bottom - (homeRect.top - margin);
-    btn.style.transform = `translate(-50%, calc(-50% - ${Math.ceil(shiftUp)}px))`;
-  }
-}
-
 // View state, like matDrawerView above -- not persisted. Mirrors
 // cardgame/mat.html's own filt object (station/suit toggles ORed within
 // a group, ANDed across groups; a name search; a sort mode).
