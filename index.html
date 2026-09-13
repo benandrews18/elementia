@@ -2316,6 +2316,43 @@ body[data-screen="market"] #trackedPill{display:none}
   display:flex; flex-direction:column;
 }
 #drawer.open{transform:translateY(0)}
+/* Combo Lab (2026-09-12) -- an experimentation sandbox reusing the real
+   Display Mat/full-inventory drawer wholesale (see openComboLab()) rather
+   than building a second copy of it: swaps `state` for a throwaway one
+   with every Classic item unlocked and an empty mat, forces the SAME
+   #drawer real players use into its .open.expanded state, and hides
+   everything else on screen via this attribute so the drawer is the only
+   thing left -- "essentially just the Full-Inventory view, no other
+   buttons or options" per the request. #drawer itself additionally drops
+   its normal bottom:var(--hub-h) reservation here (the hub it was leaving
+   room for is hidden) so it truly fills the screen instead of leaving an
+   empty strip at the bottom where the hub used to be. */
+[data-combo-lab] #topbar, [data-combo-lab] #hub, [data-combo-lab] #screen,
+[data-combo-lab] #backdrop, [data-combo-lab] #pinsBtn, [data-combo-lab] #pinsTray,
+[data-combo-lab] #quickConvertBtn, [data-combo-lab] #trackedPill, [data-combo-lab] #scrim,
+[data-combo-lab] #tour{
+  display:none !important;
+}
+[data-combo-lab] #drawer{bottom:0}
+/* Dedicated exit button -- NOT the drawer's own #closeDrawer/.dhead X,
+   which turned out to be globally display:none (every tray's header bar
+   is hidden game-wide, see .dhead's own comment -- they all close via an
+   outside scrim tap instead, which the lab also hides since the drawer
+   fills the entire screen and there's no "outside" left to tap). A real,
+   always-visible button is the ONLY way out of the lab, so it gets one
+   spelled out in full rather than an icon, sitting above even the
+   Sort/Filter corner buttons. */
+#comboLabExitBtn{
+  display:none; position:fixed; top:0; left:0; right:0; z-index:300;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px; border:none;
+  background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%); color:#fff;
+  font-size:14px; font-weight:800; letter-spacing:.2px; cursor:pointer; text-align:center;
+}
+[data-combo-lab] #comboLabExitBtn{display:block}
+/* #drawer.expanded pins to the real screen top (see its own comment),
+   which would otherwise tuck the mat/score card directly under this
+   fixed exit bar -- pushed down by roughly the bar's own height instead. */
+[data-combo-lab] #drawerTop{padding-top:calc(52px + env(safe-area-inset-top, 0px))}
 /* top has no base value (the tray is normally positioned by bottom
    alone, height following its own content) -- .expanded is the only
    rule that ever sets it, to pin the top edge to the actual screen top.
@@ -4404,7 +4441,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
   }
   #backdrop, #topbar, #hub, #pinsTray, #convert, #convertScrim, #jobScrim, #scrim,
-  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #drawer, .confetti{
+  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #drawer, .confetti, #comboLabExitBtn{
     left:50%; right:auto; width:768px; margin-left:-384px;
   }
   #jobSheet{left:calc(50% - 408px)}
@@ -4455,6 +4492,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <div id="bootScreen" aria-hidden="true"><span class="boot-icon">⚗️</span></div>
 
+<!-- Combo Lab's own exit (see openComboLab()'s CSS comment for why this
+     can't just be the drawer's usual #closeDrawer/.dhead X). -->
+<button type="button" id="comboLabExitBtn" aria-label="Exit Combo Lab">✕ Exit Combo Lab</button>
+
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
@@ -4471,7 +4512,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="scrim"></div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">
   <div class="dhead">
-    <h2>🎒 Inventory</h2>
+    <h2 id="drawerHead">🎒 Inventory</h2>
     <div id="drawerScore" title="Total score" aria-label="Total score">
       <span class="n" id="drawerScoreCount">0</span><span class="l">PTS</span>
     </div>
@@ -5166,6 +5207,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <div class="tour-welcome-actions">
       <button type="button" id="tourPlayBtn" class="bigbtn">▶ Play</button>
       <button type="button" id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
+      <button type="button" id="tourComboLabBtn" class="bigbtn sec">🧪 Combo Lab</button>
       <button type="button" id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
@@ -8565,7 +8607,13 @@ function saveKeyFor(mode){ return SAVE_KEY_PREFIX + mode; }
 // mode, state.mode is null and there's nothing meaningful to persist yet
 // (see freshState()) -- writing under a "null" key would just leave a
 // stray, unreachable localStorage entry behind.
-function save(){ if (state.mode) lsSet(saveKeyFor(state.mode), JSON.stringify(state)); }
+// comboLabActive short-circuits this entirely -- see openComboLab()'s own
+// comment for why: `state` there is a throwaway sandbox object (real
+// "classic" points at state.mode same as the actual game, precisely so
+// the rest of the drawer/mat code treats it as a normal Classic run), and
+// without this guard a stray save() call during the lab would silently
+// overwrite the player's real Classic save with sandbox data.
+function save(){ if (comboLabActive) return; if (state.mode) lsSet(saveKeyFor(state.mode), JSON.stringify(state)); }
 function readModeSave(mode){
   try {
     const raw = lsGet(saveKeyFor(mode));
@@ -13325,6 +13373,13 @@ document.getElementById("quickConvertBtn").addEventListener("click", () => hubPa
 
 /* -------------------------------------------------------- drawer --- */
 const drawer = document.getElementById("drawer"), scrim = document.getElementById("scrim");
+// Combo Lab (see openComboLab() below) -- comboLabActive gates save() (so
+// nothing from the throwaway sandbox state ever hits real localStorage)
+// and repurposes closeDrawer() (see its own comment) as the lab's exit,
+// since #hub -- the only other source of a close/exit action -- is
+// hidden the whole time the lab is open.
+let comboLabActive = false;
+let realGameState = null, realScreen = null, realCurrent = null, realSelectedMapStation = null;
 const openDrawer = () => {
   // Classic Mode's tray always starts "peeked" (see #drawer.expanded's
   // own comment) -- a fresh open never lands already showing the full
@@ -13339,6 +13394,10 @@ const openDrawer = () => {
   updateHub();
 };
 const closeDrawer = () => {
+  // Combo Lab hides #hub entirely (see its own CSS), so this button --
+  // normally just "close the tray" -- is the only exit the lab has;
+  // repurposed here rather than adding a second, redundant close control.
+  if (comboLabActive){ closeComboLab(); return; }
   // .expanded (top:0, near-viewport-height) has to come off HERE, not
   // just wait for the next openDrawer() to reset it -- translateY(100%)
   // only ever shifts a box by its OWN height, so closing while still
@@ -13362,6 +13421,68 @@ const closeDrawer = () => {
   closeMatSideTrays();
   updateHub();
 };
+/* =====================================================================
+   Combo Lab -- a dedicated sandbox for experimenting with Display Mat
+   combos, reachable from the welcome screen (see #tourComboLabBtn)
+   alongside Mini-Games. Deliberately reuses the SAME #drawer real
+   Classic runs use (renderClassicDrawer()/renderMatTop()/toggleMatCard()/
+   openMatCardPop() etc.) rather than building a parallel copy of the
+   whole mat/combo UI a second time -- it's forced into its normal
+   .open.expanded (full-inventory) state, with everything else on screen
+   hidden via the [data-combo-lab] CSS, so it's the only thing left, per
+   the "essentially just the Full-Inventory view, no other buttons or
+   options" ask.
+   The trick making this safe: `state` itself is swapped for a throwaway
+   object (real save is stashed in realGameState and restored byte-for-
+   byte on exit, never mutated), and comboLabActive additionally guards
+   save() so nothing from that throwaway state can ever reach real
+   localStorage even if some code path along the way tries to. */
+function openComboLab(){
+  realGameState = state; realScreen = screen; realCurrent = current; realSelectedMapStation = selectedMapStation;
+  const lab = freshState();
+  lab.mode = "classic"; // required for renderDrawer()/showCardPop() etc. to treat this as Classic at all
+  lab.items = [...CORE_ITEM_NAMES]; // every Classic item "owned" -- the whole point of the lab
+  lab.bingoCenterChosen = true; // sidesteps the BINGO opening sequence's own checks, never shown here anyway
+  // Round 20 (not 0/fresh) so the Quark Meter's own thresholds
+  // (lockInTiersForRound()) have real, non-trivial headroom to
+  // experiment against instead of maxing out almost immediately.
+  lab.visits = 20;
+  state = lab;
+  screen = "map"; current = null; selectedMapStation = null;
+  comboLabActive = true;
+  matDrawerView = "mat";
+  matTrayExpanded = true;
+  document.body.setAttribute("data-combo-lab", "");
+  document.getElementById("drawerHead").textContent = "🧪 Combo Lab";
+  document.getElementById("drawerScore").hidden = true;
+  document.getElementById("closeDrawer").setAttribute("aria-label", "Exit Combo Lab");
+  const drawerEl = document.getElementById("drawer");
+  drawerEl.classList.add("open", "expanded");
+  drawerEl.setAttribute("aria-hidden", "false");
+  render();
+}
+function closeComboLab(){
+  comboLabActive = false;
+  state = realGameState; screen = realScreen; current = realCurrent; selectedMapStation = realSelectedMapStation;
+  realGameState = null;
+  document.body.removeAttribute("data-combo-lab");
+  document.getElementById("drawerHead").textContent = "🎒 Inventory";
+  document.getElementById("drawerScore").hidden = false;
+  document.getElementById("closeDrawer").setAttribute("aria-label", "Close inventory");
+  matTrayExpanded = false;
+  const drawerEl = document.getElementById("drawer");
+  drawerEl.classList.remove("open", "expanded");
+  drawerEl.setAttribute("aria-hidden", "true");
+  document.getElementById("matSortBtn").hidden = true;
+  document.getElementById("matFilterBtn").hidden = true;
+  closeMatSideTrays();
+  render();
+}
+document.getElementById("tourComboLabBtn").addEventListener("click", () => {
+  endTour();
+  openComboLab();
+});
+document.getElementById("comboLabExitBtn").addEventListener("click", closeComboLab);
 document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
 scrim.addEventListener("click", closeDrawer);
 document.getElementById("invFilter").addEventListener("input", applyInvFilter);
