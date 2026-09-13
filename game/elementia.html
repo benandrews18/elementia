@@ -4343,6 +4343,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mm-slot{position:relative}
 .mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
 .mm-slot.wide{grid-column:span 2}
+/* touch-action:none on a FILLED slot specifically -- without it, a real
+   touchscreen's own native scroll/pan detection can claim an ordinary tap
+   here as an incipient scroll gesture (real fingers always carry a little
+   more jitter than a mouse does), which makes the browser fire
+   pointercancel instead of pointerup and silently drops the tap before
+   the #drawerTop pointerup listener below ever sees it -- reading as
+   "tapping a mat card just doesn't do anything." The pointerdown/up pair
+   below already has its own jitter-threshold logic to tell a tap from a
+   real drag, so nothing is lost by opting this element out of the
+   browser's OWN separate (and here, unwanted) gesture recognition --
+   scrolling the drawer from an empty slot or anywhere else is untouched. */
+.mm-slot.filled{touch-action:none}
 /* Move-arrows selection (2026-09-13, replacing pointer-drag entirely --
    see the click handler's own comment for why) -- a gold outline on the
    selected card's own slot, with up to 4 small round arrow buttons
@@ -4418,6 +4430,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,.35);
 }
 .mat-quick-btn:active{transform:translateY(2px); box-shadow:0 1px 2px rgba(0,0,0,.35)}
+/* Clear specifically -- a plain trash-can icon read as ambiguous (empty
+   the mat? delete something selected?) next to Layouts' own icon-only
+   button, so it's a labeled pill instead: same gold/height/shadow
+   language as .mat-quick-btn, just auto-width with real text padding
+   rather than a fixed 34px circle. */
+.mat-quick-btn.text{
+  width:auto; height:34px; border-radius:17px; padding:0 14px; font-size:12.5px; font-weight:800;
+}
 /* Reverted 2026-09-12: the 4-column override below blew the squares up
    far past .elbox's own sizing (font/border/icon all still set for an
    8-across row), reading as "the borders got scaled way up" rather than
@@ -14483,7 +14503,7 @@ function renderMatTop(){
   // .mat-quick-actions' own CSS comment for why these moved here (the page
   // tabs' old spot) once the tabs themselves moved to the top.
   const quickActionsHTML = matDrawerView === "mat" ? `<div class="mat-quick-actions">
-      <button type="button" class="mat-quick-btn" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">🗑️</button>
+      <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear Mat</button>
       <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
     </div>` : "";
   // The page itself: fixed height (the same 2-row mat-grid formula,
@@ -14862,15 +14882,22 @@ document.getElementById("drawerTop").addEventListener("pointerdown", ev => {
     x0: ev.clientX, y0: ev.clientY,
   };
 });
-// No preventDefault here (unlike the old drag's own pointerdown) -- a
-// real scroll gesture starting on a mat card should scroll the page
-// normally instead of being hijacked, now that there's no ghost drag to
-// protect. The pointermove check below abandons the tap the moment it
-// looks like anything other than a stationary press anyway.
+// Revised 2026-09-13: no preventDefault here, relying on .mm-slot.filled's
+// own touch-action:none (see its CSS comment) to keep the browser from
+// hijacking the gesture instead -- preventDefault on pointerdown alone
+// still leaves a window for the browser's native scroll/pan recognizer to
+// win the race on some devices, where touch-action is a hard, upfront
+// opt-out that can't race at all. The pointermove check below still
+// abandons the tap the moment it looks like a real drag, same as ever.
 document.addEventListener("pointermove", ev => {
   if (!matTapStart) return;
   if (Math.hypot(ev.clientX - matTapStart.x0, ev.clientY - matTapStart.y0) >= 18) matTapStart = null;
 });
+// A cancelled pointer sequence (multi-touch, an OS gesture taking over,
+// etc.) must still clear matTapStart -- otherwise it can be left set from
+// an abandoned gesture and get misread as still in progress by whatever
+// pointerup fires next.
+document.addEventListener("pointercancel", () => { matTapStart = null; });
 document.addEventListener("pointerup", ev => {
   if (!matTapStart) return;
   // A real touchscreen can still synthesize a compatibility "click" from
