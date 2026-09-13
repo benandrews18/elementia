@@ -186,15 +186,21 @@ body[data-picking] #topbar{display:none}
   box-shadow:0 -6px 20px rgba(0,0,0,.25);
   display:flex; justify-content:space-between; align-items:flex-end; gap:0;
 }
-/* Classic Mode's opening beat only (see playMapIntroScroll()/
-   startBingoCapstonePicker()/runBingoRevealSequence()) -- the pan and the
-   BINGO card's own staggered reveal both play with the hub bar out of the
-   way entirely, cleared the moment the reveal finishes (not once a
-   capstone's actually chosen -- the player is free to add one later). A
-   dedicated flag rather than reusing body[data-picking] (which stays true
-   for the whole "no station chosen yet" resting state a player could sit
-   in indefinitely, not just this one scripted beat). */
-body[data-intro-sequence] #hub{display:none}
+/* Classic Mode's opening beat only (see playClassicIntro()/
+   startBingoCapstonePicker()) -- covers the bare-map/logo-bounce beat
+   AND the Marketplace tray that follows it, cleared only once that tray
+   actually closes (closeJobBoard()/closeBingoIntroTray()), whether the
+   player closes it themselves or picking a capstone closes it for them.
+   Revised 2026-09-13: the hub stays VISIBLE now (was display:none) --
+   explicit request -- just inert (pointer-events:none) until the whole
+   beat finishes; same treatment for the map's own station nodes just
+   below, since nothing else was blocking a tap on one of those before
+   the tray actually opens and its scrim takes over that job. A dedicated
+   flag rather than reusing body[data-picking] (which stays true for the
+   whole "no station chosen yet" resting state a player could sit in
+   indefinitely, not just this one scripted beat). */
+body[data-intro-sequence] #hub{pointer-events:none}
+body[data-intro-sequence] .map-node{pointer-events:none}
 /* The 4 side buttons (To-Do List+Inventory on the left, Items+Settings on
    the right) each live in their own flush flex group so their own badges
    touch each other directly -- #hubHome (the center Map/Roll/Market/
@@ -463,15 +469,20 @@ body[data-screen="market"] #trackedPill{display:none}
 .mj-search-badge{font-size:13px; line-height:1}
 .mj-em{font-size:16px; line-height:1}
 .map-job-empty-note{margin-bottom:18px}
-/* The one instruction on the "choose your first station" screen -- the
-   pills are hidden there (see body[data-picking]) so this owns the top
-   band outright and can be centred in it. Given real banner weight (not
-   just shadowed text over the map art) since this is a brand-new run's
-   very first prompt -- the pulse is a light "look here" nudge, not
-   decoration, and dies to a single frame under prefers-reduced-motion via
-   the global animation-duration override above. */
+/* The one instruction on the "choose your first station" screen.
+   Revised 2026-09-13: centered over the middle of the map itself now
+   (was pinned to the top of the screen, sticky while scrolling) --
+   explicit request -- so it reads as an invitation sitting IN the space
+   the player is looking at, not a banner bolted above it; see
+   .map-canvas's own comment for why that also means the canvas no longer
+   needs to squish to leave room for this above it. Given real banner
+   weight (not just shadowed text over the map art) since this is a
+   brand-new run's very first prompt -- the pulse is a light "look here"
+   nudge, not decoration, and dies to a single frame under prefers-
+   reduced-motion via the global animation-duration override above. */
 .map-pick-note{
-  margin:0 auto 20px; padding:16px 22px; max-width:440px;
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5;
+  width:min(300px, 78%); margin:0; padding:18px 20px;
   text-align:center; color:#fff; font-weight:800; font-size:19px; line-height:1.35;
   /* Revised 2026-09-13: dropped the solid dark fill (was
      rgba(15,20,28,.82)) per explicit request -- the map art shows through
@@ -483,18 +494,37 @@ body[data-screen="market"] #trackedPill{display:none}
   border:2px solid var(--ok); border-radius:16px;
   box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
   animation:pickNotePulse 2.2s ease-in-out infinite;
-  /* Frozen to the top of the screen while scrolling the map -- same
-     position:sticky freeze .stationhead.frozen already uses (see its own
-     comment). Lower z-index than .map-card-wrap's 40 (see below) so a
-     selected station's own preview card, also pinned at the very top,
-     visually covers this note rather than the two stacking awkwardly. */
-  position:sticky; top:0; z-index:33;
 }
 @keyframes pickNotePulse{
   0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft)}
   50%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 9px rgba(63,180,108,0)}
 }
 .pinned-empty-note{font-size:12.5px; color:var(--mute); font-weight:600}
+
+/* Classic Mode's opener (see playClassicIntro()) -- a full-screen,
+   click-through layer just so the logo can float dead-center regardless
+   of whatever's underneath it (the bare map, mid-reveal). z-index above
+   every other overlay/hub element in the game (#hub's own 72 included)
+   so it's never accidentally covered by any of them for the brief moment
+   it's up. Hidden by default (opacity:0, scaled down) -- .show (added/
+   removed by playClassicIntro() itself) is what actually plays the
+   bounce-in keyframe below; nothing plays it back OUT (it's simply
+   hidden again once the Marketplace tray is about to take over), so
+   there's no matching bounce-away animation to define here. */
+#introLogo{
+  position:fixed; inset:0; z-index:95;
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+#introLogo img{
+  width:min(78vw, 420px); filter:drop-shadow(0 10px 30px rgba(0,0,0,.5));
+  opacity:0; transform:scale(.4);
+}
+#introLogo.show img{animation:introLogoBounce .5s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes introLogoBounce{
+  0%{opacity:0; transform:scale(.4)}
+  60%{opacity:1; transform:scale(1.08)}
+  100%{opacity:1; transform:scale(1)}
+}
 
 /* ------------------------------------------ floating pins/convert --- */
 /* Circular overlay buttons, same "raised icon circle" language as
@@ -928,6 +958,7 @@ body[data-screen="market"] #trackedPill{display:none}
    is the only ownership signal, and it lands the moment THAT item is
    owned, not held back until its whole line completes. */
 .bingo-title{font-size:20px; font-weight:800; text-align:center; margin:0 0 10px; letter-spacing:.3px}
+.bingo-subhint{font-size:12.5px; color:var(--ink2); text-align:center; margin:-6px 0 12px}
 /* Tighter than the stations-visited card's own 18px bottom margin (see
    .market-classic-progress) when it's sitting right above the title --
    scoped to that one pairing so every other .market-classic-progress use
@@ -993,6 +1024,16 @@ body[data-screen="market"] #trackedPill{display:none}
    above), so the name needs to stay light there rather than switching to
    .bc-name's own new dark-ink default. */
 .bingo-cell.owned .bc-name{color:#fff}
+/* Craftable-right-now (not yet owned, but every ingredient's in hand) --
+   same bright green ring .owned gets, but on the normal parchment face
+   rather than owned's own dark fill, since this square isn't finished
+   yet, just actionable. See bingoCardHTML()'s own comment. */
+.bingo-cell.craftable{
+  box-shadow:0 4px 0 rgba(0,0,0,.4), 0 6px 10px rgba(0,0,0,.25), inset 0 0 0 3px var(--ok-bright);
+}
+.bingo-cell.craftable:active{
+  box-shadow:0 1px 0 rgba(0,0,0,.4), 0 2px 4px rgba(0,0,0,.2), inset 0 0 0 3px var(--ok-bright);
+}
 /* The center square before a capstone's ever been chosen (see
    bingoCardHTML()'s own "Add Capstone" placeholder) -- dashed border
    instead of the solid parchment face every other square uses, same
@@ -1369,17 +1410,21 @@ body[data-screen="market"] #trackedPill{display:none}
    art to fit: .map-canvas no longer derives its height from the image's
    own aspect ratio at all -- it's a flex child of <main> (see
    body[data-screen="map"] main below) sized to fill exactly whatever
-   vertical room is actually left after the hint text above it and the hub
-   below, so Ocean and Observatory (the two extreme ends of the zigzag)
-   are always both on screen with zero scrolling, at any screen height.
-   The background itself stretches to fill that box exactly
-   (background-size:100% 100% below, not cover/contain) rather than being
-   cropped, so it reads as this same art evenly squished vertically to
-   fit -- MAP_NODE_POS's own percentage coords still line up exactly,
-   since the image and the nodes both scale against the same box. Width is
-   untouched either way, so .map-node's own size (a plain percentage of
-   this canvas's WIDTH, see its own CSS) stays exactly the same regardless
-   of how much the height gets squished. */
+   vertical room is left after the hub below, so Ocean and Observatory
+   (the two extreme ends of the zigzag) are always both on screen with
+   zero scrolling, at any screen height. The background itself stretches
+   to fill that box exactly (background-size:100% 100% below, not cover/
+   contain) rather than being cropped, so it reads as this same art evenly
+   squished vertically to fit -- MAP_NODE_POS's own percentage coords
+   still line up exactly, since the image and the nodes both scale
+   against the same box. Width is untouched either way, so .map-node's
+   own size (a plain percentage of this canvas's WIDTH, see its own CSS)
+   stays exactly the same regardless of how much the height gets squished.
+   Revised 2026-09-13: the "Tap a station" hint (.map-pick-note) used to
+   be a flex SIBLING of this canvas, so its own height came straight out
+   of the canvas's share of the leftover space -- it's centered INSIDE
+   the canvas now instead (see .map-pick-note's own CSS), so the canvas
+   no longer has to squish any further to make room for it above. */
 /* Full-bleed within <main>'s own side padding (18px, see main{} above) --
    the map is the one screen that should feel edge-to-edge rather than
    inset like every card-based screen elsewhere in the game. */
@@ -4942,6 +4987,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      less tappable than it always was. -->
 <div id="mouseHighlight" aria-hidden="true"></div>
 
+<!-- Classic Mode's own opener (see playClassicIntro()) -- bounces into
+     view center-screen once the bare map's own 0.5s beat finishes, holds
+     for another 0.5s, then playClassicIntro() hides it again and hands
+     off to the Marketplace tray. Purely decorative (aria-hidden,
+     pointer-events:none) -- .show is what actually triggers the CSS
+     bounce-in keyframe, see its own comment. -->
+<div id="introLogo" aria-hidden="true"><img src="banners/elementia-logo.webp" alt=""></div>
+
 <!-- capstone celebration -->
 <div class="overlay" id="celebrate" role="dialog" aria-modal="true" aria-labelledby="celebName">
   <div class="sheetbox">
@@ -7191,24 +7244,53 @@ function newGameForMode(mode){
 }
 
 /* =====================================================================
-   Post-mode-select map scroll: the real map, auto-scrolled top to bottom,
-   landing on The Ocean's preview card with its "Start"/"Start here"
-   button already showing (see mapCardHTML()). Skippable with a tap.
-   Doesn't touch game state -- pure presentation layered over whatever
-   chooseMode() already rendered underneath.
+   Post-mode-select opener. Hard/Adventure/Zen still get the old real map
+   auto-scroll pan (unchanged below), landing on The Ocean's preview card
+   with its "Start"/"Start here" button already showing (see
+   mapCardHTML()) -- Classic Mode gets its own scripted beat instead (see
+   playClassicIntro() just below), since there's no map scroll left to
+   pan across any more (Ocean and Observatory both fit on screen at once,
+   see .map-canvas's own comment). Neither path touches game state --
+   pure presentation layered over whatever chooseMode() already rendered
+   underneath.
    ===================================================================== */
+// True only while the bare-map beat of Classic's own opener is showing --
+// see playClassicIntro(). A separate flag from data-intro-sequence
+// (which spans the WHOLE beat, bare map through the Marketplace tray)
+// since this one specifically only needs to suppress the map's own
+// capstone-preview badges for the first, shorter half of it.
+let classicIntroHideCapstones = false;
+const CLASSIC_INTRO_STEP_MS = 500;
+/* Classic Mode's own opening beat, replacing the old pan entirely
+   (explicit request -- there's no map scroll left to pan across since
+   the whole map now fits on screen at once): the bare map (station icons
+   showing, capstone-preview badges suppressed) for CLASSIC_INTRO_STEP_MS,
+   then the Elementia logo bounces into view center-screen (#introLogo,
+   see its own CSS) for another CLASSIC_INTRO_STEP_MS, then the
+   Marketplace/BINGO tray opens exactly as startBingoCapstonePicker()
+   always has. body[data-intro-sequence] (see its own CSS) keeps the hub
+   bar and map nodes visible-but-untappable for this ENTIRE beat, tray
+   included -- not cleared until the tray itself actually closes (see
+   closeJobBoard()/closeBingoIntroTray()), whichever happens, so there's
+   no gap where the player could act on a station or hub button before
+   the whole sequence is actually done. */
+function playClassicIntro(){
+  screen = "map"; current = null; selectedMapStation = null;
+  document.body.setAttribute("data-intro-sequence", "");
+  classicIntroHideCapstones = true;
+  render(true);
+  setTimeout(() => {
+    document.getElementById("introLogo").classList.add("show");
+    setTimeout(() => {
+      document.getElementById("introLogo").classList.remove("show");
+      classicIntroHideCapstones = false;
+      startBingoCapstonePicker();
+    }, CLASSIC_INTRO_STEP_MS);
+  }, CLASSIC_INTRO_STEP_MS);
+}
 function playMapIntroScroll(){
   screen = "map"; current = null; selectedMapStation = null;
-  // Classic Mode's own opening beat (pan -> capstone picker -> card reveal,
-  // see startBingoCapstonePicker()) plays with the hub bar and the map's
-  // own "Tap on a station to start!" hint both out of the way for the
-  // WHOLE beat, not just this pan -- set before the render() just below so
-  // even this very first frame already has both hidden (see
-  // body[data-intro-sequence]'s own CSS comment and renderMap()'s hint).
-  // runBingoRevealSequence() is what eventually clears it again, once the
-  // card's own staggered reveal finishes.
-  const classicIntro = state.mode === "classic";
-  if (classicIntro) document.body.setAttribute("data-intro-sequence", "");
+  if (state.mode === "classic"){ playClassicIntro(); return; }
   render(true); // resets scroll to the top
 
   const startY = window.scrollY;
@@ -7241,13 +7323,7 @@ function playMapIntroScroll(){
       showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "bottom-left", "#hubHome");
     }
     window.scrollTo({top: endY, behavior: "instant"});
-    // Classic hands off to the BINGO reveal sequence instead of just
-    // landing quietly -- that function is what finally clears
-    // data-intro-sequence and reveals the hint text/hub bar (once the
-    // reveal itself finishes, not once a capstone's chosen), not this
-    // render() call.
-    if (classicIntro) startBingoCapstonePicker();
-    else render(); // no resetScroll -- keep the bottom position just set above
+    render(); // no resetScroll -- keep the bottom position just set above
   };
   const tapSkip = ev => { ev.preventDefault(); ev.stopPropagation(); finish(); };
   document.addEventListener("click", tapSkip, true);
@@ -8211,9 +8287,17 @@ function bingoCardHTML(){
         <span class="bc-addcap-label">Add<br>Capstone</span>
       </div>`;
     }
-    const cls = owns(name) ? "bingo-cell owned" : "bingo-cell";
-    const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
     const idx = ENTRIES.findIndex(e => e.name === name);
+    // Craftable-right-now gets the same green ring an owned square already
+    // has (see .bingo-cell.owned/.craftable's own CSS) -- explicit request,
+    // so a glance at the card shows which squares are actionable RIGHT NOW
+    // via the Marketplace's own craft-from-here flow (openBingoCraftOverlay()),
+    // not just which are already done. Kept on the light parchment face
+    // rather than owned's own dark fill -- this square isn't finished yet.
+    const owned = owns(name);
+    const craftable = !owned && idx >= 0 && canCraft(ENTRIES[idx]);
+    const cls = owned ? "bingo-cell owned" : craftable ? "bingo-cell craftable" : "bingo-cell";
+    const station = STATION_BY_NAME[CORE_ITEM_STATION[name]];
     const pinned = isPinned(name);
     // Revised 2026-09-12: the capstone choice is a ONE-TIME pick again --
     // once state.bingoCenterChosen is true, the center square goes back to
@@ -8230,7 +8314,8 @@ function bingoCardHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<h3 class="bingo-title">Elementia BINGO</h3>
+  return `<h3 class="bingo-title">Marketplace</h3>
+    <p class="bingo-subhint">Tap on an item to craft it directly from the market!</p>
     <div class="bingo-wrap"><div class="bingo-grid">${cells}</div></div>
     <p class="bingo-hint"><span class="bingo-hint-line">✅ Complete a line of 5 across the card for bonus points.</span></p>`;
 }
@@ -9961,7 +10046,7 @@ function renderMap(){
     // fill, only behind whatever's further back than the parent. Only a
     // true sibling comparison (this element vs. .map-node itself) does
     // what "tucked behind the circle" actually needs.
-    const capstoneBadge = state.mode === "classic" && state.lastStation === null
+    const capstoneBadge = state.mode === "classic" && state.lastStation === null && !classicIntroHideCapstones
       ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
       ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
@@ -9977,14 +10062,18 @@ function renderMap(){
          <button type="button" class="tbtn" id="showSummaryBtn" style="margin-left:8px">See results</button></p>`
     : "";
 
-  // Stays blank for the whole Classic-opening beat (pan + capstone picker,
-  // see body[data-intro-sequence]'s own CSS comment) -- it's the reveal at
-  // the END of that sequence (closeBingoIntroTray()), not something to
-  // show underneath the pan/tray the whole time.
+  // Stays blank for the whole Classic-opening beat (bare map + logo bounce
+  // + Marketplace tray, see body[data-intro-sequence]'s own CSS comment)
+  // -- it's the reveal at the END of that sequence (closeJobBoard()/
+  // closeBingoIntroTray(), whichever actually closes the tray), not
+  // something to show underneath that whole beat. Now centered INSIDE
+  // .map-canvas (see its own CSS) instead of pinned to the top of the
+  // screen -- rendered as a child of the canvas below rather than a
+  // sibling of it.
   const hint = state.lastStation === null && !document.body.hasAttribute("data-intro-sequence")
     ? `<p class="map-sub map-pick-note">${forcedStart
         ? "Every journey starts at The Ocean."
-        : "Tap on a station to start!"}</p>`
+        : "Choose a<br>station to<br>start!"}</p>`
     : "";
 
   const cardHTML = selectedMapStation ? `<div class="map-card-wrap">${mapCardHTML(selectedMapStation)}</div>` : "";
@@ -9998,8 +10087,7 @@ function renderMap(){
 
   return `${cardHTML}
     ${banner}
-    ${hint}
-    <div class="map-canvas" data-map-bg>${pathsHTML}<div class="map-nodes">${nodesHTML}</div></div>`;
+    <div class="map-canvas" data-map-bg>${pathsHTML}<div class="map-nodes">${nodesHTML}</div>${hint}</div>`;
 }
 
 /* Mini-Games mode's own map: same node positions/art as the real map
@@ -13754,7 +13842,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      openDrawer();
+      openDrawer({ peeked: true });
       return;
     }
     goStation(selectedMapStation);
@@ -13825,15 +13913,19 @@ const drawer = document.getElementById("drawer"), scrim = document.getElementByI
 // hidden the whole time the lab is open.
 let comboLabActive = false;
 let realGameState = null, realScreen = null, realCurrent = null, realSelectedMapStation = null;
-const openDrawer = () => {
-  // Classic Mode's tray always starts "peeked" (see #drawer.expanded's
-  // own comment) -- a fresh open never lands already showing the full
-  // item list. Set directly here, not left for the next render() to
-  // pick up via renderClassicDrawer()'s own toggle -- render() runs
-  // constantly in the background even while the drawer is closed, so its
-  // LAST pass could easily have left .expanded on from a previous open.
-  matTrayExpanded = false;
-  drawer.classList.toggle("expanded", state.mode !== "classic");
+// Revised 2026-09-13: "peeked" (half-view, Classic Mode's own mat/score
+// header with the full item list collapsed below it) is opt-in now via
+// opts.peeked, requested only by the Lock In flow's own first tap on a
+// newly-selected travel target (see hubHomeFace()'s own "travel" branch)
+// -- every other opener, the plain Inventory hub button included, always
+// lands straight on the full item list now, per explicit request. Set
+// directly here, not left for the next render() to pick up via
+// renderClassicDrawer()'s own toggle -- render() runs constantly in the
+// background even while the drawer is closed, so its LAST pass could
+// easily have left .expanded on (or off) from a previous open.
+const openDrawer = (opts = {}) => {
+  matTrayExpanded = !opts.peeked;
+  drawer.classList.toggle("expanded", !opts.peeked);
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
@@ -15307,6 +15399,18 @@ function closeJobBoard(){
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
+  // Classic's own opener (see playClassicIntro()) keeps data-intro-sequence
+  // set for its whole beat, tray included, specifically so a manual close
+  // right here is what hands interactivity back -- a no-op condition the
+  // rest of the time this tray closes, since the attribute won't be
+  // present then. The extra render() is only needed for that one case too
+  // (the map's own hint text, hidden throughout the intro, has to redraw
+  // once this clears) -- skipped otherwise so an ordinary To-Do List/Job
+  // Board close doesn't force a redundant full re-render behind it.
+  if (document.body.hasAttribute("data-intro-sequence")){
+    document.body.removeAttribute("data-intro-sequence");
+    render();
+  }
   updateHub();
 }
 
@@ -15363,7 +15467,11 @@ function runBingoRevealSequence(){
   // handing the hub/hint back to the player.
   setTimeout(() => {
     bingoRevealInProgress = false;
-    document.body.removeAttribute("data-intro-sequence");
+    // data-intro-sequence is NOT cleared here any more (was) -- Classic's
+    // own opener (see playClassicIntro()) now keeps the hub/map nodes
+    // inert for this WHOLE beat, tray included, not just up through this
+    // reveal -- see closeJobBoard()/closeBingoIntroTray() for where it
+    // actually gets cleared now (whichever one closes the tray).
     updateHub();
     render();
   }, lastStaggerMs + 480);
@@ -15488,10 +15596,12 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
    the next time the tray opens normally). Once the bounce finishes, snaps
    straight to the real closed state via the same transition-disabled
    reflow trick openJobSheet() itself uses, so there's no second, visible
-   slide-up on top of the bounce that just played. data-intro-sequence is
-   NOT this function's job any more -- runBingoRevealSequence() clears it
-   the moment the reveal itself finishes, well before any capstone is
-   necessarily chosen. */
+   slide-up on top of the bounce that just played. Revised 2026-09-13:
+   data-intro-sequence IS this function's job again now -- Classic's own
+   opener (see playClassicIntro()) keeps the hub/map nodes inert through
+   the whole beat, tray included, so picking a capstone on turn 1 (which
+   is what auto-triggers this close) is exactly the moment that should
+   hand interactivity back, same as a manual close (closeJobBoard()) does. */
 function closeBingoIntroTray(){
   jobSheet.classList.add("bounce-away");
   setTimeout(() => {
@@ -15502,6 +15612,7 @@ function closeBingoIntroTray(){
     jobSheet.style.transition = "";
     jobSheet.setAttribute("aria-hidden", "true");
     document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
+    document.body.removeAttribute("data-intro-sequence");
     updateHub();
     render();
   }, BINGO_BOUNCE_AWAY_MS);
