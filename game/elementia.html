@@ -4049,33 +4049,29 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-score-row{
   display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 10px;
 }
-/* Quark Meter -- a single bar spanning the full width of the score card,
-   sitting above the combo/score row rather than a small segmented strip
-   tucked into its corner. Fills continuously to the mat's actual score
-   against this round's real 1/2/3-Empty-Element thresholds (see
-   lockInTiersForRound()), with a tick at each breakpoint that lights up
-   (same gold "lit" glow every other combo/pip already uses) once the
-   score actually clears it -- a glance tells you not just "which tier"
-   but how close you are to the next one. */
-.quark-meter-wrap{width:100%}
-.quark-meter-track{
-  position:relative; width:100%; height:10px; border-radius:5px;
-  background:var(--line); overflow:visible;
+/* Quark Meter -- 4 distinct "broken pill" segments (real gaps between
+   them, not one continuous bar) spanning the full width of the score
+   card, sitting above the combo/score row. Each segment is its own small
+   track with an inner fill that grows smoothly (analog, not just on/off)
+   as the mat's score progresses through THAT segment's own slice of this
+   round's real thresholds (see lockInTiersForRound()) -- segment 1 covers
+   0->one, 2 covers one->two, 3 covers two->three, 4 is pure headroom
+   above three. A segment gets the gold "cleared" glow (same language
+   every other lit combo/pip in this game uses) only once IT specifically
+   fills all the way, so which breakpoints are actually banked reads at a
+   glance separately from how close the next one is. */
+.quark-meter-wrap{display:flex; gap:3px; width:100%}
+.qm-seg{
+  position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
+  background:var(--line);
 }
-.quark-meter-fill{
-  position:absolute; top:0; left:0; height:100%; border-radius:5px;
-  background:linear-gradient(90deg, var(--collection), var(--gold));
-  transition:width .25s cubic-bezier(.3,.8,.4,1);
+.qm-seg-fill{
+  position:absolute; inset:0; width:0; border-radius:6px;
+  background:var(--collection);
+  transition:width .3s cubic-bezier(.3,.8,.4,1);
 }
-.qm-tick{
-  position:absolute; top:50%; width:6px; height:16px; border-radius:3px;
-  background:#00000055; border:1.5px solid var(--ink2);
-  transform:translate(-50%,-50%); transition:background .2s, box-shadow .2s, border-color .2s;
-}
-.qm-tick.end{width:7px; height:18px}
-.qm-tick.lit{
-  background:var(--gold); border-color:#000;
-  box-shadow:0 0 0 1.5px var(--gold), 0 0 6px rgba(226,178,90,.85);
+.qm-seg.lit .qm-seg-fill{
+  background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.7);
 }
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Icon on top, its own raw shared-icon count below it (was an inline
@@ -4121,32 +4117,30 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .quark-meter{display:flex; gap:2px; align-self:flex-end}
 .qm-seg{width:13px; height:6px; border-radius:3px; background:var(--line)}
 .qm-seg.lit{background:var(--collection)}
-/* Revised 2026-09-12: was a small pill straddling #drawer's own top edge
-   (translate(-50%,-50%), centered exactly on that border) -- at that size
-   and position it sat right behind #hubHome (both horizontally centered),
-   visibly peeking out past the round button's own silhouette on either
-   side. Now floats entirely ABOVE the drawer's top edge instead (translateY
-   past its own full height, plus a fixed 40px gap) -- anchored to the
-   drawer's top edge the same way as before so it still tracks correctly
-   regardless of how tall the peeked tray's content currently is, but the
-   fixed extra gap clears #hubHome's 76px circle with real margin even in
-   the shortest (freshly-started, no combos yet) peeked state, which is
-   the worst case -- any taller content only pushes it up further. Sized
-   up and given real button chrome (solid fill, 3D press shadow) per
-   explicit request, so it reads as a tappable button, not a UI pill. */
+/* Round "pull tab" -- half straddling #drawer's own top edge (see its
+   own HTML comment), same attached look this has always had.
+   Revised 2026-09-12 (twice, see git history for the detour in between):
+   a first pass tried moving this to float entirely above the drawer with
+   a fixed 40px gap, to dodge #hubHome sitting right behind it -- reported
+   back as reading as broken/detached rather than fixed, since it no
+   longer touched the tray at all. Reverted to the original attached
+   translate(-50%,-50%) straddle; the #hubHome collision (this button got
+   bigger, per explicit request, which only made the overlap worse) is
+   now handled in JS instead -- see positionAllItemsBtn(), called from
+   renderMatTop() -- which measures the real overlap against #hubHome's
+   actual rect and nudges this up by exactly however much is needed, only
+   when there actually is a collision. The common case (enough natural
+   clearance already) gets no nudge at all and stays touching the edge. */
 .mat-alltab-btn{
-  position:absolute; left:50%; top:0; transform:translate(-50%, calc(-100% - 40px)); z-index:5;
+  position:absolute; left:50%; top:0; transform:translate(-50%,-50%); z-index:5;
   min-width:208px; height:56px; padding:0 20px; border-radius:16px;
   background:var(--gold); border:3px solid #000; color:#181614;
   font-size:16px; font-weight:900; letter-spacing:.3px; white-space:nowrap;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 4px 0 var(--gold-line), 0 6px 14px rgba(0,0,0,.4);
-  cursor:pointer; transition:transform .1s, box-shadow .1s;
+  cursor:pointer; transition:box-shadow .1s;
 }
-.mat-alltab-btn:active{
-  transform:translate(-50%, calc(-100% - 40px + 4px));
-  box-shadow:0 0 0 var(--gold-line), 0 3px 8px rgba(0,0,0,.35);
-}
+.mat-alltab-btn:active{box-shadow:0 0 0 var(--gold-line), 0 3px 8px rgba(0,0,0,.35)}
 #drawer.expanded .mat-alltab-btn{display:none}
 
 /* Row height is computed explicitly (via #drawerTop's own
@@ -4274,25 +4268,39 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   font-size:13px; font-weight:700;
 }
 .mat-tray-option.active{border-color:var(--gold); color:var(--gold); background:var(--gold-soft)}
-/* Two vertical stacks side by side -- suits on the left, stations on the
-   right (per explicit request), each scrolling independently only if it
-   truly has to (8 stations/4 suits both fit without scrolling in
-   practice, this is just insurance for a narrower phone). */
-.mat-filter-cols{display:flex; gap:10px; flex:1; min-height:0}
-.mat-filter-col{display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; overflow-y:auto}
-.mat-fbtn{
-  display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:10px; width:100%;
-  background:var(--st, var(--suit, var(--sunken))); border:1.5px solid var(--line); font-size:15px;
-  opacity:.5; filter:saturate(.4); overflow:hidden; color:#fff; text-align:left;
+/* Revised 2026-09-12: two stacked sections (was two side-by-side scrolling
+   columns) -- stations a 2x4 grid on top, suits a 2x2 grid (bigger icons,
+   half as many of them) below, divided by a hairline. Icon-only buttons
+   now -- see .mat-fbtn's own comment below for why the name label was
+   dropped. Grid, not flex-column, since a fixed 4-per-row (or 2-per-row)
+   layout is exactly "2 rows of 4"/"2x2", not just "however many fit". */
+.mat-filter-section{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  padding-bottom:14px; margin-bottom:14px; border-bottom:1.5px solid var(--line);
 }
-.mat-fbtn span{font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.mat-filter-section.suits{grid-template-columns:repeat(2, 1fr); padding-bottom:0; margin-bottom:0; border-bottom:none}
+/* Square, icon-only now (was a wide pill with a name label beside the
+   icon) -- 8 station emoji and 4 suit glyphs are each already distinct
+   enough alone, and losing the text is what makes room for a real grid
+   instead of a scrolling list. */
+.mat-fbtn{
+  display:flex; align-items:center; justify-content:center; aspect-ratio:1; width:100%;
+  padding:0; border-radius:12px;
+  background:var(--st, var(--suit, var(--sunken))); border:1.5px solid var(--line); font-size:22px;
+  opacity:.5; filter:saturate(.4); overflow:hidden; color:#fff;
+}
 /* em()/SUIT_ICON can both return a raw <img> (a Noto icon at its own
    full intrinsic size, e.g. 160x160) rather than a sized glyph -- without
    this, an unconstrained icon blows out of this row entirely, which is
    exactly what happened here in testing (a giant, low-opacity station
    icon bleeding across the whole drawer behind everything else). */
-.mat-fbtn :is(img,svg){width:18px; height:18px; object-fit:contain; flex:none}
+.mat-fbtn :is(img,svg){width:24px; height:24px; object-fit:contain; flex:none}
 .mat-fbtn.on{opacity:1; filter:none; box-shadow:0 0 0 2px var(--gold)}
+/* Suit buttons get the same treatment at a bigger size (per explicit
+   request -- half as many of them, in 2 rows of 2, so each has more room
+   than a station tile does). */
+.mat-filter-section.suits .mat-fbtn{font-size:32px}
+.mat-filter-section.suits .mat-fbtn :is(img,svg){width:34px; height:34px}
 /* The scrollable "which owned items to place" grid itself -- lives in
    #drawerBody, the exact container the non-Classic legacy inventory list
    already scrolled inside of (see .dbody{overflow-y:auto}), so no new
@@ -4534,10 +4542,15 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 </aside>
 <aside id="matFilterTray" aria-label="Filter items" aria-hidden="true">
   <h3 class="mat-tray-h">Filter</h3>
-  <div class="mat-filter-cols">
-    <div class="mat-filter-col" id="matFSuits"></div>
-    <div class="mat-filter-col" id="matFStations"></div>
-  </div>
+  <!-- Revised 2026-09-12: two stacked sections (was two side-by-side
+       columns) -- stations on top (2 rows of 4, matching the real 8-
+       station roster exactly), suits below (2x2, and bigger -- half as
+       many of them so each gets more room). Icon-only now, no name label
+       next to each one (see buildMatFilterBar()) -- 8 station emoji and
+       4 suit glyphs are each already distinct enough to recognize alone,
+       and dropping the text is what makes room for the bigger grid. -->
+  <div class="mat-filter-section" id="matFStations"></div>
+  <div class="mat-filter-section suits" id="matFSuits"></div>
 </aside>
 
 <!-- bottom hub: every global action, reachable from every screen -->
@@ -13872,28 +13885,33 @@ function renderMatTop(){
   // below it, not something that should vanish just because you tabbed
   // away to check your held elements.
   //
-  // Quark Meter revised 2026-09-12: was a discrete 4-segment "how many
-  // tiers have you cleared" strip tucked in the score block's own corner.
-  // Now a single full-width bar across the TOP of the whole card, filling
-  // continuously to the mat's actual score against this round's real
-  // thresholds (lockInTiersForRound()) -- not just which of 4 buckets
-  // you're in -- with a tick at each of the 1/2/3-Empty-Element
-  // breakpoints that lights up (gold glow, same "lit" language every
-  // other combo/pip in this game already uses) the moment the mat's
-  // score actually clears it.
+  // Quark Meter revised 2026-09-12 (three times now, see git history for
+  // the two detours in between): back to the original 4-segment "broken
+  // pill" shape (distinct blocks with real gaps, not one continuous bar)
+  // -- that part was already liked -- but each block now fills with an
+  // ANALOG (continuous, not just on/off) inner progress bar as Quarks
+  // build up through its own specific range, instead of only snapping lit
+  // once its threshold is fully cleared. Block 1 covers 0->one, block 2
+  // one->two, block 3 two->three; block 4 covers three->MAT_ABSOLUTE_CEILING
+  // as pure headroom (there's no real "4th reward tier") so it still has
+  // somewhere to visibly creep for a very deep mat instead of just sitting
+  // permanently empty past the real max. A block gets the gold "cleared"
+  // glow once ITS OWN range is fully filled (its threshold actually
+  // passed), not just partially progressed.
   const qmTiers = lockInTiersForRound(state.visits);
   const qmPassed = emptyElementsForScore(s.total, state.visits);
-  const qmFillPct = qmTiers.three > 0 ? Math.min(100, (s.total / qmTiers.three) * 100) : 100;
-  const qmTick1Pct = qmTiers.three > 0 ? Math.min(100, (qmTiers.one / qmTiers.three) * 100) : 0;
-  const qmTick2Pct = qmTiers.three > 0 ? Math.min(100, (qmTiers.two / qmTiers.three) * 100) : 0;
+  const qmSegRange = (lo, hi) => hi > lo ? Math.max(0, Math.min(100, ((s.total - lo) / (hi - lo)) * 100)) : (s.total >= lo ? 100 : 0);
+  const qmSegPcts = [
+    qmSegRange(0, qmTiers.one),
+    qmSegRange(qmTiers.one, qmTiers.two),
+    qmSegRange(qmTiers.two, qmTiers.three),
+    qmSegRange(qmTiers.three, MAT_ABSOLUTE_CEILING),
+  ];
+  const qmSegs = qmSegPcts.map(pct =>
+    `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`).join("");
   const quarkMeterHTML = `<div class="quark-meter-wrap"
       title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmPassed} Empty Element${qmPassed === 1 ? "" : "s"} if you lock in now">
-    <div class="quark-meter-track">
-      <div class="quark-meter-fill" style="width:${qmFillPct}%"></div>
-      <span class="qm-tick${qmPassed >= 1 ? " lit" : ""}" style="left:${qmTick1Pct}%"></span>
-      <span class="qm-tick${qmPassed >= 2 ? " lit" : ""}" style="left:${qmTick2Pct}%"></span>
-      <span class="qm-tick end${qmPassed >= 3 ? " lit" : ""}" style="left:100%"></span>
-    </div>
+    ${qmSegs}
   </div>`;
   const scoreRowHTML = `<div class="mat-score-card">
     ${quarkMeterHTML}
@@ -13941,6 +13959,7 @@ function renderMatTop(){
   document.getElementById("drawerTop").innerHTML = scoreRowHTML +
     `<div class="mat-zone-wrap">${pageHTML}${tabsHTML}</div>`;
   document.getElementById("matAllItemsBtn").hidden = matTrayExpanded;
+  if (!matTrayExpanded) positionAllItemsBtn();
   // Sort/Filter only mean anything once the full scrollable item list is
   // actually showing (see #drawer.expanded) -- hidden the rest of the
   // time, same as the item list itself. Closing their trays here too:
@@ -13950,6 +13969,26 @@ function renderMatTop(){
   document.getElementById("matFilterBtn").hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
   if (matDrawerView === "mat") renderMatGridCells(s);
+}
+/* Nudges #matAllItemsBtn up just enough to clear #hubHome when the two
+   actually collide -- see the CSS block's own comment above
+   .mat-alltab-btn for why this replaced a fixed-offset CSS approach.
+   Reset to the CSS default (plain straddle, no inline override) first so
+   a since-grown mat/score card that now has enough natural clearance on
+   its own doesn't stay nudged up from a stale previous measurement. */
+function positionAllItemsBtn(){
+  const btn = document.getElementById("matAllItemsBtn");
+  btn.style.transform = "";
+  const home = document.getElementById("hubHome");
+  const btnRect = btn.getBoundingClientRect();
+  const homeRect = home.getBoundingClientRect();
+  const margin = 8;
+  const overlapsVertically = btnRect.bottom > homeRect.top - margin && btnRect.top < homeRect.bottom + margin;
+  const overlapsHorizontally = btnRect.right > homeRect.left - margin && btnRect.left < homeRect.right + margin;
+  if (overlapsVertically && overlapsHorizontally){
+    const shiftUp = btnRect.bottom - (homeRect.top - margin);
+    btn.style.transform = `translate(-50%, calc(-50% - ${Math.ceil(shiftUp)}px))`;
+  }
 }
 
 // View state, like matDrawerView above -- not persisted. Mirrors
@@ -14009,14 +14048,17 @@ function buildMatFilterBar(){
   if (matFilterBarBuilt) return;
   const coreStations = new Set(MAT_CARDS.map(c => c.station));
   const stations = STATION_TRACKER_ORDER.filter(s => coreStations.has(s));
+  // Icon-only now (see .mat-fbtn's own CSS comment) -- title still carries
+  // the name for a tooltip/screen reader, just nothing printed alongside
+  // the glyph any more.
   document.getElementById("matFStations").innerHTML = stations.map(s => {
     const m = STATION_BY_NAME[s];
     return `<button type="button" class="mat-fbtn" data-mat-fstation="${esc(s)}" title="${esc(s)}"
-        style="--st:${DATA.suits[m.suit].color}">${em(m.emoji)}<span>${esc(s)}</span></button>`;
+        style="--st:${DATA.suits[m.suit].color}">${em(m.emoji)}</button>`;
   }).join("");
   document.getElementById("matFSuits").innerHTML = Object.keys(ELEMENT_SUIT_LABEL).map(s =>
     `<button type="button" class="mat-fbtn" data-mat-fsuit="${s}" title="${ELEMENT_SUIT_LABEL[s]}"
-        style="--suit:${SUIT_COLOR[s]}">${SUIT_ICON[s]}<span>${esc(ELEMENT_SUIT_LABEL[s])}</span></button>`).join("");
+        style="--suit:${SUIT_COLOR[s]}">${SUIT_ICON[s]}</button>`).join("");
   matFilterBarBuilt = true;
 }
 function syncMatFilterBar(){
