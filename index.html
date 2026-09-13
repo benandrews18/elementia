@@ -1337,18 +1337,26 @@ body[data-screen="market"] #trackedPill{display:none}
   min-width:24px; padding:1px; font-size:13px; flex:none; background:#fff; color:#221f1a;
 }
 .mn-elname{font-weight:600; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-/* The path map: a single tall, unmarked background image (game/backdrops/
+/* The path map: a single unmarked background image (game/backdrops/
    diamond_map_full.webp) with round station buttons positioned over it by
    percentage coords (MAP_NODE_POS), plus dashed connector lines and
    direction arrows drawn on top from MAP_EDGES (see mapPathsHTML()) --
    the art itself has no route markings baked in. Aspect ratio pinned to
-   the source image (794x1981) so the percentage coords line up regardless
-   of screen width. */
+   the source image (853x1844, replaced 2026-09-12 with a shorter/wider
+   image sized so the whole map fits on a Pixel 9a screen without
+   scrolling -- was 794x1981, tall enough that Ocean and Observatory, the
+   two extreme ends of the zigzag, couldn't both be on screen at once) so
+   the percentage coords line up regardless of screen width. .map-node's
+   own size (see its own CSS) is a plain percentage of this canvas's WIDTH,
+   which didn't change -- only the height (via this aspect-ratio) did, so
+   every node/path stayed exactly the same pixel size for free; only
+   MAP_NODE_POS itself needed updating, to match where each station
+   actually sits on the new art. */
 /* Full-bleed within <main>'s own side padding (18px, see main{} above) --
    the map is the one screen that should feel edge-to-edge rather than
    inset like every card-based screen elsewhere in the game. */
 .map-canvas{
-  position:relative; width:calc(100% + 36px); margin:0 -18px; aspect-ratio:794/1981;
+  position:relative; width:calc(100% + 36px); margin:0 -18px; aspect-ratio:853/1844;
   overflow:hidden; background:var(--card);
   border-top:1px solid var(--line); border-bottom:1px solid var(--line);
 }
@@ -2930,6 +2938,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    level the way every other .overlay (which never appears alongside
    #jobSheet at all) safely can. */
 #capstoneOverlay{z-index:70}
+#bingoCraftOverlay{z-index:70}
 /* confirm sits above other overlays -- it's usually raised FROM one
    (e.g. the reset button inside Settings), and it precedes them in the
    DOM, so without this the parent overlay would paint over it. Still
@@ -4286,6 +4295,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    use for whichever tab isn't currently in front. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(-4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
+/* Saved-layouts trigger -- same folder-tab shape/size as the two page
+   tabs above, but its own gold accent (not either page's own parchment
+   color) marks it as an action button, not a third page to switch to. */
+.mat-tab-layouts{background:var(--gold); border-color:var(--gold-line); color:#181614; font-size:14px}
 /* Reverted 2026-09-12: the 4-column override below blew the squares up
    far past .elbox's own sizing (font/border/icon all still set for an
    8-across row), reading as "the borders got scaled way up" rather than
@@ -4598,7 +4611,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
          stays inline -- a live text filter has no real use for a tray of
          its own. -->
     <div class="mat-filters" id="matFilters" hidden>
-      <input type="search" id="matFSearch" class="mat-fsearch" placeholder="Search items…"
+      <input type="search" id="matFSearch" class="mat-fsearch" placeholder="Search items or components…"
              autocomplete="off" spellcheck="false">
     </div>
     <!-- Every other mode -- unchanged simple text filter over the legacy
@@ -4889,6 +4902,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <div class="sheetbox" id="capstoneOverlayBody"></div>
 </div>
 
+<!-- Craft-from-Bingo -- tapping a not-yet-owned Bingo square opens the
+     exact same functional shop card a station's own list shows
+     (itemHTML(), wrapped in .shop for its shop-list visual treatment) as
+     a floating overlay on top of the (fully visible, faded) BINGO tray,
+     same "floating layer on top of the tray" pattern #capstoneOverlay
+     above already uses -- see openBingoCraftOverlay()/the
+     .bingo-cell[data-item-card] handler for why an unowned square routes
+     here instead of the plain read-only inspection popup. -->
+<div class="overlay" id="bingoCraftOverlay" role="dialog" aria-modal="true">
+  <div class="sheetbox" id="bingoCraftOverlayBody"></div>
+</div>
+
 <!-- settings -->
 <!-- Settings hub -- just 3 doors (This Session / Game Rules / Dev Tools),
      each its own overlay below. openSettingsScreen() swaps between all 4
@@ -5110,6 +5135,27 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <p>Past runs on this device, most recent first. Tap a run to see its turn-by-turn log.</p>
     <div id="historyList"></div>
     <div class="btnrow"><button type="button" class="bigbtn sec" id="historyClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Saved Display Mat layouts -- reachable from the Display Mat page's own
+     💾 tab (see #matLayoutsBtn/openMatLayoutsOverlay()). Modeled directly
+     on #history just above: same sheetbox/hist-header/histrows shell and
+     the same clipboard-JSON export pattern (#historyExport), just for
+     named mat arrangements (prefs.savedMatLayouts) instead of run history. -->
+<div class="overlay" id="matLayoutsOverlay" role="dialog" aria-modal="true" aria-labelledby="matLayoutsTitle">
+  <div class="sheetbox">
+    <div class="hist-header">
+      <h2 id="matLayoutsTitle">💾 Saved Layouts</h2>
+      <button type="button" class="tbtn ghost histexport-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON">⧉ Export</button>
+    </div>
+    <p>Save the mat's current arrangement under a name, then load it back any time -- in a real run, only the cards you actually own get placed.</p>
+    <div class="btnrow">
+      <input type="text" id="matLayoutName" class="mat-fsearch" placeholder="Name this arrangement…" maxlength="40" style="flex:1; min-width:140px">
+      <button type="button" class="bigbtn sec" id="matLayoutSaveBtn">Save Current Arrangement</button>
+    </div>
+    <div id="matLayoutsList"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="matLayoutsClose">Close</button></div>
   </div>
 </div>
 
@@ -8343,6 +8389,11 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // constants get retuned later -- the whole point of tracking these at all
 // is so the player can report them back for exactly that kind of tuning.
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:6, pinnedItems:[], minigamesEnabled:false,
+  // Named Display Mat arrangements, account-level (see openMatLayoutsOverlay())
+  // -- {name, items: [item names, in mat order]} -- so a combo sketched in
+  // Combo Lab or a real run's own mat can be recalled in any future
+  // session, not just the run it was saved from.
+  savedMatLayouts:[],
   guidedTutorialEnabled:false, tutorialHintsSeen:[], arcadeHighScores:{},
   // On by default (existing behavior) -- see showCardPop()/autoCardPop().
   // Off replaces the full inspection popup after a fresh craft with a
@@ -8609,16 +8660,11 @@ MAP_EDGES.forEach(([a,b]) => {
   if (!MAP_ADJ[b]) MAP_ADJ[b] = new Set();
   MAP_ADJ[a].add(b); MAP_ADJ[b].add(a);
 });
-/* The Ocean<->Observatory shortcut is locked at the start of a run -- it
-   doesn't exist as a travel option (or even show as a line on the map)
-   until the player has actually stood at The Observatory at least once
-   (arriving there via one of its other connections). Once unlocked it
-   works in either direction for the rest of the run, same as any other
-   edge -- state.visitedStations already tracks exactly this. */
+/* Every edge is available from the start of a run -- the Ocean<->Observatory
+   shortcut used to be locked until the player had stood at The Observatory
+   at least once, but that's gone now that both stations sit at the two
+   extreme ends of the map and the direct link is the point, not a reward. */
 function edgeUnlocked(a, b){
-  if ((a === "The Ocean" && b === "The Observatory") || (a === "The Observatory" && b === "The Ocean")){
-    return !!state.visitedStations["The Observatory"];
-  }
   return true;
 }
 /* a === null means "no current position yet" -- the player is choosing
@@ -8640,15 +8686,18 @@ const isMapConnected = (a,b) => a === null ? !!b :
    standing somewhere). */
 const canReachStation = (a, b) => owns("Helicopter") || isMapConnected(a, b);
 
+/* Re-measured 2026-09-12 against the new, shorter backdrop (see
+   .map-canvas's own comment) -- same "read directly off the artwork" way
+   the original values were produced, just against the new image. */
 const MAP_NODE_POS = {
-  "The Observatory":    [49.7,  9.1],
-  "The Bakery":         [20.4, 26.5],
-  "The City":            [79.5, 26.6],
-  "Greenhouse":         [20.4, 45.3],
-  "The Power Plant":    [79.8, 45.3],
-  "Old Growth Forest":  [20.4, 67.2],
-  "Deep Mine":          [79.3, 66.6],
-  "The Ocean":          [49.9, 89.2],
+  "The Observatory":    [47.0,  8.5],
+  "The Bakery":         [23.5, 23.5],
+  "The City":            [76.0, 22.5],
+  "Greenhouse":         [23.5, 40.0],
+  "The Power Plant":    [76.0, 40.0],
+  "Old Growth Forest":  [23.5, 59.0],
+  "Deep Mine":          [76.0, 59.0],
+  "The Ocean":          [47.0, 89.5],
 };
 
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
@@ -12751,13 +12800,20 @@ function performSingleCraft(entry){
    row is fully picked, rather than needing a separate Confirm control.
    ===================================================================== */
 let suitSpendEntry = null, suitSpendPicks = {}, suitSpendAnchor = null;
+// Optional one-shot hook, set by a caller that needs to know once THIS
+// particular suit-spend craft actually goes through -- e.g.
+// openBingoCraftOverlay()'s own [data-craft] handler, which needs to
+// close/refresh itself after the balloon's own async craft (below)
+// rather than right when it opens the balloon. null for every ordinary
+// station-shop caller, which has nothing extra to do here.
+let suitSpendOnCraft = null;
 function suitSpendPickedForSuit(suit){
   return Object.keys(suitSpendPicks).filter(sym => ELEMENT_SUIT[sym] === suit)
     .reduce((sum, sym) => sum + suitSpendPicks[sym], 0);
 }
 function closeSuitSpendBalloon(){
   document.getElementById("suitSpendBalloon").classList.remove("open", "above", "below");
-  suitSpendEntry = null; suitSpendPicks = {}; suitSpendAnchor = null;
+  suitSpendEntry = null; suitSpendPicks = {}; suitSpendAnchor = null; suitSpendOnCraft = null;
   clearSuitBadgeProgress();
 }
 /* While the balloon is open, the shop card's own suit-cost badges (see
@@ -12805,10 +12861,11 @@ function placeSuitSpendBalloon(anchor){
   const anchorCenter = r.left + window.scrollX + r.width / 2;
   b.querySelector(".ssb-tail").style.left = Math.max(14, Math.min(anchorCenter - left, br.width - 14)) + "px";
 }
-function openSuitSpendBalloon(entry, anchor){
+function openSuitSpendBalloon(entry, anchor, onCraft = null){
   suitSpendEntry = entry;
   suitSpendPicks = {};
   suitSpendAnchor = anchor;
+  suitSpendOnCraft = onCraft;
   document.getElementById("suitSpendBalloon").classList.add("open");
   renderSuitSpendBalloon();
 }
@@ -12860,8 +12917,12 @@ document.getElementById("suitSpendRows").addEventListener("click", ev => {
     if (state.elements[pickedSym] <= 0) delete state.elements[pickedSym];
   });
   save();
+  // Captured before closeSuitSpendBalloon() clears it -- see
+  // suitSpendOnCraft's own comment above.
+  const onCraft = suitSpendOnCraft;
   closeSuitSpendBalloon();
   performSingleCraft(entry);
+  if (onCraft) onCraft();
 });
 // Any click that doesn't land inside the balloon itself cancels it with
 // no state change -- same tap-anywhere-else-closes-it convention #hint's
@@ -14146,7 +14207,15 @@ function renderMatTop(){
   // as two physical folder pages sitting behind each other, not a single
   // toggle -- .mat-tab's own CSS gives the inactive one a visibly
   // recessed/dimmer look.
+  // Layouts button -- only on the Display Mat page itself (saving/loading
+  // an ARRANGEMENT has nothing to do with the Elements page), styled as a
+  // third .mat-tab so it reads as part of the same folder-tab row, just
+  // with its own accent (see .mat-tab-layouts' own CSS) marking it as an
+  // action rather than a third page to switch to.
+  const layoutsTabHTML = matDrawerView === "mat"
+    ? `<button type="button" class="mat-tab mat-tab-layouts" id="matLayoutsBtn" title="Saved Display Mat layouts">💾</button>` : "";
   const tabsHTML = `<div class="mat-zone-tabs">
+      ${layoutsTabHTML}
       <button type="button" class="mat-tab tab-elements ${matDrawerView === "elements" ? "active" : ""}" data-mat-view="elements">Elements</button>
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
@@ -14186,7 +14255,8 @@ function matVisibleInventory(){
   if (matFilt.suits.size)    list = list.filter(c => c.pips.some(p => matFilt.suits.has(p)));
   if (matFilt.q){
     const q = matFilt.q.toLowerCase();
-    list = list.filter(c => c.name.toLowerCase().includes(q));
+    list = list.filter(c => c.name.toLowerCase().includes(q) ||
+      c.components.some(r => r.name.toLowerCase().includes(q)));
   }
   const sorts = {
     points:  (a, b) => b.points - a.points || a.name.localeCompare(b.name),
@@ -14323,6 +14393,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     renderMatTop();
     return;
   }
+  if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
 });
@@ -14368,13 +14439,16 @@ function toggleMatSideTray(id){
   const wasOpen = tray.classList.contains("open");
   closeMatSideTrays();
   if (!wasOpen){
-    // Only ever reach as high as the search bar sitting right above the
-    // item grid these trays actually filter/sort -- not the real
-    // viewport top, which used to cover the mat/score card and drawer
-    // tabs above it for no reason. #matFilters is always in the DOM
-    // (just hidden for non-Classic modes), so its own top edge is a
-    // reliable anchor regardless of scroll position or mat content height.
-    const top = document.getElementById("matFilters").getBoundingClientRect().top;
+    // Anchored to the gold divider between the mat/score area (#drawerTop)
+    // and the scrollable item list (.dbody, see its own border-top:2px
+    // solid var(--gold)) -- not the real viewport top (used to cover the
+    // mat/score card and drawer tabs above it for no reason), and not
+    // #matFilters' own top either (that's the search bar, which sits
+    // BELOW this divider with its own padding, so anchoring there left a
+    // visible gap above both trays). .dbody is always in the DOM, so its
+    // own top edge is a reliable anchor regardless of scroll position or
+    // mat content height.
+    const top = document.querySelector("#drawer .dbody").getBoundingClientRect().top;
     tray.style.top = top + "px";
     document.getElementById("matSfScrim").style.top = top + "px";
     tray.classList.add("open"); document.getElementById("matSfScrim").hidden = false;
@@ -14392,6 +14466,98 @@ document.getElementById("matSortTray").addEventListener("click", ev => {
   document.querySelectorAll("#matSortTray [data-mat-sort]").forEach(x =>
     x.classList.toggle("active", x === b));
   renderMatResultsGrid();
+});
+
+/* =====================================================================
+   Saved Display Mat layouts -- named snapshots of state.mat, stored in
+   prefs.savedMatLayouts (account-level, so they outlive any one run/reset)
+   rather than per-run state. Reachable from both a real Classic run and
+   Combo Lab (see #matLayoutsBtn, only shown on the Display Mat page).
+   ===================================================================== */
+function renderMatLayoutsList(){
+  const list = document.getElementById("matLayoutsList");
+  const layouts = prefs.savedMatLayouts;
+  if (!layouts.length){
+    list.innerHTML = '<p class="empty">No saved layouts yet -- arrange the mat, then save it above.</p>';
+    return;
+  }
+  list.innerHTML = `<div class="histrows">${layouts.map((L, i) => `
+    <div class="histentry">
+      <div class="histrow-line">
+        <button type="button" class="histrow" data-mat-layout-load="${i}">
+          <span class="histvisits">${esc(L.name)}</span>
+          <span class="histcaps">${L.items.length} card${L.items.length === 1 ? "" : "s"}</span>
+        </button>
+        <button type="button" class="histrow-export" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
+      </div>
+    </div>`).join("")}</div>`;
+}
+function openMatLayoutsOverlay(){
+  renderMatLayoutsList();
+  openOverlay("matLayoutsOverlay");
+}
+function closeMatLayoutsOverlay(){
+  closeOverlay("matLayoutsOverlay");
+}
+function saveMatLayout(){
+  const input = document.getElementById("matLayoutName");
+  const name = input.value.trim();
+  if (!name) return;
+  prefs.savedMatLayouts.push({name, items: [...state.mat]});
+  savePrefs();
+  input.value = "";
+  renderMatLayoutsList();
+}
+/* Loads a saved layout back onto the mat -- filtered to whatever's
+   actually placeable RIGHT NOW (every card in Combo Lab, since everything
+   there is already unlocked; owned cards only in a real run), then
+   trimmed to fit using the same matFits()/matOccupancy() capacity check
+   (game/elementia.html) the normal drag-to-place flow already uses,
+   preserving the saved order and dropping only whatever no longer fits or
+   isn't owned. */
+function loadMatLayout(i){
+  const L = prefs.savedMatLayouts[i];
+  if (!L) return;
+  const placeable = L.items.filter(n => MAT_CARD_BY_NAME[n] && (comboLabActive || owns(n)));
+  const kept = [];
+  for (const n of placeable){
+    if (matFits([...kept, n].map(x => MAT_CARD_BY_NAME[x]))) kept.push(n);
+  }
+  state.mat = kept;
+  save();
+  render();
+  closeMatLayoutsOverlay();
+}
+function deleteMatLayout(i){
+  prefs.savedMatLayouts.splice(i, 1);
+  savePrefs();
+  renderMatLayoutsList();
+}
+document.getElementById("matLayoutsClose").addEventListener("click", closeMatLayoutsOverlay);
+document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
+document.getElementById("matLayoutName").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") saveMatLayout();
+});
+document.getElementById("matLayoutsList").addEventListener("click", ev => {
+  const loadBtn = ev.target.closest("[data-mat-layout-load]");
+  if (loadBtn){ loadMatLayout(+loadBtn.dataset.matLayoutLoad); return; }
+  const delBtn = ev.target.closest("[data-mat-layout-delete]");
+  if (delBtn){ deleteMatLayout(+delBtn.dataset.matLayoutDelete); return; }
+});
+// Same clipboard-JSON export pattern as #historyExport (see its own
+// comment) -- copies every saved layout, meant to be handed to an outside
+// conversation for analysis the same way a History export already is.
+document.getElementById("matLayoutsExport").addEventListener("click", async () => {
+  const btn = document.getElementById("matLayoutsExport");
+  const json = JSON.stringify(prefs.savedMatLayouts, null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    btn.textContent = "✓ Copied!";
+    btn.classList.add("done");
+  } catch (e){
+    window.prompt("Copy this text:", json);
+  }
+  setTimeout(() => { btn.textContent = "⧉ Export"; btn.classList.remove("done"); }, 1800);
 });
 
 /* Pointer-driven drag to re-arrange, same approach as the cardgame/
@@ -14743,6 +14909,86 @@ function openCapstoneOverlay(){
 function closeCapstoneOverlay(){
   closeOverlay("capstoneOverlay");
 }
+/* Craft-from-Bingo -- see #bingoCraftOverlay's own HTML comment. Reuses
+   itemHTML() itself so this card carries every bit of real shop
+   functionality (suit-cost badges, live recipe tokens, a working Craft
+   button) rather than a second hand-built card that could drift from the
+   real one. canCraft()/craft() only ever check state.elements/state.items,
+   never the player's current station, so nothing about crafting an item
+   away from its own home station is actually unsafe here. */
+function openBingoCraftOverlay(entry){
+  document.getElementById("bingoCraftOverlayBody").innerHTML =
+    `<div class="shop">${itemHTML(entry, ENTRIES.indexOf(entry))}</div>`;
+  openOverlay("bingoCraftOverlay");
+}
+function closeBingoCraftOverlay(){
+  closeOverlay("bingoCraftOverlay");
+}
+// Shared tail for both craft paths below (a plain Craft tap, and a
+// suit-cost item's craft arriving later/async via the spend balloon --
+// see suitSpendOnCraft's own comment). Clearing this overlay's own card
+// markup BEFORE performSingleCraft()'s post-craft render()+
+// bounceCardAppear() re-queries the same [data-item-card] selector a
+// moment from now keeps it from finding THIS card again (still sitting in
+// the DOM, mid its own bounce-closed animation) and popping it back into
+// view right as this overlay is closing -- bounceCardAppear() is already a
+// documented no-op when its target isn't found, which is exactly the
+// state this puts it in.
+function finishBingoCraft(){
+  document.getElementById("bingoCraftOverlayBody").innerHTML = "";
+  closeBingoCraftOverlay();
+  renderJobBoard();
+}
+// Delegated (not bound at load) since this card's own [data-craft]/
+// [data-shop-pin]/ingredient tokens only exist once openBingoCraftOverlay()
+// has actually injected itemHTML()'s markup -- mirrors just the pieces of
+// handleScreenClick's own [data-craft]/[data-shop-pin] handling this one
+// card needs, same as #jobSheetBody's own listener already mirrors a
+// handful of #screen-only handlers for the same reason (this overlay, like
+// #jobSheet, sits outside #screen).
+document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
+  if (ev.target === ev.currentTarget){ closeBingoCraftOverlay(); return; } // scrim tap
+
+  // A recipe token drill-in -- opens THAT ingredient's own inspection card
+  // on top, same as tapping any component token anywhere else (see
+  // tokenHTML()'s own comment). Checked first since a token's own
+  // [data-item-card] would otherwise never reach the craft/pin handling
+  // below anyway, but this keeps the branches in the same order
+  // handleScreenClick itself checks them in.
+  const tok = ev.target.closest(".tok[data-item-card]");
+  if (tok){
+    const tokEntry = ENTRIES[+tok.dataset.itemCard];
+    if (tokEntry) showCardPop(tokEntry, false, true);
+    return;
+  }
+
+  const shopPinBtn = ev.target.closest("[data-shop-pin]");
+  if (shopPinBtn){
+    togglePin(shopPinBtn.dataset.shopPin);
+    renderJobBoard();
+    render();
+    const idx = +ev.target.closest("[data-item-card]").dataset.itemCard;
+    openBingoCraftOverlay(ENTRIES[idx]); // re-render this same card so its pin icon reflects the new state
+    return;
+  }
+
+  const cBtn = ev.target.closest("[data-craft]");
+  if (!cBtn) return;
+  if (cBtn.getAttribute("aria-disabled") === "true"){ bounceMissingItems(cBtn); return; }
+  const entry = ENTRIES[+cBtn.dataset.craft];
+  // Suit-cost items stop for the same spend balloon a station's own Craft
+  // button opens (see handleScreenClick's own [data-craft] branch) --
+  // it calls performSingleCraft() itself once every slot's picked (async,
+  // on a later tap), so finishBingoCraft() is handed off as onCraft
+  // instead of running right here.
+  if (itemSuitCosts(entry.name).length){
+    const badge = cBtn.closest("[data-item-card]")?.querySelector(".isuit-costs");
+    if (badge){ ev.stopPropagation(); openSuitSpendBalloon(entry, badge, finishBingoCraft); }
+    return;
+  }
+  performSingleCraft(entry);
+  finishBingoCraft();
+});
 /* Bounces the whole tray away (a plain CSS @keyframes animation, not
    WAAPI -- #jobSheet already owns a persistent WAAPI-free transform/
    transition pair for its normal open/close slide, see .top-tray's own
@@ -15702,15 +15948,21 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     return;
   }
 
-  // Bingo squares open the item's own inspection card (see
-  // bingoCardHTML()'s own comment) rather than pinning -- checked before
-  // the generic [data-pin] handling below since a bingo cell no longer
-  // carries a [data-pin] attribute directly on itself (only its own
-  // corner pin button, handled above, does).
+  // Bingo squares -- an OWNED item opens the plain inspection card (see
+  // bingoCardHTML()'s own comment), same as ever; a not-yet-owned one
+  // opens the real, functional craft-from-here card instead (see
+  // openBingoCraftOverlay()), so a player who already has everything it
+  // needs doesn't have to travel back to its home station just to make
+  // it. Checked before the generic [data-pin] handling below since a
+  // bingo cell no longer carries a [data-pin] attribute directly on
+  // itself (only its own corner pin button, handled above, does).
   const bingoCell = ev.target.closest(".bingo-cell[data-item-card]");
   if (bingoCell){
     const entry = ENTRIES[+bingoCell.dataset.itemCard];
-    if (entry) showCardPop(entry, false);
+    if (entry){
+      if (owns(entry.name)) showCardPop(entry, false);
+      else openBingoCraftOverlay(entry);
+    }
     return;
   }
 
