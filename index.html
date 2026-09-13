@@ -3373,11 +3373,10 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-card-scale{display:contents}
 .pc-mat-toggles{display:none}
 /* position:absolute, left/bottom set directly by positionCardPopMatPanel()
-   -- placed in whatever's left of .pc-card-wrap's own width between the
-   card's own left edge and the screen's left edge (biased toward the
-   screen edge, not dead-centered -- see that function's own comment for
-   why a plain 50/50 split still read as "hidden behind the card"), and
-   vertically centered against the card's own height, since it's no
+   -- pinned flush to the screen's own left edge (not centered in the gap
+   left of the card -- see that function's own comment for why splitting
+   that gap at all, even biased, still read as "hidden behind the card"),
+   and vertically centered against the card's own height, since it's no
    longer a flex sibling of the card sharing its row's width budget (see
    .pc-card-wrap's own comment for why that changed). */
 .mat-panel .pc-mat-toggles{
@@ -11527,20 +11526,23 @@ function positionCardPopMatPanel(){
   // fixed reference point this needs.
   const scale = maxCardW > 0 ? (maxCardW / 300) : 0.5;
   document.getElementById("cpCard").style.transform = `scale(${scale})`;
-  // Toggle stack: placed in the gap between the card's own left edge and
-  // the screen's left edge (horizontally), and centered against the
-  // card's own height (vertically) -- both bottom-anchored to the same
-  // box, so a shared `bottom` value on each is what lines them up.
+  // Toggle stack: flush against the screen's own left edge (horizontally
+  // -- see below), and centered against the card's own height
+  // (vertically) -- both bottom-anchored to the same box, so a shared
+  // `bottom` value on each is what lines them up.
   const cardW = maxCardW, cardH = maxCardW * 7 / 5;
-  const cardLeftEdge = contentW - cardW; // distance from the content box's own left edge to the card's left edge
   const toggles = document.getElementById("cpMatToggles");
-  const togglesW = toggles.offsetWidth || toggleStackW;
   const togglesH = toggles.offsetHeight;
-  // Biased toward the screen edge (35% of the slack) rather than a plain
-  // 50/50 center, so most of the gap (65%) lands on the card side where
-  // it actually needs to clear the shadow -- see maxCardW's own comment.
-  const slack = Math.max(0, cardLeftEdge - togglesW);
-  toggles.style.left = (slack * 0.35) + "px";
+  // Revised 2026-09-13 (again): a biased-but-still-partway-across split
+  // (35% of the slack from the screen edge) still read as "hidden behind
+  // the card" -- pinned flush to the content box's own left edge instead
+  // (0, i.e. right up against the overlay's own 20px page margin, same
+  // distance from the true screen edge every other edge-anchored control
+  // -- Sort/Filter's own .floatbtn included -- already sits at), so the
+  // WHOLE gap left by maxCardW's own cap (see its comment) now separates
+  // the toggles from the card instead of half of it being spent on
+  // distance from the screen edge nobody asked for.
+  toggles.style.left = "0px";
   toggles.style.bottom = Math.max(0, (cardH - togglesH) / 2) + "px";
 }
 /* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
