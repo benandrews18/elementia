@@ -3185,6 +3185,56 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-matbtn-lg.active{background:color-mix(in srgb, var(--collection) 80%, black)}
 .pc-matbtn-lg:not(:disabled):active{transform:translateY(4px); box-shadow:0 0 0 transparent}
 .cp-matbtn-ic{font-size:17px; line-height:1}
+
+/* =====================================================================
+   "Mat panel" card inspection (2026-09-12) -- a small, non-dimming
+   version of #cardPop for taps from the Display Mat or the full-
+   inventory list specifically (see openMatCardPop()), instead of the
+   normal full-screen darkened dialog. Docked to the tray's own top-right,
+   just under #drawerTop (the mat/score card + its gold-bordered edge --
+   see #drawer .dbody's own border-top), so the mat/combo/score area stays
+   fully visible above it -- the whole point is watching that update live
+   while tapping Place/Remove, not covering it. Position (padding-top/
+   right) is computed in JS (see positionCardPopMatPanel()), not CSS,
+   since it has to track #drawerTop's real height and #drawer's real
+   right edge, both of which vary (combo count, the 768px desktop frame).
+   No background dimming (background:transparent overrides .overlay's own
+   scrim) -- explicit request: the game shouldn't fade behind this card
+   the way it does for every other popup. */
+#cardPop.mat-panel{background:transparent; justify-content:flex-end}
+#cardPop.mat-panel .pc-card-wrap{
+  display:grid; grid-template-columns:auto 1fr; grid-template-areas:"toggles card" ". actions";
+  gap:10px 12px; width:auto; max-width:none; margin:0;
+}
+#cardPop.mat-panel .pc-card{grid-area:card; width:150px; box-shadow:0 10px 28px rgba(0,0,0,.5)}
+#cardPop.mat-panel .pc-actions{grid-area:actions}
+#cardPop.mat-panel #cpMatBtn{display:none}
+.pc-mat-toggles{display:none}
+.mat-panel .pc-mat-toggles{
+  grid-area:toggles; display:flex; flex-direction:column; justify-content:center; gap:10px;
+}
+/* Dim/inert by default -- only the action that actually applies right now
+   (per setMatToggleState(), called on open and after every toggle) is
+   lit and tappable; the other sits here as a preview of what tapping the
+   lit one will unlock next. */
+.pc-mat-toggle-btn{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  width:66px; padding:10px 4px; border:none; border-radius:12px;
+  background:var(--sunken); color:var(--mute); font-size:10px; font-weight:800; line-height:1.2;
+  opacity:.4; cursor:default; transition:opacity .15s, background .15s, color .15s, transform .12s, box-shadow .12s;
+}
+.pc-mat-toggle-ic{font-size:20px; line-height:1}
+.pc-mat-toggle-btn.lit{opacity:1; cursor:pointer; color:#fff}
+.pc-mat-toggle-btn.place.lit{background:var(--collection); box-shadow:0 4px 0 var(--collection-line)}
+.pc-mat-toggle-btn.remove.lit{background:var(--bad); box-shadow:0 4px 0 color-mix(in srgb, var(--bad) 60%, black)}
+.pc-mat-toggle-btn.lit:active{transform:translateY(4px); box-shadow:0 0 0 transparent}
+/* Draws the eye to whichever button just BECAME the tappable one -- the
+   one a player just tapped simply goes dim, no animation needed there
+   (see setMatToggleState()'s own bounceTarget param). */
+@keyframes matToggleBounce{
+  0%{transform:scale(1)} 40%{transform:scale(1.2) rotate(-3deg)} 68%{transform:scale(.93) rotate(2deg)} 100%{transform:scale(1)}
+}
+.pc-mat-toggle-btn.bounce{animation:matToggleBounce .42s cubic-bezier(.3,1.2,.4,1)}
 /* Back button -- a left arrow next to a small circle repeating the
    previous card's own icon (see updateCardPopBackBtn()), one tappable
    unit. No card/background of its own any more (was the same ledge-
@@ -3983,14 +4033,49 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* --mat-row-h: the mat grid's own per-row height formula, shared with
    .mat-zone-page (see its own comment) so the two never drift apart. */
 #drawerTop{container-type:inline-size; padding:16px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
+/* Revised 2026-09-12: the card-level chrome (background/border/margin)
+   moved here from .mat-score-row below, since the Quark Meter now sits
+   inside this same card ABOVE that row rather than tucked into a corner
+   of it -- see renderMatTop()'s own quarkMeterHTML. This whole card stays
+   visible on both the Display Mat and Elements tabs now (was mat-only). */
+.mat-score-card{
+  display:flex; flex-direction:column; gap:8px; padding:10px 12px; margin-bottom:12px;
+  background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
+}
 /* Combo chips and the point total share ONE row (was two stacked rows,
    score above total) -- chips wrap on the left, the total stays pinned
    right via justify-content:space-between so it never gets pushed
    around by however many chips are currently showing. */
 .mat-score-row{
   display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 10px;
-  padding:10px 12px; margin-bottom:12px;
-  background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
+}
+/* Quark Meter -- a single bar spanning the full width of the score card,
+   sitting above the combo/score row rather than a small segmented strip
+   tucked into its corner. Fills continuously to the mat's actual score
+   against this round's real 1/2/3-Empty-Element thresholds (see
+   lockInTiersForRound()), with a tick at each breakpoint that lights up
+   (same gold "lit" glow every other combo/pip already uses) once the
+   score actually clears it -- a glance tells you not just "which tier"
+   but how close you are to the next one. */
+.quark-meter-wrap{width:100%}
+.quark-meter-track{
+  position:relative; width:100%; height:10px; border-radius:5px;
+  background:var(--line); overflow:visible;
+}
+.quark-meter-fill{
+  position:absolute; top:0; left:0; height:100%; border-radius:5px;
+  background:linear-gradient(90deg, var(--collection), var(--gold));
+  transition:width .25s cubic-bezier(.3,.8,.4,1);
+}
+.qm-tick{
+  position:absolute; top:50%; width:6px; height:16px; border-radius:3px;
+  background:#00000055; border:1.5px solid var(--ink2);
+  transform:translate(-50%,-50%); transition:background .2s, box-shadow .2s, border-color .2s;
+}
+.qm-tick.end{width:7px; height:18px}
+.qm-tick.lit{
+  background:var(--gold); border-color:#000;
+  box-shadow:0 0 0 1.5px var(--gold), 0 0 6px rgba(226,178,90,.85);
 }
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Icon on top, its own raw shared-icon count below it (was an inline
@@ -4036,18 +4121,31 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .quark-meter{display:flex; gap:2px; align-self:flex-end}
 .qm-seg{width:13px; height:6px; border-radius:3px; background:var(--line)}
 .qm-seg.lit{background:var(--collection)}
-/* Round "pull tab" -- half straddling #drawer's own top edge (see its
-   own HTML comment). translate(-50%,-50%) centers it on that exact
-   border regardless of how tall the peeked tray's content currently is,
-   since top:0 always means "my own top edge" for an absolutely
-   positioned child of #drawer. */
+/* Revised 2026-09-12: was a small pill straddling #drawer's own top edge
+   (translate(-50%,-50%), centered exactly on that border) -- at that size
+   and position it sat right behind #hubHome (both horizontally centered),
+   visibly peeking out past the round button's own silhouette on either
+   side. Now floats entirely ABOVE the drawer's top edge instead (translateY
+   past its own full height, plus a fixed 40px gap) -- anchored to the
+   drawer's top edge the same way as before so it still tracks correctly
+   regardless of how tall the peeked tray's content currently is, but the
+   fixed extra gap clears #hubHome's 76px circle with real margin even in
+   the shortest (freshly-started, no combos yet) peeked state, which is
+   the worst case -- any taller content only pushes it up further. Sized
+   up and given real button chrome (solid fill, 3D press shadow) per
+   explicit request, so it reads as a tappable button, not a UI pill. */
 .mat-alltab-btn{
-  position:absolute; left:50%; top:0; transform:translate(-50%,-50%); z-index:5;
-  min-width:104px; height:30px; padding:0 14px; border-radius:999px;
-  background:var(--card); border:2px solid var(--gold); color:var(--gold);
-  font-size:11.5px; font-weight:800; letter-spacing:.3px; white-space:nowrap;
+  position:absolute; left:50%; top:0; transform:translate(-50%, calc(-100% - 40px)); z-index:5;
+  min-width:208px; height:56px; padding:0 20px; border-radius:16px;
+  background:var(--gold); border:3px solid #000; color:#181614;
+  font-size:16px; font-weight:900; letter-spacing:.3px; white-space:nowrap;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 2px 8px rgba(0,0,0,.35);
+  box-shadow:0 4px 0 var(--gold-line), 0 6px 14px rgba(0,0,0,.4);
+  cursor:pointer; transition:transform .1s, box-shadow .1s;
+}
+.mat-alltab-btn:active{
+  transform:translate(-50%, calc(-100% - 40px + 4px));
+  box-shadow:0 0 0 var(--gold-line), 0 3px 8px rgba(0,0,0,.35);
 }
 #drawer.expanded .mat-alltab-btn{display:none}
 
@@ -4150,12 +4248,19 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
 /* Shared dim-everything-behind scrim for both trays -- deliberately NOT
    #scrim (that one closes the whole Inventory drawer; these two trays
-   sit on top of an already-open drawer and should only close themselves). */
-.mat-sf-scrim{position:fixed; inset:0; background:rgba(10,14,20,.5); z-index:62}
+   sit on top of an already-open drawer and should only close themselves).
+   Revised 2026-09-12: both this and the trays below used to run from the
+   real viewport top (top:0) down to the bottom, covering the mat/score
+   card and drawer tabs above the search bar for no reason -- their own
+   content (search-adjacent sort/filter options) has nothing to do with
+   that area. toggleMatSideTray() now sets `top` on both inline, to
+   #matFilters' own current position, so neither ever reaches higher than
+   the search bar sitting right above the item grid they actually filter. */
+.mat-sf-scrim{position:fixed; left:0; right:0; bottom:0; background:rgba(10,14,20,.5); z-index:62}
 #matSortTray, #matFilterTray{
-  position:fixed; top:0; bottom:0; width:50vw; max-width:260px; z-index:63;
+  position:fixed; bottom:0; width:50vw; max-width:260px; z-index:63;
   background:var(--card); box-shadow:0 0 24px rgba(0,0,0,.5);
-  padding:calc(env(safe-area-inset-top, 0px) + 60px) 16px 16px;
+  padding:16px 16px 16px;
   display:flex; flex-direction:column; gap:8px; overflow-y:auto;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1);
 }
@@ -4381,7 +4486,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
        once, below. Hidden whenever the tray is already expanded (see
        #drawer.expanded .mat-alltab-btn) -- once expanded it would be
        sitting off the top of the screen anyway. -->
-  <button type="button" class="mat-alltab-btn" id="matAllItemsBtn" aria-label="View full inventory">^ All Items ^</button>
+  <button type="button" class="mat-alltab-btn" id="matAllItemsBtn" aria-label="View full inventory">^ View All Items ^</button>
   <div id="drawerTop"></div>
   <div class="dbody">
     <!-- Classic Mode only -- station/suit/search/sort filter bar for the
@@ -4533,6 +4638,26 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <!-- crafted-card popup: shows the item's printed-card art, tap anywhere to dismiss -->
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
   <div class="pc-card-wrap">
+    <!-- Revised 2026-09-12: shown only in "mat panel" mode (see
+         #cardPop.mat-panel, set by openMatCardPop()/showCardPop()'s own
+         matPanel param) -- a tap from the full-inventory list or the
+         Display Mat itself. Replaces the single #cpMatBtn toggle below
+         with two separate, always-both-visible buttons so which action is
+         currently available reads at a glance instead of needing the
+         button's own label to say so. Only the relevant one is lit/
+         tappable; the other bounces into its own tappable state once
+         tapping the first one flips it (see setMatToggleState()). Hidden
+         entirely, and #cpMatBtn shown instead, for every other context
+         (post-craft popup, Item Reference/Codex, ingredient drill-in
+         opened from outside the tray) -- those keep the original layout. -->
+    <div class="pc-mat-toggles" id="cpMatToggles" hidden>
+      <button type="button" class="pc-mat-toggle-btn place" id="cpPlaceBtn" aria-label="Add to Display Mat">
+        <span class="pc-mat-toggle-ic">➕</span>Place on Mat
+      </button>
+      <button type="button" class="pc-mat-toggle-btn remove" id="cpRemoveBtn" aria-label="Remove from Display Mat">
+        <span class="pc-mat-toggle-ic">➖</span>Remove from Mat
+      </button>
+    </div>
     <div class="pc-card" id="cpCard">
       <div class="pc-suitcosts" id="cpSuitCosts"></div>
       <div class="pc-station-badge" id="cpStationBadge"></div>
@@ -4565,7 +4690,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
          same small icon-button size) -- explicitly asked to be large and
          easy to hit, not a third small icon in that row. Label text is
          set by setMatBtnState(), never left as static markup here, so it
-         can never drift out of sync with the button's own add/remove state. -->
+         can never drift out of sync with the button's own add/remove state.
+         Non-panel contexts only now -- see #cpMatToggles above for the
+         mat-panel replacement. -->
     <button type="button" class="pc-matbtn-lg" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false"></button>
   </div>
 </div>
@@ -10951,6 +11078,13 @@ let cardPopEntry = null;
 // keepBackStack param) so a new "look something up" session never starts
 // with a stale Back button left over from the last one.
 let cardPopBackStack = [];
+// Whether the CURRENT card is showing in "mat panel" mode (see the CSS
+// block's own comment above #cardPop.mat-panel) -- persists across drill-
+// in/Back the same way cardPopBackStack does (both reset together, see
+// keepBackStack below), so browsing several components deep from the
+// Display Mat stays in the small non-dimming panel the whole way rather
+// than snapping back to the full-screen dialog on the second card.
+let cardPopMatPanel = false;
 /* autoDismiss: true for the "just crafted this" popup after a purchase
    (existing behavior, unchanged); false when opened by tapping an item in
    the inventory, where it should just sit there until dismissed.
@@ -10958,9 +11092,14 @@ let cardPopBackStack = [];
    step (see the #cpIngredients/#cpBackBtn click handlers) -- every other
    call site is a fresh look-up with no "previous card" of its own, so the
    default clears cardPopBackStack rather than leaving Back pointing at
-   whatever the last unrelated viewing session happened to leave behind. */
-function showCardPop(entry, autoDismiss = true, keepBackStack = false){
-  if (!keepBackStack) cardPopBackStack = [];
+   whatever the last unrelated viewing session happened to leave behind.
+   matPanel: null (default) leaves cardPopMatPanel exactly as it already
+   is (so a drill-in/Back call, which never passes this, can't accidentally
+   drop OUT of panel mode); openMatCardPop() is the only call site that
+   ever passes an explicit true. */
+function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel = null){
+  if (!keepBackStack){ cardPopBackStack = []; cardPopMatPanel = false; }
+  if (matPanel !== null) cardPopMatPanel = matPanel;
   cardPopEntry = entry;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
@@ -11015,13 +11154,50 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   // Classic-legal (MAT_CARD_BY_NAME) and actually owned (nothing to place
   // otherwise). See toggleMatCard()'s own comment for why this is the
   // only add/remove entry point left now that a tap opens this popup.
-  const matBtn = document.getElementById("cpMatBtn");
+  // Two different controls depending on mode -- see the CSS block's own
+  // comment above #cardPop.mat-panel for why the panel gets its own
+  // separate two-button design instead of reusing #cpMatBtn.
   const matEligible = state.mode === "classic" && !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
-  matBtn.hidden = !matEligible;
-  if (matEligible) setMatBtnState(matBtn, state.mat.includes(entry.name));
+  document.getElementById("cardPop").classList.toggle("mat-panel", cardPopMatPanel);
+  document.getElementById("cpMatToggles").hidden = !(cardPopMatPanel && matEligible);
+  document.getElementById("cpMatBtn").hidden = !(!cardPopMatPanel && matEligible);
+  if (cardPopMatPanel){
+    if (matEligible) setMatToggleState(state.mat.includes(entry.name), null);
+  } else if (matEligible){
+    setMatBtnState(document.getElementById("cpMatBtn"), state.mat.includes(entry.name));
+  }
   openOverlay("cardPop");
+  if (cardPopMatPanel) positionCardPopMatPanel();
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
+}
+/* Docks #cardPop's own content to sit just under #drawerTop (the mat/
+   score card) and flush with #drawer's own right edge -- see the CSS
+   block's own comment above #cardPop.mat-panel for why this can't just be
+   a fixed CSS position. Recomputed on every open (combo count/mat state
+   changes #drawerTop's own height constantly) rather than cached. */
+function positionCardPopMatPanel(){
+  const drawerTop = document.getElementById("drawerTop").getBoundingClientRect();
+  const drawer = document.getElementById("drawer").getBoundingClientRect();
+  const cardPop = document.getElementById("cardPop");
+  cardPop.style.paddingTop = Math.max(0, drawerTop.bottom + 10) + "px";
+  cardPop.style.paddingRight = Math.max(0, window.innerWidth - drawer.right + 14) + "px";
+}
+/* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
+   onMat: whether the card is on the mat RIGHT NOW (after whatever just
+   changed it, if anything). bounceTarget: "place" | "remove" | null --
+   which button (if either) just became the newly-tappable one, so only
+   that one gets the attention-drawing bounce; the one going dim doesn't
+   need one. */
+function setMatToggleState(onMat, bounceTarget){
+  const placeBtn = document.getElementById("cpPlaceBtn");
+  const removeBtn = document.getElementById("cpRemoveBtn");
+  placeBtn.classList.toggle("lit", !onMat);
+  removeBtn.classList.toggle("lit", onMat);
+  placeBtn.disabled = onMat;
+  removeBtn.disabled = !onMat;
+  if (bounceTarget === "place"){ placeBtn.classList.remove("bounce"); void placeBtn.offsetWidth; placeBtn.classList.add("bounce"); }
+  if (bounceTarget === "remove"){ removeBtn.classList.remove("bounce"); void removeBtn.offsetWidth; removeBtn.classList.add("bounce"); }
 }
 /* Shows/hides #cpBackBtn based on cardPopBackStack -- the icon inside it
    is always the entry on top of the stack (the card this one was drilled
@@ -11193,6 +11369,32 @@ document.getElementById("cpMatBtn").addEventListener("click", ev => {
   if (!cardPopEntry) return;
   toggleMatCard(cardPopEntry.name);
   setMatBtnState(ev.currentTarget, state.mat.includes(cardPopEntry.name));
+});
+/* Mat-panel Place/Remove (see setMatToggleState()) -- each checks its own
+   `disabled` first, since both buttons always exist in the DOM and only
+   one is ever meant to be tappable at a time; a real click still reaches
+   a `disabled` button's own listener in some browsers (disabled only
+   blocks default form behavior, not JS event delivery), so the check has
+   to happen here rather than relying on that alone. toggleMatCard() can
+   still no-op (mat full, see its own toast) even from the LIT button --
+   re-reading state.mat afterward rather than assuming success is what
+   keeps the two buttons from drifting out of sync with reality, and
+   correctly skips the bounce when nothing actually changed. */
+document.getElementById("cpPlaceBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopEntry || ev.currentTarget.disabled) return;
+  const before = state.mat.includes(cardPopEntry.name);
+  toggleMatCard(cardPopEntry.name);
+  const after = state.mat.includes(cardPopEntry.name);
+  setMatToggleState(after, after !== before ? "remove" : null);
+});
+document.getElementById("cpRemoveBtn").addEventListener("click", ev => {
+  ev.stopPropagation();
+  if (!cardPopEntry || ev.currentTarget.disabled) return;
+  const before = state.mat.includes(cardPopEntry.name);
+  toggleMatCard(cardPopEntry.name);
+  const after = state.mat.includes(cardPopEntry.name);
+  setMatToggleState(after, after !== before ? "place" : null);
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -13663,27 +13865,46 @@ function renderMatTop(){
   // chips (not stacked below them) -- two lines: points and the
   // multiplier they earned on one, the final Quark payout (the number
   // that will actually matter once Quarks/Empty Elements exists -- for
-  // now just this same total, relabeled) prominent on the other. Only
-  // for the mat view itself -- it's the mat's own score, so it has
-  // nothing to say while looking at held elements instead.
-  // Revised 2026-09-12: the old msb-line3 showed state.emptyElements' own
-  // running TOTAL next to a lock icon -- a background stat with no clear
-  // relationship to what was on the mat right now (it only ever grows,
-  // reads as an unexplained, occasionally-large number). Replaced with a
-  // 4-section "Quark Meter" previewing what locking in RIGHT NOW would
-  // actually earn (emptyElementsForScore(), 0-3) -- lit segments = tier.
-  // The running total itself isn't lost, just relocated: see the Empty
-  // Elements feature's own station-header/Elements-tab display.
-  const qmTier = emptyElementsForScore(s.total, state.visits);
-  const qmSegs = [1, 2, 3, 4].map(n => `<span class="qm-seg${qmTier >= n ? " lit" : ""}"></span>`).join("");
-  const scoreRowHTML = matDrawerView !== "mat" ? "" : `<div class="mat-score-row">
+  // now just this same total, relabeled) prominent on the other.
+  // Revised 2026-09-12: this whole card now stays visible on the Elements
+  // tab too, not just the mat view -- it's a live readout of the mat's
+  // OWN potential regardless of which page you're currently looking at
+  // below it, not something that should vanish just because you tabbed
+  // away to check your held elements.
+  //
+  // Quark Meter revised 2026-09-12: was a discrete 4-segment "how many
+  // tiers have you cleared" strip tucked in the score block's own corner.
+  // Now a single full-width bar across the TOP of the whole card, filling
+  // continuously to the mat's actual score against this round's real
+  // thresholds (lockInTiersForRound()) -- not just which of 4 buckets
+  // you're in -- with a tick at each of the 1/2/3-Empty-Element
+  // breakpoints that lights up (gold glow, same "lit" language every
+  // other combo/pip in this game already uses) the moment the mat's
+  // score actually clears it.
+  const qmTiers = lockInTiersForRound(state.visits);
+  const qmPassed = emptyElementsForScore(s.total, state.visits);
+  const qmFillPct = qmTiers.three > 0 ? Math.min(100, (s.total / qmTiers.three) * 100) : 100;
+  const qmTick1Pct = qmTiers.three > 0 ? Math.min(100, (qmTiers.one / qmTiers.three) * 100) : 0;
+  const qmTick2Pct = qmTiers.three > 0 ? Math.min(100, (qmTiers.two / qmTiers.three) * 100) : 0;
+  const quarkMeterHTML = `<div class="quark-meter-wrap"
+      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmPassed} Empty Element${qmPassed === 1 ? "" : "s"} if you lock in now">
+    <div class="quark-meter-track">
+      <div class="quark-meter-fill" style="width:${qmFillPct}%"></div>
+      <span class="qm-tick${qmPassed >= 1 ? " lit" : ""}" style="left:${qmTick1Pct}%"></span>
+      <span class="qm-tick${qmPassed >= 2 ? " lit" : ""}" style="left:${qmTick2Pct}%"></span>
+      <span class="qm-tick end${qmPassed >= 3 ? " lit" : ""}" style="left:100%"></span>
+    </div>
+  </div>`;
+  const scoreRowHTML = `<div class="mat-score-card">
+    ${quarkMeterHTML}
+    <div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
       <div class="mat-score-block">
         <div class="msb-line1">${s.base.toLocaleString()} pts${s.mult > 1 ? ` ×${s.mult}` : ""}</div>
         <div class="msb-line2">⚛️ ${s.total.toLocaleString()} Quarks</div>
-        <div class="quark-meter" title="Locking in your Display Mat right now would earn ${qmTier} Empty Element${qmTier === 1 ? "" : "s"}">${qmSegs}</div>
       </div>
-    </div>`;
+    </div>
+  </div>`;
 
   // No title/occupancy/Clear row above the grid any more -- the slot
   // count and a way to clear it weren't earning their place once the
@@ -13849,7 +14070,7 @@ function toggleMatCard(name){
    ENTRIES row a Classic item's card data came from. */
 function openMatCardPop(name){
   const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-  if (entry) showCardPop(entry, false);
+  if (entry) showCardPop(entry, false, false, true);
 }
 
 let matToastTimer = null;
@@ -13919,7 +14140,18 @@ function toggleMatSideTray(id){
   const tray = document.getElementById(id);
   const wasOpen = tray.classList.contains("open");
   closeMatSideTrays();
-  if (!wasOpen){ tray.classList.add("open"); document.getElementById("matSfScrim").hidden = false; }
+  if (!wasOpen){
+    // Only ever reach as high as the search bar sitting right above the
+    // item grid these trays actually filter/sort -- not the real
+    // viewport top, which used to cover the mat/score card and drawer
+    // tabs above it for no reason. #matFilters is always in the DOM
+    // (just hidden for non-Classic modes), so its own top edge is a
+    // reliable anchor regardless of scroll position or mat content height.
+    const top = document.getElementById("matFilters").getBoundingClientRect().top;
+    tray.style.top = top + "px";
+    document.getElementById("matSfScrim").style.top = top + "px";
+    tray.classList.add("open"); document.getElementById("matSfScrim").hidden = false;
+  }
 }
 document.querySelectorAll("#matSortTray [data-mat-sort]").forEach(x =>
   x.classList.toggle("active", x.dataset.matSort === matFilt.sort));
