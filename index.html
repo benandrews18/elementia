@@ -3827,10 +3827,20 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .refem-col{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none; width:54px}
 .refem{font-size:42px; line-height:1; width:54px; text-align:center; padding-top:3px}
 /* Bare suit glyphs (no circular badge, unlike .mm-pip/.mat-fbtn) -- small
-   enough to sit quietly under the icon without competing with it. */
+   enough to sit quietly under the icon without competing with it.
+   Revised 2026-09-13: the glyph is now a solid var(--suit) fill masked to
+   the icon art's own alpha shape (--suit-mask, see refSuitsHTML()) rather
+   than a plain black <img> -- CSS color/currentColor never reaches raster
+   image content, which is why this row used to read as flat black
+   regardless of suit no matter what color was set here. */
 .refsuits{display:flex; gap:3px; justify-content:center}
-.refsuit{color:var(--suit); font-size:12px; line-height:1}
-.refsuit :is(img,svg){width:12px; height:12px}
+.refsuit{
+  display:inline-block; width:12px; height:12px; background-color:var(--suit);
+  -webkit-mask-image:var(--suit-mask); mask-image:var(--suit-mask);
+  -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+}
 .refbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
 .reftop{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
 .refname{font-weight:800; font-size:17px}
@@ -7454,6 +7464,11 @@ const SUIT_ICON = {
   metal: `<img src="data:image/png;base64,${METAL_ICON_B64}" alt="">`,
   earth: `<img src="data:image/png;base64,${EARTH_ICON_B64}" alt="">`,
 };
+// Raw base64 (no <img> wrapper) for spots that need to tint the glyph
+// itself to its own suit color via CSS mask-image (see .refsuit) rather
+// than show it plain black or invert it to white against a colored
+// circle behind it, the way every other SUIT_ICON call site does.
+const SUIT_ICON_B64 = { organic: ORGANIC_ICON_B64, reactive: REACTIVE_ICON_B64, metal: METAL_ICON_B64, earth: EARTH_ICON_B64 };
 /* One short, flavorful line per element -- shown italicized on the
    element-card popup, same spirit as a real periodic-table poster. */
 const ELEMENT_DESC = {
@@ -10495,8 +10510,14 @@ function goToRefItem(name){
 function refSuitsHTML(name){
   const suits = [...new Set(itemSuitCosts(name))];
   if (!suits.length) return "";
+  // Revised 2026-09-13: colored via CSS mask-image (see .refsuit) instead
+  // of SUIT_ICON's own plain <img> -- that art is a flat black glyph with
+  // no way for CSS color to reach it, which is why this row read as
+  // black regardless of suit. Masking a solid var(--suit) fill to the
+  // glyph's own alpha shape tints it exactly, with no separate colored
+  // circle behind it (unlike .isuit-badge/.mm-pip elsewhere).
   return `<div class="refsuits">${suits.map(s =>
-    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]}" title="${esc(ELEMENT_SUIT_LABEL[s])}">${SUIT_ICON[s]}</span>`).join("")}</div>`;
+    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(data:image/png;base64,${SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
 }
 
 function refExpandHTML(entry){
