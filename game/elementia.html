@@ -3913,6 +3913,27 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
 }
 .reftable.ref-pinned{margin-bottom:20px; box-shadow:0 0 0 1.5px var(--gold-soft)}
+/* To-Do List Hint (see computeTodoHint()) -- a plain toggle button, same
+   pill language .shop-collapse-toggle already uses elsewhere, sitting
+   between the "Pinned" heading and the pinned rows themselves. */
+.todo-hint-btn{
+  display:flex; align-items:center; gap:6px; margin-bottom:10px;
+  font-size:12px; font-weight:800; color:var(--ink2);
+  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:7px 14px;
+  cursor:pointer;
+}
+.todo-hint-btn:hover{color:var(--ink); border-color:var(--gold-line)}
+.todo-hint-card{
+  display:flex; gap:12px; align-items:center; margin-bottom:14px; padding:10px 12px;
+  background:var(--collection-soft); border:1.5px solid var(--collection-line); border-radius:12px;
+}
+.todo-hint-icon{font-size:34px; line-height:1; flex:none}
+.todo-hint-icon :is(img,svg){width:34px; height:34px}
+.todo-hint-body{min-width:0}
+.todo-hint-title{font-size:15px; font-weight:800; color:#fff}
+.todo-hint-why{font-size:12px; color:var(--ink2); margin:2px 0 4px}
+.todo-hint-where{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; font-weight:700; color:var(--ink2)}
+.todo-hint-empty{font-size:12.5px; color:var(--mute); margin-bottom:14px}
 .refexpand{
   align-self:flex-start; background:none; border:none; padding:2px 0; margin-top:2px;
   font-size:12px; font-weight:800; color:var(--gold); cursor:pointer;
@@ -10046,6 +10067,9 @@ document.getElementById("trackedPill").addEventListener("click", () => {
    node at any depth without losing their place. Ephemeral (not saved to
    localStorage): a fresh page load starts fully collapsed. */
 const jobExpanded = new Set();
+// Whether the To-Do List's own Hint panel is currently showing -- same
+// ephemeral, re-render-from-scratch pattern as jobExpanded above.
+let todoHintOpen = false;
 
 /* Where a thing comes from, as station emoji only -- an element is rolled
    at its stations, an item is built at the stations that sell it. */
@@ -15139,13 +15163,77 @@ function renderJobBoard(){
    any more, since state.jobs can never gain a new entry to show. Pins are
    still very much live (tapping a Bingo square pins it), so this compact
    tray's whole remaining job is just that pinned list. */
+/* "What should I craft next?" -- scans every pinned to-do item's own full
+   ingredient tree (not just the pinned items themselves), via
+   stillNeededClosure() (already used elsewhere for "you still need this"
+   badges -- stops descending into anything already owned, since an owned
+   item's own sub-ingredients are already resolved). Building toward
+   several different pinned goals at once outranks something that only
+   helps one, and something already buildable from owned items outranks
+   something that still needs its own sub-ingredients first -- in that
+   order, per explicit request ("consider the items the player already
+   has" first, "prioritize items that appear... in multiple items" as the
+   tiebreaker among those). Station-independent (any station selling it
+   counts) and ignores the player's currently-ROLLED elements entirely --
+   itemReqsMet() checks only item ingredients, since which elements
+   happen to be on hand resets every visit and isn't what "what should I
+   work toward" is really asking; the element half of a recipe is the
+   same regardless of which item this suggests. Returns null when there's
+   nothing left to suggest (every pinned item, and everything under it,
+   is already owned). */
+function computeTodoHint(){
+  const roots = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name) && !owns(name));
+  if (!roots.length) return null;
+
+  const usage = new Map(); // candidate item name -> Set of pinned roots it feeds
+  roots.forEach(root => {
+    new Set([root, ...stillNeededClosure(root)]).forEach(name => {
+      if (!usage.has(name)) usage.set(name, new Set());
+      usage.get(name).add(root);
+    });
+  });
+
+  let best = null;
+  usage.forEach((rootSet, name) => {
+    const entry = ENTRIES.find(e => e.name === name);
+    if (!entry) return;
+    const candidate = {
+      name, entry, usageCount: rootSet.size,
+      ready: itemReqsMet(entry),
+      remaining: stillNeededClosure(name).length,
+    };
+    const better = !best
+      || (candidate.ready && !best.ready)
+      || (candidate.ready === best.ready && candidate.usageCount > best.usageCount)
+      || (candidate.ready === best.ready && candidate.usageCount === best.usageCount && candidate.remaining < best.remaining)
+      || (candidate.ready === best.ready && candidate.usageCount === best.usageCount && candidate.remaining === best.remaining && candidate.name.localeCompare(best.name) < 0);
+    if (better) best = candidate;
+  });
+  if (!best) return null;
+  return { ...best, homes: ENTRIES.filter(x => x.name === best.name).map(x => x.station) };
+}
+function todoHintResultHTML(){
+  const hint = computeTodoHint();
+  if (!hint) return `<p class="todo-hint-empty">Everything on your list is already crafted!</p>`;
+  const homesHTML = hint.homes.map(h => `<span>${em(STATION_BY_NAME[h].emoji)} ${esc(h)}</span>`).join("");
+  return `<div class="todo-hint-card">
+      <div class="todo-hint-icon">${em(hint.entry.emoji)}</div>
+      <div class="todo-hint-body">
+        <div class="todo-hint-title">Try crafting ${esc(hint.name)}</div>
+        <div class="todo-hint-why">${hint.usageCount > 1 ? `Feeds ${hint.usageCount} items on your list` : "On your list"}${hint.ready ? " — you have everything it needs" : ""}</div>
+        <div class="todo-hint-where">${homesHTML}</div>
+      </div>
+    </div>`;
+}
 function classicPinsAndJobsHTML(){
   const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
-  return names.length
-    ? `<div class="ref-pinned-heading">📌 Pinned</div><div class="reftable ref-pinned">${
-        names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
-      }</div>`
-    : "";
+  if (!names.length) return "";
+  const hintHTML = `<button type="button" class="todo-hint-btn" data-todo-hint aria-expanded="${todoHintOpen}">
+      💡 ${todoHintOpen ? "Hide Hint" : "Get a Hint"}
+    </button>${todoHintOpen ? todoHintResultHTML() : ""}`;
+  return `<div class="ref-pinned-heading">📌 Pinned</div>${hintHTML}<div class="reftable ref-pinned">${
+      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
+    }</div>`;
 }
 /* Shared open logic for both doors -- jobSheetVariant (set by whichever
    of the two functions below actually got called) decides the rest:
@@ -16322,6 +16410,9 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
 
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
+
+  const hintBtn = ev.target.closest("[data-todo-hint]");
+  if (hintBtn){ todoHintOpen = !todoHintOpen; renderJobBoard(); return; }
 
   // Adventure's own Marketplace tray shows available (not-yet-accepted)
   // quests now, unlike the compact tray -- same data-quest-take handling
