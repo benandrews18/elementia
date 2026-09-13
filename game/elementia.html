@@ -3316,8 +3316,27 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    THEM" instead). Pinned to var(--hub-h) alone now, same flush-to-hub
    convention #drawer itself already uses when expanded. */
 #cardPop.mat-panel{
-  background:rgba(10,14,20,.72); background-clip:content-box;
+  background:transparent;
   padding-right:14px; padding-bottom:var(--hub-h, 67px);
+}
+/* Revised 2026-09-13 (full-width dim): background-clip:content-box (the
+   old approach) darkened everything below the breakline while leaving
+   #cardPop's own padding undimmed -- correct vertically, but padding
+   ALSO covers the horizontal margins (.overlay's own 20px left / this
+   panel's own 14px right), so a thin undimmed strip stayed lit down both
+   sides of the screen. #cardPop.mat-panel itself is transparent now, and
+   this dedicated sibling (a direct child of #cardPop, painted first so
+   .pc-card-wrap's own content stacks above it -- see .pc-card-wrap's
+   position:relative) does the actual dimming instead: left:0/right:0
+   ignore #cardPop's padding entirely (full screen width), while top/
+   bottom are set in JS to the SAME px values as #cardPop's own
+   padding-top/padding-bottom, so it still only covers the breakline-to-
+   hub band. */
+.pc-mat-backdrop{display:none}
+.mat-panel .pc-mat-backdrop{
+  display:block; position:absolute; left:0; right:0; z-index:0;
+  background:rgba(10,14,20,.72);
+  /* top/bottom set directly by positionCardPopMatPanel() */
 }
 /* Revised 2026-09-13: was a flex row (toggles, then card) with
    justify-content/align-items:flex-end -- on a screen with enough spare
@@ -3331,7 +3350,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    against exactly this scenario -- see its own comment) rather than
    negotiated through flex-shrink at all. */
 #cardPop.mat-panel .pc-card-wrap{
-  position:relative; width:100%; height:100%; margin:0; max-width:none;
+  position:relative; z-index:1; width:100%; height:100%; margin:0; max-width:none;
 }
 #cardPop.mat-panel .pc-card-scale{
   display:block; position:absolute; right:0; bottom:0;
@@ -3354,11 +3373,13 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .pc-card-scale{display:contents}
 .pc-mat-toggles{display:none}
 /* position:absolute, left/bottom set directly by positionCardPopMatPanel()
-   -- centered in whatever's left of .pc-card-wrap's own width between the
-   card's own left edge and the screen's left edge, and vertically centered
-   against the card's own height, since it's no longer a flex sibling of
-   the card sharing its row's width budget (see .pc-card-wrap's own
-   comment for why that changed). */
+   -- placed in whatever's left of .pc-card-wrap's own width between the
+   card's own left edge and the screen's left edge (biased toward the
+   screen edge, not dead-centered -- see that function's own comment for
+   why a plain 50/50 split still read as "hidden behind the card"), and
+   vertically centered against the card's own height, since it's no
+   longer a flex sibling of the card sharing its row's width budget (see
+   .pc-card-wrap's own comment for why that changed). */
 .mat-panel .pc-mat-toggles{
   position:absolute; display:flex; flex-direction:column; justify-content:center; gap:10px;
 }
@@ -4847,6 +4868,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 
 <!-- crafted-card popup: shows the item's printed-card art, tap anywhere to dismiss -->
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
+  <div class="pc-mat-backdrop" id="cpMatBackdrop" aria-hidden="true"></div>
   <div class="pc-card-wrap">
     <!-- Revised 2026-09-12: shown only in "mat panel" mode (see
          #cardPop.mat-panel, set by openMatCardPop()/showCardPop()'s own
@@ -11470,6 +11492,12 @@ function positionCardPopMatPanel(){
   // carries (see .overlay's own comment).
   const hubPad = parseFloat(getComputedStyle(cardPop).paddingBottom) || 0;
   const availH = Math.max(0, window.innerHeight - paddingTop - hubPad);
+  // Full-width dim backdrop (see .pc-mat-backdrop's own CSS comment) --
+  // same top/bottom band as this panel's own padding, but the element
+  // itself ignores #cardPop's left/right padding entirely.
+  const backdrop = document.getElementById("cpMatBackdrop");
+  backdrop.style.top = paddingTop + "px";
+  backdrop.style.bottom = hubPad + "px";
   // The card's own width is capped three ways: never taller than the
   // available height allows (availH*5/7, its own 5:7 ratio), never bigger
   // than its real native size (300 -- upscaling past that read as "not
@@ -11482,7 +11510,16 @@ function positionCardPopMatPanel(){
   // reading as "the buttons are hidden behind the card."
   const contentW = cardPop.clientWidth - 20 - 14; // .overlay's own left padding (20) + this panel's own right padding (14)
   const toggleStackW = 66;
-  const maxCardW = Math.max(0, Math.min(300, availH * 5 / 7, contentW - toggleStackW - 24));
+  // Revised 2026-09-13: was "- 24" -- on a screen where this cap (not
+  // availH or the native-300 cap) is what's actually limiting the card's
+  // width, a plain 50/50 centered split of only 24px total slack left
+  // just ~12px of real clearance between the toggle stack and the card's
+  // own left edge -- easily swallowed by .pc-card's own box-shadow blur
+  // (0 10px 28px), which visually bleeds well past the card's actual box
+  // and read as "the buttons are still hidden behind the card." Raised to
+  // 56 and, below, the split itself is biased toward the card's side
+  // rather than centered, so there's real breathing room past that blur.
+  const maxCardW = Math.max(0, Math.min(300, availH * 5 / 7, contentW - toggleStackW - 56));
   const scaleBox = document.querySelector(".pc-card-scale");
   scaleBox.style.width = maxCardW + "px";
   scaleBox.style.height = (maxCardW * 7 / 5) + "px";
@@ -11490,8 +11527,8 @@ function positionCardPopMatPanel(){
   // fixed reference point this needs.
   const scale = maxCardW > 0 ? (maxCardW / 300) : 0.5;
   document.getElementById("cpCard").style.transform = `scale(${scale})`;
-  // Toggle stack: centered in the gap between the card's own left edge
-  // and the screen's left edge (horizontally), and centered against the
+  // Toggle stack: placed in the gap between the card's own left edge and
+  // the screen's left edge (horizontally), and centered against the
   // card's own height (vertically) -- both bottom-anchored to the same
   // box, so a shared `bottom` value on each is what lines them up.
   const cardW = maxCardW, cardH = maxCardW * 7 / 5;
@@ -11499,7 +11536,11 @@ function positionCardPopMatPanel(){
   const toggles = document.getElementById("cpMatToggles");
   const togglesW = toggles.offsetWidth || toggleStackW;
   const togglesH = toggles.offsetHeight;
-  toggles.style.left = Math.max(0, (cardLeftEdge - togglesW) / 2) + "px";
+  // Biased toward the screen edge (35% of the slack) rather than a plain
+  // 50/50 center, so most of the gap (65%) lands on the card side where
+  // it actually needs to clear the shadow -- see maxCardW's own comment.
+  const slack = Math.max(0, cardLeftEdge - togglesW);
+  toggles.style.left = (slack * 0.35) + "px";
   toggles.style.bottom = Math.max(0, (cardH - togglesH) / 2) + "px";
 }
 /* Place/Remove -- see the CSS block's own comment above .pc-mat-toggles.
