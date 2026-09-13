@@ -473,7 +473,14 @@ body[data-screen="market"] #trackedPill{display:none}
 .map-pick-note{
   margin:0 auto 20px; padding:16px 22px; max-width:440px;
   text-align:center; color:#fff; font-weight:800; font-size:19px; line-height:1.35;
-  background:rgba(15,20,28,.82); border:2px solid var(--ok); border-radius:16px;
+  /* Revised 2026-09-13: dropped the solid dark fill (was
+     rgba(15,20,28,.82)) per explicit request -- the map art shows through
+     now instead of a blacked-out rectangle sitting on top of it. Border
+     and the pulsing var(--ok-soft) glow (this comment block's own "given
+     real banner weight" reasoning still applies to those two) stay, so
+     the prompt still reads as a distinct, attention-grabbing object over
+     the art, just without a flat opaque panel behind the text. */
+  border:2px solid var(--ok); border-radius:16px;
   box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
   animation:pickNotePulse 2.2s ease-in-out infinite;
   /* Frozen to the top of the screen while scrolling the map -- same
@@ -1506,17 +1513,23 @@ body[data-screen="market"] #trackedPill{display:none}
    z-index:-1 vs. .map-node's own 0 (up to 3 for .here/.selected) always
    keeps this behind, so only the slice that clears the circle's edge is
    visible -- a marker peeking out from behind the node. */
+/* Revised 2026-09-13: 25% smaller across the board (was 56px/32px/16px)
+   -- explicit request, this badge specifically (not .map-node-capstone-
+   badge, its own separate marker for a different moment). translateY
+   offset stays -60px unchanged (untouched by request) -- with a smaller
+   disc that clears even more of the node's own circle than before,
+   nothing reads as newly "hidden." */
 .map-node-tracked-badge{
   position:absolute; transform:translate(-50%, calc(-50% - 60px));
-  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
+  width:42px; height:42px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:24px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
 }
 /* Bare glyph, no circle/background of its own -- just a small "this is
    what's being tracked" marker riding the badge's own corner, not a
    second competing chip. */
 .map-node-tracked-glass{
-  position:absolute; top:-2px; right:-2px; font-size:16px; line-height:1;
+  position:absolute; top:-1.5px; right:-1.5px; font-size:12px; line-height:1;
   filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));
 }
 /* Classic Mode's initial station-pick screen only (see renderMap()'s own
@@ -8862,6 +8875,25 @@ const MAP_NODE_POS = {
   "Deep Mine":          [79.3, 66.6],
   "The Ocean":          [49.9, 89.2],
 };
+/* Explicit per-station nudge, layered on top of MAP_NODE_POS's own
+   percentages via CSS calc() rather than baked into those percentages
+   directly -- a physical mm offset is device-independent (CSS mm is
+   defined as a fixed multiple of the 96dpi reference px, regardless of
+   the map canvas's own responsive height), where a percentage isn't. The
+   Ocean is deliberately excluded (stays at its own MAP_NODE_POS spot);
+   Greenhouse/The Power Plant get an extra 1.5mm on top of the shared
+   5mm every other station gets, per explicit request. Only affects the
+   real travel map's own nodes/badges (renderMap()) -- Mini-Games mode's
+   renderArcadeMap() reuses MAP_NODE_POS directly, unshifted. */
+const MAP_NODE_MM_SHIFT = Object.fromEntries(Object.keys(MAP_NODE_POS).map(name => [
+  name,
+  name === "The Ocean" ? 0 : (name === "Greenhouse" || name === "The Power Plant") ? 6.5 : 5,
+]));
+const mapNodeTopStyle = name => {
+  const mm = MAP_NODE_MM_SHIFT[name];
+  const y = MAP_NODE_POS[name][1];
+  return mm ? `calc(${y}% + ${mm}mm)` : `${y}%`;
+};
 
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
@@ -9839,7 +9871,8 @@ function renderMap(){
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
 
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
-    const [x,y] = MAP_NODE_POS[name];
+    const [x] = MAP_NODE_POS[name];
+    const topStyle = mapNodeTopStyle(name);
     const s = STATION_BY_NAME[name];
     const isHere = name === here;
     const reachable = !isHere && !over && (forcedStart ? name === "The Ocean" : canReachStation(here, name));
@@ -9888,10 +9921,10 @@ function renderMap(){
     // true sibling comparison (this element vs. .map-node itself) does
     // what "tucked behind the circle" actually needs.
     const capstoneBadge = state.mode === "classic" && state.lastStation === null
-      ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${y}%" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
+      ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
-      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${y}%" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
-    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${y}%;--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
+    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${identityKnown ? em(s.emoji) : "❓"}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
