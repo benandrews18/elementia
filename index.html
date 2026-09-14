@@ -8053,24 +8053,24 @@ const CORE_SET = new Set([
   "The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
   "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Oven",
   "The Bakery|Apple Pie","The Bakery|Fish Cakes","The Bakery|Banana Bread","The Bakery|Fruit Cake",
-  // The City (12 + capstone -- above the usual 10, a deliberate exception:
-  // Motorcycle and Sushi Restaurant were added 2026-09-14 specifically to
-  // support new named Display Mat collections built around them, on top
-  // of the existing 10+capstone rather than displacing anything). Statue
-  // cut outright (nothing else in core depended on it); Glass's core
-  // listing moved in from Power Plant to fill the slot instead, net zero
-  // change to City's own original count. Sushi Restaurant was originally
-  // swapped for Museum (Museum's recipe was changed to Building +
-  // Telescope + Fossil, see build_guide.py, giving Fossil and Telescope
-  // their first real use in Classic Mode) but is now back in alongside
-  // Museum rather than instead of it -- both Sushi Restaurant and
-  // Motorcycle's own recipes use only items already core here or at
-  // other stations (Seaweed+Salmon+Building; Bicycle+Engine+Fiberglass),
-  // so neither needed a recipe change to become reachable in Classic.
+  // The City (10 + capstone). Statue cut outright (nothing else in core
+  // depended on it); Glass's core listing moved in from Power Plant to
+  // fill the slot instead, net zero change to City's own count. Sushi
+  // Restaurant swapped for Museum -- Museum's recipe was changed to
+  // Building + Telescope + Fossil (see build_guide.py), which gives
+  // Fossil and Telescope their first real use in Classic Mode; Seaweed
+  // and Salmon (Sushi Restaurant's own ingredients) were already
+  // core-connected via Orca/Coral Reef/Ecosystem regardless.
+  // Reverted 2026-09-14: Motorcycle/Sushi Restaurant were briefly added
+  // here as real craftable items so two named collections could use them
+  // as members -- explicit follow-up request said no, they were only ever
+  // meant to be collection NAMES built from existing items, not new item
+  // cards. See MAT_COLLECTIONS_RAW's own "motorcycle"/"sushi-restaurant"
+  // entries, now built from Bicycle+Engine+Fiberglass and
+  // Seaweed+Salmon+Building alone.
   "The City|Clay","The City|Limestone","The City|Steel","The City|Concrete",
   "The City|Bridge","The City|Building","The City|Helicopter","The City|Museum",
   "The City|Skyscraper","The City|Glass","The City|Metropolis",
-  "The City|Motorcycle","The City|Sushi Restaurant",
   // The Observatory (10 + capstone, Glass trimmed, +Wheel)
   "The Observatory|Microchip","The Observatory|Tools","The Observatory|Magnet",
   "The Observatory|Compass","The Observatory|Satellite Dish","The Observatory|Telescope",
@@ -8395,10 +8395,13 @@ function matIsComplete(c, mat){
    see Elementia_Handoff/mat_collections_approved.csv for the source list
    this was transcribed from verbatim (every item name and slot-fit was
    validated live against matOccupancy()/MAT_CARD_BY_NAME before landing
-   here). Two members (Motorcycle, Sushi Restaurant) only resolve because
-   of the CORE_SET additions right above this file's own MAT_CARDS/
-   CORE_SET section -- see that comment for why they were added. Spans
-   sizes 2-8; unlike the old hand-curated set this one is meant to be
+   here). "motorcycle"/"sushi-restaurant" were originally 4-member sets
+   that included Motorcycle/Sushi Restaurant themselves as new Classic
+   item cards -- reverted the same day, explicit follow-up request: those
+   two names are collection THEMES built from existing items, never meant
+   to become real craftable cards, so both are 3-member sets now and
+   neither item was added back to CORE_SET. Spans sizes 2-8; unlike the
+   old hand-curated set this one is meant to be
    *discovered*, not visible up front -- see prefs.everUnlockedMatCollections
    and renderMatTop()'s own filtering of this same list's chips. */
 const MAT_COLLECTIONS_RAW = [
@@ -8445,13 +8448,13 @@ const MAT_COLLECTIONS_RAW = [
   { id:"green-machine",           name:"Green Machine",           items:["Tractor","Soil","Fertilizer","Grain"] },
   { id:"heavy-metal",             name:"Heavy Metal",             items:["Engine","Turbine Blade","Satellite Dish","Bridge"] },
   { id:"im-looking-through-you",  name:"I'm Looking Through You", items:["Glass","Light Bulb","Compass","Telescope"] },
-  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass","Motorcycle"] },
+  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass"] },
   { id:"natural-treasures",       name:"Natural Treasures",       items:["Fossil","Diamond","Life","Star"] },
   { id:"ocean-life",              name:"Ocean Life",              items:["Water","Seaweed","Salmon","Orca"] },
   { id:"old-growth-life",         name:"Old Growth Life",         items:["Soil","Tree","Deer","Salmon"] },
   { id:"power-up",                name:"Power Up",                items:["Furnace","Engine","Solar Panel","Turbine Blade"] },
   { id:"sky-watch",               name:"Sky Watch",               items:["Telescope","Satellite Dish","Compass","Solar Panel"] },
-  { id:"sushi-restaurant",        name:"Sushi Restaurant",        items:["Seaweed","Salmon","Building","Sushi Restaurant"] },
+  { id:"sushi-restaurant",        name:"Sushi Restaurant",        items:["Seaweed","Salmon","Building"] },
   { id:"water-cycle",             name:"Water Cycle",             items:["Soil","Tree","Cloud","Water"] },
   { id:"wheat-field",             name:"Wheat Field",             items:["Farm","Grain","Tractor","Turbine Blade"] },
   { id:"ancient-inventions",      name:"Ancient Inventions",      items:["Wheel","Telescope","Compass","Canoe","Furnace"] },
