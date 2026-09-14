@@ -5403,9 +5403,9 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
     <div class="setting-row">
       <span class="setting-ico">🚜</span>
       <span class="setting-body">
-        <span class="setting-label">Tractor harvest taps</span>
+        <span class="setting-label">Tractor: harvest taps + 1 extra die</span>
       </span>
-      <input type="checkbox" id="setExpTractorHarvest" class="switch" aria-label="Tap elements to harvest with a Tractor">
+      <input type="checkbox" id="setExpTractorHarvest" class="switch" aria-label="Tap elements to harvest, and roll 1 extra die, with a Tractor">
     </div>
 
     <div class="btnrow">
@@ -7177,10 +7177,17 @@ const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.
    Raw elements are consumed; crafted items are PERMANENT UNLOCKS.
    ===================================================================== */
 /* Dice rolls per visit. Defaults to build_guide.py's value but is adjustable
-   per-device via the settings overlay (prefs.diceCount). */
+   per-device via the settings overlay (prefs.diceCount), plus a +1 bonus
+   once the player owns a Tractor (Experimental -- prefs.expTractorHarvest,
+   on by default now, see prefs' own comment). Guarded on state actually
+   existing: loadAll() calls this once before state is assigned at all
+   (see its own comment), when there's nothing to own yet. Re-run any time
+   either input could have changed -- prefs saved, Tractor just crafted
+   (see craft()'s own comment), or a save/mode just loaded. */
 let TAKE = DATA.take;
 function applyDiceCount(){
-  TAKE = prefs.diceCount || DATA.take;
+  const tractorBonus = prefs.expTractorHarvest && state && state.items && state.items.includes("Tractor") ? 1 : 0;
+  TAKE = (prefs.diceCount || DATA.take) + tractorBonus;
 }
 /* Session cap from HANDOFF.md §6: a group gets at most 15 station visits.
    Kept out of the generated DATA block (which must stay byte-identical to
@@ -8780,7 +8787,7 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // (bubbles popped, seconds survived, ...) even if a game's own difficulty
 // constants get retuned later -- the whole point of tracking these at all
 // is so the player can report them back for exactly that kind of tuning.
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:6, pinnedItems:[], minigamesEnabled:false,
+let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
   // Named Display Mat arrangements, account-level (see openMatLayoutsOverlay())
   // -- {name, items: [item names, in mat order]} -- so a combo sketched in
   // Combo Lab or a real run's own mat can be recalled in any future
@@ -8824,11 +8831,12 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:6, pinnedItems:[], minigame
   // with/without before committing to any of them for real -- see Dev
   // Tools' own new "Experimental" rows and each flag's own call sites
   // (toggleJobSelect()/conversionRate()/the Tractor-harvest [data-elem]
-  // handling). Off by default -- flipping them on never changes anything
-  // for a save that never opts in.
+  // handling, applyDiceCount()'s own Tractor bonus). Tiered conversion and
+  // Tractor harvest are on by default now that both have shipped for
+  // real; Compass-gated tracking stays opt-in.
   expCompassTracking:false,
-  expTieredConversion:false,
-  expTractorHarvest:false};
+  expTieredConversion:true,
+  expTractorHarvest:true};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -12511,12 +12519,13 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
-  // Experimental (prefs.expTractorHarvest) -- a fresh set of 6 taps
-  // (matching TAKE, the normal per-visit dice count) every real new visit;
-  // NOT reset by the free "Shop" re-entry (see hubHomeFace()'s own "shop"
-  // face, which bypasses goStation() entirely) since that's the same
-  // visit continuing, not a new one.
-  state.tractorTapsLeft = 6;
+  // Experimental (prefs.expTractorHarvest) -- a fresh set of taps matching
+  // TAKE (the normal per-visit dice count, Tractor's own +1 bonus
+  // included, see applyDiceCount()) every real new visit; NOT reset by
+  // the free "Shop" re-entry (see hubHomeFace()'s own "shop" face, which
+  // bypasses goStation() entirely) since that's the same visit
+  // continuing, not a new one.
+  state.tractorTapsLeft = TAKE;
   // One new turn-log entry per real visit -- craft()'s own tail appends
   // into whichever entry is last (and doRoll()'s own tail tallies into
   // elements), so this must land before any crafting or rolling this turn
@@ -17019,6 +17028,7 @@ setExpTieredConversionBox.addEventListener("change", () => {
 setExpTractorHarvestBox.addEventListener("change", () => {
   prefs.expTractorHarvest = setExpTractorHarvestBox.checked;
   savePrefs();
+  applyDiceCount(); // may add/remove the +1 bonus immediately if a Tractor's already owned
 });
 
 function openSettingsRules(){
@@ -17033,7 +17043,11 @@ function openSettingsRules(){
   setUnlimitedBox.disabled = modeForcesUnlimited;
   setVisitsInput.value = unlimited ? DEFAULT_MAX_VISITS : prefs.maxVisits;
   setVisitsInput.disabled = unlimited;
-  setDiceInput.value = TAKE;
+  // The base preference, not the live TAKE -- TAKE can currently include
+  // the Tractor bonus (see applyDiceCount()), and this field has to stay
+  // "what you're setting the BASE to" or saving unchanged would silently
+  // bake that bonus into prefs.diceCount and double it on the next visit.
+  setDiceInput.value = prefs.diceCount || DATA.take;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
   setAutoCardInspectionBox.checked = prefs.autoCardInspection !== false;
