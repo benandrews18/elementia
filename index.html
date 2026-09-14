@@ -2399,9 +2399,10 @@ body[data-screen="market"] #trackedPill{display:none}
 #lockInBannerText{
   margin:0; color:#fff; font-weight:800; font-size:19px; line-height:1.5;
 }
-/* Second line ("Earn [Empty Element square] from your Quark Score.") reads
-   quieter than the first -- an explanation of the mechanic, not a second
-   instruction competing with "Lock-In your Display Mat to continue." */
+/* Second line ("Earn bonus dice for your next station from your Quark
+   Score.") reads quieter than the first -- an explanation of the
+   mechanic, not a second instruction competing with "Lock-In your
+   Display Mat to continue." */
 #lockInBannerText .libt-sub{
   display:flex; align-items:center; justify-content:center; gap:6px;
   font-weight:700; font-size:15px; color:var(--ink2); margin-top:2px;
@@ -4429,6 +4430,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .qm-break{position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2}
 .qm-break .empty-el-square{box-shadow:0 2px 4px rgba(0,0,0,.4)}
 .qm-break.lit .empty-el-square{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+/* Revised 2026-09-13: the reward at each break is bonus dice now, not a
+   banked Empty Element (see finishLockIn()'s own comment) -- a plain die
+   face reads that directly instead of borrowing the (now-dormant) blank
+   element-square icon. Same white-face/thick-border language as
+   .empty-el-square for visual continuity with the rest of the meter. */
+.qm-break-dice{
+  display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+  border:3px solid #000; border-radius:7px; background:#fff; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+.qm-break.lit .qm-break-dice{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
 /* Empty Elements counter, next to a station's own title (see
    emptyElBadgeHTML()/renderStation()). Dimmed + a real disabled state at 0
    held rather than hidden outright, so the control stays discoverable even
@@ -4908,8 +4919,9 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      replaced by a reward readout -- explicit request) once Lock In is
      actually tapped, while the combo/Quarks bounce plays -- see
      playLockInSequence() -- border/background stay put the whole time.
-     The second line's Empty Element square is filled in once at load (see
-     the script's own init call) since it needs emptyElSquareHTML(). -->
+     The second line's text is filled in once at load (see the script's
+     own init call) since it names the current reward mechanic in prose
+     rather than being baked into this static markup. -->
 <div id="lockInBanner" aria-hidden="true">
   <p id="lockInBannerText">Lock-In your Display Mat to continue.<span class="libt-sub" id="lockInBannerSub"></span></p>
 </div>
@@ -9021,10 +9033,20 @@ function freshState(){
     bingoLinesCompleted: [], // [lineIndex, ...] into bingoLines()'s own 12-line array -- see
                        // checkBingoLines()/BINGO_LINE_BONUS. Lifetime, never un-completes even
                        // if a member item is later spent (Classic never spends items anyway).
-    emptyElements: 0, // Classic only -- the Lock In mechanic's own running total (see
-                       // confirmLockIn()/LOCKIN_ROUND_ANCHORS). Earned 1-3 at a time each time
-                       // the player locks in their Display Mat before traveling; nothing spends
-                       // it yet (the economy this is meant to feed doesn't exist yet either).
+    // DORMANT as of 2026-09-13 -- Lock In no longer banks its reward here
+    // (see finishLockIn()/bonusDiceNextVisit below), so this stays 0
+    // forever on a fresh save. Left in place, untouched, purely so the
+    // "spend a held Empty Element to cash in a chosen element" system
+    // (see its own DORMANT section further down) can come back later
+    // without rebuilding its data model from scratch.
+    emptyElements: 0,
+    // Classic only -- Lock In's actual live reward now (see confirmLockIn()/
+    // LOCKIN_ROUND_ANCHORS/finishLockIn()): however many Empty Elements the
+    // mat just scored become this many EXTRA dice on arrival at the
+    // destination station, consumed by the very next doRoll() there (see
+    // its own comment) and reset to 0 either way -- a one-trip bonus, not
+    // a bank, so it never stacks across visits.
+    bonusDiceNextVisit: 0,
     bingoCenterChosen: false, // Whether the BINGO card's own center square has ever been
                        // picked (see setBingoCenter()) -- false shows the "Add Capstone"
                        // placeholder there instead of a real item. Stays true forever once
@@ -9036,9 +9058,9 @@ function freshState(){
                        // round-MAX_VISITS summary screen (see showSummary()/sessionOver()) --
                        // from here on sessionOver() reports false again (unblocking travel),
                        // and confirmLockIn() switches from "can't fail before the limit" to
-                       // "must earn at least 1 Empty Element each Lock-In or the run ends".
-    finalGameOver: false, // True only once a post-limit Lock-In actually scored 0 Empty
-                       // Elements and the player confirmed ending the run there (see
+                       // "must earn at least 1 bonus die each Lock-In or the run ends".
+    finalGameOver: false, // True only once a post-limit Lock-In actually earned 0 bonus
+                       // dice and the player confirmed ending the run there (see
                        // confirmLockIn()) -- distinct from the ordinary round-limit ending,
                        // so showSummary() can word it accordingly and skip offering another
                        // Continue Playing option.
@@ -11042,7 +11064,12 @@ function renderStation(name){
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
-        <div><h1><span class="station-title-text">${esc(s.name)}</span>${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1></div>
+        <!-- No more Empty Element counter here -- Lock In's reward is now spent
+             automatically as bonus dice on arrival (see finishLockIn()/doRoll()),
+             not banked into a station-side total. emptyElBadgeHTML() itself is
+             left defined, just unreferenced, in case the spend-it-yourself cash-in
+             system it powers (see its own "DORMANT" section) comes back later. -->
+        <div><h1><span class="station-title-text">${esc(s.name)}</span></h1></div>
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
@@ -11665,7 +11692,7 @@ function showSummary(){
   const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
 
   document.getElementById("sumSub").textContent = state.finalGameOver
-    ? `Game over -- no Empty Elements earned on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
+    ? `Game over -- no bonus dice earned on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
     : `All ${visitLimitLabel()} visits used. Here's what you built:`;
 
   // Continue Playing only makes sense the FIRST time this screen appears
@@ -12846,7 +12873,17 @@ function doRoll(rollCount){
   const s = STATION_BY_NAME[current], out = [];
   const dice = sortedDice(s);
   const isOceanFirstRoll = oceanTutorialActive(current);
-  const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : (rollCount == null ? TAKE : rollCount);
+  // Lock In's own reward (see finishLockIn()) -- extra dice for THIS
+  // roll, whichever path set the base count (plain TAKE, a mini-game's
+  // own score-based count, or an explicit rollCount). Excluded from the
+  // Ocean's one-time scripted first roll, which draws a fixed sequence
+  // rather than sampling the pool at all -- there's no "extra" slot to
+  // add to. Consumed here unconditionally (win or not: mapLocked() means
+  // this is always the very next roll after a Lock-In that granted it,
+  // so there's nothing to carry over) so it can never apply twice.
+  const bonus = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
+  state.bonusDiceNextVisit = 0;
+  const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : (rollCount == null ? TAKE : rollCount) + bonus;
   for (let i = 0; i < n; i++){
     const sym = isOceanFirstRoll ? OCEAN_FIRST_ROLL[i] : dice[Math.floor(Math.random() * 6)];
     const face = dice.indexOf(sym) + 1;
@@ -14642,16 +14679,18 @@ let matLastScore = null;
    station being selected -- see hubHomeFace()'s own comment; opening the
    mat any other way, including the plain Inventory button while a travel
    target happens to be selected, never shows Lock In). Tapping it locks
-   in whatever score the mat currently reads for a reward of Empty
-   Elements (state.emptyElements), then travels straight to the station
-   on its own (see finishLockIn()) -- no second Travel tap needed, since
-   reaching "lockin" at all already means the player committed to this
-   trip. Nothing spends Empty Elements yet -- the real economy this is
-   meant to feed doesn't exist yet either -- so for now this is purely an
-   accumulating stat plus a soft "would this have ended your run" warning
-   (see
-   LOCKIN_ROUND_ANCHORS' own comment on why 0 doesn't actually end
-   anything yet). */
+   in whatever score the mat currently reads for a reward of 0-3, then
+   travels straight to the station on its own (see finishLockIn()) -- no
+   second Travel tap needed, since reaching "lockin" at all already means
+   the player committed to this trip.
+   Revised 2026-09-13: that reward is now literally bonus dice for the
+   destination's own next roll (state.bonusDiceNextVisit, spent by
+   doRoll() the instant the player actually rolls there), not a banked
+   "Empty Elements" currency any more -- the earlier spend-it-yourself
+   cash-in system built around that currency is DORMANT now (see its own
+   section further down, kept rather than deleted in case it comes back).
+   A reward of 0 still isn't automatically fatal -- see confirmLockIn()'s
+   own comment on why that only matters past the visit limit. */
 /* Calibrated 2026-09-11 against the player's own last 6 Classic runs'
    real History exports: replayed each run's actual visitLog (which items
    got crafted, in order) through this same file's own matScore()/
@@ -14754,7 +14793,7 @@ function confirmLockIn(){
   if (reward === 0){
     if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any Empty Elements. You're past your visit limit, so this ends your run here. End it now?`,
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any bonus dice. You're past your visit limit, so this ends your run here. End it now?`,
       () => {
         state.finalGameOver = true;
         save();
@@ -14829,9 +14868,10 @@ function playLockInSequence(reward){
   const afterQuarks = afterChips + LOCKIN_BOUNCE_DURATION_MS + 300;
   setTimeout(() => finishLockIn(reward), afterQuarks);
 }
-// Just banks the reward and closes the drawer -- travel is the player's
-// own separate next decision (or not: they can keep browsing/crafting
-// and lock in again later), not something this triggers on their behalf.
+// Sets up the reward as bonus dice for the trip that's about to happen
+// and closes the drawer -- travel is the player's own separate next
+// decision (or not: they can keep browsing/crafting and lock in again
+// later), not something this triggers on their behalf.
 // Revised 2026-09-12: Lock In is only ever reachable via the travel
 // doorway now (see hubHomeFace()'s own travelPromptFor check), so there's
 // no longer a real "keep browsing, travel later" case to preserve --
@@ -14839,8 +14879,14 @@ function playLockInSequence(reward){
 // the player tap Travel a second time for a trip they already committed
 // to. dest is captured up front since selectedMapStation could in theory
 // change before the delayed goStation() below actually runs.
+// Revised 2026-09-13: the reward is no longer a banked Empty Element
+// currency -- it's now literally how many extra dice the upcoming
+// goStation() visit rolls with, spent by doRoll() itself the moment the
+// player actually rolls there (see its own comment). Overwrites rather
+// than accumulates -- it only ever needs to cover the ONE trip this
+// Lock-In is for.
 function finishLockIn(reward, opts = {}){
-  state.emptyElements = (state.emptyElements || 0) + reward;
+  state.bonusDiceNextVisit = reward;
   save();
   const dest = selectedMapStation;
   const proceed = () => {
@@ -14850,12 +14896,14 @@ function finishLockIn(reward, opts = {}){
     // mostly finish before the station screen swaps in underneath it.
     setTimeout(() => goStation(dest), 320);
   };
-  // skipToast: playLockInSequence() already showed this same reward inside
-  // #lockInBanner -- the toast here is only for the reward===0 path (no
+  // skipToast: the toast here is only for the reward===0 path (no
   // sequence plays for that, see confirmLockIn()) and the odd caller that
-  // hands this reward directly without going through the sequence first.
+  // hands this reward directly without going through playLockInSequence()
+  // first -- that sequence's own banner deliberately never shows the
+  // count itself (explicit request), so this toast is the one and only
+  // place the player actually sees the number.
   if (reward > 0 && !opts.skipToast){
-    showMatToast(`+${reward} Empty Element${reward === 1 ? "" : "s"}!`);
+    showMatToast(`+${reward} bonus ${reward === 1 ? "die" : "dice"} at your next station!`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
     setTimeout(proceed, 900);
@@ -14865,27 +14913,43 @@ function finishLockIn(reward, opts = {}){
 }
 
 /* =====================================================================
-   Empty Elements at Stations -- the first real sink for state.emptyElements
-   (earned via Lock In above), which until now was purely an accumulating
-   stat with nothing to spend it on. A held Empty Element trades 1-for-1
-   for any element actually found at the CURRENT station (its own die
-   faces, same pool sortedDice() already draws real rolls from) -- a
-   guaranteed, roll-free pickup rather than a random one, so it reads as
-   "spend a banked reward to skip a roll", not a new gacha of its own.
+   DORMANT as of 2026-09-13 -- Empty Elements at Stations. This whole
+   section (through the document click listener at the bottom of it) was
+   the first real sink for a BANKED state.emptyElements: a held Empty
+   Element traded 1-for-1 for any element actually found at the CURRENT
+   station, a guaranteed roll-free pickup the player chose to spend
+   whenever they liked. Lock In's reward is no longer banked at all (see
+   finishLockIn()'s own comment -- it's spent automatically as bonus dice
+   the moment the player next rolls), so nothing in here is reachable any
+   more: emptyElBadgeHTML() is never called (see renderStation()'s own
+   comment on why), which is the only thing that ever set
+   emptyElCashInMode true in the first place. Left fully in place,
+   untouched, rather than deleted, so this "let the player CHOOSE which
+   element to spend a reward on" idea can come back later without being
+   rebuilt from scratch -- reviving it just means calling
+   emptyElBadgeHTML() from renderStation() again and giving it something
+   real to spend once more (state.emptyElements or a new field).
    ===================================================================== */
 // Shared "Empty Element" square (see .empty-el-square's own CSS comment)
 // -- everywhere this currency shows up (station-title counter, Quark
 // Meter breakpoints, the Lock In banner's reward line) renders the exact
 // same square instead of each spot inventing its own icon language. px
 // sets both dimensions and scales the "?" and corner badge to match.
+// DORMANT along with the rest of this section (see its own header
+// comment) -- kept only because #lockInBannerSub used to call it too;
+// that call site now renders a plain dice emoji instead (see below),
+// so as of 2026-09-13 this has no live callers left either.
 function emptyElSquareHTML(px){
   const suitBadgePx = Math.round(px * 0.42);
   return `<span class="empty-el-square" style="width:${px}px; height:${px}px; font-size:${Math.round(px * 0.55)}px" title="Empty Element">?<span class="el-suit-badge" style="--suit:#000; width:${suitBadgePx}px; height:${suitBadgePx}px"></span></span>`;
 }
-// One-time fill-in for #lockInBanner's own static second line -- needs
-// emptyElSquareHTML() (just defined above), so it can't be plain HTML.
-document.getElementById("lockInBannerSub").innerHTML =
-  `Earn ${emptyElSquareHTML(16)} from your Quark Score.`;
+// One-time fill-in for #lockInBanner's own static second line. Revised
+// 2026-09-13: the reward is bonus dice for the next station now, not an
+// Empty Element (see finishLockIn()'s own comment), so this just names
+// that plainly instead of rendering the (now-dormant) Empty Element
+// square icon.
+document.getElementById("lockInBannerSub").textContent =
+  "Earn bonus dice for your next station from your Quark Score.";
 // Classic Mode only (state.emptyElements is never touched outside it, see
 // finishLockIn()'s own comment) -- rendered next to the station title
 // (renderStation()'s own sheet-head) regardless of count so it's always
@@ -15019,17 +15083,19 @@ function renderMatTop(){
   ];
   const qmSegs = qmSegPcts.map(pct =>
     `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`).join("");
-  // Empty Element badges straddle the 3 real breakpoints (between segments
+  // Bonus-dice badges straddle the 3 real breakpoints (between segments
   // 1/2, 2/3, 3/4 -- the 4th segment is pure headroom past the last real
   // tier, so it gets no break icon of its own after it). Percentage left
   // offsets divide the 4-equal-flex-segment meter into quarters -- see
   // .qm-break's own CSS comment for why pixel-measuring the real (3px)
-  // gaps isn't worth it. Lit once qmPassed has actually reached that many
-  // Empty Elements, i.e. locking in RIGHT NOW would bank one this far.
+  // gaps isn't worth it. Lit once qmPassed has actually reached that many,
+  // i.e. locking in RIGHT NOW would send that many extra dice to your
+  // next station (see finishLockIn()'s own comment -- this used to bank
+  // an Empty Element instead, back when that was a spendable currency).
   const qmBreaks = [1, 2, 3].map(i =>
-    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="Empty Element ${i}">${emptyElSquareHTML(20)}</span>`).join("");
+    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="+${i} bonus ${i === 1 ? "die" : "dice"}"><span class="qm-break-dice">🎲</span></span>`).join("");
   const quarkMeterHTML = `<div class="quark-meter-wrap"
-      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmPassed} Empty Element${qmPassed === 1 ? "" : "s"} if you lock in now">
+      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- +${qmPassed} bonus ${qmPassed === 1 ? "die" : "dice"} at your next station if you lock in now">
     ${qmSegs}${qmBreaks}
   </div>`;
   // Revised 2026-09-13: was two small right-aligned lines sharing the
