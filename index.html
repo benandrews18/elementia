@@ -8799,7 +8799,7 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // (bubbles popped, seconds survived, ...) even if a game's own difficulty
 // constants get retuned later -- the whole point of tracking these at all
 // is so the player can report them back for exactly that kind of tuning.
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
+let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:4, pinnedItems:[], minigamesEnabled:false,
   // Named Display Mat arrangements, account-level (see openMatLayoutsOverlay())
   // -- {name, items: [item names, in mat order]} -- so a combo sketched in
   // Combo Lab or a real run's own mat can be recalled in any future
@@ -9041,11 +9041,12 @@ function freshState(){
     // without rebuilding its data model from scratch.
     emptyElements: 0,
     // Classic only -- Lock In's actual live reward now (see confirmLockIn()/
-    // LOCKIN_ROUND_ANCHORS/finishLockIn()): however many Empty Elements the
-    // mat just scored become this many EXTRA dice on arrival at the
+    // LOCKIN_ROUND_ANCHORS/finishLockIn()/diceDeltaForReward()): a dice
+    // DELTA -- can be negative (-1, missed the first Quark breakpoint
+    // entirely) as well as 0/+1/+2 -- applied on arrival at the
     // destination station, consumed by the very next doRoll() there (see
-    // its own comment) and reset to 0 either way -- a one-trip bonus, not
-    // a bank, so it never stacks across visits.
+    // its own comment) and reset to 0 either way. A one-trip adjustment,
+    // not a bank, so it never stacks across visits.
     bonusDiceNextVisit: 0,
     bingoCenterChosen: false, // Whether the BINGO card's own center square has ever been
                        // picked (see setBingoCenter()) -- false shows the "Add Capstone"
@@ -9058,9 +9059,9 @@ function freshState(){
                        // round-MAX_VISITS summary screen (see showSummary()/sessionOver()) --
                        // from here on sessionOver() reports false again (unblocking travel),
                        // and confirmLockIn() switches from "can't fail before the limit" to
-                       // "must earn at least 1 bonus die each Lock-In or the run ends".
-    finalGameOver: false, // True only once a post-limit Lock-In actually earned 0 bonus
-                       // dice and the player confirmed ending the run there (see
+                       // "must clear the first Quark breakpoint each Lock-In or the run ends".
+    finalGameOver: false, // True only once a post-limit Lock-In actually missed the first
+                       // Quark breakpoint (tier 0) and the player confirmed ending the run there (see
                        // confirmLockIn()) -- distinct from the ordinary round-limit ending,
                        // so showSummary() can word it accordingly and skip offering another
                        // Continue Playing option.
@@ -11692,7 +11693,7 @@ function showSummary(){
   const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
 
   document.getElementById("sumSub").textContent = state.finalGameOver
-    ? `Game over -- no bonus dice earned on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
+    ? `Game over -- missed the first Quark breakpoint on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
     : `All ${visitLimitLabel()} visits used. Here's what you built:`;
 
   // Continue Playing only makes sense the FIRST time this screen appears
@@ -12873,17 +12874,21 @@ function doRoll(rollCount){
   const s = STATION_BY_NAME[current], out = [];
   const dice = sortedDice(s);
   const isOceanFirstRoll = oceanTutorialActive(current);
-  // Lock In's own reward (see finishLockIn()) -- extra dice for THIS
-  // roll, whichever path set the base count (plain TAKE, a mini-game's
-  // own score-based count, or an explicit rollCount). Excluded from the
+  // Lock In's own reward (see finishLockIn()/diceDeltaForReward()) -- a
+  // dice DELTA for THIS roll, applied on top of whichever path set the
+  // base count (plain TAKE, a mini-game's own score-based count, or an
+  // explicit rollCount): -1 if the mat didn't even clear the first Quark
+  // breakpoint, 0/+1/+2 for the three real tiers. Excluded from the
   // Ocean's one-time scripted first roll, which draws a fixed sequence
-  // rather than sampling the pool at all -- there's no "extra" slot to
-  // add to. Consumed here unconditionally (win or not: mapLocked() means
-  // this is always the very next roll after a Lock-In that granted it,
-  // so there's nothing to carry over) so it can never apply twice.
-  const bonus = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
+  // rather than sampling the pool at all -- there's no "extra"/"missing"
+  // slot to adjust there. Consumed here unconditionally (win or not:
+  // mapLocked() means this is always the very next roll after a Lock-In
+  // that granted it, so there's nothing to carry over) so it can never
+  // apply twice. Floored at 1 -- a -1 delta should never be able to zero
+  // out a roll entirely, even against a very low custom dice setting.
+  const delta = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
   state.bonusDiceNextVisit = 0;
-  const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : (rollCount == null ? TAKE : rollCount) + bonus;
+  const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : Math.max(1, (rollCount == null ? TAKE : rollCount) + delta);
   for (let i = 0; i < n; i++){
     const sym = isOceanFirstRoll ? OCEAN_FIRST_ROLL[i] : dice[Math.floor(Math.random() * 6)];
     const face = dice.indexOf(sym) + 1;
@@ -14773,15 +14778,23 @@ function emptyElementsForScore(total, round){
   if (total >= t.one) return 1;
   return 0;
 }
+// Converts the 0-3 tier above into an actual dice DELTA for the trip
+// (see doRoll()'s own comment on where this gets applied/consumed).
+// Tier 1 is deliberately a breakeven, not a reward on its own -- its
+// whole job is to be the line that keeps you at your normal dice count;
+// missing it entirely (tier 0) is what actually costs you one. Tiers 2
+// and 3 are the real rewards on top of that: +1, then +2.
+function diceDeltaForReward(reward){ return reward - 1; }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
    could be stale if this fires from a code path that skipped a render).
-   A 0-reward Lock-In means something different depending on the round:
-   before the round limit (state.visits < MAX_VISITS) it's consequence-free
-   -- the player hasn't even reached the point where a Game Over is
-   possible yet, so this just proceeds silently, same as any other
-   Lock-In. From the round limit on (only reachable at all once the
-   player has chosen Continue Playing off the summary screen, see
-   showSummary()/sessionOver()), scoring 0 for real ends the run -- see
+   A tier-0 Lock-In (costs a die, see diceDeltaForReward()) means something
+   different depending on the round: before the round limit (state.visits
+   < MAX_VISITS) that's the only consequence -- the player hasn't even
+   reached the point where a Game Over is possible yet, so this just
+   proceeds (losing the die) silently, same as any other Lock-In. From the
+   round limit on (only reachable at all once the player has chosen
+   Continue Playing off the summary screen, see showSummary()/
+   sessionOver()), missing tier 1 for real ends the run -- see
    askConfirm()'s own generic Yes/Cancel dialog, reused here rather than
    inventing a second confirmation UI. Cancel just backs out of the
    confirm and leaves the mat and drawer exactly as they were, so the
@@ -14793,7 +14806,7 @@ function confirmLockIn(){
   if (reward === 0){
     if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to earn any bonus dice. You're past your visit limit, so this ends your run here. End it now?`,
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint, so you'd lose a die. You're past your visit limit, so this ends your run here. End it now?`,
       () => {
         state.finalGameOver = true;
         save();
@@ -14880,13 +14893,17 @@ function playLockInSequence(reward){
 // to. dest is captured up front since selectedMapStation could in theory
 // change before the delayed goStation() below actually runs.
 // Revised 2026-09-13: the reward is no longer a banked Empty Element
-// currency -- it's now literally how many extra dice the upcoming
-// goStation() visit rolls with, spent by doRoll() itself the moment the
-// player actually rolls there (see its own comment). Overwrites rather
-// than accumulates -- it only ever needs to cover the ONE trip this
-// Lock-In is for.
+// currency -- it's now literally a dice DELTA for the upcoming
+// goStation() visit, spent by doRoll() itself the moment the player
+// actually rolls there (see its own comment). Overwrites rather than
+// accumulates -- it only ever needs to cover the ONE trip this Lock-In
+// is for.
+// Revised again same day: the raw 0-3 reward isn't the delta any more
+// (see diceDeltaForReward()) -- tier 1 is a breakeven (0), tier 0 costs a
+// die (-1), tiers 2/3 add one/two on top of that.
 function finishLockIn(reward, opts = {}){
-  state.bonusDiceNextVisit = reward;
+  const delta = diceDeltaForReward(reward);
+  state.bonusDiceNextVisit = delta;
   save();
   const dest = selectedMapStation;
   const proceed = () => {
@@ -14896,14 +14913,16 @@ function finishLockIn(reward, opts = {}){
     // mostly finish before the station screen swaps in underneath it.
     setTimeout(() => goStation(dest), 320);
   };
-  // skipToast: the toast here is only for the reward===0 path (no
-  // sequence plays for that, see confirmLockIn()) and the odd caller that
-  // hands this reward directly without going through playLockInSequence()
-  // first -- that sequence's own banner deliberately never shows the
-  // count itself (explicit request), so this toast is the one and only
-  // place the player actually sees the number.
-  if (reward > 0 && !opts.skipToast){
-    showMatToast(`+${reward} bonus ${reward === 1 ? "die" : "dice"} at your next station!`);
+  // skipToast: the toast here is only for the odd caller that hands this
+  // reward directly without going through playLockInSequence() first --
+  // that sequence's own banner deliberately never shows the number itself
+  // (explicit request), so this toast is the one and only place the
+  // player actually sees it. No toast at all when delta is exactly 0
+  // (tier 1) -- that's a breakeven, nothing actually changed to report.
+  if (delta !== 0 && !opts.skipToast){
+    showMatToast(delta > 0
+      ? `+${delta} bonus ${delta === 1 ? "die" : "dice"} at your next station!`
+      : `-1 die at your next station -- didn't clear the first Quark breakpoint.`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
     setTimeout(proceed, 900);
@@ -14944,12 +14963,13 @@ function emptyElSquareHTML(px){
   return `<span class="empty-el-square" style="width:${px}px; height:${px}px; font-size:${Math.round(px * 0.55)}px" title="Empty Element">?<span class="el-suit-badge" style="--suit:#000; width:${suitBadgePx}px; height:${suitBadgePx}px"></span></span>`;
 }
 // One-time fill-in for #lockInBanner's own static second line. Revised
-// 2026-09-13: the reward is bonus dice for the next station now, not an
-// Empty Element (see finishLockIn()'s own comment), so this just names
-// that plainly instead of rendering the (now-dormant) Empty Element
-// square icon.
+// 2026-09-13 (twice): the reward decides dice for the next station now,
+// not an Empty Element (see finishLockIn()'s own comment) -- and it's not
+// purely upside any more either (miss the first Quark breakpoint and you
+// lose one), so this names the mechanic plainly rather than promising
+// only a gain.
 document.getElementById("lockInBannerSub").textContent =
-  "Earn bonus dice for your next station from your Quark Score.";
+  "Your Quark Score sets your dice at the next station.";
 // Classic Mode only (state.emptyElements is never touched outside it, see
 // finishLockIn()'s own comment) -- rendered next to the station title
 // (renderStation()'s own sheet-head) regardless of count so it's always
@@ -15088,14 +15108,18 @@ function renderMatTop(){
   // tier, so it gets no break icon of its own after it). Percentage left
   // offsets divide the 4-equal-flex-segment meter into quarters -- see
   // .qm-break's own CSS comment for why pixel-measuring the real (3px)
-  // gaps isn't worth it. Lit once qmPassed has actually reached that many,
-  // i.e. locking in RIGHT NOW would send that many extra dice to your
-  // next station (see finishLockIn()'s own comment -- this used to bank
-  // an Empty Element instead, back when that was a spendable currency).
+  // gaps isn't worth it. Lit once qmPassed has actually reached that
+  // tier, i.e. locking in RIGHT NOW would apply that tier's own dice
+  // delta at your next station (see diceDeltaForReward()) -- tier 1 is
+  // the breakeven line (falling short of it, tier 0, is what actually
+  // costs a die), tiers 2/3 are the real +1/+2 rewards on top of that.
+  const QM_BREAK_LABEL = { 1: "Keeps your dice -- miss this and you lose one", 2: "+1 bonus die", 3: "+2 bonus dice" };
   const qmBreaks = [1, 2, 3].map(i =>
-    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="+${i} bonus ${i === 1 ? "die" : "dice"}"><span class="qm-break-dice">🎲</span></span>`).join("");
+    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="${QM_BREAK_LABEL[i]}"><span class="qm-break-dice">🎲</span></span>`).join("");
+  const qmDelta = diceDeltaForReward(qmPassed);
+  const qmDeltaLabel = qmDelta === 0 ? "no change" : qmDelta > 0 ? `+${qmDelta} dice` : "-1 die";
   const quarkMeterHTML = `<div class="quark-meter-wrap"
-      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- +${qmPassed} bonus ${qmPassed === 1 ? "die" : "dice"} at your next station if you lock in now">
+      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmDeltaLabel} at your next station if you lock in now">
     ${qmSegs}${qmBreaks}
   </div>`;
   // Revised 2026-09-13: was two small right-aligned lines sharing the
