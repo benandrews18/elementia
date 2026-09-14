@@ -5294,6 +5294,27 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   </div>
 </div>
 
+<!-- real end of a run -- reached HARD_VISIT_LIMIT, or eliminated for good
+     past the round-limit checkpoint (see showEndGame()). Deliberately a
+     separate overlay from #summary above, not a shared template: never
+     offers Continue Playing, and carries two extra stat sections
+     (#endGrid gets extra BINGO/top-score tiles via sessionStatsGridHTML's
+     own extraCells, #endFlavorWrap is the Biggest Turn icon strip) that
+     the round-limit checkpoint doesn't need. -->
+<div class="overlay" id="endGame" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+  <div class="sheetbox">
+    <h2 id="endTitle">🏁 Game Over</h2>
+    <p id="endSub"></p>
+    <div class="sumgrid" id="endGrid"></div>
+    <div id="endCapsWrap"></div>
+    <div id="endFlavorWrap"></div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn sec" id="endNew">Start a new session</button>
+      <button type="button" class="bigbtn sec" id="endReview">Review my collection</button>
+    </div>
+  </div>
+</div>
+
 <!-- generic confirm. window.confirm() is silently suppressed in sandboxed
      frames (it returns false without ever prompting), which is what broke
      the "start a new session" button -- so confirmations live in-page. -->
@@ -7292,6 +7313,18 @@ function applyDiceCount(){
    to Infinity so every visits-remaining check just falls out naturally. */
 const DEFAULT_MAX_VISITS = 20;
 let MAX_VISITS = DEFAULT_MAX_VISITS;
+/* Classic Mode's real, absolute stop -- double whatever checkpoint
+   (MAX_VISITS) is actually configured, not a bare literal, so a player
+   who's changed prefs.maxVisits in Settings still gets a sensible far
+   end rather than one hardcoded to the default. For the default 20-visit
+   checkpoint this is turn 40, matching LOCKIN_ROUND_ANCHORS' own
+   guaranteed-impossible wall at round 40 (see its comment) -- the two are
+   meant to land together: even a theoretically perfect run that somehow
+   kept clearing the score wall all the way out can't play past this.
+   Zen/Hard never reach it (MAX_VISITS is already Infinity there, see
+   below), and goMap()'s own check additionally guards state.mode --
+   see its own comment on why. */
+let HARD_VISIT_LIMIT = Infinity;
 /* Zen and Hard both override whatever's configured in Settings for this
    session only (prefs.maxVisits itself is untouched, so a later Classic
    session still uses whatever the player configured). Hard Mode is a
@@ -7306,6 +7339,7 @@ function applyVisitLimit(){
     && (state.mode === "zen" || state.mode === "hard");
   MAX_VISITS = unlimitedMode ? Infinity
     : prefs.maxVisits === "unlimited" ? Infinity : (prefs.maxVisits || DEFAULT_MAX_VISITS);
+  HARD_VISIT_LIMIT = isFinite(MAX_VISITS) ? MAX_VISITS * 2 : Infinity;
 }
 function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "∞"; }
 
@@ -9168,8 +9202,15 @@ function freshState(){
     finalGameOver: false, // True only once a post-limit Lock-In actually missed the first
                        // Quark breakpoint (tier 0) and the player confirmed ending the run there (see
                        // confirmLockIn()) -- distinct from the ordinary round-limit ending,
-                       // so showSummary() can word it accordingly and skip offering another
+                       // so showEndGame() can word it accordingly and skip offering another
                        // Continue Playing option.
+    reachedHardLimit: false, // True only once state.visits hits HARD_VISIT_LIMIT (see goMap())
+                       // -- the OTHER real ending, a congratulatory one: the player kept
+                       // clearing the Quark breakpoint all the way out. showEndGame() words
+                       // this one differently from finalGameOver.
+    bestMatScore: 0,   // Peak matScore().total across every real Lock-In this run (see
+                       // confirmLockIn()), not the overall meta score() -- shown on
+                       // showEndGame() as "top Quark Score this game".
   };
 }
 
@@ -11792,11 +11833,50 @@ const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
 // dismissing the summary and immediately re-triggering it.
 function sessionOver(){ return state.visits >= MAX_VISITS && !state.pastVisitLimit; }
 
-function showSummary(){
+/* Shared between showSummary() (the round-limit checkpoint, which still
+   offers Continue Playing) and showEndGame() (a real ending -- reached
+   HARD_VISIT_LIMIT, or missed a post-checkpoint Quark breakpoint for
+   good) -- both show the same core run stats, just wrapped in different
+   framing/buttons. extraCells (raw .sumstat HTML) lets showEndGame()
+   append its own stat tiles onto the same grid layout. */
+function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
   const elementsHeld = Object.values(state.elements).reduce((a,b) => a+b, 0);
   const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
+  return `
+    <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
+    <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
+    <div class="sumstat"><div class="n">${byTier("CREATION")}</div><div class="l">CREATIONS</div></div>
+    <div class="sumstat"><div class="n">${elementsHeld}</div><div class="l">ELEMENTS LEFT</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold);font-size:20px">${
+      state.jobs.length ? `${state.jobs.filter(j => j.turnedIn).length}/${state.jobs.length}` : "—"}</div><div class="l">JOBS TURNED IN</div></div>${extraCells || ""}`;
+}
+function capstonesSectionHTML(){
+  const caps = CAPSTONES.filter(owns);
+  return caps.length
+    ? `<div class="sec-label" style="margin-top:16px">CAPSTONES COMPLETED</div>
+       <div class="sumcaps">${caps.map(n =>
+         `<span class="sumcap">${em(ITEM_EMOJI[n])} ${esc(n)}</span>`).join("")}</div>`
+    : `<p class="empty" style="margin-top:14px">No capstones this time — they need
+       materials from several stations, so plan your route next run!</p>`;
+}
+// Show against the last station's own backdrop art, not a flat dark
+// scrim -- updateBackdrop() only turns #backdrop on for an actual
+// station SCREEN, but these end screens can appear from the map (out of
+// visits) or Settings' review button, so drive it directly off
+// state.lastStation here instead. closeOverlay() hands #backdrop back to
+// updateBackdrop()'s normal screen-driven control once this closes.
+function showSessionEndBackdrop(){
+  const bg = STATION_BG[state.lastStation];
+  if (bg){
+    const bgEl = document.getElementById("backdrop");
+    bgEl.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${bg}")`;
+    bgEl.classList.add("show");
+  }
+}
 
+function showSummary(){
   document.getElementById("sumSub").textContent = state.finalGameOver
     ? `Game over -- missed the first Quark breakpoint on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
     : `All ${visitLimitLabel()} visits used. Here's what you built:`;
@@ -11809,36 +11889,65 @@ function showSummary(){
   // continue into.
   document.getElementById("sumContinue").hidden = state.pastVisitLimit || state.finalGameOver;
 
-  document.getElementById("sumGrid").innerHTML = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
-    <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
-    <div class="sumstat"><div class="n">${byTier("CREATION")}</div><div class="l">CREATIONS</div></div>
-    <div class="sumstat"><div class="n">${elementsHeld}</div><div class="l">ELEMENTS LEFT</div></div>
-    <div class="sumstat"><div class="n" style="color:var(--gold);font-size:20px">${
-      state.jobs.length ? `${state.jobs.filter(j => j.turnedIn).length}/${state.jobs.length}` : "—"}</div><div class="l">JOBS TURNED IN</div></div>`;
-
-  document.getElementById("sumCapsWrap").innerHTML = caps.length
-    ? `<div class="sec-label" style="margin-top:16px">CAPSTONES COMPLETED</div>
-       <div class="sumcaps">${caps.map(n =>
-         `<span class="sumcap">${em(ITEM_EMOJI[n])} ${esc(n)}</span>`).join("")}</div>`
-    : `<p class="empty" style="margin-top:14px">No capstones this time — they need
-       materials from several stations, so plan your route next run!</p>`;
-
-  // Show against the last station's own backdrop art, not a flat dark
-  // scrim -- updateBackdrop() only turns #backdrop on for an actual
-  // station SCREEN, but the summary can appear from the map (out of
-  // visits) or Settings' review button, so drive it directly off
-  // state.lastStation here instead. closeOverlay() hands #backdrop back
-  // to updateBackdrop()'s normal screen-driven control once this closes.
-  const bg = STATION_BG[state.lastStation];
-  if (bg){
-    const bgEl = document.getElementById("backdrop");
-    bgEl.style.backgroundImage = `linear-gradient(var(--backdrop-wash),var(--backdrop-wash)), url("${bg}")`;
-    bgEl.classList.add("show");
-  }
-
+  document.getElementById("sumGrid").innerHTML = sessionStatsGridHTML();
+  document.getElementById("sumCapsWrap").innerHTML = capstonesSectionHTML();
+  showSessionEndBackdrop();
   openOverlay("summary");
+}
+
+/* Who visited the most stations this run, and which single visit scored
+   the most points -- both pure derived reads of state.visitLog (already
+   recorded per-visit by goStation()/craft(), see their own comments), no
+   new incremental tracking needed. */
+function topVisitedStation(){
+  const counts = {};
+  (state.visitLog || []).forEach(t => { counts[t.station] = (counts[t.station] || 0) + 1; });
+  let top = null;
+  Object.keys(counts).forEach(s => { if (!top || counts[s] > counts[top]) top = s; });
+  return top ? { name: top, count: counts[top] } : null;
+}
+function biggestTurn(){
+  let best = null;
+  (state.visitLog || []).forEach(t => {
+    const points = (t.items || []).reduce((n, i) => n + (ITEM_POINTS[i] || 0), 0);
+    if (points > 0 && (!best || points > best.points)) best = { station: t.station, items: t.items, points };
+  });
+  return best;
+}
+function endGameFlavorHTML(){
+  const turn = biggestTurn();
+  if (!turn) return "";
+  return `<div class="sec-label" style="margin-top:16px">BIGGEST TURN -- ${esc(turn.station)} (+${turn.points.toLocaleString()} pts)</div>
+    <div class="sumcaps">${turn.items.map(n =>
+      `<span class="sumcap" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>`;
+}
+
+/* The real end of a run -- either the congratulatory case (kept clearing
+   the Quark breakpoint all the way to HARD_VISIT_LIMIT, see goMap()) or
+   the elimination case (missed one for good past the checkpoint, see
+   confirmLockIn()) -- a separate overlay from showSummary()'s round-limit
+   checkpoint since neither offers Continue Playing and both need the
+   extra BINGO/top-score/flavor stats below. */
+function showEndGame(){
+  document.getElementById("endTitle").textContent = state.reachedHardLimit
+    ? "🎉 You Reached the End!" : "🏁 Game Over";
+  document.getElementById("endSub").textContent = state.reachedHardLimit
+    ? `You kept clearing the Quark breakpoint all the way to visit ${state.visits} -- here's your run:`
+    : `Game over -- missed the first Quark breakpoint on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`;
+
+  const bingoTotal = bingoLines().length;
+  const bingoDone = (state.bingoLinesCompleted || []).length;
+  const top = topVisitedStation();
+  const extraCells = `
+    <div class="sumstat"><div class="n" style="color:var(--gold)">${bingoDone}<span style="font-size:16px;color:var(--mute)">/${bingoTotal}</span></div><div class="l">BINGO LINES</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
+      top ? `<div class="sumstat"><div class="n" style="font-size:18px">${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
+
+  document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
+  document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
+  document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
+  showSessionEndBackdrop();
+  openOverlay("endGame");
 }
 
 /* --------------------------------------------------- celebration --- */
@@ -12741,6 +12850,17 @@ function goMap(){
   else window.scrollTo({top:0, behavior:"instant"});
   // Surface the wrap-up once the last visit is done and they've come back.
   if (sessionOver() && !state.ended){ state.ended = true; save(); showSummary(); }
+  // The OTHER real ending: a player who kept clearing the Quark
+  // breakpoint all the way out to HARD_VISIT_LIMIT (see its own comment
+  // -- double whatever checkpoint is configured, turn 40 by default).
+  // state.mode guard mirrors sessionOver()'s own Zen/Hard exemption --
+  // those modes already run with MAX_VISITS (and therefore
+  // HARD_VISIT_LIMIT) at Infinity, so this never fires for them, but the
+  // explicit check keeps this block legible on its own rather than
+  // relying on the Infinity comparison silently doing the right thing.
+  if (state.mode === "classic" && state.pastVisitLimit && state.visits >= HARD_VISIT_LIMIT && !state.ended){
+    state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
+  }
   // Organic, one-time-ever: a player back on the map choosing their
   // SECOND station (state.visits === 1 here -- goMap() only ever runs
   // after leaving a station, so this is always >= 1, never the very
@@ -14827,28 +14947,42 @@ let matLastScore = null;
      min:     0  22   215   696  1674
      max:     3 148   561  1656  2162
    -- a fast-then-saturating climb, since the pool it draws from is
-   capped: CORE_SET has only 79 distinct items, and a search over ALL 79
-   at once (i.e. an entire run's worth of crafting, however long) tops
-   out at 2,660 (MAT_ABSOLUTE_CEILING below) -- a Star Charts collection
-   (Star+Telescope+Satellite Dish+Rocket+Space Station) stacked with an
-   Observatory station combo and 3 simultaneous suit combos. Notably,
-   NONE of the 6 real runs ever crafted Rocket or Space Station at all
-   (see the session's own written analysis) -- that ceiling assumes a
-   catalog-complete run no real 20-visit game has actually produced, so
-   it's used here only as the hard cap the curve must never exceed, not
-   as a realistic per-round target.
+   capped: CORE_SET has only 79 distinct items.
+   Revised 2026-09-13: MAT_ABSOLUTE_CEILING was re-derived from scratch
+   after a real run posted a 3,400+ Quark Score, blowing straight through
+   the old ceiling (2,660) and the "impossible" wall built on top of it --
+   root cause was multi-station cards (an item now counts toward EVERY
+   station combo it's home to, not just one canonical station), added
+   later in the same session as the original 2026-09-11 calibration
+   below, which was never re-measured against that change. Re-measured by
+   running a hill-climbing search (many random restarts, greedy
+   construction, 1-for-1 and 2-for-2 swaps) against this file's own live
+   matScore()/MAT_CARDS/matFits() -- not a reimplementation, the actual
+   scoring code -- looking for the single best-possible 8-slot mat under
+   today's rules. 400 restarts converged repeatedly (10/400 runs, a clear
+   margin over the next-best 4,100) on the same 4,422: Star Charts
+   (Star+Telescope+Satellite Dish+Rocket+Space Station) stacked with a
+   maxed Observatory station combo (k=6) and maxed metal/reactive suit
+   combos (k=6 each), Oven filling the 7th slot as the best available
+   card sharing neither the station nor a suit. That's the new
+   MAT_ABSOLUTE_CEILING below -- still assumes a catalog-complete run no
+   real game has actually produced, used only as the hard cap the curve
+   must never exceed, not a realistic per-round target.
    Anchors only (rounds in between are linearly interpolated by
-   lockInTiersForRound()) -- rounds 1-20 track the real min/mean/max
-   above (1-die near the real min so a normal run keeps clearing it;
-   2-dice near the mean; 3-dice near the max, i.e. only a near-optimal
-   mat), then rounds 25-30 climb to approach MAT_ABSOLUTE_CEILING (by
-   design -- "only the best possible layout still clears 1 die" once
-   runs push that far past today's 20-visit norm) and round 31's 1-die
-   bar (2,700) deliberately EXCEEDS the ceiling: no arrangement of any
-   size can clear it, a hard, guaranteed-Game-Over wall. Still first-pass
-   in the sense that no real run has ever actually PLAYED past round 20
-   with this mechanic live -- the shape is grounded in real data, the
-   far end (25+) is this session's own extrapolation of it, not measured.
+   lockInTiersForRound()) -- rounds 1-20 are UNCHANGED from the original
+   2026-09-11 calibration (real per-round data below, 1-die near the real
+   min so a normal run keeps clearing it; 2-dice near the mean; 3-dice
+   near the max) -- small early mats are barely touched by the
+   multi-station change, so that data is still valid. Rounds 25-35 were
+   rebuilt to climb toward the new ceiling instead of the old one, and
+   the "impossible wall" (previously round 31, now round 40 -- see
+   HARD_VISIT_LIMIT) has its 1-die bar (4,700) deliberately set above the
+   new ceiling: no arrangement of any size can clear it, a hard,
+   guaranteed-Game-Over/End-Game wall, now grounded in the actual
+   re-measured maximum instead of a stale one a real run had already
+   beaten. Rounds 25-40 are this session's own extrapolation, same as the
+   original 25-31 was -- no real run has been played that far with this
+   mechanic live.
    Revised 2026-09-12: the 1-die floor stayed literally 0 only through
    round 1, so a bare one-card mat (a lone MATERIAL, 2-5ish points --
    exactly what visit 2 or 3 of a real run often is; several of the 6
@@ -14860,7 +14994,7 @@ let matLastScore = null;
    fail" is the actual intent, not merely "turn 1 can't fail" -- and
    2-/3-dice were eased down to match rather than left towering over an
    otherwise-forgiving 1-die bar. */
-const MAT_ABSOLUTE_CEILING = 2660;
+const MAT_ABSOLUTE_CEILING = 4422;
 const LOCKIN_ROUND_ANCHORS = [
   // [round, oneDieMin, twoDiceMin, threeDiceMin]
   [1,      0,    5,    15],
@@ -14869,9 +15003,10 @@ const LOCKIN_ROUND_ANCHORS = [
   [10,   100,  300,   500],
   [15,   450,  900,  1550],
   [20,  1150, 1800,  2100],
-  [25,  2000, 2350,  2600],
-  [30,  2550, 2650,  2660],
-  [31,  2700, 2900,  3000], // 1-die alone already exceeds MAT_ABSOLUTE_CEILING -- impossible
+  [25,  2200, 2700,  3200],
+  [30,  2900, 3400,  3800],
+  [35,  3600, 4000,  4300],
+  [40,  4700, 4900,  5100], // 1-die alone already exceeds MAT_ABSOLUTE_CEILING -- impossible
 ];
 function lockInTiersForRound(round){
   const a = LOCKIN_ROUND_ANCHORS;
@@ -14919,6 +15054,7 @@ function diceDeltaForReward(reward){ return reward - 1; }
    committing to end things. */
 function confirmLockIn(){
   const s = matScore(matOnMat());
+  state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, state.visits);
   if (reward === 0){
     if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
@@ -14929,7 +15065,7 @@ function confirmLockIn(){
         save();
         closeDrawer();
         travelPromptFor = null;
-        showSummary();
+        showEndGame();
       }
     );
     return;
@@ -17456,6 +17592,12 @@ document.getElementById("sumNew").addEventListener("click", () => {
 });
 document.getElementById("sumReview").addEventListener("click", () => {
   closeOverlay("summary"); openDrawer();
+});
+document.getElementById("endNew").addEventListener("click", () => {
+  closeOverlay("endGame"); resetCurrentModeRun();
+});
+document.getElementById("endReview").addEventListener("click", () => {
+  closeOverlay("endGame"); openDrawer();
 });
 
 /* -------------------------------------------------------- confirm --- */
