@@ -50,6 +50,23 @@
   --backdrop-wash-light:rgba(18,23,31,.18);
   --item-bg-start:rgba(20,26,35,.92);
   --item-bg-end:rgba(20,26,35,.30);
+  /* Reusable pseudo-stroke for a small icon sitting on a colored badge
+     (station circles, the combo counter's own icons) -- box-shadow can't
+     do this since it's always rectangular/circular against the ELEMENT's
+     own box, not the icon graphic's actual silhouette. drop-shadow
+     instead follows real alpha-channel edges (transparent PNG or a text
+     glyph alike), so 8 of them stacked in a ring around the origin reads
+     as one even, thin black outline hugging the icon's own shape --
+     sub-pixel offsets (0.6px cardinal, ~0.45px diagonal so every
+     direction reads the same thickness) since these icons are small
+     enough that a full 1px stroke read as too heavy. Applied to the icon
+     node itself (an <img>, see em()), never its badge parent, so the
+     badge's own circular border/background stay untouched. */
+  --icon-outline:
+    drop-shadow(.6px 0 0 #000) drop-shadow(-.6px 0 0 #000)
+    drop-shadow(0 .6px 0 #000) drop-shadow(0 -.6px 0 #000)
+    drop-shadow(.45px .45px 0 #000) drop-shadow(-.45px -.45px 0 #000)
+    drop-shadow(.45px -.45px 0 #000) drop-shadow(-.45px .45px 0 #000);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -4518,6 +4535,18 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 .mm-cico{width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:16.5px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
 .mm-cico :is(img,svg){width:18px; height:18px}
+/* Outline the station/item icon graphic itself, not the suit one --
+   element suits are explicitly exempt from this treatment (their own
+   glyphs already read fine against their circle, and a stroke changed
+   their look more than intended). */
+.mm-cico.station :is(img,svg), .mm-cico.component :is(img,svg){filter:var(--icon-outline)}
+/* Component (item) combos never had a real background of their own --
+   just whatever #4a4f5c the shared .mm-cico fallback happened to supply,
+   same neutral gray for every item regardless of what it actually is.
+   Parchment instead (same #f2e6cc every mat card's own face already
+   uses), explicit request, so an item icon here reads the same "sitting
+   on a real card" way it does everywhere else on the mat. */
+.mm-cico.component{background:#f2e6cc}
 .mm-cico.star{background:none; font-size:21px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
 
@@ -4722,6 +4751,10 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    exactly what happened here in testing (a giant, low-opacity station
    icon bleeding across the whole drawer behind everything else). */
 .mat-fbtn :is(img,svg){width:24px; height:24px; object-fit:contain; flex:none}
+/* Station chips only -- this same .mat-fbtn class is shared with the suit
+   filter row right below it (#matFSuits), and element suits are
+   explicitly exempt from the icon-outline treatment. */
+.mat-fbtn[data-mat-fstation] :is(img,svg){filter:var(--icon-outline)}
 .mat-fbtn.on{opacity:1; filter:none; box-shadow:0 0 0 2px var(--gold)}
 /* The scrollable "which owned items to place" grid itself -- lives in
    #drawerBody, the exact container the non-Classic legacy inventory list
@@ -4808,7 +4841,22 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   background:var(--suit); border:1.5px solid #000; font-size:15px; color:#fff; line-height:1;
 }
 .mm-pip :is(img,svg){width:16px; height:16px}
-.mm-pip.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 4px rgba(226,178,90,.85)}
+/* Revised 2026-09-14: "lit" (this pip/station is part of a live combo)
+   used to be just a thin static gold ring -- now a visibly bigger halo
+   that gently breathes, so a combo-carrying icon reads as active at a
+   glance instead of needing a close look to notice the thin ring. Shared
+   by .mm-pip and .mm-station (see below) since both use the exact same
+   "combo lit" language. transform:scale is safe here -- both are fixed-
+   size flex/absolute badges, never part of a layout a bigger box would
+   reflow. */
+@keyframes comboLitPulse{
+  0%, 100%{ box-shadow:0 0 0 2.5px var(--gold), 0 0 8px rgba(226,178,90,.8); transform:scale(1); }
+  50%{ box-shadow:0 0 0 4.5px var(--gold), 0 0 15px rgba(226,178,90,1); transform:scale(1.12); }
+}
+.mm-pip.lit, .mm-station.lit{ animation:comboLitPulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){
+  .mm-pip.lit, .mm-station.lit{ animation:none; box-shadow:0 0 0 3.5px var(--gold), 0 0 10px rgba(226,178,90,.9); }
+}
 .mm-icon{font-size:44px; line-height:1; margin-top:3px}
 .mm-icon :is(img,svg){width:44px; height:44px; object-fit:contain}
 .mm-name{
@@ -4831,8 +4879,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   width:26px; height:26px; border-radius:50%; flex:none;
   display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:14.5px;
 }
-.mm-station :is(img,svg){width:17px; height:17px; object-fit:contain}
-.mm-station.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(226,178,90,.85)}
+.mm-station :is(img,svg){width:17px; height:17px; object-fit:contain; filter:var(--icon-outline)}
 /* No more "ON MAT" pill -- the faded filter below already reads as
    "already placed" on its own; a label repeating the same fact was
    redundant, per explicit request. */
@@ -5952,7 +5999,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__LIGHTHOUSE__",
      "Lighthouse",
      "CREATION",
-     "💡 Light Bulb + __CONCRETE__ Concrete",
+     "💡 Light Bulb + __CONCRETE__ Concrete + 🪟 Glass",
      20
     ],
     [
@@ -6311,8 +6358,8 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__STEEL__",
      "Steel",
-     "MATERIAL",
-     "Fe + C",
+     "COMPONENT",
+     "Fe + C + __FURNACE__ Furnace",
      1
     ],
     [
@@ -6326,7 +6373,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🛠️",
      "Tools",
      "CREATION",
-     "__STEEL__ Steel + Ti + Al",
+     "Ti + Al + Fe",
      3
     ],
     [
@@ -6396,7 +6443,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚜",
      "Tractor",
      "CREATION",
-     "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber",
+     "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber + __STEEL__ Steel",
      21
     ],
     [
@@ -6481,7 +6528,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🌳",
      "Tree",
      "COMPONENT",
-     "🌱 Soil + C + O",
+     "🌱 Soil + 💧 Water + C + O",
      9
     ],
     [
@@ -6762,8 +6809,8 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__STEEL__",
      "Steel",
-     "MATERIAL",
-     "Fe + C",
+     "COMPONENT",
+     "Fe + C + __FURNACE__ Furnace",
      1
     ],
     [
@@ -6939,7 +6986,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🛠️",
      "Tools",
      "CREATION",
-     "__STEEL__ Steel + Ti + Al",
+     "Ti + Al + Fe",
      3
     ],
     [
@@ -14698,10 +14745,14 @@ function matCardHTML(name, opts = {}){
 
 function matComboChipHTML(g, kind){
   const st = STATION_BY_NAME[g.name];
+  // kind doubles as a modifier class (mm-cico.station/.suit/.component) so
+  // CSS can style each variant's background/outline on its own -- station
+  // and suit already carry their own color via --st/--suit, component
+  // gets a parchment face instead (see .mm-cico.component's own comment).
   const icon =
-    kind === "station" ? `<span class="mm-cico" style="--st:${DATA.suits[st.suit].color}">${em(st.emoji)}</span>`
-    : kind === "suit"  ? `<span class="mm-cico" style="--suit:${SUIT_COLOR[g.name]}">${SUIT_ICON[g.name]}</span>`
-    : `<span class="mm-cico">${ITEM_EMOJI[g.name] ? em(ITEM_EMOJI[g.name]) : esc(g.name)}</span>`;
+    kind === "station" ? `<span class="mm-cico ${kind}" style="--st:${DATA.suits[st.suit].color}">${em(st.emoji)}</span>`
+    : kind === "suit"  ? `<span class="mm-cico ${kind}" style="--suit:${SUIT_COLOR[g.name]}">${SUIT_ICON[g.name]}</span>`
+    : `<span class="mm-cico ${kind}">${ITEM_EMOJI[g.name] ? em(ITEM_EMOJI[g.name]) : esc(g.name)}</span>`;
   const label = kind === "suit" ? ELEMENT_SUIT_LABEL[g.name] : g.name;
   // Just the raw shared-icon count, stacked below the icon -- no "+bonus"
   // suffix any more (the bonus it earns shows once, aggregated into the
@@ -14922,37 +14973,138 @@ function bouncePulse(el){
 }
 const LOCKIN_BOUNCE_STAGGER_MS = 220;
 const LOCKIN_BOUNCE_DURATION_MS = 380;
+/* Builds the ordered list of scoring "beats" the reveal plays through --
+   explicit request for this exact order, replacing the old single "every
+   combo chip in DOM order" pass:
+     1. every card actually on the mat, its own plain (undoubled) points.
+     2. every card whose full recipe is ALSO on the mat (matIsComplete),
+        bounced together with the ingredient cards that satisfy it, for
+        the extra points its doubling adds on top of step 1's contribution.
+     3. every completed named collection (s.cols), its member cards
+        bouncing together, for its own flat bonus.
+     4. every station/suit/component combo, in the same station-then-suit-
+        then-component order the combo row itself lists them (collections
+        moved earlier, to step 3, so they're excluded here).
+   Steps 1-3 only ever move "points on display" (pointsDelta); step 4 only
+   ever moves "combo multiplier" (multDelta) -- matching matScore()'s own
+   total = (base + colBonus) * mult. chipKind/chipName (steps 3-4 only)
+   let the player bounce that beat's own .mm-combo chip alongside its
+   cards, same as the old code already did for every combo. */
+function lockInScoreBeats(mat, s){
+  const beats = [];
+  mat.forEach(c => beats.push({ cardNames: [c.name], pointsDelta: c.points, multDelta: 0 }));
+  mat.forEach(c => {
+    if (!matIsComplete(c, mat)) return;
+    const need = matDirectItems(c);
+    const groupNames = [c.name, ...mat.filter(m => need.has(m.name)).map(m => m.name)];
+    beats.push({ cardNames: groupNames, pointsDelta: c.points, multDelta: 0 });
+  });
+  s.cols.forEach(col => beats.push({
+    cardNames: matCardsForCombo("collection", col.id).map(c => c.name),
+    pointsDelta: col.bonus, multDelta: 0,
+    chipKind: "collection", chipName: col.id,
+  }));
+  [...s.combos.station.map(g => ({ ...g, kind: "station" })),
+   ...s.combos.suit.map(g => ({ ...g, kind: "suit" })),
+   ...s.combos.component.map(g => ({ ...g, kind: "component" }))]
+    .forEach(g => beats.push({
+      cardNames: matCardsForCombo(g.kind, g.name).map(c => c.name),
+      pointsDelta: 0, multDelta: g.bonus,
+      chipKind: g.kind, chipName: g.name,
+    }));
+  return beats;
+}
+// Writes the 3 headline numbers directly (not a re-render -- a fresh
+// renderMatTop() call mid-sequence would wipe out any bounce animation
+// already in flight on these same nodes). Order matches .mat-score-stats'
+// own fixed DOM order (points, ×, mult, =, quarks).
+function setMatScoreNumbers(points, mult, total){
+  const vals = document.querySelectorAll("#drawerTop .mat-score-stats .mss-val");
+  if (vals[0]) vals[0].textContent = Math.round(points).toLocaleString();
+  if (vals[1]) vals[1].textContent = Math.round(mult).toLocaleString();
+  if (vals[2]) vals[2].textContent = "⚛️ " + Math.round(total).toLocaleString();
+}
+// Same live-DOM-write approach as setMatScoreNumbers() above, re-deriving
+// the exact segment-fill/break-lit math renderMatTop() itself uses (see
+// its own Quark Meter comment) against whatever running total the reveal
+// is currently on, instead of the mat's real final total.
+function setQuarkMeterProgress(total){
+  const qmTiers = lockInTiersForRound(state.visits);
+  const ranges = [[0, qmTiers.one], [qmTiers.one, qmTiers.two], [qmTiers.two, qmTiers.three], [qmTiers.three, MAT_ABSOLUTE_CEILING]];
+  const segs = document.querySelectorAll("#drawerTop .qm-seg");
+  ranges.forEach(([lo, hi], i) => {
+    const seg = segs[i];
+    if (!seg) return;
+    const pct = hi > lo ? Math.max(0, Math.min(100, ((total - lo) / (hi - lo)) * 100)) : (total >= lo ? 100 : 0);
+    const fill = seg.querySelector(".qm-seg-fill");
+    if (fill) fill.style.width = pct + "%";
+    seg.classList.toggle("lit", pct >= 100);
+  });
+  const passed = emptyElementsForScore(total, state.visits);
+  document.querySelectorAll("#drawerTop .qm-break").forEach((b, i) => b.classList.toggle("lit", passed >= i + 1));
+}
 /* Lock In's own celebration beat, played once a reward is actually confirmed
    (reward === 0 skips straight to finishLockIn() via askConfirm above --
-   nothing to celebrate). Sequence: each combo chip bounces left-to-right,
-   staggered, along with whichever real mat cards actually earned it (see
-   matCardsForCombo()); once every chip's had its turn, the Quarks number
-   itself bounces; then (a beat later, letting that last bounce land) the
-   trip actually happens (finishLockIn(), same bank-and-travel logic as
-   ever, own toast and all -- that's still the one place the actual reward
-   COUNT is shown; explicit request that this banner itself never displays
-   it). #lockInBannerText stays hidden the whole time -- border/background
-   stay put throughout (see #lockInBanner's own CSS comment) -- and is
-   restored for next time by closeDrawer(). The setTimeout chain runs at a
-   fixed pace regardless of reduced motion -- bouncePulse() itself is what
-   no-ops the animation, not the sequence's own timing. */
+   nothing to celebrate). Explicit request: the live numbers/meter the
+   player was just looking at while arranging the mat reset to 0 the
+   instant this starts, then build back up to those exact same real values
+   one scoring beat at a time (see lockInScoreBeats()) -- points-on-display
+   and the combo multiplier each climb independently, while Quarks (their
+   product) and the Quark Meter's own fill re-derive from whatever those
+   two are at THAT INSTANT after every single beat, not just once at the
+   end. Once every beat's had its turn, numbers are explicitly snapped to
+   the real final values (guards e.g. a mat with zero combos, where the
+   multiplier would otherwise never leave the 0 it started the reveal at)
+   and the Quarks stat gets one last bounce of its own; then (a beat later,
+   letting that land) the trip actually happens (finishLockIn(), same bank-
+   and-travel logic as ever, own toast and all -- that's still the one
+   place the actual reward COUNT is shown; explicit request that this
+   banner itself never displays it). #lockInBannerText stays hidden the
+   whole time -- border/background stay put throughout (see #lockInBanner's
+   own CSS comment) -- and is restored for next time by closeDrawer(). The
+   setTimeout chain runs at a fixed pace regardless of reduced motion --
+   bouncePulse() itself is what no-ops the animation, not the sequence's
+   own timing. */
 function playLockInSequence(reward){
   document.getElementById("lockInBannerText").hidden = true;
-  const chips = [...document.querySelectorAll("#drawerTop .mat-combos .mm-combo")];
-  chips.forEach((chip, i) => {
+  const mat = matOnMat();
+  const s = matLastScore || matScore(mat);
+  const beats = lockInScoreBeats(mat, s);
+
+  // Multiplier's true resting value with zero combos is 1 (matScore()'s
+  // own mult = 1 + comboBonus), not 0 -- starting the running tally there
+  // instead of 0 means every combo's own +bonus beat lands the display
+  // EXACTLY on the real s.mult with no fix-up jump needed at the final
+  // settle, and Quarks (points x mult) recomputes correctly at every beat
+  // from the very first one instead of being pinned at 0 until step 4.
+  setMatScoreNumbers(0, 1, 0);
+  setQuarkMeterProgress(0);
+
+  let runningPoints = 0, runningMult = 1;
+  beats.forEach((beat, i) => {
     setTimeout(() => {
-      bouncePulse(chip);
-      const kind = chip.dataset.comboKind, name = chip.dataset.comboName;
-      if (kind && name){
-        matCardsForCombo(kind, name).forEach(c => {
-          bouncePulse(document.querySelector(`#matGrid [data-mat-card="${cssEsc(c.name)}"]`));
-        });
+      beat.cardNames.forEach(name => {
+        bouncePulse(document.querySelector(`#matGrid [data-mat-card="${cssEsc(name)}"]`));
+      });
+      if (beat.chipKind && beat.chipName){
+        bouncePulse(document.querySelector(
+          `#drawerTop .mat-combos .mm-combo[data-combo-kind="${beat.chipKind}"][data-combo-name="${cssEsc(beat.chipName)}"]`));
       }
+      runningPoints += beat.pointsDelta;
+      runningMult += beat.multDelta;
+      const runningTotal = runningPoints * runningMult;
+      setMatScoreNumbers(runningPoints, runningMult, runningTotal);
+      setQuarkMeterProgress(runningTotal);
     }, i * LOCKIN_BOUNCE_STAGGER_MS);
   });
-  const afterChips = chips.length * LOCKIN_BOUNCE_STAGGER_MS + LOCKIN_BOUNCE_DURATION_MS + 150;
-  setTimeout(() => bouncePulse(document.querySelector("#drawerTop .mss-stat.quarks")), afterChips);
-  const afterQuarks = afterChips + LOCKIN_BOUNCE_DURATION_MS + 300;
+
+  const afterBeats = beats.length * LOCKIN_BOUNCE_STAGGER_MS + LOCKIN_BOUNCE_DURATION_MS + 150;
+  setTimeout(() => {
+    setMatScoreNumbers(s.base + s.colBonus, s.mult, s.total);
+    setQuarkMeterProgress(s.total);
+    bouncePulse(document.querySelector("#drawerTop .mss-stat.quarks"));
+  }, afterBeats);
+  const afterQuarks = afterBeats + LOCKIN_BOUNCE_DURATION_MS + 300;
   setTimeout(() => finishLockIn(reward), afterQuarks);
 }
 // Sets up the reward as bonus dice for the trip that's about to happen
