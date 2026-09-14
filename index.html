@@ -9037,6 +9037,16 @@ let marketSection = null;
 // always falling to the map. null means "use the old current-station-or-map
 // fallback" (Codex opened from a station, or from the map screen itself).
 let codexReturnScreen = null;
+// Snapshot of the mat drawer's own open/peeked state right before Item
+// Reference takes over the screen (Codex is a full screen=, not a
+// stacking overlay -- it renders at a lower z-index than #drawer, so
+// leaving the drawer open underneath would just hide Codex behind it
+// entirely, unlike Jobs/Settings which genuinely stack on top -- see
+// hubPanelClick()'s own comment). null: drawer wasn't open at all,
+// nothing to restore. true: was open peeked (half-view). false: was open
+// expanded (full inventory). Restored by closePanelByName()'s own codex
+// branch once Item Reference closes.
+let codexReturnDrawerPeeked = null;
 // Shop items newly unlocked by the craft that just happened, held back from
 // the shop grid (see renderStation()'s shopEntries) until the resulting
 // card-inspection popup closes -- see the craft click handler and
@@ -11036,8 +11046,12 @@ function goToRefItem(name){
   // (see closePanelByName()'s own comment) lands back on that station
   // instead of falling through to the map.
   const fromStation = current;
+  // Same "capture before closing touches it" reasoning as fromStation
+  // above -- see codexReturnDrawerPeeked's own comment.
+  const drawerPeeked = drawer.classList.contains("open") ? !drawer.classList.contains("expanded") : null;
   if (openPanel) closePanelByName(openPanel);
   codexReturnScreen = fromMarket ? "market" : fromStation;
+  codexReturnDrawerPeeked = drawerPeeked;
   screen = "codex"; current = null;
   jobExpanded.clear();
   jobExpanded.add("refroot/" + name);
@@ -14304,10 +14318,16 @@ function goHome(){
    of these four are open, and that arrow needs one shared place to ask
    "is something open, and how do I close it" regardless of which. */
 function openPanelName(){
-  if (drawer.classList.contains("open")) return "drawer";
+  // Checked in top-to-bottom z-index order, not open-ness order: Jobs
+  // (69) and Settings (.overlay, 65) can now genuinely be open AT THE
+  // SAME TIME as the mat drawer (60, see hubPanelClick()'s own comment on
+  // why those two stack on top of it instead of closing it) -- reporting
+  // "drawer" while Jobs/Settings sits on top of it would make Home's own
+  // back-arrow close the wrong (bottom) layer first.
   if (jobSheet.classList.contains("open")) return "jobs";
-  if (pinsTray.classList.contains("open")) return "pins";
   if (anySettingsOpen()) return "settings";
+  if (drawer.classList.contains("open")) return "drawer";
+  if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
   if (screen === "codex") return "codex";
   // Market is a real screen (screen === "market"), same tier as Codex --
@@ -14348,6 +14368,15 @@ function closePanelByName(name){
     }
     codexReturnScreen = null;
     render(true);
+    // Restore the mat drawer to exactly how it looked before Item
+    // Reference took over -- see codexReturnDrawerPeeked's own comment.
+    // Not done for "market": Market's own Codex jump never had a drawer
+    // open underneath it in the first place (there's no Display Mat on
+    // that screen), so this only ever matters for the codex name.
+    if (name === "codex" && codexReturnDrawerPeeked !== null){
+      openDrawer({ peeked: codexReturnDrawerPeeked });
+      codexReturnDrawerPeeked = null;
+    }
   }
 }
 /* Tapping a button whose panel is already open just closes it. Tapping
@@ -14367,6 +14396,16 @@ function closePanelByName(name){
 function hubPanelClick(name, openFn){
   const open = openPanelName();
   if (open === name){ closePanelByName(name); return; }
+  // Jobs/Settings render at a higher z-index than #drawer (69/65 vs 60),
+  // so they genuinely stack on top of a peeked Lock-In or expanded
+  // Inventory view -- closing the drawer first would needlessly lose that
+  // view just to check the to-do list or a setting, then (with nothing
+  // left remembering it, since neither ever touches screen/current) leave
+  // the player stranded back on the map once Jobs/Settings closes rather
+  // than back where they actually were. Codex/Pins/Convert render BELOW
+  // #drawer, so those still close it first as before -- Codex separately
+  // remembers and restores it instead (see codexReturnDrawerPeeked).
+  if (open === "drawer" && (name === "jobs" || name === "settings")){ openFn(); return; }
   if (open && open !== "market" && open !== "codex") closePanelByName(open);
   openFn();
 }
@@ -14499,7 +14538,15 @@ document.getElementById("hubInv").addEventListener("click", () => {
 });
 document.getElementById("hubCodex").addEventListener("click", () => {
   const fromMarket = screen === "market";
-  hubPanelClick("codex", () => { codexReturnScreen = fromMarket ? "market" : null; screen = "codex"; render(true); });
+  // Captured before hubPanelClick()'s own closePanelByName("drawer") call
+  // (triggered when openPanelName() reports "drawer") can close it -- see
+  // codexReturnDrawerPeeked's own comment.
+  const drawerPeeked = drawer.classList.contains("open") ? !drawer.classList.contains("expanded") : null;
+  hubPanelClick("codex", () => {
+    codexReturnScreen = fromMarket ? "market" : null;
+    codexReturnDrawerPeeked = drawerPeeked;
+    screen = "codex"; render(true);
+  });
 });
 document.getElementById("hubSettings").addEventListener("click", () => hubPanelClick("settings", openSettings));
 document.getElementById("hubJobs").addEventListener("click", () => hubPanelClick("jobs", openJobBoard));
