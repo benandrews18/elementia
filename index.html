@@ -4842,21 +4842,13 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 }
 .mm-pip :is(img,svg){width:16px; height:16px}
 /* Revised 2026-09-14: "lit" (this pip/station is part of a live combo)
-   used to be just a thin static gold ring -- now a visibly bigger halo
-   that gently breathes, so a combo-carrying icon reads as active at a
-   glance instead of needing a close look to notice the thin ring. Shared
-   by .mm-pip and .mm-station (see below) since both use the exact same
-   "combo lit" language. transform:scale is safe here -- both are fixed-
-   size flex/absolute badges, never part of a layout a bigger box would
-   reflow. */
-@keyframes comboLitPulse{
-  0%, 100%{ box-shadow:0 0 0 2.5px var(--gold), 0 0 8px rgba(226,178,90,.8); transform:scale(1); }
-  50%{ box-shadow:0 0 0 4.5px var(--gold), 0 0 15px rgba(226,178,90,1); transform:scale(1.12); }
-}
-.mm-pip.lit, .mm-station.lit{ animation:comboLitPulse 1.6s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce){
-  .mm-pip.lit, .mm-station.lit{ animation:none; box-shadow:0 0 0 3.5px var(--gold), 0 0 10px rgba(226,178,90,.9); }
-}
+   used to be just a thin static gold ring -- now a visibly bigger halo, so
+   a combo-carrying icon reads as active at a glance instead of needing a
+   close look to notice the thin ring. Shared by .mm-pip and .mm-station
+   (see below) since both use the exact same "combo lit" language.
+   Revised 2026-09-13: dropped the pulsing/breathing animation this halo
+   briefly had -- static only, per direct request. */
+.mm-pip.lit, .mm-station.lit{ box-shadow:0 0 0 3.5px var(--gold), 0 0 10px rgba(226,178,90,.9); }
 .mm-icon{font-size:44px; line-height:1; margin-top:3px}
 .mm-icon :is(img,svg){width:44px; height:44px; object-fit:contain}
 .mm-name{
