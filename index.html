@@ -2444,24 +2444,26 @@ body[data-screen="market"] #trackedPill{display:none}
    for the filter tray, plain <span>s here instead of that tray's own
    tappable buttons. */
 #lockInQuarkTutorial{
-  display:flex; flex-direction:column; gap:3px; max-width:340px;
-  color:var(--ink2); font-size:11.5px; font-weight:600; line-height:1.3;
+  display:flex; flex-direction:column; gap:4px; max-width:340px;
+  color:var(--ink2); font-size:12px; font-weight:600; line-height:1.3;
 }
 #lockInQuarkTutorial .liqt-icons{
-  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:3px; margin:1px 0;
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:5px; margin:1px 0;
 }
+/* "medium size" per direct request -- same 24px a station/suit icon
+   already reads at elsewhere on this same screen (see .mat-fbtn). */
 #lockInQuarkTutorial .liqt-ic{
-  width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  font-size:10px; background:var(--st, var(--suit, #4a4f5c)); flex:none;
+  width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:14px; background:var(--st, var(--suit, #4a4f5c)); flex:none;
 }
-#lockInQuarkTutorial .liqt-ic :is(img,svg){width:11px; height:11px}
-/* Second line ("Earn bonus dice for your next station from your Quark
-   Score.") reads quieter than the first -- an explanation of the
-   mechanic, not a second instruction competing with "Lock-In your
-   Display Mat to continue." */
+#lockInQuarkTutorial .liqt-ic :is(img,svg){width:16px; height:16px}
+/* Revised 2026-09-14: two short lines now (was one longer sentence) --
+   "Generate Quarks..."/"More Quarks = More Elements..." -- so this needs
+   to stack, not sit in a single row. Still reads quieter than
+   #lockInBannerText's own instruction above it. */
 #lockInBannerText .libt-sub{
-  display:flex; align-items:center; justify-content:center; gap:6px;
-  font-weight:700; font-size:15px; color:var(--ink2); margin-top:2px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-weight:700; font-size:14px; color:var(--ink2); margin-top:4px;
 }
 #scrim.open{display:block}
 /* Bottom sheet now (was a right-side slide-in) -- same slide-up-from-
@@ -15570,23 +15572,25 @@ function emptyElSquareHTML(px){
   return `<span class="empty-el-square" style="width:${px}px; height:${px}px; font-size:${Math.round(px * 0.55)}px" title="Empty Element">?<span class="el-suit-badge" style="--suit:#000; width:${suitBadgePx}px; height:${suitBadgePx}px"></span></span>`;
 }
 // One-time fill-in for #lockInBanner's own static second line. Revised
-// 2026-09-13 (twice): the reward decides dice for the next station now,
-// not an Empty Element (see finishLockIn()'s own comment) -- and it's not
-// purely upside any more either (miss the first Quark breakpoint and you
-// lose one), so this names the mechanic plainly rather than promising
-// only a gain.
-document.getElementById("lockInBannerSub").textContent =
-  "Your Quark Score sets your dice at the next station.";
+// 2026-09-14: simplified to two short lines per direct request, replacing
+// the earlier single sentence -- still names the mechanic plainly (reward
+// decides dice for the next station, see finishLockIn()'s own comment)
+// without the longer wording.
+document.getElementById("lockInBannerSub").innerHTML =
+  `<span>⚛️ Generate Quarks from your Card Display.</span>` +
+  `<span>🎲 More Quarks = More Elements at the next Station</span>`;
 // One-time fill-in, same idea as #lockInBannerSub just above -- a short
 // explainer for how Quark Score actually adds up, reusing the exact
 // station/suit icon markup buildMatFilterBar() already draws for the
 // filter tray (plain <span>s here, not that tray's own tappable buttons,
-// so these never wire into its click delegation).
+// so these never wire into its click delegation). Simplified 2026-09-14
+// per direct request -- shorter lines, medium (24px) icons instead of the
+// earlier compressed 17px, dropped the Collection Bonuses mention (not
+// part of the new copy).
 document.getElementById("lockInQuarkTutorial").innerHTML = `
-  <div>⚛️ Quark Score = Display Score × Combo Multiplier</div>
-  <div>✅ A complete item recipe rewards DOUBLE points for that item</div>
-  <div>🔍 Experiment with combinations to discover hidden Collection Bonuses</div>
-  <div>Combo Multiplier is added by matching 3+ of these icons on your cards:</div>
+  <div>Quark Score = Display Score × Combo Multiplier</div>
+  <div>Complete item recipes DOUBLE the points for that item!</div>
+  <div>Build Combo Multiplier by matching 3+ icons</div>
   <div class="liqt-icons">${Object.keys(STATION_BY_NAME).map(s => {
     const m = STATION_BY_NAME[s];
     return `<span class="liqt-ic" style="--st:${DATA.suits[m.suit].color}" title="${esc(s)}">${em(m.emoji)}</span>`;
