@@ -587,20 +587,6 @@ body[data-screen="market"] #trackedPill{display:none}
    already communicates by itself. */
 #quickConvertBtn .converticon{width:34px; height:34px}
 
-/* Map screen's own Collections entry point -- top corner, not the bottom
-   hub tier: #pinsBtn/#quickConvertBtn already own both bottom corners
-   (see their own comments), and the fixed 5-button #hub has no spare
-   slot. Only ever present while screen === "map" (part of renderMap()'s
-   own returned markup, see mapCollectionsBtnHTML() there), so it doesn't
-   need its own screen-guard here. */
-.map-collections-btn{
-  position:fixed; top:max(12px, env(safe-area-inset-top)); right:12px; z-index:40;
-  display:flex; align-items:center; gap:5px; padding:8px 12px; border-radius:999px;
-  background:var(--card); border:2px solid var(--gold); color:var(--ink);
-  font-size:14px; font-weight:800; box-shadow:0 4px 14px rgba(0,0,0,.28);
-}
-.map-collections-btn span{font-variant-numeric:tabular-nums; color:var(--gold)}
-
 /* Pinned-items tray -- rests just above the hub already (same bottom
    offset #jobSheet uses). z-index 33 -- ABOVE Convert's own floating
    button (.floatbtn's 32; the tray covers it while open), but BELOW
@@ -5686,11 +5672,13 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      prefs.everUnlockedMatCollections/matComboChipsHTML()'s own "discovery"
      comment). Modeled on #matLayoutsOverlay/#history just above: same
      sheetbox/hist-header shell -- no export button though, this list isn't
-     something a player edits or shares. Reachable from the new 🏆 button
-     on the Map screen (see mapCollectionsBtnHTML() in renderMap()).
-     Deliberately never renders anything for a STILL-locked collection --
-     not even a "???" placeholder row -- the count alone (renderCollectionsList())
-     communicates how many remain undiscovered. -->
+     something a player edits or shares. Reachable from the 🏆 Collections
+     button on the welcome screen (#tourCollectionsBtn, alongside Mini-Games/
+     Combo Lab -- see its own click handler, same behind-settings layering
+     #tourSettingsBtn already uses so #tour stays underneath rather than
+     closing). Deliberately never renders anything for a STILL-locked
+     collection -- not even a "???" placeholder row -- the count alone
+     (renderCollectionsList()) communicates how many remain undiscovered. -->
 <div class="overlay" id="collectionsOverlay" role="dialog" aria-modal="true" aria-labelledby="collectionsTitle">
   <div class="sheetbox">
     <h2 id="collectionsTitle">🏆 Collections</h2>
@@ -5851,6 +5839,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
       <button type="button" id="tourPlayBtn" class="bigbtn">▶ Play</button>
       <button type="button" id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
       <button type="button" id="tourComboLabBtn" class="bigbtn sec">🧪 Combo Lab</button>
+      <button type="button" id="tourCollectionsBtn" class="bigbtn sec">🏆 Collections</button>
       <button type="button" id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
@@ -10544,20 +10533,7 @@ function renderMap(){
   // to draw connections from.
   const pathsHTML = state.lastStation === null ? "" : mapPathsHTML(state.lastStation);
 
-  // Neither the fixed 5-button #hub nor the two existing floating corner
-  // buttons (#pinsBtn/#quickConvertBtn, both bottom corners already
-  // spoken for) have room for a permanent Collections entry point --
-  // fixed-position and part of this screen's own markup (only ever
-  // present while screen === "map") rather than global hub chrome.
-  // Delegated click (handleScreenClick()'s own #mapCollectionsBtn check)
-  // since this button is torn down and rebuilt on every render() like the
-  // rest of this screen.
-  const collectionsBtnHTML = `<button type="button" id="mapCollectionsBtn" class="map-collections-btn"
-      title="Collections" aria-label="Collections, ${prefs.everUnlockedMatCollections.length} of ${MAT_COLLECTIONS.length} unlocked">
-    🏆 <span>${prefs.everUnlockedMatCollections.length}/${MAT_COLLECTIONS.length}</span>
-  </button>`;
-
-  return `${collectionsBtnHTML}${cardHTML}
+  return `${cardHTML}
     ${banner}
     <div class="map-canvas" data-map-bg>${pathsHTML}<div class="map-nodes">${nodesHTML}</div>${hint}</div>`;
 }
@@ -13937,8 +13913,6 @@ function handleScreenClick(ev){
 
   if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
 
-  if (ev.target.closest("#mapCollectionsBtn")){ openCollectionsOverlay(); return; }
-
   if (ev.target.closest("#emptyElBadgeBtn")){
     emptyElCashInMode ? exitEmptyElCashIn() : enterEmptyElCashIn();
     return;
@@ -15591,7 +15565,7 @@ document.getElementById("lockInQuarkTutorial").innerHTML = `
   <div>Quark Score = Display Score × Combo Multiplier</div>
   <div>Complete item recipes DOUBLE the points for that item!</div>
   <div>Build Combo Multiplier by matching 3+ icons</div>
-  <div class="liqt-icons">${Object.keys(STATION_BY_NAME).map(s => {
+  <div class="liqt-icons">${Object.keys(MAP_NODE_POS).map(s => {
     const m = STATION_BY_NAME[s];
     return `<span class="liqt-ic" style="--st:${DATA.suits[m.suit].color}" title="${esc(s)}">${em(m.emoji)}</span>`;
   }).join("")}</div>
@@ -16214,14 +16188,21 @@ function renderCollectionsList(){
       </div>
     </div>`).join("")}</div>`;
 }
+// Reached only from the welcome screen now (#tourCollectionsBtn, alongside
+// Mini-Games/Combo Lab) -- same behind-settings layering #tourSettingsBtn
+// already uses (see its own comment) so #tour drops behind this overlay
+// instead of closing outright, then comes back above it once this closes.
 function openCollectionsOverlay(){
   renderCollectionsList();
+  document.getElementById("tour").classList.add("behind-settings");
   openOverlay("collectionsOverlay");
 }
 function closeCollectionsOverlay(){
   closeOverlay("collectionsOverlay");
+  document.getElementById("tour").classList.remove("behind-settings");
 }
 document.getElementById("collectionsClose").addEventListener("click", closeCollectionsOverlay);
+document.getElementById("tourCollectionsBtn").addEventListener("click", openCollectionsOverlay);
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
 document.getElementById("matLayoutName").addEventListener("keydown", ev => {
   if (ev.key === "Enter") saveMatLayout();
