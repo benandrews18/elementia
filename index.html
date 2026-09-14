@@ -4815,11 +4815,23 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   font-size:10.5px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
 }
-.mm-station{
-  position:absolute; bottom:-3px; right:-3px; z-index:2; width:30px; height:30px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:16.5px;
+/* Revised 2026-09-14: was a single badge pinned to the bottom-right
+   corner -- now a row of one-per-real-home-station (see MAT_CARDS' own
+   comment), centered along the card's bottom edge instead, since a
+   recurring raw material can have 2-3 of these at once and a single
+   corner slot can only ever hold one. Sized down a touch (26px, was 30px)
+   so 3 across still fits comfortably without crowding a normal-width mat
+   card; still poking slightly past the card's own bottom edge (-3px),
+   matching .mm-pts/.mm-pips' existing "corner badge" language. */
+.mm-stations{
+  position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; align-items:center; justify-content:center; gap:3px;
 }
-.mm-station :is(img,svg){width:19.5px; height:19.5px; object-fit:contain}
+.mm-station{
+  width:26px; height:26px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:14.5px;
+}
+.mm-station :is(img,svg){width:17px; height:17px; object-fit:contain}
 .mm-station.lit{box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(226,178,90,.85)}
 /* No more "ON MAT" pill -- the faded filter below already reads as
    "already placed" on its own; a label repeating the same fact was
@@ -8132,12 +8144,25 @@ const MAT_COMBO_TIERS = [ {k:3, b:1}, {k:4, b:2}, {k:5, b:4}, {k:6, b:6} ];
 const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   const station = CORE_ITEM_STATION[name];
   const entry = ENTRIES.find(e => e.name === name && e.station === station);
+  // Every real "home" station for this item, not just CORE_SET's own
+  // single curated pick -- a recurring raw material (Water, Clay, Glass,
+  // Steel, ...) is genuinely sold at 2-3 stations at once, and the mat
+  // card now shows/combos against every one of them, not just the one
+  // CORE_ITEM_STATION happens to point at. Canonical station first (still
+  // what a few callers -- shop-list sorting, the fixed set of filter-tray
+  // chips -- key off as the one deterministic "home"), then any others in
+  // whatever order ENTRIES lists them, deduped. STATION_BY_NAME guard
+  // drops the rare sub-zone ENTRIES row (planets etc., not a real station
+  // this card's icon row could render).
+  const stations = [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]
+    .filter((s, i, arr) => STATION_BY_NAME[s] && arr.indexOf(s) === i);
   return {
     name,
     points: ITEM_POINTS[name],
     tier: ITEM_TIER[name],
     emoji: ITEM_EMOJI[name],
     station,
+    stations,
     pips: itemSuitCosts(name),
     components: entry ? entry.reqs : [],
   };
@@ -8180,7 +8205,12 @@ const matDirectItems = c => new Set(c.components.filter(x => x.kind === "item").
 function matGroupsOf(mat){
   const st = {}, su = {}, cp = {};
   mat.forEach(c => {
-    st[c.station] = (st[c.station] || 0) + 1;
+    // Every home station this card is actually sold at (see MAT_CARDS'
+    // own comment), not just its one canonical pick -- a card sold at 2-3
+    // stations is eligible to complete a combo at ANY of them
+    // simultaneously, same card counting toward more than one station's
+    // tally at once.
+    c.stations.forEach(s => { st[s] = (st[s] || 0) + 1; });
     // Every pip counts, not just every distinct suit -- a card carrying
     // two organic pips (e.g. Fruit Cake) contributes 2 to the organic
     // count, not 1, same as if two separate organic cards were on the
@@ -14636,9 +14666,17 @@ function matCardHTML(name, opts = {}){
   const pts = opts.complete ? c.points * 2 : c.points;
   const pipsHTML = c.pips.map(s =>
     `<span class="mm-pip${matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
-  const stMeta = STATION_BY_NAME[c.station];
-  const stColor = DATA.suits[stMeta.suit].color;
-  const stLit = matLive.station.has(c.station) ? " lit" : "";
+  // One badge per real home station (see MAT_CARDS' own comment) -- a
+  // recurring raw material sold at 2-3 stations shows/lights up all of
+  // them at once, each independently, since the card is simultaneously
+  // eligible for a combo at any of them (see matGroupsOf()). Most items
+  // still have just the one.
+  const stationsHTML = c.stations.map(stName => {
+    const stMeta = STATION_BY_NAME[stName];
+    const stColor = DATA.suits[stMeta.suit].color;
+    const stLit = matLive.station.has(stName) ? " lit" : "";
+    return `<span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(stName)}">${em(stMeta.emoji)}</span>`;
+  }).join("");
   // No .cap modifier any more -- capstones no longer get a distinct gold
   // border, so the class had nothing left to do.
   // "wide" (tray context only -- the Display Mat's own 8-slot grid already
@@ -14649,12 +14687,12 @@ function matCardHTML(name, opts = {}){
                opts.tray && onMat ? "on" : "",
                opts.tray && matIsCapstone(c) ? "wide" : "", opts.cls || ""].join(" ");
   return `<button type="button" class="${cls}" data-mat-card="${esc(name)}"
-      title="${esc(name)} — ${c.points} pts${opts.complete ? ` (doubled to ${pts} -- every ingredient is on the mat)` : ""}, ${esc(c.station)}">
+      title="${esc(name)} — ${c.points} pts${opts.complete ? ` (doubled to ${pts} -- every ingredient is on the mat)` : ""}, ${c.stations.map(esc).join(" / ")}">
     <span class="mm-pts">${pts}</span>
     ${pipsHTML ? `<span class="mm-pips">${pipsHTML}</span>` : ""}
     <span class="mm-icon">${em(c.emoji)}</span>
     <span class="mm-name">${esc(name)}</span>
-    <span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(c.station)}">${em(stMeta.emoji)}</span>
+    <span class="mm-stations">${stationsHTML}</span>
   </button>`;
 }
 
@@ -14862,7 +14900,7 @@ function confirmLockIn(){
    bounce the right cards alongside their chip. */
 function matCardsForCombo(kind, name){
   const mat = matOnMat();
-  if (kind === "station") return mat.filter(c => c.station === name);
+  if (kind === "station") return mat.filter(c => c.stations.includes(name));
   if (kind === "suit") return mat.filter(c => c.pips.includes(name));
   if (kind === "component") return mat.filter(c => c.name === name || matDirectItems(c).has(name));
   if (kind === "collection"){
@@ -15302,7 +15340,11 @@ function renderMatTop(){
 let matFilt = { stations: new Set(), suits: new Set(), q: "", sort: "points" };
 function matVisibleInventory(){
   let list = matInventory();
-  if (matFilt.stations.size) list = list.filter(c => matFilt.stations.has(c.station));
+  // .some(), same pattern as the suit filter right below (c.pips is
+  // multi-valued too) -- a multi-home item (see MAT_CARDS' own comment)
+  // matches a station filter through ANY of its real homes, not just its
+  // one canonical pick.
+  if (matFilt.stations.size) list = list.filter(c => c.stations.some(s => matFilt.stations.has(s)));
   if (matFilt.suits.size)    list = list.filter(c => c.pips.some(p => matFilt.suits.has(p)));
   if (matFilt.q){
     const q = matFilt.q.toLowerCase();
