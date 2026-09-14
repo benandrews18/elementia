@@ -587,6 +587,20 @@ body[data-screen="market"] #trackedPill{display:none}
    already communicates by itself. */
 #quickConvertBtn .converticon{width:34px; height:34px}
 
+/* Map screen's own Collections entry point -- top corner, not the bottom
+   hub tier: #pinsBtn/#quickConvertBtn already own both bottom corners
+   (see their own comments), and the fixed 5-button #hub has no spare
+   slot. Only ever present while screen === "map" (part of renderMap()'s
+   own returned markup, see mapCollectionsBtnHTML() there), so it doesn't
+   need its own screen-guard here. */
+.map-collections-btn{
+  position:fixed; top:max(12px, env(safe-area-inset-top)); right:12px; z-index:40;
+  display:flex; align-items:center; gap:5px; padding:8px 12px; border-radius:999px;
+  background:var(--card); border:2px solid var(--gold); color:var(--ink);
+  font-size:14px; font-weight:800; box-shadow:0 4px 14px rgba(0,0,0,.28);
+}
+.map-collections-btn span{font-variant-numeric:tabular-nums; color:var(--gold)}
+
 /* Pinned-items tray -- rests just above the hub already (same bottom
    offset #jobSheet uses). z-index 33 -- ABOVE Convert's own floating
    button (.floatbtn's 32; the tray covers it while open), but BELOW
@@ -2406,16 +2420,41 @@ body[data-screen="market"] #trackedPill{display:none}
    slide transition) but above #scrim/the map underneath. bottom is set in
    JS to the drawer's live top edge -- top:0 plus that is what makes this
    read as "everything above the tray", not a fixed-height banner. */
+/* justify-content:flex-start, not center -- with #lockInQuarkTutorial's
+   content added this box can now genuinely overflow a short viewport, and
+   centering a taller-than-container flex column clips content
+   symmetrically from BOTH ends (a well-known flexbox+overflow quirk),
+   hiding the top half behind an unscrolled top edge even with
+   overflow-y:auto set. flex-start always keeps #lockInBannerText's own
+   instruction visible first and lets the tutorial block scroll below it. */
 #lockInBanner{
   display:none; position:fixed; left:0; right:0; top:0; z-index:59;
-  flex-direction:column; align-items:center; justify-content:center; gap:14px;
-  padding:24px 28px; text-align:center;
+  flex-direction:column; align-items:center; justify-content:flex-start; gap:10px;
+  padding:16px 28px; text-align:center; overflow-y:auto;
   background:rgba(10,14,20,.92); border-bottom:3px solid var(--gold);
 }
 #lockInBanner.show{display:flex}
 #lockInBannerText{
   margin:0; color:#fff; font-weight:800; font-size:19px; line-height:1.5;
 }
+/* One-time-filled (see the script's own init call) explanation of Quark
+   Score math -- kept small/quiet, well below #lockInBannerText's own
+   instruction, since it's reference material, not the main prompt. Icon
+   rows reuse the exact station/suit icon markup buildMatFilterBar() draws
+   for the filter tray, plain <span>s here instead of that tray's own
+   tappable buttons. */
+#lockInQuarkTutorial{
+  display:flex; flex-direction:column; gap:3px; max-width:340px;
+  color:var(--ink2); font-size:11.5px; font-weight:600; line-height:1.3;
+}
+#lockInQuarkTutorial .liqt-icons{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:3px; margin:1px 0;
+}
+#lockInQuarkTutorial .liqt-ic{
+  width:17px; height:17px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:10px; background:var(--st, var(--suit, #4a4f5c)); flex:none;
+}
+#lockInQuarkTutorial .liqt-ic :is(img,svg){width:11px; height:11px}
 /* Second line ("Earn bonus dice for your next station from your Quark
    Score.") reads quieter than the first -- an explanation of the
    mechanic, not a second instruction competing with "Lock-In your
@@ -2826,6 +2865,13 @@ body[data-screen="market"] #trackedPill{display:none}
 .histscore{font-weight:800; font-size:13.5px; color:var(--gold); white-space:nowrap}
 .histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
 .histnone{font-size:13px; color:var(--mute); font-weight:700}
+/* Collections list -- reuses .histrows/.histentry's own scrollable
+   bordered-row shell (see above), just a plain read-only body instead of
+   a tappable .histrow (nothing to load/delete/drill into here). */
+.collection-row{padding:10px 13px; display:flex; flex-direction:column; gap:3px}
+.collection-row .cr-name{font-weight:800; font-size:13.5px; color:var(--collection)}
+.collection-row .cr-items{font-size:12px; color:var(--mute)}
+.collection-row .cr-bonus{font-size:12px; font-weight:800; color:var(--gold)}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
 .histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
 .histturns{display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto}
@@ -4532,6 +4578,13 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 }
 .mm-combo.col b{font-size:11px; font-weight:800; white-space:nowrap}
 .mm-combo.col i{font-style:normal; font-size:11px; font-weight:800}
+/* A collection chip playLockInSequence() has placed in the DOM ahead of
+   its own reveal beat (see matComboChipsHTML()) -- invisible but already
+   taking its final layout position, so un-hiding it at the right moment
+   reads as a reveal rather than a layout jump. transform/opacity only
+   (no display:none) so bouncePulse()'s own transform animation still
+   applies cleanly once revealed. */
+.mm-combo.col.discovering{opacity:0; transform:scale(.4)}
 .mm-cico{width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:16.5px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
 .mm-cico :is(img,svg){width:18px; height:18px}
@@ -4994,6 +5047,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      rather than being baked into this static markup. -->
 <div id="lockInBanner" aria-hidden="true">
   <p id="lockInBannerText">Lock-In your Display Mat to continue.<span class="libt-sub" id="lockInBannerSub"></span></p>
+  <div id="lockInQuarkTutorial"></div>
 </div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">
   <div class="dhead">
@@ -5196,10 +5250,10 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
          opened from outside the tray) -- those keep the original layout. -->
     <div class="pc-mat-toggles" id="cpMatToggles" hidden>
       <button type="button" class="pc-mat-toggle-btn place" id="cpPlaceBtn" aria-label="Add to Display Mat">
-        <span class="pc-mat-toggle-ic">+</span>Place on Mat
+        <span class="pc-mat-toggle-ic">+</span>Add
       </button>
       <button type="button" class="pc-mat-toggle-btn remove" id="cpRemoveBtn" aria-label="Remove from Display Mat">
-        <span class="pc-mat-toggle-ic">−</span>Remove from Mat
+        <span class="pc-mat-toggle-ic">−</span>Remove
       </button>
       <button type="button" class="pc-mat-toggle-btn close" id="cpMatCloseBtn" aria-label="Close">
         <span class="pc-mat-toggle-ic">✕</span>Close
@@ -5623,6 +5677,24 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
     </div>
     <div id="matLayoutsList"></div>
     <div class="btnrow"><button type="button" class="bigbtn sec" id="matLayoutsClose">Close</button></div>
+  </div>
+</div>
+
+<!-- Named Display Mat collections ever discovered (see
+     prefs.everUnlockedMatCollections/matComboChipsHTML()'s own "discovery"
+     comment). Modeled on #matLayoutsOverlay/#history just above: same
+     sheetbox/hist-header shell -- no export button though, this list isn't
+     something a player edits or shares. Reachable from the new 🏆 button
+     on the Map screen (see mapCollectionsBtnHTML() in renderMap()).
+     Deliberately never renders anything for a STILL-locked collection --
+     not even a "???" placeholder row -- the count alone (renderCollectionsList())
+     communicates how many remain undiscovered. -->
+<div class="overlay" id="collectionsOverlay" role="dialog" aria-modal="true" aria-labelledby="collectionsTitle">
+  <div class="sheetbox">
+    <h2 id="collectionsTitle">🏆 Collections</h2>
+    <p id="collectionsCount"></p>
+    <div id="collectionsList"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="collectionsClose">Close</button></div>
   </div>
 </div>
 
@@ -7990,17 +8062,24 @@ const CORE_SET = new Set([
   "The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
   "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Oven",
   "The Bakery|Apple Pie","The Bakery|Fish Cakes","The Bakery|Banana Bread","The Bakery|Fruit Cake",
-  // The City (10 + capstone). Statue cut outright (nothing else in core
-  // depended on it); Glass's core listing moved in from Power Plant to
-  // fill the slot instead, net zero change to City's own count. Sushi
-  // Restaurant swapped for Museum -- Museum's recipe was changed to
-  // Building + Telescope + Fossil (see build_guide.py), which gives
-  // Fossil and Telescope their first real use in Classic Mode; Seaweed
-  // and Salmon (Sushi Restaurant's own ingredients) were already
-  // core-connected via Orca/Coral Reef/Ecosystem regardless.
+  // The City (12 + capstone -- above the usual 10, a deliberate exception:
+  // Motorcycle and Sushi Restaurant were added 2026-09-14 specifically to
+  // support new named Display Mat collections built around them, on top
+  // of the existing 10+capstone rather than displacing anything). Statue
+  // cut outright (nothing else in core depended on it); Glass's core
+  // listing moved in from Power Plant to fill the slot instead, net zero
+  // change to City's own original count. Sushi Restaurant was originally
+  // swapped for Museum (Museum's recipe was changed to Building +
+  // Telescope + Fossil, see build_guide.py, giving Fossil and Telescope
+  // their first real use in Classic Mode) but is now back in alongside
+  // Museum rather than instead of it -- both Sushi Restaurant and
+  // Motorcycle's own recipes use only items already core here or at
+  // other stations (Seaweed+Salmon+Building; Bicycle+Engine+Fiberglass),
+  // so neither needed a recipe change to become reachable in Classic.
   "The City|Clay","The City|Limestone","The City|Steel","The City|Concrete",
   "The City|Bridge","The City|Building","The City|Helicopter","The City|Museum",
   "The City|Skyscraper","The City|Glass","The City|Metropolis",
+  "The City|Motorcycle","The City|Sushi Restaurant",
   // The Observatory (10 + capstone, Glass trimmed, +Wheel)
   "The Observatory|Microchip","The Observatory|Tools","The Observatory|Magnet",
   "The Observatory|Compass","The Observatory|Satellite Dish","The Observatory|Telescope",
@@ -8320,32 +8399,87 @@ function matIsComplete(c, mat){
   return [...need].every(n => names.has(n));
 }
 
-/* Hand-curated named sets, ported as-is from the cardgame/mat.html
-   prototype (already checked there against the Classic 79). "Five cards
-   from one station" is already what the combo multiplier pays for, so a
-   collection instead asks for a specific, memorable set worth building
-   toward over most of a run -- the identity the Bingo card already
-   supplies for a normal run, here for anyone using the mat instead. */
+/* Replaced 2026-09-14 with a 69-collection set the player hand-reviewed
+   (approve/edit/reject/add-their-own) against a 100-collection proposal --
+   see Elementia_Handoff/mat_collections_approved.csv for the source list
+   this was transcribed from verbatim (every item name and slot-fit was
+   validated live against matOccupancy()/MAT_CARD_BY_NAME before landing
+   here). Two members (Motorcycle, Sushi Restaurant) only resolve because
+   of the CORE_SET additions right above this file's own MAT_CARDS/
+   CORE_SET section -- see that comment for why they were added. Spans
+   sizes 2-8; unlike the old hand-curated set this one is meant to be
+   *discovered*, not visible up front -- see prefs.everUnlockedMatCollections
+   and renderMatTop()'s own filtering of this same list's chips. */
 const MAT_COLLECTIONS_RAW = [
-  { id:"deeptime",  name:"Deep Time",        items:["Fossil","Bone","Diamond","DNA","Clay"] },
-  { id:"starchart", name:"Star Charts",      items:["Star","Telescope","Satellite Dish","Rocket","Space Station"] },
-  { id:"rolling",   name:"Rolling Stock",    items:["Car","Helicopter","Speedboat","Maglev Train","Tractor"] },
-  { id:"bakery",    name:"The Bakery Line",  items:["Flour","Dough","Yeast","Bread","Oven"] },
-  { id:"sweet",     name:"Sweet Tooth",      items:["Sugar","Cake","Banana Bread","Fruit Cake","Apple"] },
-  { id:"alloys",    name:"Alloy Works",      items:["Steel","Stainless Steel","Aluminum Alloy","Titanium Alloy","Fiberglass"] },
-  { id:"livewire",  name:"Live Wire",        items:["Wire","Battery","Microchip","Computer","Light Bulb"] },
-  { id:"skyline",   name:"Skyline",          items:["Concrete","Glass","Building","Skyscraper","Metropolis"] },
-  { id:"openwater", name:"Open Water",       items:["Water","Seaweed","Salmon","Orca","Coral Reef"] },
-  { id:"homestead", name:"The Homestead",    items:["Farm","Grain","Chicken","Log Cabin","Homestead"] },
-  { id:"wild",      name:"Wild Things",      items:["Deer","Salmon","Orca","Chicken","Tree"] },
-  { id:"weather",   name:"Weather Front",    items:["Cloud","Rainbow","Star","Water"] },
-  { id:"instrum",   name:"Fine Instruments", items:["Clock","Compass","Magnet","Telescope"] },
-  { id:"growth",    name:"Green Growth",     items:["Soil","Tree","Seaweed","Grain","Farm"] },
-  { id:"powergrid", name:"Power Grid",       items:["Battery","Solar Panel","Turbine Blade","Engine","Light Bulb"] },
-  { id:"firstlight",name:"First Light",      items:["Furnace","Glass","Light Bulb","Star","Lighthouse"] },
-  { id:"machine",   name:"The Machine",      items:["Engine","Wheel","Rubber","Tools","Robot"] },
-  { id:"genesis",   name:"Genesis",          items:["DNA","Egg","Life","Ecosystem","Tree"] },
-  { id:"flight",    name:"Flight",           items:["Rocket","Helicopter","Satellite Dish","Turbine Blade","Compass"] },
+  { id:"fruits",                  name:"Fruits",                  items:["Apple","Banana"] },
+  { id:"people-power",            name:"People Power",            items:["Canoe","Bicycle"] },
+  { id:"alloys",                  name:"Alloys",                  items:["Steel","Aluminum Alloy","Stainless Steel"] },
+  { id:"bedrock",                 name:"Bedrock",                 items:["Clay","Sand","Limestone"] },
+  { id:"bridge-bond",             name:"Bridge & Bond",           items:["Concrete","Steel","Tree"] },
+  { id:"calcium-creations",       name:"Calcium Creations",       items:["Bone","Egg","Limestone"] },
+  { id:"closed-circuit",          name:"Closed Circuit",          items:["Battery","Wire","Light Bulb"] },
+  { id:"daily-commute",           name:"Daily Commute",           items:["Car","Bicycle","Maglev Train"] },
+  { id:"deep-earth",              name:"Deep Earth",              items:["Diamond","Fossil","Limestone"] },
+  { id:"early-explorers",         name:"Early Explorers",         items:["Canoe","Compass","Star"] },
+  { id:"electromagnet",           name:"Electromagnet",           items:["Wire","Magnet","Battery"] },
+  { id:"farmstead-feast",         name:"Farmstead Feast",         items:["Chicken","Egg","Apple Pie"] },
+  { id:"flora",                   name:"Flora",                   items:["Tree","Grain","Seaweed"] },
+  { id:"foundry-basics",          name:"Foundry Basics",          items:["Steel","Furnace","Tools"] },
+  { id:"greenhouse",              name:"Greenhouse",              items:["Log Cabin","Glass","Star"] },
+  { id:"greenhouse-start",        name:"Greenhouse Start",        items:["Soil","Grain","Farm"] },
+  { id:"hydrocarbons",            name:"Hydrocarbons",            items:["Sugar","Seaweed","Tree"] },
+  { id:"lab-bench",               name:"Lab Bench",               items:["Microchip","Light Bulb","Engine"] },
+  { id:"morning-bake",            name:"Morning Bake",            items:["Egg","Banana","Dough"] },
+  { id:"nautical-trio",           name:"Nautical Trio",           items:["Canoe","Orca","Salmon"] },
+  { id:"off-grid-home",           name:"Off-Grid Home",           items:["Log Cabin","Oven","Light Bulb"] },
+  { id:"perfect-circle",          name:"Perfect Circle",          items:["Clock","Compass","Wheel"] },
+  { id:"prosthesis",              name:"Prosthesis",              items:["Bone","Aluminum Alloy","Stainless Steel"] },
+  { id:"shelter-from-the-storm",  name:"Shelter from the Storm",  items:["Log Cabin","Lighthouse","Building"] },
+  { id:"sky-survey",              name:"Sky Survey",              items:["Telescope","Satellite Dish","Rocket"] },
+  { id:"sourdough",               name:"Sourdough",               items:["Flour","Water","Yeast"] },
+  { id:"special-exhibit",         name:"Special Exhibit",         items:["Museum","Canoe","Clay"] },
+  { id:"stargazers-kit",          name:"Stargazer's Kit",         items:["Telescope","Compass","Star"] },
+  { id:"to-the-skies",            name:"To the Skies",            items:["Helicopter","Rocket","Cloud"] },
+  { id:"transparency",            name:"Transparency",            items:["Glass","Plastic","Diamond"] },
+  { id:"wind-power",              name:"Wind Power",              items:["Tree","Turbine Blade","Battery"] },
+  { id:"wooden-wonders",          name:"Wooden Wonders",          items:["Log Cabin","Canoe","Wheel"] },
+  { id:"working-vehicles",        name:"Working Vehicles",        items:["Helicopter","Tractor","Maglev Train"] },
+  { id:"ancient-ground",          name:"Ancient Ground",          items:["Fossil","Diamond","Limestone","Magnet"] },
+  { id:"beach-town",              name:"Beach Town",              items:["Speedboat","Lighthouse","Bicycle","Fish Cakes"] },
+  { id:"cabin-life",              name:"Cabin Life",              items:["Log Cabin","Tree","Deer","Fossil"] },
+  { id:"concrete-jungle",         name:"Concrete Jungle",         items:["Concrete","Building","Skyscraper","Museum"] },
+  { id:"confectionery",           name:"Confectionery",           items:["Sugar","Banana","Apple","Oven"] },
+  { id:"deep-freight",            name:"Deep Freight",            items:["Natural Gas","Steel","Rubber","Maglev Train"] },
+  { id:"fauna",                   name:"Fauna",                   items:["Deer","Chicken","Salmon","Orca"] },
+  { id:"green-machine",           name:"Green Machine",           items:["Tractor","Soil","Fertilizer","Grain"] },
+  { id:"heavy-metal",             name:"Heavy Metal",             items:["Engine","Turbine Blade","Satellite Dish","Bridge"] },
+  { id:"im-looking-through-you",  name:"I'm Looking Through You", items:["Glass","Light Bulb","Compass","Telescope"] },
+  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass","Motorcycle"] },
+  { id:"natural-treasures",       name:"Natural Treasures",       items:["Fossil","Diamond","Life","Star"] },
+  { id:"ocean-life",              name:"Ocean Life",              items:["Water","Seaweed","Salmon","Orca"] },
+  { id:"old-growth-life",         name:"Old Growth Life",         items:["Soil","Tree","Deer","Salmon"] },
+  { id:"power-up",                name:"Power Up",                items:["Furnace","Engine","Solar Panel","Turbine Blade"] },
+  { id:"sky-watch",               name:"Sky Watch",               items:["Telescope","Satellite Dish","Compass","Solar Panel"] },
+  { id:"sushi-restaurant",        name:"Sushi Restaurant",        items:["Seaweed","Salmon","Building","Sushi Restaurant"] },
+  { id:"water-cycle",             name:"Water Cycle",             items:["Soil","Tree","Cloud","Water"] },
+  { id:"wheat-field",             name:"Wheat Field",             items:["Farm","Grain","Tractor","Turbine Blade"] },
+  { id:"ancient-inventions",      name:"Ancient Inventions",      items:["Wheel","Telescope","Compass","Canoe","Furnace"] },
+  { id:"farm-to-table",           name:"Farm to Table",           items:["Farm","Grain","Chicken","Egg","Apple"] },
+  { id:"foundry-line",            name:"Foundry Line",            items:["Furnace","Steel","Stainless Steel","Aluminum Alloy","Tools"] },
+  { id:"metal-works",             name:"Metal Works",             items:["Steel","Stainless Steel","Aluminum Alloy","Tools","Wire"] },
+  { id:"river-to-rail",           name:"River to Rail",           items:["Canoe","Bicycle","Car","Maglev Train","Helicopter"] },
+  { id:"precious-earth",          name:"Precious Earth",          items:["Clay","Sand","Limestone","Diamond","Natural Gas","Rubber"] },
+  { id:"the-long-haul",           name:"The Long Haul",           items:["Car","Bicycle","Speedboat","Helicopter","Maglev Train","Tractor"] },
+  { id:"around-the-world",        name:"Around the World",        items:["Bicycle","Canoe","Speedboat","Car","Tractor","Helicopter","Maglev Train"] },
+  { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Oven"] },
+  { id:"city-complete",           name:"City Complete",           items:["Clay","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
+  { id:"deep-mine-complete",      name:"Deep Mine Complete",      items:["Clay","Natural Gas","Steel","Tools","Furnace","Aluminum Alloy","Diamond"] },
+  { id:"observatory-complete",    name:"Observatory Complete",    items:["Microchip","Magnet","Compass","Satellite Dish","Telescope","Star","Rocket"] },
+  { id:"ocean-complete",          name:"Ocean Complete",          items:["Water","Limestone","Sand","Seaweed","Banana","Cloud","Orca"] },
+  { id:"old-growth-complete",     name:"Old Growth Complete",     items:["Sand","Bone","Soil","Salmon","Tree","Canoe","Deer"] },
+  { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Engine","Light Bulb","Computer","Turbine Blade"] },
+  { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Soil","Farm","Chicken","Apple","Grain"] },
+  { id:"world-tour",              name:"World Tour",              items:["Cloud","Tree","Diamond","Grain","Light Bulb","Dough","Building","Telescope"] },
 ];
 const matCollectionBonus = col =>
   Math.round(col.items.reduce((n, i) => n + (MAT_CARD_BY_NAME[i] ? MAT_CARD_BY_NAME[i].points : 0), 0) * 0.3);
@@ -8941,6 +9075,16 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:4, pinnedItems:[], minigame
   // Combo Lab or a real run's own mat can be recalled in any future
   // session, not just the run it was saved from.
   savedMatLayouts:[],
+  // [collectionId, ...] -- every MAT_COLLECTIONS id ever actually revealed
+  // during a real Lock-In (see playLockInSequence()), account-level so
+  // "discovered before" survives a reset the same way classicUnlocked
+  // does -- a state.* field would NOT work here, freshState() wipes every
+  // per-run field (including this one's old home, state.matUnlockedCollections)
+  // on every new session. renderMatTop() filters the live combo row
+  // against this list -- a collection completed on the mat but never
+  // locked in before produces no chip at all until it's actually Locked
+  // In once, the "discovery" the player asked for.
+  everUnlockedMatCollections:[],
   guidedTutorialEnabled:false, tutorialHintsSeen:[], arcadeHighScores:{},
   // On by default (existing behavior) -- see showCardPop()/autoCardPop().
   // Off replaces the full inspection popup after a fresh craft with a
@@ -9154,9 +9298,10 @@ function freshState(){
     mat: [], // Display Mat (Classic only) -- item names, in display order. See
              // matScore()/renderMatScreen(). Distinct from COLLECTIONS/
              // collectionsCompleted above, which is a wholly separate,
-             // pre-existing Adventure/Zen mechanic.
-    matUnlockedCollections: [], // [collectionId, ...] ever completed on the mat -- see
-                                 // MAT_COLLECTIONS, lifetime like collectionsCompleted.
+             // pre-existing Adventure/Zen mechanic. Named Display Mat
+             // collections' own "ever discovered" tracking lives in
+             // prefs.everUnlockedMatCollections instead, not here -- this
+             // state doesn't survive a reset, and discovery needs to.
     collectionsCompleted: [], // [collectionId, ...] -- see checkCollections()/COLLECTIONS. Lifetime,
                                // never un-completes even if a member item is later spent in Hard Mode.
     tradeOffers: [], // [{reward, demand}, ...] -- Hard Mode's Trade Market board (see
@@ -10397,7 +10542,20 @@ function renderMap(){
   // to draw connections from.
   const pathsHTML = state.lastStation === null ? "" : mapPathsHTML(state.lastStation);
 
-  return `${cardHTML}
+  // Neither the fixed 5-button #hub nor the two existing floating corner
+  // buttons (#pinsBtn/#quickConvertBtn, both bottom corners already
+  // spoken for) have room for a permanent Collections entry point --
+  // fixed-position and part of this screen's own markup (only ever
+  // present while screen === "map") rather than global hub chrome.
+  // Delegated click (handleScreenClick()'s own #mapCollectionsBtn check)
+  // since this button is torn down and rebuilt on every render() like the
+  // rest of this screen.
+  const collectionsBtnHTML = `<button type="button" id="mapCollectionsBtn" class="map-collections-btn"
+      title="Collections" aria-label="Collections, ${prefs.everUnlockedMatCollections.length} of ${MAT_COLLECTIONS.length} unlocked">
+    🏆 <span>${prefs.everUnlockedMatCollections.length}/${MAT_COLLECTIONS.length}</span>
+  </button>`;
+
+  return `${collectionsBtnHTML}${cardHTML}
     ${banner}
     <div class="map-canvas" data-map-bg>${pathsHTML}<div class="map-nodes">${nodesHTML}</div>${hint}</div>`;
 }
@@ -13777,6 +13935,8 @@ function handleScreenClick(ev){
 
   if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
 
+  if (ev.target.closest("#mapCollectionsBtn")){ openCollectionsOverlay(); return; }
+
   if (ev.target.closest("#emptyElBadgeBtn")){
     emptyElCashInMode ? exitEmptyElCashIn() : enterEmptyElCashIn();
     return;
@@ -14871,6 +15031,27 @@ function matComboChipHTML(g, kind){
   // ×mult on the score block's own right side, not repeated per chip).
   return `<span class="mm-combo" data-combo-kind="${kind}" data-combo-name="${esc(g.name)}" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b></span>`;
 }
+/* Shared by renderMatTop() (revealAll=false, the live pre-Lock-In view)
+   and playLockInSequence() (revealAll=true, the moment Lock-In itself
+   starts) -- station/suit/component chips are identical either way; only
+   named collections differ. revealAll=false drops any collection not yet
+   in prefs.everUnlockedMatCollections entirely (no chip at all -- the
+   "discovery" the player asked for: nothing hints a collection exists
+   before it's actually been Locked In once). revealAll=true keeps every
+   completed collection's chip in the DOM but marks a first-timer
+   ".discovering" (CSS-hidden) so playLockInSequence() has a real element
+   ready to reveal at that collection's own beat instead of conjuring one
+   mid-animation. */
+function matComboChipsHTML(s, revealAll){
+  const cols = revealAll ? s.cols : s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
+  return s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
+    s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
+    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
+    cols.map(c => {
+      const discovering = revealAll && !prefs.everUnlockedMatCollections.includes(c.id);
+      return `<span class="mm-combo col${discovering ? " discovering" : ""}" data-combo-kind="collection" data-combo-name="${esc(c.id)}" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`;
+    }).join("");
+}
 
 /* Fills #matGrid alone (not the score band/toggle around it), so a
    mid-drag reorder can re-flow just the 8 slots without touching
@@ -15199,6 +15380,18 @@ function playLockInSequence(reward){
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
 
+  // renderMatTop()'s live view (revealAll=false) never rendered a chip at
+  // all for a collection completed for the very first time -- so before
+  // any beat can bounce/reveal one, the DOM needs a real element for it.
+  // revealAll=true rebuilds the row with every completed collection
+  // present, marking first-timers ".discovering" (CSS-hidden) until their
+  // own beat below un-hides them.
+  const combosEl = document.querySelector("#drawerTop .mat-combos");
+  if (combosEl){
+    combosEl.innerHTML = matComboChipsHTML(s, true) ||
+      `<span class="mm-combo-none">Three cards alike start a combo</span>`;
+  }
+
   // Multiplier's true resting value with zero combos is 1 (matScore()'s
   // own mult = 1 + comboBonus), not 0 -- starting the running tally there
   // instead of 0 means every combo's own +bonus beat lands the display
@@ -15215,8 +15408,20 @@ function playLockInSequence(reward){
         bouncePulse(document.querySelector(`#matGrid [data-mat-card="${cssEsc(name)}"]`));
       });
       if (beat.chipKind && beat.chipName){
-        bouncePulse(document.querySelector(
-          `#drawerTop .mat-combos .mm-combo[data-combo-kind="${beat.chipKind}"][data-combo-name="${cssEsc(beat.chipName)}"]`));
+        const chipEl = document.querySelector(
+          `#drawerTop .mat-combos .mm-combo[data-combo-kind="${beat.chipKind}"][data-combo-name="${cssEsc(beat.chipName)}"]`);
+        // The actual "discovery" moment: a collection never Locked In
+        // before gets revealed (un-hidden) exactly as its own beat bounces
+        // it, and is persisted into prefs immediately so it shows live,
+        // pre-Lock-In, from now on (see matComboChipsHTML()/renderMatTop()).
+        if (beat.chipKind === "collection" && chipEl){
+          chipEl.classList.remove("discovering");
+          if (!prefs.everUnlockedMatCollections.includes(beat.chipName)){
+            prefs.everUnlockedMatCollections.push(beat.chipName);
+            savePrefs();
+          }
+        }
+        bouncePulse(chipEl);
       }
       runningPoints += beat.pointsDelta;
       runningMult += beat.multDelta;
@@ -15372,6 +15577,25 @@ function emptyElSquareHTML(px){
 // only a gain.
 document.getElementById("lockInBannerSub").textContent =
   "Your Quark Score sets your dice at the next station.";
+// One-time fill-in, same idea as #lockInBannerSub just above -- a short
+// explainer for how Quark Score actually adds up, reusing the exact
+// station/suit icon markup buildMatFilterBar() already draws for the
+// filter tray (plain <span>s here, not that tray's own tappable buttons,
+// so these never wire into its click delegation).
+document.getElementById("lockInQuarkTutorial").innerHTML = `
+  <div>⚛️ Quark Score = Display Score × Combo Multiplier</div>
+  <div>✅ A complete item recipe rewards DOUBLE points for that item</div>
+  <div>🔍 Experiment with combinations to discover hidden Collection Bonuses</div>
+  <div>Combo Multiplier is added by matching 3+ of these icons on your cards:</div>
+  <div class="liqt-icons">${Object.keys(STATION_BY_NAME).map(s => {
+    const m = STATION_BY_NAME[s];
+    return `<span class="liqt-ic" style="--st:${DATA.suits[m.suit].color}" title="${esc(s)}">${em(m.emoji)}</span>`;
+  }).join("")}</div>
+  <div class="liqt-icons">${Object.keys(ELEMENT_SUIT_LABEL).map(s =>
+    `<span class="liqt-ic" style="--suit:${SUIT_COLOR[s]}" title="${esc(ELEMENT_SUIT_LABEL[s])}">${SUIT_ICON[s]}</span>`).join("")}</div>
+  <div>Ingredient items count toward Combo Multiplier too!</div>
+  <div class="liqt-icons">${["Water","Sand","Tree","Wheel"].map(n =>
+    `<span class="liqt-ic" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</div>`;
 // Classic Mode only (state.emptyElements is never touched outside it, see
 // finishLockIn()'s own comment) -- rendered next to the station title
 // (renderStation()'s own sheet-head) regardless of count so it's always
@@ -15456,20 +15680,12 @@ function renderMatTop(){
   const s = matScore(mat);
   matLastScore = s;
 
-  // Lifetime unlock, same rule state.collectionsCompleted already uses
-  // for the separate Adventure/Zen collections mechanic: once completed
-  // it stays marked even if a member card is later taken off the mat.
-  let changed = false;
-  s.cols.forEach(c => {
-    if (!state.matUnlockedCollections.includes(c.id)){ state.matUnlockedCollections.push(c.id); changed = true; }
-  });
-  if (changed) save();
-
-  const chips =
-    s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
-    s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
-    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
-    s.cols.map(c => `<span class="mm-combo col" data-combo-kind="collection" data-combo-name="${esc(c.id)}" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`).join("");
+  // Named collections are a *discovery* (see matComboChipsHTML()'s own
+  // comment) -- revealAll=false here drops any collection not already in
+  // prefs.everUnlockedMatCollections entirely, no chip at all, while every
+  // other combo kind (station/suit/component) stays fully visible live as
+  // always.
+  const chips = matComboChipsHTML(s, false);
   // Score/multiplier/Quarks on the right, in the same row as the combo
   // chips (not stacked below them) -- two lines: points and the
   // multiplier they earned on one, the final Quark payout (the number
@@ -15746,9 +15962,11 @@ function renderClassicDrawer(){
 function setMatBtnState(btn, onMat){
   btn.classList.toggle("active", onMat);
   btn.setAttribute("aria-pressed", onMat);
-  const label = onMat ? "Remove from Display Mat" : "Add to Display Mat";
-  btn.setAttribute("aria-label", label);
-  btn.innerHTML = `<span class="cp-matbtn-ic">${onMat ? "➖" : "➕"}</span>${esc(label)}`;
+  // aria-label stays the fuller sentence (better for screen readers);
+  // only the visible text is the plain one-word button label.
+  btn.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
+  const visibleLabel = onMat ? "Remove" : "Add";
+  btn.innerHTML = `<span class="cp-matbtn-ic">${onMat ? "➖" : "➕"}</span>${esc(visibleLabel)}`;
 }
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
@@ -15967,6 +16185,39 @@ function deleteMatLayout(i){
   renderMatLayoutsList();
 }
 document.getElementById("matLayoutsClose").addEventListener("click", closeMatLayoutsOverlay);
+
+/* Shows only what's actually been discovered -- see
+   prefs.everUnlockedMatCollections/matComboChipsHTML()'s own "discovery"
+   comment. A still-locked collection gets no row at all, not even a
+   placeholder; the X/Y count above the list is the only hint of how many
+   remain. */
+function renderCollectionsList(){
+  const total = MAT_COLLECTIONS.length;
+  const unlocked = MAT_COLLECTIONS.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
+  document.getElementById("collectionsCount").textContent =
+    `${unlocked.length} / ${total} Collections Unlocked`;
+  const list = document.getElementById("collectionsList");
+  if (!unlocked.length){
+    list.innerHTML = '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection to reveal it here.</p>';
+    return;
+  }
+  list.innerHTML = `<div class="histrows">${unlocked.map(c => `
+    <div class="histentry">
+      <div class="collection-row">
+        <span class="cr-name">${esc(c.name)}</span>
+        <span class="cr-items">${esc(c.items.join(", "))}</span>
+        <span class="cr-bonus">+${c.bonus}</span>
+      </div>
+    </div>`).join("")}</div>`;
+}
+function openCollectionsOverlay(){
+  renderCollectionsList();
+  openOverlay("collectionsOverlay");
+}
+function closeCollectionsOverlay(){
+  closeOverlay("collectionsOverlay");
+}
+document.getElementById("collectionsClose").addEventListener("click", closeCollectionsOverlay);
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
 document.getElementById("matLayoutName").addEventListener("keydown", ev => {
   if (ev.key === "Enter") saveMatLayout();
