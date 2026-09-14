@@ -5936,7 +5936,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    Do not hand-edit. Regenerate with:  python game/build_game.py
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
- "take": 6,
+ "take": 3,
  "version": "2026.08.16",
  "suits": {
   "ocean": {
@@ -9073,7 +9073,7 @@ let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = fal
 // (bubbles popped, seconds survived, ...) even if a game's own difficulty
 // constants get retuned later -- the whole point of tracking these at all
 // is so the player can report them back for exactly that kind of tuning.
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:4, pinnedItems:[], minigamesEnabled:false,
+let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
   // Named Display Mat arrangements, account-level (see openMatLayoutsOverlay())
   // -- {name, items: [item names, in mat order]} -- so a combo sketched in
   // Combo Lab or a real run's own mat can be recalled in any future
@@ -12229,11 +12229,27 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   }
   openOverlay("cardPop");
   if (cardPopMatPanel) positionCardPopMatPanel();
-  // Reset any inline scale left over from a previous mat-panel viewing --
-  // without this, jumping straight from a mat-panel card to a normal one
-  // (e.g. Item Reference while the tray happens to still be open) would
-  // render the normal full-screen card shrunk down too.
-  else document.getElementById("cpCard").style.transform = "";
+  // Reset EVERY inline style positionCardPopMatPanel() sets -- without
+  // this, a normal (non-mat-panel) card pop shown any time after a
+  // mat-panel one earlier in the session inherits its stale leftover
+  // values. Found via a real bug report: #cardPop's own paddingTop (set
+  // from #drawerTop's position at the time) was the one this used to
+  // miss -- only #cpCard's transform was ever cleared here -- so a card
+  // auto-shown well after the Display Mat had been open at least once
+  // (autoCardPop() firing after crafting straight from a Bingo square is
+  // a common way to hit this, since the mat's usually been opened by
+  // then) rendered pushed far down the screen, still padded for a
+  // #drawerTop that isn't even part of this view.
+  else {
+    document.getElementById("cardPop").style.paddingTop = "";
+    document.getElementById("cpMatBackdrop").style.top = "";
+    document.getElementById("cpMatBackdrop").style.bottom = "";
+    document.querySelector(".pc-card-scale").style.width = "";
+    document.querySelector(".pc-card-scale").style.height = "";
+    document.getElementById("cpCard").style.transform = "";
+    document.getElementById("cpMatToggles").style.left = "";
+    document.getElementById("cpMatToggles").style.bottom = "";
+  }
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
 }
@@ -13255,15 +13271,15 @@ function doRoll(rollCount){
   // Lock In's own reward (see finishLockIn()/diceDeltaForReward()) -- a
   // dice DELTA for THIS roll, applied on top of whichever path set the
   // base count (plain TAKE, a mini-game's own score-based count, or an
-  // explicit rollCount): -1 if the mat didn't even clear the first Quark
-  // breakpoint, 0/+1/+2 for the three real tiers. Excluded from the
-  // Ocean's one-time scripted first roll, which draws a fixed sequence
-  // rather than sampling the pool at all -- there's no "extra"/"missing"
+  // explicit rollCount): 0 if the mat didn't clear the first Quark
+  // breakpoint (no penalty), +1/+2/+3 for the three real tiers. Excluded
+  // from the Ocean's one-time scripted first roll, which draws a fixed
+  // sequence rather than sampling the pool at all -- there's no "extra"
   // slot to adjust there. Consumed here unconditionally (win or not:
   // mapLocked() means this is always the very next roll after a Lock-In
   // that granted it, so there's nothing to carry over) so it can never
-  // apply twice. Floored at 1 -- a -1 delta should never be able to zero
-  // out a roll entirely, even against a very low custom dice setting.
+  // apply twice. Math.max(1, ...) is defensive only now that delta can
+  // never go negative -- kept in case a future tier ever does again.
   const delta = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
   state.bonusDiceNextVisit = 0;
   const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length : Math.max(1, (rollCount == null ? TAKE : rollCount) + delta);
@@ -15239,26 +15255,27 @@ function emptyElementsForScore(total, round){
 }
 // Converts the 0-3 tier above into an actual dice DELTA for the trip
 // (see doRoll()'s own comment on where this gets applied/consumed).
-// Tier 1 is deliberately a breakeven, not a reward on its own -- its
-// whole job is to be the line that keeps you at your normal dice count;
-// missing it entirely (tier 0) is what actually costs you one. Tiers 2
-// and 3 are the real rewards on top of that: +1, then +2.
-function diceDeltaForReward(reward){ return reward - 1; }
+// Revised 2026-09-15, explicit request: straight +1/+2/+3 bonus dice for
+// the three real breakpoints, tier 0 a plain +0 (no penalty at all) --
+// replaces the earlier "-1/0/+1/+2" delta model, whose tier-0 result
+// silently cost you a die relative to your own normal count. The old
+// model was confusing about what you'd actually earned; this one reads
+// directly off the tier number.
+function diceDeltaForReward(reward){ return reward; }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
    could be stale if this fires from a code path that skipped a render).
-   A tier-0 Lock-In (costs a die, see diceDeltaForReward()) means something
-   different depending on the round: before the round limit (state.visits
-   < MAX_VISITS) that's the only consequence -- the player hasn't even
-   reached the point where a Game Over is possible yet, so this just
-   proceeds (losing the die) silently, same as any other Lock-In. From the
-   round limit on (only reachable at all once the player has chosen
-   Continue Playing off the summary screen, see showSummary()/
-   sessionOver()), missing tier 1 for real ends the run -- see
-   askConfirm()'s own generic Yes/Cancel dialog, reused here rather than
-   inventing a second confirmation UI. Cancel just backs out of the
-   confirm and leaves the mat and drawer exactly as they were, so the
-   player can rearrange it and lock in again whenever they like before
-   committing to end things. */
+   A tier-0 Lock-In (no bonus dice at all, see diceDeltaForReward()) means
+   something different depending on the round: before the round limit
+   (state.visits < MAX_VISITS) that's the only consequence -- the player
+   hasn't even reached the point where a Game Over is possible yet, so
+   this just proceeds silently, same as any other Lock-In. From the round
+   limit on (only reachable at all once the player has chosen Continue
+   Playing off the summary screen, see showSummary()/sessionOver()),
+   missing tier 1 for real ends the run -- see askConfirm()'s own generic
+   Yes/Cancel dialog, reused here rather than inventing a second
+   confirmation UI. Cancel just backs out of the confirm and leaves the
+   mat and drawer exactly as they were, so the player can rearrange it and
+   lock in again whenever they like before committing to end things. */
 function confirmLockIn(){
   const s = matScore(matOnMat());
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
@@ -15266,7 +15283,7 @@ function confirmLockIn(){
   if (reward === 0){
     if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint, so you'd lose a die. You're past your visit limit, so this ends your run here. End it now?`,
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint. You're past your visit limit, so this ends your run here. End it now?`,
       () => {
         state.finalGameOver = true;
         save();
@@ -15489,10 +15506,13 @@ function playLockInSequence(reward){
 // Revised 2026-09-14: a POSITIVE delta now blocks on the player tapping
 // through showLockInRewardModal()'s own "Nice" celebration instead of a
 // timed toast (explicit request) -- proceed() is passed in as that
-// modal's own continue callback rather than called on a setTimeout. The
-// -1 (lost a die) case keeps the plain toast; there's nothing to
-// celebrate there, and delta 0 (tier 1, breakeven) still gets no
-// notification at all.
+// modal's own continue callback rather than called on a setTimeout.
+// Revised 2026-09-15, explicit request: diceDeltaForReward() no longer
+// ever returns a negative delta (tier 0 is a plain +0, not a penalty --
+// see its own comment), so the old "-1 die" toast branch is gone
+// entirely, and the modal now blocks EVERY Lock-In regardless of delta,
+// tier 0's +0 included -- the player should always see exactly what a
+// Lock-In earned them, even when that's nothing.
 function finishLockIn(reward, opts = {}){
   const delta = diceDeltaForReward(reward);
   state.bonusDiceNextVisit = delta;
@@ -15508,19 +15528,10 @@ function finishLockIn(reward, opts = {}){
   // skipToast: for the odd caller that hands this reward directly without
   // going through playLockInSequence() first -- that sequence's own
   // banner deliberately never shows the number itself (explicit request),
-  // so the modal/toast below is the one and only place the player
-  // actually sees it.
+  // so the modal below is the one and only place the player actually
+  // sees it.
   if (opts.skipToast){ proceed(); return; }
-  if (delta > 0){
-    showLockInRewardModal(delta, proceed);
-  } else if (delta < 0){
-    showMatToast(`-1 die at your next station -- didn't clear the first Quark breakpoint.`);
-    // Let the toast actually be seen before the drawer (it's rendered
-    // inside #drawer, see .mat-toast's own comment) slides away with it.
-    setTimeout(proceed, 900);
-  } else {
-    proceed(); // tier 1 breakeven -- nothing actually changed to report
-  }
+  showLockInRewardModal(delta, proceed);
 }
 // Milliseconds between each die's own pop-in (see .lockin-reward-die's
 // own CSS) -- staggered via inline animation-delay, not a JS setTimeout
@@ -15539,9 +15550,16 @@ let lockInRewardOnDone = null;
    right via their own staggered animation-delay (see
    LOCKIN_DICE_POP_STAGGER_MS/.lockin-reward-die); onDone runs once the
    player taps through, continuing whatever finishLockIn() was already
-   about to do (close the drawer, travel). */
+   about to do (close the drawer, travel).
+   Revised 2026-09-15, explicit request: now called for every Lock-In,
+   n===0 included (previously this only ever ran for a positive delta,
+   see finishLockIn()'s own comment) -- n===0 gets its own honest title
+   rather than the grammatically-broken "You earned +0 dice", and simply
+   shows no dice below it. */
 function showLockInRewardModal(n, onDone){
-  document.getElementById("lockInRewardTitle").textContent = `You earned +${n} ${n === 1 ? "die" : "dice"}`;
+  document.getElementById("lockInRewardTitle").textContent = n === 0
+    ? "No bonus dice this time"
+    : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
     `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
@@ -15756,14 +15774,15 @@ function renderMatTop(){
   // .qm-break's own CSS comment for why pixel-measuring the real (3px)
   // gaps isn't worth it. Lit once qmPassed has actually reached that
   // tier, i.e. locking in RIGHT NOW would apply that tier's own dice
-  // delta at your next station (see diceDeltaForReward()) -- tier 1 is
-  // the breakeven line (falling short of it, tier 0, is what actually
-  // costs a die), tiers 2/3 are the real +1/+2 rewards on top of that.
-  const QM_BREAK_LABEL = { 1: "Keeps your dice -- miss this and you lose one", 2: "+1 bonus die", 3: "+2 bonus dice" };
+  // delta at your next station (see diceDeltaForReward()) -- straight
+  // +1/+2/+3 bonus dice for the three tiers, tier 0 a plain +0 with no
+  // penalty (revised 2026-09-15, explicit request -- replaces the earlier
+  // breakeven/-1 model).
+  const QM_BREAK_LABEL = { 1: "+1 bonus die", 2: "+2 bonus dice", 3: "+3 bonus dice" };
   const qmBreaks = [1, 2, 3].map(i =>
     `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="${QM_BREAK_LABEL[i]}"><span class="qm-break-dice">🎲</span></span>`).join("");
   const qmDelta = diceDeltaForReward(qmPassed);
-  const qmDeltaLabel = qmDelta === 0 ? "no change" : qmDelta > 0 ? `+${qmDelta} dice` : "-1 die";
+  const qmDeltaLabel = qmDelta === 0 ? "no bonus dice" : `+${qmDelta} dice`;
   const quarkMeterHTML = `<div class="quark-meter-wrap"
       title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmDeltaLabel} at your next station if you lock in now">
     ${qmSegs}${qmBreaks}
