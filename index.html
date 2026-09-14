@@ -3089,6 +3089,25 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .sheetbox h2{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px}
 .sheetbox p{color:var(--ink2); font-size:15px; margin-bottom:14px; line-height:1.5}
 .sheetbox .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+/* Lock In's "you won dice" celebration (see showLockInRewardModal()) --
+   centered title, one Nice button, both sharing this box's own bounceIn
+   pop-in with the rest of .sheetbox. */
+.lockin-reward-box{text-align:center}
+.lockin-reward-box h2{margin-bottom:18px}
+.lockin-reward-box .btnrow{justify-content:center; margin-top:4px}
+/* One die per span, laid out in a single row (wrapping only if an
+   unusually large count somehow ever needed it) -- see .lockin-reward-die
+   for how each pops in on its own delay instead of all landing at once. */
+.lockin-reward-dice{display:flex; justify-content:center; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px; min-height:44px}
+/* animation-delay set per-die inline (see showLockInRewardModal()) is what
+   actually staggers the "sequentially" part -- bounceIn itself (shared
+   with .sheetbox et al, see its own keyframes) is what pops each one in;
+   opacity:0 up front keeps a later die invisible until its own delay
+   elapses instead of flashing at full opacity pre-animation. */
+.lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
+@media (prefers-reduced-motion: reduce){
+  .lockin-reward-die{animation:none; opacity:1}
+}
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
    padding/font than a normal .btnrow pair so none of the three has to
    wrap to its own row. */
@@ -5234,6 +5253,20 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
     <div class="btnrow">
       <button type="button" class="bigbtn" id="confirmYes">Yes, do it</button>
       <button type="button" class="bigbtn sec" id="confirmNo">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lock In's own "you won dice" celebration -- replaces the old plain
+     toast for a positive reward (see finishLockIn()/showLockInRewardModal()
+     own comment). Text and dice count are filled in at open time; the dice
+     themselves pop in one at a time via .lockin-reward-die's own CSS. -->
+<div class="overlay" id="lockInRewardOverlay" role="dialog" aria-modal="true" aria-labelledby="lockInRewardTitle">
+  <div class="sheetbox lockin-reward-box" style="max-width:420px">
+    <h2 id="lockInRewardTitle"></h2>
+    <div class="lockin-reward-dice" id="lockInRewardDice"></div>
+    <div class="btnrow">
+      <button type="button" class="bigbtn" id="lockInRewardNice">Nice</button>
     </div>
   </div>
 </div>
@@ -8843,12 +8876,15 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:4, pinnedItems:[], minigame
   // with/without before committing to any of them for real -- see Dev
   // Tools' own new "Experimental" rows and each flag's own call sites
   // (toggleJobSelect()/conversionRate()/the Tractor-harvest [data-elem]
-  // handling, applyDiceCount()'s own Tractor bonus). Tiered conversion and
-  // Tractor harvest are on by default now that both have shipped for
-  // real; Compass-gated tracking stays opt-in.
+  // handling, applyDiceCount()'s own Tractor bonus). Reverted 2026-09-14
+  // back to off-by-default for all three -- a real run played with both
+  // Tractor and Tiered Conversion off (see its own History export) still
+  // cleared every capstone comfortably inside the round limit, and the
+  // player's own call afterward was that the base game reads better
+  // without either turned on for a new player by default.
   expCompassTracking:false,
-  expTieredConversion:true,
-  expTractorHarvest:true};
+  expTieredConversion:false,
+  expTractorHarvest:false};
 /* Which item on an accepted job card (if any) is "selected" on the map --
    ephemeral UI state, same category as screen/current, not saved.
    Selecting one highlights its full ingredient-item closure among the
@@ -14901,6 +14937,13 @@ function playLockInSequence(reward){
 // Revised again same day: the raw 0-3 reward isn't the delta any more
 // (see diceDeltaForReward()) -- tier 1 is a breakeven (0), tier 0 costs a
 // die (-1), tiers 2/3 add one/two on top of that.
+// Revised 2026-09-14: a POSITIVE delta now blocks on the player tapping
+// through showLockInRewardModal()'s own "Nice" celebration instead of a
+// timed toast (explicit request) -- proceed() is passed in as that
+// modal's own continue callback rather than called on a setTimeout. The
+// -1 (lost a die) case keeps the plain toast; there's nothing to
+// celebrate there, and delta 0 (tier 1, breakeven) still gets no
+// notification at all.
 function finishLockIn(reward, opts = {}){
   const delta = diceDeltaForReward(reward);
   state.bonusDiceNextVisit = delta;
@@ -14913,23 +14956,64 @@ function finishLockIn(reward, opts = {}){
     // mostly finish before the station screen swaps in underneath it.
     setTimeout(() => goStation(dest), 320);
   };
-  // skipToast: the toast here is only for the odd caller that hands this
-  // reward directly without going through playLockInSequence() first --
-  // that sequence's own banner deliberately never shows the number itself
-  // (explicit request), so this toast is the one and only place the
-  // player actually sees it. No toast at all when delta is exactly 0
-  // (tier 1) -- that's a breakeven, nothing actually changed to report.
-  if (delta !== 0 && !opts.skipToast){
-    showMatToast(delta > 0
-      ? `+${delta} bonus ${delta === 1 ? "die" : "dice"} at your next station!`
-      : `-1 die at your next station -- didn't clear the first Quark breakpoint.`);
+  // skipToast: for the odd caller that hands this reward directly without
+  // going through playLockInSequence() first -- that sequence's own
+  // banner deliberately never shows the number itself (explicit request),
+  // so the modal/toast below is the one and only place the player
+  // actually sees it.
+  if (opts.skipToast){ proceed(); return; }
+  if (delta > 0){
+    showLockInRewardModal(delta, proceed);
+  } else if (delta < 0){
+    showMatToast(`-1 die at your next station -- didn't clear the first Quark breakpoint.`);
     // Let the toast actually be seen before the drawer (it's rendered
     // inside #drawer, see .mat-toast's own comment) slides away with it.
     setTimeout(proceed, 900);
   } else {
-    proceed();
+    proceed(); // tier 1 breakeven -- nothing actually changed to report
   }
 }
+// Milliseconds between each die's own pop-in (see .lockin-reward-die's
+// own CSS) -- staggered via inline animation-delay, not a JS setTimeout
+// chain, so the sequence can't be interrupted by anything else touching
+// the DOM in between (a re-render, say) the way a timed chain could be.
+const LOCKIN_DICE_POP_STAGGER_MS = 150;
+// Runs once, when this overlay's own "Nice" tap (or a backdrop tap, or
+// Escape -- see the keydown handler's own special case for this id)
+// actually dismisses it -- whichever of those a given open used. Cleared
+// immediately after firing so a stray second dismissal (there shouldn't
+// be one; defensive) can't call it twice.
+let lockInRewardOnDone = null;
+/* Lock In's own "you won dice" celebration -- a blocking modal (see
+   .overlay's own dark full-screen backdrop) replacing the old timed toast
+   for a positive reward, explicit request. n dice pop into place left to
+   right via their own staggered animation-delay (see
+   LOCKIN_DICE_POP_STAGGER_MS/.lockin-reward-die); onDone runs once the
+   player taps through, continuing whatever finishLockIn() was already
+   about to do (close the drawer, travel). */
+function showLockInRewardModal(n, onDone){
+  document.getElementById("lockInRewardTitle").textContent = `You earned +${n} ${n === 1 ? "die" : "dice"}`;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
+    `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
+  lockInRewardOnDone = onDone;
+  openOverlay("lockInRewardOverlay");
+}
+function dismissLockInRewardModal(){
+  closeOverlay("lockInRewardOverlay");
+  const onDone = lockInRewardOnDone;
+  lockInRewardOnDone = null;
+  if (onDone) onDone();
+}
+document.getElementById("lockInRewardNice").addEventListener("click", dismissLockInRewardModal);
+// Backdrop tap dismisses same as Nice -- this overlay always has a
+// pending onDone (travel) to run, so it can't just close like a generic
+// overlay would (see the generic "click outside closes" listener further
+// down, which still also fires and harmlessly no-ops against an already-
+// closed overlay).
+document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
+  if (ev.target === ev.currentTarget) dismissLockInRewardModal();
+});
 
 /* =====================================================================
    DORMANT as of 2026-09-13 -- Empty Elements at Stations. This whole
@@ -17213,6 +17297,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
     if (emptyElCashInMode){ exitEmptyElCashIn(); return; }
     const open = document.querySelector(".overlay.open");
+    if (open && open.id === "lockInRewardOverlay"){ dismissLockInRewardModal(); return; }
     if (open){ closeOverlay(open.id); return; }
     if (jobSheet.classList.contains("open")){ closeJobBoard(); return; }
     hideHint(); closeDrawer();
