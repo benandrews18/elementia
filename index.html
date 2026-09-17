@@ -3175,6 +3175,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 @media (prefers-reduced-motion: reduce){
   .lockin-reward-die{animation:none; opacity:1}
 }
+.lockin-reward-extra{text-align:center; font-weight:800; color:var(--collection); margin:-2px 0 10px}
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
    padding/font than a normal .btnrow pair so none of the three has to
    wrap to its own row. */
@@ -4469,7 +4470,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    every other lit combo/pip in this game uses) only once IT specifically
    fills all the way, so which breakpoints are actually banked reads at a
    glance separately from how close the next one is. */
-.quark-meter-wrap{display:flex; gap:3px; width:100%; position:relative}
+/* Two stacked rows now (labels, then the segment bar itself) instead of
+   one flex row of segments -- see renderMatTop()'s own Quark Meter
+   comment for why. */
+.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative}
+.qm-labels{display:flex; gap:3px; width:100%}
+.qm-seg-label{
+  flex:1; text-align:center; font-size:10px; font-weight:800; color:var(--ink2);
+  font-variant-numeric:tabular-nums;
+}
+.qm-segs-row{display:flex; gap:3px; width:100%; position:relative}
 .qm-seg{
   position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
   background:var(--line);
@@ -5385,6 +5395,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   <div class="sheetbox lockin-reward-box" style="max-width:420px">
     <h2 id="lockInRewardTitle"></h2>
     <div class="lockin-reward-dice" id="lockInRewardDice"></div>
+    <p class="lockin-reward-extra" id="lockInRewardExtra" hidden></p>
     <div class="btnrow">
       <button type="button" class="bigbtn" id="lockInRewardNice">Nice</button>
     </div>
@@ -8113,6 +8124,27 @@ DATA.stations.forEach(s => {
 const STATION_BY_NAME = {};
 DATA.stations.forEach(s => STATION_BY_NAME[s.name] = s);
 const CAPSTONES = DATA.stations.map(s => s.capstone[1]);
+/* Each capstone's second, COMBO-ONLY station -- added to its MAT_CARDS
+   entry's own .stations array (see that builder below) so it counts
+   toward that station's live Display Mat combo just like a genuinely
+   multi-home item, without ever becoming purchasable/craftable there (no
+   matching CORE_SET/shop entry exists for it). Capstones currently score
+   too little combo/points for the 2 slots they cost -- this is meant to
+   help close that gap. Chosen 2026-09-17 by tallying each capstone's own
+   direct item ingredients by their home station (excluding the
+   capstone's own home), highest count wins, ties broken by summed
+   ingredient point value -- computed live against ENTRIES/MAT_CARD_BY_NAME
+   in the browser console, not hand-guessed. */
+const CAPSTONE_BONUS_STATION = {
+  "Coral Reef": "The Power Plant",   // Clock (10pts) outweighs Limestone's two 1pt ties
+  "Robot": "Deep Mine",              // Aluminum Alloy (7) over Magnet (2)
+  "Homestead": "The Bakery",         // Apple Pie (24) over Tractor (21) over Log Cabin (12)
+  "Maglev Train": "The City",        // Glass+Bridge (16) over Engine+Glass (14) over Glass+Magnet (6)
+  "Ecosystem": "The Observatory",    // Rainbow (21) edges out Orca (20)
+  "Fruit Cake": "Greenhouse",        // Sugar+Apple (12) over Banana (11)
+  "Metropolis": "The Power Plant",   // Car+Light Bulb (32) over Bicycle (20)
+  "Space Station": "Greenhouse",     // Apple+Solar Panel (22), its only real option
+};
 
 /* =====================================================================
    Sub-zones -- Rocket/Sailboat/Library unlock travel to a place off the
@@ -8239,14 +8271,24 @@ const subzoneVisited = name => !!state.visitedStations[name];
 // set (unlike isCoreEntry(), which needs one specific station) work
 // correctly regardless of which station a caller happens to be looking at.
 const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
-// Item name -> its one canonical CORE_SET station -- Glass et al sell at
-// several stations, but CORE_SET pins each core item to exactly one (see
-// CORE_ITEM_NAMES's own comment), which is exactly what a single "here's
-// where this comes from" badge (see bingoCardHTML()) needs.
-const CORE_ITEM_STATION = Object.fromEntries([...CORE_SET].map(s => {
+// Item name -> its one canonical CORE_SET station, for a single "here's
+// where this comes from" badge (Card Inspection, bingoCardHTML()) -- a
+// handful of raw materials/components genuinely appear in more than one
+// station's own CORE_SET block (Water/Limestone/Sand also listed under
+// The Bakery/The City/Old Growth Forest respectively, alongside their
+// real primary home; see MAT_CARDS' own `stations` for the FULL multi-
+// station list these single badges deliberately don't show). FIRST
+// occurrence wins, not last -- Object.fromEntries()'s last-wins default
+// used to pick whichever station's block happened to be defined latest
+// in this file, which routinely surfaced the less intuitive of the two
+// (Water's badge showing The Bakery, Sand's showing Old Growth Forest)
+// rather than each item's actual primary station. Fixed 2026-09-17,
+// audited live via CORE_SET's own array order in the browser console.
+const CORE_ITEM_STATION = {};
+[...CORE_SET].forEach(s => {
   const [station, name] = s.split("|");
-  return [name, station];
-}));
+  if (!(name in CORE_ITEM_STATION)) CORE_ITEM_STATION[name] = station;
+});
 
 /* =====================================================================
    Display Mat (Classic Mode only) -- a Bazaar-shaped scoring layer on
@@ -8288,8 +8330,13 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   // whatever order ENTRIES lists them, deduped. STATION_BY_NAME guard
   // drops the rare sub-zone ENTRIES row (planets etc., not a real station
   // this card's icon row could render).
-  const stations = [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]
-    .filter((s, i, arr) => STATION_BY_NAME[s] && arr.indexOf(s) === i);
+  // A capstone's bonus station (see CAPSTONE_BONUS_STATION's own comment)
+  // is appended here, purely for combo eligibility -- it never gains a
+  // real shop/CORE_SET entry, so it's not reachable through the ENTRIES
+  // spread above and stays permanently un-purchasable there.
+  const bonusStation = CAPSTONE_BONUS_STATION[name];
+  const stations = [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station), bonusStation]
+    .filter((s, i, arr) => s && STATION_BY_NAME[s] && arr.indexOf(s) === i);
   return {
     name,
     points: ITEM_POINTS[name],
@@ -11345,12 +11392,13 @@ function renderStation(name){
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
-        <!-- No more Empty Element counter here -- Lock In's reward is now spent
-             automatically as bonus dice on arrival (see finishLockIn()/doRoll()),
-             not banked into a station-side total. emptyElBadgeHTML() itself is
-             left defined, just unreferenced, in case the spend-it-yourself cash-in
-             system it powers (see its own "DORMANT" section) comes back later. -->
         <div><h1><span class="station-title-text">${esc(s.name)}</span></h1></div>
+        <!-- Revived 2026-09-17 for the Quark Meter's new 4th tier (see
+             finishLockIn()) -- state.emptyElements can be banked again now,
+             so the spend-it-yourself cash-in flow this badge opens
+             (enterEmptyElCashIn()) is reachable once more. Classic only,
+             same guard emptyElBadgeHTML()'s own comment already documents. -->
+        ${state.mode === "classic" ? emptyElBadgeHTML() : ""}
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
@@ -15153,98 +15201,84 @@ let matLastScore = null;
    section further down, kept rather than deleted in case it comes back).
    A reward of 0 still isn't automatically fatal -- see confirmLockIn()'s
    own comment on why that only matters past the visit limit. */
-/* Calibrated 2026-09-11 against the player's own last 6 Classic runs'
-   real History exports: replayed each run's actual visitLog (which items
-   got crafted, in order) through this same file's own matScore()/
-   matFits(), searching for the BEST possible 8-slot Display Mat
-   achievable from whatever was owned after each visit -- not what the
-   player's mat actually scored (Display Mat didn't exist yet when these
-   were played), but the ceiling a perfect arrangement could have hit at
-   that point. Across the 6 runs, that ceiling's mean/min/max per round
-   (1-indexed, matching state.visits at lock-in time) was:
-     round:   1   5    10   15    20
-     mean:    1  76   439  1075  1936
-     min:     0  22   215   696  1674
-     max:     3 148   561  1656  2162
-   -- a fast-then-saturating climb, since the pool it draws from is
-   capped: CORE_SET has only 79 distinct items.
-   Revised 2026-09-13: MAT_ABSOLUTE_CEILING was re-derived from scratch
-   after a real run posted a 3,400+ Quark Score, blowing straight through
-   the old ceiling (2,660) and the "impossible" wall built on top of it --
-   root cause was multi-station cards (an item now counts toward EVERY
-   station combo it's home to, not just one canonical station), added
-   later in the same session as the original 2026-09-11 calibration
-   below, which was never re-measured against that change. Re-measured by
-   running a hill-climbing search (many random restarts, greedy
-   construction, 1-for-1 and 2-for-2 swaps) against this file's own live
-   matScore()/MAT_CARDS/matFits() -- not a reimplementation, the actual
-   scoring code -- looking for the single best-possible 8-slot mat under
-   today's rules. 400 restarts converged repeatedly (10/400 runs, a clear
-   margin over the next-best 4,100) on the same 4,422: Star Charts
-   (Star+Telescope+Satellite Dish+Rocket+Space Station) stacked with a
-   maxed Observatory station combo (k=6) and maxed metal/reactive suit
-   combos (k=6 each), Oven filling the 7th slot as the best available
-   card sharing neither the station nor a suit. That's the new
-   MAT_ABSOLUTE_CEILING below -- still assumes a catalog-complete run no
-   real game has actually produced, used only as the hard cap the curve
-   must never exceed, not a realistic per-round target.
-   Anchors only (rounds in between are linearly interpolated by
-   lockInTiersForRound()) -- rounds 1-20 are UNCHANGED from the original
-   2026-09-11 calibration (real per-round data below, 1-die near the real
-   min so a normal run keeps clearing it; 2-dice near the mean; 3-dice
-   near the max) -- small early mats are barely touched by the
-   multi-station change, so that data is still valid. Rounds 25-35 were
-   rebuilt to climb toward the new ceiling instead of the old one, and
-   the "impossible wall" (previously round 31, now round 40 -- see
-   MAX_VISITS) has its 1-die bar (4,700) deliberately set above the
-   new ceiling: no arrangement of any size can clear it, a hard,
-   guaranteed-Game-Over/End-Game wall, now grounded in the actual
-   re-measured maximum instead of a stale one a real run had already
-   beaten. Rounds 25-40 are this session's own extrapolation, same as the
-   original 25-31 was -- no real run has been played that far with this
-   mechanic live.
-   Revised 2026-09-12: the 1-die floor stayed literally 0 only through
-   round 1, so a bare one-card mat (a lone MATERIAL, 2-5ish points --
-   exactly what visit 2 or 3 of a real run often is; several of the 6
-   reference runs crafted NOTHING at all by visit 2, see the mean/min
-   table above) could already fall short of the round-2 bar once
-   interpolated toward round 5's 15 -- a real playtest hit exactly this
-   with a lone Sand card. The added round-3 anchor holds 1-die at 0
-   through round 5 instead of round 1 alone -- "opening moves can't
-   fail" is the actual intent, not merely "turn 1 can't fail" -- and
-   2-/3-dice were eased down to match rather than left towering over an
-   otherwise-forgiving 1-die bar. */
-const MAT_ABSOLUTE_CEILING = 4422;
+/* Recalibrated 2026-09-17 for the Capstone rework (CAPSTONE_BONUS_STATION,
+   see MAT_CARDS' own comment) plus a new 4th tier -- no real player logs
+   to replay this time, so this used a from-scratch simulation instead of
+   the 2026-09-11/09-13 calibrations' real History exports (both kept only
+   as prior-art context below). Two pieces, both run live in the Browser
+   pane against this file's own real matScore()/MAT_CARDS/matFits()/ENTRIES
+   -- not a reimplementation:
+   1. MAT_ABSOLUTE_CEILING: same hill-climbing search as before (many
+      random restarts, greedy construction, 1-for-1 swaps plus a
+      fill-remaining-space pass), now against the post-Capstone-rework
+      scoring. Converged repeatedly on 4,473 -- Maglev Train (its own Deep
+      Mine home plus its new The City combo bonus) stacked with Bicycle,
+      Diamond, Lighthouse, Tractor, Helicopter, and Car filling the
+      remaining 6 slots. A modest rise from the old 4,422 (Capstones'
+      bonus station is a small boost, not a rebalance of the whole curve).
+   2. Per-round anchors: since there's no real playtest data to set a
+      realistic (not just optimal) per-round curve from, simulated ~65
+      full 40-visit runs -- each visit rolls 3 dice from ONLY that visit's
+      own station (round-robin through all 8, matching real routing, not
+      a global element pool) and greedily crafts whatever becomes
+      affordable there, cheapest first -- then ran the same hill-climbing
+      search against each simulated run's owned-items snapshot at every
+      anchor round. Explicit request this time: calibrate ALL 4 tiers to
+      real reachability, not just the top one, so tiers 2-3 feel
+      accomplishable by ordinary (not just optimal) play -- tier one sits
+      at that round's own 15th percentile across the 65 runs (a below-
+      average run still clears it), two at the 40th (most runs clear it),
+      three at the 70th (clearly good play), four at the 90th (a real
+      stretch, the new Empty Element reward -- see finishLockIn()). Four
+      is also hand-capped well under MAT_ABSOLUTE_CEILING at every round
+      (never above ~94% of it) so the Quark Meter's 5th, pure-headroom
+      segment (see renderMatTop()) always has real room left to climb
+      into, matching the spirit of the ORIGINAL 2026-09-11 calibration's
+      own real per-round mean/min/max table this recalibration replaces:
+        round:   1   5    10   15    20
+        mean:    1  76   439  1075  1936
+        min:     0  22   215   696  1674
+        max:     3 148   561  1656  2162
+   The old "impossible wall" hack (round 40's own tier deliberately set
+   ABOVE the ceiling, guaranteeing a Game Over right there) is GONE --
+   it existed only to force an ending under the old round-20-checkpoint-
+   then-Continue-Playing design; now that MAX_VISITS is simply the fixed,
+   final visit (see BREAKPOINT_GATE_VISIT's own comment), reaching it
+   while still clearing breakpoints is meant to genuinely succeed into
+   the congratulatory ending (state.reachedHardLimit), not be blocked by
+   a rigged final bar. */
+const MAT_ABSOLUTE_CEILING = 4473;
 const LOCKIN_ROUND_ANCHORS = [
-  // [round, oneDieMin, twoDiceMin, threeDiceMin]
-  [1,      0,    5,    15],
-  [3,      0,   10,    30],
-  [5,      0,   40,    90],
-  [10,   100,  300,   500],
-  [15,   450,  900,  1550],
-  [20,  1150, 1800,  2100],
-  [25,  2200, 2700,  3200],
-  [30,  2900, 3400,  3800],
-  [35,  3600, 4000,  4300],
-  [40,  4700, 4900,  5100], // 1-die alone already exceeds MAT_ABSOLUTE_CEILING -- impossible
+  // [round, oneDieMin, twoDiceMin, threeDiceMin, emptyElementMin]
+  [1,      0,    0,    0,     5],
+  [3,      0,    0,    2,    10],
+  [5,      0,    5,   10,    25],
+  [10,    10,   30,  100,   250],
+  [15,   150,  330,  500,  1100],
+  [20,   500,  950, 1300,  2300],
+  [25,  1100, 2000, 2450,  3100],
+  [30,  2000, 2650, 3250,  3700],
+  [35,  2800, 3450, 3900,  4000],
+  [40,  3400, 4000, 4100,  4200],
 ];
 function lockInTiersForRound(round){
   const a = LOCKIN_ROUND_ANCHORS;
-  if (round <= a[0][0]) return { one: a[0][1], two: a[0][2], three: a[0][3] };
+  if (round <= a[0][0]) return { one: a[0][1], two: a[0][2], three: a[0][3], four: a[0][4] };
   if (round >= a[a.length - 1][0]){
     const last = a[a.length - 1];
-    return { one: last[1], two: last[2], three: last[3] };
+    return { one: last[1], two: last[2], three: last[3], four: last[4] };
   }
   for (let i = 0; i < a.length - 1; i++){
-    const [r0, o0, t0, h0] = a[i], [r1, o1, t1, h1] = a[i + 1];
+    const [r0, o0, t0, h0, e0] = a[i], [r1, o1, t1, h1, e1] = a[i + 1];
     if (round >= r0 && round <= r1){
       const f = (round - r0) / (r1 - r0);
-      return { one: o0 + (o1 - o0) * f, two: t0 + (t1 - t0) * f, three: h0 + (h1 - h0) * f };
+      return { one: o0 + (o1 - o0) * f, two: t0 + (t1 - t0) * f, three: h0 + (h1 - h0) * f, four: e0 + (e1 - e0) * f };
     }
   }
 }
 function emptyElementsForScore(total, round){
   const t = lockInTiersForRound(round);
+  if (total >= t.four) return 4;
   if (total >= t.three) return 3;
   if (total >= t.two) return 2;
   if (total >= t.one) return 1;
@@ -15258,7 +15292,10 @@ function emptyElementsForScore(total, round){
 // silently cost you a die relative to your own normal count. The old
 // model was confusing about what you'd actually earned; this one reads
 // directly off the tier number.
-function diceDeltaForReward(reward){ return reward; }
+// Tier 4 grants an Empty Element on top of dice (see finishLockIn()), not
+// instead of them -- the dice delta itself caps at tier 3's own +3, same
+// as clearing tier 3 alone would give.
+function diceDeltaForReward(reward){ return Math.min(reward, 3); }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
    could be stale if this fires from a code path that skipped a render).
    A tier-0 Lock-In (no bonus dice at all, see diceDeltaForReward()) means
@@ -15378,7 +15415,8 @@ function setMatScoreNumbers(points, mult, total){
 // is currently on, instead of the mat's real final total.
 function setQuarkMeterProgress(total){
   const qmTiers = lockInTiersForRound(state.visits);
-  const ranges = [[0, qmTiers.one], [qmTiers.one, qmTiers.two], [qmTiers.two, qmTiers.three], [qmTiers.three, MAT_ABSOLUTE_CEILING]];
+  const bounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four, MAT_ABSOLUTE_CEILING];
+  const ranges = bounds.slice(1).map((hi, i) => [bounds[i], hi]);
   const segs = document.querySelectorAll("#drawerTop .qm-seg");
   ranges.forEach(([lo, hi], i) => {
     const seg = segs[i];
@@ -15512,6 +15550,11 @@ function playLockInSequence(reward){
 function finishLockIn(reward, opts = {}){
   const delta = diceDeltaForReward(reward);
   state.bonusDiceNextVisit = delta;
+  // Tier 4 -- the new stretch reward, ~90th percentile per round (see
+  // LOCKIN_ROUND_ANCHORS' own comment) -- additionally banks one Empty
+  // Element, reviving the dormant station cash-in flow (see
+  // emptyElBadgeHTML()/renderStation()).
+  if (reward >= 4) state.emptyElements = (state.emptyElements || 0) + 1;
   save();
   const dest = selectedMapStation;
   const proceed = () => {
@@ -15527,7 +15570,7 @@ function finishLockIn(reward, opts = {}){
   // so the modal below is the one and only place the player actually
   // sees it.
   if (opts.skipToast){ proceed(); return; }
-  showLockInRewardModal(delta, proceed);
+  showLockInRewardModal(delta, reward >= 4, proceed);
 }
 // Milliseconds between each die's own pop-in (see .lockin-reward-die's
 // own CSS) -- staggered via inline animation-delay, not a JS setTimeout
@@ -15552,13 +15595,19 @@ let lockInRewardOnDone = null;
    see finishLockIn()'s own comment) -- n===0 gets its own honest title
    rather than the grammatically-broken "You earned +0 dice", and simply
    shows no dice below it. */
-function showLockInRewardModal(n, onDone){
+function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
     : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
     `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
+  // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
+  // rather than a whole separate celebration beat, since it's additive to
+  // whatever the dice count already says.
+  const extra = document.getElementById("lockInRewardExtra");
+  extra.hidden = !gotEmptyElement;
+  extra.textContent = gotEmptyElement ? "Plus: +1 Empty Element -- spend it at any station" : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -15579,32 +15628,22 @@ document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
 });
 
 /* =====================================================================
-   DORMANT as of 2026-09-13 -- Empty Elements at Stations. This whole
-   section (through the document click listener at the bottom of it) was
-   the first real sink for a BANKED state.emptyElements: a held Empty
-   Element traded 1-for-1 for any element actually found at the CURRENT
-   station, a guaranteed roll-free pickup the player chose to spend
-   whenever they liked. Lock In's reward is no longer banked at all (see
-   finishLockIn()'s own comment -- it's spent automatically as bonus dice
-   the moment the player next rolls), so nothing in here is reachable any
-   more: emptyElBadgeHTML() is never called (see renderStation()'s own
-   comment on why), which is the only thing that ever set
-   emptyElCashInMode true in the first place. Left fully in place,
-   untouched, rather than deleted, so this "let the player CHOOSE which
-   element to spend a reward on" idea can come back later without being
-   rebuilt from scratch -- reviving it just means calling
-   emptyElBadgeHTML() from renderStation() again and giving it something
-   real to spend once more (state.emptyElements or a new field).
+   Empty Elements at Stations -- REVIVED 2026-09-17 for the Quark Meter's
+   new 4th tier (see finishLockIn()/LOCKIN_ROUND_ANCHORS). A held Empty
+   Element trades 1-for-1 for any element actually found at the CURRENT
+   station, a guaranteed roll-free pickup the player chooses to spend
+   whenever they like -- banked by a tier-4 Lock-In, spent here. Was fully
+   dormant from 2026-09-13 (when Lock-In's reward became automatic bonus
+   dice with nothing left to bank) until now; renderStation() calls
+   emptyElBadgeHTML() again (see its own comment), which is what actually
+   makes this section reachable.
    ===================================================================== */
 // Shared "Empty Element" square (see .empty-el-square's own CSS comment)
 // -- everywhere this currency shows up (station-title counter, Quark
-// Meter breakpoints, the Lock In banner's reward line) renders the exact
-// same square instead of each spot inventing its own icon language. px
-// sets both dimensions and scales the "?" and corner badge to match.
-// DORMANT along with the rest of this section (see its own header
-// comment) -- kept only because #lockInBannerSub used to call it too;
-// that call site now renders a plain dice emoji instead (see below),
-// so as of 2026-09-13 this has no live callers left either.
+// Meter breakpoints) renders the exact same square instead of each spot
+// inventing its own icon language. px sets both dimensions and scales
+// the "?" and corner badge to match. Live again via emptyElBadgeHTML()
+// (see this section's own header comment).
 function emptyElSquareHTML(px){
   const suitBadgePx = Math.round(px * 0.42);
   return `<span class="empty-el-square" style="width:${px}px; height:${px}px; font-size:${Math.round(px * 0.55)}px" title="Empty Element">?<span class="el-suit-badge" style="--suit:#000; width:${suitBadgePx}px; height:${suitBadgePx}px"></span></span>`;
@@ -15739,49 +15778,56 @@ function renderMatTop(){
   // below it, not something that should vanish just because you tabbed
   // away to check your held elements.
   //
-  // Quark Meter revised 2026-09-12 (three times now, see git history for
-  // the two detours in between): back to the original 4-segment "broken
-  // pill" shape (distinct blocks with real gaps, not one continuous bar)
-  // -- that part was already liked -- but each block now fills with an
-  // ANALOG (continuous, not just on/off) inner progress bar as Quarks
-  // build up through its own specific range, instead of only snapping lit
-  // once its threshold is fully cleared. Block 1 covers 0->one, block 2
-  // one->two, block 3 two->three; block 4 covers three->MAT_ABSOLUTE_CEILING
-  // as pure headroom (there's no real "4th reward tier") so it still has
-  // somewhere to visibly creep for a very deep mat instead of just sitting
-  // permanently empty past the real max. A block gets the gold "cleared"
-  // glow once ITS OWN range is fully filled (its threshold actually
-  // passed), not just partially progressed.
+  // Quark Meter revised 2026-09-17 for the new 4th tier: 5 blocks now, not
+  // 4 -- one per real reward tier (one/two/three/four) plus a 5th pure-
+  // headroom block past four up to MAT_ABSOLUTE_CEILING (same role the old
+  // 4th block played before a real 4th tier existed), each still filling
+  // with an ANALOG inner progress bar and getting the gold "cleared" glow
+  // once its OWN range is fully passed. Segment WIDTHS are no longer equal
+  // (explicit request, "don't have to be equal in size") -- flex-grow per
+  // block is sqrt(its own point range), which spreads the meter
+  // proportionally to how much Quark-earning that block actually
+  // represents while still keeping an early, tiny range (round 1's 0->5)
+  // visibly wide enough to read, rather than a raw-range proportion
+  // collapsing it to nothing. A persistent number above each of the 4 real
+  // blocks (not just a tooltip) shows its own required minimum -- the 5th
+  // headroom block gets no number, since it has no threshold of its own.
   const qmTiers = lockInTiersForRound(state.visits);
   const qmPassed = emptyElementsForScore(s.total, state.visits);
   const qmSegRange = (lo, hi) => hi > lo ? Math.max(0, Math.min(100, ((s.total - lo) / (hi - lo)) * 100)) : (s.total >= lo ? 100 : 0);
-  const qmSegPcts = [
-    qmSegRange(0, qmTiers.one),
-    qmSegRange(qmTiers.one, qmTiers.two),
-    qmSegRange(qmTiers.two, qmTiers.three),
-    qmSegRange(qmTiers.three, MAT_ABSOLUTE_CEILING),
-  ];
-  const qmSegs = qmSegPcts.map(pct =>
-    `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`).join("");
-  // Bonus-dice badges straddle the 3 real breakpoints (between segments
-  // 1/2, 2/3, 3/4 -- the 4th segment is pure headroom past the last real
-  // tier, so it gets no break icon of its own after it). Percentage left
-  // offsets divide the 4-equal-flex-segment meter into quarters -- see
-  // .qm-break's own CSS comment for why pixel-measuring the real (3px)
-  // gaps isn't worth it. Lit once qmPassed has actually reached that
-  // tier, i.e. locking in RIGHT NOW would apply that tier's own dice
-  // delta at your next station (see diceDeltaForReward()) -- straight
-  // +1/+2/+3 bonus dice for the three tiers, tier 0 a plain +0 with no
-  // penalty (revised 2026-09-15, explicit request -- replaces the earlier
-  // breakeven/-1 model).
-  const QM_BREAK_LABEL = { 1: "+1 bonus die", 2: "+2 bonus dice", 3: "+3 bonus dice" };
-  const qmBreaks = [1, 2, 3].map(i =>
-    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${i * 25}%" title="${QM_BREAK_LABEL[i]}"><span class="qm-break-dice">🎲</span></span>`).join("");
+  const qmBounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four, MAT_ABSOLUTE_CEILING];
+  const qmFlex = qmBounds.slice(1).map((hi, i) => Math.max(Math.sqrt(Math.max(hi - qmBounds[i], 1)), 2));
+  const qmTotalFlex = qmFlex.reduce((a, b) => a + b, 0);
+  let qmCum = 0;
+  const qmCumPcts = qmFlex.map(f => { qmCum += f; return (qmCum / qmTotalFlex) * 100; });
+  const qmLabels = qmBounds.slice(1, 5).map((hi, i) =>
+    `<span class="qm-seg-label" style="flex:${qmFlex[i]} 1 0">${Math.round(hi).toLocaleString()}</span>`).join("")
+    + `<span class="qm-seg-label" style="flex:${qmFlex[4]} 1 0"></span>`;
+  const qmSegs = qmBounds.slice(1).map((hi, i) => {
+    const pct = qmSegRange(qmBounds[i], hi);
+    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}" style="flex:${qmFlex[i]} 1 0"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
+  }).join("");
+  // Bonus-dice/Empty-Element badges straddle the 4 real breakpoints
+  // (between blocks 1/2, 2/3, 3/4, 4/5 -- the 5th block is pure headroom
+  // past tier four, so it gets no break icon after it). Left offsets are
+  // each block's own cumulative flex share (qmCumPcts), not a fixed
+  // quarter/fifth split, so a break badge always sits exactly on its real
+  // block boundary regardless of how unevenly the blocks are sized. Lit
+  // once qmPassed has actually reached that tier, i.e. locking in RIGHT
+  // NOW would apply that tier's own reward at your next station (see
+  // diceDeltaForReward()/finishLockIn()) -- tier 0 a plain +0 with no
+  // penalty.
+  const QM_BREAK_LABEL = { 1: "+1 bonus die", 2: "+2 bonus dice", 3: "+3 bonus dice", 4: "+3 dice, plus +1 Empty Element" };
+  const qmBreaks = [1, 2, 3, 4].map(i =>
+    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${qmCumPcts[i - 1]}%" title="${QM_BREAK_LABEL[i]}">${
+      i === 4 ? emptyElSquareHTML(20) : `<span class="qm-break-dice">🎲</span>`}</span>`).join("");
   const qmDelta = diceDeltaForReward(qmPassed);
-  const qmDeltaLabel = qmDelta === 0 ? "no bonus dice" : `+${qmDelta} dice`;
+  const qmDeltaLabel = qmPassed === 0 ? "no bonus dice"
+    : qmPassed >= 4 ? `+${qmDelta} dice, +1 Empty Element` : `+${qmDelta} dice`;
   const quarkMeterHTML = `<div class="quark-meter-wrap"
-      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} -- ${qmDeltaLabel} at your next station if you lock in now">
-    ${qmSegs}${qmBreaks}
+      title="${s.total.toLocaleString()} Quarks toward this round's breakpoints: ${Math.round(qmTiers.one).toLocaleString()} / ${Math.round(qmTiers.two).toLocaleString()} / ${Math.round(qmTiers.three).toLocaleString()} / ${Math.round(qmTiers.four).toLocaleString()} -- ${qmDeltaLabel} at your next station if you lock in now">
+    <div class="qm-labels">${qmLabels}</div>
+    <div class="qm-segs-row">${qmSegs}${qmBreaks}</div>
   </div>`;
   // Revised 2026-09-13: was two small right-aligned lines sharing the
   // combo-chip row ("12 pts ×3" / "36 Quarks") -- explicit request for a
