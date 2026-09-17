@@ -6019,14 +6019,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "🌿",
      "Seaweed",
      "MATERIAL",
-     "C + H + O",
+     "C + H",
      2
     ],
     [
      "☁️",
      "Cloud",
      "COMPONENT",
-     "💧 Water + N + C",
+     "__FURNACE__ Furnace + 💧 Water",
      10
     ],
     [
@@ -6136,10 +6136,10 @@ const DATA = /*__GAME_DATA_START__*/{
    "dice": [
     "Si",
     "Al",
-    "Ag",
     "Ni",
     "Cu",
-    "Fe"
+    "Fe",
+    "K"
    ],
    "shop": [
     [
@@ -6416,12 +6416,12 @@ const DATA = /*__GAME_DATA_START__*/{
    "name": "Deep Mine",
    "suit": "mine",
    "dice": [
-    "Ni",
-    "Si",
     "Al",
     "Fe",
     "C",
-    "Mg"
+    "S",
+    "H",
+    "Ti"
    ],
    "shop": [
     [
@@ -6548,7 +6548,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Si",
     "Al",
     "Mg",
-    "S"
+    "P"
    ],
    "shop": [
     [
@@ -6693,7 +6693,7 @@ const DATA = /*__GAME_DATA_START__*/{
    "dice": [
     "O",
     "H",
-    "P",
+    "C",
     "S",
     "Ca",
     "Mg"
@@ -8409,61 +8409,51 @@ const MAT_COLLECTIONS_RAW = [
   { id:"people-power",            name:"People Power",            items:["Canoe","Bicycle"] },
   { id:"alloys",                  name:"Alloys",                  items:["Steel","Aluminum Alloy","Stainless Steel"] },
   { id:"bedrock",                 name:"Bedrock",                 items:["Clay","Sand","Limestone"] },
-  { id:"bridge-bond",             name:"Bridge & Bond",           items:["Concrete","Steel","Tree"] },
   { id:"calcium-creations",       name:"Calcium Creations",       items:["Bone","Egg","Limestone"] },
   { id:"closed-circuit",          name:"Closed Circuit",          items:["Battery","Wire","Light Bulb"] },
   { id:"daily-commute",           name:"Daily Commute",           items:["Car","Bicycle","Maglev Train"] },
-  { id:"deep-earth",              name:"Deep Earth",              items:["Diamond","Fossil","Limestone"] },
+  { id:"deep-time",               name:"Deep Time",               items:["Diamond","Fossil","Coral Reef","Star"] },
   { id:"early-explorers",         name:"Early Explorers",         items:["Canoe","Compass","Star"] },
   { id:"electromagnet",           name:"Electromagnet",           items:["Wire","Magnet","Battery"] },
   { id:"farmstead-feast",         name:"Farmstead Feast",         items:["Chicken","Egg","Apple Pie"] },
   { id:"flora",                   name:"Flora",                   items:["Tree","Grain","Seaweed"] },
   { id:"foundry-basics",          name:"Foundry Basics",          items:["Steel","Furnace","Tools"] },
   { id:"greenhouse",              name:"Greenhouse",              items:["Log Cabin","Glass","Star"] },
-  { id:"greenhouse-start",        name:"Greenhouse Start",        items:["Soil","Grain","Farm"] },
   { id:"hydrocarbons",            name:"Hydrocarbons",            items:["Sugar","Seaweed","Tree"] },
   { id:"lab-bench",               name:"Lab Bench",               items:["Microchip","Light Bulb","Engine"] },
   { id:"morning-bake",            name:"Morning Bake",            items:["Egg","Banana","Dough"] },
+  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass"] },
   { id:"nautical-trio",           name:"Nautical Trio",           items:["Canoe","Orca","Salmon"] },
   { id:"off-grid-home",           name:"Off-Grid Home",           items:["Log Cabin","Oven","Light Bulb"] },
-  { id:"perfect-circle",          name:"Perfect Circle",          items:["Clock","Compass","Wheel"] },
+  { id:"full-circle",             name:"Full Circle",             items:["Clock","Compass","Wheel"] },
   { id:"prosthesis",              name:"Prosthesis",              items:["Bone","Aluminum Alloy","Stainless Steel"] },
   { id:"shelter-from-the-storm",  name:"Shelter from the Storm",  items:["Log Cabin","Lighthouse","Building"] },
   { id:"sky-survey",              name:"Sky Survey",              items:["Telescope","Satellite Dish","Rocket"] },
   { id:"sourdough",               name:"Sourdough",               items:["Flour","Water","Yeast"] },
   { id:"special-exhibit",         name:"Special Exhibit",         items:["Museum","Canoe","Clay"] },
-  { id:"stargazers-kit",          name:"Stargazer's Kit",         items:["Telescope","Compass","Star"] },
+  { id:"sushi-restaurant",        name:"Sushi Restaurant",        items:["Seaweed","Salmon","Building"] },
   { id:"to-the-skies",            name:"To the Skies",            items:["Helicopter","Rocket","Cloud"] },
   { id:"transparency",            name:"Transparency",            items:["Glass","Plastic","Diamond"] },
   { id:"wind-power",              name:"Wind Power",              items:["Tree","Turbine Blade","Battery"] },
-  { id:"wooden-wonders",          name:"Wooden Wonders",          items:["Log Cabin","Canoe","Wheel"] },
   { id:"working-vehicles",        name:"Working Vehicles",        items:["Helicopter","Tractor","Maglev Train"] },
   { id:"ancient-ground",          name:"Ancient Ground",          items:["Fossil","Diamond","Limestone","Magnet"] },
-  { id:"beach-town",              name:"Beach Town",              items:["Speedboat","Lighthouse","Bicycle","Fish Cakes"] },
+  { id:"beach-town",              name:"Beach Town",              items:["Speedboat","Lighthouse","Fish Cakes"] },
   { id:"cabin-life",              name:"Cabin Life",              items:["Log Cabin","Tree","Deer","Fossil"] },
   { id:"concrete-jungle",         name:"Concrete Jungle",         items:["Concrete","Building","Skyscraper","Museum"] },
   { id:"confectionery",           name:"Confectionery",           items:["Sugar","Banana","Apple","Oven"] },
   { id:"deep-freight",            name:"Deep Freight",            items:["Natural Gas","Steel","Rubber","Maglev Train"] },
   { id:"fauna",                   name:"Fauna",                   items:["Deer","Chicken","Salmon","Orca"] },
-  { id:"green-machine",           name:"Green Machine",           items:["Tractor","Soil","Fertilizer","Grain"] },
   { id:"heavy-metal",             name:"Heavy Metal",             items:["Engine","Turbine Blade","Satellite Dish","Bridge"] },
   { id:"im-looking-through-you",  name:"I'm Looking Through You", items:["Glass","Light Bulb","Compass","Telescope"] },
-  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass"] },
-  { id:"natural-treasures",       name:"Natural Treasures",       items:["Fossil","Diamond","Life","Star"] },
   { id:"ocean-life",              name:"Ocean Life",              items:["Water","Seaweed","Salmon","Orca"] },
   { id:"old-growth-life",         name:"Old Growth Life",         items:["Soil","Tree","Deer","Salmon"] },
   { id:"power-up",                name:"Power Up",                items:["Furnace","Engine","Solar Panel","Turbine Blade"] },
-  { id:"sky-watch",               name:"Sky Watch",               items:["Telescope","Satellite Dish","Compass","Solar Panel"] },
-  { id:"sushi-restaurant",        name:"Sushi Restaurant",        items:["Seaweed","Salmon","Building"] },
   { id:"water-cycle",             name:"Water Cycle",             items:["Soil","Tree","Cloud","Water"] },
-  { id:"wheat-field",             name:"Wheat Field",             items:["Farm","Grain","Tractor","Turbine Blade"] },
+  { id:"grain-mill",              name:"Grain Mill",              items:["Farm","Grain","Turbine Blade"] },
   { id:"ancient-inventions",      name:"Ancient Inventions",      items:["Wheel","Telescope","Compass","Canoe","Furnace"] },
   { id:"farm-to-table",           name:"Farm to Table",           items:["Farm","Grain","Chicken","Egg","Apple"] },
-  { id:"foundry-line",            name:"Foundry Line",            items:["Furnace","Steel","Stainless Steel","Aluminum Alloy","Tools"] },
   { id:"metal-works",             name:"Metal Works",             items:["Steel","Stainless Steel","Aluminum Alloy","Tools","Wire"] },
-  { id:"river-to-rail",           name:"River to Rail",           items:["Canoe","Bicycle","Car","Maglev Train","Helicopter"] },
-  { id:"precious-earth",          name:"Precious Earth",          items:["Clay","Sand","Limestone","Diamond","Natural Gas","Rubber"] },
-  { id:"the-long-haul",           name:"The Long Haul",           items:["Car","Bicycle","Speedboat","Helicopter","Maglev Train","Tractor"] },
+  { id:"precious-earth",          name:"Precious Earth",          items:["Soil","Limestone","Diamond","Natural Gas","Rubber"] },
   { id:"around-the-world",        name:"Around the World",        items:["Bicycle","Canoe","Speedboat","Car","Tractor","Helicopter","Maglev Train"] },
   { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Oven"] },
   { id:"city-complete",           name:"City Complete",           items:["Clay","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
