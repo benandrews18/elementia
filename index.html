@@ -1258,6 +1258,12 @@ body[data-screen="market"] #trackedPill{display:none}
 #eventToast.et-job .ct-title, #eventToast.et-job .ct-bonus{color:var(--ok)}
 #eventToast.et-unlock{background:var(--collection-soft); border-bottom-color:var(--collection)}
 #eventToast.et-unlock .ct-title, #eventToast.et-unlock .ct-bonus{color:var(--collection)}
+#eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
+#eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
+/* This kind's own "name" line is a full sentence, not an item name -- ease
+   off .ct-name's default bold/large item-name sizing so it reads as body
+   text instead of shouting a short label at full size. */
+#eventToast.et-warn .ct-name{font-size:13.5px; font-weight:600; color:var(--ink2)}
 /* Coin-flip: only played on the Home button's icon+label when it swaps
    specifically between the Map and Marketplace faces (see
    setHubHomeFace()) -- rotates edge-on and back to 0, never past 90, so
@@ -2854,12 +2860,22 @@ body[data-screen="market"] #trackedPill{display:none}
 .histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
 .histnone{font-size:13px; color:var(--mute); font-weight:700}
 /* Collections list -- reuses .histrows/.histentry's own scrollable
-   bordered-row shell (see above), just a plain read-only body instead of
-   a tappable .histrow (nothing to load/delete/drill into here). */
-.collection-row{padding:10px 13px; display:flex; flex-direction:column; gap:3px}
+   bordered-row shell (see above); a plain read-only row (name/icons/
+   bonus) plus one optional action (Add to Mat, Classic only -- see
+   renderCollectionsList()), not a tappable .histrow of its own. */
+.collection-row{padding:10px 13px; display:flex; flex-direction:column; gap:6px}
 .collection-row .cr-name{font-weight:800; font-size:13.5px; color:var(--collection)}
-.collection-row .cr-items{font-size:12px; color:var(--mute)}
+/* Bare icons, no border/background pill -- explicit request, replacing
+   the plain comma-joined item-name text this row used to show. */
+.collection-row .cr-icons{display:flex; flex-wrap:wrap; gap:6px; font-size:19px; line-height:1}
+.collection-row .cr-icon img{width:1em; height:1em}
 .collection-row .cr-bonus{font-size:12px; font-weight:800; color:var(--gold)}
+.collection-row .cr-add{
+  align-self:flex-start; border:1.5px solid var(--collection-line); border-radius:8px;
+  padding:5px 12px; font-size:12px; font-weight:800; color:var(--collection);
+  background:var(--collection-soft);
+}
+.collection-row .cr-add:disabled{opacity:.4; cursor:not-allowed}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
 .histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
 .histturns{display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto}
@@ -4226,12 +4242,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .switch:checked{background:var(--ok); border-color:var(--ok)}
 .switch:checked::before{transform:translateX(17px)}
 
-.setnum{
-  width:60px; padding:8px 6px; text-align:center; border:1.5px solid var(--line); border-radius:9px;
-  font:inherit; font-size:15px; font-weight:800; background:var(--bg-soft); color:var(--ink);
-}
-.setnum:disabled{opacity:.45}
-.mini-toggle{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:var(--mute); cursor:pointer}
 .setversion{margin-top:18px; font-size:11.5px; color:var(--mute); text-align:center}
 
 
@@ -4707,11 +4717,22 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    below). Built once (see buildMatFilterBar()) and only ever toggled/
    read after that -- never regenerated via innerHTML -- so a search
    keystroke can never lose its own input's focus. */
-.mat-filters{margin:14px 0 10px}
+.mat-filters{margin:14px 0 10px; display:flex; align-items:center; gap:8px}
 .mat-fsearch{
-  width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
+  flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
   background:var(--sunken); color:var(--ink); font-size:13px; box-sizing:border-box;
 }
+/* In-game entry point into the same #collectionsOverlay the welcome
+   screen's own button opens (see openCollectionsOverlay()) -- a plain
+   standalone button (not .mat-fbtn -- that class's dimmed/toggle-state
+   styling is for the filter tray's on/off chips, not an always-active
+   icon button) sized to sit inline with the search bar. */
+.mat-collections-btn{
+  flex:none; width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:18px; border-radius:8px; border:1.5px solid var(--collection-line);
+  background:var(--collection-soft); color:var(--ink);
+}
+.mat-collections-btn:hover{background:var(--sunken)}
 
 /* Sort/Filter floating buttons -- same circular "raised icon" language
    and screen corners as #pinsBtn/#quickConvertBtn one row up (left/right
@@ -5075,6 +5096,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
     <div class="mat-filters" id="matFilters" hidden>
       <input type="search" id="matFSearch" class="mat-fsearch" placeholder="Search items or components…"
              autocomplete="off" spellcheck="false">
+      <button type="button" id="matCollectionsBtn" class="mat-collections-btn" title="Collections">🏆</button>
     </div>
     <!-- Every other mode -- unchanged simple text filter over the legacy
          tier-grouped list (see renderLegacyDrawer()). -->
@@ -5321,28 +5343,12 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   </div>
 </div>
 
-<!-- end-of-session summary -->
-<div class="overlay" id="summary" role="dialog" aria-modal="true" aria-labelledby="sumTitle">
-  <div class="sheetbox">
-    <h2 id="sumTitle">🏁 Session complete</h2>
-    <p id="sumSub"></p>
-    <div class="sumgrid" id="sumGrid"></div>
-    <div id="sumCapsWrap"></div>
-    <div class="btnrow">
-      <button type="button" class="bigbtn" id="sumContinue">▶ Continue Playing</button>
-      <button type="button" class="bigbtn sec" id="sumNew">Start a new session</button>
-      <button type="button" class="bigbtn sec" id="sumReview">Review my collection</button>
-    </div>
-  </div>
-</div>
-
-<!-- real end of a run -- reached HARD_VISIT_LIMIT, or eliminated for good
-     past the round-limit checkpoint (see showEndGame()). Deliberately a
-     separate overlay from #summary above, not a shared template: never
-     offers Continue Playing, and carries two extra stat sections
+<!-- real end of a run -- reached MAX_VISITS, or missed a Quark breakpoint
+     from BREAKPOINT_GATE_VISIT on (see showEndGame()). The only ending
+     screen now that the old round-checkpoint "Continue Playing" summary
+     is gone; carries two extra stat sections
      (#endGrid gets extra BINGO/top-score tiles via sessionStatsGridHTML's
-     own extraCells, #endFlavorWrap is the Biggest Turn icon strip) that
-     the round-limit checkpoint doesn't need. -->
+     own extraCells, #endFlavorWrap is the Biggest Turn icon strip). -->
 <div class="overlay" id="endGame" role="dialog" aria-modal="true" aria-labelledby="endTitle">
   <div class="sheetbox">
     <h2 id="endTitle">🏁 Game Over</h2>
@@ -5467,22 +5473,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 <div class="overlay" id="settingsRules" role="dialog" aria-modal="true" aria-labelledby="setRulesTitle">
   <div class="sheetbox">
     <h2 id="setRulesTitle">🎲 Game Rules</h2>
-    <p class="setnote">Changing these mid-session just moves the finish line.</p>
-    <div class="setting-row">
-      <span class="setting-ico">🗺️</span>
-      <span class="setting-body">
-        <span class="setting-label">Station visits per session</span>
-        <label class="mini-toggle"><input type="checkbox" id="setUnlimited" class="switch"> Unlimited</label>
-      </span>
-      <input id="setVisits" class="setnum" type="number" min="1" step="1" inputmode="numeric" aria-label="Station visits per session">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🎲</span>
-      <span class="setting-body">
-        <span class="setting-label">Dice rolls per visit</span>
-      </span>
-      <input id="setDice" class="setnum" type="number" min="1" max="10" step="1" inputmode="numeric" aria-label="Dice rolls per visit">
-    </div>
     <div class="setting-row">
       <span class="setting-ico">🎮</span>
       <span class="setting-body">
@@ -7356,55 +7346,56 @@ const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.
    Derived model — mirrors simulation/model.py's parse_requirements().
    Raw elements are consumed; crafted items are PERMANENT UNLOCKS.
    ===================================================================== */
-/* Dice rolls per visit. Defaults to build_guide.py's value but is adjustable
-   per-device via the settings overlay (prefs.diceCount), plus a +1 bonus
-   once the player owns a Tractor (Experimental -- prefs.expTractorHarvest,
-   on by default now, see prefs' own comment). Guarded on state actually
-   existing: loadAll() calls this once before state is assigned at all
-   (see its own comment), when there's nothing to own yet. Re-run any time
-   either input could have changed -- prefs saved, Tractor just crafted
-   (see craft()'s own comment), or a save/mode just loaded. */
-let TAKE = DATA.take;
+/* Dice rolls per visit -- fixed at 3, plus a +1 bonus once the player owns
+   a Tractor (Experimental -- prefs.expTractorHarvest, on by default now,
+   see prefs' own comment). No longer player-configurable (was adjustable
+   via Settings' "Dice rolls per visit" -- removed 2026-09-17, explicit
+   request: this and the two visit-count constants just below should be
+   fixed numbers, not settings players fiddle with). Guarded on state
+   actually existing: loadAll() calls this once before state is assigned
+   at all (see its own comment), when there's nothing to own yet. Re-run
+   any time the Tractor input could have changed -- just crafted (see
+   craft()'s own comment) or a save/mode just loaded. */
+let TAKE = 3;
 function applyDiceCount(){
   const tractorBonus = prefs.expTractorHarvest && state && state.items && state.items.includes("Tractor") ? 1 : 0;
-  TAKE = (prefs.diceCount || DATA.take) + tractorBonus;
+  TAKE = 3 + tractorBonus;
 }
-/* Session cap from HANDOFF.md §6: a group gets at most 15 station visits.
-   Kept out of the generated DATA block (which must stay byte-identical to
-   build_guide.py) so regenerating game data never clobbers it. Adjustable
-   per-device via the settings overlay (prefs.maxVisits); "unlimited" maps
-   to Infinity so every visits-remaining check just falls out naturally. */
-const DEFAULT_MAX_VISITS = 20;
+/* Classic Mode's real, absolute stop -- also what the topbar's visits
+   pill shows as its own denominator. Fixed at 40 (was derived as double
+   whatever round-checkpoint Settings had configured; that whole
+   checkpoint concept -- and the Settings control for it -- is gone now,
+   see confirmLockIn()/BREAKPOINT_GATE_VISIT below for what replaced it).
+   Matches LOCKIN_ROUND_ANCHORS' own guaranteed-impossible score wall at
+   round 40 (see its comment) -- the two are meant to land together: even
+   a theoretically perfect run that somehow kept clearing the score wall
+   all the way out can't play past this. Zen/Hard never reach it
+   (Infinity there, see applyVisitLimit() below), and goMap()'s own check
+   additionally guards state.mode -- see its own comment on why. */
+const DEFAULT_MAX_VISITS = 40;
 let MAX_VISITS = DEFAULT_MAX_VISITS;
-/* Classic Mode's real, absolute stop -- double whatever checkpoint
-   (MAX_VISITS) is actually configured, not a bare literal, so a player
-   who's changed prefs.maxVisits in Settings still gets a sensible far
-   end rather than one hardcoded to the default. For the default 20-visit
-   checkpoint this is turn 40, matching LOCKIN_ROUND_ANCHORS' own
-   guaranteed-impossible wall at round 40 (see its comment) -- the two are
-   meant to land together: even a theoretically perfect run that somehow
-   kept clearing the score wall all the way out can't play past this.
-   Zen/Hard never reach it (MAX_VISITS is already Infinity there, see
-   below), and goMap()'s own check additionally guards state.mode --
-   see its own comment on why. */
-let HARD_VISIT_LIMIT = Infinity;
-/* Zen and Hard both override whatever's configured in Settings for this
-   session only (prefs.maxVisits itself is untouched, so a later Classic
-   session still uses whatever the player configured). Hard Mode is a
-   "campaign" -- players craft/complete jobs at their own pace with no
-   step limit to hit, and since it therefore never trips sessionOver(),
-   an in-progress Hard Mode run is never force-ended; it just keeps
-   loading back into itself on every reload until the player explicitly
-   resets from Settings, same as any other save. Guarded for the one call
-   during loadAll() that happens before `state` exists yet. */
+/* Zen and Hard both run unlimited visits regardless of the fixed Classic
+   cap above. Hard Mode is a "campaign" -- players craft/complete jobs at
+   their own pace with no step limit to hit, and since it therefore never
+   reaches MAX_VISITS, an in-progress Hard Mode run is never force-ended;
+   it just keeps loading back into itself on every reload until the
+   player explicitly resets from Settings, same as any other save.
+   Guarded for the one call during loadAll() that happens before `state`
+   exists yet. */
 function applyVisitLimit(){
   const unlimitedMode = typeof state !== "undefined" && state
     && (state.mode === "zen" || state.mode === "hard");
-  MAX_VISITS = unlimitedMode ? Infinity
-    : prefs.maxVisits === "unlimited" ? Infinity : (prefs.maxVisits || DEFAULT_MAX_VISITS);
-  HARD_VISIT_LIMIT = isFinite(MAX_VISITS) ? MAX_VISITS * 2 : Infinity;
+  MAX_VISITS = unlimitedMode ? Infinity : DEFAULT_MAX_VISITS;
 }
 function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "∞"; }
+/* Classic Mode only: from this visit on, a Lock-In that misses the first
+   Quark breakpoint (tier 0) ends the run for real instead of proceeding
+   harmlessly (see confirmLockIn()). Fixed at 10, not player-configurable
+   -- replaces the old settings-driven round-length checkpoint (which used
+   to gate this at MAX_VISITS/20 and offer a "Continue Playing" screen)
+   entirely; there's nothing left to continue past now, play just
+   continues straight through to MAX_VISITS. */
+const BREAKPOINT_GATE_VISIT = 10;
 
 /* ------------------------------------------------------- game mode --- */
 const MODE_DISPLAY_NAME = {zen:"Zen Mode", classic:"Classic Mode", hard:"Adventure Mode"};
@@ -8645,7 +8636,7 @@ function bingoCardHTML(){
     // data-item-card) is what routes a tap to openCapstoneOverlay()
     // instead of the plain item-inspection popup.
     if (i === BINGO_CENTER_IDX && !state.bingoCenterChosen){
-      return `<div class="bingo-cell bingo-cell-addcap" data-add-capstone="1" title="Add a capstone to anchor your BINGO card">
+      return `<div class="bingo-cell bingo-cell-addcap" data-cell-idx="${i}" data-add-capstone="1" title="Add a capstone to anchor your BINGO card">
         <span class="bc-addcap-ic">➕</span>
         <span class="bc-addcap-label">Add<br>Capstone</span>
       </div>`;
@@ -8669,7 +8660,7 @@ function bingoCardHTML(){
     // reopen the overlay and change it. Only the pre-choice placeholder
     // cell above (the "Add Capstone" invitation) ever routes there.
     const centerAttr = "";
-    return `<div class="${cls}"${centerAttr} data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+    return `<div class="${cls}"${centerAttr} data-cell-idx="${i}" data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
         aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
       <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
@@ -9311,6 +9302,10 @@ function freshState(){
     bingoLinesCompleted: [], // [lineIndex, ...] into bingoLines()'s own 12-line array -- see
                        // checkBingoLines()/BINGO_LINE_BONUS. Lifetime, never un-completes even
                        // if a member item is later spent (Classic never spends items anyway).
+    pendingBingoClears: [], // [lineIndex, ...] -- lines newly completed by checkBingoLines()
+                       // but not yet animated/cleared (see processPendingBingoClears()). Plays
+                       // out the next time the Bingo card is actually viewed, not instantly at
+                       // craft time, since several lines can complete between visits.
     // DORMANT as of 2026-09-13 -- Lock In no longer banks its reward here
     // (see finishLockIn()/bonusDiceNextVisit below), so this stays 0
     // forever on a fresh save. Left in place, untouched, purely so the
@@ -9333,18 +9328,14 @@ function freshState(){
                        // center re-opens the picker at any point in the game, not just once).
                        // See the migration just below freshState() for saves from before this
                        // field existed.
-    pastVisitLimit: false, // True once the player has chosen "Continue Playing" off the
-                       // round-MAX_VISITS summary screen (see showSummary()/sessionOver()) --
-                       // from here on sessionOver() reports false again (unblocking travel),
-                       // and confirmLockIn() switches from "can't fail before the limit" to
-                       // "must clear the first Quark breakpoint each Lock-In or the run ends".
-    finalGameOver: false, // True only once a post-limit Lock-In actually missed the first
-                       // Quark breakpoint (tier 0) and the player confirmed ending the run there (see
-                       // confirmLockIn()) -- distinct from the ordinary round-limit ending,
-                       // so showEndGame() can word it accordingly and skip offering another
-                       // Continue Playing option.
-    reachedHardLimit: false, // True only once state.visits hits HARD_VISIT_LIMIT (see goMap())
-                       // -- the OTHER real ending, a congratulatory one: the player kept
+    sawBreakpointGateNotice: false, // One-shot: whether the turn-10 "breakpoints now matter"
+                       // notice has fired yet this run (see BREAKPOINT_GATE_VISIT).
+    finalGameOver: false, // True only once a Lock-In from BREAKPOINT_GATE_VISIT on actually
+                       // missed the first Quark breakpoint (tier 0) and the player confirmed
+                       // ending the run there (see confirmLockIn()) -- distinct from the
+                       // congratulatory ending below, so showEndGame() can word it accordingly.
+    reachedHardLimit: false, // True only once state.visits hits MAX_VISITS (see goMap()) --
+                       // the OTHER real ending, a congratulatory one: the player kept
                        // clearing the Quark breakpoint all the way out. showEndGame() words
                        // this one differently from finalGameOver.
     bestMatScore: 0,   // Peak matScore().total across every real Lock-In this run (see
@@ -10367,7 +10358,7 @@ function mapCardHTML(name){
   const s = STATION_BY_NAME[name];
   const su = DATA.suits[s.suit];
   const capName = s.capstone[1], done = owns(capName);
-  const over = sessionOver();
+  const over = state.ended;
   const here = name === state.lastStation;
   const connected = canReachStation(state.lastStation, name);
   // Confirming travel itself now happens through the hub's own Travel
@@ -10433,7 +10424,7 @@ function mapCardHTML(name){
 }
 
 function renderMap(){
-  const over = sessionOver();
+  const over = state.ended;
   const here = state.lastStation;
   // Hard Mode only: The Ocean is the only legal first pick, so every other
   // node reads as unreachable during this window rather than the normal
@@ -10509,8 +10500,8 @@ function renderMap(){
 
   const banner = over
     ? `<p class="map-sub" style="color:var(--bad);font-weight:700">
-         All ${visitLimitLabel()} visits used — this session is complete.
-         <button type="button" class="tbtn" id="showSummaryBtn" style="margin-left:8px">See results</button></p>`
+         This run has ended.
+         <button type="button" class="tbtn" id="showEndBtn" style="margin-left:8px">See results</button></p>`
     : "";
 
   // Stays blank for the whole Classic-opening beat (bare map + logo bounce
@@ -11792,7 +11783,7 @@ function updateHub(){
    over), reused here so Home's Travel face only appears when tapping it
    would actually do something. */
 function canTravelTo(name){
-  return !!name && name !== state.lastStation && canReachStation(state.lastStation, name) && !sessionOver();
+  return !!name && name !== state.lastStation && canReachStation(state.lastStation, name) && !state.ended;
 }
 /* Single source of truth for which of Home's six faces is showing right
    now. Both updateHub() (styling, see setHubHomeFace()) and the hubHome
@@ -11954,11 +11945,12 @@ function closeOverlay(id){
     document.getElementById("convertGoalCard").innerHTML = "";
     document.getElementById("convertScrim").classList.remove("open");
   }
-  // showSummary() forces #backdrop on against state.lastStation's art even
-  // when the current screen isn't "station" (see its own comment) -- put
-  // that back under updateBackdrop()'s normal screen-driven control once
-  // the summary closes, rather than leaving a stale station image behind.
-  if (id === "summary") updateBackdrop();
+  // showSessionEndBackdrop() forces #backdrop on against state.lastStation's
+  // art even when the current screen isn't "station" (see its own comment)
+  // -- put that back under updateBackdrop()'s normal screen-driven control
+  // once the end screen closes, rather than leaving a stale station image
+  // behind.
+  if (id === "endGame") updateBackdrop();
   updateHub();
   // No-ops unless this closed the LAST blocking overlay AND something
   // actually queued while it was open (see showMouseTip()/its own
@@ -11969,19 +11961,11 @@ function closeOverlay(id){
 const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
 
 /* --------------------------------------------------- session end --- */
-// state.pastVisitLimit (set by #sumContinue, see showSummary()) keeps this
-// false forever after the player chooses to keep playing past the round
-// limit -- travel/the map's own "over" gate (renderMap()) both read this
-// directly, so continuing really does unblock them rather than just
-// dismissing the summary and immediately re-triggering it.
-function sessionOver(){ return state.visits >= MAX_VISITS && !state.pastVisitLimit; }
-
-/* Shared between showSummary() (the round-limit checkpoint, which still
-   offers Continue Playing) and showEndGame() (a real ending -- reached
-   HARD_VISIT_LIMIT, or missed a post-checkpoint Quark breakpoint for
-   good) -- both show the same core run stats, just wrapped in different
-   framing/buttons. extraCells (raw .sumstat HTML) lets showEndGame()
-   append its own stat tiles onto the same grid layout. */
+/* Feeds showEndGame() -- the only ending screen now that the old
+   round-checkpoint "Continue Playing" summary is gone (see
+   BREAKPOINT_GATE_VISIT's own comment for what replaced it). extraCells
+   (raw .sumstat HTML) lets showEndGame() append its own stat tiles onto
+   the same grid layout. */
 function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
   const elementsHeld = Object.values(state.elements).reduce((a,b) => a+b, 0);
@@ -12019,25 +12003,6 @@ function showSessionEndBackdrop(){
   }
 }
 
-function showSummary(){
-  document.getElementById("sumSub").textContent = state.finalGameOver
-    ? `Game over -- missed the first Quark breakpoint on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`
-    : `All ${visitLimitLabel()} visits used. Here's what you built:`;
-
-  // Continue Playing only makes sense the FIRST time this screen appears
-  // for a run that just hit the round limit -- once the player has
-  // already taken that option (state.pastVisitLimit) travel is already
-  // unblocked, and once the run has genuinely ended for real
-  // (state.finalGameOver, see confirmLockIn()) there's nothing left to
-  // continue into.
-  document.getElementById("sumContinue").hidden = state.pastVisitLimit || state.finalGameOver;
-
-  document.getElementById("sumGrid").innerHTML = sessionStatsGridHTML();
-  document.getElementById("sumCapsWrap").innerHTML = capstonesSectionHTML();
-  showSessionEndBackdrop();
-  openOverlay("summary");
-}
-
 /* Who visited the most stations this run, and which single visit scored
    the most points -- both pure derived reads of state.visitLog (already
    recorded per-visit by goStation()/craft(), see their own comments), no
@@ -12065,18 +12030,16 @@ function endGameFlavorHTML(){
       `<span class="sumcap" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>`;
 }
 
-/* The real end of a run -- either the congratulatory case (kept clearing
-   the Quark breakpoint all the way to HARD_VISIT_LIMIT, see goMap()) or
-   the elimination case (missed one for good past the checkpoint, see
-   confirmLockIn()) -- a separate overlay from showSummary()'s round-limit
-   checkpoint since neither offers Continue Playing and both need the
-   extra BINGO/top-score/flavor stats below. */
+/* The real (and only) end of a run -- either the congratulatory case (kept
+   clearing the Quark breakpoint all the way to MAX_VISITS, see goMap()) or
+   the elimination case (missed one for good from BREAKPOINT_GATE_VISIT on,
+   see confirmLockIn()). */
 function showEndGame(){
   document.getElementById("endTitle").textContent = state.reachedHardLimit
     ? "🎉 You Reached the End!" : "🏁 Game Over";
   document.getElementById("endSub").textContent = state.reachedHardLimit
     ? `You kept clearing the Quark breakpoint all the way to visit ${state.visits} -- here's your run:`
-    : `Game over -- missed the first Quark breakpoint on a Lock-In past visit ${visitLimitLabel()}. Here's what you built:`;
+    : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
 
   const bingoTotal = bingoLines().length;
   const bingoDone = (state.bingoLinesCompleted || []).length;
@@ -12894,7 +12857,7 @@ function applyInvFilter(){
 }
 
 function goStation(name){
-  if (sessionOver()){ showSummary(); return; }
+  if (state.ended){ showEndGame(); return; }
   // Adventure/Hard Mode's Helicopter fast travel costs 1 Natural Gas per
   // real hop -- STATION_BY_NAME[name] excludes every sub-zone id (Island/
   // Wardrobe/planets, entered through this same function but never real
@@ -13007,17 +12970,14 @@ function goMap(){
   const hereNode = document.querySelector(".map-node.here");
   if (hereNode) hereNode.scrollIntoView({block:"center", behavior:"instant"});
   else window.scrollTo({top:0, behavior:"instant"});
-  // Surface the wrap-up once the last visit is done and they've come back.
-  if (sessionOver() && !state.ended){ state.ended = true; save(); showSummary(); }
-  // The OTHER real ending: a player who kept clearing the Quark
-  // breakpoint all the way out to HARD_VISIT_LIMIT (see its own comment
-  // -- double whatever checkpoint is configured, turn 40 by default).
-  // state.mode guard mirrors sessionOver()'s own Zen/Hard exemption --
-  // those modes already run with MAX_VISITS (and therefore
-  // HARD_VISIT_LIMIT) at Infinity, so this never fires for them, but the
-  // explicit check keeps this block legible on its own rather than
-  // relying on the Infinity comparison silently doing the right thing.
-  if (state.mode === "classic" && state.pastVisitLimit && state.visits >= HARD_VISIT_LIMIT && !state.ended){
+  // The congratulatory ending: a player who kept clearing the Quark
+  // breakpoint all the way out to MAX_VISITS (turn 40 by default -- see
+  // its own comment). state.mode guard mirrors Zen/Hard's own unlimited-
+  // visits exemption (they never reach a finite MAX_VISITS at all, see
+  // applyVisitLimit()), kept explicit so this block reads clearly on its
+  // own rather than relying on the Infinity comparison silently doing
+  // the right thing.
+  if (state.mode === "classic" && state.visits >= MAX_VISITS && !state.ended){
     state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
   }
   // Organic, one-time-ever: a player back on the map choosing their
@@ -13934,7 +13894,7 @@ function handleScreenClick(ev){
   }
   hideHint();
 
-  if (ev.target.closest("#showSummaryBtn")){ showSummary(); return; }
+  if (ev.target.closest("#showEndBtn")){ showEndGame(); return; }
 
   if (ev.target.closest("#emptyElBadgeBtn")){
     emptyElCashInMode ? exitEmptyElCashIn() : enterEmptyElCashIn();
@@ -14504,6 +14464,7 @@ function expandDrawerToFull(){
   if (!(drawer.classList.contains("open") && !drawer.classList.contains("expanded"))) return false;
   matTrayExpanded = true;
   drawer.classList.add("expanded");
+  resetDrawerTopScroll();
   renderMatTop();
   updateHub();
   syncLockInBanner();
@@ -14516,6 +14477,7 @@ function expandDrawerToFull(){
 function collapseDrawerToPeeked(){
   matTrayExpanded = false;
   drawer.classList.remove("expanded");
+  resetDrawerTopScroll();
   renderMatTop();
   updateHub();
   syncLockInBanner();
@@ -14619,11 +14581,24 @@ let realGameState = null, realScreen = null, realCurrent = null, realSelectedMap
 const openDrawer = (opts = {}) => {
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
+  resetDrawerTopScroll();
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
   syncLockInBanner();
+  maybeShowBreakpointGateNotice();
 };
+// One-shot heads-up the first time the player views their Display Mat on
+// exactly BREAKPOINT_GATE_VISIT -- from here on a tier-0 Lock-In (see
+// confirmLockIn()) is a real Game Over risk, not the harmless no-op it
+// was every visit before this.
+function maybeShowBreakpointGateNotice(){
+  if (state.mode !== "classic" || state.visits !== BREAKPOINT_GATE_VISIT || state.sawBreakpointGateNotice) return;
+  state.sawBreakpointGateNotice = true;
+  save();
+  queueEventToast("warn", "⚠️", "Breakpoints now matter",
+    "Missing your first Quark breakpoint on Lock-In ends your run from here on.");
+}
 /* Shows/hides/positions #lockInBanner -- see its own HTML comment. Only
    the Lock In flow's own half-view (peeked) stage shows it (travelPromptFor
    is set only by that flow's own "travel" face branch, see hubHomeFace()'s
@@ -15117,6 +15092,38 @@ let matDrawerView = "mat";
 // mat/elements zone, or "peeked" (that zone only) -- see #drawer.expanded
 // and openDrawer(), which resets this to false on every fresh open.
 let matTrayExpanded = false;
+
+/* Collapsing #drawerTop on scroll, full-inventory only -- scrolling
+   further into the item list progressively hides the mat/combo header
+   (up to its own full height) to reclaim screen room; scrolling back
+   toward the top reveals it again by the same amount. Applied as a
+   plain transform on #drawerTop ITSELF, not its innerHTML -- renderMatTop()
+   only ever replaces #drawerTop's CONTENTS, never the node itself, so
+   this offset survives every re-render undisturbed until explicitly
+   reset here. */
+let drawerTopScrollOffset = 0;
+let lastDbodyScrollTop = 0;
+function resetDrawerTopScroll(){
+  drawerTopScrollOffset = 0;
+  lastDbodyScrollTop = 0;
+  const drawerTop = document.getElementById("drawerTop");
+  drawerTop.style.transform = "";
+  drawerTop.style.marginBottom = "";
+}
+document.querySelector("#drawer .dbody").addEventListener("scroll", ev => {
+  if (!matTrayExpanded || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const drawerTop = document.getElementById("drawerTop");
+  const maxOffset = drawerTop.offsetHeight;
+  if (!maxOffset) return;
+  const top = ev.target.scrollTop;
+  const delta = top - lastDbodyScrollTop;
+  lastDbodyScrollTop = top;
+  drawerTopScrollOffset = Math.max(0, Math.min(maxOffset, drawerTopScrollOffset + delta));
+  drawerTop.style.transform = `translateY(${-drawerTopScrollOffset}px)`;
+  // Closes the gap #dbody would otherwise open up as #drawerTop slides
+  // out from under it (a transform never affects layout on its own).
+  drawerTop.style.marginBottom = `${-drawerTopScrollOffset}px`;
+}, {passive:true});
 // Cached so a mid-drag reorder (renderMatGridCells() above) doesn't have
 // to recompute the score on every pointermove -- reordering never
 // changes it, only adding/removing/toggling views does, and each of
@@ -15189,7 +15196,7 @@ let matLastScore = null;
    multi-station change, so that data is still valid. Rounds 25-35 were
    rebuilt to climb toward the new ceiling instead of the old one, and
    the "impossible wall" (previously round 31, now round 40 -- see
-   HARD_VISIT_LIMIT) has its 1-die bar (4,700) deliberately set above the
+   MAX_VISITS) has its 1-die bar (4,700) deliberately set above the
    new ceiling: no arrangement of any size can clear it, a hard,
    guaranteed-Game-Over/End-Game wall, now grounded in the actual
    re-measured maximum instead of a stale one a real run had already
@@ -15255,27 +15262,26 @@ function diceDeltaForReward(reward){ return reward; }
 /* Reads the mat exactly as it stands right now (not matLastScore, which
    could be stale if this fires from a code path that skipped a render).
    A tier-0 Lock-In (no bonus dice at all, see diceDeltaForReward()) means
-   something different depending on the round: before the round limit
-   (state.visits < MAX_VISITS) that's the only consequence -- the player
-   hasn't even reached the point where a Game Over is possible yet, so
-   this just proceeds silently, same as any other Lock-In. From the round
-   limit on (only reachable at all once the player has chosen Continue
-   Playing off the summary screen, see showSummary()/sessionOver()),
-   missing tier 1 for real ends the run -- see askConfirm()'s own generic
-   Yes/Cancel dialog, reused here rather than inventing a second
-   confirmation UI. Cancel just backs out of the confirm and leaves the
-   mat and drawer exactly as they were, so the player can rearrange it and
-   lock in again whenever they like before committing to end things. */
+   something different depending on the visit: before BREAKPOINT_GATE_VISIT
+   that's the only consequence -- the player hasn't even reached the point
+   where a Game Over is possible yet, so this just proceeds silently, same
+   as any other Lock-In. From BREAKPOINT_GATE_VISIT on, missing tier 1 for
+   real ends the run -- see askConfirm()'s own generic Yes/Cancel dialog,
+   reused here rather than inventing a second confirmation UI. Cancel just
+   backs out of the confirm and leaves the mat and drawer exactly as they
+   were, so the player can rearrange it and lock in again whenever they
+   like before committing to end things. */
 function confirmLockIn(){
   const s = matScore(matOnMat());
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, state.visits);
   if (reward === 0){
-    if (state.visits < MAX_VISITS){ finishLockIn(0); return; }
+    if (state.visits < BREAKPOINT_GATE_VISIT){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint. You're past your visit limit, so this ends your run here. End it now?`,
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it ends your run here. End it now?`,
       () => {
         state.finalGameOver = true;
+        state.ended = true;
         save();
         closeDrawer();
         travelPromptFor = null;
@@ -16090,6 +16096,7 @@ function clearMatDisplay(){
   save();
   render();
 }
+document.getElementById("matCollectionsBtn").addEventListener("click", openCollectionsOverlay);
 document.getElementById("matFStations").addEventListener("click", ev => {
   const b = ev.target.closest("[data-mat-fstation]");
   if (!b) return;
@@ -16228,6 +16235,16 @@ document.getElementById("matLayoutsClose").addEventListener("click", closeMatLay
    comment. A still-locked collection gets no row at all, not even a
    placeholder; the X/Y count above the list is the only hint of how many
    remain. */
+// Whether every member of a collection is owned AND whatever isn't
+// already on the mat would actually fit -- the single gate for the
+// "Add to Mat" button below (see addCollectionToMat()'s own comment for
+// why the add itself stays all-or-nothing off this same check).
+function collectionAddFits(c){
+  if (!c.items.every(n => owns(n))) return false;
+  const missing = c.items.filter(n => !state.mat.includes(n)).map(n => MAT_CARD_BY_NAME[n]);
+  if (!missing.length) return false; // already fully on the mat -- nothing to add
+  return matFits(matOnMat().concat(missing));
+}
 function renderCollectionsList(){
   const total = MAT_COLLECTIONS.length;
   const unlocked = MAT_COLLECTIONS.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
@@ -16238,19 +16255,34 @@ function renderCollectionsList(){
     list.innerHTML = '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection to reveal it here.</p>';
     return;
   }
-  list.innerHTML = `<div class="histrows">${unlocked.map(c => `
+  // Classic-only action -- the Add-to-Mat button only makes sense where a
+  // Display Mat exists at all (this overlay is also reachable from the
+  // welcome screen outside any run, where state.mat doesn't exist yet).
+  const canAdd = state.mode === "classic";
+  list.innerHTML = `<div class="histrows">${unlocked.map(c => {
+    const allOnMat = canAdd && c.items.every(n => state.mat.includes(n));
+    const fits = canAdd && collectionAddFits(c);
+    return `
     <div class="histentry">
       <div class="collection-row">
         <span class="cr-name">${esc(c.name)}</span>
-        <span class="cr-items">${esc(c.items.join(", "))}</span>
+        <span class="cr-icons">${c.items.map(n =>
+          `<span class="cr-icon" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</span>
         <span class="cr-bonus">+${c.bonus}</span>
+        ${canAdd ? `<button type="button" class="cr-add" data-add-collection="${esc(c.id)}"
+            ${fits ? "" : "disabled"}
+            title="${allOnMat ? "Already on your Display Mat" : fits ? "Add every card in this collection to your Display Mat" : "Own every card and free up mat room to add this collection"}">${
+              allOnMat ? "On Mat" : "Add to Mat"}</button>` : ""}
       </div>
-    </div>`).join("")}</div>`;
+    </div>`;
+  }).join("")}</div>`;
 }
-// Reached only from the welcome screen now (#tourCollectionsBtn, alongside
-// Mini-Games/Combo Lab) -- same behind-settings layering #tourSettingsBtn
-// already uses (see its own comment) so #tour drops behind this overlay
-// instead of closing outright, then comes back above it once this closes.
+// Reached from the welcome screen (#tourCollectionsBtn, alongside Mini-
+// Games/Combo Lab) AND now also from in-game (the inventory filter bar's
+// own #matCollectionsBtn, see buildMatFilterBar()) -- the exact same
+// overlay/function either way, no separate in-game copy. The #tour
+// behind-settings toggle is harmless when #tour isn't even open (the
+// in-game entry point), same class add/remove either way.
 function openCollectionsOverlay(){
   renderCollectionsList();
   document.getElementById("tour").classList.add("behind-settings");
@@ -16261,6 +16293,23 @@ function closeCollectionsOverlay(){
   document.getElementById("tour").classList.remove("behind-settings");
 }
 document.getElementById("collectionsClose").addEventListener("click", closeCollectionsOverlay);
+// All-or-nothing: every not-yet-placed member goes on at once, gated by
+// collectionAddFits() (checked again here, not just trusted from the
+// button's own disabled state, in case the mat changed while this
+// overlay sat open behind it). No partial add -- a collection half-placed
+// by a failed fit would just be confusing.
+function addCollectionToMat(id){
+  const c = MAT_COLLECTIONS.find(x => x.id === id);
+  if (!c || !collectionAddFits(c)) return;
+  c.items.forEach(n => { if (!state.mat.includes(n)) state.mat.push(n); });
+  save();
+  renderCollectionsList();
+  renderMatTop(); renderMatResultsGrid();
+}
+document.getElementById("collectionsList").addEventListener("click", ev => {
+  const btn = ev.target.closest("[data-add-collection]");
+  if (btn) addCollectionToMat(btn.dataset.addCollection);
+});
 document.getElementById("tourCollectionsBtn").addEventListener("click", openCollectionsOverlay);
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
 document.getElementById("matLayoutName").addEventListener("keydown", ev => {
@@ -16353,6 +16402,10 @@ function renderJobBoard(){
         // stays a personal log, never a place to browse and accept
         // something new -- that's the "full" tray's job.
         : questsBodyHTML(true);
+  // Only the real Bingo card view just rendered above has real cells to
+  // animate -- a no-op every other time this fires (nothing pending, or
+  // already mid-sequence, see processPendingBingoClears()'s own guard).
+  if (classic && full) processPendingBingoClears();
 }
 /* Pins + active/completed jobs only -- no "Available Jobs" board (that's
    jobBoardHTML(false)'s own job, reserved for the full variant above).
@@ -16513,7 +16566,10 @@ function closeJobBoard(){
   // stays reachable any time this tray is reopened, on turn 1 or turn 20
   // alike, so there's no risk of stranding the player the way there used
   // to be when picking one was the only way out of this screen.
-  if (bingoRevealInProgress) return;
+  // Same block during a line-clear's own bounce-out/refill (see
+  // processPendingBingoClears()) -- a scrim tap or Escape mid-clear would
+  // strand the underlying state.bingoCard mutation half-applied.
+  if (bingoRevealInProgress || bingoClearInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
@@ -17544,12 +17600,103 @@ function checkBingoCompletion(name){
    of which line or what's on it -- see that constant's own comment. */
 function checkBingoLines(){
   if (state.mode !== "classic" || !state.bingoCard) return;
+  if (!state.pendingBingoClears) state.pendingBingoClears = []; // old saves predate this field
   bingoLines().forEach((line, i) => {
     if (state.bingoLinesCompleted.includes(i)) return;
     if (!line.every(idx => owns(state.bingoCard[idx]))) return;
     state.bingoLinesCompleted.push(i);
+    state.pendingBingoClears.push(i);
     queueEventToast("job", "🎉", "BINGO! Line complete", "", "+" + BINGO_LINE_BONUS + " pts");
   });
+}
+/* Which raw element a cleared square's own item hands back, matching its
+   suit (see the request: "collect elements which match the suits of the
+   items that were crafted"). itemSuitCosts() -- the same curated table
+   the Display Mat's own suit-combo pips read (see MAT_CARDS) -- gives 0-3
+   suit tags per item; the majority suit among them wins ties broken by
+   draw order. An item with NO suit tags at all (most items, see that
+   table's own comment) falls back to any element actually obtainable in
+   Classic (CLASSIC_ELEMENTS), never the fuller ELEMENT_SUIT key set,
+   which also lists a couple of symbols (Zn) no current Classic station
+   actually deals. */
+function elementForBingoClear(name){
+  const pips = itemSuitCosts(name);
+  let suit = null;
+  if (pips.length){
+    const counts = {};
+    pips.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+    suit = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+  }
+  const pool = (suit ? CLASSIC_ELEMENTS.filter(el => ELEMENT_SUIT[el] === suit) : null) || [];
+  const finalPool = pool.length ? pool : CLASSIC_ELEMENTS;
+  return finalPool[Math.floor(Math.random() * finalPool.length)];
+}
+// A fresh, non-capstone, non-duplicate replacement for a just-cleared
+// square -- same eligibility floor drawBingoCard() draws the whole board
+// from (BINGO_MIN_POINTS via bingoEligibleItems()), capstones excluded
+// (those only ever come from the center/extras drawBingoCard() itself
+// places at card creation, never re-rolled by a later refill).
+function drawBingoReplacementItem(exclude){
+  const pool = bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE" && !exclude.has(n));
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+let bingoClearInProgress = false;
+const BINGO_CLEAR_BOUNCE_MS = 320;
+const BINGO_CLEAR_STAGGER_MS = 70;
+/* Plays out one pending line clear at a time (see state.pendingBingoClears,
+   queued by checkBingoLines()), called every time the Bingo card actually
+   renders (see renderJobBoard()'s own tail call) -- a no-op unless
+   something's actually pending. The BINGO_CENTER_IDX square is skipped
+   even when it's part of the completed line -- it's the card's one
+   permanent anchor (see bingoCardHTML()'s own "Add Capstone" comment),
+   never cleared/refilled by this. Recurses through renderJobBoard()'s own
+   tail call rather than looping internally: each line's cycle (bounce out
+   -> mutate state -> repaint) fully lands before the next line's bounce-
+   out starts, which is what actually makes multiple simultaneous
+   completions read as one clear after another instead of overlapping. */
+function processPendingBingoClears(){
+  if (bingoClearInProgress) return;
+  const pending = state.pendingBingoClears || [];
+  if (!pending.length) return;
+  bingoClearInProgress = true;
+  const lineIdx = pending[0];
+  const line = bingoLines()[lineIdx].filter(i => i !== BINGO_CENTER_IDX);
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const cellFor = i => document.querySelector(`#jobSheetBody .bingo-cell[data-cell-idx="${i}"]`);
+  line.forEach((i, k) => {
+    setTimeout(() => {
+      const cell = cellFor(i);
+      if (cell && !reduced){
+        cell.animate([
+          { transform: "scale(1)", opacity: 1, offset: 0 },
+          { transform: "scale(1.12)", opacity: 1, offset: .35 },
+          { transform: "scale(.2)", opacity: 0, offset: 1 },
+        ], { duration: BINGO_CLEAR_BOUNCE_MS, easing: "cubic-bezier(.3,.8,.4,1)" });
+      }
+    }, k * BINGO_CLEAR_STAGGER_MS);
+  });
+  const totalDelay = reduced ? 0 : (line.length - 1) * BINGO_CLEAR_STAGGER_MS + BINGO_CLEAR_BOUNCE_MS + 40;
+  setTimeout(() => {
+    const usedNames = new Set(state.bingoCard);
+    const granted = [];
+    line.forEach(i => {
+      const name = state.bingoCard[i];
+      const el = elementForBingoClear(name);
+      state.elements[el] = (state.elements[el] || 0) + 1;
+      granted.push({name, el});
+      const fresh = drawBingoReplacementItem(usedNames);
+      if (fresh){ usedNames.add(fresh); state.bingoCard[i] = fresh; }
+    });
+    state.pendingBingoClears = pending.slice(1);
+    save();
+    bingoClearInProgress = false;
+    renderJobBoard();
+    line.forEach((i, k) => setTimeout(() => bingoCellFlipAppear(cellFor(i)), k * BINGO_REVEAL_STAGGER_MS));
+    const bySuit = {};
+    granted.forEach(g => { bySuit[g.el] = (bySuit[g.el] || 0) + 1; });
+    const elSummary = Object.keys(bySuit).map(el => `${bySuit[el]}${el}`).join(", ");
+    queueEventToast("job", "✨", "Line cleared", elSummary, "+" + line.length + " elements");
+  }, totalDelay);
 }
 /* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
    not a lookalike, the literal same function -- so "Full breakdown"
@@ -17766,9 +17913,6 @@ document.getElementById("jobSheetBody").addEventListener("touchend", ev => {
 });
 
 /* -------------------------------------------------------- settings --- */
-const setVisitsInput = document.getElementById("setVisits");
-const setUnlimitedBox = document.getElementById("setUnlimited");
-const setDiceInput = document.getElementById("setDice");
 const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
 const setAutoCardInspectionBox = document.getElementById("setAutoCardInspection");
@@ -17823,46 +17967,14 @@ setExpTractorHarvestBox.addEventListener("change", () => {
 });
 
 function openSettingsRules(){
-  // Zen/Hard already force MAX_VISITS to Infinity regardless of this pref
-  // (see applyVisitLimit()) -- showing an editable "25" here while that's
-  // true would silently do nothing if changed, which reads as a bug, not
-  // a setting. So for those two modes the control just reflects reality:
-  // locked to Unlimited, both inputs disabled.
-  const modeForcesUnlimited = state && (state.mode === "zen" || state.mode === "hard");
-  const unlimited = modeForcesUnlimited || prefs.maxVisits === "unlimited";
-  setUnlimitedBox.checked = unlimited;
-  setUnlimitedBox.disabled = modeForcesUnlimited;
-  setVisitsInput.value = unlimited ? DEFAULT_MAX_VISITS : prefs.maxVisits;
-  setVisitsInput.disabled = unlimited;
-  // The base preference, not the live TAKE -- TAKE can currently include
-  // the Tractor bonus (see applyDiceCount()), and this field has to stay
-  // "what you're setting the BASE to" or saving unchanged would silently
-  // bake that bonus into prefs.diceCount and double it on the next visit.
-  setDiceInput.value = prefs.diceCount || DATA.take;
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
   setAutoCardInspectionBox.checked = prefs.autoCardInspection !== false;
   openSettingsScreen("settingsRules");
 }
 document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
-setUnlimitedBox.addEventListener("change", () => {
-  setVisitsInput.disabled = setUnlimitedBox.checked;
-});
 document.getElementById("setRulesCancel").addEventListener("click", () => closeOverlay("settingsRules"));
 document.getElementById("setSave").addEventListener("click", () => {
-  // Zen/Hard's forced-unlimited display (see openSettingsRules()) is
-  // read-only -- don't let merely opening this screen while in one of
-  // those modes silently overwrite whatever visit limit the player
-  // actually has configured for Classic mode.
-  if (setUnlimitedBox.disabled){
-    // leave prefs.maxVisits untouched
-  } else if (setUnlimitedBox.checked){
-    prefs.maxVisits = "unlimited";
-  } else {
-    const n = Math.max(1, Math.round(Number(setVisitsInput.value)) || DEFAULT_MAX_VISITS);
-    prefs.maxVisits = n;
-  }
-  prefs.diceCount = Math.max(1, Math.min(10, Math.round(Number(setDiceInput.value)) || DATA.take));
   prefs.minigamesEnabled = setMinigamesBox.checked;
   // showTutorialHintOnce() itself checks this live, so toggling it off
   // stops any further tips immediately, mid-run included -- no separate
@@ -17870,24 +17982,10 @@ document.getElementById("setSave").addEventListener("click", () => {
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
   prefs.autoCardInspection = setAutoCardInspectionBox.checked;
   savePrefs();
-  applyVisitLimit();
-  applyDiceCount();
   closeOverlay("settingsRules");
   render();
 });
 
-document.getElementById("sumContinue").addEventListener("click", () => {
-  state.pastVisitLimit = true;
-  save();
-  closeOverlay("summary");
-  render();
-});
-document.getElementById("sumNew").addEventListener("click", () => {
-  closeOverlay("summary"); resetCurrentModeRun();
-});
-document.getElementById("sumReview").addEventListener("click", () => {
-  closeOverlay("summary"); openDrawer();
-});
 document.getElementById("endNew").addEventListener("click", () => {
   closeOverlay("endGame"); resetCurrentModeRun();
 });
