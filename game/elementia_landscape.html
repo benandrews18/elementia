@@ -150,6 +150,38 @@ body.landscape #jobSheet.top-tray .bingo-hint{font-size:8.5px; line-height:1.3; 
 body.landscape *{scrollbar-width:none}
 body.landscape *::-webkit-scrollbar{display:none}
 
+/* ---- Landscape station screen: header is one compact band -- icon + title
+   (+ Empty Element badge) on the left, "Elements found here" chips inline
+   beside it; the item shop below flows in two columns. */
+body.landscape[data-screen="station"] main{padding:0 0 calc(var(--hub-h, 63px) + 8px)}
+body.landscape .sheet{border:none; border-radius:0}
+body.landscape .stationhead{
+  display:grid; grid-template-columns:auto 1fr; column-gap:14px;
+  grid-template-areas:"head label" "head gather" "play play" "hint hint";
+  align-items:start; padding:0 0 8px; border-radius:0; border-top-width:6px;
+}
+body.landscape .sheet-head{grid-area:head; padding:14px 0 0 22px; gap:10px; align-self:start}
+body.landscape .sheet-head .em{font-size:32px}
+body.landscape .sheet-head h1{font-size:21px; gap:10px; letter-spacing:-.3px}
+body.landscape .sheet-head:has(.travel-btn){padding-right:0}
+body.landscape .travel-btn{top:10px; right:14px; width:34px; height:34px}
+body.landscape .col-label.elements-label{grid-area:label; margin:8px 60px 0 0; font-size:9.5px; letter-spacing:1px}
+body.landscape .gather{grid-area:gather; margin:2px 60px 0 0; padding:0; justify-content:flex-start; gap:8px}
+body.landscape .gcol{flex:none; width:50px; max-width:none; gap:3px}
+body.landscape .gchip{border-width:3px; border-radius:7px; padding:2px}
+body.landscape .gchip .gsym{font-size:21px}
+body.landscape .gnum{font-size:7.5px; top:1px; left:2px}
+body.landscape .gname{font-size:7px}
+body.landscape .gcol > .die{width:16px; height:16px; border-width:1.5px; border-radius:4px}
+body.landscape .empty-el-cashin-hint{grid-area:hint}
+body.landscape .playbar{grid-area:play; margin:6px 22px 0; gap:8px}
+body.landscape .rolled{gap:8px; justify-content:flex-start}
+body.landscape .rollcard{flex:0 0 50px; max-width:50px; padding:4px}
+body.landscape .makewrap{padding:8px 22px 14px}
+body.landscape .col-label.shop-label{font-size:11px; letter-spacing:1px; padding-bottom:4px; margin-bottom:8px; text-align:left}
+body.landscape .shop{display:grid; grid-template-columns:1fr 1fr; gap:8px 12px}
+body.landscape .shop-toggle-row{margin-bottom:6px}
+
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
    for a 915x412 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
