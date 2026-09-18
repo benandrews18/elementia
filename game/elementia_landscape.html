@@ -325,6 +325,68 @@ body.landscape .todo-tracker .map-job-chip .mj-em{font-size:20px; line-height:1}
 body.landscape .todo-tracker .map-job-chip.selected{border-color:var(--gold); background:var(--gold-soft); box-shadow:0 0 0 2px var(--gold-soft)}
 body.landscape .todo-tracker .mj-search-badge{position:absolute; top:-6px; right:-6px; font-size:10px}
 
+/* Dialogs (.sheetbox): compact chrome, and any dialog taller than the space
+   above the hub scrolls INSIDE its own box instead of scrolling the overlay. */
+body.landscape .overlay .sheetbox{
+  padding:14px 22px; border-radius:16px; border-width:2px;
+  max-height:100%; overflow-y:auto;
+}
+body.landscape .sheetbox h2{font-size:19px; margin-bottom:4px}
+body.landscape .sheetbox p{font-size:13px; margin-bottom:8px; line-height:1.4}
+body.landscape .sheetbox .btnrow{margin-top:10px; gap:8px}
+body.landscape .setting-row{padding:7px 11px; margin-bottom:5px; gap:10px}
+body.landscape .setting-label{font-size:13px}
+body.landscape .bigbtn{padding:9px 14px; font-size:14px}
+body.landscape #settings .btnrow .bigbtn{padding:8px 6px; font-size:13px}
+body.landscape .setversion{margin-top:8px}
+
+/* Mini-Games arcade map: header strip, then the rotated map filling the rest. */
+body.landscape .arcade-head{padding:8px 18px}
+body.landscape .arcade-head h1{font-size:16px}
+body.landscape .arcade-body{padding:0; overflow:hidden; display:flex; flex-direction:column; position:relative}
+body.landscape #arcadeMap{flex:1; min-height:0; display:flex}
+body.landscape #arcadeMap .map-canvas{flex:1; width:100%; margin:0}
+body.landscape .arcade-hint{position:absolute; left:0; right:0; bottom:6px; z-index:5; margin:0; color:#fff; text-shadow:0 1px 4px #000; font-weight:700}
+
+/* Combo Lab: no hub, so the drawer runs to the stage bottom; the exit button
+   becomes a small pill at the top-right instead of a full-width bar. */
+body.landscape[data-combo-lab] #drawer.expanded{bottom:0}
+body.landscape[data-combo-lab] #drawerTop{padding-top:8px}
+body.landscape[data-combo-lab] #drawer.expanded .dbody{padding-top:40px}
+body.landscape #comboLabExitBtn{
+  left:auto; right:10px; top:6px; width:auto; padding:5px 14px; font-size:12px; border-radius:999px;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
+}
+body.landscape[data-combo-lab] .mat-sf-btn{bottom:10px}
+body.landscape[data-combo-lab] .mat-sf-scrim{bottom:0}
+body.landscape[data-combo-lab] #matSortTray, body.landscape[data-combo-lab] #matFilterTray{bottom:0}
+
+/* Adventure (Hard) Marketplace tray carries Quests + Collection Bundles panels
+   (not the 5x5 Bingo grid), so it gets a wider tray. */
+body.landscape[data-mode="hard"] #jobSheet.top-tray{width:520px}
+
+/* Zen Marketplace: the 4-row options strip shrinks to fit above the hub, and
+   the banner/section chrome tightens. */
+body.landscape #marketArc{gap:7px; max-height:calc(100% - var(--hub-h, 63px) - 12px); top:calc(50% - 26px)}
+body.landscape .market-arc-btn{padding:4px 14px 4px 4px; gap:8px}
+body.landscape .market-arc-icon{width:44px; height:44px; font-size:20px}
+body.landscape .market-arc-label{font-size:12.5px}
+body.landscape .market-banner{padding:6px 26px}
+body.landscape .market-banner h1{font-size:17px; letter-spacing:1.5px}
+body.landscape .market-section{margin:8px 0 6px; padding:10px}
+body.landscape[data-screen="market"] main{padding:10px 18px calc(var(--hub-h, 63px) + 10px)}
+
+/* Capstone picker: the 8 choices sit in a single row instead of 4x2. */
+body.landscape #capstoneOverlay .sheetbox{max-width:680px}
+body.landscape .bingo-pick-grid{grid-template-columns:repeat(8,1fr); gap:6px}
+body.landscape .bingo-pick-grid .bc-icon{font-size:30px; bottom:8px}
+body.landscape .bingo-pick-grid .bingo-cell{border-radius:10px}
+body.landscape .bingo-random-btn{margin-top:8px}
+
+/* Event/collection toasts: slimmer top drops. */
+body.landscape #eventToast, body.landscape #collectionToast{padding:8px 20px; gap:10px}
+body.landscape #eventToast .ct-icon{width:34px; height:34px; font-size:19px}
+
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
    for a 915x412 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
@@ -17017,6 +17079,11 @@ function openJobSelectTray(){
 function openJobBoard(){
   jobSheetVariant = "compact";
   openJobSheet();
+  // LANDSCAPE: the "pick a pin to track" nudge that used to fire when the
+  // floating pins tray opened lives here now (tracker chips are in this tray).
+  if (state.mode === "classic" && prefs.pinnedItems.length && !selectedJobItem){
+    showTutorialHintOnce("pinselect", 10, "Tap a pin below to start tracking!", "bottom-right");
+  }
 }
 function closeJobBoard(){
   // Blocks dismissal only while the opening reveal (runBingoRevealSequence())
