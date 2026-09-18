@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Landscape Layout Mockups (Real Assets)</title>
+<style>
+/* ===== Palette copied verbatim from elementia.html's own :root ===== */
+:root{
+  --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
+  --line:#2a5a72; --line2:#1c4257; --bg:#0f2733; --card:#163544;
+  --bg-soft:#122e3c; --sunken:#1c4257; --pip:#c9d3e0;
+  --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c; --ok-bright:#4fe583;
+  --bad:#f0674c; --bad-soft:#371913; --bad-dark:#a3311d;
+  --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
+  --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
+  --shadow:rgba(0,0,0,.45);
+  --backdrop-wash:rgba(18,23,31,.42);
+  --backdrop-wash-light:rgba(18,23,31,.18);
+  --item-bg-start:rgba(20,26,35,.92);
+  --item-bg-end:rgba(20,26,35,.30);
+  /* Real DATA.suits colors, one per station */
+  --suit-ocean:#3aa9a0; --suit-power:#8a5ce0; --suit-greenhouse:#3aab6d; --suit-mine:#e2a83e;
+  --suit-forest:#e2823a; --suit-bakery:#8cb43e; --suit-city:#e2543b; --suit-observatory:#4d7cf2;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Segoe UI','Helvetica Neue',Arial,'Segoe UI Emoji','Noto Color Emoji',sans-serif;
+  background:#070f14; color:var(--ink); min-height:100vh;
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  padding:16px 12px 40px;
+}
+
+/* ===== Chrome around the mockups (not part of the game itself) ===== */
+.meta{max-width:960px; text-align:center; color:var(--mute); font-size:13px; line-height:1.5}
+.meta b{color:var(--ink2)}
+.tabs{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:980px}
+.tab{
+  background:var(--card); border:1px solid var(--line); color:var(--ink2);
+  padding:8px 13px; border-radius:8px; font-size:12.5px; font-weight:600;
+  cursor:pointer; transition:background .12s,color .12s;
+}
+.tab:hover{background:var(--sunken); color:var(--ink)}
+.tab.active{background:var(--gold-soft); border-color:var(--gold-line); color:var(--gold)}
+.stage{width:100%; display:flex; justify-content:center}
+
+/* ===== Scaling device frame, internal design canvas is 932x430 ===== */
+.frame-wrap{ --w:932px; --h:430px; width:var(--w); height:var(--h); }
+.frame{
+  position:relative; width:932px; height:430px; overflow:hidden;
+  border-radius:18px; background:var(--bg);
+  box-shadow:0 20px 60px var(--shadow), 0 0 0 1px #000;
+  transform-origin:top left;
+}
+.frame *{font-family:inherit}
+.screen{position:absolute; inset:0; display:none}
+.screen.active{display:block}
+.content{position:absolute; left:0; right:0; top:0; height:368px; overflow:hidden}
+
+/* ===== Real map art: backdrops/diamond_map_full.webp, rotated 90deg to
+   match the landscape station layout below (a literal 90deg rotation of
+   the portrait MAP_NODE_POS chain -- see each .station-wrap's own left/top,
+   computed as (100-origY%, origX%) per station). The element is sized to
+   the ORIGINAL (pre-rotation) box -- content-area height x width -- then
+   rotated, so background-size:100% 100% stretches the real art across it
+   exactly the way the live game's own .map-canvas::before does, just
+   pre-rotated. ===== */
+.map-bg-real{position:absolute; inset:0; overflow:hidden; background:#0f2018}
+.map-art{
+  position:absolute; top:50%; left:50%; width:368px; height:932px;
+  transform:translate(-50%,-50%) rotate(90deg);
+  background:url("backdrops/diamond_map_full.webp") center/100% 100% no-repeat;
+  opacity:.96;
+}
+
+/* ===== Real per-station / marketplace backdrop art (see updateBackdrop()
+   in elementia.html) -- full-bleed art behind the station preview/shop and
+   marketplace screens, with the exact same dark wash the live game
+   layers on top for legibility. ===== */
+.station-backdrop{
+  position:absolute; inset:0; background-size:cover; background-position:center;
+}
+.station-backdrop::before{content:""; position:absolute; inset:0; background:var(--backdrop-wash)}
+.market-backdrop::before{background:var(--backdrop-wash-light)}
+
+/* ===== Hub bar: real #hub / .hubbtn / #hubHome chrome, lifted verbatim
+   from elementia.html, just spread across the wide 3-section layout
+   (left cluster / center circle / right cluster) instead of 5 buttons
+   packed into a narrow portrait width. ===== */
+.hubbar{
+  position:absolute; left:0; right:0; bottom:0; height:64px; z-index:10;
+  padding:6px 14px; background:linear-gradient(180deg, #1c4257, #163544);
+  border-top:1.5px solid #2a5a72; box-shadow:0 -6px 20px rgba(0,0,0,.25);
+  display:flex; align-items:flex-end; justify-content:space-between;
+}
+.hub-cluster{display:flex; gap:6px}
+.hubbtn{
+  width:66px; height:50px; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px; border-radius:15px;
+  background:linear-gradient(180deg, #2a5a72, #1c4257);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.28), inset 0 -3px 5px rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.25);
+  border:1.5px solid rgba(255,255,255,.22); color:#fff;
+}
+.hubbtn.active{background:linear-gradient(rgba(63,180,108,.28), rgba(63,180,108,.28)), linear-gradient(180deg, #2a5a72, #1c4257)}
+.hubbtn.active .hl{color:var(--ok)}
+.hubbtn .hi{font-size:22px; line-height:1}
+.hubbtn .hl{font-size:8.5px; font-weight:800; letter-spacing:.2px}
+.hub-home{
+  position:absolute; left:50%; bottom:8px; transform:translateX(-50%);
+  width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:26px;
+  background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+  border:4px solid #f2a93a;
+  box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+    inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
+  z-index:11;
+}
+
+/* ===== Station map nodes: real .map-node / .map-node-capstone-badge
+   chrome (dark circle, suit-colored border; gold-bordered capstone badge
+   offset to the badge's own side) -- sized down from the live game's own
+   19.5%-of-canvas-width rule to a fixed px size that reads right at this
+   mockup's fixed 932px design width. ===== */
+.station-wrap{position:absolute; width:60px; height:60px; transform:translate(-50%,-50%)}
+.station-big{
+  width:60px; height:60px; border-radius:50%;
+  background:#122e3c; border:6px solid var(--suit, #ffce54);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; box-shadow:0 2px 10px var(--shadow); position:relative; z-index:2;
+}
+.station-small{
+  position:absolute; left:48px; top:6px; width:44px; height:44px; border-radius:50%;
+  background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:1;
+}
+.pick-card{
+  position:absolute; width:150px; height:88px; left:390px; top:131px;
+  background:#0c1c24; border:2px solid var(--ok); border-radius:10px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  padding:10px; font-weight:700; font-size:13px; color:var(--ink);
+  box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:3;
+}
+
+/* ===== Slide-down top tray (station preview / marketplace) ===== */
+.scrim{position:absolute; inset:0; background:rgba(6,14,19,.55); z-index:7}
+.toptray{
+  position:absolute; top:0; left:0; right:0; z-index:8;
+  background:linear-gradient(180deg, rgba(15,26,35,.88), rgba(18,38,50,.82) 88%);
+  border-bottom:2px solid var(--gold-line);
+  padding:10px 20px 12px;
+}
+.pv-row1{display:flex; align-items:center; justify-content:space-between}
+.pv-name{display:flex; align-items:center; gap:10px}
+.pv-name .ic{font-size:26px}
+.pv-name h2{font-size:19px; text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.pv-track{
+  display:flex; align-items:center; gap:6px; background:var(--sunken); border:1px solid var(--gold-line);
+  border-radius:20px; padding:5px 12px 5px 8px; font-size:11.5px; font-weight:700; color:var(--gold);
+}
+.pv-label{font-size:9.5px; font-weight:800; letter-spacing:.04em; color:var(--ink2); margin:8px 0 5px; text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.elchip{
+  width:34px; height:34px; border-radius:7px; background:#fff; color:#12202a;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-weight:800; font-size:12px; border:2px solid var(--gold); line-height:1;
+}
+.elchip small{font-size:6px; font-weight:700; color:#5a6a76; margin-top:1px}
+.chip-row{display:flex; gap:6px; flex-wrap:wrap}
+.icobadge{
+  width:28px; height:28px; border-radius:6px; background:var(--sunken); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:14px;
+}
+.icobadge.gold{border-color:var(--gold)}
+.pv-cap{display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--ink2)}
+
+/* ===== Marketplace tray -- real backdrops/marketplace.webp behind it ===== */
+.market-tray{
+  position:absolute; top:0; left:50%; transform:translateX(-50%); width:260px; z-index:8;
+  background:linear-gradient(180deg, rgba(18,49,65,.92), rgba(15,42,53,.9));
+  border:1px solid var(--line); border-top:none;
+  border-radius:0 0 16px 16px; padding:8px 12px 10px; box-shadow:0 14px 30px rgba(0,0,0,.5);
+}
+.mk-visited{
+  display:flex; align-items:center; justify-content:space-between; background:var(--sunken);
+  border:1px solid var(--line); border-radius:9px; padding:5px 9px;
+}
+.mk-visited .lbl{font-size:9px; font-weight:800; color:var(--mute); letter-spacing:.03em}
+.mk-pips{display:flex; gap:4px; margin-top:3px}
+.mk-pips span{width:17px;height:17px;border-radius:5px;background:#12202a; border:1px solid var(--line); display:flex;align-items:center;justify-content:center; font-size:9px; opacity:.5}
+.mk-pips span.done{opacity:1; border-color:var(--gold)}
+.mk-bonus{background:var(--gold); color:#241d10; font-weight:800; font-size:11px; border-radius:12px; padding:3px 9px}
+.mk-title{text-align:center; margin-top:6px}
+.mk-title h2{font-size:14px}
+.mk-title p{font-size:9.5px; color:var(--mute); margin-top:1px}
+.bingo-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-top:6px}
+/* Real .bingo-cell: parchment face, no border, chunky drop-shadow instead */
+.bingo-cell{
+  aspect-ratio:1/1; background:#f2e6cc; color:#2a2015; border-radius:8px;
+  box-shadow:0 3px 0 rgba(0,0,0,.4), 0 4px 7px rgba(0,0,0,.25);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;
+  font-size:6.5px; font-weight:700; position:relative; line-height:1.1; overflow:hidden;
+}
+.bingo-cell.owned{background:var(--ok-soft); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.4), 0 4px 7px rgba(0,0,0,.25), inset 0 0 0 2px var(--ok-bright)}
+.bingo-cell.locked{filter:grayscale(.7) brightness(.6)}
+.bingo-cell .em{font-size:16px}
+.bingo-cell.center{background:transparent; color:var(--gold); border:2px dashed var(--gold)}
+.mk-note{display:flex; align-items:center; gap:6px; font-size:9.5px; color:var(--mute); margin-top:6px}
+
+/* ===== Station shop: real header + .item/.craftbtn card chrome ===== */
+.shop-head{
+  position:relative; height:60px; z-index:2;
+  background:linear-gradient(180deg, rgba(15,26,35,.85), rgba(18,38,50,.8));
+  border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px;
+  padding:0 20px;
+}
+.shop-head .row1{display:flex; align-items:center; gap:10px; flex-shrink:0}
+.shop-head .row1 .ic{font-size:24px}
+.shop-head .row1 h2{font-size:17px; text-shadow:0 2px 6px rgba(0,0,0,.6)}
+.shop-grid{
+  position:absolute; top:60px; left:0; right:0; bottom:0; overflow:auto;
+  display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:10px 20px;
+  align-content:start;
+}
+/* Real .item / .shop .item -- suit-thin-border light glass card, dark
+   bevelled icon slot, craftbtn pill on the right. */
+.recipe-card{
+  position:relative; display:flex; align-items:stretch; border-radius:14px;
+  border:2px solid var(--pip);
+  background:linear-gradient(to right, rgba(221,231,244,.72), rgba(201,218,238,.72));
+  box-shadow:0 2px 5px rgba(0,0,0,.18);
+  padding:6px 8px 6px 6px; gap:10px; align-items:center;
+}
+.recipe-card.locked{filter:grayscale(.5) brightness(.6)}
+.recipe-card.capstone{
+  background:linear-gradient(90deg,#251f10,#1c1a15); border-color:var(--gold-line); color:var(--cream, #e9dfc6);
+}
+.recipe-card .iem{
+  font-size:26px; width:44px; height:44px; flex:none; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:10px; border:2px solid var(--line); background:var(--sunken);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.25), inset 0 -4px 6px rgba(0,0,0,.25);
+}
+.recipe-card .txt{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
+.recipe-card .txt b{font-size:12.5px; color:#1c2b3d}
+.recipe-card.capstone .txt b{color:var(--gold)}
+.recipe-card .formula{display:flex; gap:4px; flex-wrap:wrap; font-size:9.5px; font-weight:700}
+.recipe-card .formula em{background:#fff; color:#1c2b3d; border-radius:6px; padding:2px 6px; font-style:normal; border:1.5px solid #1c2b3d; box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.recipe-card.capstone .formula em{background:#3a2e14; color:var(--gold); border-color:var(--gold-line)}
+.recipe-card .badge{position:absolute; top:-6px; left:-6px; width:20px; height:20px; border-radius:50%; background:#4d7cf2; border:2px solid #fff; font-size:10px; display:flex; align-items:center; justify-content:center}
+.craft-btn{
+  flex:none; width:52px; display:flex; align-items:center; justify-content:center; text-align:center;
+  border-radius:9px; padding:9px 4px; font-size:11.5px; font-weight:800; line-height:1.1;
+  background:var(--sunken); color:var(--mute);
+}
+.craft-btn.go{
+  background:linear-gradient(180deg, #ffce6b, #f0a428 62%); color:#fff;
+  text-shadow:0 1px 2px rgba(120,60,0,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #a05d12;
+}
+.recipe-card.capstone .craft-btn{background:var(--gold-soft); color:var(--gold); border:1px solid var(--gold-line)}
+
+/* ===== Left slide-in tray (To-Do list + tracker) ===== */
+.panel{
+  position:absolute; top:0; bottom:62px; left:0; width:302px; z-index:6;
+  background:linear-gradient(180deg,var(--card),var(--bg-soft));
+  border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  border-radius:0 0 14px 0; padding:12px 14px 10px; overflow:hidden;
+  display:flex; flex-direction:column; gap:8px;
+}
+.todo-head{display:flex; align-items:center; justify-content:space-between}
+.todo-head .pinned{font-size:11px; font-weight:800; color:var(--gold); letter-spacing:.02em}
+.hint-link{font-size:10.5px; color:var(--gold); font-weight:700}
+.track-card{background:var(--bg-soft); border:1px solid var(--line); border-radius:10px; padding:9px 10px; display:flex; flex-direction:column; gap:5px}
+.track-top{display:flex; align-items:center; gap:8px}
+.track-top .ic{width:34px;height:34px;border-radius:8px;background:var(--sunken);display:flex;align-items:center;justify-content:center;font-size:17px}
+.track-top .nm{font-size:13px; font-weight:700}
+.track-top .st{font-size:9.5px; color:var(--mute); display:block}
+.track-top .pin{margin-left:auto; font-size:13px; color:var(--gold)}
+.bd-toggle{font-size:10px; color:var(--gold); font-weight:700}
+.need-row{display:flex; align-items:center; gap:7px; font-size:11px; color:var(--ink2); padding:3px 0}
+.need-row .ic{width:20px;height:20px;border-radius:5px;background:var(--sunken);display:flex;align-items:center;justify-content:center; font-size:11px}
+.need-row .stationtag{margin-left:auto; font-size:10px; opacity:.7}
+.panel-spacer{flex:1}
+.tracker-box{border-top:1px solid var(--line); padding-top:8px}
+.tracker-lbl{font-size:9.5px; font-weight:800; color:var(--mute); letter-spacing:.03em; margin-bottom:6px}
+.tracker-row{display:flex; gap:7px}
+.tracker-chip{
+  width:40px; height:40px; border-radius:9px; background:var(--sunken); border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:18px; position:relative;
+}
+.tracker-chip.active{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold-soft)}
+.tracker-chip .dot{position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); font-size:7px; color:var(--gold); font-weight:800}
+
+/* ===== Inventory + Mat: real Quark Meter (3 equal segments, Empty
+   Element capping the end) exactly as shipped in elementia.html. ===== */
+.split{position:absolute; inset:0; display:flex}
+.mat-pane{width:62%; padding:8px 12px; display:flex; flex-direction:column; gap:7px; border-right:1px solid var(--line); background:var(--bg-soft)}
+.mat-score-card{background:var(--sunken); border:1.5px solid var(--line); border-radius:12px; padding:10px 12px 8px; display:flex; flex-direction:column; gap:8px}
+.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative; margin-top:16px}
+.qm-labels{position:relative; width:100%; height:12px}
+.qm-seg-label{position:absolute; top:0; transform:translateX(-50%); text-align:center; font-size:10px; font-weight:800; color:var(--ink2); white-space:nowrap}
+.qm-seg-label.qm-label-end{transform:none; text-align:right}
+.qm-cap-label{top:-18px; color:var(--gold)}
+.qm-segs-row{display:flex; gap:3px; width:100%; position:relative}
+.qm-seg{position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden; background:var(--line)}
+.qm-seg-fill{position:absolute; inset:0; width:0; border-radius:6px; background:var(--gold); opacity:.55}
+.qm-seg.lit .qm-seg-fill{opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7)}
+.qm-break{position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2}
+.qm-break-dice{display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border:3px solid #000; border-radius:7px; background:#fff; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.qm-break.lit .qm-break-dice{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+.qm-break-cap{right:0; top:-24px; transform:none}
+.empty-el-square{position:relative; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border:3px solid #000; border-radius:7px; background:#fff; color:#181614; font-weight:800; font-size:11px}
+.qm-break.lit .empty-el-square{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+.mat-score-stats{display:flex; align-items:baseline; justify-content:center; gap:8px}
+.mss-stat{display:flex; flex-direction:column; align-items:center; gap:1px}
+.mss-val{font-size:17px; font-weight:900; color:var(--ink); line-height:1}
+.mss-stat.quarks .mss-val{color:var(--gold)}
+.mss-label{font-size:9px; font-weight:700; color:var(--ink2); text-transform:uppercase}
+.mss-op{font-size:15px; font-weight:800; color:var(--mute)}
+.mat-toolbar{display:flex; align-items:center; gap:8px}
+.mat-toolbar .clear{background:var(--gold-soft); color:var(--gold); border:1px solid var(--gold-line); border-radius:16px; padding:6px 14px; font-size:11px; font-weight:800}
+.mat-toolbar .save{width:30px;height:30px;border-radius:50%;background:var(--sunken); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:13px}
+.mat-toolbar .tabs2{margin-left:auto; display:flex; background:var(--sunken); border-radius:8px; overflow:hidden; border:1px solid var(--line)}
+.mat-toolbar .tabs2 span{padding:6px 12px; font-size:10.5px; font-weight:700; color:var(--mute)}
+.mat-toolbar .tabs2 span.on{background:#e9dfc6; color:#241d10}
+.mat-grid{flex:1; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); gap:7px}
+.mat-card{
+  background:#e9dfc6; color:#241d10; border-radius:9px; padding:6px; position:relative;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  box-shadow:0 3px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.2);
+}
+.mat-card .pts{position:absolute; top:4px; left:5px; font-size:10px; font-weight:800; background:#fff; border-radius:50%; width:17px; height:17px; display:flex; align-items:center; justify-content:center}
+.mat-card .em{font-size:22px}
+.mat-card .nm{font-size:9px; font-weight:700}
+
+.inv-pane{width:38%; padding:8px 12px; display:flex; flex-direction:column; gap:7px; position:relative}
+.inv-toprow{display:flex; gap:8px; align-items:center}
+.inv-search{flex:1; background:var(--sunken); border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:11px; color:var(--mute)}
+.inv-trophy{width:32px;height:32px;border-radius:8px;background:#241c3a; border:1px solid #4a3a75; display:flex;align-items:center;justify-content:center; font-size:15px; flex-shrink:0}
+.inv-grid{flex:1; overflow-y:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:7px; align-content:start; padding-bottom:4px}
+.inv-card{
+  background:#e9dfc6; color:#241d10; border-radius:8px; padding:5px; display:flex; flex-direction:column;
+  align-items:center; gap:1px; position:relative; box-shadow:0 2px 0 rgba(0,0,0,.3), 0 3px 6px rgba(0,0,0,.18);
+}
+.inv-card .pts{position:absolute; top:3px; left:4px; font-size:9px; font-weight:800; background:#fff; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center}
+.inv-card .em{font-size:19px; margin-top:2px}
+.inv-card .nm{font-size:8px; font-weight:700; text-align:center}
+.inv-corner-btn{
+  position:absolute; bottom:8px; width:32px; height:32px; border-radius:50%; z-index:4;
+  background:var(--sunken); border:2px solid var(--gold); display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:var(--gold);
+}
+.inv-corner-btn.sort{left:12px}
+.inv-corner-btn.filter{right:12px}
+
+/* ===== Bottom sheet (filter / sort) -- bounded to the inventory pane ===== */
+.sheet-scrim{position:absolute; inset:0; background:rgba(6,14,19,.55); z-index:12}
+.sheet{
+  position:absolute; left:62%; right:0; bottom:62px; z-index:13;
+  background:linear-gradient(180deg,#163544,#122e3c); border-top:1px solid var(--gold-line);
+  border-left:1px solid var(--line);
+  border-radius:14px 0 0 0; padding:10px 14px 12px; box-shadow:0 -8px 24px rgba(0,0,0,.5);
+}
+.sheet .handle{width:32px;height:4px;border-radius:3px;background:var(--line); margin:0 auto 8px}
+.sheet h3{font-size:9.5px; font-weight:800; letter-spacing:.03em; color:var(--mute); margin-bottom:8px; text-align:center}
+.sheet-cols{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.sheet-fopt{
+  aspect-ratio:1/1; border-radius:9px; background:var(--sunken); border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:17px;
+}
+.sheet-fopt.on{border-color:var(--gold); background:var(--gold-soft)}
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <b>Elementia — landscape layout mockups, real assets pass.</b> Same layout as before, now skinned with the
+  actual game: the real <code>diamond_map_full.webp</code> map art (rotated 90°, station positions computed
+  from the real <code>MAP_NODE_POS</code> table), real per-station/marketplace backdrop art, real suit colors,
+  real hub/button/card chrome, and the Quark Meter exactly as shipped (3 equal segments, Empty Element capping
+  the end). Still static — no click-through, no game logic.
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="stage">
+  <div class="frame-wrap" id="frameWrap">
+    <div class="frame" id="frame">
+
+      <!-- 1. MAP -->
+      <div class="screen active" data-screen="map">
+        <div class="map-bg-real"><div class="map-art"></div></div>
+
+        <!-- Ocean (start, left edge) -->
+        <div class="station-wrap" style="left:101px; top:184px">
+          <div class="station-big" style="--suit:var(--suit-ocean)">🌊</div>
+          <div class="station-small">🪸</div>
+        </div>
+        <!-- Old Growth Forest / Deep Mine column -->
+        <div class="station-wrap" style="left:306px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-forest)">🌲</div>
+          <div class="station-small">🌎</div>
+        </div>
+        <div class="station-wrap" style="left:311px; top:292px">
+          <div class="station-big" style="--suit:var(--suit-mine)">💎</div>
+          <div class="station-small">⛰️</div>
+        </div>
+        <!-- choose-a-station card + Greenhouse / Power Plant column -->
+        <div class="station-wrap" style="left:510px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-greenhouse)">🌻</div>
+          <div class="station-small">🏡</div>
+        </div>
+        <div class="pick-card">Choose a station<br>to start!</div>
+        <div class="station-wrap" style="left:510px; top:294px">
+          <div class="station-big" style="--suit:var(--suit-power)">⚡</div>
+          <div class="station-small">🤖</div>
+        </div>
+        <!-- Bakery / City column -->
+        <div class="station-wrap" style="left:685px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-bakery)">🍞</div>
+          <div class="station-small">🎂</div>
+        </div>
+        <div class="station-wrap" style="left:684px; top:293px">
+          <div class="station-big" style="--suit:var(--suit-city)">🏗️</div>
+          <div class="station-small">🏙️</div>
+        </div>
+        <!-- Observatory (right edge) -->
+        <div class="station-wrap" style="left:847px; top:183px">
+          <div class="station-big" style="--suit:var(--suit-observatory)">🔭</div>
+          <div class="station-small">🛰️</div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🏪</div>
+      </div>
+
+      <!-- 2. MAP WITH STATION PREVIEW (top tray, real Ocean backdrop) -->
+      <div class="screen" data-screen="preview">
+        <div class="map-bg-real"><div class="map-art"></div></div>
+        <div class="station-wrap" style="left:306px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-forest)">🌲</div><div class="station-small">🌎</div>
+        </div>
+        <div class="station-wrap" style="left:510px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-greenhouse)">🌻</div><div class="station-small">🏡</div>
+        </div>
+        <div class="station-wrap" style="left:685px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-bakery)">🍞</div><div class="station-small">🎂</div>
+        </div>
+        <div class="station-wrap" style="left:847px; top:183px">
+          <div class="station-big" style="--suit:var(--suit-observatory)">🔭</div><div class="station-small">🛰️</div>
+        </div>
+
+        <div class="toptray">
+          <div class="pv-row1">
+            <div class="pv-name"><span class="ic">🌊</span><h2>The Ocean</h2></div>
+            <div class="pv-track">🔍 <b>Coral Reef</b></div>
+          </div>
+          <div class="pv-label">ELEMENTS FOUND HERE</div>
+          <div class="chip-row">
+            <div class="elchip">H<small>1</small></div>
+            <div class="elchip">C<small>6</small></div>
+            <div class="elchip">N<small>7</small></div>
+            <div class="elchip">O<small>8</small></div>
+            <div class="elchip">Si<small>14</small></div>
+            <div class="elchip">Ca<small>20</small></div>
+          </div>
+          <div class="chip-row" style="margin-top:8px">
+            <div class="icobadge">💧</div><div class="icobadge">⏳</div><div class="icobadge">🪨</div>
+            <div class="icobadge">🌿</div><div class="icobadge">☁️</div><div class="icobadge">🍌</div>
+            <div class="icobadge">🗼</div><div class="icobadge">🐬</div><div class="icobadge gold">🪸</div>
+          </div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🥾</div>
+      </div>
+
+      <!-- 3. MARKETPLACE (top tray, real marketplace.webp backdrop) -->
+      <div class="screen" data-screen="market">
+        <div class="map-bg-real"><div class="map-art"></div></div>
+        <div class="station-wrap" style="left:101px; top:184px">
+          <div class="station-big" style="--suit:var(--suit-ocean)">🌊</div><div class="station-small">🪸</div>
+        </div>
+        <div class="station-wrap" style="left:847px; top:183px">
+          <div class="station-big" style="--suit:var(--suit-observatory)">🔭</div><div class="station-small">🛰️</div>
+        </div>
+
+        <div class="market-tray">
+          <div class="mk-visited">
+            <div>
+              <div class="lbl">0/8 STATIONS VISITED</div>
+              <div class="mk-pips">
+                <span class="done">🌊</span><span>🌲</span><span>💎</span><span>🌻</span>
+                <span>⚡</span><span>🍞</span><span>🏗️</span><span>🔭</span>
+              </div>
+            </div>
+            <div class="mk-bonus">+15</div>
+          </div>
+          <div class="mk-title">
+            <h2>Marketplace</h2>
+            <p>Tap on an item to craft it directly from the market!</p>
+          </div>
+          <div class="bingo-grid">
+            <div class="bingo-cell"><span class="em">🧑‍🌾</span>Farm</div>
+            <div class="bingo-cell"><span class="em">💻</span>Computer</div>
+            <div class="bingo-cell"><span class="em">☸️</span>Wheel</div>
+            <div class="bingo-cell"><span class="em">🐔</span>Chicken</div>
+            <div class="bingo-cell"><span class="em">🌈</span>Rainbow</div>
+
+            <div class="bingo-cell"><span class="em">🍌</span>Banana</div>
+            <div class="bingo-cell"><span class="em">🚀</span>Rocket</div>
+            <div class="bingo-cell locked"><span class="em">🪵</span>Fossil</div>
+            <div class="bingo-cell"><span class="em">⏰</span>Clock</div>
+            <div class="bingo-cell"><span class="em">🌳</span>Tree</div>
+
+            <div class="bingo-cell locked"><span class="em">🍞</span>Bread</div>
+            <div class="bingo-cell"><span class="em">🛞</span>Rubber</div>
+            <div class="bingo-cell center"><span class="em">➕</span>Capstone</div>
+            <div class="bingo-cell owned"><span class="em">🐟</span>Salmon</div>
+            <div class="bingo-cell locked"><span class="em">🚁</span>Helicopter</div>
+
+            <div class="bingo-cell"><span class="em">🏢</span>Building</div>
+            <div class="bingo-cell owned"><span class="em">⭐</span>Star</div>
+            <div class="bingo-cell"><span class="em">🥚</span>Egg</div>
+            <div class="bingo-cell locked"><span class="em">🍎</span>Apple</div>
+            <div class="bingo-cell"><span class="em">🛶</span>Canoe</div>
+
+            <div class="bingo-cell locked"><span class="em">🔥</span>Oven</div>
+            <div class="bingo-cell"><span class="em">🌉</span>Bridge</div>
+            <div class="bingo-cell"><span class="em">🦌</span>Deer</div>
+            <div class="bingo-cell"><span class="em">💡</span>Light Bulb</div>
+            <div class="bingo-cell locked"><span class="em">🧫</span>Yeast</div>
+          </div>
+          <div class="mk-note">✅ Complete a line of 5 across the card for bonus points.</div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🏪</div>
+      </div>
+
+      <!-- 4. STATION SHOP (real Ocean backdrop behind the shop list) -->
+      <div class="screen" data-screen="shop">
+        <div class="station-backdrop" style="background-image:url('backdrops/ocean.webp')"></div>
+        <div class="shop-head">
+          <div class="row1"><span class="ic">🌊</span><h2>The Ocean</h2></div>
+          <div class="chip-row">
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">H<small>1</small></div>
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">C<small>6</small></div>
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">N<small>7</small></div>
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">O<small>8</small></div>
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">Si<small>14</small></div>
+            <div class="elchip" style="width:30px;height:30px;font-size:11px">Ca<small>20</small></div>
+          </div>
+        </div>
+        <div class="shop-grid">
+          <div class="recipe-card"><div class="iem">💧</div><div class="txt"><b>Water</b><div class="formula"><em>H</em><em>+</em><em>O</em></div></div><button class="craft-btn go">Craft</button></div>
+          <div class="recipe-card locked"><div class="iem">⏳</div><div class="txt"><b>Sand</b><div class="formula"><em>Si</em><em>+</em><em>O</em></div></div><button class="craft-btn">Craft</button></div>
+          <div class="recipe-card"><div class="iem">🪨</div><div class="txt"><b>Limestone</b><div class="formula"><em>Ca</em><em>+</em><em>C</em><em>+</em><em>O</em></div></div><button class="craft-btn go">Craft</button></div>
+          <div class="recipe-card"><div class="iem">🌿</div><div class="txt"><b>Seaweed</b><div class="formula"><em>C</em><em>+</em><em>H₂O</em></div></div><button class="craft-btn go">Craft</button></div>
+          <div class="recipe-card"><div class="iem">🐬</div><div class="txt"><b>Orca</b><div class="formula"><em>🌿</em><em>+</em><em>🦴</em><em>+</em><em>🐟</em></div></div><button class="craft-btn">Craft</button><span class="badge">🌲</span></div>
+          <div class="recipe-card"><div class="iem">🧬</div><div class="txt"><b>Life</b><div class="formula"><em>💧</em><em>+</em><em>🦴</em><em>+</em>…</div></div><button class="craft-btn">Craft</button></div>
+          <div class="recipe-card locked"><div class="iem">🚤</div><div class="txt"><b>Speedboat</b><div class="formula"><em>⚙️</em><em>+</em><em>🧭</em><em>+</em>…</div></div><button class="craft-btn">Craft</button></div>
+          <div class="recipe-card capstone"><div class="iem">🪸</div><div class="txt"><b>Coral Reef</b><div class="formula"><em>🪨</em><em>+</em><em>🌿</em><em>+</em>…</div></div><button class="craft-btn">Craft</button></div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🎲</div>
+      </div>
+
+      <!-- 5. INVENTORY + DISPLAY MAT -->
+      <div class="screen" data-screen="matinv">
+        <div class="content">
+          <div class="split">
+            <div class="mat-pane">
+              <div class="mat-score-card">
+                <div class="quark-meter-wrap"
+                    title="219 Quarks toward this round's breakpoints: 500 / 950 / 1,300 / 2,300">
+                  <div class="qm-labels">
+                    <span class="qm-seg-label" style="left:33.333%">500</span>
+                    <span class="qm-seg-label" style="left:66.667%">950</span>
+                    <span class="qm-seg-label qm-label-end" style="right:0">1,300</span>
+                    <span class="qm-seg-label qm-label-end qm-cap-label" style="right:0">2,300</span>
+                  </div>
+                  <div class="qm-segs-row">
+                    <span class="qm-seg lit"><span class="qm-seg-fill" style="width:100%"></span></span>
+                    <span class="qm-seg lit"><span class="qm-seg-fill" style="width:100%"></span></span>
+                    <span class="qm-seg"><span class="qm-seg-fill" style="width:38%"></span></span>
+                    <span class="qm-break lit" style="left:33.333%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break lit" style="left:66.667%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break" style="left:100%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break qm-break-cap"><span class="empty-el-square">?</span></span>
+                  </div>
+                </div>
+                <div class="mat-score-stats">
+                  <div class="mss-stat"><div class="mss-val">219</div><div class="mss-label">Points</div></div>
+                  <div class="mss-op">×</div>
+                  <div class="mss-stat"><div class="mss-val">19</div><div class="mss-label">Multiplier</div></div>
+                  <div class="mss-op">=</div>
+                  <div class="mss-stat quarks"><div class="mss-val">⚛️ 4,161</div><div class="mss-label">Quarks</div></div>
+                </div>
+              </div>
+              <div class="mat-toolbar">
+                <button class="clear">Clear Mat</button>
+                <div class="save">💾</div>
+                <div class="tabs2"><span>Elements</span><span class="on">Display Mat</span></div>
+              </div>
+              <div class="mat-grid">
+                <div class="mat-card"><span class="pts">28</span><span class="em">🚁</span><span class="nm">Helicopter</span></div>
+                <div class="mat-card"><span class="pts">26</span><span class="em">🚤</span><span class="nm">Speedboat</span></div>
+                <div class="mat-card"><span class="pts">22</span><span class="em">🚗</span><span class="nm">Car</span></div>
+                <div class="mat-card"><span class="pts">21</span><span class="em">🚜</span><span class="nm">Tractor</span></div>
+                <div class="mat-card" style="grid-column:span 2"><span class="pts">34</span><span class="em">🚄</span><span class="nm">Maglev Train</span></div>
+                <div class="mat-card"><span class="pts">20</span><span class="em">🚲</span><span class="nm">Bicycle</span></div>
+                <div class="mat-card"><span class="pts">20</span><span class="em">💎</span><span class="nm">Diamond</span></div>
+              </div>
+            </div>
+            <div class="inv-pane">
+              <div class="inv-toprow">
+                <div class="inv-search">Search items or components…</div>
+                <div class="inv-trophy">🏆</div>
+              </div>
+              <div class="inv-grid">
+                <div class="inv-card"><span class="pts">28</span><span class="em">🚁</span><span class="nm">Helicopter</span></div>
+                <div class="inv-card"><span class="pts">28</span><span class="em">🚀</span><span class="nm">Rocket</span></div>
+                <div class="inv-card"><span class="pts">26</span><span class="em">🚤</span><span class="nm">Speedboat</span></div>
+                <div class="inv-card"><span class="pts">25</span><span class="em">🏛️</span><span class="nm">Museum</span></div>
+                <div class="inv-card"><span class="pts">24</span><span class="em">🥧</span><span class="nm">Apple Pie</span></div>
+                <div class="inv-card"><span class="pts">23</span><span class="em">🧬</span><span class="nm">Life</span></div>
+              </div>
+              <div class="inv-corner-btn sort">⇅</div>
+              <div class="inv-corner-btn filter">▽</div>
+            </div>
+          </div>
+        </div>
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn active"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🏪</div>
+      </div>
+
+      <!-- 6. INVENTORY + FILTER/SORT BOTTOM SHEET -->
+      <div class="screen" data-screen="matinv-filter">
+        <div class="content">
+          <div class="split">
+            <div class="mat-pane">
+              <div class="mat-score-card">
+                <div class="quark-meter-wrap"
+                    title="219 Quarks toward this round's breakpoints: 500 / 950 / 1,300 / 2,300">
+                  <div class="qm-labels">
+                    <span class="qm-seg-label" style="left:33.333%">500</span>
+                    <span class="qm-seg-label" style="left:66.667%">950</span>
+                    <span class="qm-seg-label qm-label-end" style="right:0">1,300</span>
+                    <span class="qm-seg-label qm-label-end qm-cap-label" style="right:0">2,300</span>
+                  </div>
+                  <div class="qm-segs-row">
+                    <span class="qm-seg lit"><span class="qm-seg-fill" style="width:100%"></span></span>
+                    <span class="qm-seg lit"><span class="qm-seg-fill" style="width:100%"></span></span>
+                    <span class="qm-seg"><span class="qm-seg-fill" style="width:38%"></span></span>
+                    <span class="qm-break lit" style="left:33.333%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break lit" style="left:66.667%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break" style="left:100%"><span class="qm-break-dice">🎲</span></span>
+                    <span class="qm-break qm-break-cap"><span class="empty-el-square">?</span></span>
+                  </div>
+                </div>
+                <div class="mat-score-stats">
+                  <div class="mss-stat"><div class="mss-val">219</div><div class="mss-label">Points</div></div>
+                  <div class="mss-op">×</div>
+                  <div class="mss-stat"><div class="mss-val">19</div><div class="mss-label">Multiplier</div></div>
+                  <div class="mss-op">=</div>
+                  <div class="mss-stat quarks"><div class="mss-val">⚛️ 4,161</div><div class="mss-label">Quarks</div></div>
+                </div>
+              </div>
+              <div class="mat-toolbar">
+                <button class="clear">Clear Mat</button>
+                <div class="save">💾</div>
+                <div class="tabs2"><span>Elements</span><span class="on">Display Mat</span></div>
+              </div>
+              <div class="mat-grid">
+                <div class="mat-card"><span class="pts">28</span><span class="em">🚁</span><span class="nm">Helicopter</span></div>
+                <div class="mat-card"><span class="pts">26</span><span class="em">🚤</span><span class="nm">Speedboat</span></div>
+                <div class="mat-card"><span class="pts">22</span><span class="em">🚗</span><span class="nm">Car</span></div>
+                <div class="mat-card"><span class="pts">21</span><span class="em">🚜</span><span class="nm">Tractor</span></div>
+                <div class="mat-card" style="grid-column:span 2"><span class="pts">34</span><span class="em">🚄</span><span class="nm">Maglev Train</span></div>
+                <div class="mat-card"><span class="pts">20</span><span class="em">🚲</span><span class="nm">Bicycle</span></div>
+                <div class="mat-card"><span class="pts">20</span><span class="em">💎</span><span class="nm">Diamond</span></div>
+              </div>
+            </div>
+            <div class="inv-pane">
+              <div class="inv-toprow">
+                <div class="inv-search">Search items or components…</div>
+                <div class="inv-trophy">🏆</div>
+              </div>
+              <div class="inv-grid" style="opacity:.3">
+                <div class="inv-card"><span class="pts">28</span><span class="em">🚁</span><span class="nm">Helicopter</span></div>
+                <div class="inv-card"><span class="pts">28</span><span class="em">🚀</span><span class="nm">Rocket</span></div>
+                <div class="inv-card"><span class="pts">26</span><span class="em">🚤</span><span class="nm">Speedboat</span></div>
+              </div>
+              <div class="inv-corner-btn sort" style="border-color:var(--ink2)">⇅</div>
+              <div class="inv-corner-btn filter">▽</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sheet-scrim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <h3>FILTER BY STATION</h3>
+          <div class="sheet-cols">
+            <div class="sheet-fopt on">🌊</div>
+            <div class="sheet-fopt">🌻</div>
+            <div class="sheet-fopt">🌲</div>
+            <div class="sheet-fopt">⚡</div>
+            <div class="sheet-fopt on">💎</div>
+            <div class="sheet-fopt">🍞</div>
+            <div class="sheet-fopt">🏗️</div>
+            <div class="sheet-fopt">🔭</div>
+          </div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn active"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🏪</div>
+      </div>
+
+      <!-- 7. TO-DO LIST + TRACKER -->
+      <div class="screen" data-screen="todo">
+        <div class="map-bg-real"><div class="map-art"></div></div>
+        <div class="station-wrap" style="left:685px; top:75px">
+          <div class="station-big" style="--suit:var(--suit-bakery)">🍞</div><div class="station-small">🎂</div>
+        </div>
+        <div class="station-wrap" style="left:847px; top:183px">
+          <div class="station-big" style="--suit:var(--suit-observatory)">🔭</div><div class="station-small">🛰️</div>
+        </div>
+
+        <div class="panel">
+          <div class="todo-head">
+            <span class="pinned">📌 PINNED</span>
+            <span class="hint-link">💡 Get a Hint</span>
+          </div>
+          <div class="track-card">
+            <div class="track-top">
+              <div class="ic">🪸</div>
+              <div><span class="nm">Coral Reef</span><span class="st">🌊 The Ocean · ⭐34</span></div>
+              <span class="pin">📌</span>
+            </div>
+            <div class="bd-toggle">▾ Hide full breakdown</div>
+            <div class="need-row"><span class="ic">🪨</span> Limestone <span class="stationtag">🌊 🌻 🏗️</span></div>
+            <div class="need-row"><span class="ic">🌿</span> Seaweed <span class="stationtag">🌊</span></div>
+            <div class="need-row"><span class="ic">⏰</span> Clock <span class="stationtag">⚡</span></div>
+            <div class="need-row"><span class="ic">🐬</span> Orca <span class="stationtag">🌊</span></div>
+            <div class="need-row"><span class="ic">🧬</span> Life <span class="stationtag">🌊</span></div>
+          </div>
+          <div class="panel-spacer"></div>
+          <div class="tracker-box">
+            <div class="tracker-lbl">TRACKING ON MAP &amp; AT STATIONS</div>
+            <div class="tracker-row">
+              <div class="tracker-chip active">🪸<span class="dot">●</span></div>
+              <div class="tracker-chip">💪</div>
+              <div class="tracker-chip">🌈</div>
+              <div class="tracker-chip">🚀</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hubbar">
+          <div class="hub-cluster">
+            <div class="hubbtn active"><span class="hi">📋</span><span class="hl">To-Do</span></div>
+            <div class="hubbtn"><span class="hi">🎒</span><span class="hl">Inventory</span></div>
+          </div>
+          <div class="hub-cluster">
+            <div class="hubbtn"><span class="hi">📖</span><span class="hl">Items</span></div>
+            <div class="hubbtn"><span class="hi">⚙️</span><span class="hl">Settings</span></div>
+          </div>
+        </div>
+        <div class="hub-home">🏪</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const screens = ["map","preview","market","shop","matinv","matinv-filter","todo"];
+const labels = {
+  map:"1 · Map",
+  preview:"2 · Map + Station Preview",
+  market:"3 · Marketplace",
+  shop:"4 · Station Shop",
+  matinv:"5 · Inventory + Display Mat",
+  "matinv-filter":"6 · Inventory + Filter/Sort",
+  todo:"7 · To-Do List + Tracker"
+};
+const tabsEl = document.getElementById("tabs");
+screens.forEach((id,i)=>{
+  const b = document.createElement("button");
+  b.className = "tab" + (i===0 ? " active" : "");
+  b.textContent = labels[id];
+  b.onclick = ()=>{
+    document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", s.dataset.screen===id));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    b.classList.add("active");
+  };
+  tabsEl.appendChild(b);
+});
+
+function fitFrame(){
+  const wrap = document.getElementById("frameWrap");
+  const frame = document.getElementById("frame");
+  const maxW = Math.min(window.innerWidth - 24, 932);
+  const scale = maxW / 932;
+  frame.style.transform = "scale(" + scale + ")";
+  wrap.style.width = (932*scale) + "px";
+  wrap.style.height = (430*scale) + "px";
+}
+window.addEventListener("resize", fitFrame);
+fitFrame();
+</script>
+</body>
+</html>
