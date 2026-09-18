@@ -33,8 +33,11 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SRC = HERE / "elementia.html"
-OUT = HERE / "build" / "elementia_artifact.html"
+# --landscape builds the separate landscape edition (elementia_landscape.html)
+# into its own artifact file; the portrait build is untouched by that flag.
+LANDSCAPE = "--landscape" in sys.argv
+SRC = HERE / ("elementia_landscape.html" if LANDSCAPE else "elementia.html")
+OUT = HERE / "build" / ("elementia_landscape_artifact.html" if LANDSCAPE else "elementia_artifact.html")
 
 PWA_START = "/* ----------------------------------------------------------- PWA --- */"
 BOOT_START = "/* ---------------------------------------------------------- boot --- */"
@@ -58,7 +61,13 @@ RISKY_PATTERNS = [
 
 def strip_document_wrapper(text):
     text, n1 = re.subn(r"\A<!DOCTYPE html>\s*<html[^>]*>\s*<head>\s*", "", text)
-    text, n2 = re.subn(r"\s*</head>\s*<body>\s*", "\n", text)
+    # The landscape edition's <body class="landscape"> loses its class when the
+    # wrapper is stripped, so re-add it with a tiny script at the top of the body.
+    body_prefix = (
+        "\n<script>(function(){function a(){document.body.classList.add('landscape');}"
+        "if(document.body)a();else document.addEventListener('DOMContentLoaded',a);})();</script>\n"
+    ) if LANDSCAPE else "\n"
+    text, n2 = re.subn(r"\s*</head>\s*<body[^>]*>\s*", lambda m: body_prefix, text)
     text, n3 = re.subn(r"\s*</body>\s*</html>\s*\Z", "\n", text)
     if not (n1 and n2 and n3):
         raise SystemExit(

@@ -19,11 +19,12 @@ file to begin with.
 Usage:  python game/build_minigames.py
 Then:   python game/build_minigames.py --check     (verify only, no write)
 """
+import re
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TARGET = HERE / "elementia.html"
+TARGETS = [HERE / "elementia.html", HERE / "elementia_landscape.html"]
 MINIGAMES_DIR = HERE / "minigames"
 
 START, END = "<!--__MINIGAMES_START__-->", "<!--__MINIGAMES_END__-->"
@@ -63,7 +64,17 @@ ASSETS = {
 }
 
 
-def build_block():
+# The landscape edition renders inside a fixed 915x412 stage, so viewport units
+# in the inlined mini-game CSS are rewritten to the stage's own --vw/--vh vars
+# (same rewrite applied to the landscape file's own CSS).
+_VU = re.compile(r"(?<![A-Za-z0-9_.-])([0-9]*[.]?[0-9]+)(vh|vw)")
+
+
+def stage_units(src):
+    return _VU.sub(lambda m: f"calc({m.group(1)} * var(--{m.group(2)}))", src)
+
+
+def build_block(landscape=False):
     lines = [START, "<script>", "window.MINIGAME_ASSETS = {"]
     for k, v in ASSETS.items():
         lines.append(f'  "{k}": "{v}",')
@@ -73,6 +84,8 @@ def build_block():
         if not path.exists():
             raise SystemExit(f"Missing mini-game source: {path}")
         src = path.read_text(encoding="utf-8")
+        if landscape:
+            src = stage_units(src)
         if "</script" in src.lower():
             raise SystemExit(f"{path} contains a literal '</script' -- cannot inline safely")
         lines.append(f"<script>\n{src}\n</script>")
@@ -85,22 +98,26 @@ def build_block():
     return "\n".join(lines)
 
 
-def main():
-    check_only = "--check" in sys.argv
-    html = TARGET.read_text(encoding="utf-8")
+def sync_one(target, check_only):
+    html = target.read_text(encoding="utf-8")
     a, b = html.find(START), html.find(END)
     if a < 0 or b < 0:
-        raise SystemExit(f"Markers {START}/{END} not found in {TARGET}")
-    block = build_block()
+        raise SystemExit(f"Markers {START}/{END} not found in {target}")
+    block = build_block(landscape=target.name == "elementia_landscape.html")
     current = html[a:b + len(END)]
     if current == block:
-        print("elementia.html: mini-games in sync")
+        print(f"{target.name}: mini-games in sync")
         return
     if check_only:
-        raise SystemExit("elementia.html: mini-games OUT OF SYNC -- run without --check to fix")
-    new_html = html[:a] + block + html[b + len(END):]
-    TARGET.write_text(new_html, encoding="utf-8")
-    print(f"elementia.html: inlined {len(STATION_FILES)} mini-games")
+        raise SystemExit(f"{target.name}: mini-games OUT OF SYNC -- run without --check to fix")
+    target.write_text(html[:a] + block + html[b + len(END):], encoding="utf-8")
+    print(f"{target.name}: inlined {len(STATION_FILES)} mini-games")
+
+
+def main():
+    check_only = "--check" in sys.argv
+    for t in TARGETS:
+        sync_one(t, check_only)
 
 
 if __name__ == "__main__":
