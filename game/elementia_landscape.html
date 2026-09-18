@@ -95,6 +95,61 @@ body.landscape main#screen{
 }
 body.landscape main#screen::-webkit-scrollbar{display:none}
 
+/* ---- Landscape station-preview top tray (map): same card content, compacted
+   so it reads as a short tray sliding down over the map. */
+body.landscape .map-card{padding:8px 22px 9px; gap:6px; border-top-width:6px; border-bottom:2px solid var(--gold-line); background:linear-gradient(180deg, rgba(15,26,35,.94), rgba(18,38,50,.92)); border-radius:0 0 14px 14px}
+body.landscape .map-card .em{font-size:24px}
+body.landscape .map-card h2{font-size:17px}
+body.landscape .mc-tracked{padding:2px 9px; font-size:11.5px; border-width:2px}
+body.landscape .pool{gap:8px; justify-content:flex-start}
+body.landscape .pcol{flex:none; width:50px; gap:3px}
+body.landscape .pchip{border-width:3px; border-radius:7px; padding:2px}
+body.landscape .pchip .psym{font-size:20px}
+body.landscape .pnum{font-size:8px; top:1px; left:2px}
+body.landscape .pname{font-size:7.5px}
+body.landscape .station-items{padding:4px 22px; margin:0 -22px; gap:6px}
+body.landscape .station-item-icon{font-size:17px}
+body.landscape .capline{font-size:12px; padding-top:6px; margin-top:0}
+
+/* ---- Landscape Marketplace top tray (Classic Bingo / Job Select): narrow
+   centered tray sliding down over the map, Stations Visited first, then a
+   square 5x5 grid whose cell size (--bcell) is set by the available height. */
+body.landscape #jobSheet.top-tray{
+  --bcell:44px; --bgap:4px;
+  left:50%; right:auto; width:calc(5 * var(--bcell) + 4 * var(--bgap) + 30px);
+  max-height:calc(100% - var(--hub-h, 63px) - 4px);
+  border-left:2.5px solid var(--gold); border-right:2.5px solid var(--gold);
+  transform:translate(-50%,-100%);
+}
+body.landscape #jobSheet.top-tray.open{transform:translate(-50%,0)}
+@keyframes ls-tray-bounce-away{
+  0%{transform:translate(-50%,0) scale(1); opacity:1}
+  30%{transform:translate(-50%,0) scale(1.03); opacity:1}
+  100%{transform:translate(-50%,0) scale(.85); opacity:0}
+}
+body.landscape #jobSheet.top-tray.bounce-away{animation-name:ls-tray-bounce-away}
+body.landscape #jobSheet.top-tray .dbody{padding:6px 12px 6px}
+body.landscape #jobSheet.top-tray .market-classic-progress{margin:0 0 4px; padding:5px 9px 6px; border-radius:10px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-station-progress-label{font-size:8.5px; letter-spacing:.5px; margin-bottom:4px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-stations{gap:4px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-station{max-width:22px; font-size:11px}
+body.landscape #jobSheet.top-tray .market-progress-bonus{width:30px; height:30px; font-size:9.5px; top:-8px; right:-6px}
+body.landscape #jobSheet.top-tray .bingo-title{font-size:13px; margin:2px 0 1px}
+body.landscape #jobSheet.top-tray .market-classic-progress + .bingo-title{margin-top:2px}
+body.landscape #jobSheet.top-tray .bingo-subhint{font-size:9px; margin:0 0 4px}
+body.landscape #jobSheet.top-tray .bingo-grid{gap:var(--bgap); margin-top:0}
+body.landscape #jobSheet.top-tray .bingo-cell{border-radius:8px; padding:1px; box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25)}
+body.landscape #jobSheet.top-tray .bingo-cell.owned{box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25), inset 0 0 0 2px var(--ok-bright)}
+body.landscape #jobSheet.top-tray .bingo-cell.craftable{box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25), inset 0 0 0 2px var(--ok-bright)}
+body.landscape #jobSheet.top-tray .bc-icon{font-size:20px; bottom:5px}
+body.landscape #jobSheet.top-tray .bc-name{font-size:5.5px; line-height:6px; height:12px; bottom:0}
+body.landscape #jobSheet.top-tray .bc-pin{width:13px; height:13px; font-size:7px; top:-3px; right:-3px}
+body.landscape #jobSheet.top-tray .bc-station{width:15px; height:15px; font-size:9px}
+body.landscape #jobSheet.top-tray .bingo-hint{font-size:8.5px; line-height:1.3; margin:5px 0 0}
+
+body.landscape *{scrollbar-width:none}
+body.landscape *::-webkit-scrollbar{display:none}
+
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
    for a 915x412 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
@@ -1490,8 +1545,12 @@ body[data-screen="market"] #trackedPill{display:none}
 /* The art sits on its own ::before layer (not directly on .map-canvas'
    background) so it alone can be faded ~25% -- nodes/paths/arrows on top
    stay fully opaque instead of fading along with it. */
+.map-canvas{container-type:size}
 .map-canvas::before{
-  content:""; position:absolute; inset:0;
+  /* LANDSCAPE: the tall art is rotated 90deg clockwise -- the element is
+     sized with swapped dimensions (cq units) and rotated about the center. */
+  content:""; position:absolute; left:50%; top:50%; width:100cqh; height:100cqw;
+  transform:translate(-50%,-50%) rotate(90deg);
   background:url("backdrops/diamond_map_full.webp") center/100% 100% no-repeat;
   opacity:.96;
 }
@@ -1530,9 +1589,9 @@ body[data-screen="market"] #trackedPill{display:none}
    opaque pixels) instead of opacity, which would let the art bleed back
    through. */
 .map-node{
-  position:absolute; width:19.5%; aspect-ratio:1; transform:translate(-50%,-50%);
+  position:absolute; width:62px; height:62px; transform:translate(-50%,-50%);
   border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:#122e3c; border:7px solid #4a5566; cursor:pointer; z-index:0;
+  background:#122e3c; border:6px solid #4a5566; cursor:pointer; z-index:0;
   transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s, border-color .12s, filter .12s;
   padding:0;
 }
@@ -1541,7 +1600,7 @@ body[data-screen="market"] #trackedPill{display:none}
    tactile rather than flat. Scale lives on top of each state's own
    translate(-50%,-50%) centering transform. */
 .map-node:active{transform:translate(-50%,-50%) scale(.88)}
-.map-node .mn-em{font-size:min(calc(10 * var(--vw)),46px); line-height:1}
+.map-node .mn-em{font-size:28px; line-height:1}
 /* Mini-Games' own best-run badge (see renderArcadeMap()) -- only ever
    present on the arcade map's nodes (the real map's own .map-node markup
    never sets this), so it's safe to always float it at the node's own
@@ -1618,9 +1677,9 @@ body[data-screen="market"] #trackedPill{display:none}
    disc that clears even more of the node's own circle than before,
    nothing reads as newly "hidden." */
 .map-node-tracked-badge{
-  position:absolute; transform:translate(-50%, calc(-50% - 60px));
-  width:42px; height:42px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
-  display:flex; align-items:center; justify-content:center; font-size:24px; line-height:1;
+  position:absolute; transform:translate(calc(-50% + 56px), -50%);
+  width:36px; height:36px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
 }
 /* Bare glyph, no circle/background of its own -- just a small "this is
@@ -1639,9 +1698,9 @@ body[data-screen="market"] #trackedPill{display:none}
    badge's own size/position/stacking (see its own comment) so the two
    stay consistent whichever one shows. */
 .map-node-capstone-badge{
-  position:absolute; transform:translate(-50%, calc(-50% - 60px));
-  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
-  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
+  position:absolute; transform:translate(calc(-50% + 60px), -50%);
+  width:46px; height:46px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
 }
 /* The station card overlays the map as a floating panel pinned to the top
@@ -9630,14 +9689,16 @@ const canReachStation = (a, b) => owns("Helicopter") || isMapConnected(a, b);
    see .map-canvas's own comment for why the shorter replacement image was
    dropped in favor of squishing this original art to fit instead. */
 const MAP_NODE_POS = {
-  "The Observatory":    [49.7,  9.1],
-  "The Bakery":         [20.4, 26.5],
-  "The City":            [79.5, 26.6],
-  "Greenhouse":         [20.4, 45.3],
-  "The Power Plant":    [79.8, 45.3],
-  "Old Growth Forest":  [20.4, 67.2],
-  "Deep Mine":          [79.3, 66.6],
-  "The Ocean":          [49.9, 89.2],
+  // LANDSCAPE: the portrait coords rotated 90deg clockwise, (x,y) -> (100-y, x)
+  // -- Ocean ends up on the left edge, Observatory on the right.
+  "The Observatory":    [90.9, 49.7],
+  "The Bakery":         [73.5, 20.4],
+  "The City":           [73.4, 79.5],
+  "Greenhouse":         [54.7, 20.4],
+  "The Power Plant":    [54.7, 79.8],
+  "Old Growth Forest":  [32.8, 20.4],
+  "Deep Mine":          [33.4, 79.3],
+  "The Ocean":          [10.8, 49.9],
 };
 /* Explicit per-station nudge, layered on top of MAP_NODE_POS's own
    percentages via CSS calc() rather than baked into those percentages
@@ -9651,7 +9712,7 @@ const MAP_NODE_POS = {
    renderArcadeMap() reuses MAP_NODE_POS directly, unshifted. */
 const MAP_NODE_MM_SHIFT = Object.fromEntries(Object.keys(MAP_NODE_POS).map(name => [
   name,
-  name === "The Ocean" ? 0 : (name === "Greenhouse" || name === "The Power Plant") ? 6.5 : 5,
+  0, // landscape: no per-station nudge (portrait art squish correction)
 ]));
 const mapNodeTopStyle = name => {
   const mm = MAP_NODE_MM_SHIFT[name];
