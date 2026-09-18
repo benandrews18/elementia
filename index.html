@@ -1776,7 +1776,16 @@ body[data-screen="market"] #trackedPill{display:none}
    -- see .pill/#topbar. */
 .sheet-head{display:flex; align-items:center; gap:16px; padding:20px 26px 14px}
 .sheet-head .em{font-size:44px; line-height:1}
-.sheet-head h1{font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff}
+/* inline-flex (not block) so the row only ever spans the title text plus
+   .empty-el-badge's own width -- align-items:center keeps the badge
+   vertically centered on the title's own cap-height, and the same 16px
+   gap .sheet-head itself uses between the station icon and this title
+   puts the badge that same visual distance from the title's other side. */
+.sheet-head h1{
+  font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff;
+  display:inline-flex; align-items:center; gap:16px;
+}
+.station-title-wrap{min-width:0}
 .sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
 /* Experimental (prefs.expTractorHarvest) -- purely decorative, unlike
    .travel-btn right next to it (a real button); tapping the gather row's
@@ -2863,17 +2872,25 @@ body[data-screen="market"] #trackedPill{display:none}
    bordered-row shell (see above); a plain read-only row (name/icons/
    bonus) plus one optional action (Add to Mat, Classic only -- see
    renderCollectionsList()), not a tappable .histrow of its own. */
-.collection-row{padding:10px 13px; display:flex; flex-direction:column; gap:6px}
+/* Row layout mirrors the station shop's own .item/.irow + .craftbtn split
+   (see .item above): a two-line text+icons column on the left that takes
+   whatever width it wants, and the action button pinned to the row's own
+   right edge, vertically self-centered against the whole row -- not a
+   fourth stacked line of its own. */
+.collection-row{padding:10px 13px; display:flex; align-items:center; gap:12px}
+.collection-row .cr-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px}
+.collection-row .cr-line1{display:flex; align-items:baseline; gap:8px}
 .collection-row .cr-name{font-weight:800; font-size:13.5px; color:var(--collection)}
 /* Bare icons, no border/background pill -- explicit request, replacing
-   the plain comma-joined item-name text this row used to show. */
-.collection-row .cr-icons{display:flex; flex-wrap:wrap; gap:6px; font-size:19px; line-height:1}
+   the plain comma-joined item-name text this row used to show. Doubled
+   from 19px to 38px per explicit request. */
+.collection-row .cr-icons{display:flex; flex-wrap:wrap; gap:8px; font-size:38px; line-height:1}
 .collection-row .cr-icon img{width:1em; height:1em}
 .collection-row .cr-bonus{font-size:12px; font-weight:800; color:var(--gold)}
 .collection-row .cr-add{
-  align-self:flex-start; border:1.5px solid var(--collection-line); border-radius:8px;
-  padding:5px 12px; font-size:12px; font-weight:800; color:var(--collection);
-  background:var(--collection-soft);
+  flex:none; align-self:center; border:1.5px solid var(--collection-line); border-radius:10px;
+  padding:10px 14px; font-size:12px; font-weight:800; color:var(--collection);
+  background:var(--collection-soft); white-space:nowrap;
 }
 .collection-row .cr-add:disabled{opacity:.4; cursor:not-allowed}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
@@ -3116,6 +3133,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    #jobSheet at all) safely can. */
 #capstoneOverlay{z-index:70}
 #bingoCraftOverlay{z-index:70}
+#bingoClearOverlay{z-index:70}
+/* Locks the tray against taps for the pre-animation pause plus the
+   animation itself (see processPendingBingoClears()'s own comment) --
+   nothing in here should be interruptible mid-beat. */
+#jobSheet.bingo-clearing{pointer-events:none}
 /* confirm sits above other overlays -- it's usually raised FROM one
    (e.g. the reset button inside Settings), and it precedes them in the
    DOM, so without this the parent overlay would paint over it. Still
@@ -3152,6 +3174,17 @@ button.setting-row:not(:disabled):active, .mode-card:active{
      the top with no way to reach it. Short dialogs still center exactly
      as before. */
   margin:auto 0;
+}
+/* Craft-from-Bingo (see openBingoCraftOverlay()) -- #bingoCraftOverlayBody
+   carries .sheetbox directly, which otherwise wraps the real shop .item
+   card in a second dark/gold dialog frame it doesn't have anywhere else,
+   reading as a distinct "popup" instead of the station shop row it's
+   meant to reproduce exactly. Stripped down to an invisible positioning
+   box here so the .item card itself (full station-shop styling, suit
+   badges included) is the only visible surface, same as it is in-line in
+   a real shop list. */
+#bingoCraftOverlayBody.sheetbox{
+  background:transparent; border:none; box-shadow:none; padding:0; max-width:480px;
 }
 .sheetbox h2{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px}
 .sheetbox p{color:var(--ink2); font-size:15px; margin-bottom:14px; line-height:1.5}
@@ -4473,12 +4506,26 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Two stacked rows now (labels, then the segment bar itself) instead of
    one flex row of segments -- see renderMatTop()'s own Quark Meter
    comment for why. */
-.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative}
-.qm-labels{display:flex; gap:3px; width:100%}
+/* Extra top margin reserves room for .qm-cap-label, which sits above this
+   whole row (see below) rather than in the flow of anything else. */
+.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative; margin-top:16px}
+.qm-labels{position:relative; width:100%; height:12px}
+/* Each label sits directly above its own breakpoint icon at a fixed x
+   (see renderMatTop()'s own qmCumPcts) instead of centered across a whole
+   segment's width, which used to land it in the gap between two
+   breakpoints rather than over either one. The two breakpoints that fall
+   at the meter's own right edge (dice-3, and the Empty Element cap above
+   it) right-align flush instead of centering on 100%, so neither one's
+   text overflows past the meter's own bounds. */
 .qm-seg-label{
-  flex:1; text-align:center; font-size:10px; font-weight:800; color:var(--ink2);
-  font-variant-numeric:tabular-nums;
+  position:absolute; top:0; transform:translateX(-50%); text-align:center; font-size:10px; font-weight:800;
+  color:var(--ink2); font-variant-numeric:tabular-nums; white-space:nowrap;
 }
+.qm-seg-label.qm-label-end{transform:none; text-align:right}
+/* Sits a full row above the dice-3 number (see .qm-break-cap's own
+   matching vertical offset), gold to match the Empty Element's own
+   "special" language elsewhere (the badge, the Lock In reward line). */
+.qm-cap-label{top:-18px; color:var(--gold)}
 .qm-segs-row{display:flex; gap:3px; width:100%; position:relative}
 .qm-seg{
   position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
@@ -4520,6 +4567,12 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .qm-break{position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2}
 .qm-break .empty-el-square{box-shadow:0 2px 4px rgba(0,0,0,.4)}
 .qm-break.lit .empty-el-square{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+/* The Empty Element breakpoint shares the dice-3 icon's own x position
+   (both sit at the meter's 100% mark, see renderMatTop()) but caps the
+   meter from above instead of overlapping it -- offset up and flush to
+   the right edge like its matching .qm-cap-label, rather than centered
+   the way the 3 dice icons are. */
+.qm-break-cap{right:0; top:-24px; transform:none}
 /* Revised 2026-09-13: the reward at each break is bonus dice now, not a
    banked Empty Element (see finishLockIn()'s own comment) -- a plain die
    face reads that directly instead of borrowing the (now-dormant) blank
@@ -4537,10 +4590,18 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    just the same square every other element uses (sized to match via
    syncEmptyElBadgeSize()) with its own count stacked below, same as
    .gcol/.gname on the real elements right underneath it. */
+/* Nested inside the title's own <h1> (see its "gap" CSS) rather than a
+   direct .sheet-head sibling -- sitting there, its own width used to make
+   the title text and the "Elements Found Here" pool underneath it
+   compensate/reflow around it every time its digit count changed. Nested
+   in the title's own flex row instead, only that row's internal layout
+   ever sees it change size -- .sheet-head itself, and everything else in
+   it (the tractor badge, the travel button), never do. */
 .empty-el-badge{
+  flex:none;
   display:inline-flex; flex-direction:column; align-items:center; gap:2px;
-  margin-left:10px; padding:0; border:none; background:none;
-  vertical-align:middle; cursor:pointer; opacity:.45;
+  padding:0; border:none; background:none;
+  cursor:pointer; opacity:.45;
 }
 .empty-el-badge:disabled{cursor:default}
 .empty-el-badge.active{opacity:1}
@@ -4561,6 +4622,18 @@ body.empty-el-cashin .station-tractor-badge, body.empty-el-cashin .travel-btn,
 body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
   opacity:.15; pointer-events:none; transition:opacity .2s;
 }
+/* A real dark scrim on top of everything above, not just their own faded
+   opacity (explicit request: "darken the background as well as fading
+   it") -- see #emptyElCashinScrim's own placement/CSS just below. The
+   still-highlighted row and badge get bumped above it here so the scrim
+   only ever darkens what's already faded, never the spotlighted pair. */
+#emptyElCashinScrim{
+  position:fixed; inset:0; z-index:73; background:#000; opacity:0; pointer-events:none;
+  transition:opacity .2s;
+}
+body.empty-el-cashin #emptyElCashinScrim{opacity:.55}
+body.empty-el-cashin .gather, body.empty-el-cashin .empty-el-badge,
+body.empty-el-cashin .empty-el-cashin-hint{position:relative; z-index:74}
 .empty-el-cashin-hint{display:none; text-align:center; font-weight:700; font-size:15px; color:#fff; margin:12px 26px 0}
 body.empty-el-cashin .empty-el-cashin-hint{display:block}
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
@@ -5052,6 +5125,13 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 <main id="screen"></main>
 
 <div id="scrim"></div>
+<!-- Empty Element cash-in "spotlight" darkening -- see body.empty-el-cashin's
+     own comment/CSS. Layered on top of the already-faded elements (a plain
+     opacity fade alone read as too subtle on its own, explicit request to
+     also darken) while sitting below the still-highlighted "Elements Found
+     Here" row and the tapped badge itself (see those selectors' own
+     z-index bump under body.empty-el-cashin). -->
+<div id="emptyElCashinScrim"></div>
 <!-- Lock In's own prompt, shown ONLY above the half-view ("peeked") Display
      Mat -- see syncLockInBanner()/confirmLockIn(). Sized in JS to exactly
      fill the gap between the screen's own top edge and the peeked drawer's
@@ -5438,6 +5518,16 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      here instead of the plain read-only inspection popup. -->
 <div class="overlay" id="bingoCraftOverlay" role="dialog" aria-modal="true">
   <div class="sheetbox" id="bingoCraftOverlayBody"></div>
+</div>
+
+<!-- Bingo line-clear reward -- the elements a just-cleared line handed
+     back (see processPendingBingoClears()), shown as their own popup
+     instead of just a toast so the player actually sees what they got.
+     The chips themselves are the exact .gcol/.gchip markup a station's
+     own "Elements Found Here" gather row uses (see renderStation()),
+     just without that row's die-face pip (there's no roll here). -->
+<div class="overlay" id="bingoClearOverlay" role="dialog" aria-modal="true" aria-labelledby="bingoClearTitle">
+  <div class="sheetbox" id="bingoClearOverlayBody"></div>
 </div>
 
 <!-- settings -->
@@ -11392,13 +11482,22 @@ function renderStation(name){
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
-        <div><h1><span class="station-title-text">${esc(s.name)}</span></h1></div>
-        <!-- Revived 2026-09-17 for the Quark Meter's new 4th tier (see
-             finishLockIn()) -- state.emptyElements can be banked again now,
-             so the spend-it-yourself cash-in flow this badge opens
-             (enterEmptyElCashIn()) is reachable once more. Classic only,
-             same guard emptyElBadgeHTML()'s own comment already documents. -->
-        ${state.mode === "classic" ? emptyElBadgeHTML() : ""}
+        <div class="station-title-wrap">
+          <h1><span class="station-title-text">${esc(s.name)}</span>
+            <!-- Revived 2026-09-17 for the Quark Meter's new 4th tier (see
+                 finishLockIn()) -- state.emptyElements can be banked again
+                 now, so the spend-it-yourself cash-in flow this badge opens
+                 (enterEmptyElCashIn()) is reachable once more. Classic only,
+                 same guard emptyElBadgeHTML()'s own comment already
+                 documents. Nested inside the title's own h1 (see its "gap"
+                 CSS) rather than a direct .sheet-head sibling -- sitting
+                 there, its own width used to make the title/element-pool
+                 row compensate/reflow whenever its digit count changed;
+                 nested here it's inline right next to the title text, same
+                 gap as the station icon on the header's other side, without
+                 that outer row ever seeing it. -->
+            ${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1>
+        </div>
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
         ${travelButtonHTML(name)}
@@ -14512,7 +14611,6 @@ function expandDrawerToFull(){
   if (!(drawer.classList.contains("open") && !drawer.classList.contains("expanded"))) return false;
   matTrayExpanded = true;
   drawer.classList.add("expanded");
-  resetDrawerTopScroll();
   renderMatTop();
   updateHub();
   syncLockInBanner();
@@ -14525,7 +14623,6 @@ function expandDrawerToFull(){
 function collapseDrawerToPeeked(){
   matTrayExpanded = false;
   drawer.classList.remove("expanded");
-  resetDrawerTopScroll();
   renderMatTop();
   updateHub();
   syncLockInBanner();
@@ -14629,7 +14726,6 @@ let realGameState = null, realScreen = null, realCurrent = null, realSelectedMap
 const openDrawer = (opts = {}) => {
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
-  resetDrawerTopScroll();
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
@@ -15141,37 +15237,6 @@ let matDrawerView = "mat";
 // and openDrawer(), which resets this to false on every fresh open.
 let matTrayExpanded = false;
 
-/* Collapsing #drawerTop on scroll, full-inventory only -- scrolling
-   further into the item list progressively hides the mat/combo header
-   (up to its own full height) to reclaim screen room; scrolling back
-   toward the top reveals it again by the same amount. Applied as a
-   plain transform on #drawerTop ITSELF, not its innerHTML -- renderMatTop()
-   only ever replaces #drawerTop's CONTENTS, never the node itself, so
-   this offset survives every re-render undisturbed until explicitly
-   reset here. */
-let drawerTopScrollOffset = 0;
-let lastDbodyScrollTop = 0;
-function resetDrawerTopScroll(){
-  drawerTopScrollOffset = 0;
-  lastDbodyScrollTop = 0;
-  const drawerTop = document.getElementById("drawerTop");
-  drawerTop.style.transform = "";
-  drawerTop.style.marginBottom = "";
-}
-document.querySelector("#drawer .dbody").addEventListener("scroll", ev => {
-  if (!matTrayExpanded || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const drawerTop = document.getElementById("drawerTop");
-  const maxOffset = drawerTop.offsetHeight;
-  if (!maxOffset) return;
-  const top = ev.target.scrollTop;
-  const delta = top - lastDbodyScrollTop;
-  lastDbodyScrollTop = top;
-  drawerTopScrollOffset = Math.max(0, Math.min(maxOffset, drawerTopScrollOffset + delta));
-  drawerTop.style.transform = `translateY(${-drawerTopScrollOffset}px)`;
-  // Closes the gap #dbody would otherwise open up as #drawerTop slides
-  // out from under it (a transform never affects layout on its own).
-  drawerTop.style.marginBottom = `${-drawerTopScrollOffset}px`;
-}, {passive:true});
 // Cached so a mid-drag reorder (renderMatGridCells() above) doesn't have
 // to recompute the score on every pointermove -- reordering never
 // changes it, only adding/removing/toggling views does, and each of
@@ -15415,7 +15480,7 @@ function setMatScoreNumbers(points, mult, total){
 // is currently on, instead of the mat's real final total.
 function setQuarkMeterProgress(total){
   const qmTiers = lockInTiersForRound(state.visits);
-  const bounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four, MAT_ABSOLUTE_CEILING];
+  const bounds = [0, qmTiers.one, qmTiers.two, qmTiers.three];
   const ranges = bounds.slice(1).map((hi, i) => [bounds[i], hi]);
   const segs = document.querySelectorAll("#drawerTop .qm-seg");
   ranges.forEach(([lo, hi], i) => {
@@ -15690,21 +15755,24 @@ function emptyElBadgeHTML(){
   return `<button type="button" class="empty-el-badge${n > 0 ? " active" : ""}" id="emptyElBadgeBtn"
       ${n > 0 ? "" : 'disabled aria-disabled="true"'}
       title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
-      aria-label="${n} Empty Elements held">${emptyElSquareHTML(20)}<b>${n}</b></button>`;
+      aria-label="${n} Empty Elements held">${emptyElSquareHTML(13)}<b>${n}</b></button>`;
 }
 // The row of real elements right below the badge (see renderStation()'s
 // own .gather) shrinks/grows with how many of them there are (see .gcol's
 // own comment) -- that final rendered size can only be known after layout,
 // not computed ahead of time, so this re-measures the first real .gchip
 // and stretches the badge's own icon (and its corner suit badge/font) to
-// match exactly, every render. Called from render() itself; no-ops
-// harmlessly outside a station screen (or Zen/Hard, which never show the
-// badge at all) since the selectors just find nothing.
+// match, every render. Scaled to 67% of that measured size (explicit
+// request: "33% smaller") now that the badge overlays the title instead of
+// sitting inline beside the real elements it used to size itself flush
+// against. Called from render() itself; no-ops harmlessly outside a
+// station screen (or Zen/Hard, which never show the badge at all) since
+// the selectors just find nothing.
 function syncEmptyElBadgeSize(){
   const square = document.querySelector("#emptyElBadgeBtn .empty-el-square");
   const chip = document.querySelector(".gather .gchip");
   if (!square || !chip) return;
-  const px = chip.getBoundingClientRect().width;
+  const px = chip.getBoundingClientRect().width * .67;
   if (!px) return;
   square.style.width = px + "px";
   square.style.height = px + "px";
@@ -15778,49 +15846,42 @@ function renderMatTop(){
   // below it, not something that should vanish just because you tabbed
   // away to check your held elements.
   //
-  // Quark Meter revised 2026-09-17 for the new 4th tier: 5 blocks now, not
-  // 4 -- one per real reward tier (one/two/three/four) plus a 5th pure-
-  // headroom block past four up to MAT_ABSOLUTE_CEILING (same role the old
-  // 4th block played before a real 4th tier existed), each still filling
-  // with an ANALOG inner progress bar and getting the gold "cleared" glow
-  // once its OWN range is fully passed. Segment WIDTHS are no longer equal
-  // (explicit request, "don't have to be equal in size") -- flex-grow per
-  // block is sqrt(its own point range), which spreads the meter
-  // proportionally to how much Quark-earning that block actually
-  // represents while still keeping an early, tiny range (round 1's 0->5)
-  // visibly wide enough to read, rather than a raw-range proportion
-  // collapsing it to nothing. A persistent number above each of the 4 real
-  // blocks (not just a tooltip) shows its own required minimum -- the 5th
-  // headroom block gets no number, since it has no threshold of its own.
+  // Quark Meter revised 2026-09-19: back to 3 real segments, one per dice
+  // tier -- equal width (flex:1 each, see .qm-seg's own CSS), spanning the
+  // METER'S FULL LENGTH, so the 3 breakpoints land at fixed thirds (33.3% /
+  // 66.7% / 100%) regardless of how far apart their actual point values
+  // are. The Empty Element breakpoint doesn't get a 4th segment at all --
+  // it caps the meter at that same 100% mark, rendered as its own icon
+  // stacked ABOVE the dice-3 icon (see .qm-break-cap) rather than claiming
+  // extra bar width for itself. Each real number now sits directly above
+  // ITS OWN breakpoint icon (fixed x, same qmCumPcts the icons use below)
+  // instead of centered across a whole segment's width, which used to land
+  // it in the gap between two breakpoints rather than over either one.
   const qmTiers = lockInTiersForRound(state.visits);
   const qmPassed = emptyElementsForScore(s.total, state.visits);
   const qmSegRange = (lo, hi) => hi > lo ? Math.max(0, Math.min(100, ((s.total - lo) / (hi - lo)) * 100)) : (s.total >= lo ? 100 : 0);
-  const qmBounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four, MAT_ABSOLUTE_CEILING];
-  const qmFlex = qmBounds.slice(1).map((hi, i) => Math.max(Math.sqrt(Math.max(hi - qmBounds[i], 1)), 2));
-  const qmTotalFlex = qmFlex.reduce((a, b) => a + b, 0);
-  let qmCum = 0;
-  const qmCumPcts = qmFlex.map(f => { qmCum += f; return (qmCum / qmTotalFlex) * 100; });
-  const qmLabels = qmBounds.slice(1, 5).map((hi, i) =>
-    `<span class="qm-seg-label" style="flex:${qmFlex[i]} 1 0">${Math.round(hi).toLocaleString()}</span>`).join("")
-    + `<span class="qm-seg-label" style="flex:${qmFlex[4]} 1 0"></span>`;
-  const qmSegs = qmBounds.slice(1).map((hi, i) => {
-    const pct = qmSegRange(qmBounds[i], hi);
-    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}" style="flex:${qmFlex[i]} 1 0"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
+  const qmDiceBounds = [0, qmTiers.one, qmTiers.two, qmTiers.three];
+  const qmCumPcts = [33.333, 66.667, 100];
+  const qmSegs = qmDiceBounds.slice(1).map((hi, i) => {
+    const pct = qmSegRange(qmDiceBounds[i], hi);
+    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
   }).join("");
-  // Bonus-dice/Empty-Element badges straddle the 4 real breakpoints
-  // (between blocks 1/2, 2/3, 3/4, 4/5 -- the 5th block is pure headroom
-  // past tier four, so it gets no break icon after it). Left offsets are
-  // each block's own cumulative flex share (qmCumPcts), not a fixed
-  // quarter/fifth split, so a break badge always sits exactly on its real
-  // block boundary regardless of how unevenly the blocks are sized. Lit
-  // once qmPassed has actually reached that tier, i.e. locking in RIGHT
-  // NOW would apply that tier's own reward at your next station (see
-  // diceDeltaForReward()/finishLockIn()) -- tier 0 a plain +0 with no
-  // penalty.
+  const qmLabels =
+    `<span class="qm-seg-label" style="left:${qmCumPcts[0]}%">${Math.round(qmDiceBounds[1]).toLocaleString()}</span>` +
+    `<span class="qm-seg-label" style="left:${qmCumPcts[1]}%">${Math.round(qmDiceBounds[2]).toLocaleString()}</span>` +
+    `<span class="qm-seg-label qm-label-end" style="right:0">${Math.round(qmDiceBounds[3]).toLocaleString()}</span>` +
+    `<span class="qm-seg-label qm-label-end qm-cap-label" style="right:0">${Math.round(qmTiers.four).toLocaleString()}</span>`;
+  // Bonus-dice badges sit on the 3 fixed third-marks (qmCumPcts) above.
+  // The Empty Element cap renders at that same final 100% mark, offset
+  // upward (.qm-break-cap) so it visually caps the meter from above the
+  // dice-3 icon instead of overlapping it. Lit once qmPassed has actually
+  // reached that tier, i.e. locking in RIGHT NOW would apply that tier's
+  // own reward at your next station (see diceDeltaForReward()/
+  // finishLockIn()) -- tier 0 a plain +0 with no penalty.
   const QM_BREAK_LABEL = { 1: "+1 bonus die", 2: "+2 bonus dice", 3: "+3 bonus dice", 4: "+3 dice, plus +1 Empty Element" };
-  const qmBreaks = [1, 2, 3, 4].map(i =>
-    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${qmCumPcts[i - 1]}%" title="${QM_BREAK_LABEL[i]}">${
-      i === 4 ? emptyElSquareHTML(20) : `<span class="qm-break-dice">🎲</span>`}</span>`).join("");
+  const qmBreaks = [1, 2, 3].map(i =>
+    `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${qmCumPcts[i - 1]}%" title="${QM_BREAK_LABEL[i]}"><span class="qm-break-dice">🎲</span></span>`).join("")
+    + `<span class="qm-break qm-break-cap${qmPassed >= 4 ? " lit" : ""}" title="${QM_BREAK_LABEL[4]}">${emptyElSquareHTML(20)}</span>`;
   const qmDelta = diceDeltaForReward(qmPassed);
   const qmDeltaLabel = qmPassed === 0 ? "no bonus dice"
     : qmPassed >= 4 ? `+${qmDelta} dice, +1 Empty Element` : `+${qmDelta} dice`;
@@ -16311,14 +16372,18 @@ function renderCollectionsList(){
     return `
     <div class="histentry">
       <div class="collection-row">
-        <span class="cr-name">${esc(c.name)}</span>
-        <span class="cr-icons">${c.items.map(n =>
-          `<span class="cr-icon" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</span>
-        <span class="cr-bonus">+${c.bonus}</span>
+        <div class="cr-main">
+          <div class="cr-line1">
+            <span class="cr-name">${esc(c.name)}</span>
+            <span class="cr-bonus">+${c.bonus}</span>
+          </div>
+          <span class="cr-icons">${c.items.map(n =>
+            `<span class="cr-icon" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</span>
+        </div>
         ${canAdd ? `<button type="button" class="cr-add" data-add-collection="${esc(c.id)}"
             ${fits ? "" : "disabled"}
-            title="${allOnMat ? "Already on your Display Mat" : fits ? "Add every card in this collection to your Display Mat" : "Own every card and free up mat room to add this collection"}">${
-              allOnMat ? "On Mat" : "Add to Mat"}</button>` : ""}
+            title="${allOnMat ? "Already on your Display Mat" : fits ? "Place every card in this collection onto your Display Mat" : "Own every card and free up mat room to place this collection"}">${
+              allOnMat ? "On Mat" : "Place on Mat"}</button>` : ""}
       </div>
     </div>`;
   }).join("")}</div>`;
@@ -17689,6 +17754,13 @@ function drawBingoReplacementItem(exclude){
 let bingoClearInProgress = false;
 const BINGO_CLEAR_BOUNCE_MS = 320;
 const BINGO_CLEAR_STAGGER_MS = 70;
+// Beat before the bounce-out even starts, so a completed line reads as a
+// real "hold on, something just happened" pause rather than snapping
+// straight into the animation -- explicit request. Player input is locked
+// out for this whole pause plus the animation after it (see
+// #jobSheet.bingo-clearing's own CSS), not just the animation itself, so
+// there's nothing to interrupt mid-beat.
+const BINGO_PRECLEAR_PAUSE_MS = 500;
 /* Plays out one pending line clear at a time (see state.pendingBingoClears,
    queued by checkBingoLines()), called every time the Bingo card actually
    renders (see renderJobBoard()'s own tail call) -- a no-op unless
@@ -17705,45 +17777,75 @@ function processPendingBingoClears(){
   const pending = state.pendingBingoClears || [];
   if (!pending.length) return;
   bingoClearInProgress = true;
+  // Locks out taps anywhere in the tray for the full pause+animation
+  // stretch (see the constant's own comment) -- lifted right alongside
+  // bingoClearInProgress itself, below.
+  const jobSheetEl = document.getElementById("jobSheet");
+  if (jobSheetEl) jobSheetEl.classList.add("bingo-clearing");
   const lineIdx = pending[0];
   const line = bingoLines()[lineIdx].filter(i => i !== BINGO_CENTER_IDX);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const cellFor = i => document.querySelector(`#jobSheetBody .bingo-cell[data-cell-idx="${i}"]`);
-  line.forEach((i, k) => {
-    setTimeout(() => {
-      const cell = cellFor(i);
-      if (cell && !reduced){
-        cell.animate([
-          { transform: "scale(1)", opacity: 1, offset: 0 },
-          { transform: "scale(1.12)", opacity: 1, offset: .35 },
-          { transform: "scale(.2)", opacity: 0, offset: 1 },
-        ], { duration: BINGO_CLEAR_BOUNCE_MS, easing: "cubic-bezier(.3,.8,.4,1)" });
-      }
-    }, k * BINGO_CLEAR_STAGGER_MS);
-  });
-  const totalDelay = reduced ? 0 : (line.length - 1) * BINGO_CLEAR_STAGGER_MS + BINGO_CLEAR_BOUNCE_MS + 40;
+  const preclearPause = reduced ? 0 : BINGO_PRECLEAR_PAUSE_MS;
   setTimeout(() => {
-    const usedNames = new Set(state.bingoCard);
-    const granted = [];
-    line.forEach(i => {
-      const name = state.bingoCard[i];
-      const el = elementForBingoClear(name);
-      state.elements[el] = (state.elements[el] || 0) + 1;
-      granted.push({name, el});
-      const fresh = drawBingoReplacementItem(usedNames);
-      if (fresh){ usedNames.add(fresh); state.bingoCard[i] = fresh; }
+    line.forEach((i, k) => {
+      setTimeout(() => {
+        const cell = cellFor(i);
+        if (cell && !reduced){
+          cell.animate([
+            { transform: "scale(1)", opacity: 1, offset: 0 },
+            { transform: "scale(1.12)", opacity: 1, offset: .35 },
+            { transform: "scale(.2)", opacity: 0, offset: 1 },
+          ], { duration: BINGO_CLEAR_BOUNCE_MS, easing: "cubic-bezier(.3,.8,.4,1)" });
+        }
+      }, k * BINGO_CLEAR_STAGGER_MS);
     });
-    state.pendingBingoClears = pending.slice(1);
-    save();
-    bingoClearInProgress = false;
-    renderJobBoard();
-    line.forEach((i, k) => setTimeout(() => bingoCellFlipAppear(cellFor(i)), k * BINGO_REVEAL_STAGGER_MS));
-    const bySuit = {};
-    granted.forEach(g => { bySuit[g.el] = (bySuit[g.el] || 0) + 1; });
-    const elSummary = Object.keys(bySuit).map(el => `${bySuit[el]}${el}`).join(", ");
-    queueEventToast("job", "✨", "Line cleared", elSummary, "+" + line.length + " elements");
-  }, totalDelay);
+    const totalDelay = reduced ? 0 : (line.length - 1) * BINGO_CLEAR_STAGGER_MS + BINGO_CLEAR_BOUNCE_MS + 40;
+    setTimeout(() => {
+      const usedNames = new Set(state.bingoCard);
+      const granted = [];
+      line.forEach(i => {
+        const name = state.bingoCard[i];
+        const el = elementForBingoClear(name);
+        state.elements[el] = (state.elements[el] || 0) + 1;
+        granted.push({name, el});
+        const fresh = drawBingoReplacementItem(usedNames);
+        if (fresh){ usedNames.add(fresh); state.bingoCard[i] = fresh; }
+      });
+      state.pendingBingoClears = pending.slice(1);
+      save();
+      bingoClearInProgress = false;
+      if (jobSheetEl) jobSheetEl.classList.remove("bingo-clearing");
+      renderJobBoard();
+      line.forEach((i, k) => setTimeout(() => bingoCellFlipAppear(cellFor(i)), k * BINGO_REVEAL_STAGGER_MS));
+      openBingoClearOverlay(granted);
+    }, totalDelay);
+  }, preclearPause);
 }
+/* Popup shown once a line's clear animation finishes -- see
+   processPendingBingoClears()'s own tail call. Replaces the old plain
+   toast with something the player actually has to look at and dismiss,
+   using the exact .gcol/.gchip chip markup a station's own "Elements
+   Found Here" gather row renders (see renderStation()) so a gathered
+   element reads as visually identical to one rolled at a station. */
+function openBingoClearOverlay(granted){
+  const chips = granted.map(g => `<div class="gcol">
+      <div class="gchip" style="--suit:${ELEMENT_COLOR[g.el] || "#8a94a6"}">
+        <span class="gnum">${ATOMIC_NUMBER[g.el] || ""}</span>
+        <span class="gsym">${esc(g.el)}</span>
+      </div>
+      <span class="gname">${esc(ELEMENT_NAMES[g.el] || g.el)}</span>
+    </div>`).join("");
+  document.getElementById("bingoClearOverlayBody").innerHTML = `
+    <h2 id="bingoClearTitle">✨ Line Cleared!</h2>
+    <p>+${granted.length} element${granted.length === 1 ? "" : "s"} collected</p>
+    <div class="gather" style="margin:14px 0 0; padding:0">${chips}</div>
+    <div class="btnrow"><button type="button" class="bigbtn" id="bingoClearOkBtn">Nice!</button></div>`;
+  openOverlay("bingoClearOverlay");
+}
+document.getElementById("bingoClearOverlayBody").addEventListener("click", ev => {
+  if (ev.target.closest("#bingoClearOkBtn")) closeOverlay("bingoClearOverlay");
+});
 /* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
    not a lookalike, the literal same function -- so "Full breakdown"
    behaves identically everywhere it appears, right down to sharing the
