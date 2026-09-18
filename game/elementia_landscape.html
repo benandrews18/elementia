@@ -182,6 +182,127 @@ body.landscape .col-label.shop-label{font-size:11px; letter-spacing:1px; padding
 body.landscape .shop{display:grid; grid-template-columns:1fr 1fr; gap:8px 12px}
 body.landscape .shop-toggle-row{margin-bottom:6px}
 
+/* ---- Landscape Inventory / Display Mat: the portrait vertical stack split at
+   its existing divider. Left pane = #drawerTop (Quark Meter card, Clear/
+   Layouts/tabs, mat grid); right pane = .dbody (search + Collections +
+   card grid, own scroll region) with Sort/Filter buttons at its bottom
+   corners. Peeked (half) view = mat pane only, docked above the hub. */
+body.landscape #drawer{border-radius:0; box-shadow:0 -6px 18px rgba(0,0,0,.3)}
+body.landscape #drawer.expanded{top:0; bottom:var(--hub-h, 63px); max-height:none; flex-direction:row}
+/* Peeked (Lock-In half view) = the mat pane only, docked left; the Lock-In
+   prompt (#lockInBanner) fills the right 38% pane beside it. */
+body.landscape #drawer.open:not(.expanded){top:0; bottom:var(--hub-h, 63px); right:auto; width:62%; max-height:none}
+body.landscape #drawer:not(.expanded) #drawerTop{flex:1; border-right:2px solid var(--gold)}
+body.landscape #lockInBanner{left:62%; top:0; padding:14px 18px; border-bottom:none; border-left:2px solid var(--gold); justify-content:center}
+body.landscape #lockInBannerText{font-size:16px; line-height:1.35}
+body.landscape #lockInBannerText .libt-sub{font-size:12px}
+body.landscape #lockInQuarkTutorial{font-size:11px; max-width:none}
+body.landscape #drawerTop{padding:8px 12px 6px; --mat-row-h:78px; overflow-y:auto}
+body.landscape #drawer.expanded #drawerTop{flex:0 0 62%; max-width:62%; border-right:2px solid var(--gold)}
+body.landscape #drawer.expanded .dbody{flex:1; min-width:0; padding:8px 10px 52px; border-top:none}
+/* Score card: meter across the top, points x multiplier = Quarks beside the
+   combo chips underneath it. */
+body.landscape .mat-score-card{
+  display:grid; grid-template-columns:auto 1fr; align-items:center; gap:4px 12px;
+  padding:6px 12px 6px; margin-bottom:6px;
+}
+body.landscape .mat-score-card .quark-meter-wrap{grid-column:1 / -1; margin-top:14px}
+body.landscape .mat-score-stats{flex-wrap:nowrap; gap:6px 8px}
+body.landscape .mss-val{font-size:15px}
+body.landscape .mss-label{font-size:8px}
+body.landscape .mat-score-row{min-height:38px}
+body.landscape .mat-zone-page{padding:8px}
+body.landscape .mat-tab{padding:5px 12px 4px}
+body.landscape .mat-quick-btn{height:28px; width:28px; font-size:13px}
+body.landscape .mat-quick-btn.text{width:auto; height:28px; font-size:11.5px; padding:0 12px}
+body.landscape .mat-grid{gap:6px}
+body.landscape .mat-filters{margin:0 0 8px}
+body.landscape .mat-fsearch{padding:6px 9px; font-size:12px}
+body.landscape .mat-collections-btn{width:32px; height:32px; font-size:16px}
+body.landscape .mat-results-grid{grid-template-columns:repeat(3, 1fr); gap:6px; --mat-row-h:calc(((100cqw - 12px) / 3) * 1.25)}
+/* Sort / Filter: round buttons at the inventory pane's bottom-left/right,
+   opening short bottom windows bounded to that pane, above the hub. */
+body.landscape .mat-sf-btn{width:38px; height:38px; font-size:16px}
+body.landscape #matSortBtn.mat-sf-btn{left:calc(62% + 10px); bottom:calc(var(--hub-h, 63px) + 8px)}
+body.landscape #matFilterBtn.mat-sf-btn{left:auto; right:10px; bottom:calc(var(--hub-h, 63px) + 8px)}
+body.landscape .mat-sf-btn .sorticon, body.landscape .mat-sf-btn .filtericon{width:20px; height:20px}
+body.landscape .mat-sf-scrim{left:62%; bottom:var(--hub-h, 63px)}
+body.landscape #matSortTray, body.landscape #matFilterTray{
+  left:62%; right:0; top:auto !important; bottom:var(--hub-h, 63px); width:auto; max-width:none;
+  max-height:calc(100% - var(--hub-h, 63px) - 60px);
+  border-top:2px solid var(--gold); border-radius:14px 0 0 0; padding:8px 14px 10px; gap:6px;
+  transform:translateY(calc(100% + var(--hub-h, 63px)));
+}
+body.landscape #matSortTray.open, body.landscape #matFilterTray.open{transform:none}
+body.landscape .mat-tray-h{text-align:center; margin:0 0 2px; font-size:11px}
+body.landscape .mat-tray-option{padding:8px 12px; font-size:12px}
+body.landscape .mat-filter-section{grid-template-columns:repeat(8, 1fr); gap:5px; padding-bottom:8px; margin-bottom:8px}
+body.landscape .mat-filter-section.suits{grid-template-columns:repeat(4, 1fr); padding:0; margin:0}
+body.landscape .mat-fbtn{font-size:16px; border-radius:8px}
+body.landscape .mat-fbtn :is(img,svg){width:18px; height:18px}
+body.landscape .mat-filter-section.suits .mat-fbtn{aspect-ratio:auto; height:34px}
+
+/* Display Mat cards are short (2 rows must fit beside the score card), so the
+   card's own badges/icon/name scale down for that grid only. */
+body.landscape .mat-grid .mm-card{padding:3px 2px 2px; border-width:3px; border-radius:10px}
+body.landscape .mat-grid .mm-icon{font-size:28px; margin-top:0}
+body.landscape .mat-grid .mm-icon :is(img,svg){width:28px; height:28px}
+body.landscape .mat-grid .mm-pts{min-width:21px; height:21px; font-size:10.5px; top:-4px; left:-4px; border-width:1.5px}
+body.landscape .mat-grid .mm-pips{gap:1px; top:-4px; right:-4px}
+body.landscape .mat-grid .mm-pip{width:18px; height:18px; font-size:10px}
+body.landscape .mat-grid .mm-pip :is(img,svg){width:11px; height:11px}
+body.landscape .mat-grid .mm-stations{bottom:-4px; gap:2px}
+body.landscape .mat-grid .mm-station{width:18px; height:18px; font-size:10px}
+body.landscape .mat-grid .mm-station :is(img,svg){width:11px; height:11px}
+body.landscape .mat-grid .mm-name{font-size:8.5px; -webkit-line-clamp:1; margin-bottom:8px}
+
+/* Card inspection popup (non-panel form: post-craft / Item Reference): the
+   5:7 printed card is scaled down to fit the 412px canvas, actions to its
+   right. The mat-panel form positions itself in JS (positionCardPopMatPanel). */
+body.landscape .overlay{padding:8px 16px calc(8px + var(--hub-h, 63px))}
+body.landscape #cardPop:not(.mat-panel) .pc-card-wrap{
+  flex-direction:row; align-items:center; justify-content:center; gap:26px; width:auto; max-width:none;
+}
+body.landscape #cardPop:not(.mat-panel) .pc-card{flex:none; width:300px; transform:scale(.76); transform-origin:center; margin:-52px -36px; animation:none}
+body.landscape #cardPop:not(.mat-panel) .pc-actions{flex-direction:column}
+
+/* Item Reference (codex): same page, tightened vertical rhythm for 412px. */
+body.landscape[data-screen="codex"] main{padding:8px 18px calc(var(--hub-h, 63px) + 10px)}
+body.landscape[data-screen="codex"] .map-head{margin-bottom:0}
+body.landscape[data-screen="codex"] .map-head h1{font-size:19px; letter-spacing:-.3px}
+body.landscape .refbar{margin-bottom:6px}
+body.landscape .refrow{padding:8px 14px; gap:12px}
+
+/* Dialog lists that scroll inside a .sheetbox: shorter caps so the whole box
+   (title + list + buttons) fits above the hub at 412px. */
+body.landscape .histrows{max-height:calc(32 * var(--vh))}
+body.landscape .histturns{max-height:calc(28 * var(--vh))}
+body.landscape .convert-picker-grid{max-height:calc(30 * var(--vh))}
+body.landscape .refbar{top:0}
+
+/* Arrange Items: canvas on the left, the item tray as a right-hand panel. */
+body.landscape .arr-head{padding:7px 16px}
+body.landscape .arr-head h2{font-size:15px}
+body.landscape .arr-canvas{right:38%}
+body.landscape .arr-tray-panel{
+  left:auto; right:0; top:0; bottom:0; width:38%; max-height:none;
+  border-top:none; border-left:2.5px solid var(--gold); border-radius:0; box-shadow:-8px 0 20px rgba(0,0,0,.3);
+}
+body.landscape .arr-tray-handle{height:22px}
+body.landscape .arr-toolbar{padding:6px 10px; gap:8px}
+body.landscape .arr-tool-btn{width:34px; height:34px; font-size:16px}
+body.landscape .arr-bgpicker{padding:6px 10px; gap:7px}
+body.landscape .arr-swatch{width:22px; height:22px}
+body.landscape .arr-tray-tabs{padding:6px 10px 0}
+body.landscape .arr-tray-tab{padding:5px; font-size:12px}
+body.landscape .arr-tray{padding:8px 10px; gap:7px}
+body.landscape .arr-tray-card{gap:4px; padding:5px}
+body.landscape .arr-tray-card .em{font-size:28px}
+body.landscape .arr-tray-card .nm{font-size:10px}
+
+/* Element card popup: native 280x392 would sit behind the hub at 412px. */
+body.landscape .el-pop-card{zoom:.82}
+
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
    for a 915x412 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
@@ -12529,6 +12650,8 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   // #drawerTop that isn't even part of this view.
   else {
     document.getElementById("cardPop").style.paddingTop = "";
+    document.getElementById("cardPop").style.paddingLeft = "";
+    document.getElementById("cpMatBackdrop").style.left = "";
     document.getElementById("cpMatBackdrop").style.top = "";
     document.getElementById("cpMatBackdrop").style.bottom = "";
     document.querySelector(".pc-card-scale").style.width = "";
@@ -12559,9 +12682,12 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
    .pc-card-wrap's own CSS comment for why. */
 function positionCardPopMatPanel(){
   const cardPop = document.getElementById("cardPop");
-  const drawerTopBottom = document.getElementById("drawerTop").getBoundingClientRect().bottom;
-  const paddingTop = Math.max(0, drawerTopBottom + 10);
+  // LANDSCAPE: the panel docks over the RIGHT (inventory) pane -- full pane
+  // height above the hub -- instead of under the mat card like portrait.
+  const paneLeft = Math.round(window.innerWidth * 0.62);
+  const paddingTop = 8;
   cardPop.style.paddingTop = paddingTop + "px";
+  cardPop.style.paddingLeft = (paneLeft + 8) + "px";
   // Available height = the real viewport height, minus the padding-top
   // just set and the hub-reservation padding-bottom every overlay already
   // carries (see .overlay's own comment).
@@ -12571,8 +12697,9 @@ function positionCardPopMatPanel(){
   // same top/bottom band as this panel's own padding, but the element
   // itself ignores #cardPop's left/right padding entirely.
   const backdrop = document.getElementById("cpMatBackdrop");
-  backdrop.style.top = paddingTop + "px";
+  backdrop.style.top = "0px";
   backdrop.style.bottom = hubPad + "px";
+  backdrop.style.left = paneLeft + "px";
   // The card's own width is capped three ways: never taller than the
   // available height allows (availH*5/7, its own 5:7 ratio), never bigger
   // than its real native size (300 -- upscaling past that read as "not
@@ -12583,7 +12710,7 @@ function positionCardPopMatPanel(){
   // with enough spare height let the card grow wide enough to squeeze the
   // toggle stack down toward zero width (flex's own default shrink:1),
   // reading as "the buttons are hidden behind the card."
-  const contentW = cardPop.clientWidth - 20 - 14; // .overlay's own left padding (20) + this panel's own right padding (14)
+  const contentW = cardPop.clientWidth - (paneLeft + 8) - 14; // pane offset + this panel's own right padding (14)
   const toggleStackW = 66;
   // Revised 2026-09-13: was "- 24" -- on a screen where this cap (not
   // availH or the native-300 cap) is what's actually limiting the card's
@@ -12898,10 +13025,10 @@ function placeHint(target){
   h.classList.add("open");
   const r = target.getBoundingClientRect();
   const hr = h.getBoundingClientRect();
-  let left = r.left + window.scrollX + r.width / 2 - hr.width / 2;
+  let left = r.left + r.width / 2 - hr.width / 2;
   left = Math.max(8, Math.min(left, window.innerWidth - hr.width - 8));
-  let top = r.top + window.scrollY - hr.height - 9;
-  if (top < window.scrollY + 4) top = r.bottom + window.scrollY + 9;
+  let top = r.top - hr.height - 9;
+  if (top < 4) top = r.bottom + 9;
   h.style.left = left + "px";
   h.style.top = top + "px";
 }
@@ -14118,11 +14245,11 @@ function placeSuitSpendBalloon(anchor){
   const b = document.getElementById("suitSpendBalloon");
   const r = anchor.getBoundingClientRect();
   const br = b.getBoundingClientRect();
-  let left = r.left + window.scrollX + r.width / 2 - br.width / 2;
-  left = Math.max(8, Math.min(left, window.scrollX + window.innerWidth - br.width - 8));
-  let top = r.top + window.scrollY - br.height - 12;
-  const above = top >= window.scrollY + 4;
-  if (!above) top = r.bottom + window.scrollY + 12;
+  let left = r.left + r.width / 2 - br.width / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - br.width - 8));
+  let top = r.top - br.height - 12;
+  const above = top >= 4;
+  if (!above) top = r.bottom + 12;
   b.classList.toggle("above", above);
   b.classList.toggle("below", !above);
   b.style.left = left + "px";
@@ -14130,7 +14257,7 @@ function placeSuitSpendBalloon(anchor){
   // Tail stays centered on the real anchor badge, not the bubble's own
   // (possibly re-centered-to-stay-onscreen) box, so it keeps pointing at
   // the actual badge even once the bubble has shifted sideways to fit.
-  const anchorCenter = r.left + window.scrollX + r.width / 2;
+  const anchorCenter = r.left + r.width / 2;
   b.querySelector(".ssb-tail").style.left = Math.max(14, Math.min(anchorCenter - left, br.width - 14)) + "px";
 }
 function openSuitSpendBalloon(entry, anchor, onCraft = null){
@@ -14945,9 +15072,9 @@ function syncLockInBanner(){
   const show = travelPromptFor !== null && drawer.classList.contains("open") && !drawer.classList.contains("expanded");
   banner.classList.toggle("show", show);
   if (!show) return;
-  const bottomPx = parseFloat(getComputedStyle(drawer).bottom) || 0;
-  const heightPx = drawer.getBoundingClientRect().height;
-  banner.style.bottom = (bottomPx + heightPx) + "px";
+  // LANDSCAPE: banner is a right-hand pane beside the peeked mat, top:0 down
+  // to the hub (same bottom edge the drawer itself docks to).
+  banner.style.bottom = (parseFloat(getComputedStyle(drawer).bottom) || 0) + "px";
 }
 const closeDrawer = () => {
   // Combo Lab hides #hub entirely (see its own CSS), so this button --
