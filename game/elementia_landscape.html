@@ -303,6 +303,28 @@ body.landscape .arr-tray-card .nm{font-size:10px}
 /* Element card popup: native 280x392 would sit behind the hub at 412px. */
 body.landscape .el-pop-card{zoom:.82}
 
+/* ---- Landscape To-Do tray: left slide-in with the pinned list on top and
+   the tracker chip row combined at its bottom. The floating pins button,
+   pins tray and tracked pill are hidden (Zen keeps them -- it has no To-Do
+   button). */
+body.landscape:not([data-mode="zen"]) #pinsBtn,
+body.landscape:not([data-mode="zen"]) #pinsTray,
+body.landscape:not([data-mode="zen"]) #trackedPill{display:none !important}
+body.landscape #jobSheet:not(.top-tray){width:calc(330px + 24px); border-radius:0 0 14px 0}
+body.landscape #jobSheetBody:has(> .todo-main){display:flex; flex-direction:column; padding:0; overflow:hidden}
+body.landscape .todo-main{flex:1; min-height:0; overflow-y:auto; padding:12px 14px 8px}
+body.landscape .todo-tracker{flex:none; border-top:1px solid var(--line); padding:8px 14px 10px; background:var(--bg-soft)}
+body.landscape .todo-tracker-lbl{font-size:9.5px; font-weight:800; color:var(--mute); letter-spacing:.03em; margin-bottom:7px}
+body.landscape .todo-tracker .map-job-chips{gap:7px; min-height:0}
+body.landscape .todo-tracker .map-job-chip{
+  position:relative; width:42px; height:42px; padding:0; border-radius:9px; justify-content:center;
+  background:var(--sunken); border:2px solid var(--line);
+}
+body.landscape .todo-tracker .map-job-chip .mj-name{display:none}
+body.landscape .todo-tracker .map-job-chip .mj-em{font-size:20px; line-height:1}
+body.landscape .todo-tracker .map-job-chip.selected{border-color:var(--gold); background:var(--gold-soft); box-shadow:0 0 0 2px var(--gold-soft)}
+body.landscape .todo-tracker .mj-search-badge{position:absolute; top:-6px; right:-6px; font-size:10px}
+
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
    for a 915x412 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
@@ -10998,9 +11020,7 @@ function renderArcadeMap(){
    opened from the floating pins button -- rebuilt on every render()
    alongside everything else, independent of which screen is showing or
    whether the tray is currently open. */
-function renderPinsTray(){
-  const el = document.getElementById("pinsTrayBody");
-  if (!el) return;
+function pinsChipsHTML(){
   const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
   const chips = names.length
     ? names.map(name => {
@@ -11012,7 +11032,17 @@ function renderPinsTray(){
         </button>`;
       }).join("")
     : `<span class="pinned-empty-note">Pin items in Item Reference to track them here.</span>`;
-  el.innerHTML = `<div class="map-job-chips">${chips}</div>`;
+  return `<div class="map-job-chips">${chips}</div>`;
+}
+function renderPinsTray(){
+  const el = document.getElementById("pinsTrayBody");
+  if (!el) return;
+  el.innerHTML = pinsChipsHTML();
+}
+/* LANDSCAPE: the tracker chip row lives at the bottom of the To-Do tray
+   (the floating pins button/tray + tracked pill are hidden outside Zen). */
+function trackerSectionHTML(){
+  return `<div class="todo-tracker"><div class="todo-tracker-lbl">TRACKING ON MAP &amp; AT STATIONS</div>${pinsChipsHTML()}</div>`;
 }
 
 /* Read-only companion to the pins button showing whichever pinned item is
@@ -11914,6 +11944,7 @@ function renderLegacyDrawer(){
    ===================================================================== */
 function render(resetScroll){
   document.body.dataset.screen = screen;
+  document.body.dataset.mode = state.mode || "";
   // Before the first station is chosen there's nothing for the visits/score
   // pills to report (0 of N, 0 points) and the screen's single job is "pick
   // a node" -- so they stay out of the way entirely. See #topbar's CSS.
@@ -12126,6 +12157,8 @@ function updateHub(){
   // how many".
   const hasUnselectedPin = prefs.pinnedItems.length > 0 && !selectedJobItem;
   setHubBadge("pinsBtn", hasUnselectedPin ? "!" : null);
+  // LANDSCAPE: the floating pins button is hidden outside Zen (tracker lives in the To-Do tray), so its "pick a tracked item" flag rides on the To-Do hub button instead.
+  if (state.mode !== "zen") setHubBadge("hubJobs", hasUnselectedPin ? "!" : null);
   // Total conversions currently possible across every element (each one
   // independently good for floor(count/3) 3-for-1 conversions, see
   // convertGo's own handler) -- not just "you have enough of something",
@@ -16796,7 +16829,7 @@ function renderJobBoard(){
     (classic || hard) && full ? `${em("__MARKETPLACE__")} Marketplace` // same custom icon as Home's own Market face, see hubHomeFace()
     : classic ? "📋 To-Do List"
     : "📜 Quests"; // Adventure's compact tray, and Zen's unreachable fallback
-  document.getElementById("jobSheetBody").innerHTML =
+  const jobBodyHTML =
     classic
       ? (full
           // Job Select's own "Available Jobs" board (jobBoardHTML(false))
@@ -16827,6 +16860,9 @@ function renderJobBoard(){
         // stays a personal log, never a place to browse and accept
         // something new -- that's the "full" tray's job.
         : questsBodyHTML(true);
+  document.getElementById("jobSheetBody").innerHTML = full
+    ? jobBodyHTML
+    : `<div class="todo-main">${jobBodyHTML}</div>${trackerSectionHTML()}`;
   // Only the real Bingo card view just rendered above has real cells to
   // animate -- a no-op every other time this fires (nothing pending, or
   // already mid-sequence, see processPendingBingoClears()'s own guard).
@@ -18262,6 +18298,9 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
 
   const takeBtn = ev.target.closest("[data-take]");
   if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
+
+  const selectJobBtn = ev.target.closest("[data-select-job]");
+  if (selectJobBtn){ toggleJobSelect(selectJobBtn.dataset.selectJob); renderJobBoard(); return; }
 
   const hintBtn = ev.target.closest("[data-todo-hint]");
   if (hintBtn){ todoHintOpen = !todoHintOpen; renderJobBoard(); return; }
