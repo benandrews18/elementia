@@ -76,7 +76,7 @@ body{
   font-family:'Segoe UI','Helvetica Neue',Arial,'Segoe UI Emoji','Noto Color Emoji',sans-serif;
   color:var(--ink); background:var(--bg); line-height:1.35;
 }
-/* ---- Landscape stage: fixed 915x412 design canvas (Pixel 9a landscape),
+/* ---- Landscape stage: fixed 1920x1080 design canvas (full HD, 16:9),
    scaled uniformly to fit the window and letterboxed. The transform on body
    also makes every position:fixed descendant stage-relative. --stage-scale
    is kept up to date by the tiny script in <head>; JS that reads
@@ -84,12 +84,12 @@ body{
 html{background:#081b23; height:100%; overflow:hidden}
 body.landscape{
   position:absolute; left:50%; top:50%; margin:0;
-  width:915px; height:412px; overflow:hidden;
+  width:1920px; height:1080px; overflow:hidden;
   transform:translate(-50%,-50%) scale(var(--stage-scale,1)); transform-origin:center center;
   transition:none !important; /* the stage must never animate in when the class is applied after first paint (Artifact build) */
-  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 90px rgba(0,0,0,.6);
+  box-shadow:0 0 0 2.1px rgba(255,255,255,.06), 0 0 188.9px rgba(0,0,0,.6);
 }
-:root{--vw:9.15px; --vh:4.12px}
+:root{--vw:19.2px; --vh:10.8px}
 body.landscape main#screen{
   position:absolute; left:0; top:0; width:100%; height:100%; max-width:none; margin:0;
   overflow-x:hidden; overflow-y:auto; scrollbar-width:none;
@@ -98,28 +98,28 @@ body.landscape main#screen::-webkit-scrollbar{display:none}
 
 /* ---- Landscape station-preview top tray (map): same card content, compacted
    so it reads as a short tray sliding down over the map. */
-body.landscape .map-card{padding:8px 22px 9px; gap:6px; border-top-width:6px; border-bottom:2px solid var(--gold-line); background:linear-gradient(180deg, rgba(15,26,35,.94), rgba(18,38,50,.92)); border-radius:0 0 14px 14px}
-body.landscape .map-card .em{font-size:24px}
-body.landscape .map-card h2{font-size:17px}
-body.landscape .mc-tracked{padding:2px 9px; font-size:11.5px; border-width:2px}
-body.landscape .pool{gap:8px; justify-content:flex-start}
-body.landscape .pcol{flex:none; width:50px; gap:3px}
-body.landscape .pchip{border-width:3px; border-radius:7px; padding:2px}
-body.landscape .pchip .psym{font-size:20px}
-body.landscape .pnum{font-size:8px; top:1px; left:2px}
-body.landscape .pname{font-size:7.5px}
-body.landscape .station-items{padding:4px 22px; margin:0 -22px; gap:6px}
-body.landscape .station-item-icon{font-size:17px}
-body.landscape .capline{font-size:12px; padding-top:6px; margin-top:0}
+body.landscape .map-card{padding:16.8px 46.2px 18.9px; gap:12.6px; border-top-width:12.6px; border-bottom:4.2px solid var(--gold-line); background:linear-gradient(180deg, rgba(15,26,35,.94), rgba(18,38,50,.92)); border-radius:0 0 29.4px 29.4px}
+body.landscape .map-card .em{font-size:50.4px}
+body.landscape .map-card h2{font-size:35.7px}
+body.landscape .mc-tracked{padding:4.2px 18.9px; font-size:24.1px; border-width:4.2px}
+body.landscape .pool{gap:16.8px; justify-content:flex-start}
+body.landscape .pcol{flex:none; width:104.9px; gap:6.3px}
+body.landscape .pchip{border-width:6.3px; border-radius:14.7px; padding:4.2px}
+body.landscape .pchip .psym{font-size:42px}
+body.landscape .pnum{font-size:16.8px; top:2.1px; left:4.2px}
+body.landscape .pname{font-size:15.7px}
+body.landscape .station-items{padding:8.4px 46.2px; margin:0 -46.2px; gap:12.6px}
+body.landscape .station-item-icon{font-size:35.7px}
+body.landscape .capline{font-size:25.2px; padding-top:12.6px; margin-top:0}
 
 /* ---- Landscape Marketplace top tray (Classic Bingo / Job Select): narrow
    centered tray sliding down over the map, Stations Visited first, then a
    square 5x5 grid whose cell size (--bcell) is set by the available height. */
 body.landscape #jobSheet.top-tray{
-  --bcell:44px; --bgap:4px;
-  left:50%; right:auto; width:calc(5 * var(--bcell) + 4 * var(--bgap) + 30px);
-  max-height:calc(100% - var(--hub-h, 63px) - 4px);
-  border-left:2.5px solid var(--gold); border-right:2.5px solid var(--gold);
+  --bcell:92.3px; --bgap:8.4px;
+  left:50%; right:auto; width:calc(5 * var(--bcell) + 4 * var(--bgap) + 63px);
+  max-height:calc(100% - var(--hub-h, 132.2px) - 8.4px);
+  border-left:5.2px solid var(--gold); border-right:5.2px solid var(--gold);
   transform:translate(-50%,-100%);
 }
 body.landscape #jobSheet.top-tray.open{transform:translate(-50%,0)}
@@ -129,24 +129,24 @@ body.landscape #jobSheet.top-tray.open{transform:translate(-50%,0)}
   100%{transform:translate(-50%,0) scale(.85); opacity:0}
 }
 body.landscape #jobSheet.top-tray.bounce-away{animation-name:ls-tray-bounce-away}
-body.landscape #jobSheet.top-tray .dbody{padding:6px 12px 6px}
-body.landscape #jobSheet.top-tray .market-classic-progress{margin:0 0 4px; padding:5px 9px 6px; border-radius:10px}
-body.landscape #jobSheet.top-tray .market-classic-progress .market-station-progress-label{font-size:8.5px; letter-spacing:.5px; margin-bottom:4px}
-body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-stations{gap:4px}
-body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-station{max-width:22px; font-size:11px}
-body.landscape #jobSheet.top-tray .market-progress-bonus{width:30px; height:30px; font-size:9.5px; top:-8px; right:-6px}
-body.landscape #jobSheet.top-tray .bingo-title{font-size:13px; margin:2px 0 1px}
-body.landscape #jobSheet.top-tray .market-classic-progress + .bingo-title{margin-top:2px}
-body.landscape #jobSheet.top-tray .bingo-subhint{font-size:9px; margin:0 0 4px}
+body.landscape #jobSheet.top-tray .dbody{padding:12.6px 25.2px 12.6px}
+body.landscape #jobSheet.top-tray .market-classic-progress{margin:0 0 8.4px; padding:10.5px 18.9px 12.6px; border-radius:21px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-station-progress-label{font-size:17.8px; letter-spacing:.5px; margin-bottom:8.4px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-stations{gap:8.4px}
+body.landscape #jobSheet.top-tray .market-classic-progress .market-progress-station{max-width:46.2px; font-size:23.1px}
+body.landscape #jobSheet.top-tray .market-progress-bonus{width:63px; height:63px; font-size:19.9px; top:-16.8px; right:-12.6px}
+body.landscape #jobSheet.top-tray .bingo-title{font-size:27.3px; margin:4.2px 0 2.1px}
+body.landscape #jobSheet.top-tray .market-classic-progress + .bingo-title{margin-top:4.2px}
+body.landscape #jobSheet.top-tray .bingo-subhint{font-size:18.9px; margin:0 0 8.4px}
 body.landscape #jobSheet.top-tray .bingo-grid{gap:var(--bgap); margin-top:0}
-body.landscape #jobSheet.top-tray .bingo-cell{border-radius:8px; padding:1px; box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25)}
-body.landscape #jobSheet.top-tray .bingo-cell.owned{box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25), inset 0 0 0 2px var(--ok-bright)}
-body.landscape #jobSheet.top-tray .bingo-cell.craftable{box-shadow:0 2px 0 rgba(0,0,0,.4), 0 3px 5px rgba(0,0,0,.25), inset 0 0 0 2px var(--ok-bright)}
-body.landscape #jobSheet.top-tray .bc-icon{font-size:20px; bottom:5px}
-body.landscape #jobSheet.top-tray .bc-name{font-size:5.5px; line-height:6px; height:12px; bottom:0}
-body.landscape #jobSheet.top-tray .bc-pin{width:13px; height:13px; font-size:7px; top:-3px; right:-3px}
-body.landscape #jobSheet.top-tray .bc-station{width:15px; height:15px; font-size:9px}
-body.landscape #jobSheet.top-tray .bingo-hint{font-size:8.5px; line-height:1.3; margin:5px 0 0}
+body.landscape #jobSheet.top-tray .bingo-cell{border-radius:16.8px; padding:2.1px; box-shadow:0 4.2px 0 rgba(0,0,0,.4), 0 6.3px 10.5px rgba(0,0,0,.25)}
+body.landscape #jobSheet.top-tray .bingo-cell.owned{box-shadow:0 4.2px 0 rgba(0,0,0,.4), 0 6.3px 10.5px rgba(0,0,0,.25), inset 0 0 0 4.2px var(--ok-bright)}
+body.landscape #jobSheet.top-tray .bingo-cell.craftable{box-shadow:0 4.2px 0 rgba(0,0,0,.4), 0 6.3px 10.5px rgba(0,0,0,.25), inset 0 0 0 4.2px var(--ok-bright)}
+body.landscape #jobSheet.top-tray .bc-icon{font-size:42px; bottom:10.5px}
+body.landscape #jobSheet.top-tray .bc-name{font-size:11.5px; line-height:12.6px; height:25.2px; bottom:0}
+body.landscape #jobSheet.top-tray .bc-pin{width:27.3px; height:27.3px; font-size:14.7px; top:-6.3px; right:-6.3px}
+body.landscape #jobSheet.top-tray .bc-station{width:31.5px; height:31.5px; font-size:18.9px}
+body.landscape #jobSheet.top-tray .bingo-hint{font-size:17.8px; line-height:1.3; margin:10.5px 0 0}
 
 body.landscape *{scrollbar-width:none}
 body.landscape *::-webkit-scrollbar{display:none}
@@ -154,125 +154,125 @@ body.landscape *::-webkit-scrollbar{display:none}
 /* ---- Landscape station screen: header is one compact band -- icon + title
    (+ Empty Element badge) on the left, "Elements found here" chips inline
    beside it; the item shop below flows in two columns. */
-body.landscape[data-screen="station"] main{padding:0 0 calc(var(--hub-h, 63px) + 8px)}
+body.landscape[data-screen="station"] main{padding:0 0 calc(var(--hub-h, 132.2px) + 16.8px)}
 body.landscape .sheet{border:none; border-radius:0}
 body.landscape .stationhead{
-  display:grid; grid-template-columns:auto 1fr; column-gap:14px;
+  display:grid; grid-template-columns:auto 1fr; column-gap:29.4px;
   grid-template-areas:"head label" "head gather" "play play" "hint hint";
-  align-items:start; padding:0 0 8px; border-radius:0; border-top-width:6px;
+  align-items:start; padding:0 0 16.8px; border-radius:0; border-top-width:12.6px;
 }
-body.landscape .sheet-head{grid-area:head; padding:14px 0 0 22px; gap:10px; align-self:start}
-body.landscape .sheet-head .em{font-size:32px}
-body.landscape .sheet-head h1{font-size:21px; gap:10px; letter-spacing:-.3px}
+body.landscape .sheet-head{grid-area:head; padding:29.4px 0 0 46.2px; gap:21px; align-self:start}
+body.landscape .sheet-head .em{font-size:67.1px}
+body.landscape .sheet-head h1{font-size:44.1px; gap:21px; letter-spacing:-.3px}
 body.landscape .sheet-head:has(.travel-btn){padding-right:0}
-body.landscape .travel-btn{top:10px; right:14px; width:34px; height:34px}
-body.landscape .col-label.elements-label{grid-area:label; margin:8px 60px 0 0; font-size:9.5px; letter-spacing:1px}
-body.landscape .gather{grid-area:gather; margin:2px 60px 0 0; padding:0; justify-content:flex-start; gap:8px}
-body.landscape .gcol{flex:none; width:50px; max-width:none; gap:3px}
-body.landscape .gchip{border-width:3px; border-radius:7px; padding:2px}
-body.landscape .gchip .gsym{font-size:21px}
-body.landscape .gnum{font-size:7.5px; top:1px; left:2px}
-body.landscape .gname{font-size:7px}
-body.landscape .gcol > .die{width:16px; height:16px; border-width:1.5px; border-radius:4px}
+body.landscape .travel-btn{top:21px; right:29.4px; width:71.3px; height:71.3px}
+body.landscape .col-label.elements-label{grid-area:label; margin:16.8px 125.9px 0 0; font-size:19.9px; letter-spacing:2.1px}
+body.landscape .gather{grid-area:gather; margin:4.2px 125.9px 0 0; padding:0; justify-content:flex-start; gap:16.8px}
+body.landscape .gcol{flex:none; width:104.9px; max-width:none; gap:6.3px}
+body.landscape .gchip{border-width:6.3px; border-radius:14.7px; padding:4.2px}
+body.landscape .gchip .gsym{font-size:44.1px}
+body.landscape .gnum{font-size:15.7px; top:2.1px; left:4.2px}
+body.landscape .gname{font-size:14.7px}
+body.landscape .gcol > .die{width:33.6px; height:33.6px; border-width:3.1px; border-radius:8.4px}
 body.landscape .empty-el-cashin-hint{grid-area:hint}
-body.landscape .playbar{grid-area:play; margin:6px 22px 0; gap:8px}
-body.landscape .rolled{gap:8px; justify-content:flex-start}
-body.landscape .rollcard{flex:0 0 50px; max-width:50px; padding:4px}
-body.landscape .makewrap{padding:8px 22px 14px}
-body.landscape .col-label.shop-label{font-size:11px; letter-spacing:1px; padding-bottom:4px; margin-bottom:8px; text-align:left}
-body.landscape .shop{display:grid; grid-template-columns:1fr 1fr; gap:8px 12px}
-body.landscape .shop-toggle-row{margin-bottom:6px}
+body.landscape .playbar{grid-area:play; margin:12.6px 46.2px 0; gap:16.8px}
+body.landscape .rolled{gap:16.8px; justify-content:flex-start}
+body.landscape .rollcard{flex:0 0 104.9px; max-width:104.9px; padding:8.4px}
+body.landscape .makewrap{padding:16.8px 46.2px 29.4px}
+body.landscape .col-label.shop-label{font-size:23.1px; letter-spacing:2.1px; padding-bottom:8.4px; margin-bottom:16.8px; text-align:left}
+body.landscape .shop{display:grid; grid-template-columns:1fr 1fr; gap:16.8px 25.2px}
+body.landscape .shop-toggle-row{margin-bottom:12.6px}
 
 /* ---- Landscape Inventory / Display Mat: the portrait vertical stack split at
    its existing divider. Left pane = #drawerTop (Quark Meter card, Clear/
    Layouts/tabs, mat grid); right pane = .dbody (search + Collections +
    card grid, own scroll region) with Sort/Filter buttons at its bottom
    corners. Peeked (half) view = mat pane only, docked above the hub. */
-body.landscape #drawer{border-radius:0; box-shadow:0 -6px 18px rgba(0,0,0,.3)}
-body.landscape #drawer.expanded{top:0; bottom:var(--hub-h, 63px); max-height:none; flex-direction:row}
+body.landscape #drawer{border-radius:0; box-shadow:0 -12.6px 37.8px rgba(0,0,0,.3)}
+body.landscape #drawer.expanded{top:0; bottom:var(--hub-h, 132.2px); max-height:none; flex-direction:row}
 /* Peeked (Lock-In half view) = the mat pane only, docked left; the Lock-In
    prompt (#lockInBanner) fills the right 38% pane beside it. */
-body.landscape #drawer.open:not(.expanded){top:0; bottom:var(--hub-h, 63px); right:auto; width:62%; max-height:none}
-body.landscape #drawer:not(.expanded) #drawerTop{flex:1; border-right:2px solid var(--gold)}
-body.landscape #lockInBanner{left:62%; top:0; padding:14px 18px; border-bottom:none; border-left:2px solid var(--gold); justify-content:center}
-body.landscape #lockInBannerText{font-size:16px; line-height:1.35}
-body.landscape #lockInBannerText .libt-sub{font-size:12px}
-body.landscape #lockInQuarkTutorial{font-size:11px; max-width:none}
-body.landscape #drawerTop{padding:8px 12px 6px; --mat-row-h:78px; overflow-y:auto}
-body.landscape #drawer.expanded #drawerTop{flex:0 0 62%; max-width:62%; border-right:2px solid var(--gold)}
-body.landscape #drawer.expanded .dbody{flex:1; min-width:0; padding:8px 10px 52px; border-top:none}
+body.landscape #drawer.open:not(.expanded){top:0; bottom:var(--hub-h, 132.2px); right:auto; width:62%; max-height:none}
+body.landscape #drawer:not(.expanded) #drawerTop{flex:1; border-right:4.2px solid var(--gold)}
+body.landscape #lockInBanner{left:62%; top:0; padding:29.4px 37.8px; border-bottom:none; border-left:4.2px solid var(--gold); justify-content:center}
+body.landscape #lockInBannerText{font-size:33.6px; line-height:1.35}
+body.landscape #lockInBannerText .libt-sub{font-size:25.2px}
+body.landscape #lockInQuarkTutorial{font-size:23.1px; max-width:none}
+body.landscape #drawerTop{padding:16.8px 25.2px 12.6px; --mat-row-h:163.7px; overflow-y:auto}
+body.landscape #drawer.expanded #drawerTop{flex:0 0 62%; max-width:62%; border-right:4.2px solid var(--gold)}
+body.landscape #drawer.expanded .dbody{flex:1; min-width:0; padding:16.8px 21px 109.1px; border-top:none}
 /* Score card: meter across the top, points x multiplier = Quarks beside the
    combo chips underneath it. */
 body.landscape .mat-score-card{
-  display:grid; grid-template-columns:auto 1fr; align-items:center; gap:4px 12px;
-  padding:6px 12px 6px; margin-bottom:6px;
+  display:grid; grid-template-columns:auto 1fr; align-items:center; gap:8.4px 25.2px;
+  padding:12.6px 25.2px 12.6px; margin-bottom:12.6px;
 }
-body.landscape .mat-score-card .quark-meter-wrap{grid-column:1 / -1; margin-top:14px}
-body.landscape .mat-score-stats{flex-wrap:nowrap; gap:6px 8px}
-body.landscape .mss-val{font-size:15px}
-body.landscape .mss-label{font-size:8px}
-body.landscape .mat-score-row{min-height:38px}
-body.landscape .mat-zone-page{padding:8px}
-body.landscape .mat-tab{padding:5px 12px 4px}
-body.landscape .mat-quick-btn{height:28px; width:28px; font-size:13px}
-body.landscape .mat-quick-btn.text{width:auto; height:28px; font-size:11.5px; padding:0 12px}
-body.landscape .mat-grid{gap:6px}
-body.landscape .mat-filters{margin:0 0 8px}
-body.landscape .mat-fsearch{padding:6px 9px; font-size:12px}
-body.landscape .mat-collections-btn{width:32px; height:32px; font-size:16px}
-body.landscape .mat-results-grid{grid-template-columns:repeat(3, 1fr); gap:6px; --mat-row-h:calc(((100cqw - 12px) / 3) * 1.25)}
+body.landscape .mat-score-card .quark-meter-wrap{grid-column:1 / -1; margin-top:29.4px}
+body.landscape .mat-score-stats{flex-wrap:nowrap; gap:12.6px 16.8px}
+body.landscape .mss-val{font-size:31.5px}
+body.landscape .mss-label{font-size:16.8px}
+body.landscape .mat-score-row{min-height:79.7px}
+body.landscape .mat-zone-page{padding:16.8px}
+body.landscape .mat-tab{padding:10.5px 25.2px 8.4px}
+body.landscape .mat-quick-btn{height:58.8px; width:58.8px; font-size:27.3px}
+body.landscape .mat-quick-btn.text{width:auto; height:58.8px; font-size:24.1px; padding:0 25.2px}
+body.landscape .mat-grid{gap:12.6px}
+body.landscape .mat-filters{margin:0 0 16.8px}
+body.landscape .mat-fsearch{padding:12.6px 18.9px; font-size:25.2px}
+body.landscape .mat-collections-btn{width:67.1px; height:67.1px; font-size:33.6px}
+body.landscape .mat-results-grid{grid-template-columns:repeat(3, 1fr); gap:12.6px; --mat-row-h:calc(((100cqw - 25.2px) / 3) * 1.25)}
 /* Sort / Filter: round buttons at the inventory pane's bottom-left/right,
    opening short bottom windows bounded to that pane, above the hub. */
-body.landscape .mat-sf-btn{width:38px; height:38px; font-size:16px}
-body.landscape #matSortBtn.mat-sf-btn{left:calc(62% + 10px); bottom:calc(var(--hub-h, 63px) + 8px)}
-body.landscape #matFilterBtn.mat-sf-btn{left:auto; right:10px; bottom:calc(var(--hub-h, 63px) + 8px)}
-body.landscape .mat-sf-btn .sorticon, body.landscape .mat-sf-btn .filtericon{width:20px; height:20px}
-body.landscape .mat-sf-scrim{left:62%; bottom:var(--hub-h, 63px)}
+body.landscape .mat-sf-btn{width:79.7px; height:79.7px; font-size:33.6px}
+body.landscape #matSortBtn.mat-sf-btn{left:calc(62% + 21px); bottom:calc(var(--hub-h, 132.2px) + 16.8px)}
+body.landscape #matFilterBtn.mat-sf-btn{left:auto; right:21px; bottom:calc(var(--hub-h, 132.2px) + 16.8px)}
+body.landscape .mat-sf-btn .sorticon, body.landscape .mat-sf-btn .filtericon{width:42px; height:42px}
+body.landscape .mat-sf-scrim{left:62%; bottom:var(--hub-h, 132.2px)}
 body.landscape #matSortTray, body.landscape #matFilterTray{
-  left:62%; right:0; top:auto !important; bottom:var(--hub-h, 63px); width:auto; max-width:none;
-  max-height:calc(100% - var(--hub-h, 63px) - 60px);
-  border-top:2px solid var(--gold); border-radius:14px 0 0 0; padding:8px 14px 10px; gap:6px;
-  transform:translateY(calc(100% + var(--hub-h, 63px)));
+  left:62%; right:0; top:auto !important; bottom:var(--hub-h, 132.2px); width:auto; max-width:none;
+  max-height:calc(100% - var(--hub-h, 132.2px) - 125.9px);
+  border-top:4.2px solid var(--gold); border-radius:29.4px 0 0 0; padding:16.8px 29.4px 21px; gap:12.6px;
+  transform:translateY(calc(100% + var(--hub-h, 132.2px)));
 }
 body.landscape #matSortTray.open, body.landscape #matFilterTray.open{transform:none}
-body.landscape .mat-tray-h{text-align:center; margin:0 0 2px; font-size:11px}
-body.landscape .mat-tray-option{padding:8px 12px; font-size:12px}
-body.landscape .mat-filter-section{grid-template-columns:repeat(8, 1fr); gap:5px; padding-bottom:8px; margin-bottom:8px}
+body.landscape .mat-tray-h{text-align:center; margin:0 0 4.2px; font-size:23.1px}
+body.landscape .mat-tray-option{padding:16.8px 25.2px; font-size:25.2px}
+body.landscape .mat-filter-section{grid-template-columns:repeat(8, 1fr); gap:10.5px; padding-bottom:16.8px; margin-bottom:16.8px}
 body.landscape .mat-filter-section.suits{grid-template-columns:repeat(4, 1fr); padding:0; margin:0}
-body.landscape .mat-fbtn{font-size:16px; border-radius:8px}
-body.landscape .mat-fbtn :is(img,svg){width:18px; height:18px}
-body.landscape .mat-filter-section.suits .mat-fbtn{aspect-ratio:auto; height:34px}
+body.landscape .mat-fbtn{font-size:33.6px; border-radius:16.8px}
+body.landscape .mat-fbtn :is(img,svg){width:37.8px; height:37.8px}
+body.landscape .mat-filter-section.suits .mat-fbtn{aspect-ratio:auto; height:71.3px}
 
 /* Display Mat cards are short (2 rows must fit beside the score card), so the
    card's own badges/icon/name scale down for that grid only. */
-body.landscape .mat-grid .mm-card{padding:3px 2px 2px; border-width:3px; border-radius:10px}
-body.landscape .mat-grid .mm-icon{font-size:28px; margin-top:0}
-body.landscape .mat-grid .mm-icon :is(img,svg){width:28px; height:28px}
-body.landscape .mat-grid .mm-pts{min-width:21px; height:21px; font-size:10.5px; top:-4px; left:-4px; border-width:1.5px}
-body.landscape .mat-grid .mm-pips{gap:1px; top:-4px; right:-4px}
-body.landscape .mat-grid .mm-pip{width:18px; height:18px; font-size:10px}
-body.landscape .mat-grid .mm-pip :is(img,svg){width:11px; height:11px}
-body.landscape .mat-grid .mm-stations{bottom:-4px; gap:2px}
-body.landscape .mat-grid .mm-station{width:18px; height:18px; font-size:10px}
-body.landscape .mat-grid .mm-station :is(img,svg){width:11px; height:11px}
-body.landscape .mat-grid .mm-name{font-size:8.5px; -webkit-line-clamp:1; margin-bottom:8px}
+body.landscape .mat-grid .mm-card{padding:6.3px 4.2px 4.2px; border-width:6.3px; border-radius:21px}
+body.landscape .mat-grid .mm-icon{font-size:58.8px; margin-top:0}
+body.landscape .mat-grid .mm-icon :is(img,svg){width:58.8px; height:58.8px}
+body.landscape .mat-grid .mm-pts{min-width:44.1px; height:44.1px; font-size:22px; top:-8.4px; left:-8.4px; border-width:3.1px}
+body.landscape .mat-grid .mm-pips{gap:2.1px; top:-8.4px; right:-8.4px}
+body.landscape .mat-grid .mm-pip{width:37.8px; height:37.8px; font-size:21px}
+body.landscape .mat-grid .mm-pip :is(img,svg){width:23.1px; height:23.1px}
+body.landscape .mat-grid .mm-stations{bottom:-8.4px; gap:4.2px}
+body.landscape .mat-grid .mm-station{width:37.8px; height:37.8px; font-size:21px}
+body.landscape .mat-grid .mm-station :is(img,svg){width:23.1px; height:23.1px}
+body.landscape .mat-grid .mm-name{font-size:17.8px; -webkit-line-clamp:1; margin-bottom:16.8px}
 
 /* Card inspection popup (non-panel form: post-craft / Item Reference): the
    5:7 printed card is scaled down to fit the 412px canvas, actions to its
    right. The mat-panel form positions itself in JS (positionCardPopMatPanel). */
-body.landscape .overlay{padding:8px 16px calc(8px + var(--hub-h, 63px))}
+body.landscape .overlay{padding:16.8px 33.6px calc(16.8px + var(--hub-h, 132.2px))}
 body.landscape #cardPop:not(.mat-panel) .pc-card-wrap{
-  flex-direction:row; align-items:center; justify-content:center; gap:26px; width:auto; max-width:none;
+  flex-direction:row; align-items:center; justify-content:center; gap:54.6px; width:auto; max-width:none;
 }
-body.landscape #cardPop:not(.mat-panel) .pc-card{flex:none; width:300px; transform:scale(.76); transform-origin:center; margin:-52px -36px; animation:none}
+body.landscape #cardPop:not(.mat-panel) .pc-card{flex:none; width:629.5px; transform:scale(.76); transform-origin:center; margin:-109.1px -75.5px; animation:none}
 body.landscape #cardPop:not(.mat-panel) .pc-actions{flex-direction:column}
 
 /* Item Reference (codex): same page, tightened vertical rhythm for 412px. */
-body.landscape[data-screen="codex"] main{padding:8px 18px calc(var(--hub-h, 63px) + 10px)}
+body.landscape[data-screen="codex"] main{padding:16.8px 37.8px calc(var(--hub-h, 132.2px) + 21px)}
 body.landscape[data-screen="codex"] .map-head{margin-bottom:0}
-body.landscape[data-screen="codex"] .map-head h1{font-size:19px; letter-spacing:-.3px}
-body.landscape .refbar{margin-bottom:6px}
-body.landscape .refrow{padding:8px 14px; gap:12px}
+body.landscape[data-screen="codex"] .map-head h1{font-size:39.9px; letter-spacing:-.3px}
+body.landscape .refbar{margin-bottom:12.6px}
+body.landscape .refrow{padding:16.8px 29.4px; gap:25.2px}
 
 /* Dialog lists that scroll inside a .sheetbox: shorter caps so the whole box
    (title + list + buttons) fits above the hub at 412px. */
@@ -282,24 +282,24 @@ body.landscape .convert-picker-grid{max-height:calc(30 * var(--vh))}
 body.landscape .refbar{top:0}
 
 /* Arrange Items: canvas on the left, the item tray as a right-hand panel. */
-body.landscape .arr-head{padding:7px 16px}
-body.landscape .arr-head h2{font-size:15px}
+body.landscape .arr-head{padding:14.7px 33.6px}
+body.landscape .arr-head h2{font-size:31.5px}
 body.landscape .arr-canvas{right:38%}
 body.landscape .arr-tray-panel{
   left:auto; right:0; top:0; bottom:0; width:38%; max-height:none;
-  border-top:none; border-left:2.5px solid var(--gold); border-radius:0; box-shadow:-8px 0 20px rgba(0,0,0,.3);
+  border-top:none; border-left:5.2px solid var(--gold); border-radius:0; box-shadow:-16.8px 0 42px rgba(0,0,0,.3);
 }
-body.landscape .arr-tray-handle{height:22px}
-body.landscape .arr-toolbar{padding:6px 10px; gap:8px}
-body.landscape .arr-tool-btn{width:34px; height:34px; font-size:16px}
-body.landscape .arr-bgpicker{padding:6px 10px; gap:7px}
-body.landscape .arr-swatch{width:22px; height:22px}
-body.landscape .arr-tray-tabs{padding:6px 10px 0}
-body.landscape .arr-tray-tab{padding:5px; font-size:12px}
-body.landscape .arr-tray{padding:8px 10px; gap:7px}
-body.landscape .arr-tray-card{gap:4px; padding:5px}
-body.landscape .arr-tray-card .em{font-size:28px}
-body.landscape .arr-tray-card .nm{font-size:10px}
+body.landscape .arr-tray-handle{height:46.2px}
+body.landscape .arr-toolbar{padding:12.6px 21px; gap:16.8px}
+body.landscape .arr-tool-btn{width:71.3px; height:71.3px; font-size:33.6px}
+body.landscape .arr-bgpicker{padding:12.6px 21px; gap:14.7px}
+body.landscape .arr-swatch{width:46.2px; height:46.2px}
+body.landscape .arr-tray-tabs{padding:12.6px 21px 0}
+body.landscape .arr-tray-tab{padding:10.5px; font-size:25.2px}
+body.landscape .arr-tray{padding:16.8px 21px; gap:14.7px}
+body.landscape .arr-tray-card{gap:8.4px; padding:10.5px}
+body.landscape .arr-tray-card .em{font-size:58.8px}
+body.landscape .arr-tray-card .nm{font-size:21px}
 
 /* Element card popup: native 280x392 would sit behind the hub at 412px. */
 body.landscape .el-pop-card{zoom:.82}
@@ -311,95 +311,142 @@ body.landscape .el-pop-card{zoom:.82}
 body.landscape:not([data-mode="zen"]) #pinsBtn,
 body.landscape:not([data-mode="zen"]) #pinsTray,
 body.landscape:not([data-mode="zen"]) #trackedPill{display:none !important}
-body.landscape #jobSheet:not(.top-tray){width:calc(330px + 24px); border-radius:0 0 14px 0}
+body.landscape #jobSheet:not(.top-tray){width:calc(692.5px + 50.4px); border-radius:0 0 29.4px 0}
 body.landscape #jobSheetBody:has(> .todo-main){display:flex; flex-direction:column; padding:0; overflow:hidden}
-body.landscape .todo-main{flex:1; min-height:0; overflow-y:auto; padding:12px 14px 8px}
-body.landscape .todo-tracker{flex:none; border-top:1px solid var(--line); padding:8px 14px 10px; background:var(--bg-soft)}
-body.landscape .todo-tracker-lbl{font-size:9.5px; font-weight:800; color:var(--mute); letter-spacing:.03em; margin-bottom:7px}
-body.landscape .todo-tracker .map-job-chips{gap:7px; min-height:0}
+body.landscape .todo-main{flex:1; min-height:0; overflow-y:auto; padding:25.2px 29.4px 16.8px}
+body.landscape .todo-tracker{flex:none; border-top:2.1px solid var(--line); padding:16.8px 29.4px 21px; background:var(--bg-soft)}
+body.landscape .todo-tracker-lbl{font-size:19.9px; font-weight:800; color:var(--mute); letter-spacing:.03em; margin-bottom:14.7px}
+body.landscape .todo-tracker .map-job-chips{gap:14.7px; min-height:0}
 body.landscape .todo-tracker .map-job-chip{
-  position:relative; width:42px; height:42px; padding:0; border-radius:9px; justify-content:center;
-  background:var(--sunken); border:2px solid var(--line);
+  position:relative; width:88.1px; height:88.1px; padding:0; border-radius:18.9px; justify-content:center;
+  background:var(--sunken); border:4.2px solid var(--line);
 }
 body.landscape .todo-tracker .map-job-chip .mj-name{display:none}
-body.landscape .todo-tracker .map-job-chip .mj-em{font-size:20px; line-height:1}
-body.landscape .todo-tracker .map-job-chip.selected{border-color:var(--gold); background:var(--gold-soft); box-shadow:0 0 0 2px var(--gold-soft)}
-body.landscape .todo-tracker .mj-search-badge{position:absolute; top:-6px; right:-6px; font-size:10px}
+body.landscape .todo-tracker .map-job-chip .mj-em{font-size:42px; line-height:1}
+body.landscape .todo-tracker .map-job-chip.selected{border-color:var(--gold); background:var(--gold-soft); box-shadow:0 0 0 4.2px var(--gold-soft)}
+/* Real corner badge now (was a bare 10px glyph -- at that size, scaled down
+   with the rest of the stage, it rendered as a handful of sub-pixels and
+   was effectively invisible even though it was correctly positioned; see
+   the "tracked item" bug report). Same "little circle riding the corner"
+   language every other badge in the game uses (.hub-badge, .bc-pin, ...)
+   so it reads as a real indicator regardless of stage scale. */
+body.landscape .todo-tracker .mj-search-badge{
+  position:absolute; top:-12.6px; right:-12.6px; z-index:2;
+  width:37.8px; height:37.8px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:23.1px; line-height:1; background:var(--gold); border:3.1px solid var(--card);
+  box-shadow:0 2.1px 6.3px rgba(0,0,0,.4);
+}
 
 /* Dialogs (.sheetbox): compact chrome, and any dialog taller than the space
    above the hub scrolls INSIDE its own box instead of scrolling the overlay. */
 body.landscape .overlay .sheetbox{
-  padding:14px 22px; border-radius:16px; border-width:2px;
+  padding:29.4px 46.2px; border-radius:33.6px; border-width:4.2px;
   max-height:100%; overflow-y:auto;
 }
-body.landscape .sheetbox h2{font-size:19px; margin-bottom:4px}
-body.landscape .sheetbox p{font-size:13px; margin-bottom:8px; line-height:1.4}
-body.landscape .sheetbox .btnrow{margin-top:10px; gap:8px}
-body.landscape .setting-row{padding:7px 11px; margin-bottom:5px; gap:10px}
-body.landscape .setting-label{font-size:13px}
-body.landscape .bigbtn{padding:9px 14px; font-size:14px}
-body.landscape #settings .btnrow .bigbtn{padding:8px 6px; font-size:13px}
-body.landscape .setversion{margin-top:8px}
+body.landscape .sheetbox h2{font-size:39.9px; margin-bottom:8.4px}
+body.landscape .sheetbox p{font-size:27.3px; margin-bottom:16.8px; line-height:1.4}
+body.landscape .sheetbox .btnrow{margin-top:21px; gap:16.8px}
+body.landscape .setting-row{padding:14.7px 23.1px; margin-bottom:10.5px; gap:21px}
+body.landscape .setting-label{font-size:27.3px}
+body.landscape .bigbtn{padding:18.9px 29.4px; font-size:29.4px}
+body.landscape #settings .btnrow .bigbtn{padding:16.8px 12.6px; font-size:27.3px}
+body.landscape .setversion{margin-top:16.8px}
 
 /* Mini-Games arcade map: header strip, then the rotated map filling the rest. */
-body.landscape .arcade-head{padding:8px 18px}
-body.landscape .arcade-head h1{font-size:16px}
+body.landscape .arcade-head{padding:16.8px 37.8px}
+body.landscape .arcade-head h1{font-size:33.6px}
 body.landscape .arcade-body{padding:0; overflow:hidden; display:flex; flex-direction:column; position:relative}
 body.landscape #arcadeMap{flex:1; min-height:0; display:flex}
 body.landscape #arcadeMap .map-canvas{flex:1; width:100%; margin:0}
-body.landscape .arcade-hint{position:absolute; left:0; right:0; bottom:6px; z-index:5; margin:0; color:#fff; text-shadow:0 1px 4px #000; font-weight:700}
+body.landscape .arcade-hint{position:absolute; left:0; right:0; bottom:12.6px; z-index:5; margin:0; color:#fff; text-shadow:0 2.1px 8.4px #000; font-weight:700}
 
 /* Combo Lab: no hub, so the drawer runs to the stage bottom; the exit button
    becomes a small pill at the top-right instead of a full-width bar. */
 body.landscape[data-combo-lab] #drawer.expanded{bottom:0}
-body.landscape[data-combo-lab] #drawerTop{padding-top:8px}
-body.landscape[data-combo-lab] #drawer.expanded .dbody{padding-top:40px}
+body.landscape[data-combo-lab] #drawerTop{padding-top:16.8px}
+body.landscape[data-combo-lab] #drawer.expanded .dbody{padding-top:83.9px}
 body.landscape #comboLabExitBtn{
-  left:auto; right:10px; top:6px; width:auto; padding:5px 14px; font-size:12px; border-radius:999px;
-  background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
+  left:auto; right:21px; top:12.6px; width:auto; padding:10.5px 29.4px; font-size:25.2px; border-radius:2096.3px;
+  background:var(--gold-soft); border:3.1px solid var(--gold-line); color:var(--gold);
 }
-body.landscape[data-combo-lab] .mat-sf-btn{bottom:10px}
+body.landscape[data-combo-lab] .mat-sf-btn{bottom:21px}
 body.landscape[data-combo-lab] .mat-sf-scrim{bottom:0}
 body.landscape[data-combo-lab] #matSortTray, body.landscape[data-combo-lab] #matFilterTray{bottom:0}
 
 /* Adventure (Hard) Marketplace tray carries Quests + Collection Bundles panels
    (not the 5x5 Bingo grid), so it gets a wider tray. */
-body.landscape[data-mode="hard"] #jobSheet.top-tray{width:520px}
+body.landscape[data-mode="hard"] #jobSheet.top-tray{width:1091.1px}
 
 /* Zen Marketplace: the 4-row options strip shrinks to fit above the hub, and
    the banner/section chrome tightens. */
-body.landscape #marketArc{gap:7px; max-height:calc(100% - var(--hub-h, 63px) - 12px); top:calc(50% - 26px)}
-body.landscape .market-arc-btn{padding:4px 14px 4px 4px; gap:8px}
-body.landscape .market-arc-icon{width:44px; height:44px; font-size:20px}
-body.landscape .market-arc-label{font-size:12.5px}
-body.landscape .market-banner{padding:6px 26px}
-body.landscape .market-banner h1{font-size:17px; letter-spacing:1.5px}
-body.landscape .market-section{margin:8px 0 6px; padding:10px}
-body.landscape[data-screen="market"] main{padding:10px 18px calc(var(--hub-h, 63px) + 10px)}
+body.landscape #marketArc{gap:14.7px; max-height:calc(100% - var(--hub-h, 132.2px) - 25.2px); top:calc(50% - 54.6px)}
+body.landscape .market-arc-btn{padding:8.4px 29.4px 8.4px 8.4px; gap:16.8px}
+body.landscape .market-arc-icon{width:92.3px; height:92.3px; font-size:42px}
+body.landscape .market-arc-label{font-size:26.2px}
+body.landscape .market-banner{padding:12.6px 54.6px}
+body.landscape .market-banner h1{font-size:35.7px; letter-spacing:3.1px}
+body.landscape .market-section{margin:16.8px 0 12.6px; padding:21px}
+body.landscape[data-screen="market"] main{padding:21px 37.8px calc(var(--hub-h, 132.2px) + 21px)}
 
 /* Capstone picker: the 8 choices sit in a single row instead of 4x2. */
-body.landscape #capstoneOverlay .sheetbox{max-width:680px}
-body.landscape .bingo-pick-grid{grid-template-columns:repeat(8,1fr); gap:6px}
-body.landscape .bingo-pick-grid .bc-icon{font-size:30px; bottom:8px}
-body.landscape .bingo-pick-grid .bingo-cell{border-radius:10px}
-body.landscape .bingo-random-btn{margin-top:8px}
+body.landscape #capstoneOverlay .sheetbox{max-width:1426.9px}
+body.landscape .bingo-pick-grid{grid-template-columns:repeat(8,1fr); gap:12.6px}
+body.landscape .bingo-pick-grid .bc-icon{font-size:63px; bottom:16.8px}
+body.landscape .bingo-pick-grid .bingo-cell{border-radius:21px}
+body.landscape .bingo-random-btn{margin-top:16.8px}
 
 /* Event/collection toasts: slimmer top drops. */
-body.landscape #eventToast, body.landscape #collectionToast{padding:8px 20px; gap:10px}
-body.landscape #eventToast .ct-icon{width:34px; height:34px; font-size:19px}
+body.landscape #eventToast, body.landscape #collectionToast{padding:16.8px 42px; gap:21px}
+body.landscape #eventToast .ct-icon{width:71.3px; height:71.3px; font-size:39.9px}
+
+/* ---- Landscape welcome/title slide: the bare "Elementia" logo mark (full
+   resolution, transparent background) floating on the app's own dark
+   chrome, replacing the portrait screenshot's baked-in camp-scene
+   background -- see tourRender()'s own landscape branch. The black
+   gradient the button row used to fade up from (needed to keep the
+   buttons legible over a busy photo) is dropped too, since there's no
+   photo underneath any more to fade away from. */
+body.landscape #tour.welcome{background:var(--bg)}
+body.landscape #tour.welcome #tourImg{
+  width:auto; height:auto; max-width:72%; max-height:68%; object-fit:contain;
+}
+body.landscape #tour.welcome .tour-welcome-actions{
+  background:none; max-width:1343px;
+}
+
+/* ---- Landscape fullscreen toggle: a small always-on-top control, appended
+   as a sibling of <body> (see the boot script's own comment) so it sits at
+   a fixed real screen size/corner regardless of the stage's own scale --
+   the one piece of chrome that deliberately ISN'T part of the 1920x1080
+   stage. Requests fullscreen on <html> (the whole page, not just the
+   stage) so the browser's own fullscreen frame includes everything; the
+   stage then simply scales up to fill whatever that fullscreen viewport
+   turns out to be, same as any other resize. */
+#lsFullscreenBtn{
+  position:fixed; top:10px; right:10px; z-index:999999;
+  width:36px; height:36px; border-radius:50%; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(10,14,20,.55); border:1.5px solid rgba(255,255,255,.35);
+  color:#fff; font-size:16px; line-height:1; cursor:pointer;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  transition:background .15s ease;
+}
+#lsFullscreenBtn:hover{background:rgba(10,14,20,.8)}
+#lsFullscreenBtn[hidden]{display:none}
 
 /* ---- Landscape hub: same real #hub/.hubbtn/#hubHome chrome, re-proportioned
-   for a 915x412 canvas (approved layout: left cluster / center circle /
+   for a 1920x1080 canvas (approved layout: left cluster / center circle /
    right cluster on one connecting bar, ~62px tall). */
 body.landscape{--hub-overhang:0px}
-body.landscape #hub{padding:6px 14px 6px; align-items:flex-end}
-body.landscape .hub-side{flex:none; gap:6px}
-body.landscape .hub-side .hubbtn{flex:none; width:66px; height:50px; max-width:none; padding:2px 4px; margin-top:0; border-radius:15px}
-body.landscape .hubbtn .hi{font-size:22px}
-body.landscape .hubbtn .hl{font-size:8.5px}
-body.landscape #hubHome{width:62px; height:62px; margin:-16px 0 0; border-width:4px}
-body.landscape #hubHome .hi{font-size:24px}
-body.landscape #hubHome .hl{font-size:9px}
+body.landscape #hub{padding:12.6px 29.4px 12.6px; align-items:flex-end}
+body.landscape .hub-side{flex:none; gap:12.6px}
+body.landscape .hub-side .hubbtn{flex:none; width:138.5px; height:104.9px; max-width:none; padding:4.2px 8.4px; margin-top:0; border-radius:31.5px}
+body.landscape .hubbtn .hi{font-size:46.2px}
+body.landscape .hubbtn .hl{font-size:17.8px}
+body.landscape #hubHome{width:130.1px; height:130.1px; margin:-33.6px 0 0; border-width:8.4px}
+body.landscape #hubHome .hi{font-size:50.4px}
+body.landscape #hubHome .hl{font-size:18.9px}
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 button:disabled{cursor:not-allowed}
 
@@ -5416,7 +5463,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
     transition-duration:.01ms !important}
   .confetti{display:none}
 }
-@media not all{ /* portrait phone-width rules -- disabled (fixed 915x412 stage) */
+@media not all{ /* portrait phone-width rules -- disabled (fixed 1920x1080 stage) */
   #topbar{flex-wrap:wrap; row-gap:8px; padding:10px 12px}
   #topbar .brand{font-size:16px}
   #topbar .spacer{flex-basis:100%; height:0}
@@ -5440,14 +5487,14 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 /* Fixed-stage scaler + coordinate shims (see the "Landscape stage" CSS).
    The stage is body, scaled by --stage-scale. Everything below makes the
    inherited portrait JS keep working unchanged inside it:
-   - innerWidth/innerHeight report the 915x412 design canvas;
+   - innerWidth/innerHeight report the 1920x1080 design canvas;
    - getBoundingClientRect() and pointer/touch clientX/clientY are reported
      in stage coordinates (real value minus stage origin, divided by scale);
    - the document no longer scrolls (body is a fixed stage), <main id="screen">
      is the scroller, so window.scrollY/scrollTo and scrollingElement are
      redirected to it. */
 (function(){
-  var W=915,H=412, de=document.documentElement;
+  var W=1920,H=1080, de=document.documentElement;
   function scr(){ return document.getElementById("screen"); }
   function fit(){
     var s=Math.min(de.clientWidth/W, de.clientHeight/H);
@@ -5494,6 +5541,62 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 </script>
 </head>
 <body class="landscape">
+
+<!-- LANDSCAPE: fullscreen toggle -- built and appended here (not written as
+     static markup) specifically so it lands as a true SIBLING of <body>,
+     escaping the stage's own transform:scale() (see #lsFullscreenBtn's own
+     CSS comment for why that matters -- anything INSIDE body inherits its
+     transform as a containing block for position:fixed, which would scale
+     this control right along with the stage instead of keeping it at a
+     constant real corner). A plain appendChild here does that regardless of
+     where in the source it runs, unlike writing the tag directly in markup
+     (the HTML parser would just fold stray body-level tags back inside
+     <body> per the standard "after body" reprocessing rule). Also doubles
+     as this file's real entry point for whether the Fullscreen API is even
+     available at all -- sandboxed hosts (an embedded preview iframe with no
+     "fullscreen" permission delegated to it, for instance) simply never get
+     the button. -->
+<script>
+(function(){
+  var doc = document, de = doc.documentElement;
+  function fsEl(){ return doc.fullscreenElement || doc.webkitFullscreenElement || null; }
+  function supported(){
+    return !!(de.requestFullscreen || de.webkitRequestFullscreen);
+  }
+  if (!supported()) return; // no button at all where the API doesn't exist
+  var btn = doc.createElement("button");
+  btn.type = "button";
+  btn.id = "lsFullscreenBtn";
+  btn.setAttribute("aria-pressed", "false");
+  de.appendChild(btn);
+  function sync(){
+    var on = !!fsEl();
+    btn.textContent = on ? "⤡" : "⤢";
+    btn.title = on ? "Exit fullscreen" : "Enter fullscreen";
+    btn.setAttribute("aria-label", btn.title);
+    btn.setAttribute("aria-pressed", String(on));
+  }
+  // Best-effort in both directions: a sandboxed host (an embedded preview
+  // with no "fullscreen" permission delegated to it, say) can still refuse
+  // this at request time even though the API exists -- some browsers throw
+  // synchronously, others resolve the call into a rejected Promise, so both
+  // need to be swallowed, or a denied request left an unhandled rejection
+  // in the console for no functional reason (the button just silently no-ops
+  // either way, which is the right behavior for a progressive-enhancement
+  // control like this one).
+  btn.addEventListener("click", function(){
+    try {
+      var p = fsEl()
+        ? (doc.exitFullscreen || doc.webkitExitFullscreen).call(doc)
+        : (de.requestFullscreen || de.webkitRequestFullscreen).call(de);
+      if (p && p.catch) p.catch(function(){});
+    } catch(e){}
+  });
+  doc.addEventListener("fullscreenchange", sync);
+  doc.addEventListener("webkitfullscreenchange", sync);
+  sync();
+})();
+</script>
 
 <div id="bootScreen" aria-hidden="true"><span class="boot-icon">⚗️</span></div>
 
@@ -18967,8 +19070,20 @@ const TOUR_SLIDES = [
 let tourIdx = 0;
 let tourWelcomeOnly = false;  // showWelcomeSlide(): just slide 0, tap/skip ends it outright
 
+// LANDSCAPE: the welcome/title slide (index 0) is a portrait screenshot with
+// its own baked-in camp-scene background -- wrong shape and wrong art for
+// this edition's wide canvas. Slide 0 alone swaps to the bare logo mark
+// (transparent background, see #tour.welcome's own CSS), full resolution,
+// floating directly on the app's own dark chrome instead of a photo. Only
+// ever reachable in practice (startTour()'s full 16-slide sweep is a
+// `?tutorial=1` debug entry point, not part of normal play), but the
+// substitution is keyed off tourIdx===0 either way, not off tourWelcomeOnly,
+// so it stays correct even if that debug path is used.
+const LANDSCAPE_WELCOME_LOGO = "banners/elementia-logo.webp";
 function tourRender(){
-  document.getElementById("tourImg").src = TOUR_SLIDES[tourIdx];
+  document.getElementById("tourImg").src =
+    (tourIdx === 0 && document.body.classList.contains("landscape"))
+      ? LANDSCAPE_WELCOME_LOGO : TOUR_SLIDES[tourIdx];
   // Preload the next slide so advancing never shows a blank flash.
   if (tourIdx + 1 < TOUR_SLIDES.length) new Image().src = TOUR_SLIDES[tourIdx + 1];
 }
