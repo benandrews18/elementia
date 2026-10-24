@@ -2896,6 +2896,17 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--collection-soft); white-space:nowrap;
 }
 .collection-row .cr-add:disabled{opacity:.4; cursor:not-allowed}
+.collection-card{position:relative}
+.collection-card .cr-check{
+  position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%;
+  background:var(--ok); color:#fff; font-size:12px; font-weight:900; line-height:1;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--bg-soft);
+}
+.collection-card.owns-all{border-color:var(--ok-line)}
+.collection-row .cr-icon.missing{opacity:.35; filter:grayscale(1)}
+.cr-toggle{flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:14px;
+  font-size:10.5px; font-weight:800; color:var(--ink2); cursor:pointer}
+.cr-toggle:has(input:disabled){opacity:.45; cursor:not-allowed}
 .histarrow{flex:none; color:var(--mute); font-size:12px}
 .histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
 .histturns{display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto}
@@ -3249,12 +3260,19 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   overflow:visible;
 }
 #convert.open{transform:translateY(0)}
+#convertEmptyEl{position:absolute; top:10px; right:14px; z-index:2}
+#convertEmptyEl:empty{display:none}
+#convertEmptyEl .empty-el-badge{flex-direction:row; gap:6px; padding:4px 10px 4px 5px; border-radius:999px;
+  background:var(--sunken); border:1.5px solid var(--line)}
+#convertEmptyEl .empty-el-badge.active{border-color:var(--gold-line); background:var(--gold-soft)}
+#convertEmptyEl .empty-el-badge b{font-size:15px}
 /* Generous bottom padding (not the old 28px) -- #quickConvertBtn floats
    ON TOP of this tray at all times while it's open (see this block's own
    comment above), sitting right over the tray's bottom-right corner, so
    .convert-row needs real clearance from the tray's true bottom edge or
    its own right-hand box ends up under that circle. */
 #convert .dbody{padding-bottom:56px}
+#convert:has(#convertEmptyEl:not(:empty)) .dbody{padding-top:54px}
 .bigbtn{
   background:var(--ok); color:#fff; font-size:15px; font-weight:800; padding:12px 22px;
   border-radius:11px; box-shadow:0 3px 0 #24774a;
@@ -4511,7 +4529,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    comment for why. */
 /* Extra top margin reserves room for .qm-cap-label, which sits above this
    whole row (see below) rather than in the flow of anything else. */
-.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative; margin-top:16px}
+.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative; margin-top:4px}
 .qm-labels{position:relative; width:100%; height:12px}
 /* Each label sits directly above its own breakpoint icon at a fixed x
    (see renderMatTop()'s own qmCumPcts) instead of centered across a whole
@@ -4528,8 +4546,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Sits a full row above the dice-3 number (see .qm-break-cap's own
    matching vertical offset), gold to match the Empty Element's own
    "special" language elsewhere (the badge, the Lock In reward line). */
-.qm-cap-label{top:-18px; color:var(--gold)}
-.qm-segs-row{display:flex; gap:3px; width:100%; position:relative}
+.qm-cap-label{color:var(--gold)}
+.qm-segs-row{display:flex; gap:6px; width:100%; position:relative}
 .qm-seg{
   position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
   background:var(--line);
@@ -4575,7 +4593,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    meter from above instead of overlapping it -- offset up and flush to
    the right edge like its matching .qm-cap-label, rather than centered
    the way the 3 dice icons are. */
-.qm-break-cap{right:0; top:-24px; transform:none}
+/* The "?" (Empty Element) breakpoint caps the meter's right end, inline
+   with the three dice (see renderMatTop()'s own 4-segment comment). */
+.qm-break-end{left:auto; right:0; transform:translate(25%,-50%)}
 /* Revised 2026-09-13: the reward at each break is bonus dice now, not a
    banked Empty Element (see finishLockIn()'s own comment) -- a plain die
    face reads that directly instead of borrowing the (now-dormant) blank
@@ -4648,18 +4668,24 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    both bumped 50% larger to read clearly at the smaller size this frees
    up. */
 .mm-combo{
-  display:flex; flex-direction:column; align-items:center; gap:1px; padding:2px 3px;
-  color:var(--gold); min-width:30px;
+  display:flex; flex-direction:column; align-items:center; gap:1px; padding:6px 7px 2px 3px;
+  color:var(--gold); min-width:30px; background:none; border:none; cursor:pointer;
+}
+.mm-combo:active{transform:scale(.92)}
+/* Combo count, riding the icon's own top-right corner (see
+   matComboChipHTML()). */
+.mm-ccount{
+  position:absolute; top:-6px; right:-8px; min-width:17px; height:17px; padding:0 3px;
+  border-radius:999px; background:var(--gold); color:#181614; border:1.5px solid #000;
+  font-size:10.5px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+  display:flex; align-items:center; justify-content:center;
 }
 .mm-combo b{font-size:18px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums}
 /* Collections stay a horizontal pill (icon, name, +bonus) rather than
    the narrow vertical icon/count tile above -- a named collection needs
    room to actually show its name, which a column layout has no space
    for. */
-.mm-combo.col{
-  flex-direction:row; align-items:center; gap:4px; padding:3px 8px 3px 3px; border-radius:999px;
-  background:var(--collection-soft); border-color:var(--collection); color:var(--collection);
-}
+.mm-combo.col{color:var(--collection)}
 .mm-combo.col b{font-size:11px; font-weight:800; white-space:nowrap}
 .mm-combo.col i{font-style:normal; font-size:11px; font-weight:800}
 /* A collection chip playLockInSequence() has placed in the DOM ahead of
@@ -4669,7 +4695,8 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    (no display:none) so bouncePulse()'s own transform animation still
    applies cleanly once revealed. */
 .mm-combo.col.discovering{opacity:0; transform:scale(.4)}
-.mm-cico{width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+.mm-combo.col .mm-ccount{background:var(--collection); color:#fff}
+.mm-cico{position:relative; width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:16.5px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
 .mm-cico :is(img,svg){width:18px; height:18px}
 /* Outline the station/item icon graphic itself, not the suit one --
@@ -4684,8 +4711,20 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
    uses), explicit request, so an item icon here reads the same "sitting
    on a real card" way it does everywhere else on the mat. */
 .mm-cico.component{background:#f2e6cc}
-.mm-cico.star{background:none; font-size:21px}
+.mm-cico.star{background:var(--collection-soft); border:1.5px solid var(--collection); color:#ffd166; font-size:17px}
 .mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
+#comboInfoOverlay{z-index:76}
+#comboInfoTitle{display:flex; align-items:center; gap:8px}
+.ci-title-ic{font-size:24px; line-height:1}
+.ci-title-ic :is(img,svg){width:26px; height:26px}
+.combo-info-list{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-top:8px}
+.combo-info-card{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px;
+  background:#f2e6cc; color:#181614; border:2px solid #000}
+.ci-em{font-size:24px; line-height:1}
+.ci-em :is(img,svg){width:26px; height:26px}
+.ci-name{flex:1; min-width:0; font-weight:800; font-size:13px}
+.ci-pts{flex:none; min-width:24px; height:24px; border-radius:999px; background:var(--gold); border:1.5px solid #000;
+  font-size:11.5px; font-weight:900; display:flex; align-items:center; justify-content:center}
 
 /* Row height is computed explicitly (via #drawerTop's own
    container-type:inline-size above) rather than from aspect-ratio on
@@ -5785,12 +5824,27 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   </div>
 </div>
 
+<!-- Combo-row info popup (see openComboInfo()) -- lists the cards behind a
+     tapped combo chip, or, for the named-collections star, the collections
+     themselves in the same card style as the Collections menu. -->
+<div class="overlay" id="comboInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="comboInfoTitle">
+  <div class="sheetbox">
+    <h2 id="comboInfoTitle"></h2>
+    <div id="comboInfoBody"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="comboInfoClose">Close</button></div>
+  </div>
+</div>
+
 <!-- element conversion: trade 3 of one element for 1 of another -- slides
      up from behind the hub, same tray language as #pinsTray, so the shop
      or map underneath stays visible and scrollable (no scrim) instead of
      the previous full-screen dialog blocking everything behind it. -->
 <div id="convertScrim"></div>
 <aside id="convert" aria-label="Convert Elements" aria-hidden="true">
+  <!-- Empty Element ("?") counter, top-right corner of this tray (moved here
+       2026-10-23 from beside the station title) -- see
+       renderConvertEmptyEl(). Classic only; empty in every other mode. -->
+  <div id="convertEmptyEl"></div>
   <div class="dhead">
     <h2 id="convertTitle">🔄 Convert Elements 3:1</h2>
     <button type="button" class="tbtn ghost" id="convertClose" aria-label="Close Convert Elements">✕</button>
@@ -11489,20 +11543,7 @@ function renderStation(name){
       <div class="sheet-head">
         <span class="em">${em(s.emoji)}</span>
         <div class="station-title-wrap">
-          <h1><span class="station-title-text">${esc(s.name)}</span>
-            <!-- Revived 2026-09-17 for the Quark Meter's new 4th tier (see
-                 finishLockIn()) -- state.emptyElements can be banked again
-                 now, so the spend-it-yourself cash-in flow this badge opens
-                 (enterEmptyElCashIn()) is reachable once more. Classic only,
-                 same guard emptyElBadgeHTML()'s own comment already
-                 documents. Nested inside the title's own h1 (see its "gap"
-                 CSS) rather than a direct .sheet-head sibling -- sitting
-                 there, its own width used to make the title/element-pool
-                 row compensate/reflow whenever its digit count changed;
-                 nested here it's inline right next to the title text, same
-                 gap as the station icon on the header's other side, without
-                 that outer row ever seeing it. -->
-            ${state.mode === "classic" ? emptyElBadgeHTML() : ""}</h1>
+          <h1><span class="station-title-text">${esc(s.name)}</span></h1>
         </div>
         ${prefs.expTractorHarvest && owns("Tractor")
           ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
@@ -11629,13 +11670,13 @@ function render(resetScroll){
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
+  renderConvertEmptyEl();
   updateHub();
   updateBackdrop();
   applyInvFilter();
   applyRefFilter();
   hideHint();
-  if (screen === "station") syncEmptyElBadgeSize();
-  else if (emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
+  if (screen !== "station" && emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
   if (screen === "map") syncMapPaths();
   // Deferred one tick, not called inline: several render() callers open a
   // full-screen overlay (showCardPop()/celebrate()) or queue one to open
@@ -15183,10 +15224,12 @@ function matComboChipHTML(g, kind){
     : kind === "suit"  ? `<span class="mm-cico ${kind}" style="--suit:${SUIT_COLOR[g.name]}">${SUIT_ICON[g.name]}</span>`
     : `<span class="mm-cico ${kind}">${ITEM_EMOJI[g.name] ? em(ITEM_EMOJI[g.name]) : esc(g.name)}</span>`;
   const label = kind === "suit" ? ELEMENT_SUIT_LABEL[g.name] : g.name;
-  // Just the raw shared-icon count, stacked below the icon -- no "+bonus"
-  // suffix any more (the bonus it earns shows once, aggregated into the
-  // ×mult on the score block's own right side, not repeated per chip).
-  return `<span class="mm-combo" data-combo-kind="${kind}" data-combo-name="${esc(g.name)}" title="${esc(label)} ×${g.k}">${icon}<b>${g.k}</b></span>`;
+  // Revised 2026-10-23: the shared-icon count rides the icon's own top-
+  // right corner as a small badge (was stacked underneath it). The whole
+  // chip is a button -- tapping it lists the cards behind the combo (see
+  // openComboInfo()).
+  return `<button type="button" class="mm-combo" data-combo-kind="${kind}" data-combo-name="${esc(g.name)}" title="${esc(label)} ×${g.k}">${
+    icon.replace(/<\/span>$/, `<span class="mm-ccount">${g.k}</span></span>`)}</button>`;
 }
 /* Shared by renderMatTop() (revealAll=false, the live pre-Lock-In view)
    and playLockInSequence() (revealAll=true, the moment Lock-In itself
@@ -15199,15 +15242,22 @@ function matComboChipHTML(g, kind){
    ".discovering" (CSS-hidden) so playLockInSequence() has a real element
    ready to reveal at that collection's own beat instead of conjuring one
    mid-animation. */
+// Revised 2026-10-23: named collections collapse into ONE star chip whose
+// corner number is how many (discovered) named collections the mat
+// currently holds -- tapping it lists them (see openComboInfo()). In
+// revealAll mode (Lock-In) the chip exists whenever ANY collection is
+// complete, hidden (.discovering) if none were discovered before, and
+// playLockInSequence() un-hides it and bumps its count as each collection's
+// own beat lands.
+const COLLECTIONS_CHIP = "__collections__";
 function matComboChipsHTML(s, revealAll){
-  const cols = revealAll ? s.cols : s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
+  const known = s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
+  const showStar = revealAll ? s.cols.length > 0 : known.length > 0;
+  const star = !showStar ? "" :
+    `<button type="button" class="mm-combo col${known.length ? "" : " discovering"}" data-combo-kind="collection" data-combo-name="${COLLECTIONS_CHIP}" title="Named collections on your mat"><span class="mm-cico star">★<span class="mm-ccount">${known.length}</span></span></button>`;
   return s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
-    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") +
-    cols.map(c => {
-      const discovering = revealAll && !prefs.everUnlockedMatCollections.includes(c.id);
-      return `<span class="mm-combo col${discovering ? " discovering" : ""}" data-combo-kind="collection" data-combo-name="${esc(c.id)}" title="${esc(c.hint)}"><span class="mm-cico star">★</span><b>${esc(c.name)}</b><i>+${c.bonus}</i></span>`;
-    }).join("");
+    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star;
 }
 
 /* Fills #matGrid alone (not the score band/toggle around it), so a
@@ -15458,7 +15508,7 @@ function lockInScoreBeats(mat, s){
   s.cols.forEach(col => beats.push({
     cardNames: matCardsForCombo("collection", col.id).map(c => c.name),
     pointsDelta: col.bonus, multDelta: 0,
-    chipKind: "collection", chipName: col.id,
+    chipKind: "collection", chipName: COLLECTIONS_CHIP, colId: col.id,
   }));
   [...s.combos.station.map(g => ({ ...g, kind: "station" })),
    ...s.combos.suit.map(g => ({ ...g, kind: "suit" })),
@@ -15486,7 +15536,7 @@ function setMatScoreNumbers(points, mult, total){
 // is currently on, instead of the mat's real final total.
 function setQuarkMeterProgress(total){
   const qmTiers = lockInTiersForRound(state.visits);
-  const bounds = [0, qmTiers.one, qmTiers.two, qmTiers.three];
+  const bounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four];
   const ranges = bounds.slice(1).map((hi, i) => [bounds[i], hi]);
   const segs = document.querySelectorAll("#drawerTop .qm-seg");
   ranges.forEach(([lo, hi], i) => {
@@ -15564,10 +15614,13 @@ function playLockInSequence(reward){
         // pre-Lock-In, from now on (see matComboChipsHTML()/renderMatTop()).
         if (beat.chipKind === "collection" && chipEl){
           chipEl.classList.remove("discovering");
-          if (!prefs.everUnlockedMatCollections.includes(beat.chipName)){
-            prefs.everUnlockedMatCollections.push(beat.chipName);
+          if (!prefs.everUnlockedMatCollections.includes(beat.colId)){
+            prefs.everUnlockedMatCollections.push(beat.colId);
             savePrefs();
           }
+          const countEl = chipEl.querySelector(".mm-ccount");
+          if (countEl) countEl.textContent =
+            s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id)).length;
         }
         bouncePulse(chipEl);
       }
@@ -15761,8 +15814,31 @@ function emptyElBadgeHTML(){
   return `<button type="button" class="empty-el-badge${n > 0 ? " active" : ""}" id="emptyElBadgeBtn"
       ${n > 0 ? "" : 'disabled aria-disabled="true"'}
       title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
-      aria-label="${n} Empty Elements held">${emptyElSquareHTML(13)}<b>${n}</b></button>`;
+      aria-label="${n} Empty Elements held">${emptyElSquareHTML(24)}<b>${n}</b></button>`;
 }
+// Fills the Convert tray's own top-right corner (see #convertEmptyEl). The
+// badge only does anything standing at a station -- cashing in picks from
+// THAT station's own element row -- so off-station it shows the count but
+// stays disabled, with the title saying why.
+function renderConvertEmptyEl(){
+  const el = document.getElementById("convertEmptyEl");
+  if (!el) return;
+  if (state.mode !== "classic"){ el.innerHTML = ""; return; }
+  el.innerHTML = emptyElBadgeHTML();
+  const btn = el.querySelector("#emptyElBadgeBtn");
+  if (btn && screen !== "station" && (state.emptyElements || 0) > 0){
+    btn.disabled = true;
+    btn.title = `${state.emptyElements} Empty Element${state.emptyElements === 1 ? "" : "s"} held -- visit a station to cash one in for an element found there`;
+  }
+}
+document.getElementById("convertEmptyEl").addEventListener("click", ev => {
+  if (!ev.target.closest("#emptyElBadgeBtn")) return;
+  if (screen !== "station" || !((state.emptyElements || 0) > 0)) return;
+  // Close the tray first so the station's own "Elements Found Here" row is
+  // what's left in the spotlight (see enterEmptyElCashIn()).
+  closeOverlay("convert");
+  enterEmptyElCashIn();
+});
 // The row of real elements right below the badge (see renderStation()'s
 // own .gather) shrinks/grows with how many of them there are (see .gcol's
 // own comment) -- that final rendered size can only be known after layout,
@@ -15866,17 +15942,20 @@ function renderMatTop(){
   const qmTiers = lockInTiersForRound(state.visits);
   const qmPassed = emptyElementsForScore(s.total, state.visits);
   const qmSegRange = (lo, hi) => hi > lo ? Math.max(0, Math.min(100, ((s.total - lo) / (hi - lo)) * 100)) : (s.total >= lo ? 100 : 0);
-  const qmDiceBounds = [0, qmTiers.one, qmTiers.two, qmTiers.three];
-  const qmCumPcts = [33.333, 66.667, 100];
+  // Revised 2026-10-23: 4 equal segments, one per breakpoint -- the three
+  // dice tiers at the 25/50/75% marks and the "?" (Empty Element) tier
+  // capping the meter's own right end at 100%, inline with the dice rather
+  // than stacked above the third one. Each number sits directly above its
+  // own breakpoint icon.
+  const qmDiceBounds = [0, qmTiers.one, qmTiers.two, qmTiers.three, qmTiers.four];
+  const qmCumPcts = [25, 50, 75, 100];
   const qmSegs = qmDiceBounds.slice(1).map((hi, i) => {
     const pct = qmSegRange(qmDiceBounds[i], hi);
     return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
   }).join("");
-  const qmLabels =
-    `<span class="qm-seg-label" style="left:${qmCumPcts[0]}%">${Math.round(qmDiceBounds[1]).toLocaleString()}</span>` +
-    `<span class="qm-seg-label" style="left:${qmCumPcts[1]}%">${Math.round(qmDiceBounds[2]).toLocaleString()}</span>` +
-    `<span class="qm-seg-label qm-label-end" style="right:0">${Math.round(qmDiceBounds[3]).toLocaleString()}</span>` +
-    `<span class="qm-seg-label qm-label-end qm-cap-label" style="right:0">${Math.round(qmTiers.four).toLocaleString()}</span>`;
+  const qmLabels = [1, 2, 3].map(i =>
+    `<span class="qm-seg-label" style="left:${qmCumPcts[i - 1]}%">${Math.round(qmDiceBounds[i]).toLocaleString()}</span>`).join("") +
+    `<span class="qm-seg-label qm-label-end qm-cap-label" style="right:0">${Math.round(qmDiceBounds[4]).toLocaleString()}</span>`;
   // Bonus-dice badges sit on the 3 fixed third-marks (qmCumPcts) above.
   // The Empty Element cap renders at that same final 100% mark, offset
   // upward (.qm-break-cap) so it visually caps the meter from above the
@@ -15887,7 +15966,7 @@ function renderMatTop(){
   const QM_BREAK_LABEL = { 1: "+1 bonus die", 2: "+2 bonus dice", 3: "+3 bonus dice", 4: "+3 dice, plus +1 Empty Element" };
   const qmBreaks = [1, 2, 3].map(i =>
     `<span class="qm-break${qmPassed >= i ? " lit" : ""}" style="left:${qmCumPcts[i - 1]}%" title="${QM_BREAK_LABEL[i]}"><span class="qm-break-dice">🎲</span></span>`).join("")
-    + `<span class="qm-break qm-break-cap${qmPassed >= 4 ? " lit" : ""}" title="${QM_BREAK_LABEL[4]}">${emptyElSquareHTML(20)}</span>`;
+    + `<span class="qm-break qm-break-end${qmPassed >= 4 ? " lit" : ""}" title="${QM_BREAK_LABEL[4]}">${emptyElSquareHTML(20)}</span>`;
   const qmDelta = diceDeltaForReward(qmPassed);
   const qmDeltaLabel = qmPassed === 0 ? "no bonus dice"
     : qmPassed >= 4 ? `+${qmDelta} dice, +1 Empty Element` : `+${qmDelta} dice`;
@@ -16171,6 +16250,11 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
+  const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
+  if (comboChip && !comboChip.classList.contains("discovering")){
+    openComboInfo(comboChip.dataset.comboKind, comboChip.dataset.comboName);
+    return;
+  }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   // Tapping a filled mat slot opens its inspection view. A plain "click"
@@ -16201,6 +16285,32 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
 });
+/* Tapping a combo chip: which mat cards earn it (matCardsForCombo()), as a
+   quick icon+name list -- or, for the named-collections star, every
+   discovered collection the mat currently completes, shown exactly like
+   the Collections menu's own cards (namedCollectionCardHTML()), item icons and
+   all. */
+function openComboInfo(kind, name){
+  const titleEl = document.getElementById("comboInfoTitle");
+  const bodyEl = document.getElementById("comboInfoBody");
+  if (kind === "collection"){
+    const s = matLastScore || matScore(matOnMat());
+    const cols = s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
+    titleEl.textContent = `★ Named Collections (${cols.length})`;
+    bodyEl.innerHTML = `<div class="histrows">${cols.map(c => namedCollectionCardHTML(c, false)).join("")}</div>`;
+  } else {
+    const label = kind === "suit" ? ELEMENT_SUIT_LABEL[name] : name;
+    const icon = kind === "station" ? em(STATION_BY_NAME[name].emoji)
+      : kind === "suit" ? SUIT_ICON[name]
+      : (ITEM_EMOJI[name] ? em(ITEM_EMOJI[name]) : "");
+    const cards = matCardsForCombo(kind, name);
+    titleEl.innerHTML = `<span class="ci-title-ic">${icon}</span> ${esc(label)} ×${cards.length}`;
+    bodyEl.innerHTML = `<div class="combo-info-list">${cards.map(c =>
+      `<div class="combo-info-card"><span class="ci-em">${ITEM_EMOJI[c.name] ? em(ITEM_EMOJI[c.name]) : ""}</span><span class="ci-name">${esc(c.name)}</span><span class="ci-pts">${c.points}</span></div>`).join("")}</div>`;
+  }
+  openOverlay("comboInfoOverlay");
+}
+document.getElementById("comboInfoClose").addEventListener("click", () => closeOverlay("comboInfoOverlay"));
 // One tap, no confirmation -- "quickly clear the display" is the explicit
 // ask, and every card it removes is still sitting safely in the owned-
 // items list (or a saved layout) to place right back.
@@ -16368,15 +16478,25 @@ function renderCollectionsList(){
     list.innerHTML = '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection to reveal it here.</p>';
     return;
   }
-  // Classic-only action -- the Add-to-Mat button only makes sense where a
-  // Display Mat exists at all (this overlay is also reachable from the
-  // welcome screen outside any run, where state.mat doesn't exist yet).
-  const canAdd = state.mode === "classic";
-  list.innerHTML = `<div class="histrows">${unlocked.map(c => {
-    const allOnMat = canAdd && c.items.every(n => state.mat.includes(n));
-    const fits = canAdd && collectionAddFits(c);
-    return `
-    <div class="histentry">
+  // Classic-only toggle -- only makes sense where a Display Mat exists at
+  // all (this overlay is also reachable from the welcome screen outside
+  // any run, where state.mat doesn't exist yet).
+  list.innerHTML = `<div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, state.mode === "classic")).join("")}</div>`;
+}
+/* One named collection's card, shared by the Collections (trophy) menu and
+   the combo-row star's own info popup (see openComboInfo()). A green check
+   rides the card's top-right corner once every member is owned. withToggle
+   adds the on/off switch (revised 2026-10-23, was a one-way "Place on
+   Mat" button): ON = every member is on the mat; flipping it off takes
+   them all back off, flipping it on places them all (all-or-nothing, see
+   collectionAddFits()). */
+function namedCollectionCardHTML(c, withToggle){
+  const ownsAll = c.items.every(n => owns(n));
+  const onMat = withToggle && c.items.every(n => state.mat.includes(n));
+  const canOn = withToggle && collectionAddFits(c);
+  return `
+    <div class="histentry collection-card${ownsAll ? " owns-all" : ""}">
+      ${ownsAll ? `<span class="cr-check" title="You own every item in this collection">✓</span>` : ""}
       <div class="collection-row">
         <div class="cr-main">
           <div class="cr-line1">
@@ -16384,15 +16504,14 @@ function renderCollectionsList(){
             <span class="cr-bonus">+${c.bonus}</span>
           </div>
           <span class="cr-icons">${c.items.map(n =>
-            `<span class="cr-icon" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</span>
+            `<span class="cr-icon${owns(n) ? "" : " missing"}" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</span>
         </div>
-        ${canAdd ? `<button type="button" class="cr-add" data-add-collection="${esc(c.id)}"
-            ${fits ? "" : "disabled"}
-            title="${allOnMat ? "Already on your Display Mat" : fits ? "Place every card in this collection onto your Display Mat" : "Own every card and free up mat room to place this collection"}">${
-              allOnMat ? "On Mat" : "Place on Mat"}</button>` : ""}
+        ${withToggle ? `<label class="cr-toggle" title="${onMat ? "Take this collection off your Display Mat" : canOn ? "Place this collection on your Display Mat" : "Own every card and free up mat room to place this collection"}">
+            <input type="checkbox" class="switch" data-toggle-collection="${esc(c.id)}" ${onMat ? "checked" : ""} ${onMat || canOn ? "" : "disabled"}>
+            <span>${onMat ? "On Mat" : "Off"}</span>
+          </label>` : ""}
       </div>
     </div>`;
-  }).join("")}</div>`;
 }
 // Reached from the welcome screen (#tourCollectionsBtn, alongside Mini-
 // Games/Combo Lab) AND now also from in-game (the inventory filter bar's
@@ -16423,9 +16542,23 @@ function addCollectionToMat(id){
   renderCollectionsList();
   renderMatTop(); renderMatResultsGrid();
 }
-document.getElementById("collectionsList").addEventListener("click", ev => {
-  const btn = ev.target.closest("[data-add-collection]");
-  if (btn) addCollectionToMat(btn.dataset.addCollection);
+// The switch's "off" half -- every member comes off the mat at once (a
+// card shared with another collection on the mat comes off too; the mat
+// holds each card once, so there's no way to keep it for one and not the
+// other).
+function removeCollectionFromMat(id){
+  const c = MAT_COLLECTIONS.find(x => x.id === id);
+  if (!c) return;
+  state.mat = state.mat.filter(n => !c.items.includes(n));
+  save();
+  renderCollectionsList();
+  renderMatTop(); renderMatResultsGrid();
+}
+document.getElementById("collectionsList").addEventListener("change", ev => {
+  const sw = ev.target.closest("[data-toggle-collection]");
+  if (!sw) return;
+  if (sw.checked) addCollectionToMat(sw.dataset.toggleCollection);
+  else removeCollectionFromMat(sw.dataset.toggleCollection);
 });
 document.getElementById("tourCollectionsBtn").addEventListener("click", openCollectionsOverlay);
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
@@ -18363,6 +18496,7 @@ document.getElementById("convertQuickGrid").addEventListener("click", ev => {
 });
 function updateConvertUI(){
   renderConvertQuickGrid();
+  renderConvertEmptyEl();
   const fromStack = document.getElementById("convFromStack");
   const fromBox = document.getElementById("convFromBox");
   const toBox = document.getElementById("convToBox");
