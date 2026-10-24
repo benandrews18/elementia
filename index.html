@@ -2594,6 +2594,27 @@ body[data-screen="market"] #trackedPill{display:none}
    header bar (.dhead is hidden entirely now), there was nothing left to
    visually separate "frozen" from "scrolls" at all. */
 #drawer .dbody{border-top:2px solid var(--gold)}
+/* Collapsible mat zone (see #matCollapseBar's own HTML comment). The bar is
+   zero-height so the button can sit centered ON the gold line; once the
+   mat is hidden the line reaches the top of the screen, so the button
+   drops to just below it instead of being cut in half by the screen edge. */
+#drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
+#drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
+#matCollapseBar{position:relative; height:0; z-index:4; display:none}
+#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
+#matCollapseBtn{
+  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+  width:46px; height:24px; border-radius:999px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold);
+  box-shadow:0 2px 6px rgba(0,0,0,.35); transition:transform .3s;
+}
+#drawer.mat-collapsed #matCollapseBtn{transform:translate(-50%,2px)}
+.mcb-chev{
+  width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
+  transform:translateY(2px) rotate(45deg); transition:transform .3s;
+}
+#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .sec-label{font-size:11px; font-weight:800; letter-spacing:1.3px; color:var(--mute);
   margin:18px 0 9px; padding-bottom:6px; border-bottom:1.5px solid var(--line2)}
 .sec-label:first-child{margin-top:0}
@@ -4476,15 +4497,21 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    bug rather than a redesign. */
 /* --mat-row-h: the mat grid's own per-row height formula, shared with
    .mat-zone-page (see its own comment) so the two never drift apart. */
-#drawerTop{container-type:inline-size; padding:16px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
+#drawerTop{container-type:inline-size; padding:10px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
 /* Revised 2026-09-12: the card-level chrome (background/border/margin)
    moved here from .mat-score-row below, since the Quark Meter now sits
    inside this same card ABOVE that row rather than tucked into a corner
    of it -- see renderMatTop()'s own quarkMeterHTML. This whole card stays
    visible on both the Display Mat and Elements tabs now (was mat-only). */
-.mat-score-card{
-  display:flex; flex-direction:column; gap:8px; padding:10px 12px; margin-bottom:12px;
-  background:var(--sunken); border:1.5px solid var(--line); border-radius:12px;
+.mat-score-card{display:flex; flex-direction:column; gap:4px; margin-bottom:6px}
+/* Quark icon | meter | total bubble, one line (see renderMatTop()). */
+.qm-line{display:flex; align-items:flex-end; gap:8px}
+.qm-line .quark-meter-wrap{flex:1; min-width:0; margin-top:0}
+.qm-quark-ic{flex:none; font-size:22px; line-height:1; margin-bottom:-3px}
+.qm-total{
+  flex:none; min-width:56px; padding:4px 10px; border-radius:999px; margin-bottom:-4px;
+  background:var(--gold-soft); border:1.5px solid var(--gold); color:var(--gold);
+  font-size:15px; font-weight:900; line-height:1.1; text-align:center; font-variant-numeric:tabular-nums;
 }
 /* Just the combo chips now (see .mat-score-stats for the points/
    multiplier/Quarks breakdown, moved to its own row above this one).
@@ -4496,7 +4523,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    real height. Always reserving a full chip's worth of space keeps the
    mat's own position on screen stable regardless of combo state. */
 .mat-score-row{
-  display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; min-height:50px;
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; min-height:40px;
 }
 /* Points on Display x Combo Multiplier = Quarks, spelled out explicitly
    on one line above the combo chips (was two small right-aligned lines
@@ -5211,6 +5238,11 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
        instead (see #hubInv's own click handler), so there's no separate
        control needed inside the tray itself for that any more. -->
   <div id="drawerTop"></div>
+  <!-- "^" toggle riding the gold line between the Display Mat and the card
+       list (2026-10-23) -- slides the whole mat zone up out of view so the
+       card list fills the tray; tapping again ("v") brings it back. Full
+       inventory view only; see toggleMatCollapsed(). -->
+  <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <div class="dbody">
     <!-- Classic Mode only -- station/suit/search/sort filter bar for the
          item grid in #drawerBody below, adapted from cardgame/mat.html's
@@ -14661,7 +14693,19 @@ function expandDrawerToFull(){
 // drawer back to the peeked half-view without fully closing it. Only
 // meaningful mid Lock-In (see #hubInv's own click handler below); nothing
 // else in the game currently calls this.
+// "^" on the gold divider: hide/show the whole Display Mat zone so the
+// card list below gets the full tray (see #matCollapseBar). View state
+// only -- every fresh open/close/peek resets it to shown.
+function setMatCollapsed(on){
+  drawer.classList.toggle("mat-collapsed", on);
+  const btn = document.getElementById("matCollapseBtn");
+  btn.setAttribute("aria-expanded", String(!on));
+  btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+}
+document.getElementById("matCollapseBtn").addEventListener("click", () =>
+  setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
+  setMatCollapsed(false);
   matTrayExpanded = false;
   drawer.classList.remove("expanded");
   renderMatTop();
@@ -14765,6 +14809,7 @@ let realGameState = null, realScreen = null, realCurrent = null, realSelectedMap
 // background even while the drawer is closed, so its LAST pass could
 // easily have left .expanded on (or off) from a previous open.
 const openDrawer = (opts = {}) => {
+  setMatCollapsed(false);
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
   drawer.classList.add("open"); scrim.classList.add("open");
@@ -14804,6 +14849,7 @@ function syncLockInBanner(){
   banner.style.bottom = (bottomPx + heightPx) + "px";
 }
 const closeDrawer = () => {
+  setMatCollapsed(false);
   // Combo Lab hides #hub entirely (see its own CSS), so this button --
   // normally just "close the tray" -- is the only exit the lab has;
   // repurposed here rather than adding a second, redundant close control.
@@ -15519,10 +15565,10 @@ function lockInScoreBeats(mat, s){
 // already in flight on these same nodes). Order matches .mat-score-stats'
 // own fixed DOM order (points, ×, mult, =, quarks).
 function setMatScoreNumbers(points, mult, total){
-  const vals = document.querySelectorAll("#drawerTop .mat-score-stats .mss-val");
-  if (vals[0]) vals[0].textContent = Math.round(points).toLocaleString();
-  if (vals[1]) vals[1].textContent = Math.round(mult).toLocaleString();
-  if (vals[2]) vals[2].textContent = "⚛️ " + Math.round(total).toLocaleString();
+  // Only the Quark total is on screen now (see renderMatTop()'s own
+  // compact meter line); points/mult are still passed in for its tooltip.
+  const totalEl = document.querySelector("#drawerTop .qm-total");
+  if (totalEl) totalEl.textContent = Math.round(total).toLocaleString();
 }
 // Same live-DOM-write approach as setMatScoreNumbers() above, re-deriving
 // the exact segment-fill/break-lit math renderMatTop() itself uses (see
@@ -15630,7 +15676,7 @@ function playLockInSequence(reward){
   setTimeout(() => {
     setMatScoreNumbers(s.base + s.colBonus, s.mult, s.total);
     setQuarkMeterProgress(s.total);
-    bouncePulse(document.querySelector("#drawerTop .mss-stat.quarks"));
+    bouncePulse(document.querySelector("#drawerTop .qm-total"));
   }, afterBeats);
   const afterQuarks = afterBeats + LOCKIN_BOUNCE_DURATION_MS + 300;
   setTimeout(() => finishLockIn(reward), afterQuarks);
@@ -15969,34 +16015,18 @@ function renderMatTop(){
     <div class="qm-labels">${qmLabels}</div>
     <div class="qm-segs-row">${qmSegs}${qmBreaks}</div>
   </div>`;
-  // Revised 2026-09-13: was two small right-aligned lines sharing the
-  // combo-chip row ("12 pts ×3" / "36 Quarks") -- explicit request for a
-  // clearer, explicitly-labeled breakdown of how Quarks actually gets
-  // computed, on its own line ABOVE the chips instead of squeezed beside
-  // them. "Points on Display" is base + colBonus, not just s.base --
-  // matScore()'s own total is (base + colBonus) * mult, so colBonus (a
-  // named-collection bonus) has to be folded in here too or the displayed
-  // formula wouldn't actually multiply out to the Quarks total shown.
-  const pointsOnDisplay = s.base + s.colBonus;
-  const statsRowHTML = `<div class="mat-score-stats">
-      <div class="mss-stat">
-        <div class="mss-val">${pointsOnDisplay.toLocaleString()}</div>
-        <div class="mss-label">Points on Display</div>
-      </div>
-      <div class="mss-op">×</div>
-      <div class="mss-stat">
-        <div class="mss-val">${s.mult.toLocaleString()}</div>
-        <div class="mss-label">Combo Multiplier</div>
-      </div>
-      <div class="mss-op">=</div>
-      <div class="mss-stat quarks">
-        <div class="mss-val">⚛️ ${s.total.toLocaleString()}</div>
-        <div class="mss-label">Quarks</div>
-      </div>
-    </div>`;
+  // Revised 2026-10-23: one compact line -- the Quark icon capping the
+  // meter's left end, the meter itself, and the running Quark total in its
+  // own bubble on the right -- replacing the separate "Points on Display x
+  // Combo Multiplier = Quarks" row and the card chrome around all of it,
+  // so the mat and the card list below get that height back. The two
+  // inputs still show on hover (title) for anyone who wants the math.
   const scoreRowHTML = `<div class="mat-score-card">
-    ${quarkMeterHTML}
-    ${statsRowHTML}
+    <div class="qm-line" title="${(s.base + s.colBonus).toLocaleString()} points on display x ${s.mult.toLocaleString()} combo multiplier = ${s.total.toLocaleString()} Quarks">
+      <span class="qm-quark-ic" aria-hidden="true">⚛️</span>
+      ${quarkMeterHTML}
+      <span class="qm-total" aria-label="${s.total.toLocaleString()} Quarks">${s.total.toLocaleString()}</span>
+    </div>
     <div class="mat-score-row">
       <div class="mat-combos">${chips || `<span class="mm-combo-none">Three cards alike start a combo</span>`}</div>
     </div>
