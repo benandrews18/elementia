@@ -79,6 +79,49 @@ body{
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 button:disabled{cursor:not-allowed}
 
+/* Lock-In -> station fade curtain (see fadeThroughBlack()). Above every
+   tray/overlay/hub so the hand-off is fully hidden. */
+#fadeCurtain{
+  position:fixed; inset:0; z-index:9000; background:#000; opacity:0; pointer-events:none;
+  transition:opacity .5s ease;
+}
+#fadeCurtain.on{opacity:1; pointer-events:auto}
+
+/* ---------------------------------------------------------- low motion ---
+   html.low-motion (see lowMotion()/applyLowMotion()): every CSS transition
+   and keyframe animation in the game resolves instantly, EXCEPT the few
+   explicitly re-enabled below -- the Quark Meter fill, the dice tumble /
+   reveal, and the Lock-In fade. Pulsing markers (map rings, the "choose a
+   station" note, the Bingo center square) go steady instead of running
+   their animation once and ending invisible. Mini-games are untouched:
+   their own CSS lives in the inlined mini-game scripts, scoped under
+   #mgOverlay, which is excluded here. */
+/* :where() keeps this blanket rule at near-zero specificity, so the
+   "kept" exceptions just below (plain class/id selectors) always win. */
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *)),
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *))::before,
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *))::after{
+  transition-duration:0s !important; transition-delay:0s !important;
+  animation-duration:.001s !important; animation-delay:0s !important; animation-iteration-count:1 !important;
+}
+html.low-motion .map-node.here::after, html.low-motion .map-node.selected::before,
+html.low-motion .map-pick-note, html.low-motion .bingo-cell-addcap,
+html.low-motion #bootScreen .boot-icon{animation:none !important}
+/* Kept: the Quark count-up's meter fill, the dice themselves, the fade. */
+html.low-motion body .qm-seg-fill{transition-duration:.3s !important}
+html.low-motion body .rollcard{animation-duration:.28s !important}
+html.low-motion body .die.tumbling{animation-duration:.5s !important}
+html.low-motion body .rollcard.revealed .sym{animation-duration:.3s !important}
+html.low-motion body #fadeCurtain{transition-duration:.5s !important}
+/* Rolled dice float over the top of the shop instead of pushing it down
+   (see playRollAnimation()). */
+html.low-motion .playbar{margin-top:0}
+.playbar.lm-overlay{position:relative; height:0; overflow:visible; z-index:6}
+.playbar.lm-overlay .rolled{
+  position:absolute; left:0; right:0; top:6px; padding:8px; border-radius:14px;
+  background:rgba(12,22,30,.92); box-shadow:0 8px 20px rgba(0,0,0,.45);
+}
+
 /* Boot screen -- this whole file is a single (often multi-MB, since every
    image is inlined as base64) HTML document, and the browser paints
    whatever's already in the DOM the instant CSS is ready. With no
@@ -5177,6 +5220,8 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 </head>
 <body>
 
+<!-- Lock-In -> station fade (see fadeThroughBlack()). -->
+<div id="fadeCurtain" aria-hidden="true"></div>
 <div id="bootScreen" aria-hidden="true"><span class="boot-icon">⚗️</span></div>
 
 <!-- Combo Lab's own exit (see openComboLab()'s CSS comment for why this
@@ -5671,6 +5716,13 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
         <span class="setting-label">Auto card inspection</span>
       </span>
       <input type="checkbox" id="setAutoCardInspection" class="switch" aria-label="Automatically open a full card view after crafting">
+    </div>
+    <div class="setting-row">
+      <span class="setting-ico">🐢</span>
+      <span class="setting-body">
+        <span class="setting-label">Low motion</span>
+      </span>
+      <input type="checkbox" id="setLowMotion" class="switch" aria-label="Low motion: menus and trays appear instantly, fewer animations">
     </div>
 
     <div class="btnrow">
@@ -9305,6 +9357,9 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // quick close-and-settle beat into wherever the item now sits in the
   // shop (the crafted-items row, or the full list if that's expanded).
   autoCardInspection:true,
+  // Low motion (see lowMotion()/html.low-motion): null = follow the
+  // device's own "reduce motion" setting, true/false = player's override.
+  lowMotion:null,
   // Account-level unlock, not per-run state -- Classic Mode opens the
   // first time an Adventure Mode capstone is completed (see celebrate())
   // and stays open forever after, even across a session reset.
@@ -9373,6 +9428,22 @@ function toggleJobSelect(name){
   if (prefs.expCompassTracking && !owns("Compass") && selectedJobItem !== name) return;
   selectedJobItem = selectedJobItem === name ? null : name;
   render();
+}
+/* =====================================================================
+   Low motion (2026-10-23). One switch for the whole game: menus, trays and
+   pop-ups appear instantly, celebration/flip/bounce effects are skipped,
+   and steady markers replace pulsing ones. Deliberately KEPT: the Display
+   Mat's Quark count-up during Lock-In, the dice roll and the dice flying
+   into the bag (minus the shop stretching around them -- see
+   playRollAnimation()), and the mini-games. Follows the device's own
+   "reduce motion" setting until the player picks a side in Settings.
+   ===================================================================== */
+function lowMotion(){
+  if (prefs && typeof prefs.lowMotion === "boolean") return prefs.lowMotion;
+  return matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function applyLowMotion(){
+  document.documentElement.classList.toggle("low-motion", lowMotion());
 }
 let history = [];
 
@@ -11684,6 +11755,7 @@ function renderLegacyDrawer(){
    Render + events
    ===================================================================== */
 function render(resetScroll){
+  applyLowMotion();
   document.body.dataset.screen = screen;
   // Before the first station is chosen there's nothing for the visits/score
   // pills to report (0 of N, 0 points) and the screen's single job is "pick
@@ -11815,7 +11887,7 @@ function setHubHomeFace(face){
     home.classList.remove("face-roll", "face-market", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
-  if (isCoinPair && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+  if (isCoinPair && !lowMotion()){
     home.classList.add("coinflip");
     setTimeout(apply, 200); // midpoint of the .4s hubCoinFlip animation, edge-on and invisible
     setTimeout(() => home.classList.remove("coinflip"), 400);
@@ -12284,7 +12356,7 @@ function showEndGame(){
 
 /* --------------------------------------------------- celebration --- */
 function fireConfetti(){
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (lowMotion()) return;
   const wrap = document.createElement("div");
   wrap.className = "confetti";
   const colors = ["#2e9e5b","#d9432b","#b7791f","#3b7fc4","#a16a34","#e2b25a"];
@@ -13516,6 +13588,11 @@ function playRollAnimation(out){
   rolled.className = "rolled";
   playBar.appendChild(rolled);
 
+  // Low motion: the rolled row floats OVER the top of the shop instead of
+  // opening a gap in the page for itself, so nothing below it has to
+  // stretch open and then slide shut again (see .playbar.lm-overlay).
+  const lm = lowMotion();
+  if (lm) playBar.classList.add("lm-overlay");
   const STAGGER_MS = 90, TUMBLE_MS = 500, PAUSE_MS = 350;
   const cards = out.map((r, i) => {
     const card = document.createElement("div");
@@ -13537,11 +13614,13 @@ function playRollAnimation(out){
   });
 
   // Expand: FLIP the bar's height from the button's to the rolled row's.
-  const endH = playBar.scrollHeight;
-  playBar.style.height = startH + "px";
-  playBar.offsetHeight; // force reflow
-  playBar.style.transition = "height .3s ease";
-  playBar.style.height = endH + "px";
+  if (!lm){
+    const endH = playBar.scrollHeight;
+    playBar.style.height = startH + "px";
+    playBar.offsetHeight; // force reflow
+    playBar.style.transition = "height .3s ease";
+    playBar.style.height = endH + "px";
+  }
 
   const lastRevealMs = (cards.length - 1) * STAGGER_MS + TUMBLE_MS + PAUSE_MS;
   setTimeout(() => flyToInventory(cards, playBar), lastRevealMs + 480);
@@ -13601,6 +13680,13 @@ function flyToInventory(cards, playBar){
   // element's own top margin were still sitting at its usual 16px when
   // render() swaps the DOM in, the shop would visibly snap up that last
   // 16px in one frame instead of having already eased there.
+  if (playBar.classList.contains("lm-overlay")){
+    // Nothing to contract -- the row only ever floated on top. Fade its
+    // backing plate out as the dice leave it.
+    const row = playBar.querySelector(".rolled");
+    if (row) row.style.background = "transparent";
+    return;
+  }
   const startH = playBar.getBoundingClientRect().height;
   playBar.style.height = startH + "px";
   playBar.offsetHeight; // force reflow
@@ -13850,7 +13936,7 @@ function resetCurrentModeRun(){
    timer keyed off this animation's own duration fires regardless. */
 function bounceCardClosed(cardEl, onDone){
   const DURATION = 300;
-  if (!cardEl || matchMedia("(prefers-reduced-motion: reduce)").matches){ onDone(); return; }
+  if (!cardEl || lowMotion()){ onDone(); return; }
   cardEl.style.pointerEvents = "none";
   cardEl.animate([
     { transform: "scale(1)", opacity: 1, offset: 0, easing: "cubic-bezier(.3,1.4,.4,1)" },
@@ -13867,7 +13953,7 @@ function bounceCardClosed(cardEl, onDone){
    isn't actually on screen (station navigated away from mid-animation) or
    under reduced motion. */
 function bounceCardAppear(targetEl){
-  if (!targetEl || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!targetEl || lowMotion()) return;
   targetEl.animate([
     { transform: "scale(0)", opacity: 0 },
     { transform: "scale(1.18)", opacity: 1, offset: .6 },
@@ -13883,7 +13969,7 @@ function bounceCardAppear(targetEl){
    .bingo-grid's own perspective (see its CSS) is what gives the rotation
    real 3D depth instead of a flat squash. */
 function bingoCellFlipAppear(cell){
-  if (!cell || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!cell || lowMotion()) return;
   cell.animate([
     { transform: "rotateY(-100deg) scale(.85)", opacity: 0, offset: 0 },
     { transform: "rotateY(20deg) scale(1.05)", opacity: 1, offset: .7 },
@@ -13930,7 +14016,7 @@ function performSingleCraft(entry){
     // <body>, never the real shop card), so there's nothing stopping them
     // from playing at the same time.
     const firstCraftReveal = !wasOwnedBefore &&
-      !matchMedia("(prefers-reduced-motion: reduce)").matches;
+      !lowMotion();
     if (firstCraftReveal) flyIngredientsAndReveal(entry);
 
     // Shop-list housekeeping: bounce the old card closed, then (once
@@ -15727,13 +15813,20 @@ function finishLockIn(reward, opts = {}){
   if (reward >= 4) state.emptyElements = (state.emptyElements || 0) + 1;
   save();
   const dest = selectedMapStation;
-  const proceed = () => {
+  // Revised 2026-10-23: once the score is counted and the dice handed out,
+  // the screen fades to black (.5s), the station loads behind the black,
+  // and it fades back in (.5s) onto the item shop -- a clean "you've
+  // arrived" beat instead of the drawer sliding away over the map.
+  const proceed = () => fadeThroughBlack(() => {
+    // Snap the drawer shut under the black rather than letting its .3s
+    // slide still be running when the station fades back in.
+    drawer.style.transition = "none";
     closeDrawer();
+    drawer.offsetHeight;
+    drawer.style.transition = "";
     travelPromptFor = null;
-    // Let the drawer's own slide-away transition (.3s, see #drawer's CSS)
-    // mostly finish before the station screen swaps in underneath it.
-    setTimeout(() => goStation(dest), 320);
-  };
+    goStation(dest);
+  });
   // skipToast: for the odd caller that hands this reward directly without
   // going through playLockInSequence() first -- that sequence's own
   // banner deliberately never shows the number itself (explicit request),
@@ -15765,11 +15858,26 @@ let lockInRewardOnDone = null;
    see finishLockIn()'s own comment) -- n===0 gets its own honest title
    rather than the grammatically-broken "You earned +0 dice", and simply
    shows no dice below it. */
+// Fades #fadeCurtain to black, runs midpoint() while the screen is fully
+// covered, then fades back out. Kept in low motion too (a fade isn't
+// movement) -- see the html.low-motion exception for #fadeCurtain.
+const FADE_MS = 500;
+function fadeThroughBlack(midpoint){
+  const c = document.getElementById("fadeCurtain");
+  c.classList.add("on");
+  setTimeout(() => {
+    midpoint();
+    // A beat for the new screen to lay out before revealing it (a timer,
+    // not requestAnimationFrame -- rAF pauses while the tab is hidden and
+    // could leave the screen stuck on black).
+    setTimeout(() => c.classList.remove("on"), 40);
+  }, FADE_MS);
+}
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
     : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = lowMotion();
   document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
     `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
   // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
@@ -17953,7 +18061,7 @@ function processPendingBingoClears(){
   if (jobSheetEl) jobSheetEl.classList.add("bingo-clearing");
   const lineIdx = pending[0];
   const line = bingoLines()[lineIdx].filter(i => i !== BINGO_CENTER_IDX);
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduced = lowMotion();
   const cellFor = i => document.querySelector(`#jobSheetBody .bingo-cell[data-cell-idx="${i}"]`);
   const preclearPause = reduced ? 0 : BINGO_PRECLEAR_PAUSE_MS;
   setTimeout(() => {
@@ -18233,6 +18341,7 @@ document.getElementById("jobSheetBody").addEventListener("touchend", ev => {
 const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
 const setAutoCardInspectionBox = document.getElementById("setAutoCardInspection");
+const setLowMotionBox = document.getElementById("setLowMotion");
 // Just opens the hub (see #settings' own HTML comment) -- the 3 sub-
 // screens each have their own open function/handler below.
 function openSettings(){
@@ -18287,6 +18396,7 @@ function openSettingsRules(){
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
   setAutoCardInspectionBox.checked = prefs.autoCardInspection !== false;
+  setLowMotionBox.checked = lowMotion();
   openSettingsScreen("settingsRules");
 }
 document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
@@ -18298,7 +18408,9 @@ document.getElementById("setSave").addEventListener("click", () => {
   // state to unwind.
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
   prefs.autoCardInspection = setAutoCardInspectionBox.checked;
+  prefs.lowMotion = setLowMotionBox.checked;
   savePrefs();
+  applyLowMotion();
   closeOverlay("settingsRules");
   render();
 });
