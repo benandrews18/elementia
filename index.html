@@ -13860,6 +13860,113 @@ function punchInventory(){
   ], { duration: 380, easing: "cubic-bezier(.3,1.4,.4,1)" });
 }
 
+/* Classic Mode's starting gift (2026-10-25): confirming the very first
+   station of a run hands over one of each element in its dice pool, and
+   that station's capstone becomes the tracked item. Played on the map,
+   before goStation(), in two beats:
+     1. every element chip on the station's preview card flies into the
+        inventory hub icon (same arc/absorb as flyToInventory());
+     2. the capstone's icon flies from the card's capstone line down into
+        the tracked-item pill.
+   The gift is granted (and the trip made) only once both beats land. The
+   station's own first roll is unchanged -- still the minimum dice. */
+let startingGiftInProgress = false;
+function isClassicFirstPick(){
+  return state.mode === "classic" && state.lastStation === null && state.visits === 0;
+}
+// A fixed-position stand-in for el, sitting exactly on top of it, so the
+// real card can re-render underneath without yanking anything mid-flight.
+function flightClone(el){
+  const r = el.getBoundingClientRect();
+  const c = el.cloneNode(true);
+  c.removeAttribute("data-elem");
+  c.style.cssText += `;position:fixed; left:${r.left}px; top:${r.top}px; width:${r.width}px; height:${r.height}px;` +
+    `margin:0; z-index:600; pointer-events:none; box-sizing:border-box;`;
+  document.body.appendChild(c);
+  return {c, r};
+}
+function playStartingGift(name){
+  if (startingGiftInProgress) return;
+  startingGiftInProgress = true;
+  const s = STATION_BY_NAME[name];
+  const capName = s.capstone[1];
+  // Track the capstone now (it usually already is -- see
+  // syncInitialPickCapstoneTracking()) so the pill has time to slide out
+  // before the icon lands on it; its own icon stays hidden until then.
+  selectedJobItem = capName;
+  renderTrackedPill();
+  const pill = document.getElementById("trackedPill");
+  const pillEm = pill.querySelector(".tp-em");
+  if (pillEm) pillEm.style.visibility = "hidden";
+
+  const finish = () => {
+    dice.forEach(d => { state.elements[d] = count(d) + 1; });
+    if (pillEm) pillEm.style.visibility = "";
+    startingGiftInProgress = false;
+    goStation(name);
+    // goStation() pushes this visit's turn-log entry -- the gift is part
+    // of what the player collected on visit 1.
+    const turn = state.visitLog && state.visitLog[state.visitLog.length - 1];
+    if (turn){
+      if (!turn.elements) turn.elements = {};
+      dice.forEach(d => { turn.elements[d] = (turn.elements[d] || 0) + 1; });
+    }
+    save(); updateHub();
+  };
+
+  const dice = sortedDice(s);
+  const chips = [...document.querySelectorAll(".map-card .pchip")];
+  const hub = document.getElementById("hubInv").getBoundingClientRect();
+  const hx = hub.left + hub.width / 2, hy = hub.top + hub.height / 2;
+  const FLY_MS = 560, STAGGER_MS = 80, CONTACT = .72;
+  // Beat 1 -- elements into the inventory.
+  chips.forEach((chip, i) => {
+    const sym = chip.querySelector(".psym");
+    const {c, r} = flightClone(chip);
+    const cSym = c.querySelector(".psym");
+    if (sym && cSym) cSym.style.fontSize = getComputedStyle(sym).fontSize;
+    c.style.boxShadow = "0 6px 16px rgba(0,0,0,.35)";
+    chip.style.opacity = ".25";
+    const dx = hx - (r.left + r.width / 2), dy = hy - (r.top + r.height / 2);
+    const anim = c.animate([
+      { transform: "translate(0,0) scale(1)", opacity: 1, offset: 0 },
+      { transform: `translate(${dx * .15}px, ${dy * .15 - 40}px) scale(1.08)`, opacity: 1, offset: .25 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.45)`, opacity: 1, offset: CONTACT },
+      { transform: `translate(${dx}px, ${dy}px) scale(.12)`, opacity: 0, offset: 1 },
+    ], { duration: FLY_MS, delay: i * STAGGER_MS, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" });
+    anim.onfinish = () => c.remove();
+    setTimeout(punchInventory, i * STAGGER_MS + FLY_MS * CONTACT);
+  });
+  const beat2At = chips.length ? (chips.length - 1) * STAGGER_MS + FLY_MS + 180 : 0;
+
+  // Beat 2 -- the capstone into the tracked-item pill.
+  setTimeout(() => {
+    const src = document.querySelector(".map-card .capline .cap-em");
+    const target = pillEm || pill;
+    if (!src || !pill.classList.contains("show")){ finish(); return; }
+    const {c, r} = flightClone(src);
+    c.style.fontSize = getComputedStyle(src).fontSize;
+    c.style.display = "flex"; c.style.alignItems = "center"; c.style.justifyContent = "center";
+    src.style.visibility = "hidden";
+    const t = target.getBoundingClientRect();
+    const dx = (t.left + t.width / 2) - (r.left + r.width / 2), dy = (t.top + t.height / 2) - (r.top + r.height / 2);
+    const endScale = Math.max(.4, Math.min(1.2, t.height / Math.max(1, r.height)));
+    const anim = c.animate([
+      { transform: "translate(0,0) scale(1)", offset: 0 },
+      { transform: `translate(${dx * .2}px, ${dy * .2 - 30}px) scale(1.9)`, offset: .3 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${endScale})`, offset: 1 },
+    ], { duration: 720, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" });
+    anim.onfinish = () => {
+      c.remove();
+      if (pillEm) pillEm.style.visibility = "";
+      pill.animate([
+        { transform: "translateX(0) scale(1)" }, { transform: "translateX(0) scale(1.15)" }, { transform: "translateX(0) scale(1)" },
+      ], { duration: 380, easing: "cubic-bezier(.3,1.4,.4,1)" });
+      setTimeout(finish, 420);
+    };
+  }, beat2At);
+}
+
 /* Tapping a not-yet-craftable Craft button (see the [data-craft] handler
    above) -- a small pill bounces up out of the button, holds for about a
    second, then drops back down into it and disappears. A standalone fixed
@@ -14225,6 +14332,7 @@ function handleScreenClick(ev){
 
   const nodeBtn = ev.target.closest("[data-map-node]");
   if (nodeBtn){
+    if (startingGiftInProgress) return; // the preview card is mid-gift
     // Classic/Hard: The Ocean is the only legal first pick -- taps on any
     // other node, or on Ocean itself trying to deselect it, are ignored so
     // the preview card stays put rather than closing to nothing.
@@ -14700,6 +14808,7 @@ function triggerRoll(){
    hubHomeFace()) -- the two can never drift apart since both read the
    same function. */
 document.getElementById("hubHome").addEventListener("click", ev => {
+  if (startingGiftInProgress) return; // see playStartingGift()
   const face = hubHomeFace();
   if (face === "close"){
     // Collapsing the Marketplace's own inline section stays ON the
@@ -14739,6 +14848,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     // first couple of trips reads as broken/confusing rather than a real
     // choice, so skip the whole Lock-In doorway and just travel outright
     // until they've actually crafted something to put on it.
+    if (isClassicFirstPick()){ playStartingGift(selectedMapStation); return; }
     if (state.items.length === 0){ goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
