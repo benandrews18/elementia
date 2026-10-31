@@ -2044,7 +2044,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .roll-popup-title{font-weight:800; font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2)}
 /* Each rolled element is a bigger copy of the station's own element-pool
    chip (.gchip/.gnum/.gname): white square, suit-colored border, atomic
-   number top-left, suit badge top-right, name underneath. Everything is
+   number top-left, suit badge top-right, name under the symbol inside the border. Everything is
    fixed-size px and laid out from the start -- the die sits ON TOP of the
    finished square and fades away on reveal (opacity only), so nothing
    resizes or shifts when an element appears or while it flies. */
@@ -2053,12 +2053,12 @@ body[data-screen="market"] #trackedPill{display:none}
 .rc-face{
   position:relative; box-sizing:border-box; width:84px; height:84px; border-radius:12px;
   background:#fff; color:#221f1a; border:6px solid var(--suit);
-  display:flex; align-items:center; justify-content:center;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding-top:6px;
 }
-.rc-sym{font-size:34px; font-weight:800; line-height:1}
+.rc-sym{font-size:32px; font-weight:800; line-height:1}
 .rc-num{position:absolute; top:4px; left:6px; font-size:12px; font-weight:800; color:var(--suit); line-height:1}
 .rc-face .el-suit-badge{top:-7px; right:-7px; width:20px; height:20px}
-.rc-name{font-size:12px; font-weight:700; color:var(--ink2); line-height:1.1; text-align:center; white-space:nowrap}
+.rc-name{max-width:100%; font-size:10.5px; font-weight:700; color:#000; line-height:1; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .rc-sym, .rc-num, .rc-face .el-suit-badge, .rc-name{opacity:0; transition:opacity .18s ease}
 .rollchip.revealed .rc-sym, .rollchip.revealed .rc-num, .rollchip.revealed .el-suit-badge, .rollchip.revealed .rc-name{opacity:1}
 .rc-die{
@@ -13963,8 +13963,8 @@ function playRollAnimation(out){
     // die laid over it until the reveal.
     card.innerHTML = `<div class="rc-face"><span class="rc-num">${ATOMIC_NUMBER[r.sym] || ""}</span>` +
       `<span class="rc-sym">${esc(r.sym)}</span>${elSuitBadgeHTML(r.sym)}` +
-      `<div class="rc-die die die-${r.face} tumbling" style="animation-delay:${i * STAGGER_MS}ms"></div></div>` +
-      `<span class="rc-name">${esc(ELEMENT_NAMES[r.sym] || r.sym)}</span>`;
+      `<span class="rc-name">${esc(ELEMENT_NAMES[r.sym] || r.sym)}</span>` +
+      `<div class="rc-die die die-${r.face} tumbling" style="animation-delay:${i * STAGGER_MS}ms"></div></div>`;
     row.appendChild(card);
     // Hold briefly on the settled face, then the die fades off the element.
     setTimeout(() => card.classList.add("revealed"), i * STAGGER_MS + TUMBLE_MS + PAUSE_MS);
