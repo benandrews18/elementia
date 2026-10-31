@@ -208,9 +208,8 @@ body[data-picking] #topbar{display:none}
 }
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
-.daypill{padding:5px 12px 5px 6px; gap:7px}
+.daypill{padding:5px 6px}
 .daypill .day-svg{width:52px; height:26px; display:block}
-.daypill .day-num{font-size:15px; color:#fff}
 .daypill.sunset{border-color:rgba(226,178,90,.7); box-shadow:0 0 0 2px rgba(226,178,90,.25), 0 3px 10px rgba(0,0,0,.28)}
 /* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's
    pills (30) but under every tray, drawer and overlay (33+). */
@@ -1189,10 +1188,10 @@ body[data-screen="market"] #trackedPill{display:none}
   filter:grayscale(1);
 }
 .bc-pin.on{filter:none; border-color:var(--gold); box-shadow:0 0 0 1.5px var(--gold), 0 0 4px rgba(226,178,90,.75)}
-/* Item tier as a roman numeral (I-III, IV = Capstone), bottom-right corner
+/* Item tier as a roman numeral (I-III, IV = Capstone), bottom-left corner
    -- replaced the station icon that used to sit top-left. */
 .bc-tier{
-  position:absolute; bottom:-5px; right:-5px; z-index:3;
+  position:absolute; bottom:-5px; left:-5px; z-index:3;
   width:19px; height:19px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
   background:#2a2520; color:#f2e6cc; border:1.5px solid #000;
@@ -1454,10 +1453,10 @@ body[data-screen="market"] #trackedPill{display:none}
    reveal its own ingredients, down to raw elements. Indentation compounds
    naturally through normal nesting -- no depth-tracking CSS needed. */
 /* Revised 2026-10-31: the whole breakdown (cards, icons, text, pins) at
-   1.5x -- zoom rather than re-sizing each .mn-* rule, so every nested level
+   1.2x (1.5x read as too big) -- zoom rather than re-sizing each .mn-* rule, so every nested level
    and custom-icon size below scales together. Only the To-Do List and Item
    Reference breakdowns render this tree (see refExpandHTML()). */
-.mission-tree{display:flex; flex-direction:column; gap:10px; zoom:1.5}
+.mission-tree{display:flex; flex-direction:column; gap:10px; zoom:1.2}
 /* Indent less per level at that size so deep trees keep room for names. */
 .mission-tree .mn-children{padding-left:8px; margin-left:5px}
 .mission-node{margin-left:2px}
@@ -2047,7 +2046,12 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .roll-popup-title{font-weight:800; font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2)}
 #rollPopupRow{flex-wrap:wrap; gap:10px}
-#rollPopupRow .rollcard{flex:0 0 calc((100% - 20px) / 3); max-width:96px}
+#rollPopupRow .rollcard{flex:0 0 calc((100% - 20px) / 3); max-width:96px; position:relative}
+#rollPopupRow .rollcard .sym{flex-direction:column; gap:2px}
+#rollPopupRow .rc-sym{line-height:1}
+#rollPopupRow .rc-name{font-size:min(11px, 13cqw); font-weight:700; color:#4a4238; line-height:1; white-space:nowrap}
+#rollPopupRow .rc-num{position:absolute; top:7px; left:8px; font-size:min(11px, 13cqw); font-weight:800; color:var(--suit); line-height:1}
+#rollPopupRow .el-suit-badge{top:6px; right:6px; width:17px; height:17px}
 #rollCollect{min-width:60%; visibility:hidden; opacity:0; transition:opacity .2s ease}
 #rollCollect.show{visibility:visible; opacity:1}
 .playnote{font-size:13.5px; color:var(--mute); font-weight:600}
@@ -7803,17 +7807,21 @@ function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "
    entirely; there's nothing left to continue past now, play just
    continues straight through to MAX_VISITS. */
 const BREAKPOINT_GATE_VISIT = 9;
-/* Revised 2026-10-31: Classic's Display Mat is only checked every
-   MAT_CHECK_EVERY visits -- the "evening" of each 3-visit day (see the
-   day-cycle icon, renderDayCycle()). Travelling away from visit 3, 6, 9,
-   ... opens the mat for a Lock-In; every other trip just leaves. Before
-   the first check the player rolls all 6 dice (MAT_PRE_CHECK_DICE); after
-   it, TAKE plus whatever bonus dice the latest check earned, held for the
-   whole next day (state.matBonusDice, see doRoll()). */
+/* Revised 2026-10-31: Classic days are MAT_CHECK_EVERY visits long (see
+   the day-cycle icon, renderDayCycle()). The first Display Mat check is
+   on leaving visit 3 -- the first sunset -- and from then on the mat is
+   checked on every trip. Before that first check the player rolls all 6
+   dice (MAT_PRE_CHECK_DICE); after it, TAKE plus whatever bonus dice the
+   latest check earned (state.matBonusDice, see doRoll()). Game Over is
+   only ever at stake on a sunset check (visit 3, 6, 9, ...) from
+   BREAKPOINT_GATE_VISIT on -- see isSunsetVisit()/confirmLockIn(). */
 const MAT_CHECK_EVERY = 3;
 const MAT_PRE_CHECK_DICE = 6;
 function isMatCheckVisit(){
-  return state.mode === "classic" && state.visits > 0 && state.visits % MAT_CHECK_EVERY === 0;
+  return state.mode === "classic" && state.visits >= MAT_CHECK_EVERY;
+}
+function isSunsetVisit(){
+  return state.visits > 0 && state.visits % MAT_CHECK_EVERY === 0;
 }
 
 /* ------------------------------------------------------- game mode --- */
@@ -8048,7 +8056,7 @@ function classicTutSlides(){
     </div>
     <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row">${dayCycleSVG(DAY_PHASES[2]).replace('class="day-svg"', 'class="day-svg" style="width:52px; height:26px"')}<span class="ct-sub" style="margin:0">Your mat is checked every 3rd day, at sunset</span></div>`;
+    <div class="ct-row">${dayCycleSVG(DAY_PHASES[2]).replace('class="day-svg"', 'class="day-svg" style="width:52px; height:26px"')}<span class="ct-sub" style="margin:0">Scored every trip -- from day 3, a miss at sunset ends the run</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){
@@ -9915,7 +9923,7 @@ function freshState(){
     // not a bank, so it never stacks across visits.
     bonusDiceNextVisit: 0,
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
-    matBonusDice: 0,   // Classic: bonus dice from the latest check, added to every roll until the next one.
+    matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
     bingoCenterChosen: false, // Whether the BINGO card's own center square has ever been
                        // picked (see setBingoCenter()) -- false shows the "Add Capstone"
                        // placeholder there instead of a real item. Stays true forever once
@@ -12055,8 +12063,8 @@ function renderLegacyDrawer(){
    Render + events
    ===================================================================== */
 /* Classic's day cycle (2026-10-31), top-right in place of the score pill:
-   each 3-visit day goes sunrise -> midday -> sunset, and the Display Mat
-   gets checked on leaving at sunset (see MAT_CHECK_EVERY). One small SVG:
+   each 3-visit day goes sunrise -> midday -> sunset; sunset checks are the
+   ones that can end the run (see MAT_CHECK_EVERY). One small SVG:
    a horizon, the sun's arc, and the sun at its place for this visit. */
 const DAY_PHASES = [
   { key: "sunrise", label: "Sunrise", sky: ["#f6a35c", "#5b6fb0"], at: [9, 25] },
@@ -12084,10 +12092,12 @@ function renderDayCycle(){
   const v = Math.max(1, state.visits);
   const phase = DAY_PHASES[(v - 1) % MAT_CHECK_EVERY];
   const day = Math.ceil(v / MAT_CHECK_EVERY);
-  const note = phase.key === "sunset" ? " -- your Display Mat is checked when you next travel" : "";
+  const note = phase.key !== "sunset" ? ""
+    : state.visits >= BREAKPOINT_GATE_VISIT ? " -- miss the first Quark breakpoint when you next travel and the run ends"
+    : " -- your Display Mat is checked when you next travel";
   pill.title = `Day ${day}, ${phase.label}${note}`;
   pill.setAttribute("aria-label", pill.title);
-  pill.innerHTML = `${dayCycleSVG(phase)}<span class="day-num">${day}</span>`;
+  pill.innerHTML = dayCycleSVG(phase);
   pill.classList.toggle("sunset", phase.key === "sunset");
 }
 function render(resetScroll){
@@ -13872,8 +13882,8 @@ function doRoll(rollCount){
   const delta = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
   state.bonusDiceNextVisit = 0;
   const base = rollCount == null ? TAKE : rollCount;
-  // Classic: 6 dice until the first mat check, then base + that check's
-  // bonus on every roll until the next one (see MAT_CHECK_EVERY).
+  // Classic: 6 dice until the first mat check, then base + the latest
+  // check's bonus (see MAT_CHECK_EVERY).
   const classicN = state.matChecked ? base + (state.matBonusDice || 0) : Math.max(MAT_PRE_CHECK_DICE, base);
   const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length
     : state.mode === "classic" ? classicN
@@ -13931,7 +13941,10 @@ function playRollAnimation(out){
     card.className = "rollcard";
     card.style.setProperty("--suit", ELEMENT_COLOR[r.sym] || "#8a94a6");
     card.style.animationDelay = (i * STAGGER_MS) + "ms";
-    card.innerHTML = `${dieFace(r.face)}<span class="sym">${esc(r.sym)}</span>`;
+    // Revealed face reads like a periodic-table square: atomic number top-
+    // left, element-type (suit) icon top-right, name under the symbol.
+    card.innerHTML = `${dieFace(r.face)}<span class="sym"><span class="rc-num">${ATOMIC_NUMBER[r.sym] || ""}</span>` +
+      `<span class="rc-sym">${esc(r.sym)}</span><span class="rc-name">${esc(ELEMENT_NAMES[r.sym] || r.sym)}</span>${elSuitBadgeHTML(r.sym)}</span>`;
     row.appendChild(card);
     const die = card.querySelector(".die");
     die.classList.add("tumbling");
@@ -15259,9 +15272,9 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     // choice, so skip the whole Lock-In doorway and just travel outright
     // until they've actually crafted something to put on it.
     if (isClassicFirstPick()){ playStartingGift(selectedMapStation); return; }
-    // Classic: the mat only gets checked on the evening of each 3-visit
-    // day (see MAT_CHECK_EVERY) -- every other trip leaves straight away.
-    // On a check visit it opens even when empty: the check still happens.
+    // Classic: no mat check before the first sunset (see MAT_CHECK_EVERY)
+    // -- those trips leave straight away. From then on every trip opens
+    // the mat, even an empty one: the check still happens.
     if (state.mode === "classic" && !isMatCheckVisit()){ goStation(selectedMapStation); return; }
     if (state.mode !== "classic" && state.items.length === 0){ goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
@@ -15437,7 +15450,7 @@ function maybeShowBreakpointGateNotice(){
   state.sawBreakpointGateNotice = true;
   save();
   queueEventToast("warn", "⚠️", "Breakpoints now matter",
-    "Missing your first Quark breakpoint on Lock-In ends your run from here on.");
+    "From now on, missing your first Quark breakpoint at sunset ends your run.");
 }
 /* Shows/hides/positions #lockInBanner -- see its own HTML comment. Only
    the Lock In flow's own half-view (peeked) stage shows it (travelPromptFor
@@ -16118,9 +16131,9 @@ function confirmLockIn(){
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    if (state.visits < BREAKPOINT_GATE_VISIT){ finishLockIn(0); return; }
+    if (state.visits < BREAKPOINT_GATE_VISIT || !isSunsetVisit()){ finishLockIn(0); return; }
     askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks this visit -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it ends your run here. End it now?`,
+      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
       () => {
         state.finalGameOver = true;
         state.ended = true;
@@ -16439,7 +16452,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   // rather than a whole separate celebration beat, since it's additive to
   // whatever the dice count already says.
   document.getElementById("lockInRewardSub").textContent = state.mode === "classic"
-    ? `🎲 ${TAKE + n} per roll for the next ${MAT_CHECK_EVERY} days` : "";
+    ? `🎲 ${TAKE + n} dice at your next station` : "";
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
   extra.textContent = gotEmptyElement ? "Plus: +1 Empty Element -- spend it at any station" : "";
@@ -16670,12 +16683,12 @@ function quarkMeterLineHTML(s){
       <span class="qm-total" aria-label="${s.total.toLocaleString()} Quarks">${s.total.toLocaleString()}</span>
     </div>`;
 }
-/* Which visit's breakpoints the meter shows: in Classic, the next mat
-   check's (visit 3, 6, 9, ... -- the one Lock-In will actually score
-   against), so the meter between checks shows the bar to aim for. */
+/* Which visit's breakpoints the meter shows: the current visit's (the one
+   the next Lock-In scores against), and in Classic never earlier than the
+   first check on visit 3. */
 function matCheckRound(){
   if (state.mode !== "classic") return state.visits;
-  return Math.max(MAT_CHECK_EVERY, Math.ceil(state.visits / MAT_CHECK_EVERY) * MAT_CHECK_EVERY);
+  return Math.max(MAT_CHECK_EVERY, state.visits);
 }
 /* Classic, once the first mat check has happened: the Quark Meter rides
    along the top of every screen (z-index just above #topbar's pills, below
