@@ -7829,13 +7829,13 @@ const BREAKPOINT_GATE_VISIT = 9;
 /* Revised 2026-10-31: Classic days are MAT_CHECK_EVERY visits long (see
    the day-cycle icon, renderDayCycle()). The first Display Mat check is
    on leaving visit 3 -- the first sunset -- and from then on the mat is
-   checked on every trip. Before that first check the player rolls all 6
+   checked on every trip. Before that first check the player rolls 4
    dice (MAT_PRE_CHECK_DICE); after it, TAKE plus whatever bonus dice the
    latest check earned (state.matBonusDice, see doRoll()). Game Over is
    only ever at stake on a sunset check (visit 3, 6, 9, ...) from
    BREAKPOINT_GATE_VISIT on -- see isSunsetVisit()/confirmLockIn(). */
 const MAT_CHECK_EVERY = 3;
-const MAT_PRE_CHECK_DICE = 6;
+const MAT_PRE_CHECK_DICE = 4;
 function isMatCheckVisit(){
   return state.mode === "classic" && state.visits >= MAT_CHECK_EVERY;
 }
@@ -13901,7 +13901,7 @@ function doRoll(rollCount){
   const delta = isOceanFirstRoll ? 0 : (state.bonusDiceNextVisit || 0);
   state.bonusDiceNextVisit = 0;
   const base = rollCount == null ? TAKE : rollCount;
-  // Classic: 6 dice until the first mat check, then base + the latest
+  // Classic: MAT_PRE_CHECK_DICE (4) until the first mat check, then base + the latest
   // check's bonus (see MAT_CHECK_EVERY).
   const classicN = state.matChecked ? base + (state.matBonusDice || 0) : Math.max(MAT_PRE_CHECK_DICE, base);
   const n = isOceanFirstRoll ? OCEAN_FIRST_ROLL.length
@@ -14244,7 +14244,7 @@ function punchInventory(){
      2. the capstone's icon flies from the card's capstone line down into
         the tracked-item pill.
    The gift is granted (and the trip made) only once both beats land. The
-   station's own first roll is a normal day-1 roll (6 dice, see
+   station's own first roll is a normal day-1 roll (4 dice, see
    MAT_PRE_CHECK_DICE). */
 let startingGiftInProgress = false;
 function isClassicFirstPick(){
