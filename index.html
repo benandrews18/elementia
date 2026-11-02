@@ -347,6 +347,7 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 .hubbtn.active .hl{color:var(--ok)}
 .hubbtn:disabled .hi{filter:grayscale(.5) brightness(.85)}
 
+#hubHome[aria-disabled="true"]{pointer-events:none}
 #hubHome{
   flex:none; width:76px; height:76px; max-width:none; border-radius:50%; gap:1px;
   margin:-26px 4px 0; color:#fff; justify-content:center;
@@ -3382,7 +3383,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #bingoCraftOverlay{z-index:70}
 #bingoClearOverlay{z-index:70}
 /* Locks the tray against taps for the pre-animation pause plus the
-   animation itself (see processPendingBingoClears()'s own comment) --
+   animation itself (see runBingoSequence()'s own comment) --
    nothing in here should be interruptible mid-beat. */
 #jobSheet.bingo-clearing{pointer-events:none}
 /* confirm sits above other overlays -- it's usually raised FROM one
@@ -5847,7 +5848,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 </div>
 
 <!-- Bingo line-clear reward -- the elements a just-cleared line handed
-     back (see processPendingBingoClears()), shown as their own popup
+     back (see runBingoSequence()), shown as their own popup
      instead of just a toast so the player actually sees what they got.
      The chips themselves are the exact .gcol/.gchip markup a station's
      own "Elements Found Here" gather row uses (see renderStation()),
@@ -9956,7 +9957,7 @@ function freshState(){
                        // checkBingoLines()/BINGO_LINE_BONUS. Lifetime, never un-completes even
                        // if a member item is later spent (Classic never spends items anyway).
     pendingBingoClears: [], // [lineIndex, ...] -- lines newly completed by checkBingoLines()
-                       // but not yet animated/cleared (see processPendingBingoClears()). Plays
+                       // but not yet animated/cleared (see runBingoSequence()). Plays
                        // out the next time the Bingo card is actually viewed, not instantly at
                        // craft time, since several lines can complete between visits.
     // DORMANT as of 2026-09-13 -- Lock In no longer banks its reward here
@@ -12449,7 +12450,7 @@ function updateHub(){
 
   const face = hubHomeFace();
   setHubHomeFace(face);
-  home.setAttribute("aria-disabled", "false");
+  home.setAttribute("aria-disabled", face === "lockin" && lockInCommitted ? "true" : "false");
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
     : face === "market" ? "Open the Marketplace"
@@ -13025,6 +13026,7 @@ function updateCardPopBackBtn(){
    sequence and removed), so all that's left to do is flush whatever item-
    unlock reveal the craft queued up. */
 function autoCardPop(entry){
+  releaseBingoCraftHold();
   if (prefs.autoCardInspection === false) flushPendingReveal();
   else showCardPop(entry);
 }
@@ -13245,6 +13247,7 @@ function queueModeUnlockToast(emoji, modeName){
   queueEventToast("unlock", emoji, "Mode unlocked", modeName);
 }
 function celebrate(entry){
+  releaseBingoCraftHold();
   const n = CAPSTONES.filter(owns).length;
   document.getElementById("celebEmoji").innerHTML = em(entry.emoji);
   document.getElementById("celebName").textContent = entry.name;
@@ -13558,6 +13561,7 @@ function applyInvFilter(){
 }
 
 function goStation(name){
+  lockInCommitted = false;
   if (state.ended){ showEndGame(); return; }
   // Adventure/Hard Mode's Helicopter fast travel costs 1 Natural Gas per
   // real hop -- STATION_BY_NAME[name] excludes every sub-zone id (Island/
@@ -14552,6 +14556,7 @@ function performSingleCraft(entry){
   // sitting at its actual current position, not a guess.
   const preCraftCard = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
   if (craft(entry)){
+    holdBingoForCraftReveal();
     const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
     // !state.seenItems[n] -- same "new to the player, not just to this
     // station's shop" rule goStation()'s own reveal check uses.
@@ -15340,7 +15345,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // The drawer is already open and showing the mat by the time this face
   // can even show (see hubHomeFace()'s own comment) -- nothing to open,
   // just evaluate and grant/deny the reward. See confirmLockIn().
-  if (face === "lockin"){ confirmLockIn(); return; }
+  if (face === "lockin"){ if (!lockInCommitted) confirmLockIn(); return; }
   // Job Select reads as "Map" rather than "Close" while open in Classic
   // Mode (see hubHomeFace()'s own comment) but still needs the tray
   // itself actually closed -- the map underneath was never navigated
@@ -16179,15 +16184,21 @@ function diceDeltaForReward(reward){ return Math.min(reward, 3); }
    backs out of the confirm and leaves the mat and drawer exactly as they
    were, so the player can rearrange it and lock in again whenever they
    like before committing to end things. */
+/* Set the moment a Lock-In actually commits (2026-11-02): Home stays
+   untappable from then until it flips to Roll at the station (cleared in
+   goStation()), so a second tap can't re-run the scoring beat. */
+var lockInCommitted = false; // var: updateHub() can read it before this line runs
 function confirmLockIn(){
+  if (lockInCommitted) return;
   const s = matScore(matOnMat());
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    if (state.visits < BREAKPOINT_GATE_VISIT || !isSunsetVisit()){ finishLockIn(0); return; }
+    if (state.visits < BREAKPOINT_GATE_VISIT || !isSunsetVisit()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
     askConfirm(
       `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
       () => {
+        lockInCommitted = true;
         state.finalGameOver = true;
         state.ended = true;
         save();
@@ -16198,6 +16209,8 @@ function confirmLockIn(){
     );
     return;
   }
+  lockInCommitted = true;
+  updateHub();
   playLockInSequence(reward);
 }
 /* Which real mat cards actually earned a given combo chip -- same grouping
@@ -17454,8 +17467,8 @@ function renderJobBoard(){
         : questsBodyHTML(true);
   // Only the real Bingo card view just rendered above has real cells to
   // animate -- a no-op every other time this fires (nothing pending, or
-  // already mid-sequence, see processPendingBingoClears()'s own guard).
-  if (classic && full) processPendingBingoClears();
+  // already mid-sequence, see runBingoSequence()'s own guard).
+  if (classic && full) scheduleBingoSequence();
 }
 /* Pins + active/completed jobs only -- no "Available Jobs" board (that's
    jobBoardHTML(false)'s own job, reserved for the full variant above).
@@ -17618,7 +17631,7 @@ function closeJobBoard(){
   // alike, so there's no risk of stranding the player the way there used
   // to be when picking one was the only way out of this screen.
   // Same block during a line-clear's own bounce-out/refill (see
-  // processPendingBingoClears()) -- a scrim tap or Escape mid-clear would
+  // runBingoSequence()) -- a scrim tap or Escape mid-clear would
   // strand the underlying state.bingoCard mutation half-applied.
   if (bingoRevealInProgress || bingoClearInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
@@ -18645,8 +18658,10 @@ function checkJobCompletion(){
    transitions onto the board for real. */
 function checkBingoCompletion(name){
   if (state.mode !== "classic" || !state.bingoCard || !state.bingoCard.includes(name)) return;
-  const entry = ENTRIES.find(e => e.name === name);
-  queueEventToast("job", entry ? em(entry.emoji) : "", "On your Bingo card", name);
+  // No toast any more -- the square bounces on the BINGO tray instead
+  // (see runBingoSequence()).
+  bingoPendingSquares.push(state.bingoCard.indexOf(name));
+  scheduleBingoSequence();
 }
 /* Fires right alongside checkBingoCompletion() in craft()'s own tail --
    every line is checked every craft (cheap: 12 lines x 5 owns() lookups),
@@ -18662,8 +18677,8 @@ function checkBingoLines(){
     if (!line.every(idx => owns(state.bingoCard[idx]))) return;
     state.bingoLinesCompleted.push(i);
     state.pendingBingoClears.push(i);
-    queueEventToast("job", "🎉", "BINGO! Line complete", "", "+" + BINGO_LINE_BONUS + " pts");
   });
+  scheduleBingoSequence();
 }
 /* Which raw element a cleared square's own item hands back, matching its
    suit (see the request: "collect elements which match the suits of the
@@ -18689,81 +18704,128 @@ function elementForBingoClear(name){
   const finalPool = pool.length ? pool : CLASSIC_ELEMENTS;
   return finalPool[Math.floor(Math.random() * finalPool.length)];
 }
+/* =====================================================================
+   BINGO progress sequence (revised 2026-11-02) -- replaces the old
+   per-square toast and the per-line clear/refill. One orderly beat, run
+   once whatever else a craft kicked off (fly-in, card popup, item reveal)
+   has finished:
+     1. the BINGO tray drops in from the top (if it isn't already open),
+     2. each newly owned square bounces, one after another,
+     3. each newly completed line bounces as a whole, one line at a time,
+     4. ONE popup hands over every line's reward elements together,
+     5. the tray hides back off the top (only if this sequence opened it).
+   Player input on the tray is locked for the whole beat (see
+   #jobSheet.bingo-clearing), and closeJobBoard() refuses mid-sequence. */
 let bingoClearInProgress = false;
-const BINGO_CLEAR_BOUNCE_MS = 320;
-const BINGO_CLEAR_STAGGER_MS = 70;
-// Beat before the bounce-out even starts, so a completed line reads as a
-// real "hold on, something just happened" pause rather than snapping
-// straight into the animation -- explicit request. Player input is locked
-// out for this whole pause plus the animation after it (see
-// #jobSheet.bingo-clearing's own CSS), not just the animation itself, so
-// there's nothing to interrupt mid-beat.
-const BINGO_PRECLEAR_PAUSE_MS = 500;
-/* Plays out one pending line clear at a time (see state.pendingBingoClears,
-   queued by checkBingoLines()), called every time the Bingo card actually
-   renders (see renderJobBoard()'s own tail call) -- a no-op unless
-   something's actually pending. Revised 2026-11-02: a completed line's
-   squares stay on the card as they are (no replacement items drawn), and
-   every square in it pays out one element of its own suit -- including
-   the center capstone when the line runs through it. Recurses through renderJobBoard()'s own
-   tail call rather than looping internally: each line's cycle (bounce out
-   -> mutate state -> repaint) fully lands before the next line's bounce-
-   out starts, which is what actually makes multiple simultaneous
-   completions read as one clear after another instead of overlapping. */
-function processPendingBingoClears(){
+let bingoPendingSquares = [];  // card indices newly owned, not yet bounced (runtime only)
+let bingoCraftHold = false;    // a craft's own reveal hasn't opened its popup yet
+let bingoCraftHoldTimer = null;
+let bingoSeqTimer = null;
+let bingoSeqAutoOpened = false;
+const BINGO_TRAY_SETTLE_MS = 450;   // tray slide-in before anything bounces
+const BINGO_SQUARE_BOUNCE_MS = 420;
+const BINGO_SQUARE_STAGGER_MS = 260;
+const BINGO_LINE_GAP_MS = 380;      // pause between one line's bounce and the next
+function holdBingoForCraftReveal(){
+  bingoCraftHold = true;
+  clearTimeout(bingoCraftHoldTimer);
+  bingoCraftHoldTimer = setTimeout(releaseBingoCraftHold, 6000); // safety net
+}
+function releaseBingoCraftHold(){
+  bingoCraftHold = false;
+  clearTimeout(bingoCraftHoldTimer);
+  scheduleBingoSequence();
+}
+function bingoSequenceBlocked(){
+  return bingoCraftHold || anyOverlayOpen() || startingGiftInProgress || bingoRevealInProgress
+    || document.getElementById("rollPopup").classList.contains("open")
+    || state.ended;
+}
+/* Polls (cheaply) until nothing else is on screen, then runs. Safe to call
+   any number of times -- only one wait is ever pending. */
+function scheduleBingoSequence(){
+  if (state.mode !== "classic" || bingoClearInProgress) return;
+  if (!bingoPendingSquares.length && !(state.pendingBingoClears || []).length) return;
+  clearTimeout(bingoSeqTimer);
+  bingoSeqTimer = setTimeout(() => {
+    if (bingoSequenceBlocked()){ scheduleBingoSequence(); return; }
+    runBingoSequence();
+  }, 300);
+}
+function bingoBounceCell(cell, scale){
+  if (!cell || lowMotion()) return;
+  cell.animate([
+    { transform: "scale(1)", offset: 0 },
+    { transform: `scale(${scale})`, offset: .4 },
+    { transform: "scale(.96)", offset: .75 },
+    { transform: "scale(1)", offset: 1 },
+  ], { duration: BINGO_SQUARE_BOUNCE_MS, easing: "ease-out" });
+}
+function runBingoSequence(){
   if (bingoClearInProgress) return;
-  const pending = state.pendingBingoClears || [];
-  if (!pending.length) return;
+  ensureBingoCard();
+  const squares = bingoPendingSquares.filter((i, k, a) => a.indexOf(i) === k);
+  const lines = [...(state.pendingBingoClears || [])];
+  bingoPendingSquares = [];
+  if (!squares.length && !lines.length) return;
   bingoClearInProgress = true;
-  // Locks out taps anywhere in the tray for the full pause+animation
-  // stretch (see the constant's own comment) -- lifted right alongside
-  // bingoClearInProgress itself, below.
-  const jobSheetEl = document.getElementById("jobSheet");
-  if (jobSheetEl) jobSheetEl.classList.add("bingo-clearing");
-  const lineIdx = pending[0];
-  const line = bingoLines()[lineIdx];
+
+  // 1. Tray in from the top, on the BINGO page.
+  const alreadyOpen = jobSheet.classList.contains("open") && jobSheetVariant === "full";
+  bingoSeqAutoOpened = !alreadyOpen;
+  bingoTab = "bingo";
+  if (alreadyOpen) renderJobBoard(); else openJobSelectTray();
+  jobSheet.classList.add("bingo-clearing");
+
   const reduced = lowMotion();
   const cellFor = i => document.querySelector(`#jobSheetBody .bingo-cell[data-cell-idx="${i}"]`);
-  const preclearPause = reduced ? 0 : BINGO_PRECLEAR_PAUSE_MS;
+  let t = alreadyOpen ? 150 : (reduced ? 150 : BINGO_TRAY_SETTLE_MS);
+
+  // 2. Each new square, one after another.
+  squares.forEach(i => {
+    setTimeout(() => bingoBounceCell(cellFor(i), 1.18), t);
+    t += BINGO_SQUARE_STAGGER_MS;
+  });
+  if (squares.length) t += BINGO_SQUARE_BOUNCE_MS - BINGO_SQUARE_STAGGER_MS + 200;
+
+  // 3. Each completed line as a whole, in sequence.
+  lines.forEach(lineIdx => {
+    setTimeout(() => bingoLines()[lineIdx].forEach(i => bingoBounceCell(cellFor(i), 1.14)), t);
+    t += BINGO_SQUARE_BOUNCE_MS + BINGO_LINE_GAP_MS;
+  });
+
   setTimeout(() => {
-    line.forEach((i, k) => {
-      setTimeout(() => {
-        const cell = cellFor(i);
-        if (cell && !reduced){
-          // A celebratory pulse in place -- the square stays put.
-          cell.animate([
-            { transform: "scale(1)", offset: 0 },
-            { transform: "scale(1.12)", offset: .4 },
-            { transform: "scale(1)", offset: 1 },
-          ], { duration: BINGO_CLEAR_BOUNCE_MS, easing: "cubic-bezier(.3,.8,.4,1)" });
-        }
-      }, k * BINGO_CLEAR_STAGGER_MS);
-    });
-    const totalDelay = reduced ? 0 : (line.length - 1) * BINGO_CLEAR_STAGGER_MS + BINGO_CLEAR_BOUNCE_MS + 40;
-    setTimeout(() => {
-      const granted = [];
-      line.forEach(i => {
-        const name = state.bingoCard[i];
-        const el = elementForBingoClear(name);
-        state.elements[el] = (state.elements[el] || 0) + 1;
-        granted.push({name, el});
-      });
-      state.pendingBingoClears = pending.slice(1);
-      save();
-      bingoClearInProgress = false;
-      if (jobSheetEl) jobSheetEl.classList.remove("bingo-clearing");
-      renderJobBoard();
-      openBingoClearOverlay(granted);
-    }, totalDelay);
-  }, preclearPause);
+    if (!lines.length){ finishBingoSequence(); return; }
+    // 4. Every line's elements at once -- one per square, center included.
+    const granted = [];
+    lines.forEach(lineIdx => bingoLines()[lineIdx].forEach(i => {
+      const name = state.bingoCard[i];
+      const el = elementForBingoClear(name);
+      state.elements[el] = (state.elements[el] || 0) + 1;
+      granted.push({name, el});
+    }));
+    state.pendingBingoClears = (state.pendingBingoClears || []).filter(i => !lines.includes(i));
+    save();
+    render();
+    openBingoClearOverlay(granted, lines.length);
+  }, t);
 }
-/* Popup shown once a line's clear animation finishes -- see
-   processPendingBingoClears()'s own tail call. Replaces the old plain
-   toast with something the player actually has to look at and dismiss,
-   using the exact .gcol/.gchip chip markup a station's own "Elements
-   Found Here" gather row renders (see renderStation()) so a gathered
-   element reads as visually identical to one rolled at a station. */
-function openBingoClearOverlay(granted){
+// 5. Runs once the reward popup is dismissed (or straight after the
+// square bounces when no line was completed).
+function finishBingoSequence(){
+  bingoClearInProgress = false;
+  jobSheet.classList.remove("bingo-clearing");
+  if (bingoSeqAutoOpened){
+    bingoSeqAutoOpened = false;
+    setTimeout(closeJobBoard, lowMotion() ? 0 : 500);
+  }
+  // Anything that landed while this was playing gets its own turn next.
+  scheduleBingoSequence();
+}
+/* The one reward popup for however many lines just completed -- the
+   exact .gcol/.gchip chip markup a station's own "Elements Found Here"
+   row uses (see renderStation()), so an element reads the same here. */
+function openBingoClearOverlay(granted, lineCount){
   const chips = granted.map(g => `<div class="gcol">
       <div class="gchip" style="--suit:${ELEMENT_COLOR[g.el] || "#8a94a6"}">
         <span class="gnum">${ATOMIC_NUMBER[g.el] || ""}</span>
@@ -18772,14 +18834,17 @@ function openBingoClearOverlay(granted){
       <span class="gname">${esc(ELEMENT_NAMES[g.el] || g.el)}</span>
     </div>`).join("");
   document.getElementById("bingoClearOverlayBody").innerHTML = `
-    <h2 id="bingoClearTitle">✨ Line Cleared!</h2>
+    <h2 id="bingoClearTitle">🎉 BINGO!</h2>
+    <p>${lineCount === 1 ? "Line complete" : `${lineCount} lines complete`} · +${lineCount * BINGO_LINE_BONUS} pts</p>
     <p>+${granted.length} element${granted.length === 1 ? "" : "s"} collected</p>
     <div class="gather" style="margin:14px 0 0; padding:0">${chips}</div>
     <div class="btnrow"><button type="button" class="bigbtn" id="bingoClearOkBtn">Nice!</button></div>`;
   openOverlay("bingoClearOverlay");
 }
 document.getElementById("bingoClearOverlayBody").addEventListener("click", ev => {
-  if (ev.target.closest("#bingoClearOkBtn")) closeOverlay("bingoClearOverlay");
+  if (!ev.target.closest("#bingoClearOkBtn")) return;
+  closeOverlay("bingoClearOverlay");
+  finishBingoSequence();
 });
 /* Same exact row Item Reference itself uses (see refStyleRowHTML()) --
    not a lookalike, the literal same function -- so "Full breakdown"
