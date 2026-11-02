@@ -9990,6 +9990,7 @@ function freshState(){
                        // missed the first Quark breakpoint (tier 0) and the player confirmed
                        // ending the run there (see confirmLockIn()) -- distinct from the
                        // congratulatory ending below, so showEndGame() can word it accordingly.
+    craftedEverything: false, // Classic: every CORE_ITEM_NAMES item owned -- see checkCraftedEverything().
     reachedHardLimit: false, // True only once state.visits hits MAX_VISITS (see goMap()) --
                        // the OTHER real ending, a congratulatory one: the player kept
                        // clearing the Quark breakpoint all the way out. showEndGame() words
@@ -10360,6 +10361,7 @@ function craft(entry, opts={}){
   checkJobCompletion();
   checkBingoCompletion(entry.name);
   checkBingoLines();
+  checkCraftedEverything();
   applyDiceCount(); // Tractor may have just been crafted -- see its own comment
   // History's per-turn breakdown -- appended to whichever turn is current
   // (goStation() always pushes a fresh entry before any crafting can
@@ -12736,10 +12738,38 @@ function endGameFlavorHTML(){
    clearing the Quark breakpoint all the way to MAX_VISITS, see goMap()) or
    the elimination case (missed one for good from BREAKPOINT_GATE_VISIT on,
    see confirmLockIn()). */
+/* Classic's third ending (2026-11-02): every item in the Classic catalog
+   (CORE_ITEM_NAMES) crafted. Flagged on the final craft, but the End
+   screen waits for that craft's own reveal and BINGO sequence to finish
+   (same idle test the BINGO sequence uses) before it opens. */
+function checkCraftedEverything(){
+  if (state.mode !== "classic" || state.ended || state.craftedEverything) return;
+  if (![...CORE_ITEM_NAMES].every(owns)) return;
+  state.craftedEverything = true;
+  save();
+  scheduleCraftedEverythingEnd();
+}
+function scheduleCraftedEverythingEnd(){
+  setTimeout(() => {
+    if (state.ended) return;
+    const busy = bingoSequenceBlocked() || bingoClearInProgress || bingoPendingSquares.length
+      || (state.pendingBingoClears || []).length;
+    if (busy){ scheduleCraftedEverythingEnd(); return; }
+    // The End screen sits below the Marketplace tray -- put the tray away first.
+    if (jobSheet.classList.contains("open")){ closeJobBoard(); scheduleCraftedEverythingEnd(); return; }
+    state.ended = true;
+    save();
+    fireConfetti();
+    showEndGame();
+  }, 500);
+}
 function showEndGame(){
-  document.getElementById("endTitle").textContent = state.reachedHardLimit
-    ? "🎉 You Reached the End!" : "🏁 Game Over";
-  document.getElementById("endSub").textContent = state.reachedHardLimit
+  document.getElementById("endTitle").textContent = state.craftedEverything
+    ? "🏆 Every Item Crafted!"
+    : state.reachedHardLimit ? "🎉 You Reached the End!" : "🏁 Game Over";
+  document.getElementById("endSub").textContent = state.craftedEverything
+    ? `You crafted every item in Elementia in ${state.visits} visits -- here's your run:`
+    : state.reachedHardLimit
     ? `You kept clearing the Quark breakpoint all the way to visit ${state.visits} -- here's your run:`
     : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
 
