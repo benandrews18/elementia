@@ -2591,7 +2591,20 @@ body[data-screen="market"] #trackedPill{display:none}
    "Generate Quarks..."/"More Quarks = More Elements..." -- so this needs
    to stack, not sit in a single row. Still reads quieter than
    #lockInBannerText's own instruction above it. */
-#lockInBannerText .libt-sub{
+#matRulesOverlay{z-index:70}
+.mat-rules-box{max-width:420px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px}
+.mat-rules-box h2{margin:0}
+.mat-rules-box .btnrow{margin-top:4px}
+#lockInQuarkTutorial{font-size:13px}
+/* Small "?" badge on the Display Mat page's bottom-right corner. */
+.mat-rules-btn{
+  position:absolute; right:-6px; bottom:-6px; z-index:4;
+  width:28px; height:28px; border-radius:50%; padding:0;
+  background:#221f1a; color:#fff; border:2px solid var(--gold);
+  font-size:15px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.mat-rules-box .libt-sub{
   display:flex; flex-direction:column; align-items:center; gap:2px;
   font-weight:700; font-size:14px; color:var(--ink2); margin-top:4px;
 }
@@ -3395,6 +3408,13 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    them, not behind (same-z-index ties fall back to DOM order, and both of
    those overlays' markup comes after this one). */
 #cardPop{z-index:71}
+.cp-close-x{
+  position:absolute; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:5;
+  width:42px; height:42px; border-radius:50%; padding:0;
+  background:rgba(20,24,32,.85); color:#fff; border:2px solid var(--gold);
+  font-size:20px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
 /* Gold border, same design language as the map screen's reachable-node
    rings (.map-node.reachable) and the capstone-celebration card that
    already borrowed it (#celebrate .sheetbox) -- extended here to the
@@ -5427,8 +5447,18 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      own init call) since it names the current reward mechanic in prose
      rather than being baked into this static markup. -->
 <div id="lockInBanner" aria-hidden="true">
-  <p id="lockInBannerText">Lock-In your Display Mat to continue.<span class="libt-sub" id="lockInBannerSub"></span></p>
-  <div id="lockInQuarkTutorial"></div>
+  <p id="lockInBannerText">Lock-In your Display Mat to continue.</p>
+</div>
+<!-- Display Mat rules (2026-11-02) -- opened from the "?" in the mat
+     page's bottom-right corner (see renderMatTop()); holds what used to sit
+     in #lockInBanner above the half-height mat. -->
+<div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
+  <div class="sheetbox mat-rules-box">
+    <h2 id="matRulesTitle">Display Mat</h2>
+    <p class="libt-sub" id="lockInBannerSub"></p>
+    <div id="lockInQuarkTutorial"></div>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesOk">Got it</button></div>
+  </div>
 </div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">
   <div class="dhead">
@@ -5621,6 +5651,9 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 
 <!-- crafted-card popup: shows the item's printed-card art, tap anywhere to dismiss -->
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
+  <!-- 2026-11-02: explicit dismiss; the tap falls through to #cardPop's own
+       tap-anywhere-to-close listener. -->
+  <button type="button" class="cp-close-x" id="cpCloseX" aria-label="Close">✕</button>
   <div class="pc-mat-backdrop" id="cpMatBackdrop" aria-hidden="true"></div>
   <div class="pc-card-wrap">
     <!-- Revised 2026-09-12: shown only in "mat panel" mode (see
@@ -15302,7 +15335,9 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      openDrawer({ peeked: true });
+      // Revised 2026-11-02: straight to the full inventory -- the mat's
+      // rules live behind its own "?" button now (see #matRulesOverlay).
+      openDrawer();
       return;
     }
     goStation(selectedMapStation);
@@ -15486,7 +15521,9 @@ function maybeShowBreakpointGateNotice(){
    need to wait out the transition first. */
 function syncLockInBanner(){
   const banner = document.getElementById("lockInBanner");
-  const show = travelPromptFor !== null && drawer.classList.contains("open") && !drawer.classList.contains("expanded");
+  // Retired 2026-11-02: the rules this banner showed moved to the Display
+  // Mat's own "?" popout (#matRulesOverlay), so it never shows now.
+  const show = false;
   banner.classList.toggle("show", show);
   if (!show) return;
   const bottomPx = parseFloat(getComputedStyle(drawer).bottom) || 0;
@@ -16547,6 +16584,9 @@ document.getElementById("lockInQuarkTutorial").innerHTML = `
   <div>Ingredient items count toward Combo Multiplier too!</div>
   <div class="liqt-icons">${["Water","Sand","Tree","Wheel"].map(n =>
     `<span class="liqt-ic" title="${esc(n)}">${ITEM_EMOJI[n] ? em(ITEM_EMOJI[n]) : esc(n)}</span>`).join("")}</div>`;
+document.getElementById("matRulesOverlay").addEventListener("click", ev => {
+  if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")) closeOverlay("matRulesOverlay");
+});
 // Classic Mode only (state.emptyElements is never touched outside it, see
 // finishLockIn()'s own comment) -- rendered next to the station title
 // (renderStation()'s own sheet-head) regardless of count so it's always
@@ -16815,8 +16855,10 @@ function renderMatTop(){
   // No in-tray Lock In button any more -- Home's own center button
   // becomes the "lockin" face whenever this view is showing (see
   // hubHomeFace()), so there's no separate control to render here.
+  const rulesBtnHTML = matDrawerView === "mat"
+    ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
   document.getElementById("drawerTop").innerHTML = scoreRowHTML +
-    `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}</div>`;
+    `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   // Sort/Filter only mean anything once the full scrollable item list is
   // actually showing (see #drawer.expanded) -- hidden the rest of the
   // time, same as the item list itself. Closing their trays here too:
@@ -17013,6 +17055,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
+  if (ev.target.closest("#matRulesBtn")){ openOverlay("matRulesOverlay"); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
     openComboInfo(comboChip.dataset.comboKind, comboChip.dataset.comboName);
