@@ -18632,8 +18632,8 @@ function checkBingoLines(){
    suit (see the request: "collect elements which match the suits of the
    items that were crafted"). itemSuitCosts() -- the same curated table
    the Display Mat's own suit-combo pips read (see MAT_CARDS) -- gives 0-3
-   suit tags per item; the majority suit among them wins ties broken by
-   draw order. An item with NO suit tags at all (most items, see that
+   suit tags per item; the majority suit among them wins, ties picked at random
+   among the tied suits. An item with NO suit tags at all (most items, see that
    table's own comment) falls back to any element actually obtainable in
    Classic (CLASSIC_ELEMENTS), never the fuller ELEMENT_SUIT key set,
    which also lists a couple of symbols (Zn) no current Classic station
@@ -18644,20 +18644,13 @@ function elementForBingoClear(name){
   if (pips.length){
     const counts = {};
     pips.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
-    suit = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+    const top = Math.max(...Object.values(counts));
+    const tied = Object.keys(counts).filter(k => counts[k] === top);
+    suit = tied[Math.floor(Math.random() * tied.length)];
   }
   const pool = (suit ? CLASSIC_ELEMENTS.filter(el => ELEMENT_SUIT[el] === suit) : null) || [];
   const finalPool = pool.length ? pool : CLASSIC_ELEMENTS;
   return finalPool[Math.floor(Math.random() * finalPool.length)];
-}
-// A fresh, non-capstone, non-duplicate replacement for a just-cleared
-// square -- same eligibility floor drawBingoCard() draws the whole board
-// from (BINGO_MIN_POINTS via bingoEligibleItems()), capstones excluded
-// (those only ever come from the center/extras drawBingoCard() itself
-// places at card creation, never re-rolled by a later refill).
-function drawBingoReplacementItem(exclude){
-  const pool = bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE" && !exclude.has(n));
-  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 }
 let bingoClearInProgress = false;
 const BINGO_CLEAR_BOUNCE_MS = 320;
@@ -18672,10 +18665,10 @@ const BINGO_PRECLEAR_PAUSE_MS = 500;
 /* Plays out one pending line clear at a time (see state.pendingBingoClears,
    queued by checkBingoLines()), called every time the Bingo card actually
    renders (see renderJobBoard()'s own tail call) -- a no-op unless
-   something's actually pending. The BINGO_CENTER_IDX square is skipped
-   even when it's part of the completed line -- it's the card's one
-   permanent anchor (see bingoCardHTML()'s own "Add Capstone" comment),
-   never cleared/refilled by this. Recurses through renderJobBoard()'s own
+   something's actually pending. Revised 2026-11-02: a completed line's
+   squares stay on the card as they are (no replacement items drawn), and
+   every square in it pays out one element of its own suit -- including
+   the center capstone when the line runs through it. Recurses through renderJobBoard()'s own
    tail call rather than looping internally: each line's cycle (bounce out
    -> mutate state -> repaint) fully lands before the next line's bounce-
    out starts, which is what actually makes multiple simultaneous
@@ -18691,7 +18684,7 @@ function processPendingBingoClears(){
   const jobSheetEl = document.getElementById("jobSheet");
   if (jobSheetEl) jobSheetEl.classList.add("bingo-clearing");
   const lineIdx = pending[0];
-  const line = bingoLines()[lineIdx].filter(i => i !== BINGO_CENTER_IDX);
+  const line = bingoLines()[lineIdx];
   const reduced = lowMotion();
   const cellFor = i => document.querySelector(`#jobSheetBody .bingo-cell[data-cell-idx="${i}"]`);
   const preclearPause = reduced ? 0 : BINGO_PRECLEAR_PAUSE_MS;
@@ -18700,32 +18693,29 @@ function processPendingBingoClears(){
       setTimeout(() => {
         const cell = cellFor(i);
         if (cell && !reduced){
+          // A celebratory pulse in place -- the square stays put.
           cell.animate([
-            { transform: "scale(1)", opacity: 1, offset: 0 },
-            { transform: "scale(1.12)", opacity: 1, offset: .35 },
-            { transform: "scale(.2)", opacity: 0, offset: 1 },
+            { transform: "scale(1)", offset: 0 },
+            { transform: "scale(1.12)", offset: .4 },
+            { transform: "scale(1)", offset: 1 },
           ], { duration: BINGO_CLEAR_BOUNCE_MS, easing: "cubic-bezier(.3,.8,.4,1)" });
         }
       }, k * BINGO_CLEAR_STAGGER_MS);
     });
     const totalDelay = reduced ? 0 : (line.length - 1) * BINGO_CLEAR_STAGGER_MS + BINGO_CLEAR_BOUNCE_MS + 40;
     setTimeout(() => {
-      const usedNames = new Set(state.bingoCard);
       const granted = [];
       line.forEach(i => {
         const name = state.bingoCard[i];
         const el = elementForBingoClear(name);
         state.elements[el] = (state.elements[el] || 0) + 1;
         granted.push({name, el});
-        const fresh = drawBingoReplacementItem(usedNames);
-        if (fresh){ usedNames.add(fresh); state.bingoCard[i] = fresh; }
       });
       state.pendingBingoClears = pending.slice(1);
       save();
       bingoClearInProgress = false;
       if (jobSheetEl) jobSheetEl.classList.remove("bingo-clearing");
       renderJobBoard();
-      line.forEach((i, k) => setTimeout(() => bingoCellFlipAppear(cellFor(i)), k * BINGO_REVEAL_STAGGER_MS));
       openBingoClearOverlay(granted);
     }, totalDelay);
   }, preclearPause);
