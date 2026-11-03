@@ -9083,7 +9083,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"calcium-creations",       name:"Calcium Creations",       items:["Bone","Egg","Limestone"] },
   { id:"closed-circuit",          name:"Closed Circuit",          items:["Battery","Wire","Light Bulb"] },
   { id:"daily-commute",           name:"Daily Commute",           items:["Car","Bicycle","Maglev Train"] },
-  { id:"deep-time",               name:"Deep Time",               items:["Diamond","Fossil","Coral Reef","Star"] },
+  { id:"deep-time",               name:"Deep Time",               items:["Diamond","Fossil","Star"] },
   { id:"early-explorers",         name:"Early Explorers",         items:["Canoe","Compass","Star"] },
   { id:"electromagnet",           name:"Electromagnet",           items:["Wire","Magnet","Battery"] },
   { id:"farmstead-feast",         name:"Farmstead Feast",         items:["Chicken","Egg","Apple Pie"] },
@@ -9141,18 +9141,15 @@ const MAT_COLLECTIONS_RAW = [
   // a station, suit or component (or, like Primordial Soup, the "sugar
   // combo", forms its own recipe web). None repeats or nests inside an
   // existing collection above.
-  { id:"primordial-soup",         name:"Primordial Soup",         items:["Sugar","DNA","Yeast"] },
+  { id:"primordial-soup",         name:"Micro Sugars",            items:["Sugar","DNA","Yeast"] },
   { id:"bake-sale",               name:"Bake Sale",               items:["Fruit Cake","Apple Pie","Banana Bread"] },
   { id:"robotics-lab",            name:"Robotics Lab",            items:["Robot","Computer","Car","Turbine Blade"] },
   { id:"woodshop",                name:"Woodshop",                items:["Tree","Canoe","Log Cabin","Wheel"] },
   { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Computer"] },
-  { id:"skyline",                 name:"Skyline",                 items:["Metropolis","Building","Skyscraper","Museum"] },
-  { id:"lighthouse-keeper",       name:"Lighthouse Keeper",       items:["Glass","Light Bulb","Lighthouse","Fiberglass"] },
+  { id:"skyline",                 name:"Skyline",                 items:["Building","Skyscraper","Museum"] },
   { id:"mission-control",         name:"Mission Control",         items:["Computer","Rocket","Satellite Dish"] },
   { id:"barn-raising",            name:"Barn Raising",            items:["Farm","Wheel","Log Cabin"] },
-  { id:"fishing-trip",            name:"Fishing Trip",            items:["Canoe","Salmon","Water"] },
-  { id:"smelter",                 name:"Smelter",                 items:["Furnace","Steel","Stainless Steel"] },
-  { id:"night-shift",             name:"Night Shift",             items:["Clock","Light Bulb","Plastic"] },
+  { id:"fishing-trip",            name:"Fishing Trip",            items:["Canoe","Salmon"] },
 ];
 const matCollectionBonus = col =>
   Math.round(col.items.reduce((n, i) => n + (MAT_CARD_BY_NAME[i] ? MAT_CARD_BY_NAME[i].points : 0), 0) * 0.3);
