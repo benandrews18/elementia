@@ -2274,7 +2274,9 @@ body[data-screen="market"] #trackedPill{display:none}
    badge -- a card either offers the manual pin toggle (.shop-pin) or
    already reads as "feeds the tracked item" (this badge), never both at
    once, see itemHTML(). */
+.todo-hl{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px}
 .item-pin-badge{
+  cursor:pointer;
   position:absolute; top:-14px; left:-14px; z-index:3; width:42px; height:42px;
   border-radius:50%; background:var(--card); border:2px solid var(--ok);
   display:flex; align-items:center; justify-content:center; font-size:21px; line-height:1;
@@ -3430,6 +3432,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    animation itself (see runBingoSequence()'s own comment) --
    nothing in here should be interruptible mid-beat. */
 #jobSheet.bingo-clearing{pointer-events:none}
+.bingo-q-reward{display:flex; align-items:center; justify-content:center; gap:10px; margin:14px 0 0; font-size:24px; font-weight:800}
 .bingo-el-pop{
   position:fixed; z-index:80; width:36px; height:36px; box-sizing:border-box; border-radius:9px; pointer-events:none;
   background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:15px;
@@ -5897,9 +5900,9 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 </div>
 <div class="overlay" id="pinTip" role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
   <div class="sheetbox pin-tip-box">
-    <h2 id="pinTipTitle">📌 Pin to track</h2>
-    <p>Tap 📌 on any item to add it to your To-Do List and track it.</p>
-    <p>Early on, track the smaller components -- like the ones in your Capstone's breakdown above.</p>
+    <h2 id="pinTipTitle">Pin Items to your To-Do List</h2>
+    <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
+    <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>
   </div>
 </div>
@@ -9144,8 +9147,8 @@ const MAT_COLLECTIONS_RAW = [
   // a station, suit or component (or, like Primordial Soup, the "sugar
   // combo", forms its own recipe web). None repeats or nests inside an
   // existing collection above.
-  { id:"primordial-soup",         name:"Primordial Soup",         items:["Sugar","Water","DNA","Yeast"] },
-  { id:"bake-sale",               name:"Bake Sale",               items:["Apple Pie","Banana Bread","Fruit Cake","Oven"] },
+  { id:"primordial-soup",         name:"Primordial Soup",         items:["Sugar","DNA","Yeast"] },
+  { id:"bake-sale",               name:"Bake Sale",               items:["Fruit Cake","Apple Pie","Banana Bread"] },
   { id:"robotics-lab",            name:"Robotics Lab",            items:["Robot","Computer","Car","Turbine Blade"] },
   { id:"woodshop",                name:"Woodshop",                items:["Tree","Canoe","Log Cabin","Wheel"] },
   { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Computer"] },
@@ -10951,7 +10954,7 @@ function itemHTML(entry, idx){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
     if (jobTree.has(entry.name)){
       const selEntry = ENTRIES.find(e => e.name === selectedJobItem);
-      if (selEntry) pinBadge = `<span class="item-pin-badge" title="Needed for ${esc(selectedJobItem)}">${em(selEntry.emoji)}</span>`;
+      if (selEntry) pinBadge = `<span class="item-pin-badge" role="button" tabindex="0" data-open-todo="${esc(entry.name)}" title="Needed for ${esc(selectedJobItem)} -- tap to see it on your To-Do List">${em(selEntry.emoji)}</span>`;
     }
   }
   // The badge above takes over the pin button's own top-left corner slot
@@ -13002,7 +13005,9 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   const matEligible = state.mode === "classic" && !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
   document.getElementById("cardPop").classList.toggle("mat-panel", cardPopMatPanel);
   document.getElementById("cpMatToggles").hidden = !(cardPopMatPanel && matEligible);
-  document.getElementById("cpMatBtn").hidden = !(!cardPopMatPanel && matEligible);
+  // Not on the "just crafted" popup (autoDismiss) -- Item Info and the pin
+  // are all that card offers (2026-11-03).
+  document.getElementById("cpMatBtn").hidden = !(!cardPopMatPanel && matEligible) || autoDismiss;
   if (cardPopMatPanel){
     if (matEligible) setMatToggleState(state.mat.includes(entry.name), null);
   } else if (matEligible){
@@ -14890,6 +14895,8 @@ document.getElementById("pinsTrayBody").addEventListener("click", ev => {
 // tokens would all be inert -- events there would never reach a listener
 // only ever attached to #screen.
 function handleScreenClick(ev){
+  const todoBadge = ev.target.closest("[data-open-todo]");
+  if (todoBadge){ ev.stopPropagation(); openTodoAt(todoBadge.dataset.openTodo); return; }
   const hintEl = ev.target.closest("[data-hint]");
   if (hintEl){
     ev.stopPropagation();
@@ -17869,8 +17876,8 @@ function openCapstoneChoice(){
     </div>`;
   }).join("");
   document.getElementById("capChoiceBody").innerHTML = `
-    <h2 id="capChoiceTitle">Choose Your Capstone</h2>
-    <p class="cap-choice-sub">The Capstone you pursue sits at the center of your BINGO card -- and you start at its station.</p>
+    <h2 id="capChoiceTitle">Choose a Capstone Project</h2>
+    <p class="cap-choice-sub">Completing Capstone Projects will guide your journey through Elementia!</p>
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>`;
   openOverlay("capChoice");
 }
@@ -17972,6 +17979,42 @@ document.getElementById("pinTip").addEventListener("click", ev => {
     save(); updateHub();
   }), lowMotion() ? 0 : 350);
 });
+/* The tracked-item badge on a shop card (2026-11-03): opens the To-Do
+   List with the tracked item's breakdown unfolded down to THIS item, which
+   gets a gold border. Tree paths follow jobNodeHTML()'s own scheme:
+   "ref/<root>/<child>/<grandchild>...". */
+function openTodoAt(name){
+  const root = selectedJobItem;
+  if (!root) return;
+  const itemReqs = n => {
+    const e = ENTRIES.find(x => x.name === n);
+    return e ? [...new Set(e.reqs.filter(r => r.kind === "item").map(r => r.name))] : [];
+  };
+  const find = (cur, trail) => {
+    if (cur === name) return trail;
+    if (trail.length > 8) return null;
+    for (const c of itemReqs(cur)){
+      if (trail.includes(c)) continue;
+      const hit = find(c, [...trail, c]);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const trail = name === root ? [] : find(root, []);
+  jobExpanded.add("refroot/" + root);
+  let path = "ref/" + root;
+  (trail || []).slice(0, -1).forEach(n => { path += "/" + n; jobExpanded.add(path); });
+  const targetPath = trail && trail.length ? "ref/" + root + "/" + trail.join("/") : null;
+  openJobBoard();
+  const rowSel = `#jobSheetBody .refrow[data-refname="${CSS.escape(root)}"]`;
+  const target = targetPath
+    ? document.querySelector(`${rowSel} .mn-head[data-toggle="${CSS.escape(targetPath)}"]`)?.closest(".mn-row")
+    : document.querySelector(rowSel);
+  document.querySelectorAll("#jobSheetBody .todo-hl").forEach(el => el.classList.remove("todo-hl"));
+  if (!target) return;
+  target.classList.add("todo-hl");
+  setTimeout(() => target.scrollIntoView({block: "center", behavior: lowMotion() ? "auto" : "smooth"}), 350);
+}
 function startBingoCapstonePicker(){
   bingoIntroActive = true;
   openJobSelectTray();
@@ -19104,24 +19147,27 @@ function runBingoSequence(){
   });
   if (squares.length) t += BINGO_SQUARE_BOUNCE_MS - BINGO_SQUARE_STAGGER_MS + 200;
 
-  // 3. Each completed line as a whole, in sequence -- each square pops
-  // out the element it pays.
-  const granted = [];
+  // 3. Each completed line as a whole, in sequence -- a "?" pops out of
+  // the line's middle square. Revised 2026-11-03: a line pays ONE "?"
+  // element (state.emptyElements) instead of an element per square --
+  // Marketplace crafting was snowballing into huge element hauls.
   lines.forEach(lineIdx => {
-    const lineGrants = bingoLines()[lineIdx].map(i => ({i, name: state.bingoCard[i], el: elementForBingoClear(state.bingoCard[i])}));
-    granted.push(...lineGrants);
-    setTimeout(() => lineGrants.forEach(g => { bingoBounceCell(cellFor(g.i), 1.22); bingoElementPop(cellFor(g.i), g.el); }), t);
+    const cells = bingoLines()[lineIdx];
+    setTimeout(() => {
+      cells.forEach(i => bingoBounceCell(cellFor(i), 1.22));
+      bingoElementPop(cellFor(cells[Math.floor(cells.length / 2)]), "?");
+    }, t);
     t += BINGO_SQUARE_BOUNCE_MS + BINGO_LINE_GAP_MS;
   });
 
   setTimeout(() => {
     if (!lines.length){ finishBingoSequence(); return; }
-    // 4. Every line's elements at once -- one per square, center included.
-    granted.forEach(g => { state.elements[g.el] = (state.elements[g.el] || 0) + 1; });
+    // 4. Every line's "?" at once.
+    state.emptyElements = (state.emptyElements || 0) + lines.length;
     state.pendingBingoClears = (state.pendingBingoClears || []).filter(i => !lines.includes(i));
     save();
     render();
-    openBingoClearOverlay(granted, lines.length);
+    openBingoClearOverlay(lines.length);
   }, t);
 }
 // 5. Runs once the reward popup is dismissed (or straight after the
@@ -19139,19 +19185,12 @@ function finishBingoSequence(){
 /* The one reward popup for however many lines just completed -- the
    exact .gcol/.gchip chip markup a station's own "Elements Found Here"
    row uses (see renderStation()), so an element reads the same here. */
-function openBingoClearOverlay(granted, lineCount){
-  const chips = granted.map(g => `<div class="gcol">
-      <div class="gchip" style="--suit:${ELEMENT_COLOR[g.el] || "#8a94a6"}">
-        <span class="gnum">${ATOMIC_NUMBER[g.el] || ""}</span>
-        <span class="gsym">${esc(g.el)}</span>
-      </div>
-      <span class="gname">${esc(ELEMENT_NAMES[g.el] || g.el)}</span>
-    </div>`).join("");
+function openBingoClearOverlay(lineCount){
+  const qs = Array.from({length: lineCount}, () => emptyElSquareHTML(48)).join("");
   document.getElementById("bingoClearOverlayBody").innerHTML = `
     <h2 id="bingoClearTitle">🎉 BINGO!</h2>
     <p>${lineCount === 1 ? "Line complete" : `${lineCount} lines complete`} · +${lineCount * BINGO_LINE_BONUS} pts</p>
-    <p>+${granted.length} element${granted.length === 1 ? "" : "s"} collected</p>
-    <div class="gather" style="margin:14px 0 0; padding:0">${chips}</div>
+    <div class="bingo-q-reward"><span>+${lineCount}</span>${qs}</div>
     <div class="btnrow"><button type="button" class="bigbtn" id="bingoClearOkBtn">Nice!</button></div>`;
   openOverlay("bingoClearOverlay");
 }
