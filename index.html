@@ -3380,11 +3380,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    level the way every other .overlay (which never appears alongside
    #jobSheet at all) safely can. */
 #capstoneOverlay{z-index:70}
-#capChoice, #capConfirm{z-index:72}
-.cap-choice-box, .cap-confirm-box{max-width:440px; text-align:center}
+#capChoice, #capConfirm, #emptyElPick{z-index:72}
+.cap-choice-box{max-width:440px; text-align:center}
+/* As wide as the station preview card on the map screen: no overlay side
+   padding, the card flush to the box's edges. */
+#capConfirm{padding-left:0; padding-right:0}
+.cap-confirm-box{max-width:560px; width:100%; padding:0 0 18px; overflow:hidden; text-align:center; border-left:none; border-right:none; border-radius:0 0 20px 20px}
 .cap-choice-box h2, .cap-confirm-box h2{margin:0 0 4px}
 .cap-choice-sub{margin:0 0 14px; color:var(--ink2); font-size:14px}
-.cap-confirm-box .map-card{margin:0 0 14px; text-align:left}
+.cap-confirm-box .map-card{margin:0 0 14px; text-align:left; border-top-width:12px}
 .cap-confirm-box .map-card .pchip{pointer-events:none}
 .cap-confirm-box .map-card .capline{display:none}
 .cc-cap{display:flex; flex-direction:column; align-items:center; gap:2px; margin:4px 0 10px}
@@ -3393,13 +3397,29 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .cc-cap-name{font-size:20px; font-weight:800}
 .cc-cap-pts{font-size:13px; color:var(--gold); font-weight:700}
 .cc-comp-label{font-size:12px; font-weight:800; letter-spacing:.06em; color:var(--mute); margin:4px 0 6px}
-.cc-comps{display:flex; flex-wrap:wrap; justify-content:center; gap:10px 12px}
-.cc-comp{display:flex; flex-direction:column; align-items:center; gap:3px; width:64px}
-.cc-comp-ic{width:46px; height:46px; border-radius:12px; background:var(--sunken); border:2px solid var(--line);
-  display:flex; align-items:center; justify-content:center; font-size:26px}
+/* Always ONE row, however many components: each column shrinks to fit. */
+.cc-comps{display:flex; flex-wrap:nowrap; justify-content:center; gap:6px; padding:0 12px}
+.cc-comp{display:flex; flex-direction:column; align-items:center; gap:3px; flex:0 1 60px; min-width:0}
+.cc-comp-ic{width:100%; max-width:46px; aspect-ratio:1; box-sizing:border-box; border-radius:12px; background:var(--sunken); border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:24px}
 .cc-comp-ic :is(img,svg){width:32px; height:32px}
 .cc-comp-ic.el{background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:18px}
-.cc-comp-name{font-size:11px; font-weight:700; color:var(--ink2); line-height:1.15}
+.cc-comp-name{font-size:10px; font-weight:700; color:var(--ink2); line-height:1.15; overflow-wrap:anywhere}
+.cap-confirm-box .btnrow{padding:0 16px}
+.cc-go{display:flex; flex-direction:column; align-items:center; gap:2px; line-height:1.15}
+.cc-go small{font-size:12px; font-weight:700; opacity:.85}
+/* "Pin to track" tip over the opening To-Do List -- sits at the bottom
+   with a light scrim so the list above it stays readable. */
+#pinTip{z-index:72; align-items:flex-end; background:rgba(10,14,20,.3)}
+.pin-tip-box{max-width:420px; text-align:center}
+.pin-tip-box h2{margin:0 0 6px}
+.pin-tip-box p{margin:0 0 6px; color:var(--ink2); font-size:14px; line-height:1.4}
+/* The "?" element picker (#emptyElPick) -- the station's own element pool
+   row, unchanged, inside a popout. */
+.empty-el-pick-box{max-width:560px; text-align:center}
+.empty-el-pick-box h2{margin:0 0 4px; display:flex; align-items:center; justify-content:center; gap:10px}
+.empty-el-pick-box .gather{margin:14px 0 4px}
+.lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
 .cc-fly{position:fixed; z-index:600; pointer-events:none; margin:0; box-sizing:border-box}
 #bingoCraftOverlay{z-index:70}
 #bingoClearOverlay{z-index:70}
@@ -5868,6 +5888,17 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 </div>
 <div class="overlay" id="capConfirm" role="dialog" aria-modal="true" aria-labelledby="capConfirmTitle">
   <div class="sheetbox cap-confirm-box" id="capConfirmBody"></div>
+</div>
+<div class="overlay" id="pinTip" role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
+  <div class="sheetbox pin-tip-box">
+    <h2 id="pinTipTitle">📌 Pin to track</h2>
+    <p>Tap 📌 on any item to add it to your To-Do List and track it.</p>
+    <p>Early on, track the smaller components -- like the ones in your Capstone's breakdown above.</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>
+  </div>
+</div>
+<div class="overlay" id="emptyElPick" role="dialog" aria-modal="true" aria-labelledby="emptyElPickTitle">
+  <div class="sheetbox empty-el-pick-box" id="emptyElPickBody"></div>
 </div>
 <div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
   <div class="sheetbox" id="capstoneOverlayBody"></div>
@@ -9101,24 +9132,24 @@ const MAT_COLLECTIONS_RAW = [
   { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Engine","Light Bulb","Computer","Turbine Blade"] },
   { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Soil","Farm","Chicken","Apple","Grain"] },
   { id:"world-tour",              name:"World Tour",              items:["Cloud","Tree","Diamond","Grain","Light Bulb","Dough","Building","Telescope"] },
-  // Whole-board collections (2026-11-02): full 7-8 slot mats whose cards
-  // already lock together through shared stations, suits and components --
-  // modelled on the player's own "great early sugar board" (Primordial
-  // Soup), plus four more of their exported boards and the strongest
-  // themed boards a hill-climb over matScore() found at each price level.
-  { id:"primordial-soup",         name:"Primordial Soup",         items:["Tree","Soil","Water","Sugar","DNA","Yeast","Sand","Limestone"] },
-  { id:"groundbreaking",          name:"Groundbreaking",          items:["Clay","Concrete","Furnace","Glass","Limestone","Sand","Soil","Steel"] },
-  { id:"lumber-camp",             name:"Lumber Camp",             items:["Log Cabin","Canoe","Tree","Soil","Clay","Sand","Water","Furnace"] },
-  { id:"homesteaders",            name:"Homesteaders",            items:["Grain","Apple","Farm","Soil","Wheel","Log Cabin","Canoe","Tree"] },
-  { id:"navigators-workshop",     name:"Navigator's Workshop",    items:["Wheel","Building","Canoe","Compass","Glass","Tools","Magnet","Water"] },
-  { id:"refinery",                name:"Refinery",                items:["Aluminum Alloy","Cloud","Furnace","Natural Gas","Plastic","Rubber","Stainless Steel","Steel"] },
-  { id:"tinkerers-bench",         name:"Tinkerer's Bench",        items:["Clock","Compass","Engine","Glass","Light Bulb","Microchip","Plastic","Wire"] },
-  { id:"hunter-gatherers",        name:"Hunter-Gatherers",        items:["Apple","Banana","Canoe","Deer","Fossil","Log Cabin","Orca","Salmon"] },
-  { id:"signal-station",          name:"Signal Station",          items:["Computer","Fiberglass","Glass","Light Bulb","Lighthouse","Plastic","Satellite Dish","Telescope"] },
-  { id:"assembly-line",           name:"Assembly Line",           items:["Robot","Car","Computer","Fiberglass","Rocket","Turbine Blade","Wheel"] },
-  { id:"dessert-delivery",        name:"Dessert Delivery",        items:["Fruit Cake","Apple Pie","Banana Bread","Car","Helicopter","Oven","Speedboat"] },
-  { id:"city-skyline",            name:"City Skyline",            items:["Metropolis","Building","Fossil","Helicopter","Museum","Skyscraper","Telescope"] },
-  { id:"space-bake-off",          name:"Space Bake-Off",          items:["Fruit Cake","Telescope","Satellite Dish","Rocket","Apple Pie","Banana Bread","Fish Cakes"] },
+  // Discoverable sub-groups (2026-11-03): tight 3-5 item clusters found
+  // INSIDE strong full mats -- the player's own exported boards plus the
+  // best boards a matScore() hill-climb found -- where every member shares
+  // a station, suit or component (or, like Primordial Soup, the "sugar
+  // combo", forms its own recipe web). None repeats or nests inside an
+  // existing collection above.
+  { id:"primordial-soup",         name:"Primordial Soup",         items:["Sugar","Water","DNA","Yeast"] },
+  { id:"bake-sale",               name:"Bake Sale",               items:["Apple Pie","Banana Bread","Fruit Cake","Oven"] },
+  { id:"robotics-lab",            name:"Robotics Lab",            items:["Robot","Computer","Car","Turbine Blade"] },
+  { id:"woodshop",                name:"Woodshop",                items:["Tree","Canoe","Log Cabin","Wheel"] },
+  { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Computer"] },
+  { id:"skyline",                 name:"Skyline",                 items:["Metropolis","Building","Skyscraper","Museum"] },
+  { id:"lighthouse-keeper",       name:"Lighthouse Keeper",       items:["Glass","Light Bulb","Lighthouse","Fiberglass"] },
+  { id:"mission-control",         name:"Mission Control",         items:["Computer","Rocket","Satellite Dish"] },
+  { id:"barn-raising",            name:"Barn Raising",            items:["Farm","Wheel","Log Cabin"] },
+  { id:"fishing-trip",            name:"Fishing Trip",            items:["Canoe","Salmon","Water"] },
+  { id:"smelter",                 name:"Smelter",                 items:["Furnace","Steel","Stainless Steel"] },
+  { id:"night-shift",             name:"Night Shift",             items:["Clock","Light Bulb","Plastic"] },
 ];
 const matCollectionBonus = col =>
   Math.round(col.items.reduce((n, i) => n + (MAT_CARD_BY_NAME[i] ? MAT_CARD_BY_NAME[i].points : 0), 0) * 0.3);
@@ -14864,7 +14895,7 @@ function handleScreenClick(ev){
   if (ev.target.closest("#showEndBtn")){ showEndGame(); return; }
 
   if (ev.target.closest("#emptyElBadgeBtn")){
-    emptyElCashInMode ? exitEmptyElCashIn() : enterEmptyElCashIn();
+    openEmptyElPicker();
     return;
   }
 
@@ -16610,7 +16641,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
     ? `🎲 ${TAKE + n} dice at your next station` : "";
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
-  extra.textContent = gotEmptyElement ? "Plus: +1 Empty Element -- spend it at any station" : "";
+  extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -16716,10 +16747,47 @@ function renderConvertEmptyEl(){
 document.getElementById("convertEmptyEl").addEventListener("click", ev => {
   if (!ev.target.closest("#emptyElBadgeBtn")) return;
   if (screen !== "station" || !((state.emptyElements || 0) > 0)) return;
-  // Close the tray first so the station's own "Elements Found Here" row is
-  // what's left in the spotlight (see enterEmptyElCashIn()).
   closeOverlay("convert");
-  enterEmptyElCashIn();
+  openEmptyElPicker();
+});
+/* Revised 2026-11-03: spending a "?" opens its own popout holding the
+   current station's element pool -- the exact .gather/.gcol/.gchip row the
+   station shop shows up top -- instead of spotlighting that row in place.
+   The picked element flies from the popout into the inventory. */
+function openEmptyElPicker(){
+  const s = current && STATION_BY_NAME[current];
+  if (!s || !((state.emptyElements || 0) > 0)) return;
+  const pool = sortedDice(s);
+  const row = pool.map((sym, i) =>
+    `<div class="gcol"><button type="button" class="gchip" data-pick-elem="${esc(sym)}" title="${esc(ELEMENT_NAMES[sym] || sym)}" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span>${dieFace(i + 1)}</div>`).join("");
+  document.getElementById("emptyElPickBody").innerHTML = `
+    <h2 id="emptyElPickTitle">${emptyElSquareHTML(34)} Pick an element</h2>
+    <div class="gather">${row}</div>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec" id="emptyElPickCancel">Cancel</button></div>`;
+  openOverlay("emptyElPick");
+}
+document.getElementById("emptyElPick").addEventListener("click", ev => {
+  if (ev.target === ev.currentTarget || ev.target.closest("#emptyElPickCancel")){ closeOverlay("emptyElPick"); return; }
+  const chip = ev.target.closest("[data-pick-elem]");
+  if (!chip || !((state.emptyElements || 0) > 0)) return;
+  const sym = chip.dataset.pickElem;
+  const fly = lowMotion() ? null : flightClone(chip);
+  closeOverlay("emptyElPick");
+  state.emptyElements -= 1;
+  state.elements[sym] = (state.elements[sym] || 0) + 1;
+  save();
+  if (!fly){ render(); return; }
+  const {c, r} = fly;
+  c.style.boxShadow = "0 6px 16px rgba(0,0,0,.35)";
+  const hub = document.getElementById("hubInv").getBoundingClientRect();
+  const dx = hub.left + hub.width / 2 - (r.left + r.width / 2), dy = hub.top + hub.height / 2 - (r.top + r.height / 2);
+  c.animate([
+    { transform: "translate(0,0) scale(1)", opacity: 1, offset: 0 },
+    { transform: `translate(${dx * .15}px, ${dy * .15 - 40}px) scale(1.1)`, opacity: 1, offset: .25 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.45)`, opacity: 1, offset: .72 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.12)`, opacity: 0, offset: 1 },
+  ], { duration: 640, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" }).onfinish = () => c.remove();
+  setTimeout(() => { punchInventory(); render(); }, 460);
 });
 // The row of real elements right below the badge (see renderStation()'s
 // own .gather) shrinks/grows with how many of them there are (see .gcol's
@@ -17811,13 +17879,14 @@ function openCapstoneConfirm(name){
     <div class="cc-cap">
       <span class="cc-cap-em" id="ccCapEm">${em(entry.emoji)}</span>
       <h2 class="cc-cap-name" id="capConfirmTitle">${esc(name)}</h2>
-      <span class="cc-cap-pts">⭐ ${entry.points} pts · start at ${esc(stationName)}</span>
+      <span class="cc-cap-pts">⭐ ${entry.points} pts</span>
     </div>
     <div class="cc-comp-label">COMPONENTS</div>
     <div class="cc-comps">${comps}</div>
     <div class="btnrow" style="justify-content:center; margin-top:16px">
       <button type="button" class="bigbtn sec" id="capConfirmBack">Back</button>
-      <button type="button" class="bigbtn" id="capConfirmGo" data-cap-name="${esc(name)}">Choose ${esc(name)}</button>
+      <button type="button" class="bigbtn cc-go" id="capConfirmGo" data-cap-name="${esc(name)}">
+        <span>Start at ${esc(stationName)}</span><small>and track ${esc(name)}</small></button>
     </div>`;
   openOverlay("capConfirm");
 }
@@ -17831,39 +17900,6 @@ document.getElementById("capConfirm").addEventListener("click", ev => {
   const go = ev.target.closest("#capConfirmGo");
   if (go) confirmCapstoneChoice(go.dataset.capName);
 });
-// A fixed-position copy of el, parked exactly over it -- survives el's
-// overlay closing underneath it.
-function capFlyClone(el){
-  const r = el.getBoundingClientRect();
-  const c = el.cloneNode(true);
-  c.removeAttribute("id");
-  c.classList.add("cc-fly");
-  c.style.left = r.left + "px"; c.style.top = r.top + "px";
-  c.style.width = r.width + "px"; c.style.height = r.height + "px";
-  document.body.appendChild(c);
-  return {c, r};
-}
-function capFlyTo(clone, target, delay){
-  return new Promise(done => {
-    if (!target){ clone.c.remove(); done(); return; }
-    const t = target.getBoundingClientRect(), r = clone.r;
-    const dx = (t.left + t.width / 2) - (r.left + r.width / 2), dy = (t.top + t.height / 2) - (r.top + r.height / 2);
-    const sc = Math.max(.3, Math.min(1.4, t.height / Math.max(1, r.height)));
-    target.style.visibility = "hidden";
-    const anim = clone.c.animate([
-      { transform: "translate(0,0) scale(1)", offset: 0 },
-      { transform: `translate(${dx * .2}px, ${dy * .2 - 30}px) scale(1.15)`, offset: .3 },
-      { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, offset: 1 },
-    ], { duration: 700, delay, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" });
-    anim.onfinish = () => {
-      clone.c.remove();
-      target.style.visibility = "";
-      target.animate([{ transform: "scale(1)" }, { transform: "scale(1.2)" }, { transform: "scale(1)" }],
-        { duration: 320, easing: "cubic-bezier(.3,1.4,.4,1)" });
-      done();
-    };
-  });
-}
 function confirmCapstoneChoice(name){
   if (capstoneIntroInProgress) return;
   capstoneIntroInProgress = true;
@@ -17882,7 +17918,7 @@ function confirmCapstoneChoice(name){
   const hub = document.getElementById("hubInv").getBoundingClientRect();
   const FLY_MS = 560, STAGGER_MS = 80;
   chips.forEach((chip, i) => {
-    const {c, r} = capFlyClone(chip);
+    const {c, r} = flightClone(chip);
     chip.style.opacity = ".25";
     const dx = hub.left + hub.width / 2 - (r.left + r.width / 2), dy = hub.top + hub.height / 2 - (r.top + r.height / 2);
     c.animate([
@@ -17895,43 +17931,41 @@ function confirmCapstoneChoice(name){
   });
   const beat2At = chips.length ? (chips.length - 1) * STAGGER_MS + FLY_MS + 150 : 0;
 
-  // Beat 2 -- To-Do List opens; the capstone and its components fly in.
+  // Beat 2 -- the To-Do List opens with the capstone on it (breakdown
+  // expanded), and a tip about pinning pops up over it.
   setTimeout(() => {
     dice.forEach(d => { state.elements[d] = count(d) + 1; });
     save();
-    const capClone = reduced ? null : capFlyClone(document.getElementById("ccCapEm"));
-    const compClones = reduced ? [] : [...box.querySelectorAll("[data-cc-comp]")].map(capFlyClone);
     closeOverlay("capConfirm");
     closeOverlay("capChoice");
     openJobBoard();
-    const flyAt = reduced ? 0 : 420; // the tray's own slide-in
     setTimeout(() => {
-      const row = document.querySelector(`#jobSheetBody .refrow[data-refname="${CSS.escape(name)}"]`);
-      const tree = row && row.querySelector(".ref-tree .mission-tree");
-      const nodes = tree ? [...tree.children] : [];
-      const targetFor = n => n && (n.querySelector(":scope > .mn-row .mn-emoji") || n.querySelector(".mn-elsym"));
-      const flights = [];
-      if (capClone) flights.push(capFlyTo(capClone, row && row.querySelector(".refem"), 0));
-      compClones.forEach((cl, i) => flights.push(capFlyTo(cl, targetFor(nodes[i]), 450 + i * 110)));
-      Promise.all(flights).then(() => {
-        // Beat 3 -- hold on the list, then into the station's shop.
-        setTimeout(() => {
-          capstoneIntroInProgress = false;
-          closeJobBoard();
-          setTimeout(() => fadeThroughBlack(() => {
-            goStation(stationName);
-            const turn = state.visitLog && state.visitLog[state.visitLog.length - 1];
-            if (turn){
-              if (!turn.elements) turn.elements = {};
-              dice.forEach(d => { turn.elements[d] = (turn.elements[d] || 0) + 1; });
-            }
-            save(); updateHub();
-          }), reduced ? 0 : 350);
-        }, reduced ? 600 : 1300);
-      });
-    }, flyAt);
+      capStartPending = {stationName, dice};
+      openOverlay("pinTip");
+    }, reduced ? 0 : 450);
   }, beat2At);
 }
+// Beat 3 -- the tip is dismissed: the list closes and the run starts in
+// the chosen station's shop.
+let capStartPending = null;
+document.getElementById("pinTip").addEventListener("click", ev => {
+  if (!ev.target.closest("#pinTipOk")) return;
+  closeOverlay("pinTip");
+  const pending = capStartPending;
+  capStartPending = null;
+  capstoneIntroInProgress = false;
+  closeJobBoard();
+  if (!pending) return;
+  setTimeout(() => fadeThroughBlack(() => {
+    goStation(pending.stationName);
+    const turn = state.visitLog && state.visitLog[state.visitLog.length - 1];
+    if (turn){
+      if (!turn.elements) turn.elements = {};
+      pending.dice.forEach(d => { turn.elements[d] = (turn.elements[d] || 0) + 1; });
+    }
+    save(); updateHub();
+  }), lowMotion() ? 0 : 350);
+});
 function startBingoCapstonePicker(){
   bingoIntroActive = true;
   openJobSelectTray();
