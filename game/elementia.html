@@ -3383,12 +3383,38 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    level the way every other .overlay (which never appears alongside
    #jobSheet at all) safely can. */
 #capstoneOverlay{z-index:70}
+#capChoice, #capConfirm{z-index:72}
+.cap-choice-box, .cap-confirm-box{max-width:440px; text-align:center}
+.cap-choice-box h2, .cap-confirm-box h2{margin:0 0 4px}
+.cap-choice-sub{margin:0 0 14px; color:var(--ink2); font-size:14px}
+.cap-confirm-box .map-card{margin:0 0 14px; text-align:left}
+.cap-confirm-box .map-card .pchip{pointer-events:none}
+.cap-confirm-box .map-card .capline{display:none}
+.cc-cap{display:flex; flex-direction:column; align-items:center; gap:2px; margin:4px 0 10px}
+.cc-cap-em{font-size:56px; line-height:1}
+.cc-cap-em :is(img,svg){width:64px; height:64px}
+.cc-cap-name{font-size:20px; font-weight:800}
+.cc-cap-pts{font-size:13px; color:var(--gold); font-weight:700}
+.cc-comp-label{font-size:12px; font-weight:800; letter-spacing:.06em; color:var(--mute); margin:4px 0 6px}
+.cc-comps{display:flex; flex-wrap:wrap; justify-content:center; gap:10px 12px}
+.cc-comp{display:flex; flex-direction:column; align-items:center; gap:3px; width:64px}
+.cc-comp-ic{width:46px; height:46px; border-radius:12px; background:var(--sunken); border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:26px}
+.cc-comp-ic :is(img,svg){width:32px; height:32px}
+.cc-comp-ic.el{background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:18px}
+.cc-comp-name{font-size:11px; font-weight:700; color:var(--ink2); line-height:1.15}
+.cc-fly{position:fixed; z-index:600; pointer-events:none; margin:0; box-sizing:border-box}
 #bingoCraftOverlay{z-index:70}
 #bingoClearOverlay{z-index:70}
 /* Locks the tray against taps for the pre-animation pause plus the
    animation itself (see runBingoSequence()'s own comment) --
    nothing in here should be interruptible mid-beat. */
 #jobSheet.bingo-clearing{pointer-events:none}
+.bingo-el-pop{
+  position:fixed; z-index:80; width:36px; height:36px; box-sizing:border-box; border-radius:9px; pointer-events:none;
+  background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:15px;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 6px 14px rgba(0,0,0,.35);
+}
 /* confirm sits above other overlays -- it's usually raised FROM one
    (e.g. the reset button inside Settings), and it precedes them in the
    DOM, so without this the parent overlay would paint over it. Still
@@ -5837,6 +5863,18 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
      than #jobSheet's own 69 (see its own CSS) is what actually puts it
      visually above the tray rather than the two competing at the same
      level. -->
+<!-- Classic's opening choice (2026-11-02): straight after the rules
+     slides, the player picks the Capstone they're pursuing (#capChoice),
+     then confirms it (#capConfirm: that station's preview card, the
+     capstone, its components). Confirming sets the BINGO center, hands
+     over that station's elements and starts the run there -- see
+     openCapstoneChoice()/confirmCapstoneChoice(). -->
+<div class="overlay" id="capChoice" role="dialog" aria-modal="true" aria-labelledby="capChoiceTitle">
+  <div class="sheetbox cap-choice-box" id="capChoiceBody"></div>
+</div>
+<div class="overlay" id="capConfirm" role="dialog" aria-modal="true" aria-labelledby="capConfirmTitle">
+  <div class="sheetbox cap-confirm-box" id="capConfirmBody"></div>
+</div>
 <div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
   <div class="sheetbox" id="capstoneOverlayBody"></div>
 </div>
@@ -8052,7 +8090,7 @@ function playClassicIntro(){
   setTimeout(() => {
     document.getElementById("introLogo").classList.remove("show");
     classicIntroHideCapstones = false;
-    openClassicTutorial(startBingoCapstonePicker);
+    openClassicTutorial(openCapstoneChoice);
   }, CLASSIC_INTRO_LOGO_MS);
 }
 /* Classic's quick how-to-play -- see #classicTut's own HTML comment. Icons
@@ -8898,9 +8936,12 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   // is appended here, purely for combo eligibility -- it never gains a
   // real shop/CORE_SET entry, so it's not reachable through the ENTRIES
   // spread above and stays permanently un-purchasable there.
-  const bonusStation = CAPSTONE_BONUS_STATION[name];
-  const stations = [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station), bonusStation]
-    .filter((s, i, arr) => s && STATION_BY_NAME[s] && arr.indexOf(s) === i);
+  // Revised 2026-11-02: a capstone's second icon is its OWN station again
+  // (two of the same, counting twice toward that station's combo), not
+  // CAPSTONE_BONUS_STATION's neighbour -- that table is no longer read.
+  const stations = ITEM_TIER[name] === "CAPSTONE" ? [station, station]
+    : [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]
+      .filter((s, i, arr) => s && STATION_BY_NAME[s] && arr.indexOf(s) === i);
   return {
     name,
     points: ITEM_POINTS[name],
@@ -9066,6 +9107,24 @@ const MAT_COLLECTIONS_RAW = [
   { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Engine","Light Bulb","Computer","Turbine Blade"] },
   { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Soil","Farm","Chicken","Apple","Grain"] },
   { id:"world-tour",              name:"World Tour",              items:["Cloud","Tree","Diamond","Grain","Light Bulb","Dough","Building","Telescope"] },
+  // Whole-board collections (2026-11-02): full 7-8 slot mats whose cards
+  // already lock together through shared stations, suits and components --
+  // modelled on the player's own "great early sugar board" (Primordial
+  // Soup), plus four more of their exported boards and the strongest
+  // themed boards a hill-climb over matScore() found at each price level.
+  { id:"primordial-soup",         name:"Primordial Soup",         items:["Tree","Soil","Water","Sugar","DNA","Yeast","Sand","Limestone"] },
+  { id:"groundbreaking",          name:"Groundbreaking",          items:["Clay","Concrete","Furnace","Glass","Limestone","Sand","Soil","Steel"] },
+  { id:"lumber-camp",             name:"Lumber Camp",             items:["Log Cabin","Canoe","Tree","Soil","Clay","Sand","Water","Furnace"] },
+  { id:"homesteaders",            name:"Homesteaders",            items:["Grain","Apple","Farm","Soil","Wheel","Log Cabin","Canoe","Tree"] },
+  { id:"navigators-workshop",     name:"Navigator's Workshop",    items:["Wheel","Building","Canoe","Compass","Glass","Tools","Magnet","Water"] },
+  { id:"refinery",                name:"Refinery",                items:["Aluminum Alloy","Cloud","Furnace","Natural Gas","Plastic","Rubber","Stainless Steel","Steel"] },
+  { id:"tinkerers-bench",         name:"Tinkerer's Bench",        items:["Clock","Compass","Engine","Glass","Light Bulb","Microchip","Plastic","Wire"] },
+  { id:"hunter-gatherers",        name:"Hunter-Gatherers",        items:["Apple","Banana","Canoe","Deer","Fossil","Log Cabin","Orca","Salmon"] },
+  { id:"signal-station",          name:"Signal Station",          items:["Computer","Fiberglass","Glass","Light Bulb","Lighthouse","Plastic","Satellite Dish","Telescope"] },
+  { id:"assembly-line",           name:"Assembly Line",           items:["Robot","Car","Computer","Fiberglass","Rocket","Turbine Blade","Wheel"] },
+  { id:"dessert-delivery",        name:"Dessert Delivery",        items:["Fruit Cake","Apple Pie","Banana Bread","Car","Helicopter","Oven","Speedboat"] },
+  { id:"city-skyline",            name:"City Skyline",            items:["Metropolis","Building","Fossil","Helicopter","Museum","Skyscraper","Telescope"] },
+  { id:"space-bake-off",          name:"Space Bake-Off",          items:["Fruit Cake","Telescope","Satellite Dish","Rocket","Apple Pie","Banana Bread","Fish Cakes"] },
 ];
 const matCollectionBonus = col =>
   Math.round(col.items.reduce((n, i) => n + (MAT_CARD_BY_NAME[i] ? MAT_CARD_BY_NAME[i].points : 0), 0) * 0.3);
@@ -17669,7 +17728,7 @@ function closeJobBoard(){
   // Same block during a line-clear's own bounce-out/refill (see
   // runBingoSequence()) -- a scrim tap or Escape mid-clear would
   // strand the underlying state.bingoCard mutation half-applied.
-  if (bingoRevealInProgress || bingoClearInProgress) return;
+  if (bingoRevealInProgress || bingoClearInProgress || capstoneIntroInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
@@ -17712,6 +17771,173 @@ let bingoRevealInProgress = false;
 // always has; choosing at any other point leaves the tray open, since the
 // player deliberately came back to it (see chooseBingoCapstone()).
 let bingoIntroActive = false;
+/* =====================================================================
+   Classic's opening choice (2026-11-02). Rules slides -> pick a Capstone
+   -> confirm it -> that capstone becomes the BINGO center, its station
+   becomes the starting station (its elements handed over, no map pick),
+   the To-Do List opens with the capstone flying onto its row and its
+   components into the row's breakdown, then the run starts in that
+   station's shop.
+   ===================================================================== */
+let capstoneIntroInProgress = false;
+function capstoneStationOf(name){
+  return (DATA.stations.find(st => st.capstone[1] === name) || {}).name || CORE_ITEM_STATION[name];
+}
+function capstoneComponents(entry){
+  const seen = new Set();
+  return sortIngredientTokens(entry.reqs.filter(r => {
+    const k = r.kind + ":" + r.name;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  }));
+}
+function openCapstoneChoice(){
+  const cells = bingoCapstoneChoices().map(name => {
+    const station = STATION_BY_NAME[capstoneStationOf(name)];
+    return `<div class="bingo-cell" data-cap-choose="${esc(name)}" title="${esc(name)} -- ${esc(station.name)}">
+      <span class="bc-station" title="${esc(station.name)}">${em(station.emoji)}</span>
+      <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
+      <span class="bc-name">${esc(name)}</span>
+    </div>`;
+  }).join("");
+  document.getElementById("capChoiceBody").innerHTML = `
+    <h2 id="capChoiceTitle">Choose Your Capstone</h2>
+    <p class="cap-choice-sub">The Capstone you pursue sits at the center of your BINGO card -- and you start at its station.</p>
+    <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>`;
+  openOverlay("capChoice");
+}
+function openCapstoneConfirm(name){
+  const entry = ENTRIES.find(e => e.name === name);
+  const stationName = capstoneStationOf(name);
+  const comps = capstoneComponents(entry).map((r, i) => r.kind === "element"
+    ? `<div class="cc-comp"><span class="cc-comp-ic el" data-cc-comp="${i}" style="--suit:${ELEMENT_COLOR[r.name] || "#8a94a6"}">${esc(r.name)}</span><span class="cc-comp-name">${esc(ELEMENT_NAMES[r.name] || r.name)}</span></div>`
+    : `<div class="cc-comp"><span class="cc-comp-ic" data-cc-comp="${i}">${em(ITEM_EMOJI[r.name])}</span><span class="cc-comp-name">${esc(r.name)}</span></div>`).join("");
+  document.getElementById("capConfirmBody").innerHTML = `
+    ${mapCardHTML(stationName)}
+    <div class="cc-cap">
+      <span class="cc-cap-em" id="ccCapEm">${em(entry.emoji)}</span>
+      <h2 class="cc-cap-name" id="capConfirmTitle">${esc(name)}</h2>
+      <span class="cc-cap-pts">⭐ ${entry.points} pts · start at ${esc(stationName)}</span>
+    </div>
+    <div class="cc-comp-label">COMPONENTS</div>
+    <div class="cc-comps">${comps}</div>
+    <div class="btnrow" style="justify-content:center; margin-top:16px">
+      <button type="button" class="bigbtn sec" id="capConfirmBack">Back</button>
+      <button type="button" class="bigbtn" id="capConfirmGo" data-cap-name="${esc(name)}">Choose ${esc(name)}</button>
+    </div>`;
+  openOverlay("capConfirm");
+}
+document.getElementById("capChoice").addEventListener("click", ev => {
+  const cell = ev.target.closest("[data-cap-choose]");
+  if (cell) openCapstoneConfirm(cell.dataset.capChoose);
+});
+document.getElementById("capConfirm").addEventListener("click", ev => {
+  if (capstoneIntroInProgress) return;
+  if (ev.target.closest("#capConfirmBack")){ closeOverlay("capConfirm"); return; }
+  const go = ev.target.closest("#capConfirmGo");
+  if (go) confirmCapstoneChoice(go.dataset.capName);
+});
+// A fixed-position copy of el, parked exactly over it -- survives el's
+// overlay closing underneath it.
+function capFlyClone(el){
+  const r = el.getBoundingClientRect();
+  const c = el.cloneNode(true);
+  c.removeAttribute("id");
+  c.classList.add("cc-fly");
+  c.style.left = r.left + "px"; c.style.top = r.top + "px";
+  c.style.width = r.width + "px"; c.style.height = r.height + "px";
+  document.body.appendChild(c);
+  return {c, r};
+}
+function capFlyTo(clone, target, delay){
+  return new Promise(done => {
+    if (!target){ clone.c.remove(); done(); return; }
+    const t = target.getBoundingClientRect(), r = clone.r;
+    const dx = (t.left + t.width / 2) - (r.left + r.width / 2), dy = (t.top + t.height / 2) - (r.top + r.height / 2);
+    const sc = Math.max(.3, Math.min(1.4, t.height / Math.max(1, r.height)));
+    target.style.visibility = "hidden";
+    const anim = clone.c.animate([
+      { transform: "translate(0,0) scale(1)", offset: 0 },
+      { transform: `translate(${dx * .2}px, ${dy * .2 - 30}px) scale(1.15)`, offset: .3 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${sc})`, offset: 1 },
+    ], { duration: 700, delay, easing: "cubic-bezier(.45,.05,.3,1)", fill: "forwards" });
+    anim.onfinish = () => {
+      clone.c.remove();
+      target.style.visibility = "";
+      target.animate([{ transform: "scale(1)" }, { transform: "scale(1.2)" }, { transform: "scale(1)" }],
+        { duration: 320, easing: "cubic-bezier(.3,1.4,.4,1)" });
+      done();
+    };
+  });
+}
+function confirmCapstoneChoice(name){
+  if (capstoneIntroInProgress) return;
+  capstoneIntroInProgress = true;
+  const entry = ENTRIES.find(e => e.name === name);
+  const stationName = capstoneStationOf(name);
+  const reduced = lowMotion();
+  setBingoCenter(name);
+  if (!isPinned(name)) togglePin(name);
+  selectedJobItem = name;
+  jobExpanded.add("refroot/" + name);
+  const dice = sortedDice(STATION_BY_NAME[stationName]);
+  const box = document.getElementById("capConfirmBody");
+
+  // Beat 1 -- the station's elements into the inventory.
+  const chips = reduced ? [] : [...box.querySelectorAll(".map-card .pchip")];
+  const hub = document.getElementById("hubInv").getBoundingClientRect();
+  const FLY_MS = 560, STAGGER_MS = 80;
+  chips.forEach((chip, i) => {
+    const {c, r} = capFlyClone(chip);
+    chip.style.opacity = ".25";
+    const dx = hub.left + hub.width / 2 - (r.left + r.width / 2), dy = hub.top + hub.height / 2 - (r.top + r.height / 2);
+    c.animate([
+      { transform: "translate(0,0) scale(1)", opacity: 1, offset: 0 },
+      { transform: `translate(${dx * .15}px, ${dy * .15 - 40}px) scale(1.08)`, opacity: 1, offset: .25 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.45)`, opacity: 1, offset: .72 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.12)`, opacity: 0, offset: 1 },
+    ], { duration: FLY_MS, delay: i * STAGGER_MS, easing: "cubic-bezier(.4,.1,.3,1)", fill: "forwards" }).onfinish = () => c.remove();
+    setTimeout(punchInventory, i * STAGGER_MS + FLY_MS * .72);
+  });
+  const beat2At = chips.length ? (chips.length - 1) * STAGGER_MS + FLY_MS + 150 : 0;
+
+  // Beat 2 -- To-Do List opens; the capstone and its components fly in.
+  setTimeout(() => {
+    dice.forEach(d => { state.elements[d] = count(d) + 1; });
+    save();
+    const capClone = reduced ? null : capFlyClone(document.getElementById("ccCapEm"));
+    const compClones = reduced ? [] : [...box.querySelectorAll("[data-cc-comp]")].map(capFlyClone);
+    closeOverlay("capConfirm");
+    closeOverlay("capChoice");
+    openJobBoard();
+    const flyAt = reduced ? 0 : 420; // the tray's own slide-in
+    setTimeout(() => {
+      const row = document.querySelector(`#jobSheetBody .refrow[data-refname="${CSS.escape(name)}"]`);
+      const tree = row && row.querySelector(".ref-tree .mission-tree");
+      const nodes = tree ? [...tree.children] : [];
+      const targetFor = n => n && (n.querySelector(":scope > .mn-row .mn-emoji") || n.querySelector(".mn-elsym"));
+      const flights = [];
+      if (capClone) flights.push(capFlyTo(capClone, row && row.querySelector(".refem"), 0));
+      compClones.forEach((cl, i) => flights.push(capFlyTo(cl, targetFor(nodes[i]), 450 + i * 110)));
+      Promise.all(flights).then(() => {
+        // Beat 3 -- hold on the list, then into the station's shop.
+        setTimeout(() => {
+          capstoneIntroInProgress = false;
+          closeJobBoard();
+          setTimeout(() => fadeThroughBlack(() => {
+            goStation(stationName);
+            const turn = state.visitLog && state.visitLog[state.visitLog.length - 1];
+            if (turn){
+              if (!turn.elements) turn.elements = {};
+              dice.forEach(d => { turn.elements[d] = (turn.elements[d] || 0) + 1; });
+            }
+            save(); updateHub();
+          }), reduced ? 0 : 350);
+        }, reduced ? 600 : 1300);
+      });
+    }, flyAt);
+  }, beat2At);
+}
 function startBingoCapstonePicker(){
   bingoIntroActive = true;
   openJobSelectTray();
@@ -18759,9 +18985,10 @@ let bingoCraftHoldTimer = null;
 let bingoSeqTimer = null;
 let bingoSeqAutoOpened = false;
 const BINGO_TRAY_SETTLE_MS = 450;   // tray slide-in before anything bounces
-const BINGO_SQUARE_BOUNCE_MS = 420;
-const BINGO_SQUARE_STAGGER_MS = 260;
-const BINGO_LINE_GAP_MS = 380;      // pause between one line's bounce and the next
+const BINGO_SQUARE_BOUNCE_MS = 560;
+const BINGO_SQUARE_STAGGER_MS = 320;
+const BINGO_LINE_GAP_MS = 650;      // pause between one line's bounce and the next (element pops play here)
+const BINGO_TRAY_HOLD_MS = 1600;    // tray stays on screen this long once everything resolves
 function holdBingoForCraftReveal(){
   bingoCraftHold = true;
   clearTimeout(bingoCraftHoldTimer);
@@ -18791,11 +19018,30 @@ function scheduleBingoSequence(){
 function bingoBounceCell(cell, scale){
   if (!cell || lowMotion()) return;
   cell.animate([
-    { transform: "scale(1)", offset: 0 },
-    { transform: `scale(${scale})`, offset: .4 },
-    { transform: "scale(.96)", offset: .75 },
-    { transform: "scale(1)", offset: 1 },
-  ], { duration: BINGO_SQUARE_BOUNCE_MS, easing: "ease-out" });
+    { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(242,196,77,0)", offset: 0 },
+    { transform: `scale(${scale})`, boxShadow: "0 0 0 6px rgba(242,196,77,.9), 0 0 22px 6px rgba(242,196,77,.7)", offset: .4 },
+    { transform: "scale(.94)", boxShadow: "0 0 0 3px rgba(242,196,77,.5)", offset: .75 },
+    { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(242,196,77,0)", offset: 1 },
+  ], { duration: BINGO_SQUARE_BOUNCE_MS, easing: "ease-out", composite: "replace" });
+}
+// The element a completed line's square pays out pops up out of that
+// square, so the reward visibly comes FROM the card before the popup.
+function bingoElementPop(cell, el){
+  if (!cell || lowMotion()) return;
+  const r = cell.getBoundingClientRect();
+  const chip = document.createElement("div");
+  chip.className = "bingo-el-pop";
+  chip.style.setProperty("--suit", ELEMENT_COLOR[el] || "#8a94a6");
+  chip.textContent = el;
+  chip.style.left = (r.left + r.width / 2 - 18) + "px";
+  chip.style.top = (r.top + r.height / 2 - 18) + "px";
+  document.body.appendChild(chip);
+  chip.animate([
+    { transform: "translateY(0) scale(.3)", opacity: 0, offset: 0 },
+    { transform: "translateY(-26px) scale(1.15)", opacity: 1, offset: .35 },
+    { transform: "translateY(-40px) scale(1)", opacity: 1, offset: .8 },
+    { transform: "translateY(-52px) scale(.9)", opacity: 0, offset: 1 },
+  ], { duration: 1000, easing: "ease-out", fill: "forwards" }).onfinish = () => chip.remove();
 }
 function runBingoSequence(){
   if (bingoClearInProgress) return;
@@ -18819,27 +19065,25 @@ function runBingoSequence(){
 
   // 2. Each new square, one after another.
   squares.forEach(i => {
-    setTimeout(() => bingoBounceCell(cellFor(i), 1.18), t);
+    setTimeout(() => bingoBounceCell(cellFor(i), 1.3), t);
     t += BINGO_SQUARE_STAGGER_MS;
   });
   if (squares.length) t += BINGO_SQUARE_BOUNCE_MS - BINGO_SQUARE_STAGGER_MS + 200;
 
-  // 3. Each completed line as a whole, in sequence.
+  // 3. Each completed line as a whole, in sequence -- each square pops
+  // out the element it pays.
+  const granted = [];
   lines.forEach(lineIdx => {
-    setTimeout(() => bingoLines()[lineIdx].forEach(i => bingoBounceCell(cellFor(i), 1.14)), t);
+    const lineGrants = bingoLines()[lineIdx].map(i => ({i, name: state.bingoCard[i], el: elementForBingoClear(state.bingoCard[i])}));
+    granted.push(...lineGrants);
+    setTimeout(() => lineGrants.forEach(g => { bingoBounceCell(cellFor(g.i), 1.22); bingoElementPop(cellFor(g.i), g.el); }), t);
     t += BINGO_SQUARE_BOUNCE_MS + BINGO_LINE_GAP_MS;
   });
 
   setTimeout(() => {
     if (!lines.length){ finishBingoSequence(); return; }
     // 4. Every line's elements at once -- one per square, center included.
-    const granted = [];
-    lines.forEach(lineIdx => bingoLines()[lineIdx].forEach(i => {
-      const name = state.bingoCard[i];
-      const el = elementForBingoClear(name);
-      state.elements[el] = (state.elements[el] || 0) + 1;
-      granted.push({name, el});
-    }));
+    granted.forEach(g => { state.elements[g.el] = (state.elements[g.el] || 0) + 1; });
     state.pendingBingoClears = (state.pendingBingoClears || []).filter(i => !lines.includes(i));
     save();
     render();
@@ -18853,7 +19097,7 @@ function finishBingoSequence(){
   jobSheet.classList.remove("bingo-clearing");
   if (bingoSeqAutoOpened){
     bingoSeqAutoOpened = false;
-    setTimeout(closeJobBoard, lowMotion() ? 0 : 500);
+    setTimeout(closeJobBoard, lowMotion() ? 400 : BINGO_TRAY_HOLD_MS);
   }
   // Anything that landed while this was playing gets its own turn next.
   scheduleBingoSequence();
