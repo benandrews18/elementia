@@ -7643,7 +7643,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__WHEEL__",
      "Wheel",
-     "MATERIAL",
+     "COMPONENT",
      "🌳 Tree + 🛠️ Tools",
      16
     ],
@@ -9230,11 +9230,12 @@ function tierBadgeHTML(name){
   if (!TIER_NUMERAL[t]) return "";
   return `<span class="bc-tier${t === "CAPSTONE" ? " t4" : ""}" title="Tier ${TIER_NUMERAL[t]}">${TIER_NUMERAL[t]}</span>`;
 }
-/* Revised 2026-10-31: every card starts with a fixed tier spread around the
-   center capstone -- 3 tier I, 12 tier II, 8 tier III, 1 extra tier IV
-   (24 + the center). A tier whose eligible pool runs short tops up from
-   that tier's full core list, then from the remaining eligible items. */
-const BINGO_TIER_SPREAD = [["MATERIAL", 3], ["COMPONENT", 12], ["CREATION", 8], ["CAPSTONE", 1]];
+/* Revised 2026-11-03: every card starts with a fixed tier spread around the
+   center capstone -- no tier I at all, 10 tier II, 13 tier III, 1 extra
+   tier IV (24 + the center). A tier whose eligible pool runs short tops up
+   from that tier's full core list, then from the remaining non-tier-I
+   eligible items. */
+const BINGO_TIER_SPREAD = [["COMPONENT", 10], ["CREATION", 13], ["CAPSTONE", 1]];
 function drawBingoCard(chosenCenter){
   const eligible = bingoEligibleItems();
   const capPool = shuffle(eligible.filter(n => ITEM_TIER[n] === "CAPSTONE"));
@@ -9248,7 +9249,7 @@ function drawBingoCard(chosenCenter){
   });
   const need = BINGO_SIZE * BINGO_SIZE - 1;
   if (picks.length < need){
-    shuffle(eligible.filter(x => !used.has(x) && ITEM_TIER[x] !== "CAPSTONE"))
+    shuffle(eligible.filter(x => !used.has(x) && ITEM_TIER[x] !== "CAPSTONE" && ITEM_TIER[x] !== "MATERIAL"))
       .slice(0, need - picks.length).forEach(x => { used.add(x); picks.push(x); });
   }
   const others = shuffle(picks);
@@ -9292,7 +9293,7 @@ function setBingoCenter(name){
     const used = new Set(card);
     used.add(name);
     const filler = shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] === ITEM_TIER[card[dupIdx]] && !used.has(n)))[0]
-      || shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE" && !used.has(n)))[0];
+      || shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE" && ITEM_TIER[n] !== "MATERIAL" && !used.has(n)))[0];
     if (filler) card[dupIdx] = filler;
   }
   card[BINGO_CENTER_IDX] = name;
