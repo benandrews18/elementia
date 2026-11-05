@@ -4026,10 +4026,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   </div>
 </nav>
 
-<!-- Marketplace menu (shown only on screen === "market", see render()).
-     A zero-size anchor at #hubHome's centre (positionMarketArc()), so each
-     button's rotate+translate fan-out is relative to that point. -->
-<div id="marketArc" aria-hidden="true"></div>
 
 <!-- floating pins + convert buttons, sitting just above the hub -->
 <!-- Magnifying glass for this button only; every other pin glyph stays a
@@ -6645,15 +6641,10 @@ const STATIONS_VISITED_BONUS = 15;
 // global out and back in just to reuse this math.
 function scoreOf(st){
   const base = st.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
-  const jobBonuses = st.jobs.filter(j => j.turnedIn).reduce((sum, j) => sum + jobBonus(j), 0);
-  const collectionBonuses = st.collectionsCompleted.reduce((sum, id) => {
-    const col = COLLECTIONS.find(c => c.id === id);
-    return sum + (col ? collectionBonus(col) : 0);
-  }, 0);
-  const stationsBonus = (st.mode === "classic" && Object.keys(MAP_NODE_POS).every(name => st.visitedStations[name]))
+  const stationsBonus = Object.keys(MAP_NODE_POS).every(name => st.visitedStations[name])
     ? STATIONS_VISITED_BONUS : 0;
   const bingoBonus = (st.bingoLinesCompleted || []).length * BINGO_LINE_BONUS;
-  return base + jobBonuses + collectionBonuses + stationsBonus + bingoBonus;
+  return base + stationsBonus + bingoBonus;
 }
 function score(){ return scoreOf(state); }
 
@@ -7191,53 +7182,6 @@ function bingoCapstonePickerHTML(){
     </div>`;
 }
 
-////////////////////////////////////////////////////////////////////////
-// Adventure (Hard) Mode's Marketplace tray: the same top-tray slot as
-// Classic's BINGO card, with two swipeable panels (Quests, Collection
-// Bundles). marketTrayPanel resets to 0 on every open (openJobSelectTray()).
-////////////////////////////////////////////////////////////////////////
-let marketTrayPanel = 0;
-function adventureMarketTrayHTML(){
-  const stationsCard = `<div class="market-classic-progress">${marketStationProgressHTML()}</div>`;
-  const quests = questsBodyHTML(false) || '<p class="empty">No quests available yet -- keep exploring.</p>';
-  return `${stationsCard}
-    <div class="market-tray-dots">
-      <button type="button" class="market-tray-dot ${marketTrayPanel === 0 ? "active" : ""}" data-tray-panel="0" aria-label="Quests"></button>
-      <button type="button" class="market-tray-dot ${marketTrayPanel === 1 ? "active" : ""}" data-tray-panel="1" aria-label="Collection Bundles"></button>
-    </div>
-    <div class="market-tray-swipe" id="marketTraySwipe">
-      <div class="market-tray-track" style="transform:translateX(${marketTrayPanel * -50}%)">
-        <div class="market-tray-panel">${quests}</div>
-        <div class="market-tray-panel">${bundlesPanelHTML()}</div>
-      </div>
-    </div>`;
-}
-/* Collection Bundles from COLLECTIONS, drawn as BINGO-sized squares and
-   always browsable, filling in from ownership (everOwned()) as you play. */
-function bundlesPanelHTML(){
-  const cards = COLLECTIONS.map(col => {
-    const have = col.items.filter(everOwned).length;
-    const done = have === col.items.length;
-    const cells = col.items.map(name => bundleCellHTML(name)).join("");
-    return `<div class="bundle-card ${done ? "complete" : ""}">
-      <div class="bundle-card-head">
-        <span class="bundle-card-name">${esc(col.icon)} ${esc(col.name)}</span>
-        <span class="bundle-card-bonus">+${collectionBonus(col)}</span>
-      </div>
-      <div class="bundle-card-grid">${cells}</div>
-      <div class="bundle-card-progress">${have}/${col.items.length}</div>
-    </div>`;
-  }).join("");
-  return `<div class="bundle-row">${cards}</div>`;
-}
-function bundleCellHTML(name){
-  const owned = everOwned(name);
-  const seen = !owned && !!state.seenItems[name];
-  const cls = owned ? "owned" : seen ? "seen" : "hidden";
-  return `<div class="bundle-cell ${cls}" title="${owned || seen ? esc(name) : "???"}">
-    <span class="bc-icon">${owned || seen ? em(ITEM_EMOJI[name]) : "?"}</span>
-  </div>`;
-}
 
 
 /* Raw materials sold at several stations (Water, Clay, ...) are pinned to
@@ -7276,42 +7220,10 @@ const STATION_BG = {
   "The City":           "backdrops/quarry.webp", // TODO(#127): re-art as city, not quarry
   "The Observatory":    "backdrops/observatory.webp",
 };
-/* ----------------------------------------------------------- job board --- */
-/* At most this many jobs can be held (taken, not-yet-turned-in) at once --
-   turning one in frees a slot. See takeJob()/jobBoardHTML(). */
-const MAX_ACTIVE_JOBS = 4;
-const activeJobCount = () => state.jobs.filter(j => !j.turnedIn).length;
 /* Job Board and Trading Post both require having visited every station
    (jobBoardUnlocked()/tradeBodyHTML()). */
 function allStationsVisited(){
   return Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
-}
-/* Job Board is Classic only (Adventure uses quests). The Hard Mode
-   quest-tier branch below is unreachable but harmless. */
-function jobBoardUnlocked(){
-  if (!allStationsVisited()) return false;
-  if (state.mode !== "hard") return true;
-  const tier1 = QUESTS.filter(q => q.parent === null);
-  // q.parent can be an array (AND-join, see QUESTS), so check membership.
-  const tier2 = QUESTS.filter(q => tier1.some(t =>
-    Array.isArray(q.parent) ? q.parent.includes(t.id) : t.id === q.parent));
-  return tier1.concat(tier2).every(q => state.quests[q.id] && state.quests[q.id].completed);
-}
-// Jobs below this are cheap enough (raw materials, first-tier crafts) that
-// a job card for one barely feels worth turning in -- keeps every offer on
-// the board worth a real detour.
-const MIN_JOB_POINTS = 10;
-function jobEligibleItems(){
-  const names = ENTRIES
-    .filter(e => QUEST_ITEM_NAMES.has(e.name)
-      // Classic Mode: never offer a job for something outside CORE_SET --
-      // it wouldn't be craftable (or even visible) here to begin with.
-      && (state.mode !== "classic" || isCoreEntry(e))
-      // Sub-zone items stay off the board until the player has been there.
-      && (!SUBZONE_PARENT[e.station] || subzoneVisited(e.station))
-      && (ITEM_POINTS[e.name] || 0) >= MIN_JOB_POINTS)
-    .map(e => e.name);
-  return [...new Set(names)]; // a couple of items are sold at 2 stations under the same name
 }
 function shuffle(arr){
   for (let i = arr.length - 1; i > 0; i--){
@@ -7321,90 +7233,6 @@ function shuffle(arr){
   return arr;
 }
 
-/* Progressive job depth: only items whose AvgVisits is under a ceiling that
-   grows with state.visits, so early boards offer shallow items. The ceiling
-   passes the deepest items (~25) around visit 15-20. */
-const JOB_DEPTH_BASE = 12;
-const JOB_DEPTH_GROWTH = 0.8;
-function jobDepthCeiling(){
-  return JOB_DEPTH_BASE + state.visits * JOB_DEPTH_GROWTH;
-}
-/* Draws up to n new board items: eligible, not already a job, not in
-   another board slot (exclude), depth-gated. Shared by topUpJobBoard() and
-   rotateJobBoard(). */
-function drawJobBoardItems(n, exclude){
-  const taken = new Set(state.jobs.flatMap(j => j.items));
-  const excludeSet = new Set(exclude);
-  const eligible = jobEligibleItems().filter(name => !taken.has(name) && !excludeSet.has(name));
-  const ceiling = jobDepthCeiling();
-  // Items with no AvgVisits data are NOT shallow (?? 0 used to let them
-  // through at visit 0).
-  let gated = eligible.filter(name => (DATA.avgVisits[name] ?? Infinity) <= ceiling);
-  // Extreme early game (visit 0-1) can gate out literally everything --
-  // fall back to the single shallowest eligible item rather than nothing.
-  if (!gated.length && eligible.length){
-    gated = [eligible.slice().sort((a, b) => (DATA.avgVisits[a] ?? Infinity) - (DATA.avgVisits[b] ?? Infinity))[0]];
-  }
-  return shuffle(gated).slice(0, n);
-}
-/* Refills state.jobBoard to 4, after a job is taken and before rotation.
-   No-op if full or the pool is empty. */
-function topUpJobBoard(){
-  if (!state.jobBoard) state.jobBoard = [];
-  if (state.jobBoard.length >= 4) return;
-  drawJobBoardItems(4 - state.jobBoard.length, state.jobBoard).forEach(name => {
-    state.jobBoard.push(name);
-    if (!state.jobBoardUnseen.includes(name)) state.jobBoardUnseen.push(name);
-  });
-}
-/* One global board: up to 2 of its 4 slots rotate on every real station
-   visit. Skipped on the visit that first fills it. */
-function rotateJobBoard(){
-  if (!jobBoardUnlocked()) return;
-  const wasFull = (state.jobBoard || []).length >= 4;
-  topUpJobBoard();
-  if (!wasFull) return;
-  const n = state.jobBoard.length;
-  const rotateCount = Math.min(2, n);
-  if (!rotateCount) return;
-  const idxs = shuffle([...Array(n).keys()]).slice(0, rotateCount);
-  // Exclude the WHOLE current board, not just the 2 staying slots -- a
-  // rotated slot randomly redrawing its own outgoing item would look like
-  // rotation did nothing.
-  const fresh = drawJobBoardItems(rotateCount, state.jobBoard);
-  // If the pool comes up short, leave whatever slots didn't get a fresh
-  // pick exactly as they were rather than shrinking the board.
-  idxs.forEach((slotIdx, k) => {
-    if (!fresh[k]) return;
-    state.jobBoard[slotIdx] = fresh[k];
-    if (!state.jobBoardUnseen.includes(fresh[k])) state.jobBoardUnseen.push(fresh[k]);
-  });
-}
-/* Taking a job is final (no un-take, no confirm). Backfills the slot
-   (topUpJobBoard()). Capped at MAX_ACTIVE_JOBS -- jobBoardHTML() fades the
-   board at the cap. */
-function takeJob(cardIndex){
-  if (!jobBoardUnlocked()) return;
-  if (!state.jobBoard || !state.jobBoard[cardIndex]) return;
-  if (activeJobCount() >= MAX_ACTIVE_JOBS) return;
-  const name = state.jobBoard[cardIndex];
-  state.jobs.push({items:[name], turnedIn:false});
-  state.jobBoard.splice(cardIndex, 1);
-  state.jobBoardUnseen = state.jobBoardUnseen.filter(n => n !== name);
-  topUpJobBoard();
-  // Auto-pin each job item that isn't owned yet (craft() auto-unpins on
-  // completion).
-  if (!owns(name) && !isPinned(name)) togglePin(name);
-  // A job taken for an item already owned would never complete (the check
-  // only runs after a craft), so check now -- same as takeQuest().
-  checkJobCompletion();
-  save(); render();
-}
-function jobDone(job){ return job.items.every(owns); }
-/* Turning in doesn't touch the items themselves (they're kept forever,
-   same as any other crafted item) -- it's purely a bonus-points action,
-   see score(). */
-function jobBonus(job){ return job.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0); }
 const entriesAt = st => ENTRIES.filter(e => e.station === st);
 
 /* =====================================================================
@@ -7427,9 +7255,6 @@ let travelPromptFor = null;
 // (syncInitialPickCapstoneTracking()), so exactly that one can be undone.
 // Ephemeral, like selectedMapStation.
 let initialPickPinnedCapstone = null;
-// Ephemeral: which Marketplace section is expanded inline (null = banner
-// only). See renderMarketScreen()/marketSectionHTML().
-let marketSection = null;
 // Screen to return to when Item Reference closes, set only when coming from
 // the Marketplace (see closePanelByName()). null = current station or map.
 let codexReturnScreen = null;
@@ -7594,11 +7419,6 @@ function freshState(){
     noRepeat: true,    // default on: blocks immediately backtracking to priorStation
     ended: false,      // session summary already shown for this run
     mode: null,        // "zen" | "classic" | "hard", chosen on the welcome screen
-    jobs: [],          // taken job cards: [{items:[name] or [name,name], turnedIn}]
-    jobBoard: [],      // up to 4 job offers (item names), one board for every station (see
-                       // rotateJobBoard()/topUpJobBoard()/takeJob()).
-    jobBoardUnseen: [], // subset of jobBoard's names the player hasn't opened the board to see
-                        // yet -- drives the hub's "new offers" badge (see updateHub()).
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // progressive shop reveal's capstone-closure rule (see isRevealed()).
     stationLastSeen: {}, // {station: [items]} revealed non-capstone shop items as of the last
@@ -7610,8 +7430,7 @@ function freshState(){
                                // the batch +/- controls (itemHTML()).
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
-    marketVisited: false, // true once the Marketplace has been opened (openMarket()/
-                          // maybeShowMarketReminder()).
+    marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
     // True once the game's one preset dice roll has been used (doRoll());
     // The Ocean's shop stays empty until then.
     oceanFirstRollDone: false,
@@ -7619,11 +7438,6 @@ function freshState(){
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
              // Collection discovery lives in prefs.everUnlockedMatCollections,
              // which survives resets.
-    collectionsCompleted: [], // [collectionId, ...] -- see checkCollections()/COLLECTIONS. Lifetime,
-                               // never un-completes even if a member item is later spent in Hard Mode.
-    tradeOffers: [], // [{reward, demand}] Hard Mode Trade Market (rollTradeOffers()),
-                     // rolled on first open; accepting re-rolls just that slot.
-    quests: {},       // {questId: {taken, completed}} Hard Mode (QUESTS/takeQuest()).
     bingoCard: null,  // [item x25] Classic BINGO card, drawn once per run by ensureBingoCard();
                       // null gives a fresh run a new draw.
     bingoLinesCompleted: [], // [lineIndex] completed lines (checkBingoLines()); never un-completes.
@@ -7746,10 +7560,6 @@ function loadAll(){
     state = raw ? Object.assign(freshState(), JSON.parse(raw)) : freshState();
   } catch(e){ state = freshState(); isNewSession = true; }
   state.mode = "classic";
-  // Old saves have a per-station jobBoard object; discard it rather than
-  // migrate.
-  if (!Array.isArray(state.jobBoard)) state.jobBoard = [];
-  if (!Array.isArray(state.jobBoardUnseen)) state.jobBoardUnseen = [];
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
@@ -7855,9 +7665,6 @@ function craft(entry, opts={}){
   // Crafting the tracked item clears tracking too; otherwise the Pins
   // button's "!" nudge (updateHub()'s hasUnselectedPin) never shows again.
   if (selectedJobItem === entry.name) selectedJobItem = null;
-  checkCollections();
-  checkQuestCompletion();
-  checkJobCompletion();
   checkBingoCompletion(entry.name);
   checkBingoLines();
   checkCraftedEverything();
@@ -7920,7 +7727,7 @@ function canCraftQty(entry, qty){
   const {items} = needsOf(entry.reqs);
   for (const it of items){
     if (it.catalyst || ITEM_TIER[it.name] === "CAPSTONE" || UTILITY_ITEMS.has(it.name)) continue;
-    if (state.mode === "hard" ? itemStock(it.name) < qty : !owns(it.name)) return false;
+    if (!owns(it.name)) return false;
   }
   return planBatchConversion(entry, qty).feasible;
 }
@@ -8113,7 +7920,7 @@ function itemHTML(entry, idx){
   const has = owns(entry.name);
   const can = batchOn ? canCraftQty(entry, qty) : (canCraft(entry) && suitCostPayable(entry));
   const done = has && !batchOn;
-  const stock = state.mode === "hard" ? itemStock(entry.name) : (has ? 1 : 0);
+  const stock = has ? 1 : 0;
   const cls = [done ? "owned" : (can ? "can" : "")];
   if (batchOn && stock > 0) cls.push("stocked");
   // Green ring = craftable right now, nothing else. The corner badge below
@@ -8468,68 +8275,7 @@ function jobNodeHTML(name, kind, path, seen){
   </div>`;
 }
 
-/* Active jobs first (each its own to-do tree), then the board to take new
-   ones from. */
-/* Job rows reuse Item Reference's row (refStyleRowHTML()). An untaken offer
-   gets a Take control in the pin slot; taken jobs get the normal pin.
-   offerIndex is the offer's slot in state.jobBoard (omit for taken jobs). */
-function jobRowHTML(name, offerIndex, locked){
-  const entry = ENTRIES.find(e => e.name === name);
-  if (!entry) return "";
-  const rightControl = offerIndex != null
-    ? `<div class="refpin-action-col">
-        <button type="button" class="refpin refpin-action" data-take="${offerIndex}" ${locked ? "disabled" : ""}
-          title="Take this job" aria-label="Take this job for ${esc(entry.name)}">Take</button>
-        ${refProgressFractionHTML(entry.name)}
-      </div>`
-    : undefined;
-  return refStyleRowHTML(entry, {rightControl});
-}
 
-/* The board is one global list (state.jobBoard, up to 4 items), shown the
-   same everywhere. */
-// acceptedOnly: the hub sheet (renderJobBoard()) is a log of taken jobs;
-// offers are only shown and accepted in the Marketplace section
-// (marketSectionHTML()).
-function jobBoardHTML(acceptedOnly){
-  // One row per held job (up to MAX_ACTIVE_JOBS); turned-in jobs in their own
-  // section below.
-  const activeJobs = state.jobs.filter(j => !j.turnedIn);
-  const completedJobs = state.jobs.filter(j => j.turnedIn);
-
-  // No "Turn In" button: checkJobCompletion() turns jobs in automatically.
-  const activeHTML = activeJobs.length
-    ? `<div class="reftable">${activeJobs.map(j => jobRowHTML(j.items[0])).join("")}</div>`
-    : `<p class="empty">${acceptedOnly
-        ? "No job taken yet -- open the Marketplace to see what's on offer."
-        : "No job taken yet -- pick one from the board above."}</p>`;
-  // Always shown in acceptedOnly mode, even empty, so the sheet isn't blank.
-  const activeSection = (acceptedOnly || activeJobs.length || completedJobs.length)
-    ? `<details class="job-section" open><summary class="job-board-heading">📋 My Jobs</summary>${activeHTML}</details>` : "";
-
-  const completedSection = completedJobs.length
-    ? `<details class="job-section"><summary class="job-board-heading">✅ Completed Jobs</summary><div class="reftable">${completedJobs.map(j => jobRowHTML(j.items[0])).join("")}</div></details>` : "";
-
-  // Locked (dimmed, .reftable.locked) until every station is visited
-  // (jobBoardUnlocked()) or while at MAX_ACTIVE_JOBS.
-  const gateOK = jobBoardUnlocked();
-  const atCap = activeJobs.length >= MAX_ACTIVE_JOBS;
-  const locked = !gateOK || atCap;
-
-  const board = state.jobBoard || [];
-  const boardBody = board.length
-    ? `<div class="reftable ${locked ? "locked" : ""}">${board.map((name, i) => jobRowHTML(name, i, locked)).join("")}</div>`
-    : `<p class="empty">No jobs on offer right now -- check back after your next station visit.</p>`;
-  const capNote = !gateOK
-    ? `<p class="empty">🔒 The Job Board unlocks once you've visited every station.</p>`
-    : atCap ? `<p class="empty">🎒 Job Board full (${MAX_ACTIVE_JOBS} max) -- turn in a job to make room.</p>` : "";
-  // "Available Jobs" so it doesn't repeat the section/sheet headings.
-  const boardSection = acceptedOnly ? "" :
-    `<details class="job-section" ${locked ? "" : "open"}><summary class="job-board-heading">🎯 Available Jobs</summary>${capNote}${boardBody}</details>`;
-
-  // Offers first, then taken jobs, then completed ones.
-  return boardSection + activeSection + completedSection;
-}
 
 /* --------------------------------------------------- pinned items --- */
 /* Pins live in prefs (a personal habit, not progress), so they survive
@@ -8623,67 +8369,11 @@ function refProgressFractionHTML(name){
   return frac ? `<span class="refpin-progress" title="${frac.have} of ${frac.total} components already built">${frac.have}/${frac.total}</span>` : "";
 }
 
-/* =====================================================================
-   Progressive shop reveal: items with AvgVisits below the threshold
-   (DATA.avgVisits, from the reachability simulation) always show. Deeper
-   items appear once there's a reason: a job wants one, it's craftable,
-   enough visits have passed, or a visited station's capstone chain passes
-   through it. Capstones always show.
-   ===================================================================== */
-// Diamond needs both Furnace and Clock (Amber's recipe uses neither, so it's
-// excluded) -- the one two-item breakpoint.
-const GEMSTONE_SECRET = new Set(["Pearl","Ruby","Opal","Turquoise","Diamond"]);
-/* Hard Mode reveal rule (isRevealed()): hidden until it's craftable right
-   now, or another owned item "breaks it open": Farm reveals farm animals,
-   Furnace the alloys (not Diamond -- see GEMSTONE_SECRET), Basket the
-   berries, Plant Fiber woven goods, Oven the baked goods. */
-const BREAKPOINT_REVEALS = {
-  "Farm": ["Cow","Sheep","Bee","Chicken"],
-  "Furnace": ["Aluminum Alloy","Titanium Alloy","Stainless Steel"],
-  "Basket": ["Strawberries","Blueberries","Blackberries"],
-  "Plant Fiber": ["Fabric","Rope","Basket","Paper"],
-  "Oven": ["Pretzel","Bread","Cake","Apple Pie","Croissant","Éclair"],
-};
-function breakpointReveals(name){
-  return Object.entries(BREAKPOINT_REVEALS).some(([trigger, list]) =>
-    owns(trigger) && list.includes(name));
-}
 
-function jobCoversItem(name){
-  return state.jobs.some(job => job.items.some(itemName =>
-    itemName === name || componentClosure(itemName).includes(name)));
-}
-/* Once an item has been SEEN (state.seenItems), its whole ingredient tree
-   is revealed too. Job items get the same treatment (jobCoversItem()). */
-function seenClosureRevealsItem(name){
-  return Object.keys(state.seenItems).some(seenName =>
-    seenName !== name && componentClosure(seenName).includes(name));
-}
+// Only the curated CORE_SET, every item visible from the start. Every core
+// item's ingredients are core too, so nothing is stranded.
 function isRevealed(entry){
-  // Classic: only the curated CORE_SET, regardless of any reveal rule. Every
-  // core item's ingredients are core too, so nothing is stranded.
-  if (state.mode === "classic" && !isCoreEntry(entry)) return false;
-  // Zen Mode, and Classic for whatever IS in its catalog: no progressive
-  // reveal at all -- every item at every station is visible from the very
-  // first frame, full sandbox, nothing gated.
-  if (state.mode === "zen" || state.mode === "classic") return true;
-  // Hard Mode: capstones follow the same reveal rule as everything else;
-  // other modes always show them.
-  if (entry.tier === "CAPSTONE" && state.mode !== "hard") return true;
-  // Sticky: once shown, an item stays shown, even if what revealed it stops
-  // being true. markSeen() records it.
-  if (state.seenItems[entry.name]) return true;
-  // A job-tracked item, or anything already visibly sitting in some OTHER
-  // seen item's own ingredient tree, is revealed no matter what -- see
-  // seenClosureRevealsItem()/jobCoversItem() above.
-  if (jobCoversItem(entry.name) || seenClosureRevealsItem(entry.name)) return true;
-  // Gemstones check the full canCraft() (elements too), so they appear as a
-  // rare surprise.
-  if (GEMSTONE_SECRET.has(entry.name)) return canCraft(entry);
-  if (breakpointReveals(entry.name)) return true;
-  // Default: hidden until every ITEM ingredient is owned; elements don't
-  // count (itemReqsMet()).
-  return itemReqsMet(entry);
+  return isCoreEntry(entry);
 }
 
 /* Records an item as shown this run (state.seenItems). Idempotent. */
@@ -8699,7 +8389,6 @@ function markSeen(name){
 const cssEsc = s => (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/["\\]/g, "\\$&");
 function goToRefItem(name){
   const openPanel = openPanelName();
-  const fromMarket = screen === "market";
   // Capture the current station before it's cleared, so closing Item
   // Reference returns there (codexReturnScreen, see closePanelByName()).
   const fromStation = current;
@@ -8707,7 +8396,7 @@ function goToRefItem(name){
   // above -- see codexReturnDrawerPeeked's own comment.
   const drawerPeeked = drawer.classList.contains("open") ? !drawer.classList.contains("expanded") : null;
   if (openPanel) closePanelByName(openPanel);
-  codexReturnScreen = fromMarket ? "market" : fromStation;
+  codexReturnScreen = fromStation;
   codexReturnDrawerPeeked = drawerPeeked;
   screen = "codex"; current = null;
   jobExpanded.clear();
@@ -9085,7 +8774,6 @@ function render(resetScroll){
   const screenEl = document.getElementById("screen");
   screenEl.innerHTML = screen === "map" ? renderMap()
     : screen === "codex" ? renderCodex()
-    : screen === "market" ? renderMarketScreen()
     : renderStation(current);
   document.getElementById("visitCount").textContent = state.visits;
   document.getElementById("visitMax").textContent = visitLimitLabel();
@@ -9124,16 +8812,9 @@ function render(resetScroll){
    theme. */
 function updateBackdrop(){
   const el = document.getElementById("backdrop");
-  // The Marketplace shares this layer; its art is a 9:16 portrait
-  // (backdrops/marketplace.webp), so cover-sizing it fills the screen
-  // properly.
-  const path = screen === "station" && current ? STATION_BG[current]
-    : screen === "market" ? "backdrops/marketplace.webp"
-    : null;
+  const path = screen === "station" && current ? STATION_BG[current] : null;
   if (path){
-    // Lighter wash for the Marketplace -- its art is the screen, with no list
-    // competing for legibility.
-    const wash = screen === "market" ? "var(--backdrop-wash-light)" : "var(--backdrop-wash)";
+    const wash = "var(--backdrop-wash)";
     el.style.backgroundImage = `linear-gradient(${wash},${wash}), url("${path}")`;
     el.classList.add("show");
   } else {
@@ -9187,14 +8868,6 @@ function setHubHomeFace(face){
   hubHomeState = face;
 }
 function updateHub(){
-  // Zen has no Job Board or Quests: the slot is disabled (not removed) so the
-  // hub layout never shifts. Classic/Adventure point it at their own system
-  // (renderJobBoard()) and the label changes to match.
-  const zen = state.mode === "zen";
-  const jobsBtn = document.getElementById("hubJobs");
-  jobsBtn.disabled = zen;
-  jobsBtn.setAttribute("aria-disabled", String(zen));
-  jobsBtn.querySelector(".hl").textContent = state.mode === "hard" ? "Quests" : "To-Do List";
   // Never badged, in any mode, green or red -- Jobs/Quests state is
   // already visible the moment the panel opens; a bubble here read as
   // one more thing competing for attention on the hub.
@@ -9204,14 +8877,6 @@ function updateHub(){
   const anyOpen = !!openPanelName();
   home.classList.toggle("active", screen === "map" && !anyOpen);
 
-  // The Marketplace menu (renderMarketArc()) updates here because every panel
-  // open/close calls updateHub() (not always render()).
-  const marketArc = document.getElementById("marketArc");
-  const arcVisible = openPanelName() === "market";
-  marketArc.classList.toggle("show", arcVisible);
-  // Position the anchor BEFORE creating the buttons, so the first paint's
-  // transforms don't use its stale position.
-  if (arcVisible){ positionMarketArc(); renderMarketArc(); }
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   // Lit for the full inventory only; the half-height Lock-In view doesn't
   // count.
@@ -9272,11 +8937,9 @@ function updateHub(){
     }, 350);
   }
 
-  // Floating buttons stay off-screen until useful: Pins once any job or quest
-  // has been taken or any item pinned (none of these lists are ever trimmed,
-  // so their lengths suffice); Convert once revealed.
-  const everTakenSomething = state.jobs.length > 0 || Object.keys(state.quests).length > 0
-    || prefs.pinnedItems.length > 0;
+  // Floating buttons stay off-screen until useful: Pins once an item is
+  // pinned; Convert once revealed.
+  const everTakenSomething = prefs.pinnedItems.length > 0;
   document.getElementById("pinsBtn").classList.toggle("offscreen", !everTakenSomething);
   document.getElementById("quickConvertBtn").classList.toggle("offscreen", !state.convertRevealed);
 
@@ -9324,19 +8987,17 @@ function canTravelTo(name){
                "close". */
 function hubHomeFace(){
   const panel = openPanelName();
-  // Classic/Adventure's full Marketplace tray (jobSheetVariant === "full",
-  // opened by Home) reads "Map" -- leaving it is just returning to the map.
-  // The hub's compact To-Do tray falls through to "close". Zen uses the old
-  // Marketplace screen instead.
-  if (panel === "jobs" && (state.mode === "classic" || state.mode === "hard") && jobSheetVariant === "full") return "map";
+  // The full Marketplace tray (jobSheetVariant === "full", opened by Home)
+  // reads "Map" -- leaving it is just returning to the map. The hub's compact
+  // To-Do tray falls through to "close".
+  if (panel === "jobs" && jobSheetVariant === "full") return "map";
   // Lock In only through the travel doorway: travelPromptFor ===
   // selectedMapStation is set only by tapping Travel, so opening the mat any
   // other way never shows Lock In.
   if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat"
       && screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)
       && travelPromptFor === selectedMapStation) return "lockin";
-  if (panel && panel !== "market") return "close";
-  if (screen === "market" && marketSection) return "close";
+  if (panel) return "close";
   if (mapLocked()) return "roll";
   // Selecting the station you're standing at: "shop" -- a free re-entry
   // (canTravelTo() refuses the current station).
@@ -9427,8 +9088,7 @@ function sessionStatsGridHTML(extraCells){
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
     <div class="sumstat"><div class="n">${byTier("CREATION")}</div><div class="l">CREATIONS</div></div>
     <div class="sumstat"><div class="n">${elementsHeld}</div><div class="l">ELEMENTS LEFT</div></div>
-    <div class="sumstat"><div class="n" style="color:var(--gold);font-size:20px">${
-      state.jobs.length ? `${state.jobs.filter(j => j.turnedIn).length}/${state.jobs.length}` : "—"}</div><div class="l">JOBS TURNED IN</div></div>${extraCells || ""}`;
+    ${extraCells || ""}`;
 }
 function capstonesSectionHTML(){
   const caps = CAPSTONES.filter(owns);
@@ -9890,12 +9550,6 @@ function showElCardPop(sym){
 }
 document.getElementById("elCardPop").addEventListener("click", () => closeOverlay("elCardPop"));
 
-/* Mode-unlock toast, using the shared event toast. Fires immediately, even
-   over celebrate()'s card -- a top banner and a centred modal don't
-   compete. */
-function queueModeUnlockToast(emoji, modeName){
-  queueEventToast("unlock", emoji, "Mode unlocked", modeName);
-}
 function celebrate(entry){
   releaseBingoCraftHold();
   const n = CAPSTONES.filter(owns).length;
@@ -10162,10 +9816,6 @@ function goStation(name){
   }
   state.stationLastSeen[name] = nowRevealed;
 
-  // One global job board now, not per-station -- every real station visit
-  // (arriving here counts) churns up to 2 of its 4 slots. See
-  // rotateJobBoard().
-  rotateJobBoard();
   save(); render(true);
   // The mini-game launches immediately on arrival, covering the screen
   // (#mgOverlay) until its score has become a roll (launchMinigame()/
@@ -11342,22 +10992,6 @@ function handleScreenClick(ev){
     return;
   }
 
-  // Job/Quest/Trade rows render inline on the Marketplace screen
-  // (marketSectionHTML()), so their buttons are handled here; jobSheetBody's
-  // listener covers the hub's Jobs sheet. Jobs turn in automatically
-  // (checkJobCompletion()).
-  const takeBtn = ev.target.closest("[data-take]");
-  if (takeBtn){ takeJob(+takeBtn.dataset.take); render(); return; }
-
-  const questTakeBtn = ev.target.closest("[data-quest-take]");
-  if (questTakeBtn){ takeQuest(questTakeBtn.dataset.questTake); return; }
-
-  const tradeAcceptBtn = ev.target.closest("[data-trade-accept]");
-  if (tradeAcceptBtn && !tradeAcceptBtn.disabled){ acceptTradeOffer(+tradeAcceptBtn.dataset.tradeAccept); return; }
-
-  // Collapses whichever Jobs/Quests/Trade/Collections section is currently
-  // expanded on the Marketplace screen -- see marketSectionHTML().
-  if (ev.target.closest("[data-market-close]")){ marketSection = null; render(); return; }
 }
 document.getElementById("screen").addEventListener("click", handleScreenClick);
 document.getElementById("convertGoalCard").addEventListener("click", handleScreenClick);
@@ -11418,9 +11052,6 @@ function openPanelName(){
   if (pinsTray.classList.contains("open")) return "pins";
   if (document.getElementById("convert").classList.contains("open")) return "convert";
   if (screen === "codex") return "codex";
-  // Market is a real screen, like Item Reference -- checked last so Jobs on
-  // top of it still reports itself.
-  if (screen === "market") return "market";
   return null;
 }
 function closePanelByName(name){
@@ -11432,14 +11063,11 @@ function closePanelByName(name){
     if (openId) closeOverlay(openId);
   }
   else if (name === "convert") closeOverlay("convert");
-  else if (name === "codex" || name === "market"){
-    // Return where Item Reference was opened from: codexReturnScreen is
-    // "market", or a station name when goToRefItem() came from a shop (it has
-    // to null `current`). Other entry points leave `current` alone, so the
-    // fallback below covers them.
-    if (name === "codex" && codexReturnScreen === "market"){
-      screen = "market";
-    } else if (name === "codex" && codexReturnScreen){
+  else if (name === "codex"){
+    // Return where Item Reference was opened from: a station name when
+    // goToRefItem() came from a shop (it has to null `current`). Other entry
+    // points leave `current` alone, so the fallback below covers them.
+    if (codexReturnScreen){
       current = codexReturnScreen;
       screen = "station";
     } else {
@@ -11448,18 +11076,16 @@ function closePanelByName(name){
     codexReturnScreen = null;
     render(true);
     // Restore the drawer as it was before Item Reference opened
-    // (codexReturnDrawerPeeked). Not for "market" (no drawer there).
-    if (name === "codex" && codexReturnDrawerPeeked !== null){
+    // (codexReturnDrawerPeeked).
+    if (codexReturnDrawerPeeked !== null){
       openDrawer({ peeked: codexReturnDrawerPeeked });
       codexReturnDrawerPeeked = null;
     }
   }
 }
 /* A button whose panel is open just closes it; any OTHER button closes
-   what's open AND opens its own target in the same tap. Market and Item
-   Reference are screens, not overlays, so they aren't closed first --
-   otherwise e.g. Quests over the Marketplace would drop the player back on
-   the map. Only another true overlay is closed first. */
+   what's open AND opens its own target in the same tap. Item Reference is a
+   screen, not an overlay, so it isn't closed first. */
 function hubPanelClick(name, openFn){
   const open = openPanelName();
   if (open === name){ closePanelByName(name); return; }
@@ -11468,7 +11094,7 @@ function hubPanelClick(name, openFn){
   // Item Reference/Pins/Convert sit below it and still close it (Item
   // Reference restores it, see codexReturnDrawerPeeked).
   if (open === "drawer" && (name === "jobs" || name === "settings")){ openFn(); return; }
-  if (open && open !== "market" && open !== "codex") closePanelByName(open);
+  if (open && open !== "codex") closePanelByName(open);
   openFn();
 }
 /* Rolls this visit's dice (or launches the mini-game that hands off to a
@@ -11489,17 +11115,13 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   if (startingGiftInProgress) return; // see playStartingGift()
   const face = hubHomeFace();
   if (face === "close"){
-    // Collapsing a Marketplace section stays on the Marketplace screen (see
-    // hubHomeFace()).
-    if (screen === "market" && marketSection){ marketSection = null; render(); return; }
     closePanelByName(openPanelName());
     return;
   }
   if (face === "roll"){ triggerRoll(); return; }
-  // Classic and Adventure open the full Marketplace tray
-  // (openJobSelectTray()); the hub's To-Do List button is openJobBoard(). Only
-  // Zen opens the old Marketplace screen.
-  if (face === "market"){ (state.mode === "zen" ? openMarket : openJobSelectTray)(); return; }
+  // The full Marketplace tray (openJobSelectTray()); the hub's To-Do List
+  // button is openJobBoard().
+  if (face === "market"){ openJobSelectTray(); return; }
   // Free re-entry into the current station: no goStation() (that spends a
   // visit), just point current/screen back at it.
   if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
@@ -11581,13 +11203,12 @@ document.getElementById("hubInv").addEventListener("click", () => {
   hubPanelClick("drawer", openDrawer);
 });
 document.getElementById("hubCodex").addEventListener("click", () => {
-  const fromMarket = screen === "market";
   // Captured before hubPanelClick()'s own closePanelByName("drawer") call
   // (triggered when openPanelName() reports "drawer") can close it -- see
   // codexReturnDrawerPeeked's own comment.
   const drawerPeeked = drawer.classList.contains("open") ? !drawer.classList.contains("expanded") : null;
   hubPanelClick("codex", () => {
-    codexReturnScreen = fromMarket ? "market" : null;
+    codexReturnScreen = null;
     codexReturnDrawerPeeked = drawerPeeked;
     screen = "codex"; render(true);
   });
@@ -13177,32 +12798,20 @@ const jobSheet = document.getElementById("jobSheet"), jobScrim = document.getEle
    smaller left-side tray (openJobBoard()) with pins and jobs only.
    jobSheetVariant remembers which is showing so re-renders keep it. */
 let jobSheetVariant = "full"; // "full" | "compact" -- Classic Mode only, see above
-/* Adventure shows Quests here in either variant (questsBodyHTML()); Zen
-   never gets here (hubJobs is disabled). */
 function renderJobBoard(){
-  const classic = state.mode === "classic";
-  const hard = state.mode === "hard";
   const full = jobSheetVariant === "full";
-  document.getElementById("jobTitle").innerHTML =
-    (classic || hard) && full ? `${em("__MARKETPLACE__")} Marketplace` // same custom icon as Home's own Market face, see hubHomeFace()
-    : classic ? "📋 To-Do List"
-    : "📜 Quests"; // Adventure's compact tray, and Zen's unreachable fallback
-  document.getElementById("jobSheetBody").innerHTML =
-    classic
-      ? (full
+  document.getElementById("jobTitle").innerHTML = full
+    ? `${em("__MARKETPLACE__")} Marketplace` // same icon as Home's Market face
+    : "📋 To-Do List";
+  document.getElementById("jobSheetBody").innerHTML = full
           // Classic's full tray: the stations-visited card and the BINGO card (no
           // job board -- jobs can't be taken here). The BINGO card is always shown;
           // before a capstone is chosen its centre is an "Add Capstone" square that
           // opens the picker overlay (openCapstoneOverlay()).
           ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`
-          : classicPinsAndJobsHTML())
-      : hard
-        ? (full ? adventureMarketTrayHTML() : questsBodyHTML(true))
-        // acceptedOnly:true -- the compact tray is a log, never a place to accept
-        // new things.
-        : questsBodyHTML(true);
+          : classicPinsAndJobsHTML();
   // Only the BINGO view has cells to animate; a no-op otherwise.
-  if (classic && full) scheduleBingoSequence();
+  if (full) scheduleBingoSequence();
 }
 /* The compact To-Do List: the pinned items only, in the same markup as Item
    Reference's pinned section (refStyleRowHTML() rows), so pin/breakdown
@@ -13271,9 +12880,6 @@ function classicPinsAndJobsHTML(){
 /* Shared open logic; jobSheetVariant decides the content and whether the
    sheet slides from the top or the left (#jobSheet.top-tray). */
 function openJobSheet(){
-  if (state.mode !== "hard" && jobBoardUnlocked()) topUpJobBoard();
-  state.jobBoardUnseen = [];
-  save();
   renderJobBoard();
   // Jump to this variant's closed position with transitions off, then
   // re-enable and open. Otherwise opening one variant right after closing the
@@ -13296,7 +12902,6 @@ function openJobSheet(){
 function openJobSelectTray(){
   jobSheetVariant = "full";
   bingoTab = "bingo";
-  marketTrayPanel = 0; // always reopens on the Quests panel, not mid-swipe
   state.marketVisited = true;
   openJobSheet();
   updateHub();
@@ -13652,28 +13257,6 @@ function closeBingoIntroTray(){
   }, BINGO_BOUNCE_AWAY_MS);
 }
 
-/* Marketplace directory: Job Board hands off to the real Job Board; the
-   other rows are disabled "Coming soon" buttons. */
-/* The picked Marketplace section (Jobs/Quests/Trading Post/Collections)
-   expands inline here. Jobs/Quests/Collections reuse their own bodies
-   (jobBoardHTML()/questsBodyHTML()/collectionsBodyHTML()); Trading Post has
-   tradeCardHTML(). The menu retracts while a section is open; Home shows
-   Close to collapse it. */
-function marketSectionHTML(){
-  if (!marketSection) return "";
-  const titles = {jobs:"📋 Job Board", quests:"📜 Quest Log", trade:"🔄 Trading Post", collections:"🏆 Collections"};
-  const body = marketSection === "jobs" ? jobBoardHTML()
-    : marketSection === "quests" ? questsBodyHTML()
-    : marketSection === "trade" ? tradeBodyHTML()
-    : collectionsBodyHTML();
-  return `<div class="market-section">
-    <div class="market-section-head">
-      <h2>${titles[marketSection]}</h2>
-      <button type="button" class="tbtn ghost" data-market-close aria-label="Close ${titles[marketSection]}">✕</button>
-    </div>
-    ${body}
-  </div>`;
-}
 /* Stations-visited progress row (compact circles), used by the
    Marketplace menu column, Classic's BINGO tray and Hard's Marketplace
    tray -- Job Board and Trading Post both require visiting every station.
@@ -13710,507 +13293,11 @@ function stationsVisitedBonusBadgeHTML(){
   const done = allStationsVisited();
   return `<span class="market-progress-bonus${done ? " done" : ""}">${done ? "✓ " : ""}+${STATIONS_VISITED_BONUS}</span>`;
 }
-function renderMarketScreen(){
-  // Classic: the progress row sits full-width at the top of the screen; Hard
-  // keeps its copy in #marketArc. Hidden while a section is open.
-  const classicProgress = (state.mode === "classic" && !marketSection)
-    ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>` : "";
-  return `<div class="market-screen">
-    <div class="market-banner"><h1>Marketplace</h1></div>
-    ${classicProgress}
-    ${marketSectionHTML()}
-  </div>`;
-}
-/* The menu options. Angles spread a 116deg arc (-58/-19/19/58deg from
-   straight up) at a fixed radius, as custom properties, so adding an
-   option is one more ARC_SLOTS entry. */
-function renderMarketArc(){
-  // Job Board is Classic Mode only now -- Adventure Mode is quest-driven
-  // instead (see the Quest Log slot below, and updateHub()'s own
-  // Jobs/Quests hub-button swap), Zen has neither.
-  const jobsWrongMode = state.mode !== "classic";
-  const jobsLocked = jobsWrongMode || !jobBoardUnlocked();
-  const slots = [
-    // Hidden in Adventure (Quest Log is its system); in Classic it's shown
-    // disabled, with its lockReason, until every station is visited.
-    { nav: "jobs", icon: "📋", label: "Job Board", disabled: jobsLocked, hidden: jobsWrongMode,
-      lockReason: !jobBoardUnlocked() ? "Visit every station to unlock" : "",
-      title: jobsWrongMode ? "Job Board — Classic Mode only"
-        : !jobBoardUnlocked() ? "Job Board — visit every station to unlock"
-        : "Job Board — take jobs, turn in finished items" },
-    // Hidden outside Adventure.
-    { nav: "quests", icon: "📜", label: "Quest Log", disabled: false, hidden: state.mode !== "hard",
-      title: "Quest Log — a branching tree of keystone-item goals" },
-    { nav: "trade", icon: "🔄", label: "Trading Post", disabled: !allStationsVisited(), hidden: state.mode !== "hard",
-      lockReason: !allStationsVisited() ? "Visit every station to unlock" : "",
-      title: !allStationsVisited() ? "Trading Post — visit every station to unlock"
-        : "Trading Post — swap a spare item for a random one" },
-    // Hidden until the player has finished a collection (.earned-hidden).
-    { nav: "collections", icon: "🏆", label: "Collections",
-      disabled: state.mode === "classic", hidden: state.mode === "classic" || !state.collectionsCompleted.length,
-      title: state.mode === "classic" ? "Collections — not available in Classic Mode"
-        : `Collections — ${state.collectionsCompleted.length}/${COLLECTIONS.length} complete` },
-  ];
-  // Every button retracts as soon as ANY section is open. Not [disabled]:
-  // :disabled's opacity:.5 would beat .retracted's opacity:0 (same
-  // specificity, later rule); pointer-events:none already blocks taps.
-  const retracted = !!marketSection;
-  document.getElementById("marketArc").innerHTML = slots.map(s => `
-    ${s.disabled && !retracted && !s.hidden && s.lockReason ? `<div class="market-arc-locknote">${esc(s.lockReason)}</div>` : ""}
-    <button type="button" class="market-arc-btn ${retracted ? "retracted" : ""} ${s.hidden ? "earned-hidden" : ""}"
-      ${s.nav ? `data-market-nav="${s.nav}"` : ""} ${s.disabled && !retracted && !s.hidden ? "disabled" : ""}
-      ${retracted || s.hidden ? 'aria-hidden="true" tabindex="-1"' : ""}
-      title="${esc(s.title)}" aria-label="${esc(s.label)}">
-      <span class="market-arc-icon">${s.icon}</span>
-      <span class="market-arc-label">${esc(s.label)}</span>
-    </button>
-    ${s.nav === "quests" && state.mode === "hard" ? `<div class="market-arc-btn market-station-progress-row ${retracted ? "retracted" : ""}">${marketStationProgressHTML()}</div>` : ""}`).join("");
-}
-/* Positioning is pure CSS now; kept as a no-op so updateHub()'s call stays
-   valid. */
-function positionMarketArc(){}
-// #marketArc is outside #screen, so it has its own listener. Tapping a
-// button toggles that section inline (marketSection); the buttons stay
-// tappable.
-document.getElementById("marketArc").addEventListener("click", ev => {
-  const navBtn = ev.target.closest("[data-market-nav]");
-  if (!navBtn || navBtn.disabled) return;
-  const target = navBtn.dataset.marketNav;
-  marketSection = marketSection === target ? null : target;
-  if (marketSection === "jobs"){
-    if (jobBoardUnlocked()) topUpJobBoard();
-    state.jobBoardUnseen = [];
-    save();
-  }
-  render();
-});
-function openMarket(){
-  screen = "market";
-  state.marketVisited = true;
-  save();
-  render(true);
-  // One-time full explanation on the first Marketplace visit
-  // (showTutorialHintOnce()), then a short reminder once per run
-  // (showMouseTipOnce()). Quests are Hard Mode only. Top-left, clear of the
-  // menu around the hub; no highlight ring (the menu isn't one control).
-  const shownFirstEver = showTutorialHintOnce("market", 10, state.mode === "hard"
-    ? "Welcome! Quests live here."
-    : "Welcome! Jobs live here.");
-  if (shownFirstEver) return;
-  // Explain Collections the first visit its button appears (after the first
-  // collection is finished).
-  const collectionsEligible = state.mode !== "classic" && state.collectionsCompleted.length > 0;
-  if (collectionsEligible && showTutorialHintOnce("collectionsunlocked", 5, "Collection done! 🏆 Tap to see it.", "top-right", '[data-market-nav="collections"]')) return;
-  showMouseTipOnce("marketreturn", 10, "Jobs, trades, collections here.", "top-left");
-}
 
-/* ----------------------------------------------------- trade market --- */
-/* Hard Mode Trading Post (tradeBodyHTML()). Hard Mode spends items, so
-   trading a spare for something else is a real exchange. A board like the
-   Job Board: TRADE_OFFER_COUNT offers, each asking for one item, rolled
-   once (state.tradeOffers); accepting re-rolls that one slot. */
-const TRADE_OFFER_COUNT = 3;
-function itemStock(name){ return state.items.filter(n => n === name).length; }
-/* "Roughly equal point value": the band widens with the item's points but
-   never narrows below +/-2. */
-function tradeBand(pts){ return Math.max(2, Math.round(pts * 0.25)); }
-const TRADE_INELIGIBLE = n => ITEM_TIER[n] !== "CAPSTONE" && !UTILITY_ITEMS.has(n);
-/* Every real item name (deduped, like jobEligibleItems()), excluding items
-   only sold at unvisited sub-zones. */
-function tradeEligibleNames(){
-  const names = ENTRIES
-    .filter(e => !SUBZONE_PARENT[e.station] || subzoneVisited(e.station))
-    .map(e => e.name);
-  return [...new Set(names)];
-}
-/* Reward side: prefers items not yet owned, falling back to the full
-   pool. */
-function rollTradeReward(){
-  const names = tradeEligibleNames().filter(TRADE_INELIGIBLE);
-  const notOwned = names.filter(n => !owns(n));
-  const pool = notOwned.length ? notOwned : names;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-/* Demand side: any item in the reward's point band, owned or not -- that's
-   what makes some offers fulfillable and others not. */
-function rollTradeDemand(rewardName){
-  const band = tradeBand(ITEM_POINTS[rewardName] || 0);
-  const names = tradeEligibleNames();
-  const pool = names.filter(n => n !== rewardName && TRADE_INELIGIBLE(n)
-    && Math.abs((ITEM_POINTS[n] || 0) - (ITEM_POINTS[rewardName] || 0)) <= band);
-  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-}
-function rollTradeOffer(){
-  let guard = 0;
-  while (guard++ < 30){
-    const reward = rollTradeReward();
-    const demand = rollTradeDemand(reward);
-    if (demand) return {reward, demand};
-  }
-  return null;
-}
-function rollTradeOffers(){
-  return Array.from({length: TRADE_OFFER_COUNT}, rollTradeOffer).filter(Boolean);
-}
-/* Swap bookkeeping, like craft()'s item side (spend one, add one, bump
-   craftCounts, clear stale pin/tracking) but not a craft. Re-rolls this
-   slot afterwards. */
-function acceptTradeOffer(i){
-  const offer = state.tradeOffers[i];
-  if (!offer || itemStock(offer.demand) <= 0) return;
-  const idx = state.items.indexOf(offer.demand);
-  state.items.splice(idx, 1);
-  state.items.push(offer.reward);
-  state.craftCounts[offer.reward] = (state.craftCounts[offer.reward] || 0) + 1;
-  if (isPinned(offer.reward)) togglePin(offer.reward);
-  if (selectedJobItem === offer.reward) selectedJobItem = null;
-  const fresh = rollTradeOffer();
-  if (fresh) state.tradeOffers[i] = fresh; else state.tradeOffers.splice(i, 1);
-  checkCollections();
-  checkQuestCompletion();
-  checkJobCompletion();
-  save(); render();
-}
-/* A Trading Post row: give and get as two item cards (fc-item style, see
-   miniIngredientCardHTML()) with an arrow between them that is also the
-   button. Green when the player holds the demanded item, otherwise
-   disabled but still shown. */
-function tradeCardHTML(offer, i){
-  const can = itemStock(offer.demand) > 0;
-  return `<button type="button" class="tp-trade-row ${can ? "can" : ""}" data-trade-accept="${i}" ${can ? "" : "disabled"}
-    title="${can ? "Make the trade" : `Needs ${esc(offer.demand)}`}">
-    <div class="tp-ex-card tp-ex-give" style="--suit:${itemSuitColor(offer.demand)}">
-      <span class="tp-ex-icon">${em(ITEM_EMOJI[offer.demand])}</span>
-      <span class="tp-ex-name">${esc(offer.demand)}</span>
-    </div>
-    <span class="tp-ex-arrow">➜</span>
-    <div class="tp-ex-card tp-ex-get" style="--suit:${itemSuitColor(offer.reward)}">
-      <span class="tp-ex-icon">${em(ITEM_EMOJI[offer.reward])}</span>
-      <span class="tp-ex-name">${esc(offer.reward)}</span>
-    </div>
-  </button>`;
-}
-function tradeBodyHTML(){
-  if (state.mode !== "hard"){
-    return `<p class="empty">🔄 The Trading Post only opens in Adventure Mode, where crafted items stay real spendable stock instead of a one-time collection.</p>`;
-  }
-  if (!allStationsVisited()){
-    // One circle per real station, "?" until visited, so progress toward the
-    // unlock is visible.
-    const stationCircles = DATA.stations.map(s => {
-      const visited = !!state.visitedStations[s.name];
-      return `<span class="trade-lock-station${visited ? " visited" : ""}" title="${esc(s.name)}">${visited ? em(s.emoji) : "?"}</span>`;
-    }).join("");
-    return `<p class="empty">🔒 Visit each station before the Trading Post will open for business.</p>
-      <div class="trade-lock-stations">${stationCircles}</div>`;
-  }
-  if (!state.tradeOffers.length) state.tradeOffers = rollTradeOffers();
-  return state.tradeOffers.length
-    ? `<div class="trade-board">${state.tradeOffers.map(tradeCardHTML).join("")}</div>`
-    : `<p class="empty">🎒 Nothing on offer right now -- check back once you've crafted a wider spread of items.</p>`;
-}
 
-/* -------------------------------------------------------- collections --- */
-/* Collections (Adventure/Zen): themed checklists over items the player
-   builds anyway -- not recipes, and based on "ever owned", not current
-   stock (everOwned()), so they stay complete even if Hard Mode later spends
-   an item (Gemstone Collection consumes 5 of the 6 gems). Named
-   "Gemstones" to avoid clashing with that craftable item. */
-const COLLECTIONS = [
-  {id:"fruit", name:"Fruit", icon:"🍎", items:["Apple","Banana","Strawberries","Blueberries","Blackberries"]},
-  {id:"gemstones", name:"Gemstones", icon:"💎", items:["Pearl","Ruby","Opal","Turquoise","Amber","Diamond"]},
-  {id:"vehicles", name:"Vehicles", icon:"🚗", items:["Sailboat","Speedboat","Car","Motorcycle","Helicopter","Maglev Train"]},
-  {id:"farm-animals", name:"Farm Animals", icon:"🐄", items:["Cow","Sheep","Chicken","Bee"]},
-  {id:"wildlife", name:"Wildlife", icon:"🦌", items:["Deer","Salmon","Orca","Dinosaur"]},
-  {id:"textiles", name:"Textiles", icon:"🧶", items:["Wool","Yarn","Fabric","Rope","Basket","Paper"]},
-  {id:"dyes", name:"Dyes", icon:"🎨", items:["Red Dye","Blue Dye","Black Dye","Yellow Dye"]},
-  {id:"alloys", name:"Alloys & Materials", icon:"🔩", items:["Steel","Stainless Steel","Aluminum Alloy","Titanium Alloy","Fiberglass"]},
-  {id:"desserts", name:"Desserts", icon:"🍰", items:["Cake","Chocolate Cake","Éclair","Berry Cupcakes","Apple Pie"]},
-  {id:"space", name:"Space", icon:"🔭", items:["Star","Planet","Telescope","Satellite Dish","Rocket","Solar System"]},
-];
-/* ~30% of the set's combined points: less than a comparable capstone
-   recipe, since it rewards breadth. Derived from ITEM_POINTS so it follows
-   rebalances. */
-function collectionBonus(col){
-  const total = col.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
-  return Math.round(total * 0.3);
-}
-/* "Ever owned": Classic/Zen ownership is permanent, so owns() works; Hard
-   Mode spends items, so it uses craftCounts (a lifetime total). */
-function everOwned(name){
-  return state.mode === "hard" ? (state.craftCounts[name] || 0) > 0 : owns(name);
-}
-function collectionProgress(col){
-  return {have: col.items.filter(everOwned).length, total: col.items.length};
-}
-function collectionDone(col){ return col.items.every(everOwned); }
 
-/* Completions are queued and drained by the toast timer, since craft() and
-   acceptTradeOffer() call this right before their own animations. */
-let collectionToastQueue = [];
-let collectionToastTimer = null;
-function checkCollections(){
-  // Not in Classic (Collections are hidden there), so it can't complete or
-  // toast them.
-  if (state.mode === "classic") return;
-  COLLECTIONS.forEach(col => {
-    if (state.collectionsCompleted.includes(col.id)) return;
-    if (collectionDone(col)){
-      state.collectionsCompleted.push(col.id);
-      collectionToastQueue.push(col);
-    }
-  });
-  if (collectionToastQueue.length && !collectionToastTimer) showNextCollectionToast();
-}
-function showNextCollectionToast(){
-  const toast = document.getElementById("collectionToast");
-  const col = collectionToastQueue.shift();
-  if (!col){ collectionToastTimer = null; return; }
-  toast.innerHTML = `
-    <span class="ct-em">${col.icon}</span>
-    <span class="ct-body"><div class="ct-title">Collection complete</div><div class="ct-name">${esc(col.name)}</div></span>
-    <span class="ct-bonus">+${collectionBonus(col)} pts</span>`;
-  toast.setAttribute("aria-hidden", "false");
-  requestAnimationFrame(() => toast.classList.add("show"));
-  const dismiss = () => {
-    toast.classList.remove("show");
-    toast.setAttribute("aria-hidden", "true");
-    collectionToastTimer = setTimeout(showNextCollectionToast, 350);
-  };
-  toast.onclick = dismiss;
-  collectionToastTimer = setTimeout(dismiss, 3500);
-}
 
-function collectionRowHTML(col){
-  const {have, total} = collectionProgress(col);
-  const done = have === total;
-  const members = col.items.map(n => `
-    <div class="coll-member ${everOwned(n) ? "have" : ""}">
-      <span class="cm-em">${em(ITEM_EMOJI[n] || "❔")}</span>
-      <span class="cm-name">${esc(n)}</span>
-    </div>`).join("");
-  return `<div class="coll-row ${done ? "done" : ""}">
-    <div class="coll-row-head">
-      <span class="coll-em">${col.icon}</span>
-      <span class="coll-name">${esc(col.name)}</span>
-      <span class="coll-progress">${have}/${total}</span>
-      <span class="coll-bonus">${done ? "✓ " : ""}+${collectionBonus(col)} pts</span>
-    </div>
-    <div class="coll-members">${members}</div>
-  </div>`;
-}
-function collectionsBodyHTML(){
-  return `<p class="trade-intro">Own every item in a set (however you got them) to complete it — nothing here is spent or crafted.</p>` +
-    COLLECTIONS.map(collectionRowHTML).join("");
-}
 
-/* ---------------------------------------------------------- quests --- */
-/* Hard Mode quests: a tree of "generations". Every quest in a generation
-   shares the same parent(s) and unlocks together (parent can be an array --
-   an AND-join, see questAvailable()). Generations are mostly 2-3 quests;
-   QUEST_VISIBLE_CAP throttles how many are offered at once. Order is the
-   hand-picked story order. Taking a quest for an item already owned
-   completes it at once (takeQuest()). gateway:<region> is a display badge
-   on Sailboat/Library/Rocket, which unlock Island/Wardrobe/Solar System
-   (SUBZONE_TRAVEL). */
-const QUESTS = [
-  { id:"furnace", item:"Furnace", parent:null,
-    blurb:"Clay and Carbon, fired hot enough to become a Furnace -- the Deep Mine's own gateway to every alloy and gemstone." },
-  { id:"dna", item:"DNA", parent:"furnace",
-    blurb:"The Greenhouse's first real biology -- Sugar and two elements twist into the blueprint every living thing in Elementia shares." },
-  { id:"tools", item:"Tools", parent:"furnace",
-    blurb:"Steel and two alloys forged into the single set of Tools nearly every later recipe leans on." },
-  { id:"soil", item:"Soil", parent:"furnace",
-    blurb:"Clay worked into Sand becomes Soil -- the forest floor everything green eventually grows out of." },
-  { id:"tree", item:"Tree", parent:["dna", "tools", "soil"],
-    blurb:"Soil plus two elements is all a Tree needs to take root -- the forest's whole timber line starts here." },
-  { id:"glass", item:"Glass", parent:["dna", "tools", "soil"],
-    blurb:"Sand and Limestone, melted together into Glass -- half the Observatory's own instruments start with this pane." },
-  { id:"egg", item:"Egg", parent:["tree", "glass"],
-    blurb:"DNA and three elements crack into an Egg -- the Bakery's first real ingredient with a pulse behind it." },
-  { id:"canoe", item:"Canoe", parent:["tree", "glass"],
-    blurb:"A Tree and some Water lashed into a Canoe -- the forest's simplest way onto the river." },
-  { id:"deer", item:"Deer", parent:["egg", "canoe"],
-    blurb:"Tree, Water, and Bone -- the forest's own wildlife starts wandering the moment a Deer appears." },
-  { id:"apple", item:"Apple", parent:["egg", "canoe"],
-    blurb:"A Tree given Water ripens into the Greenhouse's own first fruit." },
-  { id:"banana", item:"Banana", parent:["egg", "canoe"],
-    blurb:"Tree, Water, and Potassium -- the Ocean's own orchard, oddly enough, starts with a Banana." },
-  { id:"rope", item:"Rope", parent:["deer", "apple", "banana"],
-    blurb:"Plant Fiber twisted around a set of Tools becomes Rope -- the forest's own answer to holding anything together." },
-  { id:"engine", item:"Engine", parent:["deer", "apple", "banana"],
-    blurb:"Tools, Natural Gas, and Steel combine into an Engine -- the Power Plant's own answer to real motion." },
-  { id:"lightbulb", item:"Light Bulb", parent:["rope", "engine"],
-    blurb:"Glass wrapped around a Wire is all a Light Bulb needs to switch the Power Plant's own lights on." },
-  { id:"farm", item:"Farm", parent:["rope", "engine"],
-    blurb:"Soil, Tools, and Water -- the Greenhouse's whole Homestead line starts the moment a Farm exists." },
-  { id:"bridge", item:"Bridge", parent:["rope", "engine"],
-    blurb:"Steel and Concrete, spanned across Water -- The City's first real Bridge." },
-  { id:"wool", item:"Wool", parent:["lightbulb", "farm", "bridge"],
-    blurb:"A Sheep and a set of Tools shear into Wool -- the Greenhouse's own start of a whole textile line." },
-  { id:"logcabin", item:"Log Cabin", parent:["lightbulb", "farm", "bridge"],
-    blurb:"Tree, Tools, and a Furnace's own heat raise the forest's first real Log Cabin." },
-  { id:"compass", item:"Compass", parent:["wool", "logcabin"],
-    blurb:"A Magnet, Water, and Glass -- the Observatory's own answer to never losing your bearings." },
-  { id:"grain", item:"Grain", parent:["wool", "logcabin"],
-    blurb:"A Farm and some Fertilizer are all it takes to bring in the Greenhouse's first real Grain harvest." },
-  { id:"cow", item:"Cow", parent:["compass", "grain"],
-    blurb:"Farm and Grain together bring the Greenhouse's own livestock line to life, starting with a Cow." },
-  { id:"basket", item:"Basket", parent:["compass", "grain"],
-    blurb:"Plant Fiber woven around a set of Tools becomes a Basket -- the Greenhouse's own way of carrying a harvest home." },
-  { id:"honey", item:"Honey", parent:["cow", "basket"],
-    blurb:"A Bee and some Sugar are the Greenhouse's whole recipe for Honey." },
-  { id:"clock", item:"Clock", parent:["cow", "basket"],
-    blurb:"A Battery and a set of Tools tick into a Clock -- every gemstone in the game waits on this one build." },
-  { id:"fabric", item:"Fabric", parent:["cow", "basket"],
-    blurb:"Plant Fiber and Tools woven together into Fabric -- the Ocean's own start of a sail." },
-  { id:"plastic", item:"Plastic", parent:["honey", "clock", "fabric"],
-    blurb:"Natural Gas run through a Furnace becomes Plastic -- the Power Plant's own building block for everything synthetic after it." },
-  { id:"solarpanel", item:"Solar Panel", parent:["honey", "clock", "fabric"],
-    blurb:"Silicon, Wire, Glass, and a Battery -- the Greenhouse's own answer to catching sunlight." },
-  { id:"building", item:"Building", parent:["plastic", "solarpanel"],
-    blurb:"Concrete, Glass, and Steel raise The City's very first Building -- and everything the skyline references after it." },
-  { id:"microchip", item:"Microchip", parent:["plastic", "solarpanel"],
-    blurb:"Wire, Silicon, and Silver etched down into a Microchip -- the Observatory's smallest, most important build yet." },
-  { id:"sailboat", item:"Sailboat", parent:["building", "microchip"], gateway:"Island",
-    blurb:"A Canoe and some Fabric set you loose past The Ocean's own shore, out to the Island and everything only found there." },
-  { id:"chocolate", item:"Chocolate", parent:["building", "microchip"],
-    blurb:"Sugar run through a Furnace's heat becomes the Bakery's own Chocolate." },
-  { id:"tractor", item:"Tractor", parent:["building", "microchip"],
-    blurb:"A Farm's own harvest fitted with an Engine becomes a Tractor -- Deep Mine's own leap into real machinery." },
-  { id:"glassvial", item:"Glass Vial", parent:["sailboat", "chocolate", "tractor"],
-    blurb:"Glass, reshaped again by a Furnace, becomes the Power Plant's own precision Glass Vial." },
-  { id:"wheel", item:"Wheel", parent:["sailboat", "chocolate", "tractor"],
-    blurb:"A Tree shaped by a set of Tools becomes the Observatory's own Wheel -- simple, and everywhere after this." },
-  { id:"satellitedish", item:"Satellite Dish", parent:["sailboat", "chocolate", "tractor"],
-    blurb:"Aluminum Alloy and Wire curve into a Satellite Dish -- the Space Station's own ears, built long before there's a station to bolt them to." },
-  { id:"oven", item:"Oven", parent:["glassvial", "wheel", "satellitedish"],
-    blurb:"A Furnace timed by a Clock becomes the Bakery's own Oven -- every real dessert after this needs one." },
-  { id:"book", item:"Book", parent:["glassvial", "wheel", "satellitedish"],
-    blurb:"Paper bound with a set of Tools becomes The City's first real Book." },
-  { id:"salmon", item:"Salmon", parent:["glassvial", "wheel", "satellitedish"],
-    blurb:"Seaweed, Water, and an Egg -- the forest's own river starts running with Salmon." },
-  { id:"telescope", item:"Telescope", parent:["oven", "book", "salmon"],
-    blurb:"Glass, Aluminum Alloy, and Silver, aimed straight up -- the first real look at what a Rocket only gets you closer to." },
-  { id:"orca", item:"Orca", parent:["oven", "book", "salmon"],
-    blurb:"Seaweed, Salmon, Bone, and Water -- The Ocean's own apex predator, an Orca, surfaces." },
-  { id:"yarn", item:"Yarn", parent:["oven", "book", "salmon"],
-    blurb:"Wool spun on a Wheel becomes Yarn -- The City's own start of every knit good after it." },
-  { id:"lighthouse", item:"Lighthouse", parent:["telescope", "orca", "yarn"],
-    blurb:"A Light Bulb set into Concrete becomes The Ocean's own Lighthouse, keeping watch over every ship after it." },
-  { id:"volcano", item:"Volcano", parent:["telescope", "orca", "yarn"],
-    blurb:"A Planet run through a Furnace's own heat becomes a Volcano -- the Deep Mine's strangest build yet." },
-  { id:"library", item:"Library", parent:["lighthouse", "volcano"], gateway:"Wardrobe",
-    blurb:"A Building plus a Book is all it takes to open the door to somewhere far stranger than The City." },
-  { id:"bicycle", item:"Bicycle", parent:["lighthouse", "volcano"],
-    blurb:"Aluminum Alloy, a Wheel, and Rubber -- the Greenhouse's own two-wheeled answer to getting around." },
-  { id:"speedboat", item:"Speedboat", parent:["library", "bicycle"],
-    blurb:"A Canoe fitted with an Engine and a Compass becomes The Ocean's own Speedboat." },
-  { id:"computer", item:"Computer", parent:["library", "bicycle"],
-    blurb:"A Battery, Plastic, Wire, and a Microchip -- the Power Plant's own Computer, and a real step toward a Rocket." },
-  { id:"skyscraper", item:"Skyscraper", parent:["speedboat", "computer"],
-    blurb:"A Building reaching for a Cloud, crowned with a Satellite Dish -- The City's tallest build yet." },
-  { id:"star", item:"Star", parent:["speedboat", "computer"],
-    blurb:"Furnace heat and the same Clock that unlocked every gemstone -- point them at the sky and catch a Star." },
-  { id:"car", item:"Car", parent:["skyscraper", "star"],
-    blurb:"Engine, Plastic, Glass, Rubber, and a Wheel -- the Power Plant's own full Car, assembled at last." },
-  { id:"motorcycle", item:"Motorcycle", parent:["skyscraper", "star"],
-    blurb:"A Bicycle fitted with an Engine becomes The City's own Motorcycle." },
-  { id:"rainbow", item:"Rainbow", parent:["car", "motorcycle"],
-    blurb:"A Cloud and a Star together -- the sky's whole spectrum, chased down at last." },
-  { id:"solarsystem", item:"Solar System", parent:["car", "motorcycle"],
-    blurb:"A Star of your own, mapped against a Planet -- the whole neighborhood, charted." },
-  { id:"life", item:"Life", parent:["car", "motorcycle"],
-    blurb:"Bone, DNA, Water, a Clock, and a Star -- The Ocean's own recipe for something that's actually alive." },
-  { id:"sushirestaurant", item:"Sushi Restaurant", parent:["rainbow", "solarsystem", "life"],
-    blurb:"Seaweed and Salmon, served inside a real Building -- The City's own Sushi Restaurant opens." },
-  { id:"gemstonecollection", item:"Gemstone Collection", parent:["rainbow", "solarsystem", "life"],
-    blurb:"Pearl, Ruby, Opal, Turquoise, Amber, and Diamond, all in one case -- the Deep Mine's entire gemstone line, complete." },
-  { id:"windmill", item:"Windmill", parent:["sushirestaurant", "gemstonecollection"],
-    blurb:"A Cloud, Concrete, a Turbine Blade, and a Battery -- the Greenhouse's own Windmill starts turning." },
-  { id:"museum", item:"Museum", parent:["sushirestaurant", "gemstonecollection"],
-    blurb:"A Building topped with a Telescope, and a Fossil on display inside -- The City's own Museum, everything on display at once." },
-  { id:"helicopter", item:"Helicopter", parent:["windmill", "museum"],
-    blurb:"Engine, Glass, Stainless Steel, and a Turbine Blade lift The City's own Helicopter off the ground -- fast travel, unlocked." },
-  { id:"knitscarf", item:"Knit Scarf", parent:["windmill", "museum"],
-    blurb:"Yarn dyed red and blue becomes The City's own Knit Scarf." },
-  { id:"pretzel", item:"Pretzel", parent:["windmill", "museum"],
-    blurb:"Dough, Potassium, and an Oven's heat twist into the Bakery's own Pretzel." },
-  { id:"applepie", item:"Apple Pie", parent:["helicopter", "knitscarf", "pretzel"],
-    blurb:"Dough, an Apple, and an Oven -- the Bakery's own Apple Pie, baked through." },
-  { id:"croissant", item:"Croissant", parent:["helicopter", "knitscarf", "pretzel"],
-    blurb:"Dough, Butter, and an Oven -- the Bakery's own flaky Croissant." },
-  { id:"bananabread", item:"Banana Bread", parent:["applepie", "croissant"],
-    blurb:"A loaf of Bread folded around a Banana becomes the Bakery's own Banana Bread." },
-  { id:"rocket", item:"Rocket", parent:["applepie", "croissant"], gateway:"Solar System",
-    blurb:"A Computer, a Solar Panel, and Titanium Alloy in hand, a Rocket is the whole Solar System's only key." },
-  { id:"chocolatecake", item:"Chocolate Cake", parent:["bananabread", "rocket"],
-    blurb:"A Cake dressed in Chocolate becomes the Bakery's own Chocolate Cake." },
-  { id:"centralstation", item:"Central Station", parent:["bananabread", "rocket"],
-    blurb:"Helicopter, Maglev Train, Car, and Speedboat, all under one roof -- The City's own Central Station, every way to travel in one place." },
-  { id:"beachtown", item:"Beach Town", parent:["bananabread", "rocket"],
-    blurb:"A Lighthouse, a Sushi Restaurant, a Speedboat, and a Banana -- The Ocean's whole Beach Town, built from everything it's grown so far." },
-  { id:"grandbanquet", item:"Grand Banquet", parent:["chocolatecake", "centralstation", "beachtown"],
-    blurb:"Apple, Banana, Sushi Restaurant, Cake, and Fireworks -- the Bakery's own Grand Banquet, everything on one table." },
-  { id:"renewablegrid", item:"Renewable Grid", parent:["chocolatecake", "centralstation", "beachtown"],
-    blurb:"Biofuel, a Windmill, a Water Turbine, a Sunflower, and a Geothermal Pump -- the Power Plant's entire Renewable Grid, humming at once." },
-  { id:"cruiseship", item:"Cruise Ship", parent:["chocolatecake", "centralstation", "beachtown"],
-    blurb:"Speedboat, Compass, Stainless Steel, Fireworks, a Fruit Cake, and a Trumpet -- The Ocean's biggest build yet, a full Cruise Ship." },
-  { id:"trumpet", item:"Trumpet", parent:["grandbanquet", "renewablegrid", "cruiseship"],
-    blurb:"Brass shaped by a set of Tools becomes The City's own Trumpet." },
-  { id:"seaturtle", item:"Sea Turtle", parent:["grandbanquet", "renewablegrid", "cruiseship"],
-    blurb:"Water, an Egg, and Sand -- the Island's own shoreline starts moving the moment a Sea Turtle appears." },
-  { id:"treasuremap", item:"Treasure Map", parent:["grandbanquet", "renewablegrid", "cruiseship"],
-    blurb:"Paper, Black Dye, and a Mirror -- the Wardrobe's own Treasure Map, pointing somewhere stranger still." },
-  { id:"golem", item:"Golem", parent:["trumpet", "seaturtle", "treasuremap"],
-    blurb:"A Statue given Life -- the Wardrobe's last and strangest build, a Golem standing at last." },
-];
-// The Job Board pool (jobEligibleItems()): the same item set as QUESTS.
-// Defined here; only read after load.
-const QUEST_ITEM_NAMES = new Set(QUESTS.map(q => q.item));
-function questBonus(q){ return Math.round((ITEM_POINTS[q.item] || 0) * 0.3); }
-/* Available to accept: parent(s) completed and not already taken. */
-function questAvailable(q){
-  const st = state.quests[q.id];
-  if (st && (st.taken || st.completed)) return false;
-  if (q.parent === null) return true;
-  // parent can be a single id or an array (AND-join, see QUESTS' own
-  // comment) -- every one of them has to be completed, not just one.
-  const parents = Array.isArray(q.parent) ? q.parent : [q.parent];
-  return parents.every(pid => state.quests[pid] && state.quests[pid].completed);
-}
-// How many untaken quests can be offered at once on top of those in
-// progress -- a slow drip in QUESTS order.
-const QUEST_VISIBLE_CAP = 3;
-function questActiveCount(){
-  return QUESTS.filter(q => { const st = state.quests[q.id]; return st && st.taken && !st.completed; }).length;
-}
-/* Whether a quest shows in the Quest Log now: never once completed; always
-   while taken; a new candidate only when a slot opens
-   (QUEST_VISIBLE_CAP minus those in progress). */
-function questVisible(q){
-  const st = state.quests[q.id];
-  if (st && st.completed) return false;
-  if (st && st.taken) return true;
-  if (!questAvailable(q)) return false;
-  const candidates = QUESTS.filter(x => !state.quests[x.id] && questAvailable(x));
-  const slot = candidates.indexOf(q);
-  return slot !== -1 && slot < Math.max(0, QUEST_VISIBLE_CAP - questActiveCount());
-}
-/* Same "select it, auto-pin the target item" moment takeJob() already
-   uses -- see its own comment for why an already-owned item is skipped
-   (nothing left to track toward). */
-function takeQuest(id){
-  const q = QUESTS.find(x => x.id === id);
-  if (!q || !questAvailable(q)) return;
-  state.quests[id] = {taken:true, completed:false};
-  if (!owns(q.item) && !isPinned(q.item)) togglePin(q.item);
-  // Crafting the target before accepting its quest is allowed, but
-  // checkQuestCompletion() only runs after a craft/trade -- so check now or
-  // the quest would never complete.
-  checkQuestCompletion();
-  save(); render();
-}
 /* One FIFO toast queue for quest/job completion and mode unlocks (see
    #eventToast). kind picks the .et-<kind> class; icon is raw HTML; bonus is
    optional. */
@@ -14238,35 +13325,6 @@ function showNextEventToast(){
   };
   toast.onclick = dismiss;
   eventToastTimer = setTimeout(dismiss, 3500);
-}
-/* Called from craft()/acceptTradeOffer(); queued like checkCollections(),
-   since it can land mid-animation. */
-function checkQuestCompletion(){
-  if (state.mode !== "hard") return;
-  QUESTS.forEach(q => {
-    const st = state.quests[q.id];
-    if (!st || !st.taken || st.completed || !owns(q.item)) return;
-    st.completed = true;
-    queueEventToast("quest", em(ITEM_EMOJI[q.item]), "Quest complete", q.item, "+" + questBonus(q) + " pts");
-    // Classic unlocks with the first Adventure quest completed. Kept in prefs
-    // so it survives resets.
-    if (!prefs.classicUnlocked){
-      prefs.classicUnlocked = true;
-      savePrefs();
-      queueModeUnlockToast("🗺️", "Classic Mode");
-    }
-  });
-}
-/* Classic jobs turn themselves in as soon as jobDone() is true (no "Turn
-   In" button), like Adventure's quests. */
-function checkJobCompletion(){
-  if (state.mode !== "classic") return;
-  state.jobs.forEach(job => {
-    if (job.turnedIn || !jobDone(job)) return;
-    job.turnedIn = true;
-    const entry = ENTRIES.find(e => e.name === job.items[0]);
-    queueEventToast("job", entry ? em(entry.emoji) : "", "Job complete", job.items.join(", "), "+" + jobBonus(job) + " pts");
-  });
 }
 /* Called from craft() with the item just crafted. Classic never re-crafts
    an owned item, so this runs once per item per run. Queues the square for
@@ -14463,43 +13521,6 @@ document.getElementById("bingoClearOverlayBody").addEventListener("click", ev =>
   closeOverlay("bingoClearOverlay");
   finishBingoSequence();
 });
-/* Quest rows reuse refStyleRowHTML(), sharing its expand key with Item
-   Reference. Only visible quests reach here. An unaccepted quest gets an
-   Accept control in the pin slot; once taken it gets the normal pin
-   (takeQuest() already pins the target). */
-function questRowHTML(q){
-  const st = state.quests[q.id];
-  const completed = st && st.completed;
-  const taken = st && st.taken;
-  const entry = ENTRIES.find(e => e.name === q.item);
-  if (!entry) return "";
-  const extraTop = q.gateway ? `<span class="quest-gateway">${esc(q.gateway)}</span>` : "";
-  const rightControl = !taken
-    ? `<div class="refpin-action-col">
-        <button type="button" class="refpin refpin-action" data-quest-take="${esc(q.id)}"
-          title="Accept quest" aria-label="Accept quest for ${esc(q.item)}">Accept</button>
-        ${refProgressFractionHTML(entry.name)}
-      </div>`
-    : undefined;
-  return refStyleRowHTML(entry, {complete: completed, extraTop, rightControl});
-}
-/* A flat, drip-fed list (questVisible()/QUEST_VISIBLE_CAP): in progress
-   first, then what's newly on offer. */
-// acceptedOnly: the hub sheet is a log (like jobBoardHTML()); new
-// candidates only show in the Marketplace's Quest Log.
-function questsBodyHTML(acceptedOnly){
-  if (state.mode !== "hard"){
-    return `<p class="empty">📜 Quests only track in Adventure Mode, where the full item web -- and every keystone in it -- is actually in play.</p>`;
-  }
-  // Completed quests never show, so: in progress first, then new offers.
-  const visible = QUESTS.filter(questVisible);
-  const inProgress = visible.filter(q => { const st = state.quests[q.id]; return st && st.taken; });
-  const available = acceptedOnly ? [] : visible.filter(q => questAvailable(q));
-  const ordered = [...inProgress, ...available];
-  const body = ordered.length ? `<div class="reftable">${ordered.map(questRowHTML).join("")}</div>`
-    : acceptedOnly ? `<p class="empty">No quest accepted yet -- open the Marketplace to see what's on offer.</p>` : "";
-  return body;
-}
 
 /* -------------------------------------------------------- sub-zones --- */
 /* Solar System picker -- the one "menu" kind in SUBZONE_TRAVEL (see
@@ -14557,21 +13578,10 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     return;
   }
 
-  const takeBtn = ev.target.closest("[data-take]");
-  if (takeBtn){ takeJob(+takeBtn.dataset.take); renderJobBoard(); return; }
 
   const hintBtn = ev.target.closest("[data-todo-hint]");
   if (hintBtn){ todoHintOpen = !todoHintOpen; renderJobBoard(); return; }
 
-  // Adventure's Marketplace tray lists available quests, so data-quest-take is
-  // handled here too (this sheet is outside #screen).
-  const questTakeBtn = ev.target.closest("[data-quest-take]");
-  if (questTakeBtn){ takeQuest(questTakeBtn.dataset.questTake); renderJobBoard(); render(); return; }
-
-  // Swipe dots, Adventure's own tray -- tap to jump straight to a panel,
-  // same target marketTrayPanel value the swipe gesture below writes to.
-  const dotBtn = ev.target.closest("[data-tray-panel]");
-  if (dotBtn){ marketTrayPanel = +dotBtn.dataset.trayPanel; renderJobBoard(); return; }
 
   // A BINGO square's corner pin, checked before the whole-cell handler below
   // (which would also match it).
@@ -14625,29 +13635,6 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   }
 });
 
-/* Adventure's Marketplace tray: swipe between Quests and Bundles
-   (marketTrayPanel). Delegated on #jobSheetBody (it's re-rendered), and only
-   for drags that start inside .market-tray-swipe. A mostly horizontal drag
-   past SWIPE_THRESHOLD_PX flips the panel; anything else is a tap or a
-   scroll. */
-const SWIPE_THRESHOLD_PX = 50;
-let swipeStartX = null, swipeStartY = null, swipeActive = false;
-document.getElementById("jobSheetBody").addEventListener("touchstart", ev => {
-  if (!ev.target.closest("#marketTraySwipe")) return;
-  swipeStartX = ev.touches[0].clientX;
-  swipeStartY = ev.touches[0].clientY;
-  swipeActive = true;
-}, {passive: true});
-document.getElementById("jobSheetBody").addEventListener("touchend", ev => {
-  if (!swipeActive || swipeStartX === null) return;
-  swipeActive = false;
-  const dx = (ev.changedTouches[0].clientX) - swipeStartX;
-  const dy = (ev.changedTouches[0].clientY) - swipeStartY;
-  swipeStartX = null;
-  if (Math.abs(dx) < SWIPE_THRESHOLD_PX || Math.abs(dx) < Math.abs(dy)) return;
-  const next = dx < 0 ? 1 : 0; // swipe left -> next panel, swipe right -> previous
-  if (next !== marketTrayPanel){ marketTrayPanel = next; renderJobBoard(); }
-});
 
 /* -------------------------------------------------------- settings --- */
 const setMinigamesBox = document.getElementById("setMinigames");
