@@ -16,7 +16,9 @@ deterministically:
   1. Strip the outer <!DOCTYPE html>/<html>/<head>/<body> wrapper tags.
   2. Strip the PWA (manifest + service worker) IIFE, replacing it with a
      one-line comment explaining the omission.
-  3. Inline every tutorial/*.webp, backdrops/*.webp, and banners/*.webp
+  3. Inline assets/images.js (the embedded icon/art data, split out of
+     elementia.html 2026-11-05) back into a plain <script> block.
+  4. Inline every tutorial/*.webp, backdrops/*.webp, and banners/*.webp
      image reference as a base64 data URI -- the Artifact is a single file
      with no sidecar assets, so the relative paths elementia.html uses for
      local/file:// testing won't resolve there. Run build_tutorial_assets.py
@@ -115,6 +117,16 @@ def inline_local_images(text):
     return text
 
 
+IMAGES_TAG = '<script src="assets/images.js"></script>'
+
+
+def inline_image_script(text):
+    if text.count(IMAGES_TAG) != 1:
+        raise SystemExit(f"Expected exactly one {IMAGES_TAG} in {SRC.name}.")
+    js = (HERE / "assets" / "images.js").read_text(encoding="utf-8")
+    return text.replace(IMAGES_TAG, "<script>\n" + js + "\n</script>")
+
+
 def find_version(text):
     m = re.search(r'"version":\s*"([^"]+)"', text)
     return m.group(1) if m else "unknown"
@@ -134,6 +146,8 @@ def main():
 
     out_text = strip_document_wrapper(src_text)
     out_text = strip_pwa_block(out_text)
+    if not LANDSCAPE:
+        out_text = inline_image_script(out_text)
     out_text = inline_local_images(out_text)
 
     hits = check_risky_patterns(out_text)

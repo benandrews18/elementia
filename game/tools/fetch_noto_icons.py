@@ -37,6 +37,8 @@ HERE = Path(__file__).resolve().parent
 GUIDE = HERE.parent.parent / "Elementia_Handoff" / "handoff" / "pdf_generation" / "build_guide.py"
 ICON_DIR = HERE.parent / "icons" / "noto"
 TARGET_HTML = HERE.parent / "elementia.html"
+# The generated icon block lives in the split-out image file (2026-11-05).
+TARGET_ICONS = HERE.parent / "assets" / "images.js"
 
 CDN_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128/"
 START, END = "/*__NOTO_ICONS_START__*/", "/*__NOTO_ICONS_END__*/"
@@ -148,22 +150,22 @@ def main():
         for e, fname, err in misses:
             print(f"  {e!r} ({fname}): {err}")
 
-    html = TARGET_HTML.read_text(encoding="utf-8")
+    html = TARGET_ICONS.read_text(encoding="utf-8")
     a, b = html.find(START), html.find(END)
     if a < 0 or b < 0:
-        raise SystemExit(f"Markers {START}/{END} not found in {TARGET_HTML}")
+        raise SystemExit(f"Markers {START}/{END} not found in {TARGET_ICONS}")
 
     current = html[a + len(START):b].strip("\n")
     if current == block:
-        print(f"\n{TARGET_HTML.name}: in sync ({len(emojis) - len(misses)} icons)")
+        print(f"\n{TARGET_ICONS.name}: in sync ({len(emojis) - len(misses)} icons)")
         return
 
     if check_only:
-        raise SystemExit(f"OUT OF SYNC with build_guide.py: {TARGET_HTML.name}")
+        raise SystemExit(f"OUT OF SYNC with build_guide.py: {TARGET_ICONS.name}")
 
     html = html[:a + len(START)] + "\n" + block + "\n" + html[b:]
-    TARGET_HTML.write_text(html, encoding="utf-8")
-    print(f"\nwrote {len(emojis) - len(misses)} icons into {TARGET_HTML.name}")
+    TARGET_ICONS.write_text(html, encoding="utf-8")
+    print(f"\nwrote {len(emojis) - len(misses)} icons into {TARGET_ICONS.name}")
 
 
 if __name__ == "__main__":
