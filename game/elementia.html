@@ -90,9 +90,7 @@ html.low-motion .map-pick-note, html.low-motion .bingo-cell-addcap,
 html.low-motion #bootScreen .boot-icon{animation:none !important}
 /* Kept: the Quark count-up's meter fill, the dice themselves, the fade. */
 html.low-motion body .qm-seg-fill{transition-duration:.3s !important}
-html.low-motion body .rollcard{animation-duration:.28s !important}
 html.low-motion body .die.tumbling{animation-duration:.5s !important}
-html.low-motion body .rollcard.revealed .sym{animation-duration:.3s !important}
 html.low-motion body #fadeCurtain{transition-duration:.5s !important}
 /* Rolled dice float over the top of the shop instead of pushing it down
    (see playRollAnimation()). */
@@ -369,7 +367,6 @@ body[data-screen="market"] #trackedPill{display:none}
    #pinsBtn). */
 .mj-search-badge{font-size:13px; line-height:1}
 .mj-em{font-size:16px; line-height:1}
-.map-job-empty-note{margin-bottom:18px}
 /* The "choose your first station" prompt, centred over the map. A solid
    banner (it's a new run's first instruction) with a light pulse; reduced
    motion stops the pulse. */
@@ -533,148 +530,9 @@ body[data-screen="market"] #trackedPill{display:none}
 #jobSheet.bounce-away{animation:tray-bounce-away .32s cubic-bezier(.3,.8,.4,1) forwards}
 /* Less bottom padding: this tray shrink-wraps its content. */
 #jobSheet.top-tray .dbody{padding-bottom:16px}
-/* Only the Job Board keeps a dedicated sheet; Trade Market, Quests and
-   Collections render inline on the Marketplace screen. */
-/* Marketplace screen (screen === "market"): a real screen,
-   not a sheet. Its backdrop is the shared #backdrop layer (a 9:16 portrait,
-   cover-sized). .market-banner is a plain title strip; sections expand
-   inline below it (see marketSectionHTML()). */
-/* No extra top padding, matching the Map screen so switching between them
-   doesn't jump. */
-.market-screen{text-align:center}
-.market-banner{
-  display:inline-block; padding:10px 34px; border-radius:999px;
-  background:rgba(15,20,28,.65); border:2px solid var(--gold);
-  box-shadow:0 6px 16px rgba(0,0,0,.4);
-}
-.market-banner h1{
-  font-size:22px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
-  color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.6);
-}
-/* An expanded Marketplace section: solid card stock so content reads over
-   the art. Left-aligned like every other card list. */
-.market-section{
-  text-align:left; margin:16px 0 8px; background:var(--card);
-  border:2px solid var(--gold-line); border-radius:16px; padding:14px;
-  box-shadow:0 8px 24px rgba(0,0,0,.5);
-}
-.market-section-head{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  margin-bottom:12px; padding-bottom:10px; border-bottom:1.5px solid var(--line);
-}
-.market-section-head h2{font-size:17px; font-weight:800; color:#fff}
-/* The menu is a separate fixed layer (#marketArc), so it doesn't need to
-   fit in this box. */
-
-/* Marketplace menu: icon+label rows pinned to the left edge, centred
-   vertically with top:50%/translateY so it balances however many rows show.
-   Hidden entirely off the Marketplace screen (see render()). */
-#marketArc{
-  position:fixed; left:14px; top:50%; transform:translateY(-50%); z-index:73;
-  display:none; flex-direction:column; gap:16px; pointer-events:none;
-  max-height:calc(100% - var(--hub-h, 67px) - 90px); overflow-y:auto;
-}
-#marketArc.show{display:flex}
-/* Frosted light card behind each row so text stays legible over busy art. */
-.market-arc-btn{
-  pointer-events:auto; border:none; cursor:pointer;
-  display:flex; align-items:center; gap:10px;
-  padding:8px 18px 8px 8px; border-radius:999px;
-  background:rgba(255,255,255,.14); backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-  box-shadow:0 4px 14px rgba(0,0,0,.25);
-  transform:translateX(0); opacity:1;
-  transition:transform .32s cubic-bezier(.34,1.56,.64,1), opacity .22s ease, background .12s;
-}
-.market-arc-btn:not(:disabled):hover{background:rgba(255,255,255,.22)}
-/* Retracts off the left edge while a section is expanded (see
-   renderMarketArc()). */
-.market-arc-btn.retracted{
-  transform:translateX(-90px); opacity:0; pointer-events:none;
-}
-/* Collections before it's earned (see renderMarketArc()): hidden the same
-   way as .retracted, so it slides in once unlocked. */
-.market-arc-btn.earned-hidden{
-  transform:translateX(-90px); opacity:0; pointer-events:none;
-}
-/* The unlock condition, shown as text above the disabled button (see
-   renderMarketArc()'s lockReason). */
-.market-arc-locknote{
-  font-size:10px; font-weight:800; color:#ffce54; text-transform:uppercase;
-  letter-spacing:.4px; text-shadow:0 2px 5px rgba(0,0,0,.8), 0 0 3px rgba(0,0,0,.6);
-  max-width:120px; line-height:1.3; margin:0 0 -8px 2px; pointer-events:none;
-}
-.market-arc-icon{
-  flex:none; width:60px; height:60px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:26px;
-  background:linear-gradient(180deg, #38445a, #202836 62%);
-  border:2.5px solid #10141b; color:#fff;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 8px 16px rgba(0,0,0,.45);
-  transition:box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
-}
-.market-arc-label{
-  font-size:14px; font-weight:800; color:#fff; letter-spacing:.2px; white-space:nowrap;
-  text-shadow:0 2px 5px rgba(0,0,0,.8), 0 0 3px rgba(0,0,0,.6);
-}
-.market-arc-btn:not(:disabled):hover .market-arc-icon{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
-.market-arc-btn:not(:disabled):active .market-arc-icon{
-  transform:translateY(4px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
-}
-.market-arc-btn:disabled{opacity:.5; filter:grayscale(.4); cursor:default}
-/* Trading Post: one row per offer -- two item cards (give, get) joined by
-   an arrow that is also the trade button (see tradeCardHTML()). Same card
-   language as the first-craft fly-in (.fc-card). */
-.trade-board{display:flex; flex-direction:column; gap:14px}
-.tp-trade-row{
-  display:flex; align-items:center; gap:10px; width:100%;
-  background:none; border:none; padding:0; cursor:pointer;
-}
-.tp-trade-row:disabled{cursor:not-allowed}
-.tp-ex-card{
-  flex:1; min-width:0; aspect-ratio:5/4; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:5px; padding:10px 8px; box-sizing:border-box;
-  border-radius:14px; background:var(--card); border:2px solid var(--suit, #4a4f5c);
-  border-top-width:9px; box-shadow:0 4px 12px rgba(0,0,0,.25);
-  transition:filter .15s ease;
-}
-.tp-trade-row:disabled .tp-ex-card{filter:grayscale(.5) brightness(.8)}
-.tp-ex-icon{font-size:30px; line-height:1}
-.tp-ex-name{
-  font-size:11px; font-weight:800; color:#fff; text-align:center; line-height:1.2;
-  overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-}
-.tp-ex-arrow{flex:none; font-size:22px; color:var(--gold)}
-.tp-trade-row:disabled .tp-ex-arrow{color:var(--mute)}
-/* Quest rows reuse Item Reference's .refrow (refStyleRowHTML()); this pill
-   is the quest-specific addition (via opts.extraTop). */
-.quest-gateway{
-  font-size:9.5px; font-weight:800; letter-spacing:.3px; text-transform:uppercase;
-  color:#2a2110; background:var(--gold); padding:2px 8px; border-radius:999px; white-space:nowrap;
-}
-/* Collections: one row per collection with its members as a filmstrip.
-   Completed rows are violet; the rest stay neutral. */
-.coll-row{
-  padding:14px; margin-bottom:10px; border-radius:13px;
-  background:var(--sunken); border:1.5px solid var(--line);
-}
-.coll-row.done{background:var(--collection-soft); border-color:var(--collection-line)}
-.coll-row-head{display:flex; align-items:center; gap:10px; margin-bottom:10px}
-.coll-em{font-size:24px; line-height:1; flex:none}
-.coll-name{font-size:15px; font-weight:800; color:var(--ink); flex:1; min-width:0}
-.coll-progress{font-size:11.5px; font-weight:800; color:var(--mute); flex:none}
-.coll-row.done .coll-progress{color:var(--collection)}
-.coll-bonus{
-  flex:none; font-size:10px; font-weight:800; letter-spacing:.3px;
-  padding:3px 8px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--mute);
-}
-.coll-row.done .coll-bonus{background:var(--collection); border-color:var(--collection); color:#fff}
-/* Trading Post locked state (see tradeBodyHTML()): one circle per station,
-   "?" until visited. */
-/* Stations-visited row. Two homes: Hard Mode's compact row inside
-   #marketArc (see renderMarketArc()), and Classic's full-width copy at the
-   top of the Marketplace tray (.market-classic-progress). Never wraps --
-   all 8 stations always on one line. */
-.market-station-progress-row{flex-direction:column; align-items:flex-start; gap:8px; cursor:default}
+/* Stations-visited row, full width at the top of the BINGO tray
+   (.market-classic-progress). Never wraps -- all 8 stations always on one
+   line. */
 .market-station-progress-label{font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
   color:rgba(255,255,255,.75)}
 .market-progress-stations{display:flex; flex-wrap:nowrap; gap:5px}
@@ -838,82 +696,9 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Silhouette outline around the item art (same drop-shadow stack as
    .tok-icon), rather than a rectangular border. */
 .bc-icon{filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)}
-/* Adventure's Marketplace tray (adventureMarketTrayHTML()): two swipeable
-   panels, Quests then Collection Bundles. JS sets the track's transform
-   directly (marketTrayPanel). */
-.market-tray-dots{display:flex; justify-content:center; gap:8px; margin:4px 0 10px}
-.market-tray-dot{
-  width:8px; height:8px; border-radius:50%; padding:0; border:none;
-  background:var(--line); transition:background .15s, transform .15s;
-}
-.market-tray-dot.active{background:var(--gold); transform:scale(1.3)}
-.market-tray-swipe{overflow:hidden}
-.market-tray-track{display:flex; width:200%; transition:transform .25s cubic-bezier(.3,.8,.4,1)}
-.market-tray-panel{flex:0 0 50%; min-width:0}
-/* Bundle cards in a horizontal scroll; each item square matches a BINGO
-   square's size (.bundle-cell). */
-.bundle-row{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 10px; -webkit-overflow-scrolling:touch}
-.bundle-card{
-  flex:none; width:212px; background:var(--card); border:1.5px solid var(--line);
-  border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px;
-}
-.bundle-card.complete{border-color:var(--gold-line); box-shadow:0 0 0 1px var(--gold-line), 0 0 14px rgba(226,178,90,.18)}
-.bundle-card-head{display:flex; align-items:center; justify-content:space-between; gap:6px}
-.bundle-card-name{font-size:12.5px; font-weight:700; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.bundle-card-bonus{
-  flex:none; font-family:inherit; font-weight:800; font-size:11px; color:var(--mute);
-  background:var(--sunken); border:1px solid var(--line); border-radius:999px; padding:3px 8px;
-}
-.bundle-card.complete .bundle-card-bonus{color:#2a2110; background:linear-gradient(180deg,#f0d38a,var(--gold) 75%); border-color:transparent}
-.bundle-card-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:5px}
-/* position:relative so the absolutely positioned .bc-icon sizes against
-   this cell. */
-.bundle-cell{
-  position:relative; width:60px; height:60px; border-radius:10px; background:var(--sunken); border:1.5px solid var(--line);
-  display:flex; align-items:center; justify-content:center; opacity:.4; filter:grayscale(1);
-}
-.bundle-cell .bc-icon{font-size:26px; line-height:1}
-.bundle-cell.seen{opacity:.75}
-.bundle-cell.owned{opacity:1; filter:none; background:var(--ok-soft); border-color:var(--ok-line)}
-.bundle-card-progress{font-size:11px; color:var(--mute); font-weight:700; text-align:right}
-.bundle-card.complete .bundle-card-progress{color:var(--gold)}
-.trade-lock-stations{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:16px}
-.trade-lock-station{
-  width:46px; height:46px; border-radius:50%; flex:none;
-  display:flex; align-items:center; justify-content:center;
-  font-size:20px; line-height:1; font-weight:800;
-  background:var(--bg-soft); border:2px solid var(--line); color:var(--mute);
-}
-.trade-lock-station.visited{
-  background:var(--gold-soft); border-color:var(--gold); color:var(--ink);
-}
-.coll-members{display:flex; flex-wrap:wrap; gap:6px}
-.coll-member{
-  display:flex; flex-direction:column; align-items:center; gap:2px; width:52px;
-  opacity:.4; filter:grayscale(1);
-}
-.coll-member.have{opacity:1; filter:none}
-.coll-member .cm-em{font-size:22px; line-height:1}
-.coll-member .cm-name{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
-/* Collection-complete toast: a passive top banner, not a blocking overlay
-   like #celebrate, so it doesn't interrupt whatever the craft triggered.
-   Queued one at a time (collectionToastQueue). */
-#collectionToast{
-  position:fixed; top:0; left:0; right:0; z-index:90;
-  display:flex; align-items:center; gap:12px; padding:14px 18px;
-  background:var(--collection-soft); border-bottom:2.5px solid var(--collection);
-  transform:translateY(-100%); transition:transform .35s cubic-bezier(.34,1.56,.64,1);
-  cursor:pointer;
-}
-#collectionToast.show{transform:translateY(0)}
-#collectionToast .ct-em{font-size:30px; line-height:1; flex:none}
-#collectionToast .ct-body{flex:1; min-width:0}
-#collectionToast .ct-title{font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--collection)}
-#collectionToast .ct-name{font-size:15px; font-weight:800; color:var(--ink)}
-#collectionToast .ct-bonus{flex:none; font-size:13px; font-weight:800; color:var(--collection)}
-/* Shared event toast for quest/job completion and mode unlocks (see
-   queueEventToast()). The accent colour changes per kind: gold =
-   achievement, green = completed build, purple = big milestone/unlock. */
+flex:none; font-size:13px; font-weight:800; color:var(--collection)}
+/* Event toast (queueEventToast()): a passive top banner. The accent colour
+   comes from the kind; only "warn" (red) is used today. */
 #eventToast{
   position:fixed; top:0; left:0; right:0; z-index:90;
   display:flex; align-items:center; gap:14px; padding:16px 20px;
@@ -932,12 +717,6 @@ body[data-screen="market"] #trackedPill{display:none}
 #eventToast .ct-title{font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase}
 #eventToast .ct-name{font-size:16.5px; font-weight:800; color:var(--ink)}
 #eventToast .ct-bonus{flex:none; font-size:14px; font-weight:800}
-#eventToast.et-quest{background:var(--gold-soft); border-bottom-color:var(--gold)}
-#eventToast.et-quest .ct-title, #eventToast.et-quest .ct-bonus{color:var(--gold)}
-#eventToast.et-job{background:var(--ok-soft); border-bottom-color:var(--ok)}
-#eventToast.et-job .ct-title, #eventToast.et-job .ct-bonus{color:var(--ok)}
-#eventToast.et-unlock{background:var(--collection-soft); border-bottom-color:var(--collection)}
-#eventToast.et-unlock .ct-title, #eventToast.et-unlock .ct-bonus{color:var(--collection)}
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
 #eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
 /* This kind's text is a sentence, so it uses body sizing, not the bold
@@ -957,12 +736,6 @@ body[data-screen="market"] #trackedPill{display:none}
   animation:hubCoinFlip .4s ease-in-out; backface-visibility:hidden;
 }
 
-.mp-sub{font-size:14px; color:var(--ink2); margin-bottom:16px; line-height:1.5}
-/* Job Board rows reuse Item Reference's .refrow (refStyleRowHTML()/
-   jobRowHTML()). Locked state (board closed, or at MAX_ACTIVE_JOBS) dims
-   the whole list. */
-.reftable.locked{opacity:.5; filter:grayscale(.4)}
-.reftable.locked .refpin-action{cursor:not-allowed}
 
 /* ------------------------------------------------------- game mode --- */
 .mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
@@ -984,36 +757,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .mode-card-actions{display:flex; gap:8px}
 .mode-card-actions .bigbtn{flex:1; padding:11px 10px; font-size:14px}
 
-/* Section headings ("Job Board -- <station>", "My Jobs"). The native
-   <summary> triangle is replaced by a larger rotating chevron. */
-.job-board-heading{
-  display:flex; align-items:center; gap:9px; cursor:pointer; list-style:none;
-  font-size:17px; font-weight:800; letter-spacing:-.2px; color:#fff;
-  margin:0 0 14px;
-}
-.job-board-heading::-webkit-details-marker{display:none}
-/* Divider only above "My Jobs": each heading is its own <details>, so
-   :first-child can't tell them apart; this matches a .job-section that
-   directly follows another one. */
-.job-section + .job-section > .job-board-heading{
-  margin-top:32px; padding-top:24px; border-top:2px solid var(--gold);
-}
-.job-board-heading::before{
-  content:""; flex:none; width:11px; height:11px; margin-right:1px;
-  border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);
-  transform:rotate(-45deg) translate(-2px,-2px);
-  transition:transform .18s ease;
-}
-.job-section[open] > .job-board-heading::before{transform:rotate(45deg) translate(-1px,-3px)}
-/* Board and My Jobs collapse independently via native <details> (free
-   keyboard/a11y). This border-drawn chevron is the only one, shared by every
-   collapse control using .job-board-heading (including the shop's "Collapse
-   crafted" toggle). */
-.job-section > summary.job-board-heading{
-  cursor:pointer; list-style:none; display:flex; align-items:center; gap:6px;
-  -webkit-user-select:none; user-select:none;
-}
-.job-section > summary.job-board-heading::-webkit-details-marker{display:none}
 
 /* Recursive to-do tree: every node expands independently down to raw
    elements; indentation comes from normal nesting. */
@@ -1273,15 +1016,10 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Never-visited station preview (see mapCardHTML()) -- stands in for the
    whole .station-items/.capline block, so it gets that block's own
    top border/spacing instead of just floating loose. */
-.mc-unvisited{
-  font-size:13px; color:var(--mute); font-style:italic; text-align:center;
-  border-top:1px dashed var(--line); padding-top:10px; margin:0 0 2px;
-}
 .cap-em{font-size:28.5px; line-height:1}
 .cap-name{color:#fff; font-weight:700}
 .capline.done{color:var(--ok); font-weight:700}
 .capline.done .cap-name{color:var(--ok)}
-.norepeat-note{font-size:12px; color:var(--bad); font-weight:700}
 /* Informational only now -- confirming travel itself lives on the hub's
    own Travel face (see mapCardHTML()'s statusNote/hubHomeFace()). */
 .map-status-note{
@@ -1342,30 +1080,7 @@ body[data-screen="market"] #trackedPill{display:none}
    finished animating (renderStation()'s stationheadFrozen), so the pool and
    dice stay visible; normal flow afterward. */
 .stationhead.frozen{position:sticky; top:0; z-index:4}
-.travel-btn{
-  position:absolute; top:14px; right:16px; z-index:3;
-  display:flex; align-items:center; justify-content:center; width:40px; height:40px;
-  background:rgba(255,255,255,.14); border:1.5px solid rgba(255,255,255,.35); border-radius:50%;
-}
-.travel-btn:hover{background:rgba(255,255,255,.24)}
-.travel-btn .tb-em{font-size:19px; line-height:1}
-/* Room for the travel badge only when it's present, so long station names
-   don't run into it. */
-.sheet-head:has(.travel-btn){padding-right:66px}
-/* Planet picker: a plain grid inside the shared .overlay/.sheetbox shape
-   (same dialog language as Settings/Convert), not its own bespoke panel. */
-.planet-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px}
-.planet-card{
-  display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 10px;
-  background:var(--sunken); border:1.5px solid var(--line); border-radius:14px; text-align:center;
-}
-.planet-card:hover{border-color:var(--gold-line)}
-.planet-card .pl-em{font-size:34px; line-height:1}
-.planet-card .pl-name{font-size:13px; font-weight:800; color:var(--ink)}
-/* Empty shop (the 8 planets, for now) -- an explicit placeholder rather
-   than a silently blank section, so it reads as "nothing here yet" and
-   not as a rendering bug. */
-.subzone-empty{padding:30px 20px; text-align:center; color:var(--mute); font-size:14px; font-style:italic}
+padding:30px 20px; text-align:center; color:var(--mute); font-size:14px; font-style:italic}
 
 /* Always one row: .sheet can be narrow even in a wide viewport, so a media
    query is the wrong signal. .gcol shrinks (min-width:0) instead. */
@@ -1413,9 +1128,6 @@ body[data-screen="market"] #trackedPill{display:none}
   width:min(24px, 60cqw); height:min(24px, 60cqw); margin:0 auto;
   background-color:var(--card); border:2px solid var(--line); border-radius:6px;
 }
-/* Roll die: no border of its own (.rollcard is the visible square). Sized
-   inline by playRollAnimation() to match the chips. */
-.rollcard .die{width:100%; height:100%; background-color:transparent; border:none; box-sizing:border-box}
 @keyframes tumble{
   0%{transform:rotate(0) scale(1)} 25%{transform:rotate(-18deg) scale(1.12)}
   50%{transform:rotate(14deg) scale(.94)} 75%{transform:rotate(-8deg) scale(1.06)}
@@ -1430,7 +1142,6 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Mid-flight state: pulled out of normal flow so it can travel to the
    inventory hub icon in a straight line regardless of what's reflowing
    underneath it (see flyToInventory()). */
-.rollcard.flying{position:fixed; z-index:150; pointer-events:none}
 #rollPopup{
   position:fixed; inset:0; z-index:140; display:flex; align-items:safe center; justify-content:center; overflow-y:auto;
   padding:16px; background:rgba(6,14,20,.62);
@@ -1468,36 +1179,10 @@ body[data-screen="market"] #trackedPill{display:none}
 .rollchip.revealed .rc-die{opacity:0}
 #rollCollect{min-width:60%; visibility:hidden; opacity:0; transition:opacity .2s ease}
 #rollCollect.show{visibility:visible; opacity:1}
-.playnote{font-size:13.5px; color:var(--mute); font-weight:600}
 /* nowrap + equal flex columns (like .gather) so a full 6-dice roll always
    fits one line. */
 .rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
-/* Fixed basis sized for 6 dice (100% minus five 10px gaps, / 6), so smaller
-   rolls don't stretch -- they're centred instead. aspect-ratio:1 keeps the
-   box square through the die-to-symbol swap; border-box so padding never
-   changes its size. */
-.rollcard{
-  display:flex; align-items:center; justify-content:center; padding:8px;
-  flex:0 0 calc((100% - 50px) / 6); max-width:104px; aspect-ratio:1; container-type:inline-size;
-  box-sizing:border-box; background:var(--ok-soft); border:1.5px solid var(--ok-line); border-radius:9px;
-  animation:pop .28s cubic-bezier(.2,1.4,.4,1) both;
-  transition:background .2s, border-color .2s, box-shadow .2s;
-}
-@keyframes pop{from{opacity:0; transform:scale(.6) translateY(8px)}to{opacity:1; transform:none}}
-/* The symbol is hidden while the die tumbles; .revealed (added by
-   playRollAnimation()) hides the die, shows the symbol and switches the
-   border to the element's suit colour, in the same fixed box. Styled like
-   .gchip .gsym so it matches the pool. */
-.rollcard .sym{
-  display:none; width:100%; height:100%; align-items:center; justify-content:center;
-  font-weight:800; color:#221f1a; font-size:min(32px, 55cqw);
-}
-/* Thicker ring via inset box-shadow (paint only), so revealing up to 6 at
-   once doesn't force layout during the fly-away. border-width would. */
-.rollcard.revealed{background:#fff; border-color:var(--suit); box-shadow:inset 0 0 0 3.5px var(--suit)}
-.rollcard.revealed .die{display:none}
-.rollcard.revealed .sym{display:flex; animation:sym-pop .3s cubic-bezier(.3,1.4,.4,1)}
-@keyframes sym-pop{from{opacity:0; transform:scale(.5) rotate(-8deg)}to{opacity:1; transform:none}}
+from{opacity:0; transform:scale(.5) rotate(-8deg)}to{opacity:1; transform:none}}
 
 /* make here */
 .makewrap{padding:20px 8px 24px}
@@ -1745,41 +1430,6 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
 .craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
-/* Batch crafting: the quantity strip stacks under the Craft button so the
-   button keeps its full-width target. .craft-col now does the "fill the
-   right edge" job. */
-.craft-col{flex:none; align-self:stretch; width:72px; display:flex; flex-direction:column}
-.craft-col .craftbtn{flex:1; align-self:stretch; width:auto; border-radius:0 10px 0 0}
-.batch-qty-row{
-  flex:none; display:flex; align-items:center; justify-content:space-between; gap:2px;
-  border-left:1.5px solid var(--line); border-top:1.5px solid var(--line);
-  background:var(--card); border-radius:0 0 10px 0; padding:3px 5px;
-}
-.batch-qty-btn{
-  flex:none; width:20px; height:20px; border:none; border-radius:6px; padding:0;
-  background:var(--sunken); color:var(--ink); font-weight:800; font-size:14px; line-height:1;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-}
-.batch-qty-btn:disabled{color:var(--mute); cursor:not-allowed}
-.batch-qty-btn:not(:disabled):active{filter:brightness(.88)}
-.batch-qty-label{font-size:11px; font-weight:800; color:var(--ink2)}
-/* Stock count in the owned-badge corner (attr(data-stock), set in
-   itemHTML()): batch mode keeps owned cards craftable, so a checkmark would
-   wrongly read as done. */
-.item.stocked::after{
-  content:attr(data-stock); position:absolute; top:-8px; right:-8px; min-width:26px; height:24px; padding:0 5px;
-  border-radius:999px; background:var(--ok); color:#fff; font-size:12px; font-weight:800;
-  display:flex; align-items:center; justify-content:center; line-height:1;
-  box-shadow:0 0 0 2px var(--card); z-index:1;
-}
-/* Batch confirm sheet: one row per planned conversion; "Change" swaps the
-   donor element using the Convert picker grid. */
-.batch-conv-row{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
-  padding:10px 12px; border-radius:10px; background:var(--sunken); margin-bottom:8px;
-}
-.batch-conv-text{font-size:14px; font-weight:700}
-.batch-swap-wrap{margin-top:4px}
 
 .capbox{margin-top:16px; background:var(--cap-grad);
   border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
@@ -1791,12 +1441,6 @@ body[data-screen="market"] #trackedPill{display:none}
   box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
 }
 .capbox .item.job-highlight{box-shadow:none}
-.cap-tag{font-size:10px; font-weight:800; letter-spacing:.8px; color:var(--gold);
-  background:var(--gold-soft); padding:2px 7px; border-radius:5px}
-/* Hard Mode utility tag (UTILITY_ITEMS): teal, quieter than the CAPSTONE
-   tag -- it means "never spent". */
-.utility-tag{font-size:10px; font-weight:800; letter-spacing:.8px; color:#2dd4c8;
-  background:rgba(45,212,200,.15); padding:2px 7px; border-radius:5px}
 
 /* ------------------------------------------------------- inventory --- */
 #scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
@@ -1973,19 +1617,8 @@ body[data-screen="market"] #trackedPill{display:none}
 .mat-zone-page .elqty{color:#221f1a}
 /* Convert quick grid: elements with fewer than 3 can't be the FROM side. */
 .elbox.invalid{opacity:.4; cursor:not-allowed}
-#invFilter{width:100%; padding:8px 11px; border:1.5px solid var(--line); border-radius:9px;
-  font:inherit; font-size:14px; background:var(--bg-soft); color:var(--ink); margin-bottom:4px}
 
 /* element conversion */
-.convert-trigger{
-  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
-  margin:10px 0 4px; padding:11px; border-radius:11px; border:1.5px solid var(--ok-line);
-  background:var(--ok-soft); color:var(--ok); font-weight:800; font-size:14.5px;
-}
-.convert-trigger:hover{filter:brightness(1.05)}
-.convert-trigger.arrange-trigger{
-  border-color:var(--gold-line); background:var(--gold-soft); color:var(--gold);
-}
 /* Goal card (#convertGoalCard): empty and hidden (:empty) when Convert
    opens from the floating button. Otherwise holds one unmodified itemHTML()
    card, identical to the shop's, sitting on #convert's top border
@@ -2110,17 +1743,6 @@ body[data-screen="market"] #trackedPill{display:none}
    .ssb-picked's absolute corner badge resolves against ITS OWN box, not
    the row/balloon. */
 .ssb-row .convert-pick{position:relative}
-#invFilter::placeholder{color:var(--mute)}
-.itemlist{display:flex; flex-direction:column; gap:1px}
-.ientry{
-  display:flex; align-items:center; gap:13px; font-size:18px; font-weight:700;
-  padding:5px 8px; width:100%; text-align:left; border-radius:10px;
-}
-.ientry:hover{background:var(--bg-soft)}
-.ientry .iem{font-size:30px; width:36px; text-align:center; flex:none}
-.ientry .where{margin-left:auto; font-size:11px; color:var(--mute); font-weight:700}
-/* Hard Mode: repeat crafts show as a quantity badge, not duplicate rows. */
-.ientry .iqty{margin-left:auto; font-size:12px; color:var(--mute); font-weight:800}
 .empty{color:var(--mute); font-size:14px; font-style:italic}
 
 /* history */
@@ -2166,12 +1788,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .collection-row .cr-icons{display:flex; flex-wrap:wrap; gap:8px; font-size:38px; line-height:1}
 .collection-row .cr-icon img{width:1em; height:1em}
 .collection-row .cr-bonus{font-size:12px; font-weight:800; color:var(--gold)}
-.collection-row .cr-add{
-  flex:none; align-self:center; border:1.5px solid var(--collection-line); border-radius:10px;
-  padding:10px 14px; font-size:12px; font-weight:800; color:var(--collection);
-  background:var(--collection-soft); white-space:nowrap;
-}
-.collection-row .cr-add:disabled{opacity:.4; cursor:not-allowed}
 .collection-card{position:relative}
 .collection-card .cr-check{
   position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%;
@@ -2375,9 +1991,6 @@ html.low-motion .ct-slide > *{animation:none}
 .bigbtn, .tbtn:not(.ghost), button.setting-row{
   animation:bounceIn .22s cubic-bezier(.25,1,.4,1) both;
 }
-/* Bounce only shop items newly revealed by a craft (flushPendingReveal()),
-   not every re-render. */
-.item.item-pop-in{ animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both; }
 /* Item-unlock reveal (#itemReveal): real shop .item cards, gold-bordered
    and at full brightness (no .owned dimming). */
 #itemReveal{flex-direction:column; align-items:center; justify-content:center}
@@ -2472,7 +2085,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .empty-el-pick-box h2{margin:0 0 4px; display:flex; align-items:center; justify-content:center; gap:10px}
 .empty-el-pick-box .gather{margin:14px 0 4px}
 .lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
-.cc-fly{position:fixed; z-index:600; pointer-events:none; margin:0; box-sizing:border-box}
 #bingoCraftOverlay{z-index:70}
 #bingoClearOverlay{z-index:70}
 /* Locks the tray against taps for the pre-animation pause plus the
@@ -2878,40 +2490,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   padding:2px 6px; border-radius:999px; white-space:nowrap;
 }
 
-/* Hard Mode re-craft tier frames (craftTier()), on the inspection popup
-   only. They frame three sides; the suit-coloured top stays. */
-.pc-card.tier-silver{
-  border-left:6px solid #c9ced8; border-right:6px solid #c9ced8; border-bottom:6px solid #c9ced8;
-  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 18px rgba(201,206,216,.45);
-}
-.pc-card.tier-gold{
-  border-left:6px solid var(--gold); border-right:6px solid var(--gold); border-bottom:6px solid var(--gold);
-  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 20px rgba(226,178,90,.5);
-}
-.pc-card.tier-diamond{
-  border-left:6px solid #2dd4c8; border-right:6px solid #2dd4c8; border-bottom:6px solid #2dd4c8;
-  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 24px rgba(45,212,200,.55);
-  overflow:hidden;
-}
-.pc-card.tier-diamond::after{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
-  transform:translateX(-120%);
-  animation:pc-shine 3.2s ease-in-out infinite;
-}
-@keyframes pc-shine{
-  0%, 55%{transform:translateX(-120%)}
-  85%, 100%{transform:translateX(120%)}
-}
-/* Diamond tier: a slow glowing pulse on the icon, on both the popup and
-   the Item Reference row. */
-@keyframes diamond-icon-pulse{
-  0%, 100%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(45,212,200,0))}
-  50%{transform:scale(1.09); filter:drop-shadow(0 0 9px rgba(45,212,200,.75))}
-}
-.pc-card.tier-diamond .pc-icon, .refrow.tier-diamond .refem{
-  animation:diamond-icon-pulse 1.9s ease-in-out infinite;
-}
 
 /* Element card popup, matching the printed cards (white face, thick suit
    border, corner number bubbles, suit pill at the bottom). --suit set
@@ -3091,26 +2669,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .refrow:hover{background:var(--bg-soft)}
 .refrow.owned{background:var(--ok-soft)}
 .refrow.owned:hover{filter:brightness(.98)}
-/* Hard Mode re-craft tier borders (craftTier()), same colours as
-   .pc-card.tier-*, as a full rounded border. */
-.refrow.tier-silver{
-  border:6px solid #c9ced8; border-radius:12px; margin:4px 8px;
-  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 14px rgba(201,206,216,.35);
-}
-.refrow.tier-gold{
-  border:6px solid var(--gold); border-radius:12px; margin:4px 8px;
-  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 16px rgba(226,178,90,.4);
-}
-.refrow.tier-diamond{
-  border:6px solid #2dd4c8; border-radius:12px; margin:4px 8px; overflow:hidden;
-  box-shadow:0 4px 14px rgba(0,0,0,.3), 0 0 18px rgba(45,212,200,.45);
-}
-.refrow.tier-diamond::after{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(115deg, transparent 40%, rgba(255,255,255,.45) 50%, transparent 60%);
-  transform:translateX(-120%);
-  animation:pc-shine 3.2s ease-in-out infinite;
-}
 /* Icon column: the icon plus its suit row (.refsuits) below. */
 .refem-col{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none; width:54px}
 .refem{font-size:42px; line-height:1; width:54px; text-align:center; padding-top:3px}
@@ -3157,22 +2715,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .shop-pin:hover{opacity:1}
 .shop-pin.active{border:2px solid var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 8px rgba(226,178,90,.6)}
-/* Accept (quests) / Take (jobs), shown before committing (questRowHTML()/
-   jobRowHTML()): a green call-to-action, auto width for the text. Must
-   come after .refpin so .refpin's opacity:.5 doesn't win the tie and make
-   it look disabled. */
-.refpin-action{
-  width:auto; padding:0 12px; font-size:13px; font-weight:800; white-space:nowrap;
-  color:var(--ok); border-color:var(--ok-line); background:var(--ok-soft);
-  opacity:1; filter:none;
-}
-.refpin-action:hover{filter:brightness(1.06)}
-.refpin-action:disabled{opacity:.5; filter:grayscale(.5); cursor:not-allowed}
-/* Wraps Take/Accept so the completion fraction
-   (refProgressFractionHTML()) sits underneath; takes over .refpin's flex
-   role. */
-.refpin-action-col{flex:none; align-self:flex-start; display:flex; flex-direction:column; align-items:center; gap:4px}
-.refpin-progress{font-size:11px; font-weight:800; color:var(--ink2)}
+font-size:11px; font-weight:800; color:var(--ink2)}
 .ref-pinned-heading{
   font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
 }
@@ -3230,9 +2773,6 @@ button.setting-row.warn:hover{border-color:var(--bad); background:var(--bad-soft
 .setting-label{font-weight:700; font-size:14.5px}
 .setting-row.warn .setting-label{color:var(--bad)}
 .setting-sub{font-size:12px; color:var(--mute); line-height:1.35}
-.setting-val{flex:none; font-size:13px; font-weight:800; color:var(--mute)}
-.setting-chev{flex:none; font-size:20px; color:var(--mute); line-height:1}
-.setting-ctrl{flex:none; display:flex; align-items:center; gap:10px}
 .setbtn{
   flex:none; border:1.5px solid var(--line); border-radius:9px; padding:7px 13px;
   font-size:13px; font-weight:800; background:var(--bg-soft); color:var(--ink); white-space:nowrap;
@@ -3322,8 +2862,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Wide source art (six gems in a row): contain it rather than squash it
    into the square. */
 .gemcollectionicon{object-fit:contain}
-.visually-hidden{position:absolute; width:1px; height:1px; margin:-1px; padding:0;
-  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
 
 /* =====================================================================
    Arrange Items: a freeform scene builder opened from the inventory
@@ -3412,13 +2950,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
   padding:8px; text-align:center;
 }
-/* The inventory drawer's crafted-items grid reuses this card style (see
-   renderDrawer()); .inv-item-grid resets the tray-only sizing since .dbody
-   scrolls there. */
-.inv-item-grid{flex:none; min-height:0; overflow:visible; max-height:none; padding:0; background:none}
-.inv-card-qty{
-  position:absolute; top:4px; right:6px; font-size:11px; font-weight:800; color:var(--mute);
-}
 .arr-tray-card .em{font-size:38px; line-height:1}
 .arr-tray-card .nm{font-size:12px; font-weight:800; color:#fff; line-height:1.2}
 .arr-empty{grid-column:1/-1; margin:auto; color:var(--mute); font-size:13px; text-align:center; padding:20px}
@@ -3472,11 +3003,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-score-stats{
   display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:6px 10px;
 }
-.mss-stat{display:flex; flex-direction:column; align-items:center; gap:1px}
-.mss-val{font-size:17px; font-weight:900; color:var(--ink); font-variant-numeric:tabular-nums; line-height:1}
-.mss-stat.quarks .mss-val{color:var(--gold)}
-.mss-label{font-size:9.5px; font-weight:700; letter-spacing:.2px; color:var(--ink2); text-transform:uppercase; white-space:nowrap}
-.mss-op{align-self:center; font-size:15px; font-weight:800; color:var(--mute)}
 /* Quark Meter: four separate pill segments across the score card. Each
    fills smoothly through its own slice of this round's thresholds (see
    lockInTiersForRound()): 0->one, one->two, two->three, then headroom above
@@ -3561,7 +3087,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    badge so the name can dim without dimming the badge. */
 body.empty-el-cashin #topbar, body.empty-el-cashin .sheet-head .em,
 body.empty-el-cashin .sheet-head .station-title-text,
-body.empty-el-cashin .station-tractor-badge, body.empty-el-cashin .travel-btn,
+body.empty-el-cashin .station-tractor-badge,
 body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
   opacity:.15; pointer-events:none; transition:opacity .2s;
 }
@@ -3869,7 +3395,7 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   }
   #jobSheet{left:calc(50% - 408px)}
   #jobSheet.top-tray{left:50%; right:auto; width:768px; margin-left:-384px}
-  #collectionToast, #eventToast{left:50%; margin-left:-192px}
+  #eventToast{left:50%; margin-left:-192px}
   #pinsBtn{left:calc(50% - 368px)}
   #quickConvertBtn{right:calc(50% - 368px)}
   #trackedPill{left:calc(50% - 328px)}
@@ -3890,7 +3416,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 }
 @media (max-width:640px){
   #topbar{flex-wrap:wrap; row-gap:8px; padding:10px 12px}
-  #topbar .brand{font-size:16px}
   #topbar .spacer{flex-basis:100%; height:0}
   main{padding:16px 12px calc(var(--hub-h, 67px) + 80px)}
   .sheet-head,.gather,.playbar{margin-left:0; margin-right:0}
@@ -4666,9 +4191,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   <div class="dbody" id="jobSheetBody"></div>
 </aside>
 
-<!-- Trade Market, Collections and Quests render inline on the Marketplace
-     screen (marketSectionHTML()); only their toasts live here. -->
-<div id="collectionToast" role="status" aria-hidden="true"></div>
 <div id="eventToast" role="status" aria-hidden="true"></div>
 
 <!-- Image data (icons/art) -- see the file's own header. -->
@@ -6561,8 +6083,8 @@ const CORE_SET = new Set([
   "Greenhouse|Fertilizer","Greenhouse|Sugar","Greenhouse|DNA",
   "Greenhouse|Soil","Greenhouse|Farm","Greenhouse|Chicken","Greenhouse|Apple",
   "Greenhouse|Grain","Greenhouse|Solar Panel","Greenhouse|Bicycle","Greenhouse|Homestead",
-  // Deep Mine. Tractor (from Greenhouse) replaced Titanium Alloy, which is
-  // Adventure/Zen only; Rocket uses the raw Ti element instead.
+  // Deep Mine. Tractor (from Greenhouse) replaced Titanium Alloy; Rocket
+  // uses the raw Ti element instead.
   "Deep Mine|Clay","Deep Mine|Natural Gas","Deep Mine|Steel","Deep Mine|Tools",
   "Deep Mine|Furnace","Deep Mine|Aluminum Alloy","Deep Mine|Stainless Steel",
   "Deep Mine|Diamond","Deep Mine|Tractor","Deep Mine|Rubber","Deep Mine|Maglev Train",
@@ -6572,8 +6094,8 @@ const CORE_SET = new Set([
   "Old Growth Forest|Canoe","Old Growth Forest|Deer","Old Growth Forest|Log Cabin",
   "Old Growth Forest|Fossil","Old Growth Forest|Ecosystem",
   // The Bakery. Oven is here (Banana Bread and Fruit Cake need it); Natural
-  // Gas is core at Deep Mine. Bread and Cake are Adventure/Zen only --
-  // Banana Bread's and Fruit Cake's recipes inline their ingredients.
+  // Gas is core at Deep Mine. Bread and Cake aren't core -- Banana Bread's
+  // and Fruit Cake's recipes inline their ingredients.
   "The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
   "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Oven",
   "The Bakery|Apple Pie","The Bakery|Fish Cakes","The Bakery|Banana Bread","The Bakery|Fruit Cake",
@@ -7086,8 +6608,7 @@ const STATION_BG = {
   "The City":           "backdrops/quarry.webp", // TODO(#127): re-art as city, not quarry
   "The Observatory":    "backdrops/observatory.webp",
 };
-/* Job Board and Trading Post both require having visited every station
-   (jobBoardUnlocked()/tradeBodyHTML()). */
+/* Earns STATIONS_VISITED_BONUS (see stationsVisitedBonusBadgeHTML()). */
 function allStationsVisited(){
   return Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
 }
@@ -7104,9 +6625,8 @@ const entriesAt = st => ENTRIES.filter(e => e.station === st);
 /* =====================================================================
    State
    ===================================================================== */
-/* One save per mode (saveKeyFor()/loadAll()). Keys below SAVE_KEY_PREFIX
-   are one-time migration sources, read once then cleaned up. */
-const SAVE_KEY_PREFIX = "elementia-save-v4-"; // one save per mode (see saveKeyFor())
+/* The run's save lives at saveKeyFor("classic") (see loadAll()). */
+const SAVE_KEY_PREFIX = "elementia-save-v4-";
 const PREFS_KEY   = "elementia-prefs-v1";
 const HISTORY_KEY = "elementia-history-v1";
 const HISTORY_MAX = 50;
@@ -7284,7 +6804,7 @@ function freshState(){
     lastRoll: null,
     noRepeat: true,    // default on: blocks immediately backtracking to priorStation
     ended: false,      // session summary already shown for this run
-    mode: null,        // "zen" | "classic" | "hard", chosen on the welcome screen
+    mode: null,        // always "classic" once a run starts
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // progressive shop reveal's capstone-closure rule (see isRevealed()).
     stationLastSeen: {}, // {station: [items]} revealed non-capstone shop items as of the last
@@ -7503,8 +7023,7 @@ function craft(entry, opts={}){
   checkBingoLines();
   checkCraftedEverything();
   applyDiceCount(); // Tractor may have just been crafted -- see its own comment
-  // Log the craft on the current turn (goStation() always pushes one first);
-  // each batch copy logs its own entry.
+  // Log the craft on the current turn (goStation() always pushes one first).
   if (state.visitLog && state.visitLog.length) state.visitLog[state.visitLog.length - 1].items.push(entry.name);
   save();
   return true;
@@ -7977,20 +7496,6 @@ function stillNeededClosure(name){
   return [...needed];
 }
 
-/* "x/y" progress for a quest/job target: owned components out of the full
-   static tree (componentClosure()). null when it has no item components. */
-function closureCompletionFraction(name){
-  const total = componentClosure(name);
-  if (!total.length) return null;
-  const stillNeeded = new Set(stillNeededClosure(name));
-  return {have: total.length - stillNeeded.size, total: total.length};
-}
-// Shown under Take/Accept (jobRowHTML()/questRowHTML()); "" when there's no
-// fraction, so no gap.
-function refProgressFractionHTML(name){
-  const frac = closureCompletionFraction(name);
-  return frac ? `<span class="refpin-progress" title="${frac.have} of ${frac.total} components already built">${frac.have}/${frac.total}</span>` : "";
-}
 
 
 // Only the curated CORE_SET, every item visible from the start. Every core
@@ -8064,13 +7569,12 @@ function refExpandHTML(entry){
     jobNodeHTML(r.name, r.kind, "ref/" + entry.name + "/" + r.name, new Set([entry.name]))).join("")}</div>`;
 }
 
-/* Item Reference's row (.refrow/.refem/.refbody/...), reused for the Quest
-   Log and Job Board (questRowHTML()/jobRowHTML()) with the same
-   jobExpanded/refExpandHTML machinery and the same expand key
-   ("refroot/"+name), so a row stays expanded everywhere it appears.
-   opts.rightControl replaces the pin toggle (Accept/Take before
-   committing); opts.extraTop adds markup before the points badge;
-   opts.complete overrides the owns()-based "owned" styling. */
+/* Item Reference's row (.refrow/.refem/.refbody/...), reused by the To-Do
+   List (classicPinsAndJobsHTML()) with the same jobExpanded/refExpandHTML
+   machinery and the same expand key ("refroot/"+name), so a row stays
+   expanded everywhere it appears. opts.rightControl replaces the pin
+   toggle; opts.extraTop adds markup before the points badge; opts.complete
+   overrides the owns()-based "owned" styling. */
 function refStyleRowHTML(entry, opts){
   opts = opts || {};
   const has = opts.complete !== undefined ? opts.complete : owns(entry.name);
@@ -8203,11 +7707,7 @@ function renderStation(name){
   // visit's roll is spent.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
-  // A sub-zone with nothing sold there yet (the 8 planets, for now) gets
-  // an explicit placeholder instead of a silently empty section.
-  const shopBody = (!shopEntries.length && !capRevealed)
-    ? `<div class="subzone-empty">🌌 Nothing here yet — just the elements to gather for now.</div>`
-    : shopBodyHTML(shopEntries, idx);
+  const shopBody = shopBodyHTML(shopEntries, idx);
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
@@ -8420,7 +7920,7 @@ function setHubHomeFace(face){
   hubHomeState = face;
 }
 function updateHub(){
-  // Never badged, in any mode, green or red -- Jobs/Quests state is
+  // Never badged, green or red -- the To-Do state is
   // already visible the moment the panel opens; a bubble here read as
   // one more thing competing for attention on the hub.
   setHubBadge("hubJobs", null);
@@ -9343,8 +8843,7 @@ function goMap(){
   const hereNode = document.querySelector(".map-node.here");
   if (hereNode) hereNode.scrollIntoView({block:"center", behavior:"instant"});
   else window.scrollTo({top:0, behavior:"instant"});
-  // The congratulatory ending at MAX_VISITS. The mode check is explicit even
-  // though Zen/Hard use Infinity (applyVisitLimit()).
+  // The congratulatory ending at MAX_VISITS.
   if (state.visits >= MAX_VISITS && !state.ended){
     state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
   }
@@ -9673,8 +9172,7 @@ function flyToInventory(cards, playBar){
    ingredient rise one at a time, fan into a stack centre-screen, burst like
    a firework, and the new item's card is left standing. Re-crafts stay
    instant. */
-/* An item's home-station suit colour, shared by miniIngredientCardHTML()
-   and the Trading Post cards (tradeCardHTML()). */
+/* An item's home-station suit colour (miniIngredientCardHTML()). */
 function itemSuitColor(name){
   const ing = ENTRIES.find(e => e.name === name);
   return ing ? DATA.suits[STATION_BY_NAME[ing.station].suit].color : "#4a4f5c";
@@ -12246,7 +11744,7 @@ function renderJobBoard(){
           // job board -- jobs can't be taken here). The BINGO card is always shown;
           // before a capstone is chosen its centre is an "Add Capstone" square that
           // opens the picker overlay (openCapstoneOverlay()).
-          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML(true)}</div>${bingoCardHTML()}`
+          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>${bingoCardHTML()}`
           : classicPinsAndJobsHTML();
   // Only the BINGO view has cells to animate; a no-op otherwise.
   if (full) scheduleBingoSequence();
@@ -12334,8 +11832,7 @@ function openJobSheet(){
   document.getElementById("hubJobs").setAttribute("aria-expanded", "true");
   updateHub();
 }
-/* Home's Market face for Classic and Hard (Zen uses openMarket()): the full
-   board from the top. Counts as visiting the Marketplace
+/* Home's Market face: the full BINGO board from the top. Counts as visiting the Marketplace
    (state.marketVisited, which clears Home's "!"). */
 function openJobSelectTray(){
   jobSheetVariant = "full";
@@ -12344,8 +11841,7 @@ function openJobSelectTray(){
   openJobSheet();
   updateHub();
 }
-/* The hub's To-Do List button: Classic gets the compact tray
-   (classicPinsAndJobsHTML()); Adventure always shows Quests. */
+/* The hub's To-Do List button: the compact tray (classicPinsAndJobsHTML()). */
 function openJobBoard(){
   jobSheetVariant = "compact";
   openJobSheet();
@@ -12695,50 +12191,38 @@ function closeBingoIntroTray(){
   }, BINGO_BOUNCE_AWAY_MS);
 }
 
-/* Stations-visited progress row (compact circles), used by the
-   Marketplace menu column, Classic's BINGO tray and Hard's Marketplace
-   tray -- Job Board and Trading Post both require visiting every station.
-   A smaller nowrap variant of Trading Post's lock-screen circles. Built on
-   stationProgressCirclesHTML(). */
+/* Stations-visited progress row (compact circles) at the top of the BINGO
+   tray. */
 // Fixed display order (Ocean, Old Growth, Deep Mine, Greenhouse, Power
 // Plant, Bakery, City, Observatory), not DATA.stations' order.
 const STATION_TRACKER_ORDER = [
   "The Ocean", "Old Growth Forest", "Deep Mine", "Greenhouse",
   "The Power Plant", "The Bakery", "The City", "The Observatory",
 ];
-// reveal=true shows every station's icon before it's visited (Classic's
-// copy); other callers show "?" until visited. Visited stations always get
-// their icon and a green check.
-function stationProgressCirclesHTML(reveal){
+// Every station shows its icon; visited ones add a green check.
+function stationProgressCirclesHTML(){
   return STATION_TRACKER_ORDER.map(name => {
     const s = STATION_BY_NAME[name];
     const visited = !!state.visitedStations[name];
-    const showIcon = reveal || visited;
     return `<span class="market-progress-station${visited ? " visited" : ""}" title="${esc(name)}">
-      ${showIcon ? em(s.emoji) : "?"}
+      ${em(s.emoji)}
       ${visited ? '<span class="mps-check">✓</span>' : ""}
     </span>`;
   }).join("");
 }
-function marketStationProgressHTML(reveal){
+function marketStationProgressHTML(){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
-    <div class="market-progress-stations">${stationProgressCirclesHTML(reveal)}</div>`;
+    <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
 }
-// Classic's copy shows the STATIONS_VISITED_BONUS badge; Hard's doesn't
-// (no such bonus there).
+// The STATIONS_VISITED_BONUS badge beside the row.
 function stationsVisitedBonusBadgeHTML(){
   const done = allStationsVisited();
   return `<span class="market-progress-bonus${done ? " done" : ""}">${done ? "✓ " : ""}+${STATIONS_VISITED_BONUS}</span>`;
 }
 
-
-
-
-
-/* One FIFO toast queue for quest/job completion and mode unlocks (see
-   #eventToast). kind picks the .et-<kind> class; icon is raw HTML; bonus is
-   optional. */
+/* One FIFO queue for event toasts (see #eventToast). kind picks the
+   .et-<kind> class; icon is raw HTML; bonus is optional. */
 let eventToastQueue = [];
 let eventToastTimer = null;
 function queueEventToast(kind, icon, title, name, bonus){
@@ -13032,7 +12516,7 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   if (pinBtn){
     const name = pinBtn.dataset.pin;
     togglePin(name);
-    // Pinning from a job/quest card also tracks the item, so its ingredient
+    // Pinning from a card also tracks the item, so its ingredient
     // ring shows everywhere at once. Same Compass gate as toggleJobSelect()
     // (prefs.expCompassTracking).
     if (isPinned(name) && (!prefs.expCompassTracking || owns("Compass"))) selectedJobItem = name;
