@@ -4374,20 +4374,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
       </span>
       <span class="setbtn">View</span>
     </button>
-    <div class="setting-row">
-      <span class="setting-ico">🔓</span>
-      <span class="setting-body">
-        <span class="setting-label">Force unlock modes</span>
-      </span>
-      <input type="checkbox" id="setForceModes" class="switch" aria-label="Force unlock Classic and Zen Mode">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🏫</span>
-      <span class="setting-body">
-        <span class="setting-label">Classroom Mode</span>
-      </span>
-      <input type="checkbox" id="setClassroomMode" class="switch" aria-label="Classroom Mode">
-    </div>
     <p class="setnote">Experimental mechanics -- off changes nothing.</p>
     <div class="setting-row">
       <span class="setting-ico">🧭</span>
@@ -4417,27 +4403,15 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
   </div>
 </div>
 
-<!-- Game mode picker, shown after Play; no skip. Each mode has its own save
-     (saveKeyFor()): the card resumes it (or starts fresh, chooseMode()),
-     "New Game" starts over (confirming if there's progress,
-     newGameForMode()). .mode-stats shows the save's visits/points
+<!-- Run picker, shown after Play: Continue resumes the Classic save (or
+     starts fresh, chooseMode()); "New Game" starts over, confirming if there's
+     progress (newGameForMode()). .mode-stats shows the save's visits/points
      (refreshModePicker()). modeHistoryBtn copies Dev Tools' history row. -->
 <div class="overlay" id="modeOverlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
   <div class="sheetbox">
-    <h2 id="modeTitle">Choose a Game Mode</h2>
+    <h2 id="modeTitle">Elementia</h2>
     <div class="mode-options">
-      <div class="mode-card" data-mode="zen" id="zenModeCard" hidden>
-        <div class="mode-card-info">
-          <span class="mode-emoji">🌿</span>
-          <span class="mode-name">Zen Mode</span>
-          <span class="mode-stats" data-mode-stats="zen"></span>
-        </div>
-        <div class="mode-card-actions">
-          <button type="button" class="bigbtn" data-mode-select="zen">Continue</button>
-          <button type="button" class="bigbtn sec" data-mode-newgame="zen">New Game</button>
-        </div>
-      </div>
-      <div class="mode-card" data-mode="classic" id="classicModeCard" hidden>
+      <div class="mode-card" data-mode="classic" id="classicModeCard">
         <div class="mode-card-info">
           <span class="mode-emoji">🗺️</span>
           <span class="mode-name">Classic Mode</span>
@@ -4446,17 +4420,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
         <div class="mode-card-actions">
           <button type="button" class="bigbtn" data-mode-select="classic">Continue</button>
           <button type="button" class="bigbtn sec" data-mode-newgame="classic">New Game</button>
-        </div>
-      </div>
-      <div class="mode-card" data-mode="hard" id="hardModeCard">
-        <div class="mode-card-info">
-          <span class="mode-emoji">🔥</span>
-          <span class="mode-name">Adventure Mode</span>
-          <span class="mode-stats" data-mode-stats="hard"></span>
-        </div>
-        <div class="mode-card-actions">
-          <button type="button" class="bigbtn" data-mode-select="hard">Continue</button>
-          <button type="button" class="bigbtn sec" data-mode-newgame="hard">New Game</button>
         </div>
       </div>
     </div>
@@ -6174,19 +6137,11 @@ function applyDiceCount(){
   const tractorBonus = prefs.expTractorHarvest && state && state.items && state.items.includes("Tractor") ? 1 : 0;
   TAKE = 3 + tractorBonus;
 }
-/* Classic's hard stop (also the visits pill's denominator). Lines up with
-   LOCKIN_ROUND_ANCHORS ending at visit 40. Zen/Hard never reach it
-   (Infinity, see applyVisitLimit()). */
+/* The run's hard stop (also the visits pill's denominator). Lines up with
+   LOCKIN_ROUND_ANCHORS ending at visit 40. */
 const DEFAULT_MAX_VISITS = 40;
-let MAX_VISITS = DEFAULT_MAX_VISITS;
-/* Zen and Hard run unlimited visits, so a Hard Mode run never force-ends.
-   Guarded for the loadAll() call before `state` exists. */
-function applyVisitLimit(){
-  const unlimitedMode = typeof state !== "undefined" && state
-    && (state.mode === "zen" || state.mode === "hard");
-  MAX_VISITS = unlimitedMode ? Infinity : DEFAULT_MAX_VISITS;
-}
-function visitLimitLabel(){ return isFinite(MAX_VISITS) ? String(MAX_VISITS) : "∞"; }
+const MAX_VISITS = DEFAULT_MAX_VISITS;
+function visitLimitLabel(){ return String(MAX_VISITS); }
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
 const BREAKPOINT_GATE_VISIT = 9;
@@ -6206,63 +6161,26 @@ function isSunsetVisit(){
   return state.visits > 0 && state.visits % MAT_CHECK_EVERY === 0;
 }
 
-/* ------------------------------------------------------- game mode --- */
-const MODE_DISPLAY_NAME = {zen:"Zen Mode", classic:"Classic Mode", hard:"Adventure Mode"};
-/* Classic is locked until prefs.classicUnlocked (see celebrate()).
-   Re-applied every time the picker opens, so a mid-session unlock shows
-   without a reload. */
-// The Classic card is hidden (not shown disabled) until unlocked; it
-// appears the run after a capstone unlocks it (pendingClassicUnlockTip/
-// prefs.classicUnlocked).
+// The save's visits/points, or "New" (scoreOf() reads any saved blob).
 function refreshModePicker(){
-  const forced = prefs.devForceModesUnlocked;
-  const classroom = prefs.classroomMode;
-  // Classroom Mode: Classic is the only option, always visible; Zen and
-  // Adventure are hidden.
-  document.getElementById("classicModeCard").hidden = classroom ? false : !(prefs.classicUnlocked || forced);
-  document.getElementById("zenModeCard").hidden = classroom ? true : !(prefs.zenUnlocked || forced);
-  document.getElementById("hardModeCard").hidden = classroom;
-  // Each mode's save shows its visits/points. scoreOf() reads any saved
-  // blob (score() only reads the live state).
-  ["zen", "classic", "hard"].forEach(mode => {
-    const saved = readModeSave(mode);
-    document.querySelector(`[data-mode-stats="${mode}"]`).textContent =
-      saved ? `${saved.visits || 0} visits · ${scoreOf(saved)} points` : "New";
-  });
+  const saved = readModeSave("classic");
+  document.querySelector('[data-mode-stats="classic"]').textContent =
+    saved ? `${saved.visits || 0} visits · ${scoreOf(saved)} points` : "New";
 }
 function openModePicker(){
   refreshModePicker();
   openOverlay("modeOverlay");
-  // No mouse tip, no explanatory text (see showWelcomeSlide()'s own
-  // comment and the mode cards' own markup) -- just the 3 cards.
 }
-/* Zen and Classic allow any starting station (a null lastStation means
-   any pick is valid). Hard forces The Ocean, only until the first move. */
-function mustStartAtOcean(){
-  // Hard Mode only -- Classic dropped the forced Ocean start.
-  return state.mode === "hard" && state.lastStation === null;
-}
-// Tapping a mode card: resume its save if there is one, otherwise start
-// fresh (see resumeMode()/startFreshMode(); only a fresh start plays the
-// intro).
+// Continue: resume the save if there is one, otherwise start fresh (only a
+// fresh start plays the intro).
 function chooseMode(mode){
-  // Zen unlocks the moment a Classic run starts (prefs.zenUnlocked), fresh
-  // or resumed. Under Classroom Mode it still unlocks, silently (Zen stays
-  // hidden there).
-  if (mode === "classic" && !prefs.zenUnlocked){
-    prefs.zenUnlocked = true;
-    savePrefs();
-    if (!prefs.classroomMode) queueModeUnlockToast("🌿", "Zen Mode");
-  }
   if (modeHasSave(mode)) resumeMode(mode); else startFreshMode(mode);
 }
 /* Load a save straight back into play -- no reset, no intro. */
 function resumeMode(mode){
   const saved = readModeSave(mode);
   state = Object.assign(freshState(), saved, {mode});
-  applyVisitLimit();
   applyDiceCount();
-  prefs.lastActiveMode = mode; savePrefs();
   closeOverlay("modeOverlay");
   screen = "map"; current = null; selectedMapStation = null;
   render(true);
@@ -6274,32 +6192,23 @@ function resumeMode(mode){
 function startFreshMode(mode){
   state = freshState();
   state.mode = mode;
-  applyVisitLimit();
   applyDiceCount();
   selectedJobItem = null;
   mouseTipsShown = new Set();
   prefs.pinnedItems = [];
-  prefs.lastActiveMode = mode;
   savePrefs();
   save();
   closeOverlay("modeOverlay");
   render();
-  // Every mode lands on The Ocean's preview card at the end of the scroll
-  // (see playMapIntroScroll()).
-  playMapIntroScroll();
+  playClassicIntro();
 }
 /* "New Game": confirms only if there's a real save with progress. */
 function newGameForMode(mode){
   if (!modeHasSave(mode)){ startFreshMode(mode); return; }
-  askConfirm(`Start a new ${MODE_DISPLAY_NAME[mode] || mode} run? Your current save will be erased.`,
+  askConfirm("Start a new run? Your current save will be erased.",
     () => startFreshMode(mode));
 }
 
-/* =====================================================================
-   Post-mode-select opener. Hard/Zen get the map auto-scroll pan below,
-   landing on The Ocean's card; Classic gets its own scripted intro
-   (playClassicIntro()). Presentation only -- no game state changes.
-   ===================================================================== */
 // True while the intro logo shows (playClassicIntro()): hides the map's
 // capstone-preview badges. data-intro-sequence covers the whole opening.
 let classicIntroHideCapstones = false;
@@ -6411,45 +6320,6 @@ function classicTutNext(){
 }
 document.getElementById("ctNext").addEventListener("click", classicTutNext);
 document.getElementById("ctSlide").addEventListener("click", classicTutNext);
-function playMapIntroScroll(){
-  screen = "map"; current = null; selectedMapStation = null;
-  if (state.mode === "classic"){ playClassicIntro(); return; }
-  render(true); // resets scroll to the top
-
-  const startY = window.scrollY;
-  const endY = Math.max(0, document.body.scrollHeight - window.innerHeight);
-  const duration = 4000;
-  const startTime = performance.now();
-  let done = false;
-
-  const finish = () => {
-    if (done) return;
-    done = true;
-    document.removeEventListener("click", tapSkip, true);
-    // Hard Mode must start at The Ocean (mustStartAtOcean()), so pre-select it
-    // and say so. Other modes start anywhere, so nothing is pre-selected.
-    if (mustStartAtOcean()){
-      selectedMapStation = "The Ocean";
-      // Bottom-left puts the mouse near The Ocean's node at the end of the
-      // scroll; the spotlight rings #hubHome because the next action is
-      // tapping Travel.
-      showMouseTipOnce("mapintro", 7, 'You’ve landed on the ocean beach! Tap "Travel" to start.', "bottom-left", "#hubHome");
-    }
-    window.scrollTo({top: endY, behavior: "instant"});
-    render(); // no resetScroll -- keep the bottom position just set above
-  };
-  const tapSkip = ev => { ev.preventDefault(); ev.stopPropagation(); finish(); };
-  document.addEventListener("click", tapSkip, true);
-
-  function step(now){
-    if (done) return;
-    const t = Math.min(1, (now - startTime) / duration);
-    window.scrollTo({top: startY + (endY - startY) * t, behavior: "instant"});
-    if (t < 1) requestAnimationFrame(step);
-    else finish();
-  }
-  requestAnimationFrame(step);
-}
 document.getElementById("modeOverlay").addEventListener("click", ev => {
   const newBtn = ev.target.closest("[data-mode-newgame]");
   if (newBtn){ newGameForMode(newBtn.dataset.modeNewgame); return; }
@@ -7542,10 +7412,6 @@ const entriesAt = st => ENTRIES.filter(e => e.station === st);
    ===================================================================== */
 /* One save per mode (saveKeyFor()/loadAll()). Keys below SAVE_KEY_PREFIX
    are one-time migration sources, read once then cleaned up. */
-const LEGACY_KEY  = "elementia-save-v1";      // pre-groups single save
-const SLOTS_KEY   = "elementia-slots-v2";     // groups metadata
-const SAVE_PREFIX = "elementia-save-v2-";     // per-group saves
-const SAVE_KEY    = "elementia-save-v3";      // pre-per-mode flat save
 const SAVE_KEY_PREFIX = "elementia-save-v4-"; // one save per mode (see saveKeyFor())
 const PREFS_KEY   = "elementia-prefs-v1";
 const HISTORY_KEY = "elementia-history-v1";
@@ -7597,20 +7463,6 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // Low motion (see lowMotion()/html.low-motion): null = follow the
   // device's own "reduce motion" setting, true/false = player's override.
   lowMotion:null,
-  // Account-level: Classic unlocks with the first Adventure capstone
-  // (celebrate()) and stays unlocked.
-  classicUnlocked:false,
-  // Zen appears only after a Classic run has been started (chooseMode()):
-  // Adventure -> Classic -> Zen, by design.
-  zenUnlocked:false,
-  // Dev Tools: show Classic and Zen regardless of the unlock flags (which are
-  // left untouched).
-  devForceModesUnlocked:false,
-  // Dev Tools, on by default (classroom use): the picker offers Classic only,
-  // force-visible regardless of prefs.classicUnlocked.
-  classroomMode:true,
-  // The mode a plain reload resumes (set by resumeMode()/startFreshMode()).
-  lastActiveMode:null,
   // Experimental toggles, off by default (toggleJobSelect()/conversionRate()/
   // Tractor harvest/applyDiceCount()). A full run with them off cleared every
   // capstone comfortably, so the base game ships without them.
@@ -7830,9 +7682,7 @@ function edgeUnlocked(a, b){
    reachable. */
 const isMapConnected = (a,b) => a === null ? !!b :
   !!(a && b && MAP_ADJ[a] && MAP_ADJ[a].has(b) && edgeUnlocked(a,b));
-/* Owning a Helicopter makes every station reachable, in every mode. Classic
-   charges no Natural Gas (it never spends items). The first move still
-   respects mustStartAtOcean(). */
+/* Owning a Helicopter makes every station reachable. */
 const canReachStation = (a, b) => owns("Helicopter") || isMapConnected(a, b);
 
 /* Node coordinates on the original tall map art (see .map-canvas). */
@@ -7880,46 +7730,7 @@ function readModeSave(mode){
 }
 function modeHasSave(mode){ return readModeSave(mode) !== null; }
 
-/* Pull forward whatever the previous storage layouts left behind, newest
-   first, then delete them so this only ever runs once. */
-function migrateOldSave(){
-  let raw = null;
-  try {
-    const meta = JSON.parse(lsGet(SLOTS_KEY) || "null");
-    if (meta && Array.isArray(meta.slots) && meta.slots.length){
-      const id = meta.activeSlot && meta.slots.some(s => s.id === meta.activeSlot)
-        ? meta.activeSlot : meta.slots[0].id;
-      raw = lsGet(SAVE_PREFIX + id);
-      lsDel(SLOTS_KEY);
-    }
-    // Sweep every per-group save, not just the ones the metadata knew
-    // about -- older/aborted sessions can leave orphans behind.
-    Object.keys(localStorage)
-      .filter(k => k.startsWith(SAVE_PREFIX))
-      .forEach(lsDel);
-  } catch(e){}
-  if (!raw){
-    raw = lsGet(LEGACY_KEY);
-    if (raw) lsDel(LEGACY_KEY);
-  }
-  return raw;
-}
 
-/* One-time migration from the single flat save (v3) to one save per mode
-   (v4), using the blob's own .mode. Never overwrites an existing v4 save.
-   Also seeds prefs.lastActiveMode. */
-function migrateFlatSaveToPerMode(){
-  const raw = lsGet(SAVE_KEY);
-  if (raw === null) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.mode && lsGet(saveKeyFor(parsed.mode)) === null){
-      lsSet(saveKeyFor(parsed.mode), raw);
-      if (!prefs.lastActiveMode) prefs.lastActiveMode = parsed.mode;
-    }
-  } catch(e){}
-  lsDel(SAVE_KEY);
-}
 
 /* Whether this is a genuinely new session (no save at all), so a mid-run
    reload doesn't show the welcome slide. */
@@ -7929,27 +7740,12 @@ function loadAll(){
   applyDiceCount();
   loadHistory();
 
-  // v1/v2 -> v3 (flat single save), then v3 -> v4 (one save per mode) --
-  // oldest first, each a one-time migration into the next format.
-  let legacyRaw = lsGet(SAVE_KEY);
-  if (legacyRaw === null){
-    legacyRaw = migrateOldSave();
-    if (legacyRaw) lsSet(SAVE_KEY, legacyRaw);
-  }
-  migrateFlatSaveToPerMode();
-
-  // The mode a plain reload resumes into (set by resumeMode()/
-  // startFreshMode()).
-  const lastMode = prefs.lastActiveMode;
-  const raw = lastMode ? lsGet(saveKeyFor(lastMode)) : null;
+  const raw = lsGet(saveKeyFor("classic"));
   let isNewSession = !raw;
   try {
     state = raw ? Object.assign(freshState(), JSON.parse(raw)) : freshState();
   } catch(e){ state = freshState(); isNewSession = true; }
-  // Depends on the actual loaded state.mode, so this has to run AFTER
-  // state exists, not just the early guarded no-op call this used to be
-  // before state was ever assigned.
-  applyVisitLimit();
+  state.mode = "classic";
   // Old saves have a per-station jobBoard object; discard it rather than
   // migrate.
   if (!Array.isArray(state.jobBoard)) state.jobBoard = [];
@@ -7970,7 +7766,7 @@ function loadAll(){
   // rather than its parent -- the map can't route from sub-zone names.
   if (SUBZONE_PARENT[state.lastStation]) state.lastStation = SUBZONE_PARENT[state.lastStation];
   if (SUBZONE_PARENT[state.priorStation]) state.priorStation = SUBZONE_PARENT[state.priorStation];
-  savePrefs(); // persists migrateFlatSaveToPerMode()'s prefs.lastActiveMode write, if any
+  savePrefs();
   return isNewSession;
 }
 
@@ -8492,7 +8288,6 @@ function renderMap(){
   const here = state.lastStation;
   // Hard Mode: before the first move only The Ocean is reachable
   // (mustStartAtOcean()).
-  const forcedStart = mustStartAtOcean();
   // This map badge marks only the station where the tracked item itself is
   // crafted -- one breadcrumb, not every station selling a component.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
@@ -8502,7 +8297,7 @@ function renderMap(){
     const topStyle = mapNodeTopStyle(name);
     const s = STATION_BY_NAME[name];
     const isHere = name === here;
-    const reachable = !isHere && !over && (forcedStart ? name === "The Ocean" : canReachStation(here, name));
+    const reachable = !isHere && !over && canReachStation(here, name);
     const cls = ["map-node", isHere ? "here" : reachable ? "reachable" : "unreachable"];
     if (selectedMapStation === name) cls.push("selected");
     // Never-visited stations show "?" (except in Zen); the dice pool is always
@@ -8540,9 +8335,7 @@ function renderMap(){
   // Hidden during Classic's opening sequence (body[data-intro-sequence]).
   // Rendered inside .map-canvas, centred.
   const hint = state.lastStation === null && !document.body.hasAttribute("data-intro-sequence")
-    ? `<p class="map-sub map-pick-note">${forcedStart
-        ? "Every journey starts at The Ocean."
-        : "Choose a<br>station to<br>start!"}</p>`
+    ? `<p class="map-sub map-pick-note">Choose a<br>station to<br>start!</p>`
     : "";
 
   const cardHTML = selectedMapStation ? `<div class="map-card-wrap">${mapCardHTML(selectedMapStation)}</div>` : "";
@@ -11321,21 +11114,13 @@ function handleScreenClick(ev){
   const nodeBtn = ev.target.closest("[data-map-node]");
   if (nodeBtn){
     if (startingGiftInProgress) return; // the preview card is mid-gift
-    // Hard: The Ocean is the only legal first pick -- taps on other nodes, or
-    // on Ocean to deselect it, are ignored.
-    if (mustStartAtOcean()){
-      if (nodeBtn.dataset.mapNode !== "The Ocean") return;
-      selectedMapStation = "The Ocean";
-    } else {
-      selectedMapStation = selectedMapStation === nodeBtn.dataset.mapNode ? null : nodeBtn.dataset.mapNode;
-    }
+    selectedMapStation = selectedMapStation === nodeBtn.dataset.mapNode ? null : nodeBtn.dataset.mapNode;
     syncInitialPickCapstoneTracking();
     render();
     return;
   }
 
   if (selectedMapStation && ev.target.closest("[data-map-bg]")){
-    if (mustStartAtOcean()) return;
     selectedMapStation = null;
     syncInitialPickCapstoneTracking();
     render();
@@ -14877,14 +14662,10 @@ function openSettings(){
 document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
-const setForceModesBox = document.getElementById("setForceModes");
-const setClassroomModeBox = document.getElementById("setClassroomMode");
 const setExpCompassTrackingBox = document.getElementById("setExpCompassTracking");
 const setExpTieredConversionBox = document.getElementById("setExpTieredConversion");
 const setExpTractorHarvestBox = document.getElementById("setExpTractorHarvest");
 function openSettingsDev(){
-  setForceModesBox.checked = !!prefs.devForceModesUnlocked;
-  setClassroomModeBox.checked = !!prefs.classroomMode;
   setExpCompassTrackingBox.checked = !!prefs.expCompassTracking;
   setExpTieredConversionBox.checked = !!prefs.expTieredConversion;
   setExpTractorHarvestBox.checked = !!prefs.expTractorHarvest;
@@ -14892,14 +14673,6 @@ function openSettingsDev(){
 }
 document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
 // Applies immediately (no Save): a dev toggle, not a game rule.
-setForceModesBox.addEventListener("change", () => {
-  prefs.devForceModesUnlocked = setForceModesBox.checked;
-  savePrefs();
-});
-setClassroomModeBox.addEventListener("change", () => {
-  prefs.classroomMode = setClassroomModeBox.checked;
-  savePrefs();
-});
 setExpCompassTrackingBox.addEventListener("change", () => {
   prefs.expCompassTracking = setExpCompassTrackingBox.checked;
   savePrefs();
@@ -14987,7 +14760,7 @@ document.querySelectorAll(".overlay").forEach(ov => {
 document.getElementById("resetBtn").addEventListener("click", () => {
   // Resets only the current mode and stays in it (resetCurrentModeRun() ->
   // startFreshMode()).
-  askConfirm(`Start a new ${MODE_DISPLAY_NAME[state.mode] || "Mode"} run? Your inventory, visits and job board will be cleared.`, () => {
+  askConfirm("Start a new run? Your inventory and visits will be cleared.", () => {
     closeOverlay("settings");
     resetCurrentModeRun();
   });
