@@ -3983,9 +3983,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
              autocomplete="off" spellcheck="false">
       <button type="button" id="matCollectionsBtn" class="mat-collections-btn" title="Collections">🏆</button>
     </div>
-    <!-- Every other mode -- unchanged simple text filter over the legacy
-         tier-grouped list (see renderLegacyDrawer()). -->
-    <input id="invFilter" type="search" placeholder="Filter items…" aria-label="Filter inventory">
     <div id="drawerBody"></div>
   </div>
   <div class="mat-toast" id="matToast" hidden></div>
@@ -6121,7 +6118,7 @@ const BREAKPOINT_GATE_VISIT = 9;
 const MAT_CHECK_EVERY = 3;
 const MAT_PRE_CHECK_DICE = 4;
 function isMatCheckVisit(){
-  return state.mode === "classic" && state.visits >= MAT_CHECK_EVERY;
+  return state.visits >= MAT_CHECK_EVERY;
 }
 function isSunsetVisit(){
   return state.visits > 0 && state.visits % MAT_CHECK_EVERY === 0;
@@ -7311,7 +7308,6 @@ function freshState(){
     // Non-Classic Lock-In reward: a dice delta (-1..+2) applied by the next
     // doRoll() at the destination, then reset. Classic uses
     // state.matBonusDice instead.
-    bonusDiceNextVisit: 0,
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
     matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
@@ -7427,7 +7423,7 @@ function loadAll(){
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
   // Saves from before the 3-visit mat check -- a run already past its first
   // "day" counts as checked, so it keeps rolling TAKE rather than jumping to 6.
-  if (state.matChecked === false && state.visits > MAT_CHECK_EVERY && state.mode === "classic") state.matChecked = true;
+  if (state.matChecked === false && state.visits > MAT_CHECK_EVERY) state.matChecked = true;
   savePrefs();
   return isNewSession;
 }
@@ -7491,7 +7487,7 @@ function craft(entry, opts={}){
   // Auto-place each of a Classic run's first 8 crafts on the Display Mat (an
   // empty mat early on looks broken), using the same matFits() check as
   // toggleMatCard(). After that the player arranges it.
-  if (state.mode === "classic" && state.items.length <= 8){
+  if (state.items.length <= 8){
     const matCard = MAT_CARD_BY_NAME[entry.name];
     if (matCard && !state.mat.includes(entry.name) && matFits(matOnMat().concat([matCard]))){
       state.mat.push(entry.name);
@@ -7516,14 +7512,6 @@ function craft(entry, opts={}){
 
 
 
-function groupConversions(conversions){
-  const groups = [];
-  conversions.forEach(({from, to}) => {
-    const g = groups.find(g => g.from === from && g.to === to);
-    if (g) g.count++; else groups.push({from, to, count: 1});
-  });
-  return groups;
-}
 
 
 /* =====================================================================
@@ -7715,30 +7703,18 @@ function mapCardHTML(name){
   const trackedPill = trackedEntry
     ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-glass">🔍</span><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
     : "";
-  // Never-visited stations hide their name, dice and shop (see renderMap()'s
-  // node icon too). Zen and Classic show everything.
-  const unvisited = state.mode !== "zen" && state.mode !== "classic" && !state.visitedStations[name];
-  // The Ocean's identity is always shown (every Adventure run starts there);
-  // its shop still stays hidden until visited.
-  const identityKnown = !unvisited || name === "The Ocean";
-  // Adventure only: the capstone line stays hidden until that capstone has
-  // been seen in its shop (state.seenItems), so the preview doesn't spoil
-  // it.
-  const capSeen = state.mode !== "hard" || !!state.seenItems[capName];
-  const itemsHTML = unvisited
-    ? `<p class="mc-unvisited">Visit this station to discover what is available!</p>`
-    : `<div class="station-items">${stationItemIconsHTML(name)}</div>
-    ${capSeen ? `<div class="capline ${done ? "done" : ""}" data-item-card="${ENTRIES.findIndex(e => e.name === capName)}" title="${esc(capName)}">
+  const itemsHTML = `<div class="station-items">${stationItemIconsHTML(name)}</div>
+    <div class="capline ${done ? "done" : ""}" data-item-card="${ENTRIES.findIndex(e => e.name === capName)}" title="${esc(capName)}">
       <span class="cap-em">${em(s.capstone[0])}</span>
       <span class="cap-name">${esc(capName)}</span>
       ${done ? "<span>✓</span>" : ""}
-    </div>` : ""}`;
+    </div>`;
   // Atomic number + element name, like the station pool (.pnum/.pname mirror
   // .gnum/.gname).
-  const poolHTML = !identityKnown ? "" :
+  const poolHTML =
     `<div class="pool">${sortedDice(s).map(d => `<div class="pcol"><button type="button" class="pchip" data-elem="${esc(d)}" title="${esc(d)} — tap for its card" style="--suit:${ELEMENT_COLOR[d] || "#8a94a6"}"><span class="pnum">${ATOMIC_NUMBER[d]}</span><span class="psym">${esc(d)}</span>${elSuitBadgeHTML(d)}</button><span class="pname">${esc(ELEMENT_NAMES[d] || d)}</span></div>`).join("")}</div>`;
   return `<div class="map-card" style="--suit:${su.color}">
-    <div class="row1"><span class="em">${identityKnown ? em(s.emoji) : "❓"}</span><h2>${identityKnown ? esc(name) : "???"}</h2>${trackedPill}</div>
+    <div class="row1"><span class="em">${em(s.emoji)}</span><h2>${esc(name)}</h2>${trackedPill}</div>
     ${poolHTML}
     ${itemsHTML}
     ${statusNote ? `<p class="map-status-note">${esc(statusNote)}</p>` : ""}
@@ -7748,8 +7724,6 @@ function mapCardHTML(name){
 function renderMap(){
   const over = state.ended;
   const here = state.lastStation;
-  // Hard Mode: before the first move only The Ocean is reachable
-  // (mustStartAtOcean()).
   // This map badge marks only the station where the tracked item itself is
   // crafted -- one breadcrumb, not every station selling a component.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
@@ -7762,28 +7736,22 @@ function renderMap(){
     const reachable = !isHere && !over && canReachStation(here, name);
     const cls = ["map-node", isHere ? "here" : reachable ? "reachable" : "unreachable"];
     if (selectedMapStation === name) cls.push("selected");
-    // Never-visited stations show "?" (except in Zen); the dice pool is always
-    // shown.
-    const unvisited = state.mode !== "zen" && state.mode !== "classic" && !state.visitedStations[name];
-    // The Ocean's own icon shows from the very start of Adventure Mode too
-    // -- same exception, same reasoning, as mapCardHTML()'s identityKnown.
-    const identityKnown = !unvisited || name === "The Ocean";
     // Tracked-item badge on the station where it's crafted (visited stations
     // only, items isRevealed() would show). Unlike the station card's icon row,
     // capstones count here -- when the tracked item IS a capstone, this is the
     // only pointer to its station.
-    const hasTracked = !unvisited && trackedEntry && trackedEntry.station === name && isRevealed(trackedEntry);
+    const hasTracked = trackedEntry && trackedEntry.station === name && isRevealed(trackedEntry);
     // Initial station pick (lastStation === null): each node shows its capstone
     // in the tracked badge's slot (syncInitialPickCapstoneTracking() tracks the
     // open card's one); it wins over the tracked badge. Both badges are
     // SIBLINGS of the node button so z-index can put them behind its circle (a
     // negative-z child can't go behind its parent's own fill).
-    const capstoneBadge = state.mode === "classic" && state.lastStation === null && !classicIntroHideCapstones
+    const capstoneBadge = state.lastStation === null && !classicIntroHideCapstones
       ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
       ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
     return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
-      <span class="mn-em">${identityKnown ? em(s.emoji) : "❓"}</span>
+      <span class="mn-em">${em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
   }).join("");
@@ -7952,7 +7920,7 @@ function togglePin(name){
    own pick (trackingIsOurs). Call right after setting selectedMapStation,
    before render(). */
 function syncInitialPickCapstoneTracking(){
-  if (state.mode !== "classic" || state.lastStation !== null) return;
+  if (state.lastStation !== null) return;
   const wantedName = selectedMapStation ? STATION_BY_NAME[selectedMapStation].capstone[1] : null;
   const trackingIsOurs = selectedJobItem === null || selectedJobItem === initialPickPinnedCapstone;
   if (initialPickPinnedCapstone && initialPickPinnedCapstone !== wantedName){
@@ -8148,7 +8116,7 @@ function renderCodex(){
   // only CORE_SET. That check uses the NAME (CORE_ITEM_NAMES): rows are
   // deduped to one station, which may not be the item's core one (Glass).
   const rows = allRows
-    .filter(row => state.mode !== "classic" || CORE_ITEM_NAMES.has(row.name));
+    .filter(row => CORE_ITEM_NAMES.has(row.name));
 
   const REF_SORTERS = {
     az: (a, b) => a.name.localeCompare(b.name),
@@ -8311,38 +8279,10 @@ function elementsGridHTML(){
     : '<p class="empty">No loose elements — visit a station and hit PLAY.</p>';
 }
 
-/* Classic routes to renderClassicDrawer() (Display Mat + filters + item
-   grid); other modes keep the tier-grouped list. */
 function renderDrawer(){
-  return state.mode === "classic" ? renderClassicDrawer() : renderLegacyDrawer();
+  return renderClassicDrawer();
 }
 
-function renderLegacyDrawer(){
-  document.getElementById("drawerTop").innerHTML = "";
-  document.getElementById("matFilters").hidden = true;
-  document.getElementById("invFilter").hidden = false;
-  // No peek/full-inventory stage here (see #drawer.expanded's own
-  // comment) -- .dbody is simply always visible in every other mode.
-  document.getElementById("drawer").classList.add("expanded");
-
-  const elHTML = elementsGridHTML();
-  const tiers = ["MATERIAL","COMPONENT","CREATION","CAPSTONE"];
-  // The same card grid as Arrange Items' picker (.inv-item-grid), rows of 3.
-  const itemHTMLs = tiers.map(t => {
-    const names = state.items.filter(n => ITEM_TIER[n] === t);
-    if (!names.length) return "";
-    const counts = {};
-    names.forEach(n => counts[n] = (counts[n] || 0) + 1);
-    const unique = [...new Set(names)];
-    return `<div class="sec-label">${t} · ${names.length}</div><div class="arr-tray inv-item-grid">${
-      unique.map(n => `<button type="button" class="arr-tray-card" data-item="${esc(n)}">${
-        counts[n] > 1 ? `<span class="inv-card-qty">×${counts[n]}</span>` : ""}<span class="em">${em(ITEM_EMOJI[n])}</span><span class="nm">${esc(n)}</span></button>`).join("")
-    }</div>`;
-  }).join("");
-
-  return `<div class="sec-label">RAW ELEMENTS · spent when used</div>${elHTML}
-    ${itemHTMLs || '<div class="sec-label">CRAFTED · kept forever</div><p class="empty">Nothing crafted yet.</p>'}`;
-}
 
 /* =====================================================================
    Render + events
@@ -8370,10 +8310,8 @@ function dayCycleSVG(phase){
 }
 function renderDayCycle(){
   const pill = document.getElementById("dayPill");
-  const classic = state.mode === "classic";
-  document.getElementById("scorePill").hidden = classic;
-  pill.hidden = !classic;
-  if (!classic) return;
+  document.getElementById("scorePill").hidden = true;
+  pill.hidden = false;
   const v = Math.max(1, state.visits);
   const phase = DAY_PHASES[(v - 1) % MAT_CHECK_EVERY];
   const day = Math.ceil(v / MAT_CHECK_EVERY);
@@ -8408,16 +8346,10 @@ function render(resetScroll){
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();
-  applyInvFilter();
   applyRefFilter();
   hideHint();
   if (screen !== "station" && emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
   if (screen === "map") syncMapPaths();
-  // Deferred one tick: render() callers often open an overlay right after it
-  // returns (e.g. "render(); showCardPop(entry);"). Checking
-  // blockingEventOpen() inline would see nothing open yet and let a mouse tip
-  // flash for a frame before being buried.
-  setTimeout(maybeShowFirstVisitHint, 0);
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
   // Measured live (not a constant) so the fixed map card sits right under the
   // topbar at any font size or zoom.
@@ -8614,7 +8546,7 @@ function hubHomeFace(){
   // Lock In only through the travel doorway: travelPromptFor ===
   // selectedMapStation is set only by tapping Travel, so opening the mat any
   // other way never shows Lock In.
-  if (panel === "drawer" && state.mode === "classic" && matDrawerView === "mat"
+  if (panel === "drawer" && matDrawerView === "mat"
       && screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)
       && travelPromptFor === selectedMapStation) return "lockin";
   if (panel) return "close";
@@ -8763,7 +8695,7 @@ function endGameFlavorHTML(){
    the final craft; the End screen waits until that craft's reveal and BINGO
    sequence have finished (the same idle test). */
 function checkCraftedEverything(){
-  if (state.mode !== "classic" || state.ended || state.craftedEverything) return;
+  if (state.ended || state.craftedEverything) return;
   if (![...CORE_ITEM_NAMES].every(owns)) return;
   state.craftedEverything = true;
   save();
@@ -8896,7 +8828,7 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   // Display Mat controls (Classic, owned, mat-eligible only): the panel gets
   // Place/Remove/Close (#cpMatToggles), other contexts the single #cpMatBtn.
   // This popup is the only add/remove entry point (see toggleMatCard()).
-  const matEligible = state.mode === "classic" && !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
+  const matEligible = !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
   document.getElementById("cardPop").classList.toggle("mat-panel", cardPopMatPanel);
   document.getElementById("cpMatToggles").hidden = !(cardPopMatPanel && matEligible);
   // Not on the "just crafted" popup (autoDismiss) -- Item Info and the pin
@@ -9347,55 +9279,14 @@ document.addEventListener("click", ev => {
   if (!ev.target.closest("#mouseTip")) hideMouseTip();
 }, true);
 
-/* Station tips, tried in order on every render() at a station until one
-   shows (showMouseTipOnce()/showTutorialHintOnce() return false for tips
-   already seen). On a new run's first visit: "roll the dice", then "tap
-   again to head out". The rest are organic feature tips that fire the first
-   time their real situation comes up in play. */
-function maybeShowFirstVisitHint(){
-  if (current === null || openPanelName()) return;
-  // Not in Classic: its opening sequence already guides the first moves.
-  // Adventure/Zen only.
-  const classicOpening = state.mode === "classic" && state.visits === 1;
-  if (!classicOpening && state.visits === 1 && !state.rolledHere){
-    showMouseTipOnce("firstroll", 3, "Tap Roll for your first dice!", "bottom-left", "#hubHome");
-    return;
-  }
-  if (!state.rolledHere) return; // nothing below applies before this visit's own roll
-  // Wait until nothing is left to craft before saying it's fine to leave
-  // -- otherwise it reads as rushing the player out.
-  const hasCraftable = entriesAt(current).some(e => e.tier !== "CAPSTONE" && !owns(e.name) && canCraft(e));
-  if (!classicOpening && state.visits === 1 && !hasCraftable
-      && showMouseTipOnce("afterroll", 12, "Tap the Map when you're ready to leave.", "bottom-left", "#hubHome")) return;
-  // Convert's first-appearance tip lives in updateHub(), where the button is
-  // actually revealed (on any screen).
-}
 
-/* ---------------------------------------------- inventory filter --- */
-function applyInvFilter(){
-  const q = (document.getElementById("invFilter").value || "").trim().toLowerCase();
-  document.querySelectorAll("#drawerBody .ientry").forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? "" : "none";
-  });
-  document.querySelectorAll("#drawerBody .elbox").forEach(el => {
-    el.style.display = !q || el.textContent.toLowerCase().includes(q) ? "" : "none";
-  });
-}
 
 function goStation(name){
   lockInCommitted = false;
   if (state.ended){ showEndGame(); return; }
-  // Adventure/Hard: a Helicopter hop that only works by fast travel (not
-  // map-connected, see canReachStation()) costs 1 Natural Gas. Sub-zones and
-  // picking a starting station are free. Classic never spends items.
-  if (state.mode === "hard" && state.lastStation !== null && STATION_BY_NAME[name] &&
-      !isMapConnected(state.lastStation, name)){
-    const idx = state.items.indexOf("Natural Gas");
-    if (idx !== -1) state.items.splice(idx, 1);
-  }
   // Classic: auto-pin the first station's capstone (state.visits is still 0
   // here) so there's a goal from the first tap.
-  if (state.mode === "classic" && state.visits === 0 && STATION_BY_NAME[name]){
+  if (state.visits === 0 && STATION_BY_NAME[name]){
     const capName = STATION_BY_NAME[name].capstone[1];
     if (!isPinned(capName)) togglePin(capName);
   }
@@ -9454,7 +9345,7 @@ function goMap(){
   else window.scrollTo({top:0, behavior:"instant"});
   // The congratulatory ending at MAX_VISITS. The mode check is explicit even
   // though Zen/Hard use Infinity (applyVisitLimit()).
-  if (state.mode === "classic" && state.visits >= MAX_VISITS && !state.ended){
+  if (state.visits >= MAX_VISITS && !state.ended){
     state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
   }
   // One-time tip: back on the map after the first visit without ever opening
@@ -9929,7 +9820,7 @@ function punchInventory(){
    (confirmCapstoneChoice()). */
 let startingGiftInProgress = false;
 function isClassicFirstPick(){
-  return state.mode === "classic" && state.lastStation === null && state.visits === 0;
+  return state.lastStation === null && state.visits === 0;
 }
 // A fixed-position stand-in for el, sitting exactly on top of it, so the
 // real card can re-render underneath without yanking anything mid-flight.
@@ -10093,13 +9984,11 @@ function bounceMissingItems(cBtn, text = "Missing Items!"){
   ], { duration: 1400 }).onfinish = () => note.remove();
 }
 
-/* "Reset Session" and "Play Again": wipe this mode's save and start over
-   in place (each mode has its own save), recording the finished run first.
-   Uses startFreshMode() for the reset. */
+/* "Reset Session" and "Play Again": record the finished run, then start
+   over (startFreshMode()). */
 function resetCurrentModeRun(){
-  const mode = state.mode;
   recordHistory();
-  startFreshMode(mode);
+  startFreshMode("classic");
 }
 
 /* The craft + reveal, called straight away (no suit cost) or once the
@@ -10694,8 +10583,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (isClassicFirstPick()){ playStartingGift(selectedMapStation); return; }
     // Classic: no mat check before the first sunset (MAT_CHECK_EVERY); after
     // that every trip opens the mat, even an empty one.
-    if (state.mode === "classic" && !isMatCheckVisit()){ goStation(selectedMapStation); return; }
-    if (state.mode !== "classic" && state.items.length === 0){ goStation(selectedMapStation); return; }
+    if (!isMatCheckVisit()){ goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
@@ -10825,7 +10713,7 @@ const openDrawer = (opts = {}) => {
 // BREAKPOINT_GATE_VISIT: from now on missing the first breakpoint at sunset
 // ends the run.
 function maybeShowBreakpointGateNotice(){
-  if (state.mode !== "classic" || state.visits !== BREAKPOINT_GATE_VISIT || state.sawBreakpointGateNotice) return;
+  if (state.visits !== BREAKPOINT_GATE_VISIT || state.sawBreakpointGateNotice) return;
   state.sawBreakpointGateNotice = true;
   save();
   queueEventToast("warn", "⚠️", "Breakpoints now matter",
@@ -10920,7 +10808,6 @@ document.getElementById("tourComboLabBtn").addEventListener("click", () => {
 document.getElementById("comboLabExitBtn").addEventListener("click", closeComboLab);
 document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
 scrim.addEventListener("click", closeDrawer);
-document.getElementById("invFilter").addEventListener("input", applyInvFilter);
 document.getElementById("drawerBody").addEventListener("click", ev => {
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
@@ -11544,10 +11431,8 @@ function playLockInSequence(reward){
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
   const delta = diceDeltaForReward(reward);
-  if (state.mode === "classic"){
-    state.matChecked = true;
-    state.matBonusDice = delta;
-  } else state.bonusDiceNextVisit = delta;
+  state.matChecked = true;
+  state.matBonusDice = delta;
   // Tier 4 (the top breakpoint) also banks one "?" element.
   if (reward >= 4) state.emptyElements = (state.emptyElements || 0) + 1;
   save();
@@ -11603,8 +11488,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
   // rather than a whole separate celebration beat, since it's additive to
   // whatever the dice count already says.
-  document.getElementById("lockInRewardSub").textContent = state.mode === "classic"
-    ? `🎲 ${TAKE + n} dice at your next station` : "";
+  document.getElementById("lockInRewardSub").textContent = `🎲 ${TAKE + n} dice at your next station`;
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
   extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";
@@ -11672,7 +11556,6 @@ function emptyElBadgeHTML(){
 function renderConvertEmptyEl(){
   const el = document.getElementById("convertEmptyEl");
   if (!el) return;
-  if (state.mode !== "classic"){ el.innerHTML = ""; return; }
   el.innerHTML = emptyElBadgeHTML();
   const btn = el.querySelector("#emptyElBadgeBtn");
   if (btn && screen !== "station" && (state.emptyElements || 0) > 0){
@@ -11819,7 +11702,6 @@ function quarkMeterLineHTML(s){
    the next Lock-In scores against), and in Classic never earlier than the
    first check on visit 3. */
 function matCheckRound(){
-  if (state.mode !== "classic") return state.visits;
   return Math.max(MAT_CHECK_EVERY, state.visits);
 }
 /* Classic, after the first mat check: the Quark Meter rides along the top
@@ -11827,7 +11709,7 @@ function matCheckRound(){
    reading the current mat. Tapping it opens the Display Mat. */
 function renderQuarkTopBar(){
   const el = document.getElementById("quarkTopBar");
-  const show = state.mode === "classic" && !!state.matChecked && !state.ended && !comboLabActive;
+  const show = !!state.matChecked && !state.ended && !comboLabActive;
   document.body.classList.toggle("has-qtop", show);
   if (!show){ el.innerHTML = ""; return; }
   el.innerHTML = `<div class="mat-score-card qtop-card">${quarkMeterLineHTML(matScore(matOnMat()))}</div>`;
@@ -11986,10 +11868,8 @@ function syncMatFilterBar(){
 }
 
 /* Classic drawer body: the mat/Elements zone + score (#drawerTop), the
-   filter bar (#matFilters), and the item grid (returned for #drawerBody,
-   like renderLegacyDrawer()). */
+   filter bar (#matFilters), and the item grid (returned for #drawerBody). */
 function renderClassicDrawer(){
-  document.getElementById("invFilter").hidden = true;
   document.getElementById("matFilters").hidden = false;
   document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
   buildMatFilterBar();
@@ -12249,7 +12129,7 @@ function renderCollectionsList(){
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
-  list.innerHTML = `<div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, state.mode === "classic")).join("")}</div>`;
+  list.innerHTML = `<div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`;
 }
 /* A named collection's card, shared by the Collections menu and the combo
    star's popup (openComboInfo()). A green check once every member is owned.
@@ -12888,7 +12768,7 @@ function showNextEventToast(){
    an owned item, so this runs once per item per run. Queues the square for
    the BINGO sequence (no toast). */
 function checkBingoCompletion(name){
-  if (state.mode !== "classic" || !state.bingoCard || !state.bingoCard.includes(name)) return;
+  if (!state.bingoCard || !state.bingoCard.includes(name)) return;
   // No toast any more -- the square bounces on the BINGO tray instead
   // (see runBingoSequence()).
   bingoPendingSquares.push(state.bingoCard.indexOf(name));
@@ -12898,7 +12778,7 @@ function checkBingoCompletion(name){
    can complete several (the centre is on 4). Each line pays once, ever
    (state.bingoLinesCompleted). */
 function checkBingoLines(){
-  if (state.mode !== "classic" || !state.bingoCard) return;
+  if (!state.bingoCard) return;
   if (!state.pendingBingoClears) state.pendingBingoClears = []; // old saves predate this field
   bingoLines().forEach((line, i) => {
     if (state.bingoLinesCompleted.includes(i)) return;
@@ -12966,7 +12846,7 @@ function bingoSequenceBlocked(){
 /* Polls (cheaply) until nothing else is on screen, then runs. Safe to call
    any number of times -- only one wait is ever pending. */
 function scheduleBingoSequence(){
-  if (state.mode !== "classic" || bingoClearInProgress) return;
+  if (bingoClearInProgress) return;
   if (!bingoPendingSquares.length && !(state.pendingBingoClears || []).length) return;
   clearTimeout(bingoSeqTimer);
   bingoSeqTimer = setTimeout(() => {
@@ -13452,7 +13332,7 @@ function renderConvertPicker(){
   // what's close/not just what already qualifies; TO offers the full set.
   let syms = isFrom
     ? Object.keys(state.elements).filter(s => count(s) > 0)
-    : (state.mode === "classic" ? CLASSIC_ELEMENTS : Object.keys(ATOMIC_NUMBER));
+    : CLASSIC_ELEMENTS;
   // Grouped by suit (ELEMENT_SUIT's key order), not atomic number, so Ni sits
   // with the earth elements.
   const ELEMENT_DISPLAY_ORDER = Object.keys(ELEMENT_SUIT);
@@ -13661,13 +13541,12 @@ function renderTutElementsGrid(){
 /* Each step's anchor matches its button's side of the hub (To-Do List,
    Inventory, Home, Items, Settings), so the bubble never covers the
    spotlit button. */
-// A function, because the Jobs/Quests step's text depends on state.mode,
-// which isn't set at load.
+// A function so the step list is built fresh each time.
 function tutCoachSteps(){
   return [
     { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "Home rolls dice and confirms travel." },
     { sel: "#hubJobs", pose: 2, anchor: "bottom-left",
-      text: state.mode === "hard" ? "Quests: goals for bonus points." : "Jobs: build for bonus points." },
+      text: "To-Do List: the items you're tracking." },
     { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },
     { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "Look up any item's recipe here." },
     { sel: "#hubSettings", pose: 2, anchor: "bottom-right", text: "Adjust rules or go to Main Menu." },
