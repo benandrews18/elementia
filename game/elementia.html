@@ -696,7 +696,6 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Silhouette outline around the item art (same drop-shadow stack as
    .tok-icon), rather than a rectangular border. */
 .bc-icon{filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)}
-flex:none; font-size:13px; font-weight:800; color:var(--collection)}
 /* Event toast (queueEventToast()): a passive top banner. The accent colour
    comes from the kind; only "warn" (red) is used today. */
 #eventToast{
@@ -1080,7 +1079,6 @@ flex:none; font-size:13px; font-weight:800; color:var(--collection)}
    finished animating (renderStation()'s stationheadFrozen), so the pool and
    dice stay visible; normal flow afterward. */
 .stationhead.frozen{position:sticky; top:0; z-index:4}
-padding:30px 20px; text-align:center; color:var(--mute); font-size:14px; font-style:italic}
 
 /* Always one row: .sheet can be narrow even in a wide viewport, so a media
    query is the wrong signal. .gcol shrinks (min-width:0) instead. */
@@ -1182,7 +1180,6 @@ padding:30px 20px; text-align:center; color:var(--mute); font-size:14px; font-st
 /* nowrap + equal flex columns (like .gather) so a full 6-dice roll always
    fits one line. */
 .rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
-from{opacity:0; transform:scale(.5) rotate(-8deg)}to{opacity:1; transform:none}}
 
 /* make here */
 .makewrap{padding:20px 8px 24px}
@@ -2715,7 +2712,6 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 }
 .shop-pin:hover{opacity:1}
 .shop-pin.active{border:2px solid var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 8px rgba(226,178,90,.6)}
-font-size:11px; font-weight:800; color:var(--ink2)}
 .ref-pinned-heading{
   font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
 }
