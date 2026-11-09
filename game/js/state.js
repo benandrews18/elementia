@@ -72,6 +72,8 @@ let codexReturnDrawerPeeked = null;
 // arcadeHighScores: {[stationName]: {raw, label, score, dice}} -- best
 // Mini-Games run per station (launchArcadeGame()), keyed on the raw score
 // so results stay comparable if difficulty is retuned.
+/* Defaults for a new player: auto card inspection on, mouse tips on
+   (guidedTutorialEnabled), mini-games off, low motion off. */
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
   // Combo Lab or a run can be recalled later (openMatLayoutsOverlay()).
@@ -85,9 +87,9 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,
-  // Low motion (see lowMotion()/html.low-motion): null = follow the
-  // device's own "reduce motion" setting, true/false = player's override.
-  lowMotion:null};
+  // Low motion (see lowMotion()/html.low-motion): off unless turned on in
+  // Settings. Older saves holding null read as off.
+  lowMotion:false};
 /* The tracked item (ephemeral UI state, not saved): highlights its
    ingredient closure on station cards (componentClosure()/
    stationItemIconsHTML()/renderMap()). */

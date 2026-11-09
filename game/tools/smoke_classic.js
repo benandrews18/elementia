@@ -77,6 +77,11 @@
   // Rule checks: each pushes an error when a rule breaks.
   const expect = (ok, msg) => { if (!ok) errs.push("rule: " + msg); };
   await step("rules", async () => {
+    // New-player default settings (the runner starts with empty storage).
+    expect(prefs.autoCardInspection === true && prefs.guidedTutorialEnabled === true
+      && prefs.minigamesEnabled === false && prefs.lowMotion === false && !lowMotion(),
+      "defaults should be: card inspection on, mouse tips on, mini-games off, low motion off");
+
     // Suit costs count only the four core elements per suit (not leftover Zn).
     state.elements = {Zn: 5};
     expect(suitSurplusOfSuit("metal", {}) === 0, "Zn counted toward metal suit cost");

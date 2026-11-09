@@ -107,9 +107,7 @@
 /* Per-die animation-delay (set in showLockInRewardModal()) staggers the
    pops; opacity:0 hides each die until its turn. */
 .lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
-@media (prefers-reduced-motion: reduce){
-  .lockin-reward-die{animation:none; opacity:1}
-}
+html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .lockin-reward-sub{text-align:center; font-weight:700; color:var(--ink2); margin:-2px 0 10px}
 .lockin-reward-extra{text-align:center; font-weight:800; color:var(--collection); margin:-2px 0 10px}
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter

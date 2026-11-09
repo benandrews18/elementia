@@ -8,6 +8,12 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## v2026.11.08c (default settings)
+
+- **Defaults for new players:** auto card inspection on, mouse tips on,
+  mini-games off, low motion off. Low motion no longer follows the
+  device's "reduce motion" setting; it's only the in-game Settings switch.
+
 ## v2026.11.08b (run completion, trophies, tutorial, tier 1 squares)
 
 - **Intro softlock fixed:** tapping outside the capstone choice or the pin

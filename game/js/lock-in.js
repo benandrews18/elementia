@@ -146,7 +146,7 @@ function matCardsForCombo(kind, name){
 // A quick in-place scale punch for something already on screen (unlike
 // bounceCardAppear(), which pops in from invisible).
 function bouncePulse(el){
-  if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!el || lowMotion()) return;
   el.animate([
     { transform: "scale(1)" },
     { transform: "scale(1.35)", offset: .5 },
