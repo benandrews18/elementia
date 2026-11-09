@@ -8,7 +8,7 @@
    padding-left:24px puts the visible content back where a plain
    min(400px,92vw) box would. */
 #jobSheet{
-  position:fixed; top:0; left:-24px; width:calc(min(400px,92vw) + 24px); z-index:69;
+  position:fixed; top:0; left:-24px; width:calc(min(400px, var(--vw) * 92) + 24px); z-index:69;
   padding-left:24px; box-sizing:border-box;
   bottom:calc(var(--hub-h, 67px) + env(safe-area-inset-bottom));
   background:var(--card); border-right:2.5px solid var(--gold); border-bottom:2.5px solid var(--gold);

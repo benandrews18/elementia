@@ -114,7 +114,7 @@
          small HUD pill. */
       .mg-forest-bigicon{
         position:absolute; left:50%; top:26%; transform:translate(-50%,-50%); z-index:2;
-        font-size:min(30vw,150px); line-height:1; pointer-events:none;
+        font-size:min(calc(var(--vw) * 30),150px); line-height:1; pointer-events:none;
         filter:drop-shadow(0 6px 14px rgba(0,0,0,.4));
       }
       /* No transform-origin here on purpose. The needle is rotated with the

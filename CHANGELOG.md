@@ -8,6 +8,15 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## Unreleased
+
+- **Desktop view:** on a wide screen the game now shows in a phone-width
+  (430px) column at full window height, with the phone layout rules on,
+  instead of a 768px tablet column. Trays that sit just off-screen on a
+  phone no longer show beside the column, and station backdrop art shows.
+  Phones and tablets are unchanged. Width is `--frame-w` in
+  `game/css/desktop-frame.css`.
+
 ## v2026.11.08 (Classic-only data, lighter download, cleanup)
 
 - **Display Mat:** Glass, Water, Limestone and Natural Gas now count only at

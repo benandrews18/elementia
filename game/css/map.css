@@ -47,7 +47,7 @@
   display:flex; align-items:center; justify-content:center; pointer-events:none;
 }
 #introLogo img{
-  width:min(78vw, 420px); filter:drop-shadow(0 10px 30px rgba(0,0,0,.5));
+  width:min(calc(var(--vw) * 78), 420px); filter:drop-shadow(0 10px 30px rgba(0,0,0,.5));
   opacity:0; transform:scale(.4);
 }
 #introLogo.show img{animation:introLogoBounce .5s cubic-bezier(.34,1.56,.64,1) forwards}

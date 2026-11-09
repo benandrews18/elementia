@@ -222,7 +222,7 @@
    speech-tail corner always points back at the image. */
 #mouseTip{
   position:fixed; z-index:75;
-  display:flex; max-width:min(600px, 92vw);
+  display:flex; max-width:min(600px, calc(var(--vw) * 92));
   opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
 }
 #mouseTip.tut-coach-active{ z-index:10000; }

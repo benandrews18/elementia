@@ -120,7 +120,7 @@
 /* Squishy press feedback on every map button; scale stacks on top of each
    state's translate(-50%,-50%) centring. */
 .map-node:active{transform:translate(-50%,-50%) scale(.88)}
-.map-node .mn-em{font-size:min(10vw,46px); line-height:1}
+.map-node .mn-em{font-size:min(calc(var(--vw) * 10),46px); line-height:1}
 /* Mini-Games best-run badge (renderArcadeMap()); only arcade nodes set it. */
 .arcade-best-badge{
   position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);

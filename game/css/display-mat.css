@@ -255,7 +255,7 @@
    so it doesn't cover the mat above the search bar. */
 .mat-sf-scrim{position:fixed; left:0; right:0; bottom:0; background:rgba(10,14,20,.5); z-index:62}
 #matSortTray, #matFilterTray{
-  position:fixed; bottom:0; width:50vw; max-width:260px; z-index:63;
+  position:fixed; bottom:0; width:calc(var(--vw) * 50); max-width:260px; z-index:63;
   background:var(--card); box-shadow:0 0 24px rgba(0,0,0,.5);
   padding:16px 16px 16px;
   display:flex; flex-direction:column; gap:8px; overflow-y:auto;
