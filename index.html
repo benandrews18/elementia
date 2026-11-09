@@ -654,7 +654,6 @@ body[data-screen="market"] #trackedPill{display:none}
   0%, 100%{box-shadow:0 0 0 0 rgba(226,178,90,.5)}
   50%{box-shadow:0 0 0 6px rgba(226,178,90,0)}
 }
-@media (prefers-reduced-motion: reduce){.bingo-cell-addcap{animation:none}}
 .bingo-hint{font-size:11.5px; color:#fff; line-height:1.5; margin:10px 0; text-align:left}
 .bingo-hint-line{display:block}
 /* The icon covers the whole cell so it centres on the square; the name is
@@ -1864,7 +1863,6 @@ body[data-screen="market"] #trackedPill{display:none}
 .ct-slide > :nth-child(2){animation-delay:.06s} .ct-slide > :nth-child(3){animation-delay:.12s}
 .ct-slide > :nth-child(4){animation-delay:.18s} .ct-slide > :nth-child(5){animation-delay:.24s}
 @keyframes ct-in{from{opacity:0; transform:translateY(10px) scale(.96)}to{opacity:1; transform:none}}
-@media (prefers-reduced-motion: reduce){.ct-slide > *{animation:none}}
 html.low-motion .ct-slide > *{animation:none}
 .ct-kicker{font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--gold)}
 .ct-line{margin:0; text-align:center; font-size:14.5px; font-weight:700; color:var(--ink); text-wrap:balance}
@@ -2162,9 +2160,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 /* Per-die animation-delay (set in showLockInRewardModal()) staggers the
    pops; opacity:0 hides each die until its turn. */
 .lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
-@media (prefers-reduced-motion: reduce){
-  .lockin-reward-die{animation:none; opacity:1}
-}
+html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .lockin-reward-sub{text-align:center; font-weight:700; color:var(--ink2); margin:-2px 0 10px}
 .lockin-reward-extra{text-align:center; font-weight:800; color:var(--collection); margin:-2px 0 10px}
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
@@ -3439,11 +3435,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   #matSortTray{left:var(--frame-x)}
   #matFilterTray{right:var(--frame-x)}
 }
-@media (prefers-reduced-motion: reduce){
-  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important;
-    transition-duration:.01ms !important}
-  .confetti{display:none}
-}
 /* Phone layout: real phones, and the desktop phone frame above. */
 @media (max-width:640px), (min-width:769px){
   #topbar{flex-wrap:wrap; row-gap:8px; padding:10px 12px}
@@ -4325,7 +4316,7 @@ const NOTO_ICONS = {"⏳": NOTO_23f3, "☁️": NOTO_2601_fe0f, "♻️": NOTO_2
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08b",
+ "version": "2026.11.08c",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -6081,6 +6072,8 @@ let codexReturnDrawerPeeked = null;
 // arcadeHighScores: {[stationName]: {raw, label, score, dice}} -- best
 // Mini-Games run per station (launchArcadeGame()), keyed on the raw score
 // so results stay comparable if difficulty is retuned.
+/* Defaults for a new player: auto card inspection on, mouse tips on
+   (guidedTutorialEnabled), mini-games off, low motion off. */
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
   // Combo Lab or a run can be recalled later (openMatLayoutsOverlay()).
@@ -6094,9 +6087,9 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,
-  // Low motion (see lowMotion()/html.low-motion): null = follow the
-  // device's own "reduce motion" setting, true/false = player's override.
-  lowMotion:null};
+  // Low motion (see lowMotion()/html.low-motion): off unless turned on in
+  // Settings. Older saves holding null read as off.
+  lowMotion:false};
 /* The tracked item (ephemeral UI state, not saved): highlights its
    ingredient closure on station cards (componentClosure()/
    stationItemIconsHTML()/renderMap()). */
@@ -6170,12 +6163,11 @@ function freshState(){
    Low motion: menus, trays and pop-ups appear instantly; celebration/flip/
    bounce effects are skipped; pulsing markers go steady. Kept: the Quark
    count-up during Lock-In, the dice roll and flight into the bag, and the
-   mini-games. Follows the device's "reduce motion" setting until the player
-   chooses in Settings.
+   mini-games. Off unless the player turns it on in Settings (the device's
+   own "reduce motion" setting is not used).
    ===================================================================== */
 function lowMotion(){
-  if (prefs && typeof prefs.lowMotion === "boolean") return prefs.lowMotion;
-  return matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return !!(prefs && prefs.lowMotion === true);
 }
 function applyLowMotion(){
   document.documentElement.classList.toggle("low-motion", lowMotion());
@@ -10424,7 +10416,7 @@ function matCardsForCombo(kind, name){
 // A quick in-place scale punch for something already on screen (unlike
 // bounceCardAppear(), which pops in from invisible).
 function bouncePulse(el){
-  if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!el || lowMotion()) return;
   el.animate([
     { transform: "scale(1)" },
     { transform: "scale(1.35)", offset: .5 },
