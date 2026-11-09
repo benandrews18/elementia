@@ -21,31 +21,13 @@ function goStation(name){
   // their finish event fires, which would leave this stuck true and freeze
   // .stationhead everywhere.
   rollAnimationInProgress = false;
-  const alreadyVisited = state.visitedStations[name];
   state.visitedStations[name] = true;
-
-  // "New Items Unlocked" also plays on arrival if this shop's revealed set
-  // grew since the last visit -- never on a first visit (nothing to compare
-  // against).
-  const nowRevealed = entriesAt(name).filter(e => e.tier !== "CAPSTONE").map(e => e.name);
-  if (alreadyVisited && state.stationLastSeen[name]){
-    const prevSeen = new Set(state.stationLastSeen[name]);
-    // Only items new to the PLAYER (!state.seenItems), not just new to this
-    // shop.
-    const newlyAppeared = nowRevealed.filter(n => !prevSeen.has(n) && !state.seenItems[n]);
-    if (newlyAppeared.length){
-      pendingRevealNames = newlyAppeared;
-      pendingRevealStation = name;
-    }
-  }
-  state.stationLastSeen[name] = nowRevealed;
 
   save(); render(true);
   // The mini-game launches immediately on arrival, covering the screen
   // (#mgOverlay) until its score has become a roll (launchMinigame()/
-  // doRoll()). A queued reveal's 1s timer runs behind it harmlessly.
+  // doRoll()).
   launchMinigame();
-  if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
   if (current){ state.priorStation = state.lastStation; state.lastStation = current; }

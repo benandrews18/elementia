@@ -6,15 +6,10 @@ function renderStation(name){
   const s = STATION_BY_NAME[name], su = DATA.suits[s.suit];
   const all = entriesAt(name);
   const allShop     = all.filter(e => e.tier !== "CAPSTONE");
-  // Items unlocked by the latest craft stay hidden until the card popup
-  // closes (flushPendingReveal()).
-  const shopEntries = sortShopItems(allShop
-    .filter(e => !(pendingRevealStation === name && pendingRevealNames && pendingRevealNames.includes(e.name))));
+  const shopEntries = sortShopItems(allShop);
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
   const capRevealed = !!capEntry;
   const idx = e => ENTRIES.indexOf(e);
-  shopEntries.forEach(e => markSeen(e.name));
-  if (capRevealed) markSeen(capEntry.name);
   // Tutorial follow-up to openPinsTray()'s hint: the first time a shop shows
   // the tracked item's badge (itemHTML()'s pinBadge), point it out once.
   if (selectedJobItem){

@@ -1,20 +1,5 @@
 /* ------------------------------------------------------- inventory --- */
 #scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
-/* Lock-In banner above the peeked Display Mat (see syncLockInBanner()).
-   Below #drawer (60), above #scrim. JS sets `bottom` to the drawer's top
-   edge so it fills everything above the tray. */
-/* flex-start, not center: a centred column taller than its box is clipped
-   at both ends and the top can't be scrolled to. */
-#lockInBanner{
-  display:none; position:fixed; left:0; right:0; top:0; z-index:59;
-  flex-direction:column; align-items:center; justify-content:flex-start; gap:10px;
-  padding:16px 28px; text-align:center; overflow-y:auto;
-  background:rgba(10,14,20,.92); border-bottom:3px solid var(--gold);
-}
-#lockInBanner.show{display:flex}
-#lockInBannerText{
-  margin:0; color:#fff; font-weight:800; font-size:19px; line-height:1.5;
-}
 /* Quark Score explainer (filled once at load), smaller than the main
    instruction. Icon rows reuse buildMatFilterBar()'s markup as plain spans. */
 #lockInQuarkTutorial{
@@ -66,7 +51,7 @@
    no transitions or animations (Lock-In's scoring bounces are JS-driven
    and unaffected). */
 #drawer, #drawer *, #drawer *::before, #drawer *::after,
-#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #lockInBanner, #lockInBanner *{
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn{
   transition:none !important; animation:none !important;
 }
 /* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher

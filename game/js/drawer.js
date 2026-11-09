@@ -16,7 +16,6 @@ const openDrawer = (opts = {}) => {
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   updateHub();
-  syncLockInBanner();
   maybeShowBreakpointGateNotice();
 };
 const closeDrawer = () => {
@@ -29,9 +28,6 @@ const closeDrawer = () => {
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
-  syncLockInBanner();
-  // Restore the banner text for next time (playLockInSequence() hides it).
-  document.getElementById("lockInBannerText").hidden = false;
   // #matSortBtn/#matFilterBtn are separate fixed elements, so closing the
   // drawer must hide them (and their trays) too, or they'd sit over
   // #pinsBtn/#quickConvertBtn.
@@ -53,7 +49,6 @@ function expandDrawerToFull(){
   drawer.classList.add("expanded");
   renderMatTop();
   updateHub();
-  syncLockInBanner();
   return true;
 }
 // Mirror of expandDrawerToFull(): collapse to the peeked view without
@@ -74,5 +69,4 @@ function collapseDrawerToPeeked(){
   drawer.classList.remove("expanded");
   renderMatTop();
   updateHub();
-  syncLockInBanner();
 }

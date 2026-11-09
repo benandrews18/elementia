@@ -219,7 +219,6 @@ function setQuarkMeterProgress(total){
    finishLockIn() runs (its modal is the one place the reward is shown).
    The timing is fixed; bouncePulse() itself handles reduced motion. */
 function playLockInSequence(reward){
-  document.getElementById("lockInBannerText").hidden = true;
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
@@ -342,7 +341,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
   // rather than a whole separate celebration beat, since it's additive to
   // whatever the dice count already says.
-  document.getElementById("lockInRewardSub").textContent = `🎲 ${TAKE + n} dice at your next station`;
+  document.getElementById("lockInRewardSub").textContent = n ? `🎲 +${n} on your next roll` : "";
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
   extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";
@@ -370,19 +369,6 @@ function maybeShowBreakpointGateNotice(){
   save();
   queueEventToast("warn", "⚠️", "Breakpoints now matter",
     "From now on, missing your first Quark breakpoint at sunset ends your run.");
-}
-/* Legacy Lock-In banner (#lockInBanner); always hidden now -- its rules
-   moved to #matRulesOverlay. */
-function syncLockInBanner(){
-  const banner = document.getElementById("lockInBanner");
-  // Retired 2026-11-02: the rules this banner showed moved to the Display
-  // Mat's own "?" popout (#matRulesOverlay), so it never shows now.
-  const show = false;
-  banner.classList.toggle("show", show);
-  if (!show) return;
-  const bottomPx = parseFloat(getComputedStyle(drawer).bottom) || 0;
-  const heightPx = drawer.getBoundingClientRect().height;
-  banner.style.bottom = (bottomPx + heightPx) + "px";
 }
 
 // Fill-in for the mat rules popup's two summary lines.

@@ -66,10 +66,6 @@ let codexReturnScreen = null;
 // (closePanelByName()). Item Reference is a full screen below #drawer, so
 // the drawer must close. null: closed; true: peeked; false: expanded.
 let codexReturnDrawerPeeked = null;
-// Shop items unlocked by the latest craft, held out of the shop grid until
-// the card popup closes (flushPendingReveal()).
-let pendingRevealNames = null, pendingRevealStation = null;
-let itemRevealTimer = null, itemRevealShown = false, itemRevealDismissable = false, itemRevealDismissTimer = null;
 // guidedTutorialEnabled/tutorialHintsSeen: Professor Mouse's feature tips
 // (showTutorialHintOnce()) fire the first time each situation comes up in
 // play. Kept in prefs (per player, survives resets) so no tip repeats.
@@ -121,9 +117,6 @@ function freshState(){
     mode: null,        // always "classic" once a run starts
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
                           // "visited every station" bonus and the Market's progress row.
-    stationLastSeen: {}, // {station: [items]} revealed non-capstone shop items as of the last
-                         // visit, so goStation() can spot "new since last time".
-    seenItems: {},     // {item: true} every item shown to the player this run.
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).

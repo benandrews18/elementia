@@ -43,7 +43,7 @@
     render();
     const e = ENTRIES.find(x => x.station === current && canCraft(x) && !owns(x.name) && !itemSuitCosts(x.name).length);
     log.crafted = e && e.name;
-    if (e) { performSingleCraft(e); await wait(2500); closeOverlay("cardPop"); flushPendingReveal(); await wait(1500); closeItemReveal && closeItemReveal(); }
+    if (e) { performSingleCraft(e); await wait(2500); closeOverlay("cardPop"); await wait(500); }
   });
   await step("drawer", async () => { openDrawer(); render(); await wait(200); matDrawerView = "elements"; renderMatTop(); matDrawerView = "mat"; renderMatTop(); closeDrawer(); });
   await step("todo", async () => { openJobBoard(); await wait(400); closeJobBoard(); await wait(300); });

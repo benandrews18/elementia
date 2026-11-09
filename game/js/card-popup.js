@@ -1,5 +1,5 @@
 /* =====================================================================
-   card-popup.js -- Item card popup (#cardPop) and its buttons, the item-reveal overlay,
+   card-popup.js -- Item card popup (#cardPop) and its buttons,
    the element card popup, and the craft celebration.
    ===================================================================== */
 const TAG_COLORS = {MATERIAL:"#8a94a6", COMPONENT:"#3b7fc4", CREATION:"#3fa66b", CAPSTONE:"#c79a2e"};
@@ -95,7 +95,7 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
     document.getElementById("cpMatToggles").style.bottom = "";
   }
   clearTimeout(cardPopTimer);
-  if (autoDismiss) cardPopTimer = setTimeout(() => { closeOverlay("cardPop"); flushPendingReveal(); }, 3800);
+  if (autoDismiss) cardPopTimer = setTimeout(() => closeOverlay("cardPop"), 3800);
 }
 /* Docks the card just under #drawerTop and scales .pc-card to fill the
    space down to the hub (CSS can't size this box -- see the
@@ -169,64 +169,14 @@ function updateCardPopBackBtn(){
 /* Every automatic post-craft popup goes through here, so the "Auto card
    inspection" setting is read in one place. Capstones use celebrate()
    instead. With inspection off, performSingleCraft()'s bounce sequence is
-   the feedback, so this only flushes any queued item-unlock reveal. */
+   the feedback. */
 function autoCardPop(entry){
   releaseBingoCraftHold();
-  if (prefs.autoCardInspection === false) flushPendingReveal();
-  else showCardPop(entry);
+  if (prefs.autoCardInspection !== false) showCardPop(entry);
 }
-/* Reveals shop items a craft unlocked but held back while its popup was
-   open. No-op if nothing is pending, so every cardPop dismissal path can
-   call it. #itemReveal opens dark for 1s (showRevealedItems()), then the
-   new items pop in and wait for a tap (closeItemReveal()). */
-function flushPendingReveal(){
-  if (!pendingRevealNames || !pendingRevealNames.length){
-    pendingRevealNames = null; pendingRevealStation = null;
-    return;
-  }
-  itemRevealShown = false;
-  itemRevealDismissable = false;
-  document.getElementById("itemRevealList").innerHTML = "";
-  document.getElementById("itemRevealCaption").hidden = true;
-  openOverlay("itemReveal");
-  clearTimeout(itemRevealTimer);
-  clearTimeout(itemRevealDismissTimer);
-  itemRevealTimer = setTimeout(showRevealedItems, 1000);
-}
-/* After the 1s dark beat: re-render the shop with the new items (still
-   hidden by the overlay), then fill the overlay with the same itemHTML()
-   cards and the "NEW ITEMS UNLOCKED" caption. */
-function showRevealedItems(){
-  // Defensive: the pending list could be cleared before this timer fires.
-  if (!pendingRevealNames){ itemRevealShown = false; return; }
-  const names = pendingRevealNames, station = pendingRevealStation;
-  pendingRevealNames = null; pendingRevealStation = null;
-  render();
-  const entries = sortShopItems(names.map(n => ENTRIES.find(e => e.name === n && e.station === station)).filter(Boolean));
-  document.getElementById("itemRevealList").innerHTML =
-    entries.map(e => itemHTML(e, ENTRIES.indexOf(e))).join("");
-  document.getElementById("itemRevealCaption").hidden = false;
-  itemRevealShown = true;
-  // A second 1s grace period once the items show, so the tap that closed the
-  // card popup can't immediately dismiss this.
-  itemRevealDismissable = false;
-  clearTimeout(itemRevealDismissTimer);
-  itemRevealDismissTimer = setTimeout(() => { itemRevealDismissable = true; }, 1000);
-}
-/* Tap to dismiss, only after the items appear and the grace period passes
-   (itemRevealDismissable). The shop underneath is already re-rendered, so
-   closing just uncovers it. */
-function closeItemReveal(){
-  if (!itemRevealShown || !itemRevealDismissable) return;
-  itemRevealShown = false;
-  itemRevealDismissable = false;
-  closeOverlay("itemReveal");
-}
-document.getElementById("itemReveal").addEventListener("click", closeItemReveal);
 document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
-  flushPendingReveal();
 });
 /* Tapping a component icon opens that ingredient instead of dismissing:
    an item swaps this popup's content (no auto-dismiss); an element closes
@@ -268,7 +218,6 @@ document.getElementById("cpTreeBtn").addEventListener("click", ev => {
   const name = cardPopEntry.name;
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
-  flushPendingReveal();
   goToRefItem(name);
 });
 /* Pin toggle: stays on the card, so pinning while browsing doesn't close
@@ -314,7 +263,6 @@ document.getElementById("cpMatCloseBtn").addEventListener("click", ev => {
   ev.stopPropagation();
   clearTimeout(cardPopTimer);
   closeOverlay("cardPop");
-  flushPendingReveal();
 });
 
 /* -------------------------------------------------- element card popup --- */

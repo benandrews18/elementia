@@ -110,34 +110,16 @@ function stillNeededClosure(name){
   return [...needed];
 }
 
-/* Records an item as shown this run (state.seenItems). Idempotent. */
-function markSeen(name){
-  if (!state.seenItems[name]) state.seenItems[name] = true;
-}
 
 function performSingleCraft(entry){
   // First-ever crafts get the fly-and-stack reveal; check before craft()
   // changes owns().
   const wasOwnedBefore = owns(entry.name);
-  const beforeRevealed = new Set(
-    entriesAt(current).filter(e => e.tier !== "CAPSTONE").map(e => e.name)
-  );
   // Capture the shop card before craft()/render() so bounceCardClosed()
   // animates the real element.
   const preCraftCard = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
   if (craft(entry)){
     holdBingoForCraftReveal();
-    const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE").map(e => e.name);
-    // !state.seenItems[n] -- same "new to the player, not just to this
-    // station's shop" rule goStation()'s own reveal check uses.
-    const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name && !state.seenItems[n]);
-    if (newlyRevealed.length){
-      pendingRevealNames = newlyRevealed;
-      pendingRevealStation = current;
-    }
-    // Update this station's seen snapshot now, or the next arrival would replay
-    // the "New Items Unlocked" splash for items just celebrated.
-    state.stationLastSeen[current] = afterRevealed;
 
     // The ingredient fly-in runs alongside the shop bounce below (separate DOM,
     // no waiting either way).

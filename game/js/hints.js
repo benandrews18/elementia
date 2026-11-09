@@ -65,17 +65,11 @@ function positionMouseHighlight(targetSel){
   spot.style.height = (r.height + pad * 2) + "px";
   spot.classList.add("show");
 }
-// True while a full-screen moment (card popup, "New Items Unlocked") is
-// showing. Narrower than anyOverlayOpen(), which would also defer tips that
+// True while a full-screen moment (the card popup) is showing. Narrower than anyOverlayOpen(), which would also defer tips that
 // are ABOUT Convert/Settings. Tips are marked seen when called, so one
 // shown under these popups would be lost.
-// pendingRevealNames counts too: closing cardPop flushes queued tips one
-// line BEFORE itemReveal opens, so without it a tip would slip out and be
-// buried.
 function blockingEventOpen(){
-  return document.getElementById("cardPop").classList.contains("open")
-      || document.getElementById("itemReveal").classList.contains("open")
-      || !!(pendingRevealNames && pendingRevealNames.length);
+  return document.getElementById("cardPop").classList.contains("open");
 }
 // Tips that arrived while blocked, in order. A real queue: tips are marked
 // seen when called, so overwriting a single slot lost them for good.
@@ -110,21 +104,13 @@ function hideMouseTip(){
   // (see pendingMouseTips).
   flushPendingMouseTip();
 }
-/* Pressing Map (goHome()) skips the whole craft/reveal/tip pipeline: closes
-   cardPop and itemReveal (and their timers), drops any queued reveal and
-   queued tips. Uses classList directly rather than closeOverlay(), which
+/* Pressing Map (goHome()) skips the whole craft/tip pipeline: closes
+   cardPop (and its timer) and drops queued tips. Uses classList directly rather than closeOverlay(), which
    would flush the very queue being discarded. goMap() re-renders
    afterward. */
 function cancelPendingFullscreenEvents(){
   clearTimeout(cardPopTimer);
   document.getElementById("cardPop").classList.remove("open");
-  clearTimeout(itemRevealTimer);
-  clearTimeout(itemRevealDismissTimer);
-  document.getElementById("itemReveal").classList.remove("open");
-  itemRevealShown = false;
-  itemRevealDismissable = false;
-  pendingRevealNames = null;
-  pendingRevealStation = null;
   // Clear the queue BEFORE hideMouseTip(), which flushes the next tip on its
   // way out.
   pendingMouseTips = [];

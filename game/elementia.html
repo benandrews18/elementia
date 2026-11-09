@@ -65,11 +65,6 @@
 <main id="screen"></main>
 
 <div id="scrim"></div>
-<!-- Legacy Lock-In banner above the half-height mat (syncLockInBanner()).
-     No longer shown -- its rules moved to #matRulesOverlay. -->
-<div id="lockInBanner" aria-hidden="true">
-  <p id="lockInBannerText">Lock-In your Display Mat to continue.</p>
-</div>
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
@@ -264,13 +259,6 @@
   </div>
 </div>
 
-<!-- Item-unlock reveal: opens when the post-craft card closes if that
-     craft unlocked new shop items; stays dark for 1s (flushPendingReveal()),
-     then the new items pop in. Tap to dismiss (closeItemReveal()). -->
-<div class="overlay item-reveal" id="itemReveal" role="dialog" aria-modal="true" aria-labelledby="itemRevealCaption">
-  <div class="item-reveal-caption" id="itemRevealCaption" hidden>✨ NEW ITEMS UNLOCKED</div>
-  <div class="item-reveal-list" id="itemRevealList"></div>
-</div>
 
 <!-- Element card (tapped from an element box): white face, thick suit
      border, atomic number bubble, suit pill. The only place the atomic

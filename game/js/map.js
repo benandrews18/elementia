@@ -11,7 +11,6 @@ function stationItemIconsHTML(stationName){
   const icons = entriesAt(stationName)
     .filter(e => e.tier !== "CAPSTONE")
     .map(e => {
-      markSeen(e.name);
       const cls = ["station-item-icon"];
       if (owns(e.name)) cls.push("owned");
       if (jobTree && jobTree.has(e.name)) cls.push("job-highlight");
