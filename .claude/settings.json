@@ -1,4 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(python game/deploy.py:*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
