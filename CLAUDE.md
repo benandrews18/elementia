@@ -36,7 +36,14 @@ for current rules.
 - `python print/build_pdfs.py --html-only` after content changes, to
   confirm the print pipeline still reads the game data.
 
-## Publishing (only when asked)
+## Publishing (standard for every game update)
+
+Every change to the game (anything under `game/` that players see) is
+published as part of finishing the work, without waiting to be asked: once
+it's committed and the smoke test passes, do all three steps below. Changes
+to tooling, docs, `print/` or `archive/` alone don't need a publish. If the
+smoke test or the push fails, stop and report it; don't publish a broken
+build.
 
 1. Website (https://benandrews18.github.io/elementia/):
    `python game/deploy.py "What changed"`. It runs the smoke test, builds
