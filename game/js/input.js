@@ -5,9 +5,10 @@
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
-    const open = document.querySelector(".overlay.open");
+    // The topmost (last in page order) open overlay.
+    const open = [...document.querySelectorAll(".overlay.open")].pop();
     if (open && open.id === "lockInRewardOverlay"){ dismissLockInRewardModal(); return; }
-    if (open){ closeOverlay(open.id); return; }
+    if (open){ if (!open.hasAttribute("data-no-dismiss")) closeOverlay(open.id); return; }
     if (jobSheet.classList.contains("open")){ closeJobBoard(); return; }
     hideHint(); closeDrawer();
   }
@@ -16,8 +17,13 @@ document.addEventListener("keydown", e => {
     drawer.classList.contains("open") ? closeDrawer() : openDrawer();
   }
 });
+// A tap on an overlay's backdrop closes it, except data-no-dismiss ones:
+// steps of the opening (capstone choice, pin tip) that the run can't start
+// without, so closing them early would leave the game stuck.
 document.querySelectorAll(".overlay").forEach(ov => {
-  ov.addEventListener("click", ev => { if (ev.target === ov) closeOverlay(ov.id); });
+  ov.addEventListener("click", ev => {
+    if (ev.target === ov && !ov.hasAttribute("data-no-dismiss")) closeOverlay(ov.id);
+  });
 });
 
 // Named so it can be attached twice: #screen, and #convertGoalCard (an

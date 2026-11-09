@@ -26,9 +26,18 @@
   await step("start", async () => { startNewRun(); await wait(2200); });
   await step("tutorial", async () => { for (let i = 0; i < 3; i++) classicTutNext(); await wait(200); });
   await step("capstone", async () => {
+    // Intro softlock guard: a tap on the backdrop (or Escape) must not close
+    // the capstone choice or the pin tip -- the run can't start without them.
+    const isOpen = id => document.getElementById(id).classList.contains("open");
+    const esc = () => document.dispatchEvent(new KeyboardEvent("keydown", {key: "Escape"}));
+    if (!isOpen("capChoice")) errs.push("intro: capstone choice not open after the rules slides");
+    document.getElementById("capChoice").click(); esc();
+    if (!isOpen("capChoice")) errs.push("intro: outside tap/Escape closed the capstone choice");
     openCapstoneConfirm("Fruit Cake"); await wait(150);
     document.getElementById("capConfirmGo").click();
-    for (let i = 0; i < 40 && !document.getElementById("pinTip").classList.contains("open"); i++) await wait(100);
+    for (let i = 0; i < 40 && !isOpen("pinTip"); i++) await wait(100);
+    document.getElementById("pinTip").click(); esc();
+    if (!isOpen("pinTip")) errs.push("intro: outside tap/Escape closed the pin tip");
     document.getElementById("pinTipOk").click(); await wait(1400);
   });
   log.atStation = screen + ":" + current;
