@@ -8,9 +8,26 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
-## Unreleased
+## v2026.11.08b (run completion, trophies, tutorial, tier 1 squares)
 
-- **Desktop view:** on a wide screen the game now shows in a phone-width
+- **Intro softlock fixed:** tapping outside the capstone choice or the pin
+  tip (or pressing Escape) no longer closes them and strands the run.
+- **Display Mat:** tier 1 items are small squares, two stacked in one card
+  space. Each still scores fully (points, combos, collections).
+  Breakpoints unchanged.
+- **Professor Mouse walkthrough** for new players: Roll, Craft, Convert,
+  back to the map with the centre button, the tracked-item badge, and the
+  Market after the first visit. Once per player, never blocks input. Tips
+  are on by default again for new players.
+- **To-Do List:** each pinned item is its own parchment card, with a
+  readable ingredient breakdown.
+- **Run completes at turn 24:** "Run Complete!" with Keep playing
+  (Overtime) or New game. In Overtime every Lock-In must clear the first
+  Quark breakpoint; visit 40 is still the hard stop.
+- **Trophies:** 21 to earn by completing runs (per capstone, items,
+  Quarks, collections, BINGO, Overtime), kept across runs and shown from
+  the home screen's Trophies button.
+- **Desktop view** (published earlier today): on a wide screen the game now shows in a phone-width
   (430px) column at full window height, with the phone layout rules on,
   instead of a 768px tablet column. Trays that sit just off-screen on a
   phone no longer show beside the column, and station backdrop art shows.
