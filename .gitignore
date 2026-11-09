@@ -15,3 +15,7 @@ __pycache__/
 
 # Playwright browser install (python -m playwright install chromium)
 .playwright/
+
+# Large design mockups for archived experiments -- kept locally, not tracked
+archive/landscape/mockups/
+archive/boardgame/reference-images/
