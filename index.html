@@ -968,8 +968,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 /* Element pool on the preview card: mirrors .gather/.gcol/.gchip so 6
-   elements fit one row on a narrow phone. Separate classes on purpose --
-   the tractor-harvest tap gate checks for .gchip and must not fire here. */
+   elements fit one row on a narrow phone. */
 .pool{display:flex; gap:10px; justify-content:center; flex-wrap:nowrap}
 .pcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
   align-items:center; gap:7px; container-type:inline-size}
@@ -1067,22 +1066,6 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .station-title-wrap{min-width:0}
 .sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
-/* Experimental (prefs.expTractorHarvest): decorative only. Tapping the
-   element chips is the actual interaction (handleScreenClick()'s
-   [data-elem] branch). */
-.station-tractor-badge{font-size:26px; line-height:1; flex:none}
-/* Same small-pill language .mn-here-label already uses elsewhere for a
-   short status readout riding along a label row. */
-.tractor-taps-left{
-  display:inline-block; margin-left:8px; padding:2px 9px; border-radius:999px;
-  background:var(--gold-soft); color:var(--gold); font-size:11px; font-weight:800;
-  letter-spacing:.04em; text-transform:none; vertical-align:middle;
-}
-/* Sub-zone travel button: appears once the player owns the station's
-   unlock item (Rocket/Sailboat/Library, see SUBZONE_TRAVEL), and doubles as
-   "Back" inside a sub-zone. An icon-only circle in the header's top-right
-   corner (label as a tooltip): an inline label overflowed narrow phones
-   with long station names. */
 .stationhead{position:relative}
 /* Header pinned to the top until this visit's roll has landed and
    finished animating (renderStation()'s stationheadFrozen), so the pool and
@@ -3101,26 +3084,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .empty-el-badge.active .empty-el-square{box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
 .empty-el-badge b{font-size:12px; font-weight:900; color:#fff; line-height:1}
 .empty-el-badge.active b{color:var(--gold)}
-/* Legacy "?" spotlight mode (enterEmptyElCashIn()): everything fades except
-   the element row and this badge. .station-title-text is separate from the
-   badge so the name can dim without dimming the badge. */
-body.empty-el-cashin #topbar, body.empty-el-cashin .sheet-head .em,
-body.empty-el-cashin .sheet-head .station-title-text,
-body.empty-el-cashin .station-tractor-badge,
-body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
-  opacity:.15; pointer-events:none; transition:opacity .2s;
-}
-/* A dark scrim on top of the faded content; the spotlighted row and badge
-   are raised above it. */
-#emptyElCashinScrim{
-  position:fixed; inset:0; z-index:73; background:#000; opacity:0; pointer-events:none;
-  transition:opacity .2s;
-}
-body.empty-el-cashin #emptyElCashinScrim{opacity:.55}
-body.empty-el-cashin .gather, body.empty-el-cashin .empty-el-badge,
-body.empty-el-cashin .empty-el-cashin-hint{position:relative; z-index:74}
-.empty-el-cashin-hint{display:none; text-align:center; font-weight:700; font-size:15px; color:#fff; margin:12px 26px 0}
-body.empty-el-cashin .empty-el-cashin-hint{display:block}
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Combo chip: icon on top, count below (see matComboChipHTML()). */
 /* No tile background or border -- just the icon and count, 1.5x larger. */
@@ -3479,9 +3442,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
 <main id="screen"></main>
 
 <div id="scrim"></div>
-<!-- Darkening layer for the legacy "?" spotlight (body.empty-el-cashin):
-     sits above the faded content and below the highlighted row and badge. -->
-<div id="emptyElCashinScrim"></div>
 <!-- Legacy Lock-In banner above the half-height mat (syncLockInBanner()).
      No longer shown -- its rules moved to #matRulesOverlay. -->
 <div id="lockInBanner" aria-hidden="true">
@@ -3898,28 +3858,6 @@ body.empty-el-cashin .empty-el-cashin-hint{display:block}
       </span>
       <span class="setbtn">View</span>
     </button>
-    <p class="setnote">Experimental mechanics -- off changes nothing.</p>
-    <div class="setting-row">
-      <span class="setting-ico">🧭</span>
-      <span class="setting-body">
-        <span class="setting-label">Compass-gated tracking</span>
-      </span>
-      <input type="checkbox" id="setExpCompassTracking" class="switch" aria-label="Require a Compass to track an item">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🔥</span>
-      <span class="setting-body">
-        <span class="setting-label">Tiered element conversion</span>
-      </span>
-      <input type="checkbox" id="setExpTieredConversion" class="switch" aria-label="Furnace/Oven/Star tiered conversion rates">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🚜</span>
-      <span class="setting-body">
-        <span class="setting-label">Tractor: harvest taps + 1 extra die</span>
-      </span>
-      <input type="checkbox" id="setExpTractorHarvest" class="switch" aria-label="Tap elements to harvest, and roll 1 extra die, with a Tractor">
-    </div>
 
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>
@@ -5830,15 +5768,8 @@ const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.
    Derived model — mirrors simulation/model.py's parse_requirements().
    Raw elements are consumed; crafted items are PERMANENT UNLOCKS.
    ===================================================================== */
-/* Dice per roll: 3, +1 once the player owns a Tractor
-   (prefs.expTractorHarvest). Guarded because loadAll() calls this before
-   state exists. Re-run whenever the Tractor could have changed (craft(), a
-   save loading). */
-let TAKE = 3;
-function applyDiceCount(){
-  const tractorBonus = prefs.expTractorHarvest && state && state.items && state.items.includes("Tractor") ? 1 : 0;
-  TAKE = 3 + tractorBonus;
-}
+/* Dice per roll. */
+const TAKE = 3;
 /* The run's hard stop (also the visits pill's denominator). Lines up with
    LOCKIN_ROUND_ANCHORS ending at visit 40. */
 const DEFAULT_MAX_VISITS = 40;
@@ -5877,8 +5808,9 @@ const ELEMENT_NAMES = {
   Zn:"Zinc",
 };
 /* The 16 core elements taught in the tutorial ("just 16 of them make up
-   nearly everything", see #tutIntro). Zn is a bonus element found only on
-   the Island sub-zone, so it's left out here; it works everywhere else. */
+   nearly everything", see #tutIntro). Zn isn't rollable any more (it came
+   from the removed sub-zones); it stays in the tables below only so an old
+   save that still holds some displays it. */
 const CORE_ELEMENT_SYMS = ["H","C","N","O","P","S","K","Ca","Si","Al","Mg","Ni","Fe","Ti","Cu","Ag"];
 /* Matches ELEMENT_SUITS/ELEMENTS in build_element_cards.py -- the suit
    pill shown on the element-card popup (see showElCardPop()). */
@@ -5970,9 +5902,11 @@ function suitCostNeed(entry){
 }
 // Elements of `suit` still free after reserving what the recipe itself
 // needs; the suit-spend balloon only offers this much, so paying a suit
-// cost never eats into the recipe.
+// cost never eats into the recipe. Counts only the suit's core elements --
+// the same ones the balloon offers -- so a leftover Zn can't make a cost
+// look payable that the balloon can't actually pay.
 function suitSurplusOfSuit(suit, reserved){
-  return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
+  return (SUIT_CORE_ELEMENTS[suit] || [])
     .reduce((sum, el) => sum + Math.max(0, count(el) - (reserved[el] || 0)), 0);
 }
 // True when every suit the cost demands has enough surplus beyond the
@@ -6047,9 +5981,8 @@ const ATOMIC_NUMBER = {
   C:6, H:1, N:7, O:8, S:16, K:19, Ca:20,
   Si:14, Al:13, Mg:12, P:15, Fe:26, Ti:22, Cu:29, Ag:47, Ni:28, Zn:30,
 };
-// Every element a Classic player can actually roll (the 8 real stations;
-// Zn only appears on the Island sub-zone). Keeps Zn out of Convert's TO
-// list in Classic (renderConvertPicker()).
+// Every element a player can actually roll (the 8 stations' dice). Convert's
+// TO list (renderConvertPicker()).
 const CLASSIC_ELEMENTS = [...new Set(DATA.stations.flatMap(s => s.dice))];
 
 /* Element suit palette ("Chemical Role", Palette A), matching the printed
@@ -6235,8 +6168,7 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   const station = CORE_ITEM_STATION[name];
   const entry = ENTRIES.find(e => e.name === name && e.station === station);
   // Every station that sells this item (Water, Clay, Glass, Steel, ... sell at
-  // 2-3), canonical station first -- a card combos with all of them. Sub-zone
-  // rows are dropped. A capstone shows its own station twice instead, so it
+  // 2-3), canonical station first -- a card combos with all of them. A capstone shows its own station twice instead, so it
   // counts double toward that station's combo.
   const stations = ITEM_TIER[name] === "CAPSTONE" ? [station, station]
     : [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]
@@ -6495,7 +6427,15 @@ function ensureBingoCard(){
   // opening.
   const stale = state.bingoCard && state.bingoCard.some(n => !CORE_ITEM_NAMES.has(n));
   if (!state.bingoCard || state.bingoCard.length !== need || stale){
+    // Replacing an old card: its line progress and centre choice belong to
+    // that card, so they go with it.
+    if (state.bingoCard){
+      state.bingoLinesCompleted = [];
+      state.pendingBingoClears = [];
+      state.bingoCenterChosen = false;
+    }
     state.bingoCard = drawBingoCard();
+    save();
   }
   return state.bingoCard;
 }
@@ -6768,7 +6708,6 @@ function modeHasSave(mode){ return readModeSave(mode) !== null; }
 function loadAll(){
   try { prefs = Object.assign(prefs, JSON.parse(lsGet(PREFS_KEY) || "{}")); } catch(e){}
   delete prefs.theme; // theme choice no longer exists -- drop it from any older save
-  applyDiceCount();
   loadHistory();
 
   const raw = lsGet(saveKeyFor("classic"));
@@ -6835,13 +6774,7 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   autoCardInspection:true,
   // Low motion (see lowMotion()/html.low-motion): null = follow the
   // device's own "reduce motion" setting, true/false = player's override.
-  lowMotion:null,
-  // Experimental toggles, off by default (toggleJobSelect()/conversionRate()/
-  // Tractor harvest/applyDiceCount()). A full run with them off cleared every
-  // capstone comfortably, so the base game ships without them.
-  expCompassTracking:false,
-  expTieredConversion:false,
-  expTractorHarvest:false};
+  lowMotion:null};
 /* The tracked item (ephemeral UI state, not saved): highlights its
    ingredient closure on station cards (componentClosure()/
    stationItemIconsHTML()/renderMap()). */
@@ -7058,31 +6991,18 @@ document.getElementById("historyExport").addEventListener("click", async () => {
 </script>
 <script>
 /* =====================================================================
-   crafting.js -- Crafting rules: owns()/count(), element conversion rates, canCraft(),
+   crafting.js -- Crafting rules: owns()/count(), the element conversion rate, canCraft(),
    craft(), performSingleCraft(), and ingredient closures
    (componentClosure()/stillNeededClosure()) used by the To-Do List.
    ===================================================================== */
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
-/* Experimental (prefs.expTieredConversion, off by default): elements per
-   conversion from the best tool owned -- Star 1:1, Oven 2:1, Furnace 3:1.
-   Off: flat 3:1. Null (on, no tool yet) means conversion is unavailable.
-   Every conversion call site reads this instead of a hardcoded 3. */
-function conversionRate(){
-  if (!prefs.expTieredConversion) return 3;
-  if (owns("Star")) return 1;
-  if (owns("Oven")) return 2;
-  if (owns("Furnace")) return 3;
-  return null;
-}
-// Total conversions available now at conversionRate(), across all elements
-// -- the Convert badge count (updateHub()), repeated on missing-element
-// tokens (tokenHTML()).
-const totalConvertibleCount = () => {
-  const rate = conversionRate();
-  if (!rate) return 0;
-  return [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / rate), 0);
-};
+/* Elements spent per conversion (3 of one for 1 of another). */
+const CONVERT_RATE = 3;
+// Total conversions available now, across all elements -- the Convert badge
+// count (updateHub()), repeated on missing-element tokens (tokenHTML()).
+const totalConvertibleCount = () =>
+  [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / CONVERT_RATE), 0);
 
 /* Group a recipe's requirements: elements accumulate, items are unique. */
 function needsOf(reqs){
@@ -7136,7 +7056,6 @@ function craft(entry, opts={}){
   checkBingoCompletion(entry.name);
   checkBingoLines();
   checkCraftedEverything();
-  applyDiceCount(); // Tractor may have just been crafted -- see its own comment
   // Log the craft on the current turn (goStation() always pushes one first).
   if (state.visitLog && state.visitLog.length) state.visitLog[state.visitLog.length - 1].items.push(entry.name);
   save();
@@ -7675,7 +7594,6 @@ function render(resetScroll){
   updateBackdrop();
   applyRefFilter();
   hideHint();
-  if (screen !== "station" && emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
   if (screen === "map") syncMapPaths();
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
   // Measured live (not a constant) so the fixed map card sits right under the
@@ -7947,14 +7865,7 @@ function updateHub(){
   const totalConvertible = totalConvertibleCount();
   const canConvert = totalConvertible > 0;
   setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
-  // Experimental (prefs.expTieredConversion): the button icon shows the tool
-  // setting the rate (Star/Oven/Furnace), or the normal convert art.
-  {
-    const tool = prefs.expTieredConversion
-      ? (owns("Star") ? "Star" : owns("Oven") ? "Oven" : owns("Furnace") ? "Furnace" : null)
-      : null;
-    document.getElementById("quickConvertBtn").innerHTML = tool ? em(ITEM_EMOJI[tool]) : em("__CONVERT__");
-  }
+  document.getElementById("quickConvertBtn").innerHTML = em("__CONVERT__");
   // Once revealed, Convert stays on screen for good (a persisted flag, since
   // holdings can drop again). Revealed as soon as the player holds any element
   // (right after the starting gift).
@@ -8359,14 +8270,9 @@ function renderStation(name){
         <div class="station-title-wrap">
           <h1><span class="station-title-text">${esc(s.name)}</span></h1>
         </div>
-        ${prefs.expTractorHarvest && owns("Tractor")
-          ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
       </div>
-      <div class="col-label elements-label">ELEMENTS FOUND HERE:${
-        prefs.expTractorHarvest && owns("Tractor")
-          ? ` <span class="tractor-taps-left">${state.tractorTapsLeft || 0} taps left</span>` : ""}</div>
+      <div class="col-label elements-label">ELEMENTS FOUND HERE:</div>
       <div class="gather">${gather}</div>
-      <p class="empty-el-cashin-hint">Which element should be created?</p>
       ${playBar}
     </div>
     <div class="makewrap">
@@ -8530,9 +8436,8 @@ function renderCodex(){
   });
 
   // Every item, every mode -- Item Reference is where spoilers are allowed
-  // (the walkthrough promises "look up any item's recipe"). Exceptions:
-  // sub-zones the player hasn't visited stay off the list, and Classic shows
-  // only CORE_SET. That check uses the NAME (CORE_ITEM_NAMES): rows are
+  // (the walkthrough promises "look up any item's recipe"). Exception:
+  // only CORE_SET is shown. That check uses the NAME (CORE_ITEM_NAMES): rows are
   // deduped to one station, which may not be the item's core one (Glass).
   const rows = allRows
     .filter(row => CORE_ITEM_NAMES.has(row.name));
@@ -8863,10 +8768,7 @@ function closeJobBoard(){
 
 /* Shared by the topbar's job chips and the (legacy, now-unreachable)
    [data-select-job] case in #screen's own click handler. */
-// Experimental (prefs.expCompassTracking): tracking requires a Compass;
-// untracking is always allowed.
 function toggleJobSelect(name){
-  if (prefs.expCompassTracking && !owns("Compass") && selectedJobItem !== name) return;
   selectedJobItem = selectedJobItem === name ? null : name;
   render();
 }
@@ -9003,7 +8905,7 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     const name = bcPinBtn.dataset.pin;
     const iconRect = bcPinBtn.closest(".bingo-cell")?.querySelector(".bc-icon")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     renderJobBoard();
     render();
@@ -9029,9 +8931,8 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     const name = pinBtn.dataset.pin;
     togglePin(name);
     // Pinning from a card also tracks the item, so its ingredient
-    // ring shows everywhere at once. Same Compass gate as toggleJobSelect()
-    // (prefs.expCompassTracking).
-    if (isPinned(name) && (!prefs.expCompassTracking || owns("Compass"))) selectedJobItem = name;
+    // ring shows everywhere at once.
+    if (isPinned(name)) selectedJobItem = name;
     renderJobBoard();
     render();
     return;
@@ -9784,10 +9685,6 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
-  // Experimental (prefs.expTractorHarvest): fresh harvest taps (= TAKE) each
-  // new visit. The free "Shop" re-entry skips goStation(), so it doesn't
-  // reset them.
-  state.tractorTapsLeft = TAKE;
   // One turn-log entry per real visit, before any crafting or rolling can
   // add to it.
   if (!state.visitLog) state.visitLog = [];
@@ -9823,8 +9720,6 @@ function goStation(name){
   if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
-  // A sub-zone has no map node (no MAP_ADJ entry), so land back on its
-  // parent station (SUBZONE_PARENT) -- otherwise nothing is reachable.
   if (current){ state.priorStation = state.lastStation; state.lastStation = current; }
   screen = "map"; current = null; state.lastRoll = null; selectedMapStation = null;
   save(); render(false);
@@ -11661,32 +11556,6 @@ function syncEmptyElBadgeSize(){
     suitBadge.style.height = suitPx + "px";
   }
 }
-/* Legacy "?" spotlight mode: the station's element row and the badge stay
-   bright while everything else fades (body.empty-el-cashin); tapping a chip
-   cashes in, tapping elsewhere backs out. Superseded by openEmptyElPicker(). */
-let emptyElCashInMode = false;
-function enterEmptyElCashIn(){
-  if (!((state.emptyElements || 0) > 0) || !current) return;
-  emptyElCashInMode = true;
-  document.body.classList.add("empty-el-cashin");
-}
-function exitEmptyElCashIn(){
-  emptyElCashInMode = false;
-  document.body.classList.remove("empty-el-cashin");
-}
-function cashInEmptyElement(sym){
-  if (!((state.emptyElements || 0) > 0)) return;
-  state.emptyElements -= 1;
-  state.elements[sym] = (state.elements[sym] || 0) + 1;
-  save();
-  exitEmptyElCashIn();
-  render();
-}
-document.addEventListener("click", ev => {
-  if (!emptyElCashInMode) return;
-  if (ev.target.closest(".gather") || ev.target.closest("#emptyElBadgeBtn")) return;
-  exitEmptyElCashIn();
-});
 
 </script>
 <script>
@@ -11976,7 +11845,7 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
     const name = shopPinBtn.dataset.shopPin;
     const iconRect = shopPinBtn.closest("[data-item-card]")?.querySelector(".iem")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     renderJobBoard();
     render();
@@ -12364,24 +12233,6 @@ function checkBingoLines(){
   });
   scheduleBingoSequence();
 }
-/* The element a square's item would pay: the majority suit of its suit
-   tags (itemSuitCosts(), ties at random), else any Classic element
-   (CLASSIC_ELEMENTS). No longer used by the BINGO sequence, which pays "?"
-   elements. */
-function elementForBingoClear(name){
-  const pips = itemSuitCosts(name);
-  let suit = null;
-  if (pips.length){
-    const counts = {};
-    pips.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
-    const top = Math.max(...Object.values(counts));
-    const tied = Object.keys(counts).filter(k => counts[k] === top);
-    suit = tied[Math.floor(Math.random() * tied.length)];
-  }
-  const pool = (suit ? CLASSIC_ELEMENTS.filter(el => ELEMENT_SUIT[el] === suit) : null) || [];
-  const finalPool = pool.length ? pool : CLASSIC_ELEMENTS;
-  return finalPool[Math.floor(Math.random() * finalPool.length)];
-}
 
 </script>
 <script>
@@ -12555,7 +12406,6 @@ function chooseMode(mode){
 function resumeMode(mode){
   const saved = readModeSave(mode);
   state = Object.assign(freshState(), saved, {mode});
-  applyDiceCount();
   closeOverlay("modeOverlay");
   screen = "map"; current = null; selectedMapStation = null;
   render(true);
@@ -12567,7 +12417,6 @@ function resumeMode(mode){
 function startFreshMode(mode){
   state = freshState();
   state.mode = mode;
-  applyDiceCount();
   selectedJobItem = null;
   mouseTipsShown = new Set();
   prefs.pinnedItems = [];
@@ -12727,31 +12576,7 @@ function openSettings(){
 document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
-const setExpCompassTrackingBox = document.getElementById("setExpCompassTracking");
-const setExpTieredConversionBox = document.getElementById("setExpTieredConversion");
-const setExpTractorHarvestBox = document.getElementById("setExpTractorHarvest");
-function openSettingsDev(){
-  setExpCompassTrackingBox.checked = !!prefs.expCompassTracking;
-  setExpTieredConversionBox.checked = !!prefs.expTieredConversion;
-  setExpTractorHarvestBox.checked = !!prefs.expTractorHarvest;
-  openSettingsScreen("settingsDev");
-}
-document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
-// Applies immediately (no Save): a dev toggle, not a game rule.
-setExpCompassTrackingBox.addEventListener("change", () => {
-  prefs.expCompassTracking = setExpCompassTrackingBox.checked;
-  savePrefs();
-});
-setExpTieredConversionBox.addEventListener("change", () => {
-  prefs.expTieredConversion = setExpTieredConversionBox.checked;
-  savePrefs();
-  updateHub(); // Convert button's own icon reflects the new rate immediately
-});
-setExpTractorHarvestBox.addEventListener("change", () => {
-  prefs.expTractorHarvest = setExpTractorHarvestBox.checked;
-  savePrefs();
-  applyDiceCount(); // may add/remove the +1 bonus immediately if a Tractor's already owned
-});
+document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
 
 function openSettingsRules(){
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
@@ -12878,9 +12703,8 @@ function renderConvertQuickGrid(){
   if (!grid) return;
   const syms = Object.keys(state.elements).filter(k => state.elements[k] > 0)
     .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
-  const rate = conversionRate();
   grid.innerHTML = syms.map(s => {
-    const valid = rate != null && count(s) >= rate;
+    const valid = count(s) >= CONVERT_RATE;
     return `<button type="button" class="elbox ${valid ? "" : "invalid"}" data-elem="${esc(s)}" ${valid ? "" : "disabled"} style="--suit:${ELEMENT_COLOR[s]}">` +
       `<span class="elsym">${esc(s)}${elSuitBadgeHTML(s)}</span><span class="elqty">${count(s)}</span></button>`;
   }).join("");
@@ -12910,8 +12734,7 @@ function updateConvertUI(){
     convertTo ? (ELEMENT_NAMES[convertTo] || convertTo) : "Pick element";
   paintElement(toBox, convertTo);
 
-  const rate = conversionRate();
-  const ready = convertFrom && convertTo && convertFrom !== convertTo && rate != null && count(convertFrom) >= rate;
+  const ready = convertFrom && convertTo && convertFrom !== convertTo && count(convertFrom) >= CONVERT_RATE;
   document.getElementById("convertGo").disabled = !ready;
 }
 function renderConvertPicker(){
@@ -12944,8 +12767,7 @@ function renderConvertPicker(){
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
       </button>`;
-    const rate = conversionRate();
-    const valid = rate != null && count(s) >= rate;
+    const valid = count(s) >= CONVERT_RATE;
     return `<button type="button" class="convert-pick ${valid ? "" : "invalid"}" data-sym="${esc(s)}" ${valid ? "" : "disabled"} title="${esc(ELEMENT_NAMES[s] || s)}">
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
@@ -12967,9 +12789,8 @@ document.getElementById("convertPickerGrid").addEventListener("click", ev => {
 });
 document.getElementById("convertPickerClose").addEventListener("click", () => closeOverlay("convertPicker"));
 document.getElementById("convertGo").addEventListener("click", () => {
-  const rate = conversionRate();
-  if (!convertFrom || !convertTo || convertFrom === convertTo || rate == null || count(convertFrom) < rate) return;
-  state.elements[convertFrom] = count(convertFrom) - rate;
+  if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < CONVERT_RATE) return;
+  state.elements[convertFrom] = count(convertFrom) - CONVERT_RATE;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
   save();
@@ -13244,7 +13065,6 @@ document.getElementById("tourSettingsBtn").addEventListener("click", () => {
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
-    if (emptyElCashInMode){ exitEmptyElCashIn(); return; }
     const open = document.querySelector(".overlay.open");
     if (open && open.id === "lockInRewardOverlay"){ dismissLockInRewardModal(); return; }
     if (open){ closeOverlay(open.id); return; }
@@ -13389,29 +13209,6 @@ function handleScreenClick(ev){
   // the inventory drawer.
   const elemBtn = ev.target.closest("[data-elem]");
   if (elemBtn){
-    // Legacy "?" spotlight mode (enterEmptyElCashIn()): pool chips trade a "?"
-    // for that element instead.
-    if (emptyElCashInMode && elemBtn.classList.contains("gchip")){
-      cashInEmptyElement(elemBtn.dataset.elem);
-      return;
-    }
-    // Experimental (prefs.expTractorHarvest): tapping the station's own pool
-    // chip (.gchip) harvests 1 of it while a Tractor is owned and taps remain;
-    // tallied in visitLog like doRoll().
-    if (prefs.expTractorHarvest && elemBtn.classList.contains("gchip")
-        && owns("Tractor") && state.tractorTapsLeft > 0){
-      const sym = elemBtn.dataset.elem;
-      state.elements[sym] = count(sym) + 1;
-      state.tractorTapsLeft--;
-      if (state.visitLog && state.visitLog.length){
-        const turn = state.visitLog[state.visitLog.length - 1];
-        if (!turn.elements) turn.elements = {};
-        turn.elements[sym] = (turn.elements[sym] || 0) + 1;
-      }
-      save();
-      render();
-      return;
-    }
     showElCardPop(elemBtn.dataset.elem);
     return;
   }
@@ -13424,7 +13221,7 @@ function handleScreenClick(ev){
     const name = shopPinBtn.dataset.shopPin;
     const iconRect = shopPinBtn.closest(".item")?.querySelector(".iem")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     render();
     if (track) flyItemToTracker(name, iconRect);
