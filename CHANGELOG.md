@@ -10,6 +10,26 @@ Run `python build_all.py` after any content change to regenerate every PDF
 and sync the digital game. Run `python game/build_artifact.py` and
 republish to push a content change to the shared Artifact link.
 
+## 2026-11-08 — digital game fixes and cleanup (content still v2026.08.16)
+
+Code-only; no item, recipe or point changes, so `CONTENT_VERSION` and the
+PDFs are unchanged.
+
+- **BINGO card redraw**: when an old save's card is redrawn (one of its
+  items left the Classic set in a rebalance), its completed lines, waiting
+  rewards and centre choice are now cleared with it. Before, lines already
+  paid on the old card never paid on the new one.
+- **Suit costs**: the "can I pay this?" check now counts only each suit's
+  four core elements, the same ones the spend bubble offers. An old save
+  still holding Zinc could light up Craft for an item the bubble then
+  couldn't pay for.
+- **Removed**: the three experimental Dev Tools switches (Compass-gated
+  tracking, tiered conversion, Tractor harvest), which were off by default.
+  Dice per roll is fixed at 3 and conversion at 3-for-1.
+- **Removed dead code**: the old "?" spotlight cash-in mode (replaced by
+  the element picker), an unused BINGO reward helper, and leftover
+  sub-zone notes.
+
 ## v2026.08.08b (layout/stacking fixes, item points recalibrated)
 
 - **Layout fixes from the previous pass**: map screen background now
