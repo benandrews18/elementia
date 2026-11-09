@@ -136,7 +136,7 @@ function fireConfetti(){
 }
 
 document.getElementById("endNew").addEventListener("click", () => {
-  closeOverlay("endGame"); resetCurrentModeRun();
+  closeOverlay("endGame"); restartRun();
 });
 document.getElementById("endReview").addEventListener("click", () => {
   closeOverlay("endGame"); openDrawer();

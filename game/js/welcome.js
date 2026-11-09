@@ -1,11 +1,10 @@
 /* =====================================================================
    welcome.js -- Welcome screen and run start: the Classic card, resume/new run
-   (startFreshMode()), the intro, the how-to-play slides, and
-   resetCurrentModeRun().
+   (startNewRun()), the intro, the how-to-play slides, and restartRun().
    ===================================================================== */
 // The save's visits/points, or "New" (scoreOf() reads any saved blob).
 function refreshModePicker(){
-  const saved = readModeSave("classic");
+  const saved = readSave();
   document.querySelector('[data-mode-stats="classic"]').textContent =
     saved ? `${saved.visits || 0} visits · ${scoreOf(saved)} points` : "New";
 }
@@ -15,24 +14,23 @@ function openModePicker(){
 }
 // Continue: resume the save if there is one, otherwise start fresh (only a
 // fresh start plays the intro).
-function chooseMode(mode){
-  if (modeHasSave(mode)) resumeMode(mode); else startFreshMode(mode);
+function continueRun(){
+  if (hasSave()) resumeRun(); else startNewRun();
 }
 /* Load a save straight back into play -- no reset, no intro. */
-function resumeMode(mode){
-  const saved = readModeSave(mode);
-  state = Object.assign(freshState(), saved, {mode});
+function resumeRun(){
+  state = Object.assign(freshState(), readSave(), {mode: "classic"});
   closeOverlay("modeOverlay");
   screen = "map"; current = null; selectedMapStation = null;
   render(true);
 }
-/* Start a run from scratch (freshState() + the intro), for a mode's first
-   pick and for New Game/Reset. Pins, tracked item and dismissed tips live
+/* Start a run from scratch (freshState() + the intro), for the first
+   Continue and for New Game/Reset. Pins, tracked item and dismissed tips live
    in prefs/module state rather than `state`, so they're cleared here
    explicitly. */
-function startFreshMode(mode){
+function startNewRun(){
   state = freshState();
-  state.mode = mode;
+  state.mode = "classic";
   selectedJobItem = null;
   mouseTipsShown = new Set();
   prefs.pinnedItems = [];
@@ -43,10 +41,9 @@ function startFreshMode(mode){
   playClassicIntro();
 }
 /* "New Game": confirms only if there's a real save with progress. */
-function newGameForMode(mode){
-  if (!modeHasSave(mode)){ startFreshMode(mode); return; }
-  askConfirm("Start a new run? Your current save will be erased.",
-    () => startFreshMode(mode));
+function newRun(){
+  if (!hasSave()){ startNewRun(); return; }
+  askConfirm("Start a new run? Your current save will be erased.", startNewRun);
 }
 
 // True while the intro logo shows (playClassicIntro()): hides the map's
@@ -162,14 +159,14 @@ document.getElementById("ctNext").addEventListener("click", classicTutNext);
 document.getElementById("ctSlide").addEventListener("click", classicTutNext);
 document.getElementById("modeOverlay").addEventListener("click", ev => {
   const newBtn = ev.target.closest("[data-mode-newgame]");
-  if (newBtn){ newGameForMode(newBtn.dataset.modeNewgame); return; }
+  if (newBtn){ newRun(); return; }
   const selectBtn = ev.target.closest("[data-mode-select]");
-  if (selectBtn) chooseMode(selectBtn.dataset.modeSelect);
+  if (selectBtn) continueRun();
 });
 
 /* "Reset Session" and "Play Again": record the finished run, then start
-   over (startFreshMode()). */
-function resetCurrentModeRun(){
+   over (startNewRun()). */
+function restartRun(){
   recordHistory();
-  startFreshMode("classic");
+  startNewRun();
 }

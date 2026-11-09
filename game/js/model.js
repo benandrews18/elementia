@@ -289,8 +289,8 @@ const ITEM_POINTS = {};
 // Classic: a one-time score bonus for visiting every station, shown on the
 // stations-visited card (stationsVisitedBonusBadgeHTML()).
 const STATIONS_VISITED_BONUS = 15;
-// Parameterized so the mode-select screen can score every OTHER mode's
-// saved state too (see modeSummary()) without swapping the live `state`
+// Parameterized so the main menu can score the saved run too
+// (refreshModePicker()) without swapping the live `state`
 // global out and back in just to reuse this math.
 function scoreOf(st){
   const base = st.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);

@@ -7,20 +7,17 @@ const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
 const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
 
 function savePrefs(){ lsSet(PREFS_KEY, JSON.stringify(prefs)); }
-// The run's localStorage key (only "classic" is used).
-function saveKeyFor(mode){ return SAVE_KEY_PREFIX + mode; }
-// Skipped while state.mode is null (between a reset and choosing a mode)
-// -- it would write a stray "null" save.
-// Skipped in Combo Lab: its sandbox state says "classic", so a save
-// would overwrite the real Classic save (see openComboLab()).
-function save(){ if (comboLabActive) return; if (state.mode) lsSet(saveKeyFor(state.mode), JSON.stringify(state)); }
-function readModeSave(mode){
+// Skipped until a run has started (state.mode is set to "classic" then).
+// Skipped in Combo Lab: its sandbox state would overwrite the real save
+// (see openComboLab()).
+function save(){ if (comboLabActive) return; if (state.mode) lsSet(SAVE_KEY, JSON.stringify(state)); }
+function readSave(){
   try {
-    const raw = lsGet(saveKeyFor(mode));
+    const raw = lsGet(SAVE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch(e){ return null; }
 }
-function modeHasSave(mode){ return readModeSave(mode) !== null; }
+const hasSave = () => readSave() !== null;
 
 /* Whether this is a genuinely new session (no save at all), so a mid-run
    reload doesn't show the welcome slide. */
@@ -29,7 +26,7 @@ function loadAll(){
   delete prefs.theme; // theme choice no longer exists -- drop it from any older save
   loadHistory();
 
-  const raw = lsGet(saveKeyFor("classic"));
+  const raw = lsGet(SAVE_KEY);
   let isNewSession = !raw;
   try {
     state = raw ? Object.assign(freshState(), JSON.parse(raw)) : freshState();
@@ -45,8 +42,9 @@ function loadAll(){
   return isNewSession;
 }
 
-/* The run's save lives at saveKeyFor("classic") (see loadAll()). */
-const SAVE_KEY_PREFIX = "elementia-save-v4-";
+/* The run's save (see loadAll()). The "-classic" suffix is from when there
+   were several modes; it stays so existing saves keep loading. */
+const SAVE_KEY = "elementia-save-v4-classic";
 const PREFS_KEY   = "elementia-prefs-v1";
 const HISTORY_KEY = "elementia-history-v1";
 const HISTORY_MAX = 50;

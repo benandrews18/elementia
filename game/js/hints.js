@@ -39,7 +39,7 @@ function showHint(target, name, kind){
    static regex -- a computed "mouse/" + pose + ".webp" would 404 in the
    single-file build. showMouseTipOnce(): each tip id fires once per run,
    however often its call site re-renders. mouseTipsShown resets with the run
-   (resetCurrentModeRun()). */
+   (restartRun()). */
 const MOUSE_POSES = {
   1: "mouse/1.webp", 2: "mouse/2.webp", 3: "mouse/3.webp", 4: "mouse/4.webp",
   5: "mouse/5.webp", 6: "mouse/6.webp", 7: "mouse/7.webp", 8: "mouse/8.webp",

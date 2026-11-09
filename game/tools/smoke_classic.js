@@ -23,7 +23,7 @@
     });
   });
 
-  await step("start", async () => { startFreshMode("classic"); await wait(2200); });
+  await step("start", async () => { startNewRun(); await wait(2200); });
   await step("tutorial", async () => { for (let i = 0; i < 3; i++) classicTutNext(); await wait(200); });
   await step("capstone", async () => {
     openCapstoneConfirm("Fruit Cake"); await wait(150);

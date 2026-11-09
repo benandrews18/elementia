@@ -59,15 +59,14 @@ document.getElementById("confirmNo").addEventListener("click", () => {
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => {
-  // Resets only the current mode and stays in it (resetCurrentModeRun() ->
-  // startFreshMode()).
+  // Starts a new run (restartRun() -> startNewRun()).
   askConfirm("Start a new run? Your inventory and visits will be cleared.", () => {
     closeOverlay("settings");
-    resetCurrentModeRun();
+    restartRun();
   });
 });
 /* Full factory reset: unregisters the service worker, clears its caches,
-   and clears localStorage (every mode's save, prefs, history, legacy keys)
+   and clears localStorage (the save, prefs, history, legacy keys)
    -- including tutorialHintsSeen, so every tip plays again. On the reload,
    loadAll() finds no save, so the welcome slide shows. clear() is fine: the
    page owns the whole origin. */
