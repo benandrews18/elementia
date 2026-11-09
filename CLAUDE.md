@@ -48,7 +48,9 @@ build.
 1. Website (https://benandrews18.github.io/elementia/):
    `python game/deploy.py "What changed"`. It runs the smoke test, builds
    `game/build/elementia_artifact.html`, copies it into `../elementia-site/`
-   (a separate clone; this repo has no remote), commits there and pushes.
+   (a separate clone), commits there and pushes `main`. It then pushes this
+   repo's `master` to the `source` branch of the same GitHub repo (the
+   source backup; that repo is public). Never push `master` to `main`.
 2. Shared link: publish that same build file with the Artifact tool to
    https://claude.ai/artifact/KCo6nrTYdJ6cRXPhJqu2ZV
 3. Add a `CHANGELOG.md` entry. Bump `"version"` in `data.js` when content changed.
