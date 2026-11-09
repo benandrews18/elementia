@@ -741,6 +741,44 @@ body[data-screen="market"] #trackedPill{display:none}
   animation:hubCoinFlip .4s ease-in-out; backface-visibility:hidden;
 }
 
+/* To-Do List pinned items: each pinned item is its own parchment card,
+   like a note pinned to a corkboard, with room between cards and dark ink
+   so the ingredient breakdown (lines, arrows, boxes) reads clearly.
+   Scoped to #jobSheet; Item Reference's pinned section is unchanged. */
+#jobSheet .reftable.ref-pinned{
+  background:none; border:none; box-shadow:none; overflow:visible;
+  display:flex; flex-direction:column; gap:18px; padding-top:6px;
+}
+#jobSheet .ref-pinned .refrow{
+  background:#f2e6cc; color:#221f1a; border:2px solid #b8925a; border-radius:12px;
+  box-shadow:0 4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.25);
+}
+#jobSheet .ref-pinned .refrow:last-child{border-bottom:2px solid #b8925a}
+#jobSheet .ref-pinned .refrow:hover{background:#f6ecd7}
+#jobSheet .ref-pinned .refrow.owned{background:#e3f0dc; border-color:#3fa66b}
+/* The pin holding the card up: a small red tack at the top centre. */
+#jobSheet .ref-pinned .refrow::before{
+  content:""; position:absolute; top:-7px; left:50%; width:14px; height:14px; margin-left:-7px;
+  border-radius:50%; background:radial-gradient(circle at 35% 35%, #ff8a7a, #c23b2a 60%, #7d1f14);
+  box-shadow:0 2px 3px rgba(0,0,0,.45);
+}
+#jobSheet .ref-pinned .refname{color:#221f1a}
+#jobSheet .ref-pinned .refwhere{color:#5b4a33}
+#jobSheet .ref-pinned .refexpand{color:#8a5a12}
+#jobSheet .ref-pinned .refpts{background:#fff3d6; color:#6b4a10; border-color:#c79a2e}
+#jobSheet .ref-pinned .refpin:not(.active){background:#e9dcc0; border-color:#a67c4a; opacity:.8}
+/* Breakdown inside the card: light boxes, brown borders and arrows, a
+   solid guide line. */
+#jobSheet .ref-pinned .mn-head{background:#fffaf0; border-color:#a67c4a; color:#221f1a}
+#jobSheet .ref-pinned .mn-arrow{color:#5b4a33}
+#jobSheet .ref-pinned .mn-name{color:#221f1a}
+#jobSheet .ref-pinned .mission-node.done > .mn-row .mn-head{background:#dcefd9; border-color:#3fa66b}
+#jobSheet .ref-pinned .mn-children{border-left:2px solid #8a6a42}
+#jobSheet .ref-pinned .mn-leaf{border-color:#a67c4a; color:#221f1a; background:#fffaf0}
+#jobSheet .ref-pinned .mn-leaf.have{background:#dcefd9; border-color:#3fa66b; color:#1f6b3a}
+#jobSheet .ref-pinned .mn-leaf.need{color:#5b4a33}
+#jobSheet .ref-pinned .mn-tick{color:#2e8a50}
+
 </style>
 <style>
 /* ------------------------------------------------------- game mode --- */
@@ -1787,6 +1825,22 @@ body[data-screen="market"] #trackedPill{display:none}
 .histturn-station{flex:none; font-weight:700; white-space:nowrap}
 .histturn-line{padding-left:26px; color:var(--ink2); min-width:0}
 .histturn-label{font-weight:800; color:var(--mute); margin-right:5px}
+
+/* Trophies (js/trophies.js): a grid of tiles. Locked ones are dark
+   silhouettes with a hint; earned ones are in colour with the date. */
+.trophy-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; max-height:55vh; overflow-y:auto; padding:4px}
+.trophy{
+  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+  padding:10px 6px; border-radius:12px; background:var(--bg-soft); border:1.5px solid var(--line);
+}
+.trophy.earned{background:var(--gold-soft); border-color:var(--gold)}
+.trophy-ic{font-size:34px; line-height:1}
+.trophy-ic :is(img,svg){width:34px; height:34px; object-fit:contain}
+.trophy:not(.earned) .trophy-ic{filter:brightness(0) opacity(.45)}
+.trophy-name{font-size:12px; font-weight:800; color:var(--ink)}
+.trophy:not(.earned) .trophy-name{color:var(--mute)}
+.trophy-sub{font-size:10.5px; line-height:1.3; color:var(--ink2)}
+
 
 </style>
 <style>
@@ -3121,6 +3175,23 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* Leftover from an old pointer-based tap detector (now a plain click
    listener); harmless. */
 .mm-slot.filled{touch-action:none}
+/* Tier 1 squares: up to two stacked in one slot (matUnits()), together the
+   height of a normal card. */
+.mm-slot.stack{display:flex; flex-direction:column; align-items:center; gap:6px}
+.mm-slot.stack > .mm-card.mini, .mm-mini-empty{
+  flex:1 1 0; min-height:0; width:auto; height:auto; aspect-ratio:1; max-width:100%;
+}
+.mm-mini-empty{border:2px dashed var(--line); border-radius:10px}
+.mm-card.mini{padding:2px; border-width:3px; border-radius:10px}
+.mm-card.mini .mm-icon{font-size:26px; margin:0}
+.mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
+.mm-card.mini .mm-name{display:none}
+.mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
+.mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}
+.mm-card.mini .mm-pip :is(img,svg){width:11px; height:11px}
+.mm-card.mini .mm-stations{bottom:-6px}
+.mm-card.mini .mm-station{width:18px; height:18px; font-size:10px}
+.mm-card.mini .mm-station :is(img,svg){width:12px; height:12px}
 
 /* The mat/Elements zone as a "page" with two folder tabs (see
    renderMatTop()). Tabs and Clear/Layouts share one normal-flow row
@@ -3639,8 +3710,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
     <p id="endSub"></p>
     <div class="sumgrid" id="endGrid"></div>
     <div id="endCapsWrap"></div>
+    <div id="endTrophiesWrap"></div>
     <div id="endFlavorWrap"></div>
     <div class="btnrow">
+      <button type="button" class="bigbtn" id="endContinue" hidden>Keep playing (Overtime)</button>
       <button type="button" class="bigbtn sec" id="endNew">Start a new session</button>
       <button type="button" class="bigbtn sec" id="endReview">Review my collection</button>
     </div>
@@ -3692,13 +3765,13 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      capstone, components). Confirming sets the BINGO centre, hands over the
      station's elements and starts the run there (openCapstoneChoice()/
      confirmCapstoneChoice()). -->
-<div class="overlay" id="capChoice" role="dialog" aria-modal="true" aria-labelledby="capChoiceTitle">
+<div class="overlay" id="capChoice" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="capChoiceTitle">
   <div class="sheetbox cap-choice-box" id="capChoiceBody"></div>
 </div>
 <div class="overlay" id="capConfirm" role="dialog" aria-modal="true" aria-labelledby="capConfirmTitle">
   <div class="sheetbox cap-confirm-box" id="capConfirmBody"></div>
 </div>
-<div class="overlay" id="pinTip" role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
+<div class="overlay" id="pinTip" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
   <div class="sheetbox pin-tip-box">
     <h2 id="pinTipTitle">Pin Items to your To-Do List</h2>
     <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
@@ -3905,6 +3978,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   </div>
 </div>
 
+<!-- Trophies (js/trophies.js), opened from the home screen. -->
+<div class="overlay" id="trophies" role="dialog" aria-modal="true" aria-labelledby="trophiesTitle">
+  <div class="sheetbox">
+    <h2 id="trophiesTitle">🎖️ Trophies</h2>
+    <p id="trophiesCount"></p>
+    <div id="trophiesList"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="trophiesClose">Close</button></div>
+  </div>
+</div>
+
 <!-- Combo info popup (openComboInfo()): the cards behind a tapped combo
      chip, or the collections themselves for the star. -->
 <div class="overlay" id="comboInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="comboInfoTitle">
@@ -4040,6 +4123,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
       <button type="button" id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
       <button type="button" id="tourComboLabBtn" class="bigbtn sec">🧪 Combo Lab</button>
       <button type="button" id="tourCollectionsBtn" class="bigbtn sec">🏆 Collections</button>
+      <button type="button" id="tourTrophiesBtn" class="bigbtn sec">🎖️ Trophies</button>
       <button type="button" id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
@@ -4104,10 +4188,10 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <!-- Job board / To-Do List: a left-side slide-out panel (same shape as the
      inventory drawer), reachable from every screen. -->
 <div id="jobScrim"></div>
-<aside id="jobSheet" aria-label="Jobs" aria-hidden="true">
+<aside id="jobSheet" aria-label="To-Do List" aria-hidden="true">
   <div class="dhead">
     <h2 id="jobTitle">🏪 Marketplace</h2>
-    <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close jobs">✕</button>
+    <button type="button" class="tbtn ghost" id="jobSheetClose" aria-label="Close To-Do List">✕</button>
   </div>
   <div class="dbody" id="jobSheetBody"></div>
 </aside>
@@ -4241,7 +4325,7 @@ const NOTO_ICONS = {"⏳": NOTO_23f3, "☁️": NOTO_2601_fe0f, "♻️": NOTO_2
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08",
+ "version": "2026.11.08b",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -5053,7 +5137,12 @@ const TAKE = 3;
    LOCKIN_ROUND_ANCHORS ending at visit 40. */
 const DEFAULT_MAX_VISITS = 40;
 const MAX_VISITS = DEFAULT_MAX_VISITS;
-function visitLimitLabel(){ return String(MAX_VISITS); }
+/* A run is complete on returning to the map after this visit (goMap()). The
+   player can then keep going in Overtime (state.runComplete), where every
+   Lock-In must clear the first Quark breakpoint (confirmLockIn()), up to
+   MAX_VISITS. */
+const RUN_COMPLETE_VISIT = 24;
+function visitLimitLabel(){ return state && state.runComplete ? `${MAX_VISITS} OT` : String(RUN_COMPLETE_VISIT); }
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
 const BREAKPOINT_GATE_VISIT = 9;
@@ -5417,17 +5506,34 @@ const matComboTier = k => {
   return b;
 };
 
+/* Tier 1 (MATERIAL) cards are small squares: up to MAT_TIER1_PER_SLOT of
+   them stack in one slot. Each still scores as a full card (matScore()
+   reads the card list, not the slots). */
+const MAT_TIER1_PER_SLOT = 2;
+const matIsTier1 = c => c.tier === "MATERIAL";
+/* Mat order -> slot units: {card, idx, w} for a normal card, {stack:
+   [{card, idx}], w:1} for tier 1 squares. A tier 1 card joins the first
+   stack with room, else starts a new one where it sits in mat order. */
+function matUnits(cards){
+  const units = [];
+  cards.forEach((c, i) => {
+    if (!matIsTier1(c)){ units.push({card:c, idx:i, w:matSlotsOf(c)}); return; }
+    const open = units.find(u => u.stack && u.stack.length < MAT_TIER1_PER_SLOT);
+    if (open) open.stack.push({card:c, idx:i});
+    else units.push({stack:[{card:c, idx:i}], w:1});
+  });
+  return units;
+}
 /* Left-to-right packing: a 2-wide capstone never straddles a row break, so a
    lone last column pads out -- and the pad still costs a slot. Occupancy
    comes from the packing, not a sum of widths. */
 function matPackCells(cards){
   const cells = [];
   let col = 0;
-  cards.forEach((c, i) => {
-    const w = matSlotsOf(c);
-    if (col + w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
-    cells.push({card:c, idx:i, w});
-    col = (col + w) % MAT_SLOTS_COLS;
+  matUnits(cards).forEach(u => {
+    if (col + u.w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
+    cells.push(u);
+    col = (col + u.w) % MAT_SLOTS_COLS;
   });
   return cells;
 }
@@ -5984,7 +6090,7 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // collection on the mat that has never been locked in shows no chip
   // (renderMatTop()).
   everUnlockedMatCollections:[],
-  guidedTutorialEnabled:false, tutorialHintsSeen:[], arcadeHighScores:{},
+  guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,
@@ -6048,6 +6154,7 @@ function freshState(){
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).
     craftedEverything: false, // Classic: every CORE_ITEM_NAMES item owned -- see checkCraftedEverything().
+    runComplete: false, // True once the run reaches RUN_COMPLETE_VISIT (goMap()); play after it is Overtime.
     reachedHardLimit: false, // True once state.visits hits MAX_VISITS (goMap()): the
                              // congratulatory ending.
     bestMatScore: 0,   // Best matScore().total across this run's Lock-Ins, shown on the End
@@ -6687,6 +6794,51 @@ function queueTutorialHintOnce(id, pose, html, anchor, targetSel){
   pendingMouseTips.push({pose, html, anchor, targetSel});
   return true;
 }
+/* New-player walkthrough. Professor Mouse covers the first few presses
+   as they happen: Roll at a station, Craft, Convert, then the centre Home
+   button back to the map, and later (goMap()) the Market. Each tip shows
+   once per player (prefs.tutorialHintsSeen). It waits for an idle screen
+   -- nothing modal open, no roll or mini-game, no other tip -- so it never
+   blocks input or stacks; a tip that can't show yet is NOT marked seen and
+   is retried on the next render(). */
+function walkthroughIdle(){
+  return !anyOverlayOpen() && !blockingEventOpen() && !openPanelName()
+    && !pendingMouseTips.length && !rollAnimationInProgress
+    && !document.body.hasAttribute("data-intro-sequence")
+    && !document.getElementById("mouseTip").classList.contains("show")
+    && !document.getElementById("rollPopup").classList.contains("open")
+    && !document.getElementById("mgOverlay").classList.contains("show")
+    && !document.getElementById("tour").classList.contains("open");
+}
+function tryWalkthroughTip(id, pose, html, anchor, targetSel){
+  if (!walkthroughIdle()) return false;
+  return showTutorialHintOnce(id, pose, html, anchor, targetSel);
+}
+// Called at the end of every render().
+function maybeShowWalkthroughTip(){
+  if (prefs.guidedTutorialEnabled === false || !walkthroughIdle()) return;
+  if (screen !== "station" || !current) return;
+  if (!state.rolledHere){
+    if (state.pendingRoll != null)
+      tryWalkthroughTip("firstroll", 3, "Tap <b>Roll</b> to roll this station's dice!", "bottom-left", "#hubHome");
+    return;
+  }
+  const craftable = document.querySelector("#screen .craftbtn.go");
+  if (craftable){
+    tryWalkthroughTip("firstcraft", 7, "You have what you need. Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
+    return;
+  }
+  if (totalConvertibleCount() > 0 && tryWalkthroughTip("firstconvert", 5,
+      "Convert Elements! Trade 3 of one element for 1 of another.", "center", "#quickConvertBtn")){
+    queueTutorialHintOnce("converttapmissing", 7,
+      "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
+    return;
+  }
+  if (tryWalkthroughTip("gomap", 12, "All done here? Tap the <b>Map</b> button to head back.", "bottom-left", "#hubHome")) return;
+  // After the basics: the tracked item's badge on shop cards (itemHTML()).
+  if (document.querySelector("#screen .item-pin-badge"))
+    tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
+}
 document.getElementById("mouseTip").addEventListener("click", ev => {
   if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
 });
@@ -6773,6 +6925,7 @@ function render(resetScroll){
   // The hub's height is measured live too, and everything that must clear it
   // (job sheet, pins tray, drawer, overlay padding) reads --hub-h.
   document.documentElement.style.setProperty("--hub-h", document.getElementById("hub").offsetHeight + "px");
+  maybeShowWalkthroughTip();
 }
 
 /* Station and Marketplace backdrop only (not the map, inventory, reference
@@ -7042,21 +7195,9 @@ function updateHub(){
   // (right after the starting gift).
   const holdsElements = Object.values(state.elements).some(v => v > 0);
   if (holdsElements && !state.convertRevealed){
+    // Its tip comes later, with the walkthrough (maybeShowWalkthroughTip()),
+    // once a conversion is actually possible.
     state.convertRevealed = true;
-    // The moment the button first appears. Deferred past its 320ms slide-in so
-    // the spotlight measures the button's final position, not its off-screen
-    // one. Centre anchor: a full-attention beat.
-    setTimeout(() => {
-      const shown = showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "center", "#quickConvertBtn");
-      // A second bubble, queued behind the first (queueTutorialHintOnce()) and
-      // shown when the player dismisses it. Only queued if the first really just
-      // showed (shown === true) -- otherwise nothing would ever flush it. The
-      // .tok.el.need target is resolved at display time.
-      if (shown){
-        queueTutorialHintOnce("converttapmissing", 7,
-          "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
-      }
-    }, 350);
   }
 
   // Floating buttons stay off-screen until useful: Pins once an item is
@@ -7395,16 +7536,6 @@ function renderStation(name){
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
   const capRevealed = !!capEntry;
   const idx = e => ENTRIES.indexOf(e);
-  // Tutorial follow-up to openPinsTray()'s hint: the first time a shop shows
-  // the tracked item's badge (itemHTML()'s pinBadge), point it out once.
-  if (selectedJobItem){
-    const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
-    if (shopEntries.some(e => jobTree.has(e.name))){
-      showTutorialHintOnce("pintrackshop", 7,
-        "This badge marks what it feeds!",
-        "bottom-right", ".item-pin-badge");
-    }
-  }
 
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().
@@ -8819,10 +8950,16 @@ function goMap(){
   if (state.visits >= MAX_VISITS && !state.ended){
     state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
   }
+  // The run is complete at RUN_COMPLETE_VISIT: keep playing (Overtime) or
+  // start a new game. Older saves already past it get this on their next
+  // return to the map.
+  else if (state.visits >= RUN_COMPLETE_VISIT && !state.runComplete && !state.ended){
+    state.runComplete = true; save(); fireConfetti(); showEndGame();
+  }
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at Home's Market face.
   if (state.visits >= 1 && !state.marketVisited){
-    showTutorialHintOnce("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
+    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
   }
 }
 
@@ -9241,9 +9378,13 @@ function matComboChipsHTML(s, revealAll){
 function renderMatGridCells(s){
   const mat = matOnMat();
   const cells = matPackCells(mat);
-  const html = cells.map(cell => cell.card
-    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${
-        matCardHTML(cell.card.name, { complete: s.completeNames.has(cell.card.name) })}</div>`
+  const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
+  const html = cells.map(cell => cell.stack
+    // Tier 1 squares, stacked; an open half shows as a small dashed square.
+    ? `<div class="mm-slot filled stack">${cell.stack.map(t => card(t.card, "mini")).join("")}${
+        cell.stack.length < MAT_TIER1_PER_SLOT ? `<span class="mm-mini-empty"></span>` : ""}</div>`
+    : cell.card
+    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${card(cell.card)}</div>`
     : `<div class="mm-slot empty"></div>`);
   for (let n = cells.reduce((a, c) => a + c.w, 0); n < MAT_SLOTS_TOTAL; n++){
     html.push(`<div class="mm-slot empty"></div>`);
@@ -9555,7 +9696,8 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   // Cards can't be rearranged; a tap only inspects.
   const filledSlot = ev.target.closest(".mm-slot.filled");
   if (filledSlot){
-    const cardBtn = filledSlot.querySelector("[data-mat-card]");
+    // A tier 1 stack holds two cards: open the one tapped.
+    const cardBtn = ev.target.closest("[data-mat-card]") || filledSlot.querySelector("[data-mat-card]");
     if (cardBtn){
       // Peeked view: expand to the full view FIRST (expandDrawerToFull()) so the
       // popup docks under the gold line as usual.
@@ -10242,9 +10384,13 @@ function confirmLockIn(){
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    if (state.visits < BREAKPOINT_GATE_VISIT || !isSunsetVisit()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
-    askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
+    // Before Overtime the gate only applies at sunset from
+    // BREAKPOINT_GATE_VISIT on; in Overtime it applies to every Lock-In.
+    const gated = state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
+    if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
+    askConfirm(state.runComplete
+      ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
+      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;
@@ -11399,15 +11545,27 @@ function scheduleCraftedEverythingEnd(){
     showEndGame();
   }, 500);
 }
+/* Also the run-complete moment at RUN_COMPLETE_VISIT (state.runComplete,
+   not yet ended): same stats, with Keep playing (Overtime) / New game.
+   Closing it any other way also keeps playing. */
 function showEndGame(){
-  document.getElementById("endTitle").textContent = state.craftedEverything
-    ? "🏆 Every Item Crafted!"
-    : state.reachedHardLimit ? "🎉 You Reached the End!" : "🏁 Game Over";
-  document.getElementById("endSub").textContent = state.craftedEverything
+  const completing = state.runComplete && !state.ended;
+  document.getElementById("endTitle").textContent = completing ? "🎉 Run Complete!"
+    : state.craftedEverything ? "🏆 Every Item Crafted!"
+    : state.reachedHardLimit ? "🎉 You Reached the End!"
+    : state.runComplete ? "⏱️ Overtime Over" : "🏁 Game Over";
+  document.getElementById("endSub").textContent = completing
+    ? `You made it to turn ${RUN_COMPLETE_VISIT}! Keep playing in Overtime to craft every item, but every Lock-In must now clear the first Quark breakpoint. Or start a new game.`
+    : state.craftedEverything
     ? `You crafted every item in Elementia in ${state.visits} visits -- here's your run:`
     : state.reachedHardLimit
     ? `You kept clearing the Quark breakpoint all the way to visit ${state.visits} -- here's your run:`
+    : state.runComplete
+    ? `Your board missed the first Quark breakpoint on an Overtime Lock-In at visit ${state.visits}. Your run still counts as complete. Here's what you built:`
     : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
+  document.getElementById("endContinue").hidden = !completing;
+  document.getElementById("endReview").hidden = completing;
+  document.getElementById("endNew").textContent = completing ? "New game" : "Start a new session";
 
   const bingoTotal = bingoLines().length;
   const bingoDone = (state.bingoLinesCompleted || []).length;
@@ -11419,6 +11577,8 @@ function showEndGame(){
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
+  // Trophies are earned when a run completes (awardTrophies()).
+  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies());
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
   showSessionEndBackdrop();
   openOverlay("endGame");
@@ -11448,8 +11608,93 @@ function fireConfetti(){
 document.getElementById("endNew").addEventListener("click", () => {
   closeOverlay("endGame"); restartRun();
 });
+document.getElementById("endContinue").addEventListener("click", () => closeOverlay("endGame"));
 document.getElementById("endReview").addEventListener("click", () => {
   closeOverlay("endGame"); openDrawer();
+});
+
+</script>
+<script>
+/* =====================================================================
+   trophies.js -- Trophies: earned when a run completes (turn
+   RUN_COMPLETE_VISIT, or crafting everything), kept across runs in their
+   own localStorage key (TROPHY_KEY, not the run save), and shown from the
+   home screen (#tourTrophiesBtn). Locked trophies show as silhouettes with
+   a hint, to point players at new capstones, items and collections.
+   ===================================================================== */
+const TROPHY_KEY = "elementia-trophies-v1";
+
+/* Each: id, icon (emoji or __MARKER__, drawn with em()), name, hint (shown
+   while locked), test(state) -> earned on this completed run. The
+   collection trophies count discoveries across runs
+   (prefs.everUnlockedMatCollections). */
+const TROPHIES = [
+  { id:"first-run", icon:"🏁", name:"First Run", hint:"Complete a run (reach turn 24)", test:() => true },
+  ...CAPSTONES.map(cap => ({
+    id: "cap-" + cap.toLowerCase().replace(/[^a-z]+/g, "-"),
+    icon: ITEM_EMOJI[cap], name: `${cap} Run`,
+    hint: `Complete a run that crafts the ${cap}`,
+    test: st => st.items.includes(cap),
+  })),
+  { id:"items-40", icon:"🧰", name:"Busy Builder", hint:"Craft 40 items in one run", test:st => st.items.length >= 40 },
+  { id:"items-all", icon:"🌍", name:"Every Item", hint:"Craft every item in one run", test:st => !!st.craftedEverything },
+  ...[1000, 2500, 4000].map((q, i) => ({
+    id: "quarks-" + q, icon: ["⚛️", "💫", "🌟"][i], name: `${q.toLocaleString()} Quarks`,
+    hint: `Lock In a Display Mat worth ${q.toLocaleString()} Quarks`,
+    test: st => (st.bestMatScore || 0) >= q,
+  })),
+  ...[[5, "🔍", "Collector"], [20, "🗂️", "Curator"], [0, "🏛️", "Every Collection"]].map(([n, icon, name]) => ({
+    id: n ? "collections-" + n : "collections-all", icon, name,
+    hint: n ? `Discover ${n} collections on your Display Mat (across runs)` : "Discover every collection (across runs)",
+    test: () => prefs.everUnlockedMatCollections.length >= (n || MAT_COLLECTIONS.length),
+  })),
+  { id:"bingo-1", icon:"🎯", name:"BINGO!", hint:"Complete a BINGO line in a run", test:st => (st.bingoLinesCompleted || []).length >= 1 },
+  { id:"bingo-3", icon:"🎰", name:"Triple BINGO", hint:"Complete 3 BINGO lines in one run", test:st => (st.bingoLinesCompleted || []).length >= 3 },
+  { id:"ot-30", icon:"⏱️", name:"Overtime", hint:"Reach visit 30 in Overtime", test:st => st.visits >= 30 },
+  { id:"ot-36", icon:"🔥", name:"Iron Will", hint:"Reach visit 36 in Overtime", test:st => st.visits >= 36 },
+];
+
+function loadTrophies(){
+  try { return JSON.parse(lsGet(TROPHY_KEY) || "{}") || {}; } catch(e){ return {}; }
+}
+/* Awards every trophy this run now qualifies for; returns the newly earned
+   ones. Only for a completed run (turn 24 or crafted everything). */
+function awardTrophies(){
+  if (!state.runComplete && !state.craftedEverything) return [];
+  const got = loadTrophies();
+  const fresh = TROPHIES.filter(t => !got[t.id] && t.test(state));
+  if (!fresh.length) return [];
+  const at = new Date().toLocaleDateString("en-CA"); // local YYYY-MM-DD
+  fresh.forEach(t => { got[t.id] = {at}; });
+  lsSet(TROPHY_KEY, JSON.stringify(got));
+  return fresh;
+}
+function trophyTileHTML(t, earned){
+  return `<div class="trophy${earned ? " earned" : ""}" title="${esc(earned ? t.name : t.hint)}">
+    <span class="trophy-ic">${em(t.icon)}</span>
+    <span class="trophy-name">${earned ? esc(t.name) : "???"}</span>
+    <span class="trophy-sub">${earned ? `Earned ${esc(earned.at)}` : esc(t.hint)}</span>
+  </div>`;
+}
+/* The end screen's "New trophies" strip (showEndGame()). */
+function newTrophiesHTML(list){
+  if (!list.length) return "";
+  return `<div class="sec-label" style="margin-top:16px">🎖️ NEW ${list.length === 1 ? "TROPHY" : "TROPHIES"}</div>
+    <div class="trophy-grid">${list.map(t => trophyTileHTML(t, {at: "today"})).join("")}</div>`;
+}
+function openTrophies(){
+  const got = loadTrophies();
+  document.getElementById("trophiesCount").textContent =
+    `${TROPHIES.filter(t => got[t.id]).length} of ${TROPHIES.length} earned. Complete a run (turn ${RUN_COMPLETE_VISIT}) to earn them.`;
+  document.getElementById("trophiesList").innerHTML =
+    `<div class="trophy-grid">${TROPHIES.map(t => trophyTileHTML(t, got[t.id])).join("")}</div>`;
+  document.getElementById("tour").classList.add("behind-settings");
+  openOverlay("trophies");
+}
+document.getElementById("tourTrophiesBtn").addEventListener("click", openTrophies);
+document.getElementById("trophiesClose").addEventListener("click", () => {
+  closeOverlay("trophies");
+  document.getElementById("tour").classList.remove("behind-settings");
 });
 
 </script>
@@ -12133,9 +12378,10 @@ document.getElementById("tourSettingsBtn").addEventListener("click", () => {
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
-    const open = document.querySelector(".overlay.open");
+    // The topmost (last in page order) open overlay.
+    const open = [...document.querySelectorAll(".overlay.open")].pop();
     if (open && open.id === "lockInRewardOverlay"){ dismissLockInRewardModal(); return; }
-    if (open){ closeOverlay(open.id); return; }
+    if (open){ if (!open.hasAttribute("data-no-dismiss")) closeOverlay(open.id); return; }
     if (jobSheet.classList.contains("open")){ closeJobBoard(); return; }
     hideHint(); closeDrawer();
   }
@@ -12144,8 +12390,13 @@ document.addEventListener("keydown", e => {
     drawer.classList.contains("open") ? closeDrawer() : openDrawer();
   }
 });
+// A tap on an overlay's backdrop closes it, except data-no-dismiss ones:
+// steps of the opening (capstone choice, pin tip) that the run can't start
+// without, so closing them early would leave the game stuck.
 document.querySelectorAll(".overlay").forEach(ov => {
-  ov.addEventListener("click", ev => { if (ev.target === ov) closeOverlay(ov.id); });
+  ov.addEventListener("click", ev => {
+    if (ev.target === ov && !ov.hasAttribute("data-no-dismiss")) closeOverlay(ov.id);
+  });
 });
 
 // Named so it can be attached twice: #screen, and #convertGoalCard (an
