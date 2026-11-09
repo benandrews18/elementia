@@ -8,6 +8,22 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## v2026.11.08 (Classic-only data, lighter download, cleanup)
+
+- **Display Mat:** Glass, Water, Limestone and Natural Gas now count only at
+  stations whose shops sell them in Classic (on mat cards, station combos
+  and Item Reference). Before, they also counted at Power Plant/Observatory,
+  Old Growth Forest, Greenhouse and The Bakery.
+- **Lock-In reward** now reads "+n on your next roll" (it showed a wrong
+  total when Mini-Games set the base dice).
+- **Smaller download:** retired items' data and art removed; the page is
+  about 7.3 MB instead of 11 MB.
+- Removed code that could no longer run: the "New Items Unlocked" reveal,
+  the old Lock-In banner, per-mode save plumbing. Saves still load.
+- Repo: `data.js` holds only Classic rows (no separate `CORE_SET`); smoke
+  test gained rule checks; a hook syntax-checks edited JS; `game/deploy.py`
+  publishes to the website.
+
 ## 2026-11-08 — the game is now the source of truth; repo reorganized
 
 - **Game data lives in the game.** `game/js/data.js` (stations, dice, shops,
