@@ -1,14 +1,31 @@
 # Changelog
 
-All notable content/gameplay changes, keyed to `CONTENT_VERSION` in
-`Elementia_Handoff/handoff/pdf_generation/build_guide.py`. That value is
-stamped on the PDFs (footer), the digital game (Settings screen), and used
-as the version label when publishing the Artifact link — so any output in
-hand can be matched back to an entry here.
+All notable content/gameplay changes. The content version is `"version"`
+in `game/js/data.js`; it shows on the game's Settings screen and is stamped
+on any printed PDFs. Bump it (date-based) when content changes. See
+`CLAUDE.md` for how to build and publish.
 
-Run `python build_all.py` after any content change to regenerate every PDF
-and sync the digital game. Run `python game/build_artifact.py` and
-republish to push a content change to the shared Artifact link.
+Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
+`Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
+
+## 2026-11-08 — the game is now the source of truth; repo reorganized
+
+- **Game data lives in the game.** `game/js/data.js` (stations, dice, shops,
+  recipes, points, tiers) and `game/js/model.js` (Classic item set, suit
+  costs) are the source of truth. `build_guide.py` had drifted about two
+  months behind (dice 6 vs 3, 75 point values, 12 recipes, 4 station dice
+  pools); it now reads the game instead of holding its own copy.
+  `game/build_game.py`, which copied the other way, is removed, as is the
+  game's unused `avgVisits` data.
+- **Print pipeline moved to `print/`**, Classic only: Station Guide, Card
+  Deck, Element Cards. `python print/build_pdfs.py`. PDFs not re-rendered
+  yet. Full-deck, print-run and item-reference scripts removed.
+- **Archived** (`archive/`, not maintained): landscape edition, card game,
+  board game, side scroller, old simulators and balance tools, field-game
+  PDFs, old handoff CSVs. Removed stale `HANDOFF.md` and
+  `CURRENT_GAME_STATE.md`.
+- **Smoke test** committed: `node game/tools/run_smoke.mjs`.
+- Added `CLAUDE.md` with the workflow.
 
 ## 2026-11-08 — digital game fixes and cleanup (content still v2026.08.16)
 

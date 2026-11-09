@@ -2,7 +2,7 @@
    map-graph.js -- Station web: MAP_EDGES, adjacency, node positions on the map art.
 
    Station web: travel follows these edges only. The graph was developed in
-   the reachability simulator (Elementia_Handoff/handoff/simulation/): Ocean,
+   the old reachability simulator (archive/simulation/): Ocean,
    Old Growth Forest, Greenhouse, The Bakery and The Observatory are hubs
    with 3-4 links each. Positions are percentages within
    backdrops/diamond_map_full.webp; lines are drawn from this list

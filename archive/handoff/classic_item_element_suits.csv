@@ -1,0 +1,80 @@
+﻿Station(s),Item,Tier,Points,Recipe,Current Algorithmic Suit,Proposed Real-World Suit,Changed?,Extra-Cost Qty,Real-World Rationale
+Deep Mine|Old Growth Forest|The City,Clay,MATERIAL,2,Al + Si + Mg,earth,earth,no,0,Mineral/geological
+Deep Mine,Natural Gas,MATERIAL,2,C + H,organic,reactive,yes,0,"Fossil fuel, combustible"
+Deep Mine|The City,Steel,MATERIAL,2,Fe + C,metal,metal,no,0,Refined metal alloy
+Deep Mine,Aluminum Alloy,MATERIAL,4,Al + Mg + __FURNACE__ Furnace,earth,earth,no,0,"Aluminum ore is a mineral (matches its own earth-suit element, Al)"
+Deep Mine,Stainless Steel,MATERIAL,4,__STEEL__ Steel + Ni + __FURNACE__ Furnace,metal,metal,no,0,Metal alloy
+Deep Mine,Titanium Alloy,MATERIAL,4,Ti + Al + __FURNACE__ Furnace,metal,metal,no,0,Metal alloy
+Deep Mine,Rubber,COMPONENT,4,🛢️ Natural Gas + S,organic,reactive,yes,0,Vulcanization is a defining chemical reaction
+Deep Mine,Diamond,COMPONENT,11,C + __FURNACE__ Furnace + 🕐 Clock,organic,earth,yes,2,Mineral crystal/gemstone
+Deep Mine|The Observatory,Tools,CREATION,3,__STEEL__ Steel + Ti + Al,metal,metal,no,0,Metal tools
+Deep Mine,Furnace,CREATION,4,🏺 Clay + C,organic,metal,yes,0,Metalworking/smelting equipment
+Deep Mine,Maglev Train,CAPSTONE,20,⚙️ Engine + 🪟 Glass + 🧲 Magnet + 🌉 Bridge + 🦾 Aluminum Alloy,earth,metal,yes,3,Metal train
+Greenhouse,Fertilizer,MATERIAL,3,N + P + K,reactive,reactive,no,0,"N-P-K agricultural chemistry, its real-world definition"
+Greenhouse|The Bakery,Sugar,MATERIAL,3,C + H + O,organic,organic,no,0,Plant-derived carbohydrate
+Greenhouse,DNA,MATERIAL,3,🍬 Sugar + P + N,organic,organic,no,0,Biological molecule
+Greenhouse|Old Growth Forest,Soil,COMPONENT,4,🏺 Clay + ⏳ Sand,earth,earth,no,0,Ground/geological material
+Greenhouse,Grain,COMPONENT,7,🧑‍🌾 Farm + ♻️ Fertilizer,reactive,organic,yes,1,Crop/plant product
+Greenhouse,Solar Panel,COMPONENT,7,Si + 🔌 Wire + 🪟 Glass + 🔋 Battery,metal,metal,no,1,Electronic hardware
+Greenhouse,Apple,CREATION,6,🌳 Tree + 💧 Water,organic,organic,no,1,Fruit
+Greenhouse,Farm,CREATION,7,🌱 Soil + 🛠️ Tools + 💧 Water,organic,organic,no,1,Agriculture/cultivation of life
+Greenhouse,Chicken,CREATION,10,🧑‍🌾 Farm + 🥚 Egg,organic,organic,no,2,Animal
+Greenhouse,Tractor,CREATION,14,⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber + 🧑‍🌾 Farm,metal,metal,no,2,Heavy machinery
+Greenhouse,Homestead,CAPSTONE,20,🚜 Tractor + 🐔 Chicken + 🌾 Grain + __LOGCABIN__ Log Cabin + 🔆 Solar Panel,organic,organic,no,3,Agricultural life/homestead theme
+Old Growth Forest,Bone,MATERIAL,4,C + Ca + P,reactive,organic,yes,0,Skeletal/biological material
+Old Growth Forest,Tree,COMPONENT,4,🌱 Soil + C + O,organic,organic,no,0,Plant
+Old Growth Forest,Canoe,COMPONENT,5,🌳 Tree + 💧 Water + 🛠️ Tools,organic,organic,no,1,Traditionally wood-built
+Old Growth Forest,Fossil,COMPONENT,10,🏺 Clay + 🦴 Bone + 🕐 Clock,reactive,earth,yes,2,Mineralized geological remains
+Old Growth Forest,Deer,CREATION,6,🌳 Tree + 💧 Water + 🦴 Bone,organic,organic,no,1,Animal
+Old Growth Forest,Log Cabin,CREATION,6,🌳 Tree + 🛠️ Tools + __FURNACE__ Furnace,organic,organic,no,1,Wood construction
+Old Growth Forest,Salmon,CREATION,10,🌿 Seaweed + 💧 Water + 🥚 Egg,organic,organic,no,2,Animal
+Old Growth Forest,Ecosystem,CAPSTONE,27,🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow,organic,organic,no,3,Living biological community
+The Bakery,Yeast,COMPONENT,4,🍬 Sugar + 💧 Water,organic,organic,no,0,Living microorganism
+The Bakery,Egg,COMPONENT,5,🧬 DNA + Ca + C + O,organic,organic,no,1,Biological
+The Bakery,Flour,COMPONENT,8,🌾 Grain + 🛠️ Tools,reactive,organic,yes,1,"Ground grain, plant product"
+The Bakery,Dough,COMPONENT,8,__FLOUR__ Flour + 💧 Water,reactive,organic,yes,1,Food preparation
+The Bakery,Oven,CREATION,10,__FURNACE__ Furnace + 🕐 Clock,organic,metal,yes,2,Mechanical/metal appliance
+The Bakery,Bread,CREATION,11,🫓 Dough + 🦠 Yeast + __OVEN__ Oven,organic,organic,no,2,Food
+The Bakery,Cake,CREATION,12,🫓 Dough + 🍬 Sugar + 🥚 Egg + __OVEN__ Oven,organic,organic,no,2,Food
+The Bakery,Banana Bread,CREATION,16,🍞 Bread + 🍌 Banana,organic,organic,no,2,Food
+The Bakery,Fruit Cake,CAPSTONE,24,🍰 Cake + 🍎 Apple + 🍌 Banana,organic,organic,no,3,Food
+The City,Concrete,COMPONENT,4,🏺 Clay + 🪨 Limestone,earth,earth,no,0,Mineral building material
+The City,Glass,COMPONENT,4,⏳ Sand + 🪨 Limestone,organic,earth,yes,0,Melted silica/minerals
+The City,Bridge,CREATION,6,__STEEL__ Steel + __CONCRETE__ Concrete + 💧 Water,earth,metal,yes,1,Modern bridges are primarily steel structures
+The City,Building,CREATION,7,__CONCRETE__ Concrete + 🪟 Glass + __STEEL__ Steel,organic,metal,yes,1,Steel-and-glass modern construction
+The City,Skyscraper,CREATION,14,🏢 Building + ☁️ Cloud + 📡 Satellite Dish,organic,metal,yes,2,Steel/glass high-rise
+The City,Museum,CREATION,16,🏢 Building + 🔭 Telescope + __FOSSIL__ Fossil,organic,earth,yes,2,Fossil/natural-history collection theme
+The City,Helicopter,CREATION,18,⚙️ Engine + 🪟 Glass + 🔩 Stainless Steel + __TURBINEBLADE__ Turbine Blade,metal,metal,no,2,Metal aircraft
+The City,Metropolis,CAPSTONE,27,🌉 Bridge + 🗼 Skyscraper + 🚁 Helicopter + 🚗 Car + 💡 Light Bulb,organic,metal,yes,3,Urban/industrial steel-and-machine theme
+The Observatory,Wheel,MATERIAL,9,🌳 Tree + 🛠️ Tools,metal,organic,yes,1,This game's own recipe is a wooden wagon wheel
+The Observatory,Magnet,COMPONENT,4,Fe + Ni,earth,metal,yes,0,Metal
+The Observatory,Compass,COMPONENT,6,🧲 Magnet + 💧 Water + 🪟 Glass,organic,metal,yes,1,Metal navigation instrument
+The Observatory,Microchip,COMPONENT,8,🔌 Wire + Si + Ag,metal,metal,no,1,Electronic component
+The Observatory,Satellite Dish,COMPONENT,10,🦾 Aluminum Alloy + 🔌 Wire,metal,metal,no,2,Electronics/hardware
+The Observatory,Telescope,CREATION,10,🪟 Glass + 🦾 Aluminum Alloy + Ag,organic,metal,yes,2,Precision metal/optical instrument
+The Observatory,Star,CREATION,13,__FURNACE__ Furnace + H + 🕐 Clock,organic,reactive,yes,2,Nuclear fusion/burning
+The Observatory,Rainbow,CREATION,13,☁️ Cloud + ⭐ Star,organic,earth,yes,2,Natural atmospheric phenomenon
+The Observatory,Rocket,CREATION,19,💻 Computer + 🔆 Solar Panel + 🛡️ Titanium Alloy,metal,metal,no,2,Metal spacecraft
+The Observatory,Space Station,CAPSTONE,29,🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish,organic,metal,yes,3,Metal orbital structure
+The Ocean|The Bakery,Water,MATERIAL,2,H + O,organic,earth,yes,0,"Hydrological/natural resource, not biological chemistry"
+The Ocean|The City,Limestone,MATERIAL,2,Ca + C + O,organic,earth,yes,0,Sedimentary rock
+The Ocean|Old Growth Forest,Sand,MATERIAL,3,Si + O,organic,earth,yes,0,Mineral/geological
+The Ocean,Seaweed,MATERIAL,4,C + H + O,organic,organic,no,0,Marine plant
+The Ocean,Cloud,COMPONENT,5,💧 Water + N + C,organic,earth,yes,1,Atmospheric/weather phenomenon
+The Ocean,Banana,CREATION,6,🌳 Tree + 💧 Water + K,organic,organic,no,1,Fruit
+The Ocean,Orca,CREATION,11,🌿 Seaweed + 🐟 Salmon + 🦴 Bone,organic,organic,no,2,Animal
+The Ocean,Lighthouse,CREATION,12,💡 Light Bulb + __CONCRETE__ Concrete,earth,earth,no,2,Stone/masonry tower structure
+The Ocean,Speedboat,CREATION,13,🛶 Canoe + ⚙️ Engine + 🧭 Compass + __TURBINEBLADE__ Turbine Blade,metal,metal,no,2,Engine-driven motor vessel
+The Ocean,Life,CREATION,15,🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star,organic,organic,no,2,Biological concept
+The Ocean,Coral Reef,CAPSTONE,21,__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock,organic,organic,no,3,Living reef ecosystem
+The Power Plant,Wire,MATERIAL,3,Cu + Al,metal,metal,no,0,Drawn metal conductor
+The Power Plant,Battery,MATERIAL,4,Ni + Fe + K,reactive,reactive,no,0,Electrochemical reaction/energy storage
+The Power Plant,Engine,COMPONENT,6,🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel,metal,metal,no,1,Mechanical machine
+The Power Plant,Light Bulb,COMPONENT,6,🪟 Glass + 🔌 Wire,metal,metal,no,1,Electrical hardware component
+The Power Plant,Clock,COMPONENT,7,🔋 Battery + 🛠️ Tools,reactive,metal,yes,1,Precision mechanical device
+The Power Plant,Plastic,COMPONENT,7,🛢️ Natural Gas + __FURNACE__ Furnace,organic,reactive,yes,1,Petrochemical process product
+The Power Plant,Fiberglass,COMPONENT,9,🪟 Glass + 🥤 Plastic,organic,earth,yes,1,Glass-fiber material
+The Power Plant,Computer,COMPONENT,13,🔋 Battery + 🥤 Plastic + 🔌 Wire + __MICROCHIP__ Microchip,metal,metal,no,2,Electronics/hardware
+The Power Plant,Turbine Blade,COMPONENT,14,__WHEEL__ Wheel + __FIBERGLASS__ Fiberglass,metal,metal,no,2,Mechanical component
+The Power Plant,Car,CREATION,15,⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel,organic,metal,yes,2,Metal-bodied motor vehicle
+The Power Plant,Robot,CAPSTONE,23,💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy + 💡 Light Bulb,metal,metal,no,3,Metal machine

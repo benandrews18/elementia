@@ -1,0 +1,101 @@
+id,name,size,items,notes
+wheels_up,Wheels Up,3,"Bicycle, Car, Wheel",Early-game transportation starter
+morning_bake,Morning Bake,3,"Egg, Flour, Dough",Bakery basics before the oven comes online
+tide_pool,Tide Pool,3,"Water, Seaweed, Coral Reef",Ocean shallows
+stargazers_kit,Stargazer's Kit,3,"Telescope, Compass, Star",Observatory opening trio
+bedrock,Bedrock,3,"Clay, Sand, Limestone",Raw earth materials shared by three stations
+sweetener,Sweetener,3,"Sugar, Yeast, Apple",Greenhouse-to-Bakery pantry staples
+spark,Spark,3,"Battery, Wire, Light Bulb",Minimum viable circuit
+orchard_basket,Orchard Basket,3,"Apple, Banana, Fruit Cake",Fruit into dessert
+deep_earth,Deep Earth,3,"Diamond, Fossil, Bone",Things dug up, not grown
+greenhouse_start,Greenhouse Start,3,"Soil, Grain, Farm",First three Greenhouse crafts
+solar_circuit,Solar Circuit,3,"Solar Panel, Battery, Wire",Clean-energy starter loop
+nautical_trio,Nautical Trio,3,"Canoe, Speedboat, Orca",Three things found on open water
+prism_sky,Prism Sky,3,"Cloud, Rainbow, Compass",Weather meets navigation
+foundry_basics,Foundry Basics,3,"Steel, Furnace, Tools",Deep Mine's smithing core
+homestead_roots,Homestead Roots,3,"Log Cabin, Farm, Chicken",Forest-to-Greenhouse settling trio
+sushi_night,Sushi Night,3,"Salmon, Seaweed, Water",Reef-to-plate essentials
+bridge_and_bond,Bridge & Bond,3,"Concrete, Steel, Bridge",City infrastructure minimum
+lab_bench,Lab Bench,3,"Microchip, Computer, Wire",Small electronics bench
+rubber_road,Rubber Road,3,"Rubber, Wheel, Tractor",Deep Mine's rolling-stock parts
+fossil_record,Fossil Record,3,"Fossil, Bone, Clay",Prehistoric leftovers
+bakery_basics,Bakery Basics,3,"Flour, Dough, Oven",Before the first loaf
+glasshouse,Glasshouse,3,"Glass, Sand, Furnace",Where glass actually comes from
+wild_deer_trail,Wild Deer Trail,3,"Deer, Tree, Soil",Old Growth Forest wildlife
+turbine_start,Turbine Start,3,"Turbine Blade, Engine, Battery",Power Plant's mechanical core
+capstone_prep,Capstone Prep,3,"Diamond, Steel, Glass",Three premium materials worth hoarding
+circuit_city,Circuit City,4,"Wire, Battery, Microchip, Computer",Power Plant electronics line
+sky_watch,Sky Watch,4,"Telescope, Satellite Dish, Compass, Star",Observatory instruments
+harvest_table,Harvest Table,4,"Grain, Chicken, Egg, Flour",Farm goods headed for the oven
+coastal_trade,Coastal Trade,4,"Speedboat, Coral Reef, Orca, Lighthouse",Ocean commerce and wildlife
+alloy_bench,Alloy Bench,4,"Steel, Stainless Steel, Aluminum Alloy, Furnace",Every core alloy in one set
+sweet_shop,Sweet Shop,4,"Sugar, Dough, Banana Bread, Fruit Cake",Bakery's dessert case
+concrete_jungle,Concrete Jungle,4,"Concrete, Building, Bridge, Skyscraper",City construction staples
+ancient_ground,Ancient Ground,4,"Fossil, Bone, Diamond, Clay",Everything pulled from the dirt
+green_machine,Green Machine,4,"Solar Panel, Bicycle, Fertilizer, Soil",Sustainable Greenhouse tech
+iron_engine,Iron Engine,4,"Engine, Turbine Blade, Robot, Tools",Power Plant's heavy machinery
+river_to_rail,River to Rail,4,"Canoe, Bicycle, Car, Maglev Train",Every era of getting around
+ocean_life,Ocean Life,4,"Water, Seaweed, Salmon, Orca",The Ocean's living things
+storm_watch,Storm Watch,4,"Cloud, Rainbow, Wire, Battery",Weather meets the power grid
+glassworks,Glassworks,4,"Sand, Furnace, Glass, Light Bulb",Glass and what it becomes
+wheat_field,Wheat Field,4,"Farm, Grain, Flour, Oven",Field to loaf
+deep_freight,Deep Freight,4,"Natural Gas, Steel, Tractor, Maglev Train",Deep Mine's export line
+reef_watch,Reef Watch,4,"Coral Reef, Seaweed, Salmon, Water",Reef ecosystem
+cabin_life,Cabin Life,4,"Log Cabin, Tree, Deer, Fossil",Living off the Old Growth Forest
+robotics_lab,Robotics Lab,4,"Microchip, Wire, Robot, Computer",Power Plant automation
+museum_piece,Museum Piece,4,"Museum, Fossil, Telescope, Building",What the City puts on display
+farmstead_feast,Farmstead Feast,4,"Chicken, Egg, Apple, Apple Pie",A full Greenhouse-to-Bakery meal
+rocket_prep,Rocket Prep,4,"Rocket, Wheel, Rubber, Magnet",Launch-day parts list
+bridgework,Bridgework,4,"Bridge, Concrete, Steel, Clay",Everything a City bridge needs
+sunlit_grid,Sunlit Grid,4,"Solar Panel, Battery, Light Bulb, Wire",Clean power, fully wired
+fish_market,Fish Market,4,"Fish Cakes, Salmon, Seaweed, Egg",Ocean catch turned into Bakery fare
+grand_voyage,Grand Voyage,5,"Speedboat, Canoe, Orca, Coral Reef, Lighthouse",A full tour of Ocean waters
+deep_vault,Deep Vault,5,"Diamond, Steel, Furnace, Clay, Aluminum Alloy",Deep Mine's valuables
+sky_survey,Sky Survey,5,"Telescope, Satellite Dish, Rocket, Compass, Star",A serious Observatory session
+cottage_industry,Cottage Industry,5,"Log Cabin, Farm, Grain, Chicken, Homestead",A self-sufficient settlement
+master_baker,Master Baker,5,"Flour, Dough, Yeast, Oven, Fruit Cake",The full Bakery process
+steel_city,Steel City,5,"Steel, Concrete, Bridge, Skyscraper, Building",Heavy-industry City skyline
+circuit_board,Circuit Board,5,"Microchip, Wire, Battery, Computer, Robot",A complete Power Plant electronics kit
+wildlife_refuge,Wildlife Refuge,5,"Deer, Tree, Salmon, Ecosystem, Soil",Old Growth Forest at its healthiest
+motorworks,Motorworks,5,"Engine, Wheel, Rubber, Tools, Tractor",Everything a machine shop needs
+solar_farm,Solar Farm,5,"Solar Panel, Battery, Light Bulb, Turbine Blade, Fertilizer",Renewable energy across two stations
+prehistoric_trail,Prehistoric Trail,5,"Fossil, Bone, Diamond, Clay, Sand",A dig site's worth of finds
+harbor_town,Harbor Town,5,"Water, Speedboat, Lighthouse, Coral Reef, Seaweed",A working Ocean harbor
+foundry_line,Foundry Line,5,"Furnace, Steel, Stainless Steel, Aluminum Alloy, Tools",Deep Mine's full metalworking line
+farm_to_table,Farm to Table,5,"Farm, Grain, Chicken, Egg, Apple Pie",Field to finished dish
+cloud_chasers,Cloud Chasers,5,"Cloud, Rainbow, Star, Compass, Telescope",Sky-watchers' full kit
+alpine_timber,Alpine Timber,5,"Tree, Log Cabin, Canoe, Deer, Soil",Forest life and forest craft
+city_skyline,City Skyline,5,"Building, Skyscraper, Bridge, Glass, Metropolis",The City at full height
+frontier_machinery,Frontier Machinery,5,"Tractor, Rubber, Wheel, Maglev Train, Natural Gas",Deep Mine's transport and fuel
+confectionery,Confectionery,5,"Sugar, Banana, Apple, Banana Bread, Fruit Cake",Every Bakery dessert ingredient
+museum_curation,Museum Curation,5,"Museum, Fossil, Telescope, Bone, Building",A City exhibit on natural history
+the_long_haul,The Long Haul,6,"Car, Bicycle, Speedboat, Helicopter, Maglev Train, Tractor",One of every major vehicle
+precious_earth,Precious Earth,6,"Clay, Sand, Limestone, Diamond, Fossil, Bone",Everything the ground gives up
+power_grid_complete,Power Grid Complete,6,"Battery, Wire, Solar Panel, Turbine Blade, Light Bulb, Engine",A fully built-out power grid
+bakery_showcase,Bakery Showcase,6,"Flour, Dough, Yeast, Oven, Banana Bread, Fruit Cake",The Bakery's complete dessert menu
+metal_works,Metal Works,6,"Steel, Stainless Steel, Aluminum Alloy, Furnace, Tools, Wire",Deep Mine's full metals catalog
+reef_to_table,Reef to Table,6,"Water, Seaweed, Salmon, Coral Reef, Orca, Fish Cakes",From open water to finished meal
+skyline_rising,Skyline Rising,6,"Concrete, Steel, Bridge, Building, Skyscraper, Metropolis",The City built from the ground up
+homestead_legacy,Homestead Legacy,6,"Soil, Farm, Grain, Chicken, Log Cabin, Homestead",A settlement's full story
+deep_sky,Deep Sky,6,"Telescope, Satellite Dish, Compass, Star, Rainbow, Rocket",The Observatory's instruments and finds
+forest_ecosystem,Forest Ecosystem,6,"Tree, Deer, Salmon, Soil, Fossil, Ecosystem",Old Growth Forest, fully alive
+tech_stack,Tech Stack,6,"Microchip, Wire, Battery, Computer, Robot, Magnet",A complete electronics stack
+orchard_and_oven,Orchard & Oven,6,"Apple, Banana, Sugar, Egg, Flour, Apple Pie",Greenhouse fruit through the Bakery oven
+frontier_steel,Frontier Steel,6,"Steel, Furnace, Tools, Tractor, Rubber, Maglev Train",Deep Mine's industrial backbone
+glass_and_light,Glass & Light,6,"Sand, Furnace, Glass, Light Bulb, Lighthouse, Star",Everything that shines or shows the way
+museum_of_everything,Museum of Everything,6,"Museum, Fossil, Bone, Telescope, Building, Diamond",A City exhibit spanning every era
+grand_tour_of_transit,Grand Tour of Transit,7,"Canoe, Bicycle, Car, Speedboat, Helicopter, Maglev Train, Tractor",Every vehicle in the game at once
+bedrock_to_skyline,Bedrock to Skyline,7,"Clay, Sand, Limestone, Concrete, Steel, Building, Skyscraper",Raw earth turned into a skyline
+full_harvest,Full Harvest,7,"Soil, Farm, Grain, Chicken, Egg, Apple, Fertilizer",A complete Greenhouse growing season
+observatory_complete,Observatory Complete,7,"Microchip, Magnet, Compass, Satellite Dish, Telescope, Star, Rocket",Nearly the whole Observatory catalog
+power_plant_complete,Power Plant Complete,7,"Battery, Wire, Clock, Engine, Light Bulb, Computer, Turbine Blade",Nearly the whole Power Plant catalog
+bakery_complete,Bakery Complete,7,"Sugar, Water, Yeast, Egg, Flour, Dough, Oven",Nearly the whole Bakery catalog
+deep_mine_complete,Deep Mine Complete,7,"Clay, Natural Gas, Steel, Tools, Furnace, Aluminum Alloy, Diamond",Nearly the whole Deep Mine catalog
+old_growth_complete,Old Growth Complete,7,"Sand, Bone, Soil, Salmon, Tree, Canoe, Deer",Nearly the whole Old Growth Forest catalog
+ocean_complete,Ocean Complete,7,"Water, Limestone, Sand, Seaweed, Banana, Cloud, Orca",Nearly the whole Ocean catalog
+city_complete,City Complete,7,"Clay, Limestone, Steel, Concrete, Bridge, Building, Glass",Nearly the whole City catalog
+greenhouse_complete,Greenhouse Complete,8,"Fertilizer, Sugar, DNA, Soil, Farm, Chicken, Apple, Grain",The Greenhouse's full non-capstone lineup
+world_tour,World Tour,8,"Water, Battery, Farm, Steel, Tree, Flour, Glass, Star",One signature item from every station
+master_builder,Master Builder,8,"Steel, Concrete, Bridge, Building, Museum, Skyscraper, Glass, Metropolis",A City built to its absolute limit
+full_fleet,Full Fleet,8,"Canoe, Bicycle, Car, Speedboat, Helicopter, Maglev Train, Tractor, Robot",Every vehicle and machine in one set
+cosmic_explorer,Cosmic Explorer,8,"Magnet, Compass, Satellite Dish, Telescope, Star, Rainbow, Rocket, Space Station",The Observatory's grand finale, capstone included

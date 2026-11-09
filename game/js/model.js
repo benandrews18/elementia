@@ -101,8 +101,8 @@ function itemSuitOf(name){
    costs three; 4 points or under costs nothing. Fossil (one suit) and
    Apple Pie/Bicycle (two, despite high points) are deliberate. Shown as
    badges by the item name (suitCostBadgesHTML()) and on the inspection
-   card (showCardPop()). Source: Elementia_Handoff/
-   classic_mode_element_suits.csv. */
+   card (showCardPop()). This table is the source of truth for suit costs
+   (the old CSVs are in archive/handoff/). */
 const ITEM_SUIT_COST_TABLE = {
   Canoe: ["earth"], Egg: ["organic"], Cloud: ["organic"], Apple: ["organic"],
   Deer: ["earth"], "Log Cabin": ["earth"], Bridge: ["metal"], Compass: ["metal"],

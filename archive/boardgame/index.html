@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementia — Board Game</title>
+<link rel="stylesheet" href="board.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">⬡</span>
+    <span class="brand-name">Elementia</span>
+    <span class="brand-sub">Board Game</span>
+  </div>
+
+  <div class="turn-strip" id="turnStrip"></div>
+
+  <div class="topbar-right">
+    <div class="score-chip" id="scoreChip"></div>
+    <button type="button" class="btn ghost" data-act="rules">Rules</button>
+    <button type="button" class="btn ghost" data-act="newgame">New Game</button>
+  </div>
+</header>
+
+<!-- Layout order follows images/Board Game View 2: tier decks first
+     (III down to I), then the capstone row, then the board. Everything
+     personal to one player lives in the slide-up tray at the bottom. -->
+<main class="app">
+
+  <!-- ============================= TIER DECKS + ITEM DISPLAY -->
+  <section class="zone shop" aria-labelledby="shopTitle">
+    <div class="shop-head">
+      <h2 class="zone-title" id="shopTitle">Tier Decks &amp; Item Display</h2>
+      <button type="button" class="btn tiny" data-act="restock-help" title="What is restocking?">?</button>
+    </div>
+    <div class="tiers" id="tiers"></div>
+  </section>
+
+  <!-- ============================================ CAPSTONE CARDS -->
+  <section class="zone caps" aria-labelledby="capsTitle">
+    <h2 class="zone-title" id="capsTitle">Capstone Cards</h2>
+    <div class="cap-row" id="capRow"></div>
+  </section>
+
+  <!-- ==================================================== BOARD -->
+  <section class="zone board-zone" aria-labelledby="boardTitle">
+    <h2 class="sr-only" id="boardTitle">The Board</h2>
+    <!-- The station plates sit OUTSIDE .map-frame: the frame has to clip
+         (it holds the quarter-turned art), but the plates straddle the
+         map's top and bottom edges into the board's padding, the way
+         images/Board Game View 2 shows them. .map-wrap is the same size
+         as the frame, so their percentage positions are unchanged. -->
+    <div class="board" id="board">
+      <div class="map-wrap">
+        <div class="map-frame" id="mapFrame">
+          <div class="map-rot"><div class="map-art"></div></div>
+          <svg class="map-lines" id="mapLines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="map-nodes" id="mapNodes"></div>
+        </div>
+        <div class="map-float" id="mapFloat"></div>
+      </div>
+    </div>
+    <div class="action-bar" id="actionBar"></div>
+  </section>
+
+</main>
+
+<!-- ============================================== PLAYER BOARD tray -->
+<div class="tray" id="tray">
+  <button type="button" class="tray-handle" id="trayHandle" data-act="tray"
+          aria-expanded="false" aria-controls="trayBody">
+    <span class="tray-grip"></span>
+    <span class="tray-title">Player Board</span>
+    <span class="tray-hint" id="trayHint"></span>
+    <span class="tray-caret">▲</span>
+  </button>
+
+  <div class="tray-body" id="trayBody">
+    <div class="tray-cols">
+      <div class="tray-card held">
+        <h2 class="zone-title">Held Elements</h2>
+        <div class="el-grid" id="elGrid"></div>
+        <p class="tray-note" id="elNote"></p>
+      </div>
+
+      <div class="tray-card crafted">
+        <h2 class="zone-title">Crafted Items <span class="count" id="craftedCount"></span></h2>
+        <div class="crafted-grid" id="craftedGrid"></div>
+      </div>
+
+      <div class="tray-card bingo">
+        <h2 class="zone-title">BINGO Card <span class="count" id="bingoCount"></span></h2>
+        <div class="bingo-grid" id="bingoGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- generic modal shell, filled by board.js -->
+<div class="modal-veil" id="veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button type="button" class="modal-x" data-act="close" aria-label="Close">✕</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<!-- dice tray, shown while rolling -->
+<div class="roll-veil" id="rollVeil" hidden>
+  <div class="roll-box">
+    <p class="roll-station" id="rollStation"></p>
+    <div class="roll-dice" id="rollDice"></div>
+    <p class="roll-hint">Rolling…</p>
+  </div>
+</div>
+
+<div class="toast-stack" id="toasts"></div>
+
+<script src="data.js"></script>
+<script src="icons.js"></script>
+<script src="board.js"></script>
+</body>
+</html>

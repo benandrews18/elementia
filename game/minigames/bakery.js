@@ -42,7 +42,7 @@
     { key: "straw", label: "Strawberry", color: "#d43d5c" },
   ];
   // Icing is shown as one of the 3 real "cake middle" photos dropped into
-  // game/minigames/ (see build_minigames.py's ASSETS map) instead of a CSS
+  // game/minigames/ (inlined by build_artifact.py) instead of a CSS
   // swatch -- both on the option buttons and on the cake itself, so the
   // picture the player matches genuinely looks like the thing they tap.
   const FROSTINGS = [

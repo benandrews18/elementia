@@ -13,6 +13,7 @@ then works no matter which file a constant sits in.
     import sys; sys.path.insert(0, str(<repo>/"game"))
     from game_source import read_game_source
 """
+import json
 import re
 from pathlib import Path
 
@@ -38,3 +39,10 @@ def read_game_source(page=PAGE):
         parts.append(f"\n/* ==== {p.relative_to(GAME_DIR).as_posix()} ==== */\n")
         parts.append(p.read_text(encoding="utf-8"))
     return "".join(parts)
+
+
+def read_game_data():
+    """The game's DATA object from js/data.js: take, version, suits, stations."""
+    s = (GAME_DIR / "js" / "data.js").read_text(encoding="utf-8")
+    start, end = "/*__GAME_DATA_START__*/", "/*__GAME_DATA_END__*/"
+    return json.loads(s[s.index(start) + len(start):s.index(end)])

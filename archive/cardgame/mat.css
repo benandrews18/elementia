@@ -1,0 +1,463 @@
+/* =====================================================================
+   Elementia -- Display Mat.  Portrait, Pixel 9a (414 x 875 CSS px).
+
+   Four bands, top to bottom: HUD, the live score, the mat (always two
+   rows of four), and your whole collection -- the only band that
+   scrolls, since it reaches 69 cards.
+
+   The score sits directly under the HUD because it is the readout the
+   rest of the screen serves; the mat sits under it so the effect of
+   every drag is visible without moving your eyes far.
+
+   Slot and card heights come from container query units rather than
+   aspect-ratio, so a two-wide capstone (which also swallows the 6px
+   gap between its columns) still lines up with the single cards beside
+   it instead of standing 4px taller.
+   ===================================================================== */
+
+:root{
+  --felt:      #0d1220;
+  --felt-2:    #161d2c;
+  --line:      #2a3346;
+  --ink:       #f2f5f9;
+  --ink-soft:  #a7b1c4;
+  --ink-mute:  #6f7b91;
+  --gold:      #f2c94c;
+  --ok:        #3aab6d;
+  --no:        #e2543b;
+  --card-ink:  #12161f;
+  --card-face: #f4f2ee;
+  --shadow:    0 2px 6px rgba(0,0,0,.4);
+  --shadow-lg: 0 12px 34px rgba(0,0,0,.55);
+
+  /* The design canvas. Everything below is authored against these two
+     numbers and nothing else, so the layout has exactly one degree of
+     freedom left: --fit, the scale that maps it onto the window. */
+  --canvas-w: 414px;
+  --canvas-h: 875px;
+  --fit: 1;
+
+  /* Card height / card width, measured off "Mat Proportions UI 0906". */
+  --card-ratio: 1.71;
+
+  /* Card sizes are computed from the canvas in plain px rather than from
+     container query units. `100cqw` inside .mat's OWN rule does not
+     resolve against .mat -- an element is never its own query container,
+     so it fell through to the small-viewport width and the card height
+     silently tracked the browser window instead of the mat. That was the
+     stretching: resize the window and the cards changed shape. */
+  --gutter:   10px;
+  --mat-gap:   6px;
+  --inv-gap:   5px;
+  --card-w:     calc((var(--canvas-w) - 2 * var(--gutter) - 3 * var(--mat-gap)) / 4);
+  --card-h:     calc(var(--card-w) * var(--card-ratio));
+  --inv-card-w: calc((var(--canvas-w) - 2 * var(--gutter) - 3 * var(--inv-gap)) / 4);
+  --inv-card-h: calc(var(--inv-card-w) * var(--card-ratio));
+}
+*{ box-sizing:border-box; }
+html{ height:100%; -webkit-text-size-adjust:100%; }
+body{
+  margin:0; height:100%;
+  font:14px/1.4 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color:var(--ink); background:#05070c;
+  display:grid; place-items:center; overflow:hidden;
+}
+button{ font:inherit; color:inherit; }
+
+/* The canvas is a FIXED 414 x 875 -- the Pixel 9a, in CSS px -- and the
+   whole thing is scaled to fit the window as one piece. Nothing reflows,
+   nothing stretches: every proportion in here is locked to the others
+   exactly as drawn, and a resize only changes how big the phone is on
+   your desk. Sizing the phone to the viewport instead (the old
+   min(100vw,414px) / min(100dvh,875px)) let width and height move
+   independently, so the mat kept its width-derived card size while the
+   height shrank underneath it and the layout squeezed.
+   --fit is set by fitToWindow() in mat.js. */
+.phone{
+  position:relative;
+  width:var(--canvas-w); height:var(--canvas-h);
+  flex:none;
+  transform:scale(var(--fit));
+  transform-origin:50% 50%;
+  display:flex; flex-direction:column;
+  background:radial-gradient(420px 300px at 50% -8%, #1b2436 0%, transparent 70%), var(--felt);
+  overflow:hidden;
+}
+@media (min-width:520px) and (min-height:900px){
+  .phone{ border-radius:22px; box-shadow:0 0 0 8px #14181f, var(--shadow-lg); }
+}
+
+/* ------------------------------------------------------------- HUD */
+.hud{ flex:none; padding:7px 10px; background:rgba(9,13,22,.92); border-bottom:1px solid var(--line); }
+.hud-row{ display:flex; align-items:center; gap:6px; }
+.hud-gap{ margin-left:auto; }
+.round{ font-size:13px; font-weight:800; color:var(--ink-soft); }
+.round b{ color:var(--ink); font-size:15px; }
+.station-tag{
+  padding:2px 8px; border-radius:999px; background:#232c3d; border:1px solid var(--line);
+  font-size:10px; font-weight:700; color:var(--ink-soft); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; max-width:120px;
+}
+.dice-chip{
+  display:inline-flex; align-items:baseline; gap:4px; padding:2px 9px; border-radius:999px;
+  background:linear-gradient(180deg,#2a2418,#1c1810); border:1px solid #5a4a24;
+}
+.dice-chip b{ font-size:13px; color:var(--gold); font-weight:800; }
+.dice-chip span{ font-size:8px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-mute); }
+.icon-btn{
+  width:25px; height:25px; border-radius:7px; cursor:pointer; flex:none;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink-soft);
+  font-size:12px; display:grid; place-items:center;
+}
+.icon-btn:hover{ background:#27314599; }
+
+.zone-title{
+  margin:0 0 6px; display:flex; align-items:center; gap:6px;
+  font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mute);
+}
+.zone-title b{ color:var(--ink-soft); font-size:11px; letter-spacing:0; }
+.zt-gap{ margin-left:auto; }
+.zt-hint{ font-size:9px; font-weight:600; letter-spacing:0; text-transform:none; color:#55607a; }
+.mini{
+  padding:2px 8px; border-radius:999px; cursor:pointer;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink-soft);
+  font-size:9.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+}
+.mini:hover{ background:#27314599; color:var(--ink); }
+
+/* ----------------------------------------------------------- score */
+/* One number line and one chip line. Bonuses are icons, so the band
+   stays the same height whether nothing or everything is scoring. */
+/* One row: bonus icons packed left, the arithmetic right. Flat on the
+   felt rather than in a panel, so the mat below it starts higher. */
+.score{
+  flex:none; display:flex; align-items:center; gap:8px;
+  padding:6px 10px 7px; min-height:36px;
+}
+.score-line{
+  flex:none; margin-left:auto;
+  display:flex; align-items:baseline; gap:5px;
+  font-variant-numeric:tabular-nums; line-height:1;
+}
+.s-base{ font-size:15px; font-weight:800; color:#8ed6ff; }
+.s-col{ font-size:12px; font-weight:800; color:var(--gold); }
+.s-col[hidden]{ display:none; }
+.s-mult{ font-size:15px; font-weight:800; color:var(--no); }
+.s-eq{ font-size:11px; color:var(--ink-mute); }
+.s-total{ font-size:24px; font-weight:900; color:var(--gold); }
+.combos{ display:flex; gap:4px; align-items:center; flex-wrap:wrap; min-width:0; }
+.combo{
+  display:inline-flex; align-items:center; gap:3px;
+  padding:1px 6px 1px 2px; border-radius:999px;
+  background:#141a26; border:1px solid #2b3446;
+  font-size:10px; font-weight:700; color:var(--ink-mute);
+}
+.combo b{ color:var(--ink-soft); font-size:11px; }
+.combo i{ font-style:normal; color:var(--gold); font-weight:800; }
+.combo.lit{ background:#1c2a22; border-color:var(--ok); color:var(--ink); }
+.combo.col{ background:#2a2418; border-color:#5a4a24; }
+.combo.col b{ color:var(--gold); font-size:9.5px; font-weight:800; }
+.combo.col.new{ background:var(--gold); border-color:var(--gold); }
+.combo.col.new b, .combo.col.new i{ color:#1a1408; }
+.combo-none{ font-size:9.5px; color:var(--ink-mute); }
+/* Bonus icons: the station's own art, the suit's own art, the shared
+   component's own art -- the same three languages used on the cards. */
+.cico{
+  width:15px; height:15px; border-radius:50%; flex:none;
+  display:grid; place-items:center; overflow:hidden;
+}
+.cico :is(img,svg){ width:11px; height:11px; object-fit:contain; }
+.cico.st{ background:var(--st); }
+.cico.st :is(img,svg){ width:10px; height:10px; }
+.cico.su{ background:var(--suit); }
+.cico.su .suit-art{ width:9px; height:9px; filter:brightness(0) invert(1); }
+.cico.cp{ background:#e8ecf3; }
+.cico.star{ color:var(--gold); font-size:11px; background:none; }
+.combo.col.new .cico.star{ color:#1a1408; }
+
+/* ------------------------------------------------------------- mat */
+.mat-zone{ flex:none; padding:8px 10px 0; }
+/* Four columns, two rows, always. A capstone spans two cells; the row
+   height is derived from the column width so wide and narrow agree. */
+.mat{
+  /* minmax(0,...) rather than a bare 1fr: a card's own min-content --
+     its recipe strip and its name -- is wider than a quarter of the mat,
+     and a bare 1fr would let that push the columns past the screen. */
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:var(--mat-gap); grid-auto-rows:var(--card-h);
+}
+.slot{ border-radius:9px; }
+.slot.wide{ grid-column:span 2; }
+.slot.empty{ border:2px dashed #26314a; background:#111725; }
+.slot.filled{ position:relative; cursor:grab; touch-action:none; }
+.mat.dragging .slot.filled{ cursor:grabbing; }
+.mat.dragging .mcard{ pointer-events:none; }
+
+/* transform is set from JS, which folds in --fit -- see the pointermove
+   handler. transform-origin must be the top-left corner so the scale
+   does not walk the ghost away from the cursor. */
+.drag-ghost{
+  position:fixed; z-index:90; pointer-events:none;
+  opacity:.94; transform-origin:0 0;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.6));
+}
+.drag-ghost[hidden]{ display:none; }
+
+/* ----------------------------------------------------------- stage */
+/* The only band allowed to run out of room. The HUD and the Travel
+   button are flex:none siblings of this, so no amount of content and no
+   window height can push the button off the bottom -- the stage scrolls
+   instead. On a full-height phone nothing here overflows and the
+   collection scrolls inside itself, exactly as before. */
+.stage{
+  flex:1; min-height:0;
+  display:flex; flex-direction:column;
+  overflow-y:auto; overscroll-behavior:contain;
+}
+
+/* ------------------------------------------------------- inventory */
+/* Shrinks before the stage starts scrolling, but only to a floor -- past
+   that the stage takes over, rather than the grid collapsing to nothing. */
+.inv-zone{ flex:1 1 auto; min-height:190px; display:flex; flex-direction:column; padding:9px 10px 0; }
+
+.filters{ flex:none; margin-bottom:6px; }
+.frow{ display:flex; gap:4px; margin-bottom:4px; }
+.fbtn{
+  flex:1; height:25px; border-radius:7px; cursor:pointer; padding:0;
+  border:1px solid var(--line); background:#1a2130;
+  display:grid; place-items:center; opacity:.55;
+}
+.fbtn :is(img,svg){ width:14px; height:14px; object-fit:contain; }
+.fbtn.suit .suit-art{ filter:brightness(0) invert(1); opacity:.8; }
+.fbtn:hover{ opacity:.85; }
+.fbtn.on{ opacity:1; background:color-mix(in srgb, var(--st) 26%, #10151f); border-color:var(--st); }
+.fbtn.on.suit .suit-art{ opacity:1; }
+.fsearch{
+  flex:1; min-width:0; height:25px; padding:0 8px; border-radius:7px;
+  border:1px solid var(--line); background:#10161f; color:var(--ink);
+  font:inherit; font-size:11px;
+}
+.fsearch::placeholder{ color:#4d5769; }
+.fsort{
+  height:25px; border-radius:7px; padding:0 4px;
+  border:1px solid var(--line); background:#1a2130; color:var(--ink-soft);
+  font:inherit; font-size:10.5px; font-weight:700;
+}
+
+/* Four columns, same card geometry as the mat. Capstones read double
+   width here too, so their shape matches what they will cost a slot. */
+/* Scrollbar hidden, not merely thin: a visible bar eats into the column
+   width, which would pull the collection cards off the mat's proportions.
+   It still scrolls by wheel and by touch. */
+.inv{
+  flex:1; min-height:0; overflow-y:auto;
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-content:start;
+  gap:var(--inv-gap); grid-auto-rows:var(--inv-card-h);
+  padding-bottom:6px; scrollbar-width:none;
+}
+.inv::-webkit-scrollbar, .stage::-webkit-scrollbar{ width:0; height:0; }
+.stage{ scrollbar-width:none; }
+.inv .mcard{ height:100%; }
+.inv .mcard.cap{ grid-column:span 2; }
+.inv-empty{ grid-column:1/-1; color:var(--ink-mute); font-size:12px; margin:2px 0; }
+
+.foot{ flex:none; padding:8px 10px 10px; }
+.btn{
+  width:100%; padding:11px 12px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink);
+  font-size:13.5px; font-weight:800;
+}
+.btn.primary{ background:var(--ok); border-color:var(--ok); color:#04150c; }
+.btn.primary:hover{ background:#45c07d; }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+/* ------------------------------------------------------------ card */
+.mcard{
+  position:relative; width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:3px;
+  background:var(--card-face); border:2px solid var(--card-ink); border-radius:8px;
+  box-shadow:var(--shadow); cursor:pointer; text-align:center; overflow:hidden;
+  transition:transform .12s, box-shadow .12s, filter .12s;
+}
+.mcard:hover{ transform:translateY(-2px); box-shadow:var(--shadow-lg); }
+/* On the mat a card is already committed; in the collection it is not. */
+.mcard.small.on{ filter:brightness(.62) saturate(.6); }
+/* Between the suit pips and the points circle, which is the only strip
+   of the card that nothing else claims -- along the bottom it covered
+   the recipe. */
+.mcard.small.on::after{
+  content:"ON MAT"; position:absolute; inset:4px 0 auto; margin:auto;
+  width:fit-content; padding:1px 4px; border-radius:999px; z-index:3;
+  background:var(--ok); color:#04150c; font-size:6px; font-weight:800; letter-spacing:.04em;
+}
+.mcard.cap{ border-color:#7a5a12; box-shadow:0 0 0 1px var(--gold), var(--shadow); }
+.mcard.nosuit{ border-style:dashed; }
+
+/* Suit costs run down the LEFT edge so they survive any overlap. */
+.m-cost{ position:absolute; top:2px; left:2px; display:flex; flex-direction:column; gap:2px; z-index:2; }
+.mpip{
+  width:24px; height:24px; border-radius:50%; display:grid; place-items:center;
+  background:var(--suit); border:1px solid var(--card-ink);
+}
+.mpip .suit-art{ width:14px; height:14px; filter:brightness(0) invert(1); }
+.mpip.none{ background:#dfe3ea; font-size:11px; color:#8e97a8; font-weight:800; }
+
+/* ------------------------------------------------- live bonus icons */
+/* Whichever station, suit and component are currently paying out get
+   ringed in gold wherever they appear. On the mat that shows what the
+   multiplier is actually made of; in the collection below it the same
+   ring reads as "this card would join that group". Ring only -- never
+   padding or size -- so lighting a recipe up cannot re-flow the strip
+   that was measured to fit. */
+.mpip.lit, .m-station.lit{
+  border-color:var(--gold);
+  box-shadow:0 0 0 2px var(--gold), 0 0 7px rgba(242,201,76,.85);
+}
+.cmp.lit{
+  background:var(--gold); border-radius:3px;
+  box-shadow:0 0 0 1.5px var(--gold), 0 0 5px rgba(242,201,76,.8);
+}
+.cmp.el.lit{ background:var(--el); }   /* keep the element's own colour */
+.m-pts{
+  position:absolute; top:2px; right:2px; z-index:2;
+  min-width:30px; height:30px; padding:0 4px; border-radius:999px;
+  display:grid; place-items:center;
+  background:var(--card-ink); color:var(--gold);
+  font-size:14px; font-weight:900; font-variant-numeric:tabular-nums;
+}
+/* .mcard.complete (see cardHTML()'s own opts.complete) -- every direct
+   ingredient of this card is also on the mat, doubling the number
+   already shown inside .m-pts. Same gold-ring language as .lit above,
+   just on the points badge rather than a combo icon, since this is a
+   per-card bonus rather than a shared group. */
+.mcard.complete .m-pts{
+  box-shadow:0 0 0 2px var(--gold), 0 0 7px rgba(242,201,76,.85);
+}
+/* flex:0 0 auto (not flex:1) -- the art no longer claims every leftover
+   pixel of the column, which is what let name+recipe get pushed all the
+   way down to the bottom edge before. Shrunk to its own content height,
+   .mcard's own justify-content:center now centers the whole
+   art+name+recipe block as a group, landing the name near the card's
+   true vertical middle. */
+.m-art{ flex:0 0 auto; display:grid; place-items:center; width:100%; padding:4px 0 0; min-height:0; }
+.m-art :is(img,svg){ width:44px; max-width:100%; max-height:100%; object-fit:contain; }
+.m-name{
+  font-size:7px; font-weight:800; line-height:1.05; color:var(--card-ink);
+  padding:1px 1px 2px; overflow:hidden; width:100%;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+
+/* The DIRECT recipe as component art, joined by "+" -- no longer sharing
+   a bordered footer row with the station icon (see .m-station below),
+   so it rises with .m-name into the card's centered middle block instead
+   of sitting pinned to the bottom edge. Right-padding reserves room for
+   the station badge floating in the bottom-right corner, in case this
+   row's own content ever runs that far right. */
+.m-comp{
+  width:100%; padding:2px 22px 0 0; display:flex; align-items:center; justify-content:center;
+  gap:0; overflow:hidden;
+}
+/* Bottom-right corner badge -- same language as the top corners'
+   .m-cost/.m-pts, just anchored to the opposite end. Absolutely
+   positioned (not part of the flex flow), so it floats over whatever the
+   centered content block leaves clear beneath it rather than claiming a
+   row of its own. */
+.m-station{
+  position:absolute; bottom:2px; right:2px; z-index:2;
+  width:20px; height:20px; border-radius:50%;
+  display:grid; place-items:center; overflow:hidden;
+  background:var(--st); border:1px solid rgba(0,0,0,.25);
+}
+.m-station :is(img,svg){ width:13px; height:13px; object-fit:contain; }
+.cmp{ display:grid; place-items:center; flex:none; }
+.cmp :is(img,svg){ width:13px; height:13px; object-fit:contain; }
+.cmp.el{
+  min-width:12px; height:13px; padding:0 1px; border-radius:3px;
+  background:var(--el); color:#fff; font-size:6.5px; font-weight:900; line-height:13px;
+}
+.cplus{ font-style:normal; font-size:7px; font-weight:900; color:#9aa1ad; flex:none; }
+/* .m-comp's own right-padding (reserved for the corner station badge)
+   still leaves a single-width card little enough room that a 4-5 part
+   recipe needs to step its own art down to fit without spilling off the
+   edge. */
+.m-comp[data-n="4"] .cmp :is(img,svg){ width:10px; height:10px; }
+.m-comp[data-n="5"] .cmp :is(img,svg){ width:8px; height:8px; }
+:is(.m-comp[data-n="4"], .m-comp[data-n="5"]) .cplus{ font-size:5px; }
+:is(.m-comp[data-n="4"], .m-comp[data-n="5"]) .cmp.el{
+  min-width:10px; padding:0; font-size:6px; letter-spacing:-.02em;
+}
+/* A capstone is twice as wide, so its five-part recipe has the room to
+   breathe that a single-width card does not. */
+.mcard.cap .m-comp .cmp :is(img,svg){ width:16px; height:16px; }
+.mcard.cap .m-comp .cplus{ font-size:9px; }
+
+.suit-art{ width:10px; height:10px; object-fit:contain; }
+
+/* --------------------------------------------------- modal + toast */
+.modal-veil{ position:fixed; inset:0; z-index:60; background:rgba(3,5,10,.78); display:grid; place-items:center; padding:14px; }
+.modal-veil[hidden]{ display:none; }
+.modal{
+  position:relative; background:#171e2b; border:1px solid var(--line);
+  border-radius:14px; padding:18px 16px 14px; width:min(414px,100%);
+  max-height:84dvh; overflow:auto; box-shadow:var(--shadow-lg);
+}
+.modal h3{ margin:0 0 10px; font-size:16px; padding-right:26px; }
+.modal h4{ margin:13px 0 6px; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mute); }
+.modal p{ margin:0 0 8px; color:var(--ink-soft); font-size:12.5px; }
+.modal b{ color:var(--ink); }
+.modal ol{ margin:0 0 8px; padding-left:18px; color:var(--ink-soft); font-size:12.5px; }
+.modal li{ margin-bottom:4px; }
+.modal-x{
+  position:absolute; top:10px; right:10px; width:26px; height:26px; border-radius:8px;
+  cursor:pointer; border:1px solid var(--line); background:#1e2637; color:var(--ink-soft);
+}
+.modal-foot{ display:flex; gap:7px; justify-content:flex-end; margin-top:12px; }
+.modal-foot .btn{ width:auto; }
+.modal table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.modal td, .modal th{ padding:4px 5px; border-bottom:1px solid var(--line); text-align:left; }
+.modal th{ color:var(--ink); font-weight:800; }
+.modal .num{ text-align:right; font-variant-numeric:tabular-nums; }
+
+.toast-stack{
+  position:absolute; left:50%; bottom:78px; transform:translateX(-50%);
+  z-index:80; display:flex; flex-direction:column-reverse; gap:4px; align-items:center;
+  pointer-events:none; width:var(--canvas-w);
+}
+.toast{
+  padding:6px 13px; border-radius:999px; background:#232c3d; color:#fff;
+  border:1px solid var(--line); font-size:12px; font-weight:600; box-shadow:var(--shadow-lg);
+}
+.toast.bad{ background:var(--no); border-color:var(--no); }
+
+/* Shown by boot()'s catch, over everything, when the page cannot start. */
+.boot-error{
+  position:fixed; inset:12px; z-index:200; overflow:auto;
+  padding:18px 16px; border-radius:14px;
+  background:#2a1512; border:1px solid var(--no); box-shadow:var(--shadow-lg);
+}
+.boot-error h3{ margin:0 0 8px; font-size:16px; color:var(--no); }
+.boot-error p{ margin:0 0 8px; font-size:12.5px; color:var(--ink-soft); }
+.boot-error code{ font-size:11.5px; color:var(--ink); }
+
+/* --------------------------------------------- collections browser */
+.clist{ display:flex; flex-direction:column; gap:7px; }
+.crow{
+  padding:7px 9px; border-radius:9px;
+  background:#131a27; border:1px solid var(--line);
+}
+.crow.done{ border-color:var(--gold); background:#1d1a10; }
+.crow-head{ display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; }
+.crow-head b{ font-size:12.5px; }
+.crow-meta{ font-size:9.5px; color:var(--ink-mute); margin-left:auto; }
+.crow-meta i{ font-style:normal; color:var(--gold); font-weight:800; }
+.crow-items{ display:flex; flex-wrap:wrap; gap:3px; margin-top:5px; }
+/* Three states at a glance: on the mat now, owned but not displayed, and
+   not crafted yet -- which is the whole plan for the next few rounds. */
+.ci{
+  padding:1px 6px; border-radius:999px;
+  background:#0e131d; border:1px solid #2b3446;
+  font-size:9px; font-weight:700; color:#5c667a;
+}
+.ci.owned{ color:var(--ink-soft); border-color:#3a465e; }
+.ci.on{ background:var(--ok); border-color:var(--ok); color:#04150c; }

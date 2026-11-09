@@ -1,0 +1,1288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Elementia — Vacuum Run</title>
+<style>
+  :root{
+    --ink:#0d1220; --paper:#f7f4ec; --line:rgba(0,0,0,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#05070d;overflow:hidden;
+    font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:#fff;
+    -webkit-user-select:none;user-select:none;touch-action:none}
+  #game{position:fixed;inset:0;width:100%;height:100%;display:block;image-rendering:auto}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;padding:14px;
+       display:flex;flex-direction:column;gap:10px}
+  .card{background:rgba(10,14,24,.62);border:1px solid rgba(255,255,255,.14);
+        border-radius:12px;backdrop-filter:blur(6px);padding:8px 10px}
+  #topbar{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+  #zoneCard{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.04em}
+  #zoneCard .emoji{font-size:20px}
+  #zoneCard .sub{display:block;font-size:10px;opacity:.65;font-weight:600;letter-spacing:.14em}
+  #creditCard{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}
+  #elBar{display:flex;flex-wrap:wrap;gap:6px;max-width:620px}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;
+        background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+        border-radius:999px;padding:3px 9px 3px 5px;white-space:nowrap}
+  .chip i{width:14px;height:14px;border-radius:50%;display:inline-block;
+          box-shadow:0 0 6px currentColor;font-style:normal}
+  .chip.flash{animation:pop .35s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+  #jobTrack{font-size:12px;line-height:1.5;max-width:280px;opacity:.95}
+  #jobTrack b{display:block;font-size:10px;letter-spacing:.16em;opacity:.6;margin-bottom:3px}
+  #spacer{flex:1}
+  #footer{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  #keys{font-size:11px;opacity:.55;line-height:1.6}
+  kbd{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);
+      border-bottom-width:2px;border-radius:5px;padding:1px 5px;font:inherit;font-size:10px}
+  #prompt{position:fixed;left:50%;bottom:16%;transform:translateX(-50%) translateY(10px);
+          opacity:0;transition:.18s;pointer-events:none;
+          background:rgba(10,14,24,.8);border:1px solid rgba(255,255,255,.22);
+          border-radius:999px;padding:8px 16px;font-size:14px;font-weight:700}
+  #prompt.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------- Menus ---------- */
+  #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+           background:rgba(4,7,14,.66);backdrop-filter:blur(3px);z-index:20;padding:20px}
+  #overlay.on{display:flex}
+  #panel{width:min(760px,96vw);max-height:88vh;overflow:auto;border-radius:18px;
+         background:linear-gradient(180deg,#161c2b,#0e1320);
+         border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .phead{display:flex;align-items:center;gap:12px;padding:16px 20px;
+         border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;
+         background:linear-gradient(180deg,#1a2133,#141a28);z-index:2}
+  .phead h2{margin:0;font-size:19px;letter-spacing:.03em}
+  .phead .tag{font-size:10px;letter-spacing:.16em;opacity:.6;display:block;font-weight:700}
+  .phead .grow{flex:1}
+  .xbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;
+        border-radius:9px;padding:6px 11px;font:inherit;font-weight:800;cursor:pointer}
+  .xbtn:hover{background:rgba(255,255,255,.16)}
+  .pbody{padding:14px 20px 20px}
+  .sect{font-size:10px;letter-spacing:.18em;opacity:.55;font-weight:800;margin:16px 0 8px}
+  .sect:first-child{margin-top:2px}
+  .row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;
+       background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+  .row .ic{font-size:24px;width:32px;text-align:center;flex:none}
+  .row .mid{flex:1;min-width:0}
+  .row .nm{font-weight:800;font-size:14px}
+  .row .ds{font-size:11.5px;opacity:.66;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .row .own{font-size:10px;opacity:.5;letter-spacing:.1em;font-weight:700}
+  .buy{background:#3aa9a0;border:none;color:#04231f;border-radius:9px;padding:8px 14px;
+       font:inherit;font-weight:900;cursor:pointer;flex:none;min-width:88px}
+  .buy:hover{filter:brightness(1.1)}
+  .buy[disabled]{background:rgba(255,255,255,.09);color:rgba(255,255,255,.4);cursor:not-allowed}
+  .buy.alt{background:#e2a83e;color:#2a1c02}
+  .buy.done{background:rgba(255,255,255,.09);color:rgba(255,255,255,.55)}
+  .cost{font-size:11px;font-weight:800}
+  .cost.no{color:#ff8f7a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
+  .st{padding:12px;border-radius:14px;text-align:left;cursor:pointer;font:inherit;color:#fff;
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+  .st:hover{background:rgba(255,255,255,.1)}
+  .st.cur{outline:2px solid #fff3;background:rgba(255,255,255,.12)}
+  .st .e{font-size:26px}
+  .st .n{font-weight:800;margin-top:4px;font-size:13.5px}
+  .st .d{font-size:11px;opacity:.6;margin-top:3px}
+  .note{font-size:12px;opacity:.6;line-height:1.6;margin-top:12px}
+  #toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:30;
+         display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+  .tmsg{background:rgba(10,14,24,.9);border:1px solid rgba(255,255,255,.2);border-radius:10px;
+        padding:7px 14px;font-size:13px;font-weight:700;animation:tin .3s ease}
+  @keyframes tin{from{opacity:0;transform:translateY(-8px)}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="card" id="zoneCard"><span class="emoji"></span><span><span class="sub">STATION</span><span class="nm"></span></span></div>
+    <div class="card" id="creditCard">⨁ <span>0</span></div>
+    <div class="card" id="elBar"></div>
+    <div class="card" id="jobTrack" hidden></div>
+  </div>
+  <div id="spacer"></div>
+  <div id="footer">
+    <div class="card" id="keys">
+      <kbd>A</kbd><kbd>D</kbd> move &nbsp; <kbd>Space</kbd> jump &nbsp; <kbd>Hold&nbsp;Mouse</kbd> vacuum &nbsp; <kbd>E</kbd> interact &nbsp; <kbd>M</kbd> mute
+    </div>
+  </div>
+</div>
+
+<div id="prompt"></div>
+<div id="toast"></div>
+<div id="overlay"><div id="panel"></div></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   ELEMENTIA — VACUUM RUN
+   A 2D side-scroller: walk the station, aim the vacuum nozzle, and draw
+   raw elements out of resource nodes. Three props open menus:
+   the Marketplace, the Job Board, and the Transit Map.
+
+   Everything lives in this one file, matching game/elementia.html.
+   Sections: DATA · STATE · INPUT · WORLD · PLAYER · VACUUM · MENUS · DRAW
+   ===================================================================== */
+
+const W = 960, H = 540;              // logical resolution; canvas letterboxes to fit
+const WORLD_W = 3600;                // one station is this wide
+const GRAV = 1500, GROUND_PAD = 6;
+
+/* ------------------------------ DATA ------------------------------ */
+
+const EL = {
+  H : {name:"Hydrogen", color:"#cfe4ff"},
+  C : {name:"Carbon",   color:"#6b7280"},
+  O : {name:"Oxygen",   color:"#7fd4ff"},
+  N : {name:"Nitrogen", color:"#93a7ff"},
+  Si: {name:"Silicon",  color:"#c9b28a"},
+  Ca: {name:"Calcium",  color:"#f2e7d0"},
+  Fe: {name:"Iron",     color:"#c07a5f"},
+  Cu: {name:"Copper",   color:"#d98a45"},
+  Ag: {name:"Silver",   color:"#d5dde8"},
+  Ni: {name:"Nickel",   color:"#9db4a8"},
+  Al: {name:"Aluminium",color:"#b7c6d2"},
+  Mg: {name:"Magnesium",color:"#e6ecf0"},
+  S : {name:"Sulfur",   color:"#ecd34a"},
+  P : {name:"Phosphorus",color:"#ff9d5c"},
+  K : {name:"Potassium",color:"#c58ce0"},
+  Ti: {name:"Titanium", color:"#93a8bd"},
+};
+
+// The eight stations, matching Elementia's suits + dice faces.
+const ZONES = [
+  {id:"ocean", emoji:"🌊", name:"The Ocean", color:"#3aa9a0",
+   dice:["C","O","H","Si","N","Ca"], node:"coral",
+   sky:["#0a2a3a","#1d6d7a","#6fc7c0"],
+   ground:["#1a4e52","#0d2f36"], hill:["#155059","#0f3b45","#0a2a33"], mote:"bubble"},
+  {id:"power", emoji:"⚡", name:"The Power Plant", color:"#8a5ce0",
+   dice:["Si","Al","Ag","Ni","Cu","Fe"], node:"machine",
+   sky:["#170f2e","#3b2472","#8a5ce0"],
+   ground:["#2a2140","#150f24"], hill:["#2c2352","#211a3d","#171229"], mote:"spark"},
+  {id:"greenhouse", emoji:"🌱", name:"Greenhouse", color:"#3aab6d",
+   dice:["C","H","O","K","N","P"], node:"plant",
+   sky:["#0e2a1c","#2c7a4c","#8fd6a0"],
+   ground:["#1e5136","#0e2b1d"], hill:["#1d5a3a","#154429","#0e2e1d"], mote:"leaf"},
+  {id:"mine", emoji:"💎", name:"Deep Mine", color:"#e2a83e",
+   dice:["Ni","Si","Al","Fe","C","Mg"], node:"crystal",
+   sky:["#120d08","#2f2113","#6b4a1e"],
+   ground:["#3a2a16","#1c140a"], hill:["#3c2c18","#2b1f11","#1b130a"], mote:"dust"},
+  {id:"forest", emoji:"🌲", name:"Old Growth Forest", color:"#e2823a",
+   dice:["C","O","Si","Al","Mg","S"], node:"plant",
+   sky:["#1b1108","#5a3315","#d68a45"],
+   ground:["#3f2a17","#20150c"], hill:["#31421f","#243218","#182310"], mote:"leaf"},
+  {id:"bakery", emoji:"🍞", name:"The Bakery", color:"#8cb43e",
+   dice:["O","H","P","S","Ca","Mg"], node:"machine",
+   sky:["#2b1d0c","#7a5220","#e8bb6a"],
+   ground:["#4a3418","#261a0c"], hill:["#4d3a1c","#3a2c15","#281e0e"], mote:"dust"},
+  {id:"city", emoji:"🏗️", name:"The City", color:"#e2543b",
+   dice:["Ca","C","O","Al","Si","Mg"], node:"machine",
+   sky:["#171a24","#3c4457","#96a2b8"],
+   ground:["#2f333f","#171a22"], hill:["#333947","#262b36","#1a1e26"], mote:"spark"},
+  {id:"observatory", emoji:"🔭", name:"The Observatory", color:"#4d7cf2",
+   dice:["Ni","Al","Fe","Ag","Ti","Si"], node:"crystal",
+   sky:["#050716","#111a3e","#2a3f86"],
+   ground:["#1b2036","#0b0e1b"], hill:["#1e2545","#161c34","#0f1425"], mote:"star"},
+];
+const ZONE = Object.fromEntries(ZONES.map(z=>[z.id,z]));
+
+// Marketplace stock. Costs are raw elements; value feeds job payouts.
+const ITEMS = [
+  {z:"ocean", ic:"💧", n:"Water",        cost:{H:2,O:1},            v:3},
+  {z:"ocean", ic:"⏳", n:"Sand",         cost:{Si:3,O:2},           v:5},
+  {z:"ocean", ic:"🪨", n:"Limestone",    cost:{Ca:2,C:1,O:2},       v:6},
+  {z:"ocean", ic:"🌿", n:"Seaweed",      cost:{C:3,H:2,O:2},        v:8},
+  {z:"power", ic:"🔌", n:"Wire",         cost:{Cu:3},               v:4},
+  {z:"power", ic:"🧲", n:"Magnet",       cost:{Fe:3,Ni:1},          v:6},
+  {z:"power", ic:"🔋", n:"Battery",      cost:{Ni:2,Cu:2,Fe:1},     v:9},
+  {z:"power", ic:"💡", n:"Filament Bulb",cost:{Si:2,Ag:2,Al:1},     v:11},
+  {z:"greenhouse", ic:"🌱", n:"Soil",       cost:{C:2,O:2,K:1},     v:4},
+  {z:"greenhouse", ic:"🍎", n:"Fruit",      cost:{C:2,H:2,O:2},     v:6},
+  {z:"greenhouse", ic:"🌾", n:"Grain",      cost:{C:3,H:2,O:2},     v:8},
+  {z:"greenhouse", ic:"🧪", n:"Fertilizer", cost:{N:3,P:2,K:2},     v:12},
+  {z:"mine", ic:"⛏️", n:"Raw Ore",       cost:{Fe:3,Ni:1},          v:5},
+  {z:"mine", ic:"🔩", n:"Alloy Ingot",   cost:{Al:2,Ni:2,Mg:1},     v:8},
+  {z:"mine", ic:"🪞", n:"Silicon Wafer", cost:{Si:4,C:1},           v:9},
+  {z:"mine", ic:"💎", n:"Diamond",       cost:{C:8},                v:16},
+  {z:"forest", ic:"🪵", n:"Log",          cost:{C:3,O:1},           v:4},
+  {z:"forest", ic:"🍂", n:"Plant Fiber",  cost:{C:2,O:2,S:1},       v:6},
+  {z:"forest", ic:"🟫", n:"Resin",        cost:{C:3,S:2,Mg:1},      v:9},
+  {z:"forest", ic:"🪑", n:"Plank",        cost:{C:4,O:2,Si:1},      v:11},
+  {z:"bakery", ic:"🧂", n:"Salt",         cost:{Ca:2,S:1},          v:4},
+  {z:"bakery", ic:"🥖", n:"Bread",        cost:{O:3,H:3,P:1},       v:7},
+  {z:"bakery", ic:"🧈", n:"Butter",       cost:{H:4,O:2,Ca:1},      v:9},
+  {z:"bakery", ic:"🎂", n:"Cake",         cost:{O:4,H:4,Ca:2,Mg:1}, v:14},
+  {z:"city", ic:"🧱", n:"Brick",         cost:{Si:2,Ca:2,O:2},      v:6},
+  {z:"city", ic:"🪟", n:"Glass",         cost:{Si:3,O:2,Ca:1},      v:8},
+  {z:"city", ic:"🚧", n:"Steel Beam",    cost:{Al:3,C:2,Mg:1},      v:11},
+  {z:"city", ic:"🏗️", n:"Concrete",      cost:{Ca:4,Si:2,O:3},      v:14},
+  {z:"observatory", ic:"🔍", n:"Lens",       cost:{Si:3,Ag:2},      v:8},
+  {z:"observatory", ic:"🪐", n:"Alloy Plate", cost:{Ti:3,Fe:2},     v:11},
+  {z:"observatory", ic:"⭐", n:"Star Chart",  cost:{Ag:2,Ni:2,Al:2}, v:13},
+  {z:"observatory", ic:"🛰️", n:"Satellite",   cost:{Al:3,Ti:3,Ag:2}, v:18},
+];
+
+const UPGRADES = [
+  {k:"range",  ic:"📏", n:"Nozzle Extension", d:"+45 suction reach",        max:3, cost:l=>70+70*l},
+  {k:"power",  ic:"🌀", n:"Turbine Boost",    d:"Pulls elements faster",     max:3, cost:l=>85+85*l},
+  {k:"magnet", ic:"🧲", n:"Intake Magnet",    d:"Wider intake mouth",        max:2, cost:l=>110+110*l},
+  {k:"jump",   ic:"🥾", n:"Thruster Boots",   d:"Adds a mid-air second jump",max:1, cost:()=>180},
+];
+
+/* ------------------------------ STATE ------------------------------ */
+
+const SAVE_KEY = "elementia_scroller_v1";
+
+const state = {
+  zone: "ocean",
+  credits: 0,
+  el: {},                      // symbol -> count
+  items: {},                   // item name -> count
+  up: {range:0, power:0, magnet:0, jump:0},
+  jobs: {},                    // zoneId -> [job]
+  visited: {ocean:true},
+  muted: false,
+};
+for (const k in EL) state.el[k] = 0;
+
+function save(){
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e){}
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    Object.assign(state, d);
+    for (const k in EL) if (typeof state.el[k] !== "number") state.el[k] = 0;
+  } catch(e){}
+}
+load();
+
+const has = (cost) => Object.entries(cost).every(([k,v]) => (state.el[k]||0) >= v);
+const spend = (cost) => { for (const k in cost) state.el[k] -= cost[k]; };
+
+/* ------------------------------ RNG ------------------------------ */
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const strHash = s => { let h = 2166136261; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619);} return h>>>0; };
+
+/* ------------------------------ INPUT ------------------------------ */
+
+const keys = Object.create(null);
+const mouse = {x:W/2, y:H/2, down:false};
+let paused = false;
+
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if ([" ","arrowleft","arrowright","arrowup","arrowdown"].includes(k)) e.preventDefault();
+  if (k === "escape" && paused) { closeMenu(); return; }
+  if (keys[k]) return;                     // ignore auto-repeat
+  keys[k] = true;
+  if (k === "e" && !paused) tryInteract();
+  if (k === "m") { state.muted = !state.muted; toast(state.muted ? "🔇 Muted" : "🔊 Sound on"); save(); }
+});
+addEventListener("keyup", e => { keys[e.key.toLowerCase()] = false; });
+addEventListener("blur", () => { for (const k in keys) keys[k] = false; mouse.down = false; });
+
+const cv = document.getElementById("game");
+const ctx = cv.getContext("2d");
+
+function toWorldPointer(ev){
+  const r = cv.getBoundingClientRect();
+  const s = Math.min(r.width / W, r.height / H);
+  const ox = (r.width  - W*s) / 2, oy = (r.height - H*s) / 2;
+  mouse.x = (ev.clientX - r.left - ox) / s;
+  mouse.y = (ev.clientY - r.top  - oy) / s;
+}
+cv.addEventListener("mousemove", toWorldPointer);
+cv.addEventListener("mousedown", e => { if (e.button===0){ toWorldPointer(e); mouse.down = true; } });
+addEventListener("mouseup",   e => { if (e.button===0) mouse.down = false; });
+cv.addEventListener("contextmenu", e => e.preventDefault());
+
+/* ------------------------------ WORLD ------------------------------ */
+
+// Terrain is a sampled heightfield; collision just reads it back.
+const STEP = 40;
+let terrain = [], nodes = [], props = [], decor = [], ambient = [];
+let motes = [], pops = [];
+const cam = {x:0, y:0};
+
+function terrainY(x){
+  const t = Math.max(0, Math.min(WORLD_W - 1, x)) / STEP;
+  const i = Math.floor(t), f = t - i;
+  const a = terrain[Math.min(i, terrain.length-1)];
+  const b = terrain[Math.min(i+1, terrain.length-1)];
+  return a + (b - a) * f;
+}
+
+function buildZone(id){
+  const z = ZONE[id];
+  const rng = mulberry32(strHash(id));
+  const p1 = rng()*99, p2 = rng()*99, p3 = rng()*99;
+
+  terrain = [];
+  for (let i = 0; i * STEP <= WORLD_W; i++){
+    const x = i * STEP;
+    terrain.push(
+      430
+      + Math.sin(x*0.0021 + p1) * 26
+      + Math.sin(x*0.0068 + p2) * 12
+      + Math.sin(x*0.0135 + p3) * 5
+    );
+  }
+
+  // Three menu props, evenly spread so you always walk past resources.
+  props = [
+    {kind:"shop",  x: 560,  label:"Marketplace"},
+    {kind:"jobs",  x: 1760, label:"Job Board"},
+    {kind:"map",   x: 2980, label:"Transit Map"},
+  ];
+  for (const p of props){ p.y = terrainY(p.x); p.w = 86; p.h = 96; }
+
+  // Resource nodes: one per zone die face, repeated across the level.
+  nodes = [];
+  let x = 240;
+  while (x < WORLD_W - 200){
+    const nearProp = props.some(p => Math.abs(p.x - x) < 160);
+    if (!nearProp){
+      const el = z.dice[Math.floor(rng() * z.dice.length)];
+      const max = 14 + Math.floor(rng() * 12);
+      nodes.push({
+        x, y: terrainY(x), el, max, charge: max,
+        r: 26 + rng()*10, seed: rng()*6.28, shake:0, lit:0,
+      });
+    }
+    x += 180 + rng() * 190;
+  }
+
+  // Parallax silhouettes: three depths of jagged hills / towers.
+  decor = [[],[],[]];
+  for (let layer = 0; layer < 3; layer++){
+    const n = 14 + layer*6;
+    for (let i = 0; i < n; i++){
+      decor[layer].push({
+        x: rng() * WORLD_W * 1.1,
+        w: 90 + rng()*230 - layer*18,
+        h: (170 - layer*38) * (0.55 + rng()*0.9),
+        k: rng(),
+      });
+    }
+  }
+
+  ambient = [];
+  for (let i = 0; i < 70; i++){
+    ambient.push({x: rng()*WORLD_W, y: rng()*H, s: 0.3 + rng()*1.2, r: 1 + rng()*2, ph: rng()*6.28});
+  }
+
+  motes.length = 0; pops.length = 0;
+  if (!state.jobs[id]) state.jobs[id] = makeJobs(id);
+  state.visited[id] = true;
+}
+
+/* ------------------------------ PLAYER ------------------------------ */
+
+const player = {
+  x: 300, y: 0, vx: 0, vy: 0,
+  onGround: false, jumps: 0, face: 1,
+  step: 0, aim: 0, vacuuming: false, hum: 0,
+};
+
+function updatePlayer(dt){
+  const left  = keys["a"] || keys["arrowleft"];
+  const right = keys["d"] || keys["arrowright"];
+  const speed = 250;
+  const accel = player.onGround ? 2400 : 1200;
+
+  let want = (right?1:0) - (left?1:0);
+  player.vx += ((want * speed) - player.vx) * Math.min(1, accel * dt / speed);
+  if (!want) player.vx *= player.onGround ? 0.80 : 0.96;
+
+  const maxJumps = 1 + state.up.jump;
+  if ((keys[" "] || keys["w"] || keys["arrowup"]) && player.jumps < maxJumps && !player._jHeld){
+    player.vy = -520; player.jumps++; player.onGround = false; player._jHeld = true;
+    blip(player.jumps > 1 ? 520 : 340, 0.07, 0.10);
+  }
+  if (!(keys[" "] || keys["w"] || keys["arrowup"])) player._jHeld = false;
+
+  player.vy += GRAV * dt;
+  player.x = Math.max(30, Math.min(WORLD_W - 30, player.x + player.vx * dt));
+  player.y += player.vy * dt;
+
+  const g = terrainY(player.x) - GROUND_PAD;
+  if (player.y >= g){
+    if (!player.onGround && player.vy > 380) puff(player.x, g);
+    player.y = g; player.vy = 0; player.onGround = true; player.jumps = 0;
+  } else player.onGround = false;
+
+  player.step += Math.abs(player.vx) * dt * 0.045;
+
+  // Aim follows the pointer; the body turns to match.
+  const sh = shoulder();
+  player.aim = Math.atan2((mouse.y + cam.y) - sh.y, (mouse.x + cam.x) - sh.x);
+  const wantFace = Math.cos(player.aim) >= 0 ? 1 : -1;
+  if (want) player.face = want; else player.face = wantFace;
+}
+
+const shoulder = () => ({x: player.x + player.face * 3, y: player.y - 42});
+function nozzleTip(){
+  const s = shoulder(), L = 34;
+  return {x: s.x + Math.cos(player.aim)*L, y: s.y + Math.sin(player.aim)*L};
+}
+
+/* ------------------------------ VACUUM ------------------------------ */
+
+const CONE = {half: 0.42};
+const vacRange = () => 210 + state.up.range * 45;
+const vacRate  = () => 5.5 + state.up.power * 3.2;
+const intakeR  = () => 16 + state.up.magnet * 9;
+
+let spawnAcc = 0;
+
+function updateVacuum(dt){
+  player.vacuuming = mouse.down && !paused;
+  const tip = nozzleTip();
+  const range = vacRange();
+
+  if (player.vacuuming){
+    player.hum = Math.min(1, player.hum + dt*6);
+    spawnAcc += dt * vacRate();
+    let inCone = [];
+    for (const n of nodes){
+      if (n.charge <= 0) continue;
+      const dx = n.x - tip.x, dy = (n.y - n.r*0.7) - tip.y;
+      const d = Math.hypot(dx, dy);
+      if (d > range + n.r) continue;
+      let da = Math.abs(angDiff(Math.atan2(dy, dx), player.aim));
+      if (da > CONE.half + n.r/Math.max(60,d)) continue;
+      inCone.push(n);
+      n.shake = Math.min(1, n.shake + dt*5);
+      n.lit = 1;
+    }
+    while (spawnAcc >= 1 && inCone.length){
+      spawnAcc -= 1;
+      const n = inCone[Math.floor(Math.random()*inCone.length)];
+      if (n.charge <= 0) continue;
+      n.charge--;
+      const a = Math.random()*Math.PI*2, rr = n.r*(0.3+Math.random()*0.7);
+      motes.push({
+        x: n.x + Math.cos(a)*rr, y: n.y - n.r*0.7 + Math.sin(a)*rr*0.7,
+        vx: (Math.random()-0.5)*90, vy: -60 - Math.random()*80,
+        el: n.el, life: 0, spin: Math.random()*6.28,
+      });
+    }
+    if (!inCone.length) spawnAcc = Math.min(spawnAcc, 1);
+  } else {
+    player.hum = Math.max(0, player.hum - dt*5);
+    spawnAcc = 0;
+  }
+  humGain(player.hum * (player.vacuuming ? 1 : 0));
+
+  for (const n of nodes){
+    n.shake = Math.max(0, n.shake - dt*2.2);
+    n.lit   = Math.max(0, n.lit - dt*2.2);
+    if (n.charge < n.max) n.charge = Math.min(n.max, n.charge + dt*0.55);
+  }
+
+  // Motes fly to the nozzle mouth once suction has them.
+  for (let i = motes.length - 1; i >= 0; i--){
+    const m = motes[i];
+    m.life += dt;
+    const dx = tip.x - m.x, dy = tip.y - m.y, d = Math.hypot(dx,dy) || 1;
+    if (player.vacuuming && d < vacRange()*1.3){
+      const pull = 1500 + 900*state.up.power;
+      m.vx += (dx/d) * pull * dt;
+      m.vy += (dy/d) * pull * dt;
+      m.vx *= 0.90; m.vy *= 0.90;
+    } else {
+      m.vy += GRAV*0.5*dt; m.vx *= 0.99;
+      const gy = terrainY(m.x) - 4;
+      if (m.y > gy){ m.y = gy; m.vy *= -0.35; m.vx *= 0.7; }
+    }
+    m.x += m.vx*dt; m.y += m.vy*dt;
+    if (d < intakeR()){
+      collect(m.el);
+      motes.splice(i,1);
+      continue;
+    }
+    if (m.life > 14) motes.splice(i,1);
+  }
+
+  for (let i = pops.length-1; i >= 0; i--){
+    const p = pops[i];
+    p.t += dt; p.y -= 34*dt;
+    if (p.t > 1) pops.splice(i,1);
+  }
+}
+const angDiff = (a,b) => Math.atan2(Math.sin(a-b), Math.cos(a-b));
+
+function collect(el){
+  state.el[el] = (state.el[el]||0) + 1;
+  pops.push({x: player.x, y: player.y - 70, t:0, txt:"+1 "+el, color: EL[el].color});
+  flashChip(el);
+  blip(660 + Math.random()*120, 0.05, 0.05);
+  saveSoon();
+}
+function puff(x,y){
+  for (let i=0;i<7;i++) motes.push({x:x+(Math.random()-0.5)*24, y:y-4, vx:(Math.random()-0.5)*70,
+    vy:-30-Math.random()*40, el:null, life:0.5, spin:0, dustOnly:true});
+}
+
+let saveT = 0;
+function saveSoon(){ saveT = 0.8; }
+
+/* ------------------------------ AUDIO ------------------------------ */
+
+let AC = null, humOsc = null, humNode = null, humFilt = null;
+function audio(){
+  if (AC) return AC;
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    humOsc = AC.createOscillator(); humOsc.type = "sawtooth"; humOsc.frequency.value = 78;
+    humFilt = AC.createBiquadFilter(); humFilt.type = "lowpass"; humFilt.frequency.value = 620;
+    humNode = AC.createGain(); humNode.gain.value = 0;
+    humOsc.connect(humFilt); humFilt.connect(humNode); humNode.connect(AC.destination);
+    humOsc.start();
+  } catch(e){ AC = null; }
+  return AC;
+}
+addEventListener("pointerdown", () => { const a = audio(); if (a && a.state === "suspended") a.resume(); }, {once:false});
+function humGain(v){
+  if (!AC || !humNode) { if (v>0) audio(); return; }
+  const g = state.muted ? 0 : v * 0.05;
+  humNode.gain.setTargetAtTime(g, AC.currentTime, 0.05);
+  if (humFilt) humFilt.frequency.setTargetAtTime(500 + v*900, AC.currentTime, 0.08);
+}
+function blip(freq, dur, vol){
+  const a = audio(); if (!a || state.muted) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = "triangle"; o.frequency.setValueAtTime(freq, a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(freq*1.6, a.currentTime + dur);
+  g.gain.setValueAtTime(vol, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+  o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + dur + 0.02);
+}
+
+/* ------------------------------ JOBS ------------------------------ */
+
+let jobSeq = 0;
+function makeJobs(zoneId){
+  const z = ZONE[zoneId];
+  const rng = mulberry32(strHash(zoneId + "|" + Date.now().toString(36) + (jobSeq++)));
+  const out = [];
+  const stock = ITEMS.filter(i => i.z === zoneId);
+  for (let i = 0; i < 3; i++){
+    if (i === 2 && stock.length){
+      const it = stock[Math.floor(rng()*stock.length)];
+      const qty = 1 + Math.floor(rng()*2);
+      out.push({id:"j"+(jobSeq++), kind:"item", item:it.n, ic:it.ic, need:qty,
+                pay: Math.round(it.v * 11 * qty), accepted:false});
+    } else {
+      const el = z.dice[Math.floor(rng()*z.dice.length)];
+      const need = 8 + Math.floor(rng()*10);
+      out.push({id:"j"+(jobSeq++), kind:"el", el, need,
+                pay: need*4 + 15, accepted:false});
+    }
+  }
+  return out;
+}
+const jobHave = j => j.kind === "el" ? (state.el[j.el]||0) : (state.items[j.item]||0);
+const jobDone = j => jobHave(j) >= j.need;
+
+function turnIn(zoneId, id){
+  const job = (state.jobs[zoneId]||[]).find(j => j.id === id);
+  if (!job || !jobDone(job)) return;
+  if (job.kind === "el") state.el[job.el] -= job.need;
+  else state.items[job.item] -= job.need;
+  state.credits += job.pay;
+  state.jobs[zoneId] = state.jobs[zoneId].filter(j => j.id !== id);
+  if (!state.jobs[zoneId].length) state.jobs[zoneId] = makeJobs(zoneId);
+  toast("✅ Job complete  +⨁" + job.pay);
+  blip(880, 0.18, 0.12);
+  save(); renderMenu();
+}
+
+/* ------------------------------ MENUS ------------------------------ */
+
+const overlay = document.getElementById("overlay");
+const panel = document.getElementById("panel");
+let openKind = null;
+
+function nearestProp(){
+  let best = null, bd = 82;
+  for (const p of props){
+    const d = Math.abs(p.x - player.x);
+    if (d < bd) { bd = d; best = p; }
+  }
+  return best;
+}
+function tryInteract(){
+  const p = nearestProp();
+  if (p) openMenu(p.kind);
+}
+function openMenu(kind){
+  openKind = kind; paused = true; mouse.down = false;
+  overlay.classList.add("on");
+  renderMenu();
+  blip(420, 0.09, 0.08);
+}
+function closeMenu(){
+  openKind = null; paused = false;
+  overlay.classList.remove("on");
+  save();
+}
+overlay.addEventListener("mousedown", e => { if (e.target === overlay) closeMenu(); });
+
+const costHTML = cost => Object.entries(cost).map(([k,v]) =>
+  `<span class="cost ${(state.el[k]||0) >= v ? "" : "no"}" style="color:${(state.el[k]||0)>=v?EL[k].color:""}">${v}&thinsp;${k}</span>`
+).join('<span style="opacity:.3">·</span>');
+
+function renderMenu(){
+  if (!openKind) return;
+  const z = ZONE[state.zone];
+  const head = (tag, title) => `
+    <div class="phead">
+      <div style="font-size:26px">${tag.ic}</div>
+      <div><span class="tag">${z.name.toUpperCase()}</span><h2>${title}</h2></div>
+      <div class="grow"></div>
+      <div style="font-weight:900;font-size:15px">⨁ ${state.credits}</div>
+      <button class="xbtn" data-act="close">Close ✕</button>
+    </div>`;
+
+  let html = "";
+  if (openKind === "shop"){
+    const stock = ITEMS.filter(i => i.z === state.zone);
+    html = head({ic:"🛒"}, "Marketplace") + `<div class="pbody">
+      <div class="sect">BACKPACK UPGRADES — PAID IN CREDITS</div>` +
+      UPGRADES.map(u => {
+        const lvl = state.up[u.k], maxed = lvl >= u.max, c = u.cost(lvl);
+        return `<div class="row"><div class="ic">${u.ic}</div><div class="mid">
+          <div class="nm">${u.n} <span class="own">${maxed?"MAX":"LV "+lvl+"/"+u.max}</span></div>
+          <div class="ds">${u.d}</div></div>
+          <button class="buy alt ${maxed?"done":""}" data-act="up" data-k="${u.k}"
+            ${maxed || state.credits < c ? "disabled":""}>${maxed ? "Owned" : "⨁ "+c}</button></div>`;
+      }).join("") +
+      `<div class="sect">LOCAL GOODS — PAID IN ELEMENTS</div>` +
+      stock.map(it => {
+        const own = state.items[it.n]||0;
+        return `<div class="row"><div class="ic">${it.ic}</div><div class="mid">
+          <div class="nm">${it.n} ${own?`<span class="own">×${own} HELD</span>`:""}</div>
+          <div class="ds">${costHTML(it.cost)}</div></div>
+          <button class="buy" data-act="item" data-n="${it.n}" ${has(it.cost)?"":"disabled"}>Craft</button></div>`;
+      }).join("") +
+      `<div class="note">Goods are what the Job Board asks for — and every item you hold counts toward jobs at any station.</div>
+      </div>`;
+  }
+
+  if (openKind === "jobs"){
+    const list = state.jobs[state.zone] || [];
+    html = head({ic:"📋"}, "Job Board") + `<div class="pbody">
+      <div class="sect">AVAILABLE CONTRACTS</div>` +
+      list.map(j => {
+        const have = jobHave(j), ok = jobDone(j);
+        const what = j.kind === "el"
+          ? `<span style="color:${EL[j.el].color}">${j.need} × ${j.el}</span> <span style="opacity:.6">(${EL[j.el].name})</span>`
+          : `${j.ic} ${j.need} × ${j.item}`;
+        return `<div class="row"><div class="ic">${j.kind==="el" ? "⚗️" : j.ic}</div><div class="mid">
+          <div class="nm">Deliver ${what}</div>
+          <div class="ds">Pays <b>⨁ ${j.pay}</b> · progress ${Math.min(have,j.need)}/${j.need}
+            ${j.accepted ? '<span class="own">ACCEPTED</span>' : ""}</div></div>
+          ${ok ? `<button class="buy" data-act="turnin" data-id="${j.id}">Turn in</button>`
+               : j.accepted ? `<button class="buy done" disabled>In progress</button>`
+               : `<button class="buy alt" data-act="accept" data-id="${j.id}">Accept</button>`}
+        </div>`;
+      }).join("") +
+      `<div class="note">Accepted jobs are tracked in the corner of the screen. Finishing one posts a fresh contract.</div></div>`;
+  }
+
+  if (openKind === "map"){
+    html = head({ic:"🗺️"}, "Transit Map") + `<div class="pbody">
+      <div class="sect">CHOOSE A DESTINATION</div><div class="grid">` +
+      ZONES.map(z2 => {
+        const cur = z2.id === state.zone;
+        const jobs = (state.jobs[z2.id]||[]).length;
+        return `<button class="st ${cur?"cur":""}" data-act="travel" data-z="${z2.id}" ${cur?"disabled":""}>
+          <div class="e">${z2.emoji}</div><div class="n" style="color:${z2.color}">${z2.name}</div>
+          <div class="d">${z2.dice.join(" · ")}</div>
+          <div class="d">${cur ? "You are here" : (state.visited[z2.id] ? jobs+" jobs posted" : "Unvisited")}</div>
+        </button>`;
+      }).join("") + `</div>
+      <div class="note">Each station holds a different set of six elements. Travel is free — the walk between nodes is the cost.</div></div>`;
+  }
+  panel.innerHTML = html;
+}
+
+panel.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const act = b.dataset.act;
+
+  if (act === "close") return closeMenu();
+
+  if (act === "up"){
+    const u = UPGRADES.find(u => u.k === b.dataset.k);
+    const lvl = state.up[u.k], c = u.cost(lvl);
+    if (lvl >= u.max || state.credits < c) return;
+    state.credits -= c; state.up[u.k]++;
+    toast("🔧 " + u.n + " → LV " + state.up[u.k]);
+    blip(760, 0.16, 0.11);
+  }
+
+  if (act === "item"){
+    const it = ITEMS.find(i => i.n === b.dataset.n);
+    if (!it || !has(it.cost)) return;
+    spend(it.cost);
+    state.items[it.n] = (state.items[it.n]||0) + 1;
+    toast(it.ic + " Crafted " + it.n);
+    blip(640, 0.14, 0.10);
+  }
+
+  if (act === "accept"){
+    const j = (state.jobs[state.zone]||[]).find(j => j.id === b.dataset.id);
+    if (j) { j.accepted = true; toast("📋 Job accepted"); }
+  }
+
+  if (act === "turnin") return turnIn(state.zone, b.dataset.id);
+
+  if (act === "travel"){
+    const id = b.dataset.z;
+    if (id === state.zone) return;
+    state.zone = id;
+    buildZone(id);
+    player.x = 300; player.y = terrainY(300) - 40; player.vx = player.vy = 0;
+    cam.x = 0;
+    closeMenu();
+    toast(ZONE[id].emoji + "  Arrived: " + ZONE[id].name);
+    blip(520, 0.25, 0.10);
+    save();
+    return;
+  }
+
+  save(); renderMenu(); syncHUD();
+});
+
+/* ------------------------------ HUD ------------------------------ */
+
+const hudZone = document.getElementById("zoneCard");
+const hudCred = document.querySelector("#creditCard span");
+const hudEls  = document.getElementById("elBar");
+const hudJob  = document.getElementById("jobTrack");
+const promptEl= document.getElementById("prompt");
+const toastEl = document.getElementById("toast");
+
+function toast(msg){
+  const d = document.createElement("div");
+  d.className = "tmsg"; d.textContent = msg;
+  toastEl.appendChild(d);
+  setTimeout(() => { d.style.transition=".4s"; d.style.opacity=0; setTimeout(()=>d.remove(),400); }, 1800);
+}
+function flashChip(el){
+  const c = hudEls.querySelector('[data-el="'+el+'"]');
+  if (!c) return;
+  c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash");
+}
+let lastHudSig = "";
+function syncHUD(){
+  const z = ZONE[state.zone];
+  hudZone.querySelector(".emoji").textContent = z.emoji;
+  hudZone.querySelector(".nm").textContent = z.name;
+  hudZone.style.borderColor = z.color + "77";
+  hudCred.textContent = state.credits;
+
+  const sig = z.dice.join()+"|"+z.dice.map(k=>state.el[k]).join();
+  if (sig !== lastHudSig){
+    lastHudSig = sig;
+    hudEls.innerHTML = z.dice.map(k =>
+      `<span class="chip" data-el="${k}"><i style="background:${EL[k].color};color:${EL[k].color}"></i>${k} ${state.el[k]||0}</span>`
+    ).join("");
+  } else {
+    z.dice.forEach(k => {
+      const c = hudEls.querySelector('[data-el="'+k+'"]');
+      if (c) c.lastChild.textContent = k + " " + (state.el[k]||0);
+    });
+  }
+
+  const acc = [];
+  for (const zid in state.jobs)
+    for (const j of state.jobs[zid]) if (j.accepted) acc.push([zid,j]);
+  if (acc.length){
+    hudJob.hidden = false;
+    hudJob.innerHTML = "<b>ACTIVE JOBS</b>" + acc.slice(0,4).map(([zid,j]) => {
+      const have = Math.min(jobHave(j), j.need);
+      const what = j.kind === "el" ? j.need+" × "+j.el : j.need+" × "+j.item;
+      return `${ZONE[zid].emoji} ${what} <b style="display:inline;opacity:1;letter-spacing:0">${have}/${j.need}</b>`;
+    }).join("<br>");
+  } else hudJob.hidden = true;
+}
+
+/* ------------------------------ DRAW ------------------------------ */
+
+let vw = W, vh = H, scale = 1, offx = 0, offy = 0;
+function resize(){
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width  = Math.floor(innerWidth * dpr);
+  cv.height = Math.floor(innerHeight * dpr);
+  scale = Math.min(innerWidth / W, innerHeight / H) * dpr;
+  offx = (cv.width  - W*scale)/2;
+  offy = (cv.height - H*scale)/2;
+}
+addEventListener("resize", resize); resize();
+
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+
+function drawSky(z, t){
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, z.sky[0]); g.addColorStop(0.55, z.sky[1]); g.addColorStop(1, z.sky[2]);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  // A soft sun/moon disc that drifts with the camera.
+  const sx = W*0.74 - cam.x*0.02, sy = 108;
+  const rg = ctx.createRadialGradient(sx,sy,4,sx,sy,150);
+  rg.addColorStop(0, "rgba(255,255,255,.55)");
+  rg.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(sx,sy,150,0,6.283); ctx.fill();
+}
+
+function drawParallax(z){
+  for (let layer = 0; layer < 3; layer++){
+    const p = [0.12, 0.28, 0.5][layer];
+    const base = H*0.62 + layer*26;
+    ctx.fillStyle = z.hill[layer];
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (const d of decor[layer]){
+      const x = d.x - cam.x*p;
+      if (x < -400 || x > W+400) continue;
+      if (z.node === "machine" || z.id === "city"){
+        ctx.rect(x, base - d.h, d.w*0.5, d.h + 200);
+      } else {
+        ctx.moveTo(x - d.w/2, base + 40);
+        ctx.lineTo(x, base - d.h);
+        ctx.lineTo(x + d.w/2, base + 40);
+      }
+    }
+    ctx.fill();
+  }
+}
+
+function drawGround(z){
+  const g = ctx.createLinearGradient(0, 380, 0, H);
+  g.addColorStop(0, z.ground[0]); g.addColorStop(1, z.ground[1]);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-10, H+10);
+  const x0 = Math.max(0, cam.x - 60), x1 = Math.min(WORLD_W, cam.x + W + 60);
+  ctx.lineTo(x0 - cam.x, terrainY(x0));
+  for (let x = x0; x <= x1; x += 12) ctx.lineTo(x - cam.x, terrainY(x));
+  ctx.lineTo(W+10, H+10);
+  ctx.closePath(); ctx.fill();
+
+  ctx.strokeStyle = z.color + "aa"; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let x = x0; x <= x1; x += 12){
+    const y = terrainY(x);
+    x === x0 ? ctx.moveTo(x-cam.x, y) : ctx.lineTo(x-cam.x, y);
+  }
+  ctx.stroke();
+}
+
+function drawNode(n, t){
+  const cx = n.x - cam.x, cy = n.y - cam.y;
+  if (cx < -120 || cx > W+120) return;
+  const z = ZONE[state.zone];
+  const col = EL[n.el].color;
+  const frac = n.charge / n.max;
+  const sh = n.shake * Math.sin(t*38 + n.seed) * 3;
+  const r = n.r * (0.55 + 0.45*frac);
+
+  ctx.save();
+  ctx.translate(cx + sh, cy);
+
+  // Glow
+  const gg = ctx.createRadialGradient(0,-r*0.7,2,0,-r*0.7,r*3);
+  gg.addColorStop(0, hexA(col, 0.35 + n.lit*0.35));
+  gg.addColorStop(1, hexA(col, 0));
+  ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0,-r*0.7,r*3,0,6.283); ctx.fill();
+
+  // Base rock
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath(); ctx.ellipse(0, 0, n.r*1.05, n.r*0.3, 0, 0, 6.283); ctx.fill();
+
+  ctx.fillStyle = col;
+  ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2;
+
+  if (z.node === "crystal"){
+    for (let i = 0; i < 4; i++){
+      const a = -1.57 + (i-1.5)*0.42, hgt = r*(1.25 - Math.abs(i-1.5)*0.22);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*r*0.55, Math.sin(a)*r*0.2);
+      ctx.lineTo(Math.cos(a)*r*0.2 - 8, -hgt*0.2);
+      ctx.lineTo(Math.cos(a)*r*0.35, -hgt);
+      ctx.lineTo(Math.cos(a)*r*0.2 + 9, -hgt*0.2);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  } else if (z.node === "coral"){
+    for (let i = 0; i < 5; i++){
+      const a = -0.4 - i*0.55, R = r*(0.5+((i*7)%4)/8);
+      ctx.beginPath();
+      ctx.arc(Math.cos(a)*r*0.5, -r*0.5 + Math.sin(a)*r*0.4, R*0.55, 0, 6.283);
+      ctx.fill(); ctx.stroke();
+    }
+  } else if (z.node === "plant"){
+    ctx.strokeStyle = hexA(col, .9); ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(r*0.3,-r, 0, -r*1.5); ctx.stroke();
+    ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++){
+      const y = -r*0.4 - i*r*0.32, s = (i%2?1:-1);
+      ctx.beginPath();
+      ctx.ellipse(s*r*0.5, y, r*0.42, r*0.2, s*0.5, 0, 6.283);
+      ctx.fill(); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(0, -r*1.55, r*0.32, 0, 6.283); ctx.fill(); ctx.stroke();
+  } else { // machine
+    roundRect(-r*0.75, -r*1.15, r*1.5, r*1.15, 7); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    roundRect(-r*0.45, -r*0.95, r*0.9, r*0.5, 4); ctx.fill();
+    ctx.fillStyle = hexA("#ffffff", 0.55 + n.lit*0.4);
+    for (let i = 0; i < 3; i++){ ctx.fillRect(-r*0.38 + i*r*0.3, -r*0.86, r*0.16, r*0.32*frac + 2); }
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(0, -r*1.25, r*0.26, 0, 6.283); ctx.fill(); ctx.stroke();
+  }
+
+  // Charge meter
+  const bw = n.r*1.6;
+  ctx.fillStyle = "rgba(0,0,0,.45)";
+  roundRect(-bw/2, 8, bw, 6, 3); ctx.fill();
+  ctx.fillStyle = col;
+  roundRect(-bw/2, 8, Math.max(2, bw*frac), 6, 3); ctx.fill();
+
+  ctx.font = "700 11px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.fillText(n.el, 0, 30);
+  ctx.restore();
+}
+
+function drawProp(p, t, near){
+  const x = p.x - cam.x, y = p.y - cam.y;
+  if (x < -160 || x > W+160) return;
+  const z = ZONE[state.zone];
+  ctx.save(); ctx.translate(x, y);
+
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath(); ctx.ellipse(0, 2, 56, 12, 0, 0, 6.283); ctx.fill();
+
+  if (near){
+    const gl = ctx.createRadialGradient(0,-50,4,0,-50,120);
+    gl.addColorStop(0, hexA("#ffffff", .22)); gl.addColorStop(1, hexA("#ffffff", 0));
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(0,-50,120,0,6.283); ctx.fill();
+  }
+
+  const bob = Math.sin(t*2 + p.x) * 2;
+
+  if (p.kind === "shop"){
+    ctx.fillStyle = "#2a2f3d"; roundRect(-46,-86,92,86,6); ctx.fill();
+    ctx.fillStyle = z.color;   roundRect(-52,-104,104,22,6); ctx.fill();
+    // awning stripes
+    for (let i=0;i<5;i++){ ctx.fillStyle = i%2 ? "#ffffff22" : "#00000022"; ctx.fillRect(-52+i*21,-104,21,22); }
+    ctx.fillStyle = "#111622"; roundRect(-36,-70,72,40,4); ctx.fill();
+    ctx.font = "26px serif"; ctx.textAlign = "center"; ctx.fillText("🛒", 0, -42 + bob);
+    ctx.fillStyle = "#0007"; ctx.fillRect(-46,-8,92,8);
+  }
+  if (p.kind === "jobs"){
+    ctx.fillStyle = "#5a4632"; ctx.fillRect(-7,-64,6,64); ctx.fillRect(2,-64,6,64);
+    ctx.fillStyle = "#7c5f42"; roundRect(-48,-108,96,54,5); ctx.fill();
+    ctx.strokeStyle = "#00000055"; ctx.lineWidth=3; ctx.stroke();
+    ctx.fillStyle = "#efe7d6";
+    ctx.save(); ctx.translate(0, bob*0.5);
+    roundRect(-38,-100,26,32,2); ctx.fill();
+    roundRect(-6,-98,26,30,2); ctx.fill();
+    roundRect(22,-102,16,22,2); ctx.fill();
+    ctx.restore();
+    ctx.font = "18px serif"; ctx.textAlign="center"; ctx.fillStyle="#333";
+    ctx.fillText("📋", -25, -78);
+  }
+  if (p.kind === "map"){
+    ctx.fillStyle = "#2a3142"; roundRect(-10,-52,20,52,4); ctx.fill();
+    ctx.save(); ctx.translate(0, bob);
+    ctx.fillStyle = "#1b2233"; roundRect(-52,-112,104,66,8); ctx.fill();
+    ctx.strokeStyle = z.color; ctx.lineWidth = 3; ctx.stroke();
+    // little constellation of stations
+    ctx.fillStyle = z.color;
+    for (let i=0;i<6;i++){
+      const a = t*0.4 + i*1.05;
+      ctx.beginPath(); ctx.arc(Math.cos(a)*30, -79 + Math.sin(a)*18, 3.4, 0, 6.283); ctx.fill();
+    }
+    ctx.strokeStyle = hexA(z.color, .5); ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i=0;i<6;i++){
+      const a = t*0.4 + i*1.05;
+      const px = Math.cos(a)*30, py = -79 + Math.sin(a)*18;
+      i ? ctx.lineTo(px,py) : ctx.moveTo(px,py);
+    }
+    ctx.closePath(); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Floating label
+  ctx.font = "800 12px Trebuchet MS, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillStyle = near ? "#fff" : "rgba(255,255,255,.55)";
+  ctx.fillText(p.label.toUpperCase(), 0, -122 + bob);
+  ctx.restore();
+}
+
+function drawPlayer(t){
+  const px = player.x - cam.x, py = player.y - cam.y;
+  const f = player.face;
+  const moving = Math.abs(player.vx) > 20 && player.onGround;
+  const swing = moving ? Math.sin(player.step*2.2) : 0;
+  const bob = moving ? Math.abs(Math.cos(player.step*2.2))*2 : (player.onGround ? Math.sin(t*2)*1 : 0);
+
+  ctx.save();
+  ctx.translate(px, py - bob);
+
+  // shadow
+  ctx.fillStyle = "rgba(0,0,0,.35)";
+  ctx.beginPath(); ctx.ellipse(0, bob, 20, 6, 0, 0, 6.283); ctx.fill();
+
+  ctx.save(); ctx.scale(f, 1);
+
+  // legs
+  ctx.strokeStyle = "#232a3a"; ctx.lineCap = "round"; ctx.lineWidth = 9;
+  const legA = player.onGround ? swing*0.55 : -0.3;
+  ctx.beginPath(); ctx.moveTo(-2,-26); ctx.lineTo(-2 + Math.sin(legA)*13, -2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 3,-26); ctx.lineTo( 3 - Math.sin(legA)*13, -2); ctx.stroke();
+  ctx.strokeStyle = "#11151f"; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(-2 + Math.sin(legA)*13, -3); ctx.lineTo(-2 + Math.sin(legA)*13 + 6, -3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 3 - Math.sin(legA)*13, -3); ctx.lineTo( 3 - Math.sin(legA)*13 + 6, -3); ctx.stroke();
+
+  // backpack tank (behind the body)
+  const glow = player.hum;
+  ctx.save(); ctx.translate(-16, -46);
+  ctx.fillStyle = "#39415a"; roundRect(-11,-2,20,34,9); ctx.fill();
+  ctx.fillStyle = "#20263a"; roundRect(-8,2,14,26,7); ctx.fill();
+  const tg = ctx.createLinearGradient(0,2,0,28);
+  tg.addColorStop(0, hexA(ZONE[state.zone].color, .25 + glow*.6));
+  tg.addColorStop(1, hexA(ZONE[state.zone].color, .05 + glow*.3));
+  ctx.fillStyle = tg; roundRect(-7,3,12,24,6); ctx.fill();
+  ctx.fillStyle = hexA("#ffffff", .5 + glow*.5);
+  ctx.beginPath(); ctx.arc(0, 30, 3.2 + glow*1.4, 0, 6.283); ctx.fill();
+  ctx.restore();
+
+  // torso
+  ctx.fillStyle = "#3d6ea8"; roundRect(-11,-50,23,26,8); ctx.fill();
+  ctx.fillStyle = "#cfd8e3"; roundRect(-11,-40,23,6,3); ctx.fill();
+
+  // head
+  ctx.fillStyle = "#f0c39a"; ctx.beginPath(); ctx.arc(2,-60,11,0,6.283); ctx.fill();
+  ctx.fillStyle = "#2a3242"; // hair / cap
+  ctx.beginPath(); ctx.arc(2,-62,11,Math.PI,0); ctx.fill();
+  ctx.fillRect(2,-63,13,4);
+  // goggles
+  ctx.fillStyle = "rgba(20,28,44,.9)"; roundRect(-4,-62,15,7,3.5); ctx.fill();
+  ctx.fillStyle = hexA("#9fe8ff", .75 + glow*.25);
+  roundRect(4,-61,6,5,2.5); ctx.fill();
+
+  ctx.restore(); // un-flip
+
+  // ---- arm + nozzle, drawn in world angle ----
+  const s = {x: f*3, y: -42};
+  const a = player.aim;
+  const tip = {x: s.x + Math.cos(a)*34, y: s.y + Math.sin(a)*34};
+
+  // hose from pack to nozzle
+  ctx.strokeStyle = "#2b3245"; ctx.lineWidth = 7; ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-f*16, -20);
+  ctx.quadraticCurveTo(-f*26 + Math.cos(a)*10, -6 + Math.sin(a)*6, s.x + Math.cos(a)*14, s.y + Math.sin(a)*14);
+  ctx.stroke();
+  ctx.strokeStyle = hexA("#8fa2c4", .5); ctx.lineWidth = 2.5;
+  ctx.setLineDash([4,7]); ctx.stroke(); ctx.setLineDash([]);
+
+  // arm
+  ctx.strokeStyle = "#3d6ea8"; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(f*2, -46); ctx.lineTo(s.x + Math.cos(a)*20, s.y + Math.sin(a)*20); ctx.stroke();
+  ctx.fillStyle = "#f0c39a";
+  ctx.beginPath(); ctx.arc(s.x + Math.cos(a)*20, s.y + Math.sin(a)*20, 4.5, 0, 6.283); ctx.fill();
+
+  // nozzle
+  ctx.save();
+  ctx.translate(s.x, s.y); ctx.rotate(a);
+  ctx.fillStyle = "#59627d"; roundRect(10,-5,18,10,4); ctx.fill();
+  ctx.fillStyle = "#8892ad";
+  ctx.beginPath(); ctx.moveTo(26,-6); ctx.lineTo(40,-11); ctx.lineTo(40,11); ctx.lineTo(26,6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = hexA("#0b1020", .9);
+  ctx.beginPath(); ctx.ellipse(40, 0, 3, 10, 0, 0, 6.283); ctx.fill();
+  if (glow > 0.02){
+    ctx.fillStyle = hexA(ZONE[state.zone].color, .35*glow);
+    ctx.beginPath(); ctx.ellipse(40, 0, 5, 12, 0, 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+
+  ctx.restore();
+  return {x: player.x + tip.x, y: player.y - bob + tip.y};
+}
+
+function drawCone(t){
+  if (player.hum <= 0.02) return;
+  const tip = nozzleTip();
+  const x = tip.x - cam.x, y = tip.y - cam.y;
+  const R = vacRange(), a = player.aim, hw = CONE.half;
+
+  ctx.save();
+  ctx.translate(x,y); ctx.rotate(a);
+  ctx.globalAlpha = 0.10 + 0.18*player.hum;
+  const g = ctx.createLinearGradient(0,0,R,0);
+  g.addColorStop(0, "rgba(255,255,255,.95)");
+  g.addColorStop(1, hexA(ZONE[state.zone].color, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R,-hw,hw); ctx.closePath(); ctx.fill();
+
+  // swirl lines running inward
+  ctx.globalAlpha = 0.30*player.hum;
+  ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 6; i++){
+    const ph = (t*1.5 + i/6) % 1;
+    const rr = R * (1 - ph);
+    const amp = hw * (0.15 + 0.85*ph);
+    ctx.beginPath(); ctx.arc(0,0, rr, -amp, amp); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawMotes(t){
+  for (const m of motes){
+    const x = m.x - cam.x, y = m.y - cam.y;
+    if (x < -30 || x > W+30) continue;
+    if (m.dustOnly){
+      ctx.fillStyle = "rgba(255,255,255,.28)";
+      ctx.beginPath(); ctx.arc(x,y,2.4,0,6.283); ctx.fill();
+      continue;
+    }
+    const c = EL[m.el].color;
+    ctx.fillStyle = hexA(c, .25);
+    ctx.beginPath(); ctx.arc(x,y,7,0,6.283); ctx.fill();
+    ctx.fillStyle = c;
+    ctx.beginPath(); ctx.arc(x,y,3.2,0,6.283); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.beginPath(); ctx.arc(x-1,y-1,1.2,0,6.283); ctx.fill();
+  }
+}
+
+function drawPops(){
+  ctx.textAlign = "center";
+  ctx.font = "800 13px Trebuchet MS, sans-serif";
+  for (const p of pops){
+    ctx.globalAlpha = Math.max(0, 1 - p.t);
+    ctx.fillStyle = "rgba(0,0,0,.5)";
+    ctx.fillText(p.txt, p.x - cam.x + 1, p.y - cam.y + 1);
+    ctx.fillStyle = p.color;
+    ctx.fillText(p.txt, p.x - cam.x, p.y - cam.y);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawAmbient(z, t){
+  ctx.save();
+  for (const a of ambient){
+    const x = ((a.x - cam.x*0.6) % WORLD_W + WORLD_W) % WORLD_W;
+    if (x > W + 20) continue;
+    const y = (a.y + t*a.s*14) % H;
+    ctx.globalAlpha = 0.10 + 0.16*Math.sin(t + a.ph);
+    ctx.fillStyle = z.mote === "spark" ? "#fff6c0" : z.mote === "bubble" ? "#bff0ff" : "#ffffff";
+    ctx.beginPath(); ctx.arc(x, z.mote === "bubble" ? H - y : y, a.r, 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+}
+
+const hexA = (hex, a) => {
+  const h = hex.replace("#","");
+  const n = parseInt(h.length === 3 ? h.split("").map(c=>c+c).join("") : h, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+};
+
+/* ------------------------------ LOOP ------------------------------ */
+
+let last = performance.now(), t = 0;
+function frame(now){
+  let dt = Math.min(0.05, (now - last)/1000);
+  last = now; t += dt;
+
+  if (!paused){
+    updatePlayer(dt);
+    updateVacuum(dt);
+    // camera eases toward the player, biased in the direction they face
+    const tx = Math.max(0, Math.min(WORLD_W - W, player.x - W/2 + player.face*70));
+    const ty = Math.max(-40, Math.min(60, player.y - H*0.72));
+    cam.x += (tx - cam.x) * Math.min(1, dt*5);
+    cam.y += (ty - cam.y) * Math.min(1, dt*3);
+    if (saveT > 0){ saveT -= dt; if (saveT <= 0) save(); }
+  } else {
+    humGain(0);
+  }
+
+  const z = ZONE[state.zone];
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = "#04060c"; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.setTransform(scale,0,0,scale,offx,offy);
+  ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip();
+
+  drawSky(z, t);
+  ctx.save(); ctx.translate(0, -cam.y*0.35);
+  drawParallax(z);
+  ctx.restore();
+  drawAmbient(z, t);
+
+  ctx.save(); ctx.translate(0, 0);
+  drawGround(z);
+  for (const n of nodes) drawNode(n, t);
+  const near = nearestProp();
+  for (const p of props) drawProp(p, t, near === p);
+  drawMotes(t);
+  drawPlayer(t);
+  drawCone(t);
+  drawPops();
+  ctx.restore();
+
+  // vignette
+  const vg = ctx.createRadialGradient(W/2,H/2,H*0.42,W/2,H/2,H*0.95);
+  vg.addColorStop(0,"rgba(0,0,0,0)"); vg.addColorStop(1,"rgba(0,0,0,.45)");
+  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+
+  // interaction prompt
+  if (near && !paused){
+    promptEl.classList.add("on");
+    promptEl.innerHTML = `<kbd style="font-size:12px">E</kbd>&nbsp; ${near.label}`;
+  } else promptEl.classList.remove("on");
+
+  syncHUD();
+  requestAnimationFrame(frame);
+}
+
+/* ------------------------------ BOOT ------------------------------ */
+
+buildZone(state.zone);
+player.x = 300; player.y = terrainY(300) - 40;
+cam.x = Math.max(0, player.x - W/2);
+syncHUD();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elementia — Solitaire</title>
+<link rel="stylesheet" href="cards.css">
+</head>
+<body>
+
+<!-- Portrait-first: the whole game lives in one phone-shaped column
+     (target device is a Pixel 9a, 414x875 CSS px). On a desktop it sits
+     centred so it can be clicked with a mouse at true size. Zone order is
+     thumb-first: the hand is at the BOTTOM because it is the only thing
+     you actually touch — payment is automatic, so the element store is a
+     readout and sits higher up. -->
+<div class="phone" id="phone">
+
+  <header class="hud">
+    <div class="hud-row">
+      <span class="round">R<b id="roundNo">1</b></span>
+      <span class="station-tag" id="stationTag" hidden></span>
+      <span class="hud-gap"></span>
+      <span class="sp-chip" id="spChip"></span>
+      <button type="button" class="icon-btn" data-act="rules" aria-label="Rules">?</button>
+      <button type="button" class="icon-btn" data-act="newrun" aria-label="New run">⟳</button>
+    </div>
+    <div class="goal-bar"><div class="goal-fill" id="goalFill"></div></div>
+    <div class="hud-row small">
+      <span class="goal-score"><b id="score">0</b> / <span id="target">0</span>
+        <span class="par-tag" id="parTag" hidden></span></span>
+      <span class="hud-gap"></span>
+      <span class="counter"><b id="manaLeft">0/0</b> mana</span>
+      <span class="counter"><b id="mullsLeft">3</b> mull</span>
+      <span class="counter"><b id="deckLeft">0</b> deck</span>
+    </div>
+  </header>
+
+  <!-- ELEMENT STORE: one stack per suit, cards overlapping so the pool
+       reads by depth rather than by a count badge. -->
+  <section class="store-zone">
+    <div class="store" id="store"></div>
+  </section>
+
+  <!-- Running total + the flush track, which only settles at round end. -->
+  <section class="readout" id="readout">
+    <div class="readout-top">
+      <span class="chips-label">On the table</span>
+      <span class="chips" id="chips">0</span>
+    </div>
+    <div class="flush-track" id="readoutName"></div>
+    <p class="readout-projection" id="readoutProjection"></p>
+  </section>
+
+  <section class="played-zone">
+    <div class="played" id="played"></div>
+  </section>
+
+  <!-- HAND: fanned, bottom of the screen, in thumb reach. -->
+  <section class="hand-zone">
+    <div class="hand" id="hand"></div>
+    <div class="controls">
+      <button type="button" class="btn mull" data-act="mulligan" id="mullBtn">Mulligan</button>
+      <button type="button" class="btn primary" data-act="end" id="endBtn">End round</button>
+      <button type="button" class="btn ghost small" data-act="sort-cost" id="sortCost">Cost</button>
+      <button type="button" class="btn ghost small" data-act="sort-points" id="sortPoints">Pts</button>
+    </div>
+  </section>
+
+  <div class="toast-stack" id="toasts"></div>
+
+</div>
+
+<div class="modal-veil" id="veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button type="button" class="modal-x" data-act="close" aria-label="Close">✕</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+
+<script src="data.js"></script>
+<!-- Card art is shared with the board game rather than duplicated; run
+     `python boardgame/build_board.py` if this file is missing. Without it
+     every icon silently falls back to its raw lookup key. -->
+<script src="../boardgame/icons.js"></script>
+<!-- The recorded 20-round run, from reconstruct_run.py --emit-js. Delete
+     this line (or the file) and the game falls back to free play only. -->
+<script src="run.js"></script>
+<script src="cards.js"></script>
+</body>
+</html>

@@ -10,27 +10,6 @@
         "8777"
       ],
       "port": 8777
-    },
-    {
-      "name": "boardgame",
-      "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8732"
-      ],
-      "port": 8732,
-      "autoPort": true
-    },
-    {
-      "name": "elementia-landscape",
-      "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8778"
-      ],
-      "port": 8778
     }
   ]
 }

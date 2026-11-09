@@ -99,8 +99,8 @@ function matIsComplete(c, mat){
   return [...need].every(n => names.has(n));
 }
 
-/* Named collections: the 69 the player reviewed (source:
-   Elementia_Handoff/mat_collections_approved.csv), plus later additions
+/* Named collections: the 69 the player reviewed (originally
+   archive/handoff/mat_collections_approved.csv), plus later additions
    below. Each was checked against MAT_CARD_BY_NAME/matOccupancy().
    "Motorcycle"/"Sushi Restaurant" are collection themes made of existing
    items, not item cards. Collections are discovered, not shown up front --

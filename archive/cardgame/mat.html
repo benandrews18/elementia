@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elementia — Display Mat</title>
+<link rel="stylesheet" href="mat.css">
+</head>
+<body>
+
+<div class="phone">
+
+  <header class="hud">
+    <div class="hud-row">
+      <span class="round">R<b id="roundNo">1</b></span>
+      <span class="station-tag" id="stationTag"></span>
+      <span class="hud-gap"></span>
+      <span class="dice-chip" id="diceChip"></span>
+      <button type="button" class="icon-btn" data-act="cols" aria-label="Collections">★</button>
+      <button type="button" class="icon-btn" data-act="rules" aria-label="Rules">?</button>
+      <button type="button" class="icon-btn" data-act="newrun" aria-label="New run">⟳</button>
+    </div>
+  </header>
+
+  <!-- Everything between the HUD and the Travel button lives in .stage,
+       which is the one part of the screen allowed to run out of room.
+       Without it, a short browser window pushes the Travel button past
+       the bottom of .phone (which clips) and there is no way to reach
+       it -- it flashes on first paint, then the scripts fill the mat and
+       collection and it is gone. -->
+  <div class="stage">
+
+  <!-- SCORE first: it is the readout the whole screen serves, so it sits
+       directly under the HUD where the eye lands, not buried mid-page.
+       Bonuses are icons (station art / suit art / component art) rather
+       than words, so the whole band stays one line deep. -->
+  <section class="score">
+    <div class="combos" id="combos"></div>
+    <div class="score-line">
+      <span class="s-base" id="base">0</span>
+      <span class="s-col" id="colBonus" hidden></span>
+      <span class="s-mult" id="mult">&times;1</span>
+      <span class="s-eq">=</span>
+      <span class="s-total" id="total">0</span>
+    </div>
+  </section>
+
+  <!-- THE MAT: always 2 rows of 4. Capstones span two cells.
+       Cards are dragged between cells to re-arrange. -->
+  <section class="mat-zone">
+    <h2 class="zone-title">Display mat <b id="slotsUsed">0/8</b>
+      <span class="zt-gap"></span>
+      <button type="button" class="mini" data-act="auto">Best</button>
+      <button type="button" class="mini" data-act="clear">Clear</button>
+    </h2>
+    <div class="mat" id="mat"></div>
+  </section>
+
+  <section class="inv-zone">
+    <h2 class="zone-title">Collection <b id="invCount">0</b>
+      <span class="zt-gap"></span><span class="zt-hint" id="invShown"></span></h2>
+
+    <div class="filters">
+      <div class="frow" id="fStations"></div>
+      <div class="frow" id="fSuits"></div>
+      <div class="frow">
+        <input type="search" id="fSearch" class="fsearch" placeholder="Search items…"
+               autocomplete="off" spellcheck="false">
+        <select id="fSort" class="fsort" aria-label="Sort">
+          <option value="points">Points</option>
+          <option value="name">A–Z</option>
+          <option value="station">Station</option>
+          <option value="suit">Suit</option>
+        </select>
+        <button type="button" class="mini" data-act="fclear">Reset</button>
+      </div>
+    </div>
+
+    <div class="inv" id="inv"></div>
+  </section>
+
+  </div><!-- /.stage -->
+
+  <div class="foot">
+    <button type="button" class="btn primary" data-act="travel" id="travelBtn">Travel &#9656;</button>
+  </div>
+
+  <div class="toast-stack" id="toasts"></div>
+</div>
+
+<!-- The card that follows the cursor while dragging. It lives outside the
+     mat so re-rendering the mat mid-drag cannot destroy it. -->
+<div class="drag-ghost" id="ghost" hidden></div>
+
+<div class="modal-veil" id="veil" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button type="button" class="modal-x" data-act="close" aria-label="Close">✕</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="../boardgame/icons.js"></script>
+<script src="run.js"></script>
+<script src="mat.js"></script>
+</body>
+</html>

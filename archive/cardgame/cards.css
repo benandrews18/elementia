@@ -1,0 +1,436 @@
+/* =====================================================================
+   Elementia -- Solitaire.  Portrait-first.
+
+   Target device is a Pixel 9a held upright: 414 x 875 CSS px. The whole
+   game is one phone-shaped column, centred on a desktop so it can be
+   clicked with a mouse at true size. Nothing scrolls -- the hand, the
+   element store and the score are all on screen together, because the
+   only question the game ever asks is "can I pay for this?" and that
+   needs both halves visible at once.
+
+   Zone order is thumb-first. The hand sits at the BOTTOM: payment is
+   automatic, so an element is never tapped and the store is a readout.
+
+   Card design follows images/Card Design Reference.png; the element
+   stacks follow images/Card Game UI Reference.png.
+   ===================================================================== */
+
+:root{
+  --felt:      #0d1220;
+  --felt-2:    #161d2c;
+  --line:      #2a3346;
+  --ink:       #f2f5f9;
+  --ink-soft:  #a7b1c4;
+  --ink-mute:  #6f7b91;
+  --gold:      #f2c94c;
+  --ok:        #3aab6d;
+  --no:        #e2543b;
+  --card-ink:  #12161f;
+  --card-face: #f4f2ee;
+  --shadow:    0 2px 6px rgba(0,0,0,.4);
+  --shadow-lg: 0 12px 34px rgba(0,0,0,.55);
+
+  --store-h:  272px;
+  --ecard-h:  102px;
+  --read-h:   74px;
+  --played-h: 44px;
+}
+
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; height:100%; }
+
+body{
+  margin:0; height:100%;
+  font:14px/1.4 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  color:var(--ink);
+  background:#05070c;
+  display:grid; place-items:center;
+  overflow:hidden;
+}
+button{ font:inherit; color:inherit; }
+img{ max-width:100%; }
+
+/* The phone. On a handset it fills the screen; on a desktop it is a
+   centred 414-wide slab so the layout is tested at its true size. */
+.phone{
+  position:relative;
+  width:min(100vw, 414px);
+  height:min(100dvh, 875px);
+  display:flex; flex-direction:column;
+  background:
+    radial-gradient(420px 300px at 50% -8%, #1b2436 0%, transparent 70%),
+    var(--felt);
+  overflow:hidden;
+}
+@media (min-width:520px) and (min-height:900px){
+  .phone{ border-radius:22px; box-shadow:0 0 0 8px #14181f, var(--shadow-lg); }
+}
+
+/* ---------------------------------------------------------------- HUD */
+
+.hud{
+  flex:none; padding:8px 10px 7px;
+  background:rgba(9,13,22,.92);
+  border-bottom:1px solid var(--line);
+}
+.hud-row{ display:flex; align-items:center; gap:7px; }
+.hud-row.small{ margin-top:5px; font-size:11px; color:var(--ink-mute); }
+.hud-gap{ margin-left:auto; }
+.round{ font-size:13px; font-weight:800; color:var(--ink-soft); }
+.round b{ color:var(--ink); font-size:15px; }
+.station-tag{
+  padding:2px 8px; border-radius:999px;
+  background:#232c3d; border:1px solid var(--line);
+  font-size:10px; font-weight:700; color:var(--ink-soft);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;
+}
+.sp-chip{
+  display:inline-flex; align-items:baseline; gap:4px;
+  padding:2px 9px; border-radius:999px;
+  background:linear-gradient(180deg,#2a2418,#1c1810); border:1px solid #5a4a24;
+}
+.sp-chip b{ font-size:13px; color:var(--gold); font-weight:800; }
+.sp-chip span{ font-size:8px; font-weight:800; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--ink-mute); }
+.icon-btn{
+  width:26px; height:26px; border-radius:8px; cursor:pointer; flex:none;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink-soft);
+  font-size:13px; line-height:1; display:grid; place-items:center;
+}
+.icon-btn:hover{ background:#27314599; }
+
+.goal-bar{
+  height:6px; margin-top:7px; border-radius:99px;
+  background:#080c14; border:1px solid #222b3c; overflow:hidden;
+}
+.goal-fill{
+  height:100%; width:0;
+  background:linear-gradient(90deg,#3aab6d,#8ed6a8);
+  transition:width .35s ease;
+}
+.goal-fill.done{ background:linear-gradient(90deg,var(--gold),#f6dc9a); }
+.goal-score{ font-variant-numeric:tabular-nums; }
+.goal-score b{ font-size:14px; color:var(--gold); font-weight:800; }
+.par-tag{ margin-left:5px; font-size:10px; color:var(--ink-mute); }
+.counter{ font-size:10px; color:var(--ink-mute); white-space:nowrap; }
+.counter b{ color:var(--ink-soft); font-size:12px; font-weight:800;
+  font-variant-numeric:tabular-nums; }
+.counter b.opening{ color:var(--gold); }
+
+/* -------------------------------------------------------- suit stacks */
+
+.store-zone{ flex:none; height:var(--store-h); padding:8px 10px 0; }
+.store{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; height:100%; }
+
+.stack{ display:flex; flex-direction:column; min-width:0; }
+.stack-head{
+  display:flex; align-items:center; justify-content:center; gap:3px;
+  padding:2px 0 5px; font-size:12px; font-weight:800; color:var(--ink);
+}
+.stack-head .suit-art{ width:13px; height:13px; }
+.stack-head s{ text-decoration:none; font-size:10px; font-weight:700; color:var(--ink-mute); }
+.stack.spent .stack-head{ color:var(--ink-mute); }
+.stack-cards{ position:relative; }
+
+/* An element card. Only its top strip shows once another sits on it, so
+   the strip carries what you need to read a suit at a glance: atomic
+   number and the suit glyph. That number is the ATOMIC number, never a
+   quantity -- depth is the quantity. */
+.ecard{
+  position:absolute; left:0; right:0;
+  height:var(--ecard-h); border-radius:8px;
+  background:var(--card-face);
+  border:2px solid var(--suit);
+  box-shadow:0 -1px 0 rgba(0,0,0,.35), var(--shadow);
+  overflow:hidden;
+}
+.ecard-strip{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:3px 5px; height:22px;
+  border-bottom:1px solid color-mix(in srgb, var(--suit) 35%, #fff);
+}
+.ecard-no{
+  font-size:11px; font-weight:800; color:var(--card-ink);
+  font-variant-numeric:tabular-nums; line-height:1;
+}
+.ecard-suit{ display:grid; place-items:center; }
+.ecard-suit .suit-art{ width:12px; height:12px; }
+.ecard-body{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; height:calc(100% - 22px);
+}
+.ecard-sym{ font-size:26px; font-weight:800; color:var(--card-ink); line-height:1; }
+.ecard-name{ font-size:8.5px; font-weight:600; color:#5a6478; }
+/* Spent elements ride above the live ones, drained. */
+.ecard.tapped{ filter:grayscale(1) brightness(.62); opacity:.72; }
+.ecard.empty{ position:relative; background:#111725; border-style:dashed;
+  border-color:#26314a; box-shadow:none; }
+
+/* ------------------------------------------------------------ readout */
+
+.readout{
+  flex:none; height:var(--read-h);
+  margin:8px 10px 0; padding:6px 10px;
+  background:var(--felt-2); border:1px solid var(--line); border-radius:11px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.readout.pop{ animation:pop .4s ease; }
+@keyframes pop{ 40%{ border-color:var(--gold); } }
+.readout-top{ display:flex; align-items:baseline; justify-content:center; gap:9px; }
+.chips-label{
+  font-size:9px; font-weight:800; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.chips{ font-size:24px; font-weight:900; color:var(--gold); line-height:1;
+  font-variant-numeric:tabular-nums; }
+.flush-track{ display:flex; gap:5px; justify-content:center; margin-top:4px; }
+.flush-tag{
+  display:inline-flex; align-items:center; gap:3px;
+  padding:1px 7px; border-radius:999px;
+  background:#141a26; border:1px solid #2b3446;
+  font-size:10px; font-weight:700; color:var(--ink-mute);
+}
+.flush-tag .suit-art{ width:10px; height:10px; opacity:.45; }
+.flush-tag b{ color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+.flush-tag i{ font-style:normal; color:var(--gold); font-weight:800; }
+.flush-tag.lit{
+  background:color-mix(in srgb, var(--suit) 26%, #12161f);
+  border-color:var(--suit); color:var(--ink);
+}
+.flush-tag.lit .suit-art{ opacity:1; }
+.flush-tag.lit b{ color:#fff; }
+.readout-projection{ margin:3px 0 0; font-size:9.5px; color:var(--ink-mute); text-align:center; }
+.readout-projection b{ color:var(--ink); }
+
+/* ------------------------------------------------------------- played */
+
+.played-zone{ flex:none; height:var(--played-h); padding:7px 10px 0; }
+.played{
+  display:flex; gap:4px; height:100%; align-items:center;
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+}
+.played::-webkit-scrollbar{ display:none; }
+.chip-card{
+  flex:none;
+  display:inline-flex; align-items:center; gap:3px;
+  padding:2px 7px 2px 3px; border-radius:999px;
+  background:#0e131d; border:1px solid var(--suit);
+}
+.chip-card :is(img,svg){ width:15px; height:15px; object-fit:contain; }
+.chip-card b{ font-size:10px; font-weight:800; color:var(--gold); }
+.played-empty{ font-size:10.5px; color:var(--ink-mute); }
+
+/* --------------------------------------------------------------- hand */
+
+.hand-zone{
+  flex:1; min-height:0;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:0 10px 10px;
+}
+/* The fan. Each card is absolutely placed at i * --step, tilted further
+   from centre, and dipped so the row reads as an arc. */
+.hand{
+  position:relative; flex:1; min-height:0;
+}
+.hand-empty{
+  position:absolute; inset:auto 0 40%; text-align:center;
+  color:var(--ink-mute); font-size:12px; margin:0;
+}
+
+.controls{ flex:none; display:flex; align-items:center; gap:6px; margin-top:8px; }
+.btn{
+  padding:8px 12px; border-radius:9px; cursor:pointer;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink);
+  font-size:12.5px; font-weight:700;
+  transition:background .12s, border-color .12s, transform .06s;
+}
+.btn:hover{ background:#27314599; border-color:#3a465e; }
+.btn:active{ transform:translateY(1px); }
+.btn.primary{ background:var(--ok); border-color:var(--ok); color:#04150c; font-weight:800; }
+.btn.primary:hover{ background:#45c07d; }
+.btn.mull{ background:#3a2a3f; border-color:#57405e; }
+.btn.mull:hover{ background:#4a3651; }
+.btn.ghost{ background:transparent; color:var(--ink-soft); }
+.btn.ghost.on{ background:#27314599; color:var(--ink); border-color:#46536e; }
+.btn.small{ padding:8px 10px; font-size:11.5px; }
+.btn.small:first-of-type{ margin-left:auto; }
+.btn[disabled]{ opacity:.38; cursor:not-allowed; }
+.btn[disabled]:hover{ background:#1e2637; border-color:var(--line); }
+
+/* ---------------------------------------------------------- item card */
+
+.card{
+  position:absolute;                 /* left/bottom come from fanPos() */
+  width:126px; aspect-ratio:2.5 / 3.5;
+  transform:translateY(var(--dip)) rotate(var(--tilt));
+  transform-origin:50% 100%;
+  display:flex; flex-direction:column; align-items:center;
+  padding:6px 6px 5px;
+  background:var(--card-face);
+  border:3px solid var(--card-ink);      /* black frame, per the reference */
+  border-radius:11px;
+  box-shadow:var(--shadow);
+  cursor:pointer; text-align:center;
+  transition:transform .16s cubic-bezier(.2,.9,.3,1.3), box-shadow .16s, filter .16s;
+}
+/* Lifting a card out of the fan is how you read the half of it the next
+   card covers -- hover on a mouse, the selected state on a phone. */
+.card:hover, .card:focus-visible{
+  transform:translateY(-34px) rotate(0deg) scale(1.07);
+  box-shadow:var(--shadow-lg);
+  z-index:99 !important;
+}
+.card.sel{
+  transform:translateY(-22px) rotate(var(--tilt));
+  box-shadow:0 0 0 3px #b985d6, var(--shadow-lg);
+}
+.card.unplayable{ filter:grayscale(.55) brightness(.95); }
+.card.playable{ box-shadow:0 0 0 2px var(--ok), var(--shadow); }
+.card.freecard{ border-style:dashed; }
+
+/* Suit cost, down the left edge. This column is the only part of a buried
+   card the fan leaves visible, which is exactly why it holds the cost and
+   not the points. */
+.c-cost{
+  position:absolute; top:5px; left:4px;
+  display:flex; flex-direction:column; gap:3px; z-index:2;
+}
+.cpip{
+  width:18px; height:18px; border-radius:50%;
+  display:grid; place-items:center;
+  background:var(--suit); border:1.5px solid var(--card-ink);
+  box-shadow:0 1px 2px rgba(0,0,0,.3);
+}
+.cpip .suit-art{ width:11px; height:11px; filter:brightness(0) invert(1); }
+.cpip.short{ background:#c9ced8; }
+.cpip.short .suit-art{ filter:brightness(0) invert(1) opacity(.55); }
+.c-cost.free .freepip{
+  width:18px; height:18px; border-radius:50%;
+  display:grid; place-items:center;
+  background:#fff; border:1.5px dashed var(--card-ink);
+  font-size:9px; font-weight:800; color:#5a6478;
+}
+
+/* Points, in a star, top right. */
+.c-pts{
+  position:absolute; top:3px; right:3px; z-index:2;
+  width:29px; height:29px; display:grid; place-items:center;
+  background:var(--card-ink);
+  clip-path:polygon(50% 0%,59% 15%,76% 8%,77% 27%,95% 28%,87% 44%,100% 57%,
+                    83% 65%,89% 83%,70% 82%,64% 100%,50% 88%,36% 100%,30% 82%,
+                    11% 83%,17% 65%,0% 57%,13% 44%,5% 28%,23% 27%,24% 8%,41% 15%);
+}
+.c-pts i{
+  display:grid; place-items:center;
+  width:24px; height:24px; background:var(--gold);
+  clip-path:polygon(50% 0%,59% 15%,76% 8%,77% 27%,95% 28%,87% 44%,100% 57%,
+                    83% 65%,89% 83%,70% 82%,64% 100%,50% 88%,36% 100%,30% 82%,
+                    11% 83%,17% 65%,0% 57%,13% 44%,5% 28%,23% 27%,24% 8%,41% 15%);
+  font-style:normal; font-size:11px; font-weight:900; color:var(--card-ink);
+  font-variant-numeric:tabular-nums;
+}
+
+.c-art{
+  flex:1; display:grid; place-items:center; width:100%;
+  padding:16px 2px 0; min-height:0;
+}
+.c-art :is(img,svg){ width:44px; height:44px; object-fit:contain; }
+.c-name{
+  font-size:10px; font-weight:800; line-height:1.1; color:var(--card-ink);
+  padding:2px 1px 4px; overflow-wrap:break-word; hyphens:auto;
+}
+.c-foot{
+  width:100%; border-top:2px solid var(--card-ink);
+  padding-top:3px; margin-top:auto;
+}
+.c-comp-label{
+  display:block; font-size:6px; font-weight:800; letter-spacing:.08em;
+  text-transform:uppercase; color:#7b8496; text-align:left; padding-left:1px;
+}
+/* Recipes are icons only -- there is no room for names at this size, and
+   the art is more legible than 5px text would be. */
+.c-comps{
+  display:flex; align-items:center; justify-content:center;
+  gap:1px; flex-wrap:wrap; min-height:19px;
+}
+.cmp{ display:grid; place-items:center; }
+.cmp :is(img,svg){ width:15px; height:15px; object-fit:contain; }
+.cmp.el{
+  min-width:13px; height:14px; padding:0 2px; border-radius:3px;
+  background:#fff; border:1px solid #b9c0cc;
+  font-size:8px; font-weight:800; color:var(--card-ink); line-height:1;
+}
+.cmp-plus{ font-size:7px; font-weight:800; color:#9aa2b1; }
+
+.c-station{
+  position:absolute; right:3px; bottom:3px;
+  width:20px; height:20px; border-radius:50%;
+  display:grid; place-items:center;
+  background:var(--card-ink); border:1.5px solid var(--card-ink);
+}
+.c-station :is(img,svg){ width:13px; height:13px; object-fit:contain; }
+
+.suit-art{ width:12px; height:12px; object-fit:contain; vertical-align:middle; }
+
+/* ------------------------------------------------------ modal + toast */
+
+.modal-veil{
+  position:fixed; inset:0; z-index:60;
+  background:rgba(3,5,10,.78);
+  display:grid; place-items:center; padding:14px;
+}
+.modal-veil[hidden]{ display:none; }
+.modal{
+  position:relative;
+  background:#171e2b; border:1px solid var(--line);
+  border-radius:14px; padding:18px 16px 14px;
+  width:min(414px,100%); max-height:84dvh; overflow:auto;
+  box-shadow:var(--shadow-lg);
+}
+.modal h3{ margin:0 0 10px; font-size:16px; padding-right:26px; }
+.modal h4{
+  margin:14px 0 6px; font-size:9.5px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-mute);
+}
+.modal p{ margin:0 0 9px; color:var(--ink-soft); font-size:12.5px; }
+.modal b{ color:var(--ink); }
+.modal code{ background:#232c3d; border-radius:4px; padding:1px 4px; font-size:11px; color:var(--ink); }
+.modal-x{
+  position:absolute; top:10px; right:10px;
+  width:26px; height:26px; border-radius:8px; cursor:pointer;
+  border:1px solid var(--line); background:#1e2637; color:var(--ink-soft);
+}
+.modal-foot{ display:flex; gap:7px; justify-content:flex-end; margin-top:13px; flex-wrap:wrap; }
+.modal table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.modal td, .modal th{ padding:4px 5px; border-bottom:1px solid var(--line); text-align:left; }
+.modal th{ color:var(--ink); font-weight:800; }
+.modal .num{ text-align:right; font-variant-numeric:tabular-nums; }
+.suit-cell{ display:inline-flex; align-items:center; gap:5px; }
+
+/* Toasts sit in the gap between the played row and the fan. At the
+   bottom of the screen they land straight on top of the hand, which is
+   the one thing that must stay readable. */
+.toast-stack{
+  position:absolute; left:50%; bottom:330px; transform:translateX(-50%);
+  z-index:80; display:flex; flex-direction:column-reverse; gap:4px; align-items:center;
+  pointer-events:none; width:min(100vw,414px);
+}
+.toast{
+  padding:6px 13px; border-radius:999px;
+  background:#232c3d; color:#fff; border:1px solid var(--line);
+  font-size:12px; font-weight:600; box-shadow:var(--shadow-lg);
+  animation:rise .24s ease;
+}
+.toast.good{ background:var(--ok); border-color:var(--ok); color:#04150c; }
+.toast.bad{ background:var(--no); border-color:var(--no); }
+@keyframes rise{ from{ transform:translateY(8px); opacity:0; } }
+
+/* A laptop window shorter than the phone gives the fan its space back by
+   trimming the store, which is the most compressible zone. */
+@media (max-height:820px){
+  :root{ --store-h:228px; --ecard-h:92px; --read-h:68px; --played-h:38px; }
+}
+@media (max-height:700px){
+  :root{ --store-h:186px; --ecard-h:80px; --read-h:62px; --played-h:0px; }
+  .played-zone{ display:none; }
+}
