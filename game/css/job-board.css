@@ -244,3 +244,41 @@
 #hubHome.coinflip{
   animation:hubCoinFlip .4s ease-in-out; backface-visibility:hidden;
 }
+
+/* To-Do List pinned items: each pinned item is its own parchment card,
+   like a note pinned to a corkboard, with room between cards and dark ink
+   so the ingredient breakdown (lines, arrows, boxes) reads clearly.
+   Scoped to #jobSheet; Item Reference's pinned section is unchanged. */
+#jobSheet .reftable.ref-pinned{
+  background:none; border:none; box-shadow:none; overflow:visible;
+  display:flex; flex-direction:column; gap:18px; padding-top:6px;
+}
+#jobSheet .ref-pinned .refrow{
+  background:#f2e6cc; color:#221f1a; border:2px solid #b8925a; border-radius:12px;
+  box-shadow:0 4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.25);
+}
+#jobSheet .ref-pinned .refrow:last-child{border-bottom:2px solid #b8925a}
+#jobSheet .ref-pinned .refrow:hover{background:#f6ecd7}
+#jobSheet .ref-pinned .refrow.owned{background:#e3f0dc; border-color:#3fa66b}
+/* The pin holding the card up: a small red tack at the top centre. */
+#jobSheet .ref-pinned .refrow::before{
+  content:""; position:absolute; top:-7px; left:50%; width:14px; height:14px; margin-left:-7px;
+  border-radius:50%; background:radial-gradient(circle at 35% 35%, #ff8a7a, #c23b2a 60%, #7d1f14);
+  box-shadow:0 2px 3px rgba(0,0,0,.45);
+}
+#jobSheet .ref-pinned .refname{color:#221f1a}
+#jobSheet .ref-pinned .refwhere{color:#5b4a33}
+#jobSheet .ref-pinned .refexpand{color:#8a5a12}
+#jobSheet .ref-pinned .refpts{background:#fff3d6; color:#6b4a10; border-color:#c79a2e}
+#jobSheet .ref-pinned .refpin:not(.active){background:#e9dcc0; border-color:#a67c4a; opacity:.8}
+/* Breakdown inside the card: light boxes, brown borders and arrows, a
+   solid guide line. */
+#jobSheet .ref-pinned .mn-head{background:#fffaf0; border-color:#a67c4a; color:#221f1a}
+#jobSheet .ref-pinned .mn-arrow{color:#5b4a33}
+#jobSheet .ref-pinned .mn-name{color:#221f1a}
+#jobSheet .ref-pinned .mission-node.done > .mn-row .mn-head{background:#dcefd9; border-color:#3fa66b}
+#jobSheet .ref-pinned .mn-children{border-left:2px solid #8a6a42}
+#jobSheet .ref-pinned .mn-leaf{border-color:#a67c4a; color:#221f1a; background:#fffaf0}
+#jobSheet .ref-pinned .mn-leaf.have{background:#dcefd9; border-color:#3fa66b; color:#1f6b3a}
+#jobSheet .ref-pinned .mn-leaf.need{color:#5b4a33}
+#jobSheet .ref-pinned .mn-tick{color:#2e8a50}
