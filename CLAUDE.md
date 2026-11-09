@@ -38,12 +38,13 @@ for current rules.
 
 ## Publishing (only when asked)
 
-1. `python game/build_artifact.py` → `game/build/elementia_artifact.html`
-2. Shared link: publish that file to https://claude.ai/artifact/KCo6nrTYdJ6cRXPhJqu2ZV
-3. Website (https://benandrews18.github.io/elementia/): copy it over
-   `../elementia-site/index.html` (a separate clone), commit there,
-   `git push origin main`. This repo has no remote.
-4. Add a `CHANGELOG.md` entry. Bump `"version"` in `data.js` when content changed.
+1. Website (https://benandrews18.github.io/elementia/):
+   `python game/deploy.py "What changed"`. It runs the smoke test, builds
+   `game/build/elementia_artifact.html`, copies it into `../elementia-site/`
+   (a separate clone; this repo has no remote), commits there and pushes.
+2. Shared link: publish that same build file with the Artifact tool to
+   https://claude.ai/artifact/KCo6nrTYdJ6cRXPhJqu2ZV
+3. Add a `CHANGELOG.md` entry. Bump `"version"` in `data.js` when content changed.
 
 ## Printing
 

@@ -49,6 +49,7 @@ Each file starts with a header that says what it owns.
 | Command | What it does |
 |---|---|
 | `python build_artifact.py` | Builds `build/elementia_artifact.html`, a single self-contained file. It inlines every CSS/JS file and image, and drops `js/pwa.js`. This is what the website and the Claude artifact serve. |
+| `python deploy.py "message"` | Smoke test, build, then publish the build to the website repo (`../../elementia-site`). |
 | `node tools/run_smoke.mjs` | Plays a short Classic run in headless Chrome (start, roll, craft, panels, travel, Lock-In). Prints PASS or the errors. |
 | `game_source.py` | `read_game_data()`: the `DATA` object from `js/data.js`. `read_game_source()`: the page plus every file it loads, as one string, for finding constants like `CORE_SET`. The print pipeline (`../print/`) uses both. |
 
