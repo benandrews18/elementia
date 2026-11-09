@@ -27,10 +27,7 @@ function canCraft(entry){
   for (const it of items) if (!owns(it.name)) return false;
   return true;
 }
-/* The items-only half of canCraft(), used by isRevealed(): an item isn't
-   hidden just because this visit's dice didn't roll its elements (elements
-   reset every visit; items are permanent). canCraft() still gates
-   crafting. */
+/* The items-only half of canCraft(): are all its item ingredients owned? */
 function itemReqsMet(entry){
   const {items} = needsOf(entry.reqs);
   return items.every(it => owns(it.name));
@@ -113,12 +110,6 @@ function stillNeededClosure(name){
   return [...needed];
 }
 
-// Only the curated CORE_SET, every item visible from the start. Every core
-// item's ingredients are core too, so nothing is stranded.
-function isRevealed(entry){
-  return isCoreEntry(entry);
-}
-
 /* Records an item as shown this run (state.seenItems). Idempotent. */
 function markSeen(name){
   if (!state.seenItems[name]) state.seenItems[name] = true;
@@ -129,14 +120,14 @@ function performSingleCraft(entry){
   // changes owns().
   const wasOwnedBefore = owns(entry.name);
   const beforeRevealed = new Set(
-    entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name)
+    entriesAt(current).filter(e => e.tier !== "CAPSTONE").map(e => e.name)
   );
   // Capture the shop card before craft()/render() so bounceCardClosed()
   // animates the real element.
   const preCraftCard = document.querySelector(`[data-item-card="${ENTRIES.indexOf(entry)}"]`);
   if (craft(entry)){
     holdBingoForCraftReveal();
-    const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
+    const afterRevealed = entriesAt(current).filter(e => e.tier !== "CAPSTONE").map(e => e.name);
     // !state.seenItems[n] -- same "new to the player, not just to this
     // station's shop" rule goStation()'s own reveal check uses.
     const newlyRevealed = afterRevealed.filter(n => !beforeRevealed.has(n) && n !== entry.name && !state.seenItems[n]);

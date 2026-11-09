@@ -10,6 +10,19 @@
   document.getElementById("tour").style.display = "none";
   document.querySelectorAll(".overlay.open").forEach(o => o.classList.remove("open"));
 
+  // Data: every item and recipe icon resolves (an unknown __MARKER__ would
+  // render as raw text), and every recipe ingredient is a real item.
+  await step("data", async () => {
+    log.items = CORE_ITEM_NAMES.size;
+    ENTRIES.forEach(e => {
+      if (em(e.emoji).includes("__")) errs.push("no icon for " + e.name);
+      e.reqs.forEach(r => {
+        if (r.kind === "item" && !CORE_ITEM_NAMES.has(r.name)) errs.push(`${e.name} needs unknown item ${r.name}`);
+        if (r.kind === "item" && em(r.emoji).includes("__")) errs.push(`no icon for ${r.name} in ${e.name}'s recipe`);
+      });
+    });
+  });
+
   await step("start", async () => { startFreshMode("classic"); await wait(2200); });
   await step("tutorial", async () => { for (let i = 0; i < 3; i++) classicTutNext(); await wait(200); });
   await step("capstone", async () => {

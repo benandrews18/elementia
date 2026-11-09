@@ -1,14 +1,16 @@
 /* =====================================================================
    data.js -- Game data: DATA (stations, shops, recipes, suits) plus the hand-drawn
-   item SVGs (LIGHTHOUSE_SVG, BRASS_BAR_SVG, ...).
+   item SVG (LIGHTHOUSE_SVG).
 
    THE SOURCE OF TRUTH for game content: dice per roll ("take"), the
    content version, station suits, each station's dice and shop (rows are
    [emoji, name, tier, recipe, points]) and its capstone. Edit it here by
    hand. The print pipeline (print/) reads it via game_source.py's
    read_game_data(), so the block between the markers must stay plain JSON.
-   Classic's item set (CORE_SET) and suit costs (ITEM_SUIT_COST_TABLE) live
-   in js/model.js.
+   Every row here is in the game (Classic). An item sold at several
+   stations appears once per station, with the same recipe; its first
+   listing (station order) is its home. Suit costs (ITEM_SUIT_COST_TABLE)
+   live in js/model.js.
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
@@ -112,41 +114,6 @@ const DATA = /*__GAME_DATA_START__*/{
      11
     ],
     [
-     "🧵",
-     "Fabric",
-     "COMPONENT",
-     "🍂 Plant Fiber + 🛠️ Tools",
-     9
-    ],
-    [
-     "__DYEYELLOW__",
-     "Yellow Dye",
-     "COMPONENT",
-     "🍌 Banana + 💧 Water + 🫙 Glass Vial",
-     16
-    ],
-    [
-     "⛵",
-     "Sailboat",
-     "CREATION",
-     "🛶 Canoe + 🧵 Fabric",
-     10
-    ],
-    [
-     "🧪",
-     "Biofuel",
-     "CREATION",
-     "🌿 Seaweed + 🦴 Bone + 🌱 Soil + 🔋 Battery",
-     11
-    ],
-    [
-     "__PEARL__",
-     "Pearl",
-     "COMPONENT",
-     "Ca + C + O + __FURNACE__ Furnace + 🕐 Clock",
-     13
-    ],
-    [
      "__LIGHTHOUSE__",
      "Lighthouse",
      "CREATION",
@@ -168,32 +135,11 @@ const DATA = /*__GAME_DATA_START__*/{
      23
     ],
     [
-     "🌊",
-     "Water Turbine",
-     "CREATION",
-     "💧 Water + __CONCRETE__ Concrete + __TURBINEBLADE__ Turbine Blade + 🔋 Battery",
-     22
-    ],
-    [
      "🚤",
      "Speedboat",
      "CREATION",
      "🛶 Canoe + ⚙️ Engine + 🧭 Compass + __TURBINEBLADE__ Turbine Blade",
      26
-    ],
-    [
-     "🏖️",
-     "Beach Town",
-     "CREATION",
-     "__LIGHTHOUSE__ Lighthouse + 🍣 Sushi Restaurant + 🚤 Speedboat + 🍌 Banana",
-     25
-    ],
-    [
-     "🛳️",
-     "Cruise Ship",
-     "CREATION",
-     "🚤 Speedboat + 🧭 Compass + 🔩 Stainless Steel + 🎆 Fireworks + 🎂 Fruit Cake + 🎺 Trumpet",
-     40
     ]
    ],
    "capstone": [
@@ -232,20 +178,6 @@ const DATA = /*__GAME_DATA_START__*/{
      2
     ],
     [
-     "🎆",
-     "Fireworks",
-     "MATERIAL",
-     "C + S + K",
-     4
-    ],
-    [
-     "🪟",
-     "Glass",
-     "COMPONENT",
-     "⏳ Sand + 🪨 Limestone",
-     4
-    ],
-    [
      "⚙️",
      "Engine",
      "COMPONENT",
@@ -271,13 +203,6 @@ const DATA = /*__GAME_DATA_START__*/{
      "Plastic",
      "COMPONENT",
      "🛢️ Natural Gas + __FURNACE__ Furnace",
-     10
-    ],
-    [
-     "🫙",
-     "Glass Vial",
-     "COMPONENT",
-     "🪟 Glass + __FURNACE__ Furnace",
      10
     ],
     [
@@ -307,13 +232,6 @@ const DATA = /*__GAME_DATA_START__*/{
      "CREATION",
      "⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel",
      22
-    ],
-    [
-     "🌐",
-     "Renewable Grid",
-     "CREATION",
-     "🧪 Biofuel + 𖣘 Windmill + 🌊 Water Turbine + 🌻 Sunflower + ♨️ Geothermal Pump",
-     29
     ]
    ],
    "capstone": [
@@ -337,13 +255,6 @@ const DATA = /*__GAME_DATA_START__*/{
     "P"
    ],
    "shop": [
-    [
-     "🪨",
-     "Limestone",
-     "MATERIAL",
-     "Ca + C + O",
-     1
-    ],
     [
      "♻️",
      "Fertilizer",
@@ -401,20 +312,6 @@ const DATA = /*__GAME_DATA_START__*/{
      11
     ],
     [
-     "🌻",
-     "Sunflower",
-     "CREATION",
-     "⭐ Star + 🌾 Grain",
-     20
-    ],
-    [
-     "__OPAL__",
-     "Opal",
-     "COMPONENT",
-     "Si + O + __FURNACE__ Furnace + 🕐 Clock",
-     11
-    ],
-    [
      "🐔",
      "Chicken",
      "CREATION",
@@ -422,59 +319,10 @@ const DATA = /*__GAME_DATA_START__*/{
      14
     ],
     [
-     "🐄",
-     "Cow",
-     "CREATION",
-     "🧑‍🌾 Farm + 🌾 Grain",
-     9
-    ],
-    [
-     "🐑",
-     "Sheep",
-     "CREATION",
-     "🧑‍🌾 Farm + 💧 Water",
-     8
-    ],
-    [
-     "🐝",
-     "Bee",
-     "CREATION",
-     "🧑‍🌾 Farm + 🍬 Sugar",
-     8
-    ],
-    [
-     "🧺",
-     "Basket",
-     "COMPONENT",
-     "🍂 Plant Fiber + 🛠️ Tools",
-     9
-    ],
-    [
-     "🤍",
-     "Wool",
-     "COMPONENT",
-     "🐑 Sheep + 🛠️ Tools",
-     8
-    ],
-    [
-     "🍯",
-     "Honey",
-     "COMPONENT",
-     "🐝 Bee + 🍬 Sugar",
-     9
-    ],
-    [
      "🚲",
      "Bicycle",
      "CREATION",
      "🦾 Aluminum Alloy + __WHEEL__ Wheel + __RUBBER__ Rubber",
-     20
-    ],
-    [
-     "𖣘",
-     "Windmill",
-     "CREATION",
-     "☁️ Cloud + __CONCRETE__ Concrete + __TURBINEBLADE__ Turbine Blade + 🔋 Battery",
      20
     ]
    ],
@@ -556,27 +404,6 @@ const DATA = /*__GAME_DATA_START__*/{
      7
     ],
     [
-     "🛡️",
-     "Titanium Alloy",
-     "MATERIAL",
-     "Ti + Al + __FURNACE__ Furnace",
-     4
-    ],
-    [
-     "__BRASSBAR__",
-     "Brass",
-     "MATERIAL",
-     "Cu + Zn + __FURNACE__ Furnace",
-     10
-    ],
-    [
-     "♨️",
-     "Geothermal Pump",
-     "CREATION",
-     "🌋 Volcano + 💧 Water + 🔋 Battery",
-     10
-    ],
-    [
      "__DIAMOND__",
      "Diamond",
      "COMPONENT",
@@ -584,25 +411,11 @@ const DATA = /*__GAME_DATA_START__*/{
      20
     ],
     [
-     "🌋",
-     "Volcano",
-     "CREATION",
-     "🌎 Planet + __FURNACE__ Furnace",
-     14
-    ],
-    [
      "🚜",
      "Tractor",
      "CREATION",
      "⚙️ Engine + __WHEEL__ Wheel + __RUBBER__ Rubber + __STEEL__ Steel",
      21
-    ],
-    [
-     "__GEMCOLLECTION__",
-     "Gemstone Collection",
-     "CREATION",
-     "__PEARL__ Pearl + __RUBY__ Ruby + __OPAL__ Opal + __TURQUOISE__ Turquoise + __AMBER__ Amber + __DIAMOND__ Diamond",
-     19
     ]
    ],
    "capstone": [
@@ -626,13 +439,6 @@ const DATA = /*__GAME_DATA_START__*/{
     "P"
    ],
    "shop": [
-    [
-     "💧",
-     "Water",
-     "MATERIAL",
-     "H + O",
-     1
-    ],
     [
      "⏳",
      "Sand",
@@ -662,20 +468,6 @@ const DATA = /*__GAME_DATA_START__*/{
      6
     ],
     [
-     "🍓",
-     "Strawberries",
-     "MATERIAL",
-     "🍬 Sugar + Ca + 🧺 Basket",
-     11
-    ],
-    [
-     "🍄",
-     "Mushroom",
-     "COMPONENT",
-     "🌱 Soil + 💧 Water + N",
-     6
-    ],
-    [
      "🌳",
      "Tree",
      "COMPONENT",
@@ -697,39 +489,11 @@ const DATA = /*__GAME_DATA_START__*/{
      12
     ],
     [
-     "🍂",
-     "Plant Fiber",
-     "MATERIAL",
-     "🌳 Tree + 🛠️ Tools",
-     7
-    ],
-    [
-     "🪢",
-     "Rope",
-     "COMPONENT",
-     "🍂 Plant Fiber + 🛠️ Tools",
-     8
-    ],
-    [
      "__LOGCABIN__",
      "Log Cabin",
      "CREATION",
      "🌳 Tree + 🛠️ Tools + __FURNACE__ Furnace",
      12
-    ],
-    [
-     "__AMBER__",
-     "Amber",
-     "COMPONENT",
-     "🌳 Tree + C + 🕐 Clock",
-     11
-    ],
-    [
-     "__DYERED__",
-     "Red Dye",
-     "COMPONENT",
-     "🍓 Strawberries + 💧 Water + 🫙 Glass Vial",
-     16
     ],
     [
      "🐟",
@@ -744,13 +508,6 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "🏺 Clay + 🦴 Bone + 🕐 Clock",
      17
-    ],
-    [
-     "🦖",
-     "Dinosaur",
-     "CREATION",
-     "__AMBER__ Amber + 🧬 DNA + __FOSSIL__ Fossil",
-     13
     ]
    ],
    "capstone": [
@@ -782,13 +539,6 @@ const DATA = /*__GAME_DATA_START__*/{
      1
     ],
     [
-     "🛢️",
-     "Natural Gas",
-     "MATERIAL",
-     "C + H",
-     1
-    ],
-    [
      "🍬",
      "Sugar",
      "MATERIAL",
@@ -810,25 +560,11 @@ const DATA = /*__GAME_DATA_START__*/{
      10
     ],
     [
-     "🍫",
-     "Chocolate",
-     "COMPONENT",
-     "🍬 Sugar + __FURNACE__ Furnace",
-     9
-    ],
-    [
      "__FLOUR__",
      "Flour",
      "COMPONENT",
      "🌾 Grain + 🛠️ Tools",
      18
-    ],
-    [
-     "🥛",
-     "Milk",
-     "COMPONENT",
-     "🐄 Cow + 💧 Water",
-     10
     ],
     [
      "🫓",
@@ -845,39 +581,11 @@ const DATA = /*__GAME_DATA_START__*/{
      20
     ],
     [
-     "🥨",
-     "Pretzel",
-     "CREATION",
-     "🫓 Dough + K + __OVEN__ Oven",
-     23
-    ],
-    [
      "🍥",
      "Fish Cakes",
      "CREATION",
      "🐟 Salmon + __FLOUR__ Flour + 🥚 Egg",
      21
-    ],
-    [
-     "🍰",
-     "Cake",
-     "CREATION",
-     "🫓 Dough + 🍬 Sugar + 🥚 Egg + __OVEN__ Oven",
-     12
-    ],
-    [
-     "🍶",
-     "Cream",
-     "COMPONENT",
-     "🥛 Milk + 🕐 Clock",
-     13
-    ],
-    [
-     "🧈",
-     "Butter",
-     "MATERIAL",
-     "🍶 Cream + 🛠️ Tools",
-     13
     ],
     [
      "🥧",
@@ -887,46 +595,11 @@ const DATA = /*__GAME_DATA_START__*/{
      24
     ],
     [
-     "🍰",
-     "Chocolate Cake",
-     "CREATION",
-     "🍰 Cake + 🍫 Chocolate",
-     25
-    ],
-    [
-     "🥐",
-     "Croissant",
-     "CREATION",
-     "🫓 Dough + 🧈 Butter + __OVEN__ Oven",
-     24
-    ],
-    [
-     "🍩",
-     "Éclair",
-     "CREATION",
-     "🫓 Dough + 🥚 Egg + 🍶 Cream + 🍫 Chocolate + __OVEN__ Oven",
-     25
-    ],
-    [
      "__BANANABREAD__",
      "Banana Bread",
      "CREATION",
      "🫓 Dough + 🦠 Yeast + __OVEN__ Oven + 🍌 Banana",
      24
-    ],
-    [
-     "🧁",
-     "Berry Cupcakes",
-     "CREATION",
-     "🍰 Cake + 🫐 Blueberries + 🍓 Strawberries + 🍇 Blackberries",
-     28
-    ],
-    [
-     "🍽️",
-     "Grand Banquet",
-     "CREATION",
-     "🍎 Apple + 🍌 Banana + 🍣 Sushi Restaurant + 🍰 Cake + 🎆 Fireworks",
-     28
     ]
    ],
    "capstone": [
@@ -972,13 +645,6 @@ const DATA = /*__GAME_DATA_START__*/{
      1
     ],
     [
-     "🍇",
-     "Blackberries",
-     "MATERIAL",
-     "🍬 Sugar + Mg + 🧺 Basket",
-     12
-    ],
-    [
      "🪟",
      "Glass",
      "COMPONENT",
@@ -991,27 +657,6 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "🏺 Clay + 🪨 Limestone",
      3
-    ],
-    [
-     "🗿",
-     "Statue",
-     "COMPONENT",
-     "🪨 Limestone + 🛠️ Tools",
-     6
-    ],
-    [
-     "📄",
-     "Paper",
-     "COMPONENT",
-     "🍂 Plant Fiber + 💧 Water",
-     12
-    ],
-    [
-     "__DYEBLACK__",
-     "Black Dye",
-     "COMPONENT",
-     "🍇 Blackberries + 💧 Water + 🫙 Glass Vial",
-     18
     ],
     [
      "🌉",
@@ -1028,48 +673,6 @@ const DATA = /*__GAME_DATA_START__*/{
      13
     ],
     [
-     "📕",
-     "Book",
-     "COMPONENT",
-     "📄 Paper + 🛠️ Tools",
-     13
-    ],
-    [
-     "🧶",
-     "Yarn",
-     "COMPONENT",
-     "🤍 Wool + __WHEEL__ Wheel",
-     14
-    ],
-    [
-     "🧣",
-     "Knit Scarf",
-     "CREATION",
-     "🧶 Yarn + __DYERED__ Red Dye + __DYEBLUE__ Blue Dye",
-     22
-    ],
-    [
-     "🎺",
-     "Trumpet",
-     "CREATION",
-     "__BRASSBAR__ Brass + 🛠️ Tools",
-     18
-    ],
-    [
-     "__RUBY__",
-     "Ruby",
-     "COMPONENT",
-     "Al + O + __FURNACE__ Furnace + 🕐 Clock",
-     13
-    ],
-    [
-     "📚",
-     "Library",
-     "CREATION",
-     "🏢 Building + 📕 Book",
-     15
-    ],
-    [
      "🚁",
      "Helicopter",
      "CREATION",
@@ -1084,31 +687,10 @@ const DATA = /*__GAME_DATA_START__*/{
      21
     ],
     [
-     "🏍️",
-     "Motorcycle",
-     "CREATION",
-     "🚲 Bicycle + ⚙️ Engine + __FIBERGLASS__ Fiberglass",
-     18
-    ],
-    [
-     "🍣",
-     "Sushi Restaurant",
-     "CREATION",
-     "🌿 Seaweed + 🐟 Salmon + 🏢 Building",
-     19
-    ],
-    [
      "🏛️",
      "Museum",
      "CREATION",
      "🏢 Building + 🔭 Telescope + __FOSSIL__ Fossil",
-     25
-    ],
-    [
-     "🚉",
-     "Central Station",
-     "CREATION",
-     "🚁 Helicopter + 🚄 Maglev Train + 🚗 Car + 🚤 Speedboat",
      25
     ]
    ],
@@ -1141,39 +723,11 @@ const DATA = /*__GAME_DATA_START__*/{
      3
     ],
     [
-     "🪟",
-     "Glass",
-     "COMPONENT",
-     "⏳ Sand + 🪨 Limestone",
-     4
-    ],
-    [
-     "🫐",
-     "Blueberries",
-     "MATERIAL",
-     "🍬 Sugar + K + 🧺 Basket",
-     14
-    ],
-    [
-     "__DYEBLUE__",
-     "Blue Dye",
-     "COMPONENT",
-     "🫐 Blueberries + 💧 Water + 🫙 Glass Vial",
-     19
-    ],
-    [
      "__MICROCHIP__",
      "Microchip",
      "COMPONENT",
      "🔌 Wire + Si + Ag",
      10
-    ],
-    [
-     "🌎",
-     "Planet",
-     "CREATION",
-     "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
-     8
     ],
     [
      "🧲",
@@ -1211,13 +765,6 @@ const DATA = /*__GAME_DATA_START__*/{
      20
     ],
     [
-     "__TURQUOISE__",
-     "Turquoise",
-     "COMPONENT",
-     "Cu + Al + P + __FURNACE__ Furnace + 🕐 Clock",
-     14
-    ],
-    [
      "⭐",
      "Star",
      "CREATION",
@@ -1230,13 +777,6 @@ const DATA = /*__GAME_DATA_START__*/{
      "CREATION",
      "☁️ Cloud + ⭐ Star",
      21
-    ],
-    [
-     "☀️",
-     "Solar System",
-     "CREATION",
-     "⭐ Star + 🌎 Planet",
-     18
     ],
     [
      "🚀",
@@ -1268,9 +808,4 @@ const DATA = /*__GAME_DATA_START__*/{
 
 /* Custom lighthouse: no emoji covers this concept at all. */
 const LIGHTHOUSE_SVG = '<svg viewBox="0 0 128 128" class="lighthouse" xmlns="http://www.w3.org/2000/svg"><ellipse cx="64" cy="120" rx="36" ry="7" fill="#8a8f98"/><path fill="#9aa0a8" d="M28 118 L 44 94 L 84 94 L 100 118 Z"/><path fill="#eef0f2" d="M48 94 L 55 38 L 73 38 L 80 94 Z"/><path fill="#e0483a" d="M55 38 L 58 22 L 70 22 L 73 38 Z"/><path fill="#e0483a" d="M51 62 L 77 62 L 75 74 L 53 74 Z"/><rect x="53" y="14" width="22" height="10" rx="2" fill="#30343c"/><path fill="#ffe27a" opacity="0.55" d="M64 12 L 16 4 L 64 20 Z"/><path fill="#ffe27a" opacity="0.55" d="M64 12 L 112 4 L 64 20 Z"/><circle cx="64" cy="13" r="8" fill="#ffe27a"/></svg>';
-/* Custom brass bar: a plain metal ingot reads as the raw material Brass
-   actually is (the crafted Trumpet is what gets the real 🎺 emoji now). */
-const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http://www.w3.org/2000/svg"><path fill="#8a6d2e" d="M24 102 L104 102 L90 64 L38 64 Z"/><path fill="#d9b45c" d="M38 64 L90 64 L104 38 L52 38 Z"/><path fill="#6b5326" d="M90 64 L104 38 L118 76 L104 102 Z"/><path fill="#f2dd9a" opacity="0.55" d="M56 42 L100 42 L96 46 L60 46 Z"/></svg>';
 
-/* Custom tunnel: a bore through a mountain -- no emoji for this either. */
-const TUNNEL_SVG = '<svg viewBox="0 0 128 128" class="tunnel" xmlns="http://www.w3.org/2000/svg"><path fill="#8a7860" d="M6 110 L 44 8 L 64 46 L 84 8 L 122 110 Z"/><path fill="#9c8a70" d="M64 46 L 84 8 L 122 110 L 64 110 Z"/><path fill="#5c7a4a" d="M6 110 L 44 8 L 52 24 L 18 110 Z"/><path fill="#6b8a56" d="M84 8 L 76 24 L 108 110 L 122 110 Z"/><ellipse cx="64" cy="111" rx="38" ry="9" fill="#7a6a54"/><path fill="#20232a" d="M44 110 C 44 88, 54 76, 64 76 C 74 76, 84 88, 84 110 Z"/></svg>';

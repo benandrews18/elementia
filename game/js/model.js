@@ -1,6 +1,6 @@
 /* =====================================================================
    model.js -- Rules and catalog: visit/dice limits, element and suit tables, suit
-   costs, recipe parsing, the Classic item set (CORE_SET, ENTRIES), item
+   costs, recipe parsing, the item list (ENTRIES), item
    points and scoreOf().
 
    Derived model — mirrors simulation/model.py's parse_requirements().
@@ -281,59 +281,6 @@ function parseRecipe(str){
   });
 }
 
-/* Classic's curated catalog, keyed "Station|Name" (a few items have two
-   homes). Based on the original "core 72" set, plus the few items needed so
-   every current recipe stays closed (Wheel, Log Cabin) and Fossil for its
-   cross-station links. Each station has 10 regular items + 1 capstone;
-   multi-home materials are trimmed to one home where needed. Every item's
-   full ingredient closure is inside this set. */
-const CORE_SET = new Set([
-  // The Ocean (10 + capstone)
-  "The Ocean|Water","The Ocean|Limestone","The Ocean|Sand","The Ocean|Seaweed",
-  "The Ocean|Life","The Ocean|Banana","The Ocean|Cloud","The Ocean|Lighthouse",
-  "The Ocean|Orca","The Ocean|Speedboat","The Ocean|Coral Reef",
-  // The Power Plant. Glass's core listing lives at The City.
-  "The Power Plant|Battery","The Power Plant|Wire","The Power Plant|Clock",
-  "The Power Plant|Engine","The Power Plant|Light Bulb",
-  "The Power Plant|Plastic","The Power Plant|Car",
-  "The Power Plant|Computer","The Power Plant|Fiberglass","The Power Plant|Turbine Blade",
-  "The Power Plant|Robot",
-  // Greenhouse. Solar Panel lives here (a real recipe-data move from Power
-  // Plant); Bicycle replaced Tractor (moved to Deep Mine), and Homestead's
-  // recipe uses Bicycle accordingly.
-  "Greenhouse|Fertilizer","Greenhouse|Sugar","Greenhouse|DNA",
-  "Greenhouse|Soil","Greenhouse|Farm","Greenhouse|Chicken","Greenhouse|Apple",
-  "Greenhouse|Grain","Greenhouse|Solar Panel","Greenhouse|Bicycle","Greenhouse|Homestead",
-  // Deep Mine. Tractor (from Greenhouse) replaced Titanium Alloy; Rocket
-  // uses the raw Ti element instead.
-  "Deep Mine|Clay","Deep Mine|Natural Gas","Deep Mine|Steel","Deep Mine|Tools",
-  "Deep Mine|Furnace","Deep Mine|Aluminum Alloy","Deep Mine|Stainless Steel",
-  "Deep Mine|Diamond","Deep Mine|Tractor","Deep Mine|Rubber","Deep Mine|Maglev Train",
-  // Old Growth Forest (10 + capstone, Water trimmed, +Log Cabin +Fossil)
-  "Old Growth Forest|Clay","Old Growth Forest|Sand","Old Growth Forest|Bone",
-  "Old Growth Forest|Soil","Old Growth Forest|Salmon","Old Growth Forest|Tree",
-  "Old Growth Forest|Canoe","Old Growth Forest|Deer","Old Growth Forest|Log Cabin",
-  "Old Growth Forest|Fossil","Old Growth Forest|Ecosystem",
-  // The Bakery. Oven is here (Banana Bread and Fruit Cake need it); Natural
-  // Gas is core at Deep Mine. Bread and Cake aren't core -- Banana Bread's
-  // and Fruit Cake's recipes inline their ingredients.
-  "The Bakery|Sugar","The Bakery|Water","The Bakery|Yeast",
-  "The Bakery|Egg","The Bakery|Flour","The Bakery|Dough","The Bakery|Oven",
-  "The Bakery|Apple Pie","The Bakery|Fish Cakes","The Bakery|Banana Bread","The Bakery|Fruit Cake",
-  // The City. Glass (from Power Plant) replaced Statue; Museum (Building +
-  // Telescope + Fossil) replaced Sushi Restaurant. "Motorcycle" and "Sushi
-  // Restaurant" exist only as collection names, not items.
-  "The City|Clay","The City|Limestone","The City|Steel","The City|Concrete",
-  "The City|Bridge","The City|Building","The City|Helicopter","The City|Museum",
-  "The City|Skyscraper","The City|Glass","The City|Metropolis",
-  // The Observatory (10 + capstone, Glass trimmed, +Wheel)
-  "The Observatory|Microchip","The Observatory|Tools","The Observatory|Magnet",
-  "The Observatory|Compass","The Observatory|Satellite Dish","The Observatory|Telescope",
-  "The Observatory|Star","The Observatory|Rainbow","The Observatory|Rocket",
-  "The Observatory|Wheel","The Observatory|Space Station",
-]);
-const isCoreEntry = entry => CORE_SET.has(entry.station + "|" + entry.name);
-
 /* Flatten every station into a list of craftable entries. */
 const ENTRIES = [];       // {station, emoji, name, tier, recipe, points, reqs, farm}
 const ITEM_EMOJI = {};    // name -> emoji, for inventory display
@@ -370,16 +317,11 @@ const STATION_BY_NAME = {};
 DATA.stations.forEach(s => STATION_BY_NAME[s.name] = s);
 const CAPSTONES = DATA.stations.map(s => s.capstone[1]);
 
-// Item NAMES (not station|item pairs), so membership checks work whichever
-// station a caller is looking at -- unlike isCoreEntry(), which needs the
-// specific station.
-const CORE_ITEM_NAMES = new Set([...CORE_SET].map(s => s.split("|")[1]));
-// Item name -> its one canonical CORE_SET station, for single "where it
-// comes from" badges (card inspection, BINGO). The FIRST CORE_SET listing
-// wins, which is each item's primary home (Water -> The Ocean, not The
-// Bakery). MAT_CARDS' `stations` holds the full multi-station list.
+// Every item in the game, by name (an item sold at two stations is listed once).
+const CORE_ITEM_NAMES = new Set(ENTRIES.map(e => e.name));
+// Item name -> its home station, for single "where it comes from" badges
+// (card inspection, BINGO): the first station that sells it, in DATA order
+// (Water -> The Ocean, not The Bakery). MAT_CARDS' `stations` holds the full
+// list.
 const CORE_ITEM_STATION = {};
-[...CORE_SET].forEach(s => {
-  const [station, name] = s.split("|");
-  if (!(name in CORE_ITEM_STATION)) CORE_ITEM_STATION[name] = station;
-});
+ENTRIES.forEach(e => { if (!(e.name in CORE_ITEM_STATION)) CORE_ITEM_STATION[e.name] = e.station; });

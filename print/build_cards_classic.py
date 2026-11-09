@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Elementia -- Classic Mode single card deck: one copy of every CORE_SET
+Elementia -- Classic Mode single card deck: one copy of every
 item + every capstone (capstones are always core), not a print run.
 
 Reuses build_cards_full.py's page/grid layout and asset handling, but the
@@ -25,19 +25,14 @@ spec.loader.exec_module(bg)
 STATIONS = bg.STATIONS
 SUITS = bg.SUITS
 
-# ---- CORE_SET, read live from elementia.html -------------------------------
 import sys as _sys
 _sys.path.insert(0, str(REPO / "game"))
 from game_source import read_game_source  # noqa: E402  (page + every file it loads)
 html = read_game_source()
-m = re.search(r"const CORE_SET = new Set\(\[(.*?)\]\);", html, re.DOTALL)
-if not m:
-    raise SystemExit("Could not find CORE_SET in elementia.html")
-CORE_PAIRS = set(re.findall(r'"([^"|]+)\|([^"]+)"', m.group(1)))
 
 # ---- extra __MARKER__ icons build_guide.py doesn't itself resolve --------
 # See build_guide_classic.py's matching comment: build_guide.py only hand-
-# drew SVGs for Orca/Coral/Flour/Lighthouse/Tunnel. Newer __MARKER__ items
+# drew SVGs for Orca/Coral/Flour/Lighthouse. Newer __MARKER__ items
 # (Diamond, Ecosystem, Life, Microchip, Rubber, ...) got their art made
 # straight in elementia.html as CUSTOM_ICONS overrides instead -- pull those
 # same consts out of the live game file so cards render with the game's
@@ -87,7 +82,7 @@ def collect_classic_deck():
         suit_color = SUITS[s["suit"]]["color"]
         suit_soft = SUITS[s["suit"]]["soft"]
         for emoji, name, tag, recipe, points in s["shop"]:
-            if (s["name"], name) not in CORE_PAIRS or name in seen:
+            if name in seen:
                 continue
             seen.add(name)
             regular.append({"emoji": emoji, "name": name, "tag": tag, "recipe": recipe, "points": points,
@@ -250,8 +245,7 @@ cap_html = f"<!DOCTYPE html><html><head><meta charset='utf-8'><style>{CSS}</styl
 def resolve_markers(page_html):
     page_html = (page_html
                  .replace("__ORCA__", bg.ORCA_SVG)
-                 .replace("__LIGHTHOUSE__", bg.LIGHTHOUSE_SVG)
-                 .replace("__TUNNEL__", bg.TUNNEL_SVG))
+                 .replace("__LIGHTHOUSE__", bg.LIGHTHOUSE_SVG))
     for token, const_name in EXTRA_MARKERS.items():
         if token in page_html:
             page_html = page_html.replace(token, extract_js_const(html, const_name))

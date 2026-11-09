@@ -5,21 +5,22 @@
    Display Mat (Classic only): 8 slots (a capstone takes 2) arranged by the
    player, scored as (points + collection bonuses) x combo multiplier.
    Ported from the cardgame/mat.html prototype, reading live game data
-   (ENTRIES/CORE_SET/ITEM_SUIT_COST_TABLE) -- no separate data file. The
+   (ENTRIES/ITEM_SUIT_COST_TABLE) -- no separate data file. The
    Quark/dice reward lives in the Lock-In section (finishLockIn()). */
 const MAT_SLOTS_COLS = 4, MAT_SLOTS_ROWS = 2;
 const MAT_SLOTS_TOTAL = MAT_SLOTS_COLS * MAT_SLOTS_ROWS;
 const MAT_CAPSTONE_SLOTS = 2;
 const MAT_COMBO_TIERS = [ {k:3, b:1}, {k:4, b:2}, {k:5, b:4}, {k:6, b:6} ];
 
-/* One card per CORE_SET item, owned or not (ownership only decides what
+/* One card per item, owned or not (ownership only decides what
    shows in the tray, see matInventory()). Built once at boot. */
 const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   const station = CORE_ITEM_STATION[name];
   const entry = ENTRIES.find(e => e.name === name && e.station === station);
-  // Every station that sells this item (Water, Clay, Glass, Steel, ... sell at
-  // 2-3), canonical station first -- a card combos with all of them. A capstone shows its own station twice instead, so it
-  // counts double toward that station's combo.
+  // Every station that sells this item (Water, Clay, Steel, ... sell at 2-3),
+  // home station first -- a card combos with all of them. A capstone shows
+  // its own station twice instead, so it counts double toward that
+  // station's combo.
   const stations = ITEM_TIER[name] === "CAPSTONE" ? [station, station]
     : [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]
       .filter((s, i, arr) => s && STATION_BY_NAME[s] && arr.indexOf(s) === i);

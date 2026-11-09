@@ -9,7 +9,7 @@ function stationItemIconsHTML(stationName){
   // spent intermediates stop lighting up.
   const jobTree = selectedJobItem ? new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]) : null;
   const icons = entriesAt(stationName)
-    .filter(e => e.tier !== "CAPSTONE" && isRevealed(e))
+    .filter(e => e.tier !== "CAPSTONE")
     .map(e => {
       markSeen(e.name);
       const cls = ["station-item-icon"];
@@ -117,10 +117,10 @@ function renderMap(){
     const cls = ["map-node", isHere ? "here" : reachable ? "reachable" : "unreachable"];
     if (selectedMapStation === name) cls.push("selected");
     // Tracked-item badge on the station where it's crafted (visited stations
-    // only, items isRevealed() would show). Unlike the station card's icon row,
+    // only). Unlike the station card's icon row,
     // capstones count here -- when the tracked item IS a capstone, this is the
     // only pointer to its station.
-    const hasTracked = trackedEntry && trackedEntry.station === name && isRevealed(trackedEntry);
+    const hasTracked = trackedEntry && trackedEntry.station === name;
     // Initial station pick (lastStation === null): each node shows its capstone
     // in the tracked badge's slot (syncInitialPickCapstoneTracking() tracks the
     // open card's one); it wins over the tracked badge. Both badges are

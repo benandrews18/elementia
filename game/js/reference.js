@@ -107,12 +107,9 @@ function renderCodex(){
     allRows.push({...e, homes});
   });
 
-  // Every item, every mode -- Item Reference is where spoilers are allowed
-  // (the walkthrough promises "look up any item's recipe"). Exception:
-  // only CORE_SET is shown. That check uses the NAME (CORE_ITEM_NAMES): rows are
-  // deduped to one station, which may not be the item's core one (Glass).
-  const rows = allRows
-    .filter(row => CORE_ITEM_NAMES.has(row.name));
+  // Every item -- Item Reference is where spoilers are allowed (the
+  // walkthrough promises "look up any item's recipe").
+  const rows = allRows;
 
   const REF_SORTERS = {
     az: (a, b) => a.name.localeCompare(b.name),

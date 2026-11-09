@@ -8,10 +8,10 @@ function renderStation(name){
   const allShop     = all.filter(e => e.tier !== "CAPSTONE");
   // Items unlocked by the latest craft stay hidden until the card popup
   // closes (flushPendingReveal()).
-  const shopEntries = sortShopItems(allShop.filter(isRevealed)
+  const shopEntries = sortShopItems(allShop
     .filter(e => !(pendingRevealStation === name && pendingRevealNames && pendingRevealNames.includes(e.name))));
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
-  const capRevealed = !!capEntry && isRevealed(capEntry);
+  const capRevealed = !!capEntry;
   const idx = e => ENTRIES.indexOf(e);
   shopEntries.forEach(e => markSeen(e.name));
   if (capRevealed) markSeen(capEntry.name);

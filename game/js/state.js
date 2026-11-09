@@ -122,7 +122,7 @@ function freshState(){
     ended: false,      // session summary already shown for this run
     mode: null,        // always "classic" once a run starts
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
-                          // progressive shop reveal's capstone-closure rule (see isRevealed()).
+                          // "visited every station" bonus and the Market's progress row.
     stationLastSeen: {}, // {station: [items]} revealed non-capstone shop items as of the last
                          // visit, so goStation() can spot "new since last time".
     seenItems: {},     // {item: true} every item shown to the player this run.

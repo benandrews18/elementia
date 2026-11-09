@@ -164,7 +164,7 @@
 
 .celeb-emoji{font-size:96px; line-height:1; margin:6px 0 10px;
   animation:celebpop .6s cubic-bezier(.2,1.5,.4,1) both}
-.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .tunnel,.celeb-emoji .brassbar,.celeb-emoji .rubbertire,.celeb-emoji .rubbersq,.celeb-emoji .wheelicon,.celeb-emoji .furnaceicon,.celeb-emoji .ovenicon,.celeb-emoji .bananabreadicon,.celeb-emoji .turbineicon,.celeb-emoji .steelicon,.celeb-emoji .fossilicon,.celeb-emoji .concreteicon,.celeb-emoji .fiberglassicon,.celeb-emoji .logcabinicon,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .gemcollectionicon,.celeb-emoji .pearlicon,.celeb-emoji .rubyicon,.celeb-emoji .opalicon,.celeb-emoji .turquoiseicon,.celeb-emoji .ambericon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon,.alcan{width:1em;height:1em}
+.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .rubbersq,.celeb-emoji .wheelicon,.celeb-emoji .furnaceicon,.celeb-emoji .ovenicon,.celeb-emoji .bananabreadicon,.celeb-emoji .turbineicon,.celeb-emoji .steelicon,.celeb-emoji .fossilicon,.celeb-emoji .concreteicon,.celeb-emoji .fiberglassicon,.celeb-emoji .logcabinicon,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon{width:1em;height:1em}
 @keyframes celebpop{0%{opacity:0;transform:scale(.3) rotate(-20deg)}100%{opacity:1;transform:none}}
 .celeb-kicker{font-size:12px; font-weight:800; letter-spacing:2.4px; color:var(--gold)}
 .celeb-name{font-size:32px; font-weight:800; letter-spacing:-.6px; margin:2px 0 8px}
@@ -275,7 +275,7 @@
 /* 1.5x for icons whose art reads small; matches the Classic card PDF's
    ENLARGED_ICONS (build_cards_classic.py). */
 .pc-icon.pc-icon-lg{font-size:150px}
-.pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .brassbar,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .wheelicon,.pc-icon .furnaceicon,.pc-icon .ovenicon,.pc-icon .bananabreadicon,.pc-icon .turbineicon,.pc-icon .steelicon,.pc-icon .fossilicon,.pc-icon .concreteicon,.pc-icon .fiberglassicon,.pc-icon .logcabinicon,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.pc-icon .noto-icon,.alcan{width:1em; height:1em}
+.pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .rubbersq,.pc-icon .wheelicon,.pc-icon .furnaceicon,.pc-icon .ovenicon,.pc-icon .bananabreadicon,.pc-icon .turbineicon,.pc-icon .steelicon,.pc-icon .fossilicon,.pc-icon .concreteicon,.pc-icon .fiberglassicon,.pc-icon .logcabinicon,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .diamondicon,.pc-icon .noto-icon{width:1em; height:1em}
 .pc-divider{border-top:1.5px solid #000; margin:10px 0 10px}
 .pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:#5a5548; margin-bottom:9px}
 .pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}

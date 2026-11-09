@@ -11,9 +11,13 @@ The game is the source of truth for all content. Edit these, nothing else:
 
 - `game/js/data.js`: dice per roll (`take`), content version, each
   station's dice, shop items and capstone (`[emoji, name, tier, recipe, points]`).
-  The block between the `__GAME_DATA_*__` markers must stay plain JSON.
-- `game/js/model.js`: Classic item set (`CORE_SET`), suit costs
-  (`ITEM_SUIT_COST_TABLE`), element suits, visit limits and dice rules.
+  Every row is in the game; to add or remove an item, add or remove its
+  row. The block between the `__GAME_DATA_*__` markers must stay plain JSON.
+- `game/js/model.js`: suit costs (`ITEM_SUIT_COST_TABLE`), element suits,
+  visit limits and dice rules.
+- Item icons: an emoji renders as a Noto image. After adding an item with a
+  new emoji, run `python game/tools/fetch_noto_icons.py`. Hand-made art uses
+  a `__NAME__` marker mapped in `CUSTOM_ICONS` (`js/render-helpers.js`).
 - `game/js/mat-scoring.js`: Display Mat collections, combos, BINGO rules.
 
 Nothing else holds a copy of game data. The print pipeline reads the game.

@@ -27,7 +27,7 @@ function goStation(name){
   // "New Items Unlocked" also plays on arrival if this shop's revealed set
   // grew since the last visit -- never on a first visit (nothing to compare
   // against).
-  const nowRevealed = entriesAt(name).filter(e => e.tier !== "CAPSTONE" && isRevealed(e)).map(e => e.name);
+  const nowRevealed = entriesAt(name).filter(e => e.tier !== "CAPSTONE").map(e => e.name);
   if (alreadyVisited && state.stationLastSeen[name]){
     const prevSeen = new Set(state.stationLastSeen[name]);
     // Only items new to the PLAYER (!state.seenItems), not just new to this

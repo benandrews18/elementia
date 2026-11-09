@@ -41,7 +41,7 @@
 .mn-tick{color:var(--ok); font-weight:800; flex:none}
 /* where to get it -- station emoji only, no text */
 .mn-where{flex:none; display:flex; align-items:center; gap:3px; font-size:14px; line-height:1}
-.mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .tunnel,.mn-where .brassbar,.mn-where .rubbertire,.mn-where .rubbersq,.mn-where .wheelicon,.mn-where .furnaceicon,.mn-where .ovenicon,.mn-where .bananabreadicon,.mn-where .turbineicon,.mn-where .steelicon,.mn-where .fossilicon,.mn-where .concreteicon,.mn-where .fiberglassicon,.mn-where .logcabinicon,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .gemcollectionicon,.mn-where .pearlicon,.mn-where .rubyicon,.mn-where .opalicon,.mn-where .turquoiseicon,.mn-where .ambericon,.mn-where .diamondicon,.mn-where .noto-icon,.alcan{width:1em; height:1em}
+.mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .rubbersq,.mn-where .wheelicon,.mn-where .furnaceicon,.mn-where .ovenicon,.mn-where .bananabreadicon,.mn-where .turbineicon,.mn-where .steelicon,.mn-where .fossilicon,.mn-where .concreteicon,.mn-where .fiberglassicon,.mn-where .logcabinicon,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .diamondicon,.mn-where .noto-icon{width:1em; height:1em}
 /* Dashed guide line down each child group, on the wrapper so it runs
    continuously past the gaps between rows. */
 .mn-children{

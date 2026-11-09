@@ -172,8 +172,7 @@ body { font-family:'Helvetica Neue',Arial,'Noto Color Emoji',sans-serif; color:#
    above size themselves inline instead). One rule here covers all of them. */
 .coral,.flour,.rubbersq,.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,
 .steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon,
-.diamondicon,.lifeicon,.ecosystemicon,.microchip,.noto,.brassbar,.alcan,
-.gemcollectionicon,.pearlicon,.rubyicon,.opalicon,.turquoiseicon,.ambericon
+.diamondicon,.lifeicon,.ecosystemicon,.microchip,.noto
 { width:1em; height:1em; vertical-align:-0.15em; display:inline-block; }
 .stnote { font-size:16px; color:#5a6472; padding:2px 34px 0; font-style:italic; font-weight:600; }
 .farmstar { font-size:1.5em; color:#c79a2e; font-weight:800; font-style:normal; vertical-align:-0.05em; }
@@ -234,19 +233,8 @@ LIGHTHOUSE_SVG = '''<svg viewBox="0 0 128 128" style="width:1em;height:1em;verti
 <circle cx="64" cy="13" r="8" fill="#ffe27a"/>
 </svg>'''
 
-# Custom tunnel: a bore through a mountain, distinct from Maglev Train's 🚄
-# and Deep Mine's other icons -- no emoji covers this concept at all.
-TUNNEL_SVG = '''<svg viewBox="0 0 128 128" style="width:1em;height:1em;vertical-align:-0.15em" xmlns="http://www.w3.org/2000/svg">
-<path fill="#8a7860" d="M6 110 L 44 8 L 64 46 L 84 8 L 122 110 Z"/>
-<path fill="#9c8a70" d="M64 46 L 84 8 L 122 110 L 64 110 Z"/>
-<path fill="#5c7a4a" d="M6 110 L 44 8 L 52 24 L 18 110 Z"/>
-<path fill="#6b8a56" d="M84 8 L 76 24 L 108 110 L 122 110 Z"/>
-<ellipse cx="64" cy="111" rx="38" ry="9" fill="#7a6a54"/>
-<path fill="#20232a" d="M44 110 C 44 88, 54 76, 64 76 C 74 76, 84 88, 84 110 Z"/>
-</svg>'''
-
 # Newer custom-art items never got a hand-drawn SVG here the way Orca/
-# Flour/Lighthouse/Tunnel did -- their art was made straight in
+# Flour/Lighthouse did -- their art was made straight in
 # elementia.html as CUSTOM_ICONS overrides instead (see
 # game/tools/fetch_noto_icons.py's own docstring). Pulled live from there
 # at build time rather than duplicated into this file, same as
@@ -259,12 +247,6 @@ EXTRA_MARKERS = {
     "__FIBERGLASS__": "FIBERGLASS_IMG", "__LOGCABIN__": "LOGCABIN_IMG",
     "__DIAMOND__": "DIAMOND_IMG", "__ECOSYSTEM__": "ECOSYSTEM_IMG",
     "__LIFE__": "LIFE_IMG", "__MICROCHIP__": "MICROCHIP_IMG",
-    "__DYEYELLOW__": "DYE_YELLOW_IMG", "__DYERED__": "DYE_RED_IMG",
-    "__DYEBLUE__": "DYE_BLUE_IMG", "__DYEBLACK__": "DYE_BLACK_IMG",
-    "__BRASSBAR__": "BRASS_BAR_SVG", "__GOLEM__": "GOLEM_IMG", "__ALCAN__": "ALCAN_SVG",
-    "__GEMCOLLECTION__": "GEMCOLLECTION_IMG", "__PEARL__": "PEARL_IMG",
-    "__RUBY__": "RUBY_IMG", "__OPAL__": "OPAL_IMG", "__TURQUOISE__": "TURQUOISE_IMG",
-    "__AMBER__": "AMBER_IMG",
 }
 _GAME_HTML = read_game_source()
 
