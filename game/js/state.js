@@ -145,6 +145,7 @@ function freshState(){
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).
     craftedEverything: false, // Classic: every CORE_ITEM_NAMES item owned -- see checkCraftedEverything().
+    runComplete: false, // True once the run reaches RUN_COMPLETE_VISIT (goMap()); play after it is Overtime.
     reachedHardLimit: false, // True once state.visits hits MAX_VISITS (goMap()): the
                              // congratulatory ending.
     bestMatScore: 0,   // Best matScore().total across this run's Lock-Ins, shown on the End

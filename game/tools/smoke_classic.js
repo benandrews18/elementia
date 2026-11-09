@@ -102,6 +102,21 @@
     expect(matOccupancy(t1) === 2, `3 tier 1 cards should use 2 slots, used ${matOccupancy(t1)}`);
     expect(matScore(t1).base === t1.reduce((n, c) => n + c.points, 0), "stacked tier 1 cards should each score");
 
+    // Turn 24 completes the run: the end screen offers Keep playing, and in
+    // Overtime an empty board (0 Quarks) at any Lock-In asks to end the run.
+    const isOpen = id => document.getElementById(id).classList.contains("open");
+    state.visits = RUN_COMPLETE_VISIT; state.runComplete = false; state.ended = false;
+    goMap(); await wait(400);
+    expect(state.runComplete && isOpen("endGame") && !document.getElementById("endContinue").hidden,
+      "turn 24 should open the run-complete screen with Keep playing");
+    document.getElementById("endContinue").click(); await wait(200);
+    expect(!isOpen("endGame") && !state.ended, "Keep playing should close the screen and continue");
+    state.mat = []; state.visits = RUN_COMPLETE_VISIT + 1; lockInCommitted = false;
+    confirmLockIn(); await wait(200);
+    expect(isOpen("confirmBox"), "an Overtime Lock-In below the first breakpoint should ask to end the run");
+    document.getElementById("confirmNo").click(); await wait(200);
+    expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
+
     // An old, minimal save still loads, with new fields defaulted.
     localStorage.setItem(SAVE_KEY, JSON.stringify({items: ["Water"], elements: {H: 2}, visits: 5, mode: "classic"}));
     const isNew = loadAll();

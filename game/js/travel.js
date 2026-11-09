@@ -43,6 +43,12 @@ function goMap(){
   if (state.visits >= MAX_VISITS && !state.ended){
     state.ended = true; state.reachedHardLimit = true; save(); showEndGame();
   }
+  // The run is complete at RUN_COMPLETE_VISIT: keep playing (Overtime) or
+  // start a new game. Older saves already past it get this on their next
+  // return to the map.
+  else if (state.visits >= RUN_COMPLETE_VISIT && !state.runComplete && !state.ended){
+    state.runComplete = true; save(); fireConfetti(); showEndGame();
+  }
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at Home's Market face.
   if (state.visits >= 1 && !state.marketVisited){

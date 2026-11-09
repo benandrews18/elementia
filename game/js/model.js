@@ -12,7 +12,12 @@ const TAKE = 3;
    LOCKIN_ROUND_ANCHORS ending at visit 40. */
 const DEFAULT_MAX_VISITS = 40;
 const MAX_VISITS = DEFAULT_MAX_VISITS;
-function visitLimitLabel(){ return String(MAX_VISITS); }
+/* A run is complete on returning to the map after this visit (goMap()). The
+   player can then keep going in Overtime (state.runComplete), where every
+   Lock-In must clear the first Quark breakpoint (confirmLockIn()), up to
+   MAX_VISITS. */
+const RUN_COMPLETE_VISIT = 24;
+function visitLimitLabel(){ return state && state.runComplete ? `${MAX_VISITS} OT` : String(RUN_COMPLETE_VISIT); }
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
 const BREAKPOINT_GATE_VISIT = 9;

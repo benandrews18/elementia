@@ -89,15 +89,27 @@ function scheduleCraftedEverythingEnd(){
     showEndGame();
   }, 500);
 }
+/* Also the run-complete moment at RUN_COMPLETE_VISIT (state.runComplete,
+   not yet ended): same stats, with Keep playing (Overtime) / New game.
+   Closing it any other way also keeps playing. */
 function showEndGame(){
-  document.getElementById("endTitle").textContent = state.craftedEverything
-    ? "🏆 Every Item Crafted!"
-    : state.reachedHardLimit ? "🎉 You Reached the End!" : "🏁 Game Over";
-  document.getElementById("endSub").textContent = state.craftedEverything
+  const completing = state.runComplete && !state.ended;
+  document.getElementById("endTitle").textContent = completing ? "🎉 Run Complete!"
+    : state.craftedEverything ? "🏆 Every Item Crafted!"
+    : state.reachedHardLimit ? "🎉 You Reached the End!"
+    : state.runComplete ? "⏱️ Overtime Over" : "🏁 Game Over";
+  document.getElementById("endSub").textContent = completing
+    ? `You made it to turn ${RUN_COMPLETE_VISIT}! Keep playing in Overtime to craft every item, but every Lock-In must now clear the first Quark breakpoint. Or start a new game.`
+    : state.craftedEverything
     ? `You crafted every item in Elementia in ${state.visits} visits -- here's your run:`
     : state.reachedHardLimit
     ? `You kept clearing the Quark breakpoint all the way to visit ${state.visits} -- here's your run:`
+    : state.runComplete
+    ? `Your board missed the first Quark breakpoint on an Overtime Lock-In at visit ${state.visits}. Your run still counts as complete. Here's what you built:`
     : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
+  document.getElementById("endContinue").hidden = !completing;
+  document.getElementById("endReview").hidden = completing;
+  document.getElementById("endNew").textContent = completing ? "New game" : "Start a new session";
 
   const bingoTotal = bingoLines().length;
   const bingoDone = (state.bingoLinesCompleted || []).length;
@@ -138,6 +150,7 @@ function fireConfetti(){
 document.getElementById("endNew").addEventListener("click", () => {
   closeOverlay("endGame"); restartRun();
 });
+document.getElementById("endContinue").addEventListener("click", () => closeOverlay("endGame"));
 document.getElementById("endReview").addEventListener("click", () => {
   closeOverlay("endGame"); openDrawer();
 });

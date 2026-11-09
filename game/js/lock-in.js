@@ -106,9 +106,13 @@ function confirmLockIn(){
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    if (state.visits < BREAKPOINT_GATE_VISIT || !isSunsetVisit()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
-    askConfirm(
-      `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
+    // Before Overtime the gate only applies at sunset from
+    // BREAKPOINT_GATE_VISIT on; in Overtime it applies to every Lock-In.
+    const gated = state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
+    if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
+    askConfirm(state.runComplete
+      ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
+      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;
