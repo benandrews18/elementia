@@ -176,6 +176,23 @@
 /* Leftover from an old pointer-based tap detector (now a plain click
    listener); harmless. */
 .mm-slot.filled{touch-action:none}
+/* Tier 1 squares: up to two stacked in one slot (matUnits()), together the
+   height of a normal card. */
+.mm-slot.stack{display:flex; flex-direction:column; align-items:center; gap:6px}
+.mm-slot.stack > .mm-card.mini, .mm-mini-empty{
+  flex:1 1 0; min-height:0; width:auto; height:auto; aspect-ratio:1; max-width:100%;
+}
+.mm-mini-empty{border:2px dashed var(--line); border-radius:10px}
+.mm-card.mini{padding:2px; border-width:3px; border-radius:10px}
+.mm-card.mini .mm-icon{font-size:26px; margin:0}
+.mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
+.mm-card.mini .mm-name{display:none}
+.mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
+.mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}
+.mm-card.mini .mm-pip :is(img,svg){width:11px; height:11px}
+.mm-card.mini .mm-stations{bottom:-6px}
+.mm-card.mini .mm-station{width:18px; height:18px; font-size:10px}
+.mm-card.mini .mm-station :is(img,svg){width:12px; height:12px}
 
 /* The mat/Elements zone as a "page" with two folder tabs (see
    renderMatTop()). Tabs and Clear/Layouts share one normal-flow row

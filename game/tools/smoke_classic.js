@@ -97,6 +97,11 @@
     expect(!state.bingoLinesCompleted.length && !state.pendingBingoClears.length && !state.bingoCenterChosen,
       "redrawn BINGO card kept old line progress");
 
+    // Tier 1 (MATERIAL) cards stack two to a slot, and each still scores.
+    const t1 = ["Water", "Sand", "Clay"].map(n => MAT_CARD_BY_NAME[n]);
+    expect(matOccupancy(t1) === 2, `3 tier 1 cards should use 2 slots, used ${matOccupancy(t1)}`);
+    expect(matScore(t1).base === t1.reduce((n, c) => n + c.points, 0), "stacked tier 1 cards should each score");
+
     // An old, minimal save still loads, with new fields defaulted.
     localStorage.setItem(SAVE_KEY, JSON.stringify({items: ["Water"], elements: {H: 2}, visits: 5, mode: "classic"}));
     const isNew = loadAll();

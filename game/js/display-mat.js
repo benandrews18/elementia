@@ -89,9 +89,13 @@ function matComboChipsHTML(s, revealAll){
 function renderMatGridCells(s){
   const mat = matOnMat();
   const cells = matPackCells(mat);
-  const html = cells.map(cell => cell.card
-    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${
-        matCardHTML(cell.card.name, { complete: s.completeNames.has(cell.card.name) })}</div>`
+  const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
+  const html = cells.map(cell => cell.stack
+    // Tier 1 squares, stacked; an open half shows as a small dashed square.
+    ? `<div class="mm-slot filled stack">${cell.stack.map(t => card(t.card, "mini")).join("")}${
+        cell.stack.length < MAT_TIER1_PER_SLOT ? `<span class="mm-mini-empty"></span>` : ""}</div>`
+    : cell.card
+    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${card(cell.card)}</div>`
     : `<div class="mm-slot empty"></div>`);
   for (let n = cells.reduce((a, c) => a + c.w, 0); n < MAT_SLOTS_TOTAL; n++){
     html.push(`<div class="mm-slot empty"></div>`);
@@ -403,7 +407,8 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   // Cards can't be rearranged; a tap only inspects.
   const filledSlot = ev.target.closest(".mm-slot.filled");
   if (filledSlot){
-    const cardBtn = filledSlot.querySelector("[data-mat-card]");
+    // A tier 1 stack holds two cards: open the one tapped.
+    const cardBtn = ev.target.closest("[data-mat-card]") || filledSlot.querySelector("[data-mat-card]");
     if (cardBtn){
       // Peeked view: expand to the full view FIRST (expandDrawerToFull()) so the
       // popup docks under the gold line as usual.

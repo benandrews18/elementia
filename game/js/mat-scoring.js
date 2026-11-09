@@ -46,17 +46,34 @@ const matComboTier = k => {
   return b;
 };
 
+/* Tier 1 (MATERIAL) cards are small squares: up to MAT_TIER1_PER_SLOT of
+   them stack in one slot. Each still scores as a full card (matScore()
+   reads the card list, not the slots). */
+const MAT_TIER1_PER_SLOT = 2;
+const matIsTier1 = c => c.tier === "MATERIAL";
+/* Mat order -> slot units: {card, idx, w} for a normal card, {stack:
+   [{card, idx}], w:1} for tier 1 squares. A tier 1 card joins the first
+   stack with room, else starts a new one where it sits in mat order. */
+function matUnits(cards){
+  const units = [];
+  cards.forEach((c, i) => {
+    if (!matIsTier1(c)){ units.push({card:c, idx:i, w:matSlotsOf(c)}); return; }
+    const open = units.find(u => u.stack && u.stack.length < MAT_TIER1_PER_SLOT);
+    if (open) open.stack.push({card:c, idx:i});
+    else units.push({stack:[{card:c, idx:i}], w:1});
+  });
+  return units;
+}
 /* Left-to-right packing: a 2-wide capstone never straddles a row break, so a
    lone last column pads out -- and the pad still costs a slot. Occupancy
    comes from the packing, not a sum of widths. */
 function matPackCells(cards){
   const cells = [];
   let col = 0;
-  cards.forEach((c, i) => {
-    const w = matSlotsOf(c);
-    if (col + w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
-    cells.push({card:c, idx:i, w});
-    col = (col + w) % MAT_SLOTS_COLS;
+  matUnits(cards).forEach(u => {
+    if (col + u.w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
+    cells.push(u);
+    col = (col + u.w) % MAT_SLOTS_COLS;
   });
   return cells;
 }
