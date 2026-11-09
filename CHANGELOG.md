@@ -8,6 +8,15 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## v2026.11.08e (tier cleanup)
+
+- **Tier 1 now:** Magnet, Tools, Concrete, Glass, Rubber (cheap, simple
+  items; they stack as half squares on the Display Mat).
+- **Tier 2 now:** Stainless Steel, Aluminum Alloy (were tier 1) and
+  Furnace (was tier 3).
+- Points and recipes unchanged. Tools and Furnace no longer appear on BINGO
+  cards (they were below its 5-point minimum anyway).
+
 ## v2026.11.08d (Steel is tier 1)
 
 - **Steel** is now tier 1 (Material) instead of tier 2, so it takes a half

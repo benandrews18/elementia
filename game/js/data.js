@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08d",
+ "version": "2026.11.08e",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -371,35 +371,35 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🛠️",
      "Tools",
-     "CREATION",
+     "MATERIAL",
      "Ti + Al + Fe",
      3
     ],
     [
      "__FURNACE__",
      "Furnace",
-     "CREATION",
+     "COMPONENT",
      "🏺 Clay + C",
      4
     ],
     [
      "__RUBBER__",
      "Rubber",
-     "COMPONENT",
+     "MATERIAL",
      "🛢️ Natural Gas + S",
      5
     ],
     [
      "🔩",
      "Stainless Steel",
-     "MATERIAL",
+     "COMPONENT",
      "__STEEL__ Steel + Ni + __FURNACE__ Furnace",
      8
     ],
     [
      "🦾",
      "Aluminum Alloy",
-     "MATERIAL",
+     "COMPONENT",
      "Al + Mg + __FURNACE__ Furnace",
      7
     ],
@@ -647,14 +647,14 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🪟",
      "Glass",
-     "COMPONENT",
+     "MATERIAL",
      "⏳ Sand + 🪨 Limestone",
      4
     ],
     [
      "__CONCRETE__",
      "Concrete",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + 🪨 Limestone",
      3
     ],
@@ -718,7 +718,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🛠️",
      "Tools",
-     "CREATION",
+     "MATERIAL",
      "Ti + Al + Fe",
      3
     ],
@@ -732,7 +732,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🧲",
      "Magnet",
-     "COMPONENT",
+     "MATERIAL",
      "Fe + Ni",
      2
     ],
