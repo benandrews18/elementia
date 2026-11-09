@@ -26,9 +26,13 @@ for current rules.
 
 ## Checks
 
-- `node game/tools/run_smoke.mjs`: plays a short run in headless Chrome.
-  Run it after any game change. It must print `PASS`.
-- `node --check game/js/<file>.js` for a quick syntax check.
+- `node game/tools/run_smoke.mjs`: plays a short run in headless Chrome,
+  then checks icons, recipes and key rules (suit costs, convert, BINGO
+  redraw, loading an old save). Run it after any game change. It must
+  print `PASS`. Add a rule check to `game/tools/smoke_classic.js` when you
+  fix a rule bug.
+- A project hook (`.claude/settings.json`) syntax-checks every .js/.mjs
+  file right after Claude edits it.
 - `python print/build_pdfs.py --html-only` after content changes, to
   confirm the print pipeline still reads the game data.
 

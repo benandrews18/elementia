@@ -64,6 +64,37 @@
   });
   log.afterTravel = screen + ":" + current + " visits " + state.visits;
   log.score = score();
+
+  // Rule checks: each pushes an error when a rule breaks.
+  const expect = (ok, msg) => { if (!ok) errs.push("rule: " + msg); };
+  await step("rules", async () => {
+    // Suit costs count only the four core elements per suit (not leftover Zn).
+    state.elements = {Zn: 5};
+    expect(suitSurplusOfSuit("metal", {}) === 0, "Zn counted toward metal suit cost");
+    state.elements = {Fe: 2, Cu: 1};
+    expect(suitSurplusOfSuit("metal", {Fe: 1}) === 2, "suit surplus should skip what the recipe reserves");
+
+    // Convert: CONVERT_RATE of one element -> 1 of another.
+    state.elements = {C: CONVERT_RATE};
+    openConvertScreen(); convertFrom = "C"; convertTo = "O"; updateConvertUI();
+    document.getElementById("convertGo").click();
+    expect(count("C") === 0 && count("O") === 1, `convert gave C=${count("C")} O=${count("O")}`);
+    await wait(900); closeOverlay("convert");
+
+    // A redrawn (stale) BINGO card drops the old card's line progress.
+    state.bingoCard = ensureBingoCard().slice(); state.bingoCard[0] = "Not A Real Item";
+    state.bingoLinesCompleted = [0]; state.pendingBingoClears = [0]; state.bingoCenterChosen = true;
+    ensureBingoCard();
+    expect(!state.bingoLinesCompleted.length && !state.pendingBingoClears.length && !state.bingoCenterChosen,
+      "redrawn BINGO card kept old line progress");
+
+    // An old, minimal save still loads, with new fields defaulted.
+    localStorage.setItem(SAVE_KEY, JSON.stringify({items: ["Water"], elements: {H: 2}, visits: 5, mode: "classic"}));
+    const isNew = loadAll();
+    expect(!isNew && owns("Water") && state.visits === 5 && Array.isArray(state.mat) && state.mode === "classic",
+      "old save did not load cleanly");
+    render();
+  });
   log.errs = errs;
   window.__smoke = log;
 })();
