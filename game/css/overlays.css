@@ -1,0 +1,312 @@
+/* --------------------------------------------------- modals / overlays --- */
+/* Below #hub (72) on purpose so overlays never cover the hub, including the
+   Home button that pokes above the bar. */
+.overlay{
+  position:fixed; inset:0; z-index:65; display:none;
+  align-items:flex-start; justify-content:center;
+  background:rgba(10,14,20,.72); overflow-y:auto;
+  /* Bottom padding keeps a tall dialog's last content clear of the hub. */
+  padding:20px 20px calc(20px + var(--hub-h, 67px) + env(safe-area-inset-bottom));
+}
+.overlay.open{display:flex}
+/* Above #jobSheet (69): floats over the open BINGO tray. */
+#capstoneOverlay{z-index:70}
+#capChoice, #capConfirm, #emptyElPick{z-index:72}
+.cap-choice-box{max-width:440px; text-align:center}
+/* As wide as the station preview card on the map screen: no overlay side
+   padding, the card flush to the box's edges. */
+#capConfirm{padding-left:0; padding-right:0}
+.cap-confirm-box{max-width:560px; width:100%; padding:0 0 18px; overflow:hidden; text-align:center; border-left:none; border-right:none; border-radius:0 0 20px 20px}
+.cap-choice-box h2, .cap-confirm-box h2{margin:0 0 4px}
+.cap-choice-sub{margin:0 0 14px; color:var(--ink2); font-size:14px}
+.cap-confirm-box .map-card{margin:0 0 14px; text-align:left; border-top-width:12px}
+.cap-confirm-box .map-card .pchip{pointer-events:none}
+.cap-confirm-box .map-card .capline{display:none}
+.cc-cap{display:flex; flex-direction:column; align-items:center; gap:2px; margin:4px 0 10px}
+.cc-cap-em{font-size:56px; line-height:1}
+.cc-cap-em :is(img,svg){width:64px; height:64px}
+.cc-cap-name{font-size:20px; font-weight:800}
+.cc-cap-pts{font-size:13px; color:var(--gold); font-weight:700}
+.cc-comp-label{font-size:12px; font-weight:800; letter-spacing:.06em; color:var(--mute); margin:4px 0 6px}
+/* Always ONE row, however many components: each column shrinks to fit. */
+.cc-comps{display:flex; flex-wrap:nowrap; justify-content:center; gap:6px; padding:0 12px}
+.cc-comp{display:flex; flex-direction:column; align-items:center; gap:3px; flex:0 1 60px; min-width:0}
+.cc-comp-ic{width:100%; max-width:46px; aspect-ratio:1; box-sizing:border-box; border-radius:12px; background:var(--sunken); border:2px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:24px}
+.cc-comp-ic :is(img,svg){width:32px; height:32px}
+.cc-comp-ic.el{background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:18px}
+.cc-comp-name{font-size:10px; font-weight:700; color:var(--ink2); line-height:1.15; overflow-wrap:anywhere}
+.cap-confirm-box .btnrow{padding:0 16px}
+.cc-go{display:flex; flex-direction:column; align-items:center; gap:2px; line-height:1.15}
+.cc-go small{font-size:12px; font-weight:700; opacity:.85}
+/* "Pin to track" tip over the opening To-Do List -- sits at the bottom
+   with a light scrim so the list above it stays readable. */
+#pinTip{z-index:72; align-items:flex-end; background:rgba(10,14,20,.3)}
+.pin-tip-box{max-width:420px; text-align:center}
+.pin-tip-box h2{margin:0 0 6px}
+.pin-tip-box p{margin:0 0 6px; color:var(--ink2); font-size:14px; line-height:1.4}
+/* The "?" element picker (#emptyElPick) -- the station's own element pool
+   row, unchanged, inside a popout. */
+.empty-el-pick-box{max-width:560px; text-align:center}
+.empty-el-pick-box h2{margin:0 0 4px; display:flex; align-items:center; justify-content:center; gap:10px}
+.empty-el-pick-box .gather{margin:14px 0 4px}
+.lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
+#bingoCraftOverlay{z-index:70}
+#bingoClearOverlay{z-index:70}
+/* Locks the tray against taps for the pre-animation pause plus the
+   animation itself (see runBingoSequence()'s own comment) --
+   nothing in here should be interruptible mid-beat. */
+#jobSheet.bingo-clearing{pointer-events:none}
+.bingo-q-reward{display:flex; align-items:center; justify-content:center; gap:10px; margin:14px 0 0; font-size:24px; font-weight:800}
+.bingo-el-pop{
+  position:fixed; z-index:80; width:36px; height:36px; box-sizing:border-box; border-radius:9px; pointer-events:none;
+  background:#fff; color:#221f1a; border:4px solid var(--suit); font-weight:800; font-size:15px;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 6px 14px rgba(0,0,0,.35);
+}
+/* Confirm dialog sits above other overlays (it's often raised from one and
+   comes earlier in the DOM); still below the hub. */
+#confirmBox{z-index:66}
+/* Card inspection: above #jobSheet (69) and #drawer (60) so it can open
+   over the BINGO tray or Inventory; still below the hub. */
+/* One above #capstoneOverlay/#bingoCraftOverlay (70) so a card opened from
+   them paints on top (those come later in the DOM). */
+#cardPop{z-index:71}
+.cp-close-x{
+  position:absolute; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:5;
+  width:42px; height:42px; border-radius:50%; padding:0;
+  background:rgba(20,24,32,.85); color:#fff; border:2px solid var(--gold);
+  font-size:20px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+/* Gold border on every dialog, matching the map's reachable rings and the
+   capstone celebration. */
+.sheetbox{
+  background:var(--card); border-radius:20px; padding:26px 28px; max-width:560px; width:100%;
+  border:2.5px solid var(--gold); box-shadow:0 18px 50px rgba(0,0,0,.35); position:relative; z-index:2;
+  /* margin:auto centres vertically but collapses to 0 when the box is taller
+     than the viewport, so tall dialogs start at the top and scroll instead of
+     being clipped above the screen. */
+  margin:auto 0;
+}
+/* Craft-from-BINGO (openBingoCraftOverlay()): the sheetbox frame is
+   stripped so only the shop .item card shows, exactly as in a shop. */
+#bingoCraftOverlayBody.sheetbox{
+  background:transparent; border:none; box-shadow:none; padding:0; max-width:480px;
+}
+.sheetbox h2{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px}
+.sheetbox p{color:var(--ink2); font-size:15px; margin-bottom:14px; line-height:1.5}
+.sheetbox .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
+/* Lock In's "you won dice" celebration (see showLockInRewardModal()) --
+   centered title, one Nice button, both sharing this box's own bounceIn
+   pop-in with the rest of .sheetbox. */
+.lockin-reward-box{text-align:center}
+.lockin-reward-box h2{margin-bottom:18px}
+.lockin-reward-box .btnrow{justify-content:center; margin-top:4px}
+/* One die per span in a row; each pops in on its own delay. */
+.lockin-reward-dice{display:flex; justify-content:center; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:8px; min-height:44px}
+/* Per-die animation-delay (set in showLockInRewardModal()) staggers the
+   pops; opacity:0 hides each die until its turn. */
+.lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
+@media (prefers-reduced-motion: reduce){
+  .lockin-reward-die{animation:none; opacity:1}
+}
+.lockin-reward-sub{text-align:center; font-weight:700; color:var(--ink2); margin:-2px 0 10px}
+.lockin-reward-extra{text-align:center; font-weight:800; color:var(--collection); margin:-2px 0 10px}
+/* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
+   padding/font than a normal .btnrow pair so none of the three has to
+   wrap to its own row. */
+#settings .btnrow{flex-wrap:nowrap}
+#settings .btnrow .bigbtn{flex:1 1 0; padding:12px 6px; font-size:13.5px; white-space:nowrap}
+/* Convert scrim: below #convert (33) so the tray and goal card stay lit,
+   and below #quickConvertBtn (36) so the trigger isn't dimmed. */
+#convertScrim{position:fixed; inset:0; background:rgba(10,14,20,.6); z-index:32; display:none}
+#convertScrim.open{display:block}
+/* Convert tray: slides up from behind the hub, full width. z-index 33:
+   above .floatbtn (32) so it covers #pinsBtn, below #quickConvertBtn (36)
+   so that stays on top. */
+#convert{
+  position:fixed; left:0; right:0; z-index:33;
+  bottom:var(--hub-h, 67px);
+  max-height:60vh; background:var(--card); border-top:2.5px solid var(--gold);
+  border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
+  transform:translateY(100%); transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  display:flex; flex-direction:column;
+  /* No overflow:hidden: #convertGoalCard straddles the top border and would
+     be clipped. .dbody still scrolls the content. */
+  overflow:visible;
+}
+#convert.open{transform:translateY(0)}
+#convertEmptyEl{position:absolute; top:10px; right:14px; z-index:2}
+#convertEmptyEl:empty{display:none}
+#convertEmptyEl .empty-el-badge{flex-direction:row; gap:6px; padding:4px 10px 4px 5px; border-radius:999px;
+  background:var(--sunken); border:1.5px solid var(--line)}
+#convertEmptyEl .empty-el-badge.active{border-color:var(--gold-line); background:var(--gold-soft)}
+#convertEmptyEl .empty-el-badge b{font-size:15px}
+/* Bottom padding so .convert-row clears #quickConvertBtn, which sits over
+   the tray's bottom-right corner. */
+#convert .dbody{padding-bottom:56px}
+#convert:has(#convertEmptyEl:not(:empty)) .dbody{padding-top:54px}
+.bigbtn{
+  background:var(--ok); color:#fff; font-size:15px; font-weight:800; padding:12px 22px;
+  border-radius:11px; box-shadow:0 3px 0 #24774a;
+}
+.bigbtn:hover{filter:brightness(1.06)}
+.bigbtn:not(:disabled):active{box-shadow:0 1px 0 #24774a}
+.bigbtn.sec{background:var(--sunken); color:var(--ink); box-shadow:none; border:1.5px solid var(--line)}
+.bigbtn.sec:not(:disabled):active{box-shadow:none}
+.bigbtn.warn{background:var(--bad); box-shadow:0 3px 0 #a8402c}
+.bigbtn.warn:not(:disabled):active{box-shadow:0 1px 0 #a8402c}
+.bigbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none; cursor:not-allowed}
+.bigbtn:disabled:hover{filter:none}
+
+/* capstone celebration */
+#celebrate .sheetbox{text-align:center; max-width:460px; border:3px solid var(--gold)}
+
+.celeb-emoji{font-size:96px; line-height:1; margin:6px 0 10px;
+  animation:celebpop .6s cubic-bezier(.2,1.5,.4,1) both}
+.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .tunnel,.celeb-emoji .brassbar,.celeb-emoji .rubbertire,.celeb-emoji .rubbersq,.celeb-emoji .wheelicon,.celeb-emoji .furnaceicon,.celeb-emoji .ovenicon,.celeb-emoji .bananabreadicon,.celeb-emoji .turbineicon,.celeb-emoji .steelicon,.celeb-emoji .fossilicon,.celeb-emoji .concreteicon,.celeb-emoji .fiberglassicon,.celeb-emoji .logcabinicon,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .gemcollectionicon,.celeb-emoji .pearlicon,.celeb-emoji .rubyicon,.celeb-emoji .opalicon,.celeb-emoji .turquoiseicon,.celeb-emoji .ambericon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon,.alcan{width:1em;height:1em}
+@keyframes celebpop{0%{opacity:0;transform:scale(.3) rotate(-20deg)}100%{opacity:1;transform:none}}
+.celeb-kicker{font-size:12px; font-weight:800; letter-spacing:2.4px; color:var(--gold)}
+.celeb-name{font-size:32px; font-weight:800; letter-spacing:-.6px; margin:2px 0 8px}
+.confetti{position:fixed; inset:0; pointer-events:none; z-index:95; overflow:hidden}
+.cpiece{position:absolute; width:10px; height:14px; opacity:.95; will-change:transform}
+@keyframes fall{
+  to{transform:translateY(105vh) rotate(var(--spin)); opacity:.9}
+}
+
+/* Full-screen host for station mini-games (game/minigames/*.js, inlined by
+   build_minigames.py). Above everything. `top` is set per launch
+   (launchMinigame()) to leave the station title banner visible. */
+#mgOverlay{
+  position:fixed; left:0; right:0; bottom:0; top:0; z-index:220; background:#000; display:none;
+}
+#mgOverlay.show{ display:block; animation:mgFadeIn .25s ease both; }
+#mgStage{ width:100%; height:100%; }
+@keyframes mgFadeIn{ from{opacity:0} to{opacity:1} }
+
+/* Pre-round intro card; tap anywhere to start (launchMinigame()). */
+#mgIntro{
+  position:absolute; inset:0; z-index:2; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px; text-align:center; padding:0 30px;
+  background:rgba(0,0,0,.55); color:#fff;
+}
+#mgIntro.show{ display:flex; animation:mgFadeIn .2s ease both; }
+.mg-intro-title{ font-size:32px; font-weight:800; text-shadow:0 2px 8px rgba(0,0,0,.6); }
+.mg-intro-blurb{ font-size:16px; font-weight:600; line-height:1.4; max-width:340px; opacity:.92; }
+.mg-intro-tap{
+  margin-top:10px; font-size:13px; font-weight:800; letter-spacing:.4px; text-transform:uppercase;
+  opacity:.8; animation:mg-intro-pulse 1.4s ease-in-out infinite;
+}
+@keyframes mg-intro-pulse{ 0%,100%{opacity:.5} 50%{opacity:1} }
+
+/* Results between the round and the dice roll: station icon and dice
+   earned. */
+#mgResults{
+  position:absolute; inset:0; z-index:4; display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; text-align:center;
+  background:rgba(0,0,0,.6); color:#fff;
+}
+#mgResults.show{ display:flex; animation:mgFadeIn .2s ease both; }
+.mg-results-icon{ font-size:64px; line-height:1; }
+.mg-results-pts{ font-size:20px; font-weight:800; }
+.mg-results-dice{ font-size:34px; letter-spacing:4px; }
+/* Mini-Games high-score line (launchArcadeGame()); never shown in a real
+   session. */
+.mg-results-raw{ font-size:15px; font-weight:800; color:var(--gold); }
+.mg-results-best{ font-size:12px; font-weight:700; opacity:.75; }
+
+/* crafted-card popup */
+.pc-card-wrap{
+  width:100%; max-width:300px; margin:auto; display:flex; flex-direction:column; gap:12px;
+  /* same top-clip-safe centering as .sheetbox -- see its comment */
+}
+/* White card with a heavy black frame (images/item card redesign
+   0904.png). */
+.pc-card{
+  width:100%; aspect-ratio:5/7; background:#f7f5f0; color:#181614; border-radius:22px;
+  border:16px solid #000; padding:20px 20px 16px; display:flex; flex-direction:column;
+  position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); cursor:pointer;
+}
+/* Corner badges straddle the card's outer edge: the offset equals the
+   border width. */
+.pc-badge{
+  position:absolute; top:-16px; left:-16px; width:60px; height:60px; border-radius:50%;
+  background:#f6cc4d; border:4px solid #000; color:#181614;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
+}
+/* No more "PTS" label alongside it -- just the number, sized up to
+   actually fill the circle now that it's the only thing in it. */
+.pc-badge .n{font-size:30px; font-weight:800}
+/* Bottom-right -- the station this card was made at. Icon filled out to
+   the badge's own edge (see its img rule below); same straddle offset as
+   every other corner circle. */
+.pc-station-badge{
+  position:absolute; bottom:-16px; right:-16px; width:60px; height:60px; border-radius:50%;
+  background:#fff; border:4px solid #000; color:#181614;
+  display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.3); z-index:2;
+}
+/* Art fills the circle to its border. */
+.pc-station-badge img, .pc-station-badge svg{width:82%; height:82%}
+/* Suit-cost badges (itemSuitCosts()), up to three stacked, top-right.
+   Same size/border/offset as the other corner circles. Empty for items of
+   4 points or less. */
+.pc-suitcosts{
+  position:absolute; top:-16px; right:-16px; z-index:2;
+  display:flex; flex-direction:column; gap:8px;
+}
+.pc-suitcost-badge{
+  width:60px; height:60px; border-radius:50%; flex:none;
+  background:var(--suit); border:4px solid #000;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+.pc-suitcost-badge img{width:60%; height:60%; object-fit:contain; filter:brightness(0) invert(1)}
+/* Centered, with symmetric side padding clearing BOTH corner circles now
+   (was right-only, back when only the points badge existed). */
+.pc-title{font-size:24px; font-weight:800; line-height:1.15; text-align:center; padding:0 72px; margin-top:6px}
+/* Exactly half the content height, so the title always starts at the
+   card's midpoint. */
+.pc-icon-wrap{flex:0 0 50%; display:flex; align-items:center; justify-content:center; min-height:0}
+.pc-icon{font-size:100px; line-height:1}
+/* Gemstone Collection's icon is small at 100px; doubled here only. */
+.pc-icon.pc-icon-xl{font-size:200px}
+/* 1.5x for icons whose art reads small; matches the Classic card PDF's
+   ENLARGED_ICONS (build_cards_classic.py). */
+.pc-icon.pc-icon-lg{font-size:150px}
+.pc-icon .orca,.pc-icon .coral,.pc-icon .flour,.pc-icon .lighthouse,.pc-icon .tunnel,.pc-icon .brassbar,.pc-icon .rubbertire,.pc-icon .rubbersq,.pc-icon .wheelicon,.pc-icon .furnaceicon,.pc-icon .ovenicon,.pc-icon .bananabreadicon,.pc-icon .turbineicon,.pc-icon .steelicon,.pc-icon .fossilicon,.pc-icon .concreteicon,.pc-icon .fiberglassicon,.pc-icon .logcabinicon,.pc-icon .microchip,.pc-icon .lifeicon,.pc-icon .ecosystemicon,.pc-icon .gemcollectionicon,.pc-icon .pearlicon,.pc-icon .rubyicon,.pc-icon .opalicon,.pc-icon .turquoiseicon,.pc-icon .ambericon,.pc-icon .diamondicon,.pc-icon .noto-icon,.alcan{width:1em; height:1em}
+.pc-divider{border-top:1.5px solid #000; margin:10px 0 10px}
+.pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:#5a5548; margin-bottom:9px}
+.pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+/* Below the card, its own tap target, so it can stopPropagation without
+   triggering tap-to-dismiss. */
+/* Holds Item Info alongside the (usually hidden) Back button -- a plain
+   row, not .pc-card-wrap's own column, so the two sit side by side
+   whenever Back is showing. */
+.pc-actions{display:flex; gap:10px; align-items:center; justify-content:center}
+/* Green ledge button like .bigbtn, shorter (8px padding), sized to its
+   text; .pc-actions centres it and the Back button. */
+.pc-tree-btn{
+  flex:none; padding:8px 22px; border-radius:11px; border:none;
+  background:var(--ok); color:#fff; font-size:14px; font-weight:800;
+  letter-spacing:.2px; cursor:pointer; box-shadow:0 3px 0 #24774a;
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1), filter .15s ease;
+}
+.pc-tree-btn:not(:disabled):active{transform:translateY(3px) scale(.98); box-shadow:0 0 0 transparent}
+/* Pin toggle with .refpin's look (grey off, gold on), centred in the
+   .pc-actions row. */
+.pc-pin-btn{align-self:center}
+/* Large full-width mat button on its own row below Item Info/Pin, easy to
+   hit. Purple, tying it to the Display Mat's other purple accents. */
+.pc-matbtn-lg{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; padding:14px; border:none; border-radius:14px;
+  background:var(--collection); color:#fff; font-size:15px; font-weight:800;
+  letter-spacing:.2px; cursor:pointer; box-shadow:0 4px 0 var(--collection-line);
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
+}
+.pc-matbtn-lg[hidden]{display:none}
+.pc-matbtn-lg.active{background:color-mix(in srgb, var(--collection) 80%, black)}
+.pc-matbtn-lg:not(:disabled):active{transform:translateY(4px); box-shadow:0 0 0 transparent}
+.cp-matbtn-ic{font-size:17px; line-height:1}

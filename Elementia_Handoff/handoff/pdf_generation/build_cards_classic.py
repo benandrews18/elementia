@@ -26,9 +26,10 @@ STATIONS = bg.STATIONS
 SUITS = bg.SUITS
 
 # ---- CORE_SET, read live from elementia.html -------------------------------
-# Icon consts moved to game/assets/images.js (2026-11-05); read both files.
-html = ((REPO / "game" / "elementia.html").read_text(encoding="utf-8")
-        + (REPO / "game" / "assets" / "images.js").read_text(encoding="utf-8"))
+import sys as _sys
+_sys.path.insert(0, str(REPO / "game"))
+from game_source import read_game_source  # noqa: E402  (page + every file it loads)
+html = read_game_source()
 m = re.search(r"const CORE_SET = new Set\(\[(.*?)\]\);", html, re.DOTALL)
 if not m:
     raise SystemExit("Could not find CORE_SET in elementia.html")

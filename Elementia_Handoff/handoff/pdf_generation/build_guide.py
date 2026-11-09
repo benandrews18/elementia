@@ -505,9 +505,10 @@ EXTRA_MARKERS = {
     "__AMBER__": "AMBER_IMG",
 }
 _GAME_DIR = HERE.parent.parent.parent / "game"
-# Icon consts moved to game/assets/images.js (2026-11-05); read both files.
-_GAME_HTML = ((_GAME_DIR / "elementia.html").read_text(encoding="utf-8")
-              + (_GAME_DIR / "assets" / "images.js").read_text(encoding="utf-8"))
+import sys as _sys
+_sys.path.insert(0, str(_GAME_DIR))
+from game_source import read_game_source  # noqa: E402  (page + every file it loads)
+_GAME_HTML = read_game_source()
 
 def extract_js_const(name):
     m = re.search(r"const " + name + r" = '(.*?)';", _GAME_HTML)

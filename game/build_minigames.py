@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Inline the 8 station mini-games (game/minigames/*.js) into elementia.html.
+Inline the 8 station mini-games (game/minigames/*.js) into the landscape
+edition (elementia_landscape.html).
+
+The portrait game (elementia.html) loads them with <script src> tags
+instead, and build_artifact.py inlines those for the Artifact build; this
+script only serves the landscape file, which rewrites the mini-games'
+viewport units for its fixed stage.
 
 Each mini-game file is a self-contained IIFE that assigns
 `window.runMinigame` (the shared contract documented at the top of any file
@@ -24,7 +30,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TARGETS = [HERE / "elementia.html", HERE / "elementia_landscape.html"]
+TARGETS = [HERE / "elementia_landscape.html"]
 MINIGAMES_DIR = HERE / "minigames"
 
 START, END = "<!--__MINIGAMES_START__-->", "<!--__MINIGAMES_END__-->"

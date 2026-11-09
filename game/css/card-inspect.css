@@ -1,0 +1,300 @@
+/* =====================================================================
+   "Mat panel" card inspection (openMatCardPop()): a smaller #cardPop for
+   taps from the Display Mat or full inventory, so the mat/score above stays
+   visible while placing and removing. Padding-top (set in JS,
+   positionCardPopMatPanel()) keeps it below #drawerTop. The card's
+   bottom-right corner is anchored to the screen's (flex-end), which
+   tolerates small sizing mismatches. */
+/* .pc-card stays its natural 300x420; .pc-card-scale (display:contents
+   elsewhere) gets a real box here and JS applies transform:scale() so
+   everything shrinks together. Only Place/Remove/Close show
+   (.pc-mat-toggles); Item Info/Pin are hidden. */
+/* positionCardPopMatPanel() sets .pc-card-scale's width/height in px:
+   percentage/aspect-ratio sizing can't resolve here because every
+   dimension up the chain is indeterminate. */
+/* Bottom padding is just var(--hub-h) so the card sits flush against the
+   tray corner above the hub, like the expanded #drawer. */
+#cardPop.mat-panel{
+  background:transparent;
+  padding-right:14px; padding-bottom:var(--hub-h, 67px);
+}
+/* The dimming is a separate full-width sibling, because padding also
+   covers the side margins and left lit strips. JS sets its top/bottom to
+   #cardPop's padding values so it covers only the band below the mat. */
+.pc-mat-backdrop{display:none}
+.mat-panel .pc-mat-backdrop{
+  display:block; position:absolute; left:0; right:0; z-index:0;
+  background:rgba(10,14,20,.72);
+  /* top/bottom set directly by positionCardPopMatPanel() */
+}
+/* Both children are absolutely positioned and placed by
+   positionCardPopMatPanel(); as flex items the toggles shrank to nothing
+   when the card was wide. */
+#cardPop.mat-panel .pc-card-wrap{
+  position:relative; z-index:1; width:100%; height:100%; margin:0; max-width:none;
+}
+#cardPop.mat-panel .pc-card-scale{
+  display:block; position:absolute; right:0; bottom:0;
+  /* width/height set directly by positionCardPopMatPanel() -- see the
+     comment above this whole block for why CSS alone can't do it. */
+}
+/* setCardPopScale() sets the transform inline: a CSS variable inside
+   transform didn't reliably re-apply. Only transform-origin lives here. */
+/* animation:none is required: bounceIn's fill:both value outranks the
+   inline transform forever, which kept the card at full size instead of
+   the computed scale. */
+#cardPop.mat-panel .pc-card{
+  width:300px; position:absolute; bottom:0; right:0; transform-origin:bottom right;
+  box-shadow:0 10px 28px rgba(0,0,0,.5); animation:none;
+}
+#cardPop.mat-panel .pc-actions, #cardPop.mat-panel #cpMatBtn{display:none}
+.pc-card-scale{display:contents}
+.pc-mat-toggles{display:none}
+/* Placed by positionCardPopMatPanel(): flush to the left edge, centred
+   against the card's height. */
+.mat-panel .pc-mat-toggles{
+  position:absolute; display:flex; flex-direction:column; justify-content:center; gap:10px;
+}
+/* Dim and inert unless it's the action that applies now
+   (setMatToggleState()). */
+.pc-mat-toggle-btn{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  width:66px; padding:10px 4px; border:none; border-radius:12px;
+  background:var(--sunken); color:var(--mute); font-size:10px; font-weight:800; line-height:1.2;
+  opacity:.4; cursor:default; transition:opacity .15s, background .15s, color .15s, transform .12s, box-shadow .12s;
+}
+/* Plain text glyphs (+/−/✕), not emoji, so they follow `color` with the
+   label. */
+.pc-mat-toggle-ic{font-size:20px; line-height:1}
+.pc-mat-toggle-btn.lit{opacity:1; cursor:pointer; color:#fff}
+.pc-mat-toggle-btn.place.lit{background:var(--collection); box-shadow:0 4px 0 var(--collection-line)}
+.pc-mat-toggle-btn.remove.lit{background:var(--bad); box-shadow:0 4px 0 color-mix(in srgb, var(--bad) 60%, black)}
+.pc-mat-toggle-btn.lit:active{transform:translateY(4px); box-shadow:0 0 0 transparent}
+/* Close is always active, in a neutral slate (not Place green or Remove
+   red). */
+.pc-mat-toggle-btn.close{opacity:1; cursor:pointer; color:#fff; background:#48525f; box-shadow:0 4px 0 #333b45}
+.pc-mat-toggle-btn.close:active{transform:translateY(4px); box-shadow:0 0 0 transparent}
+/* Bounce whichever button just became active (setMatToggleState()'s
+   bounceTarget). */
+@keyframes matToggleBounce{
+  0%{transform:scale(1)} 40%{transform:scale(1.2) rotate(-3deg)} 68%{transform:scale(.93) rotate(2deg)} 100%{transform:scale(1)}
+}
+.pc-mat-toggle-btn.bounce{animation:matToggleBounce .42s cubic-bezier(.3,1.2,.4,1)}
+/* Back: a left arrow plus a circle with the previous card's icon (see
+   updateCardPopBackBtn()), no background, so only Item Info reads as a
+   button. */
+.pc-back-btn{
+  flex:none; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:0; border:none; background:none; color:var(--ink); cursor:pointer;
+  transition:transform .12s cubic-bezier(.3,.8,.4,1), opacity .12s ease;
+}
+.pc-back-btn[hidden]{display:none}
+.pc-back-btn:not(:disabled):active{transform:scale(.9); opacity:.7}
+/* A stroke on top of the bold weight reads thicker at this size than
+   weight alone. */
+.pc-back-arrow{font-size:32px; font-weight:800; line-height:1; -webkit-text-stroke:1.5px currentColor}
+.pc-back-icon{
+  width:34px; height:34px; border-radius:50%; flex:none; overflow:hidden;
+  background:#fff; border:2px solid #000; color:#181614;
+  display:flex; align-items:center; justify-content:center; font-size:20px; line-height:1;
+}
+.pc-back-icon img{width:70%; height:70%; object-fit:contain}
+/* First-craft fly-in mini cards (flyIngredientsAndReveal()): .fc-item
+   mirrors .pc-card (white face, black frame), .fc-el mirrors .el-pop-card
+   (see miniIngredientCardHTML()). 120px so they read mid-flight; JS sets
+   position and size per card. */
+.fc-card{
+  width:120px; aspect-ratio:5/7; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.45);
+  gap:4px; padding:12px 8px 10px; text-align:center; box-sizing:border-box;
+}
+.fc-item{
+  background:#f7f5f0; border-radius:16px; border:4px solid #000;
+}
+/* 80px art so it reads mid-flight. */
+.fc-item .fc-icon{font-size:80px; line-height:1}
+.fc-item .fc-name{font-size:11.5px; font-weight:800; color:#181614; line-height:1.2}
+.fc-el{
+  background:#fff; border-radius:14px; border:8px solid var(--suit, #4a4f5c);
+  position:relative;
+}
+.fc-el .fc-sym{font-size:36px; font-weight:800; color:#1f1c17; line-height:1; letter-spacing:-.01em}
+.fc-el .fc-name{font-size:8.5px; font-weight:700; color:#5a5548; line-height:1.2}
+/* Four corner bubbles like .el-pop-bubble (atomic number top-left and
+   bottom-right, suit glyph in the other two), scaled to a 120px card. */
+.fc-el-bubble{
+  position:absolute; width:22px; height:22px; border-radius:50%;
+  background:#fff; border:3px solid var(--suit, #4a4f5c);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; color:#2b2822; line-height:1;
+}
+.fc-el-bubble.tl{top:-7px; left:-7px}
+.fc-el-bubble.tr{top:-7px; right:-7px}
+.fc-el-bubble.bl{bottom:-7px; left:-7px}
+.fc-el-bubble.br{bottom:-7px; right:-7px}
+.fc-el-bubble img{width:58%; height:58%; object-fit:contain}
+/* Metal's own suit glyph, same as the full popup's own suit-icon-big --
+   reads small against the other three suits at the shared bubble scale. */
+.fc-el-bubble.big img{width:87%; height:87%}
+/* Suit pill pinned to the bottom (margin-top:auto), like .el-pop-pill. */
+.fc-el-pill{
+  margin-top:auto; font-size:6.5px; font-weight:800; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; background:var(--suit, #4a4f5c);
+  padding:2px 6px; border-radius:999px; white-space:nowrap;
+}
+
+
+/* Element card popup, matching the printed cards (white face, thick suit
+   border, corner number bubbles, suit pill at the bottom). --suit set
+   inline (showElCardPop()). */
+.el-pop-card{
+  width:100%; max-width:280px; aspect-ratio:5/7; background:#fff; border-radius:24px;
+  border:20px solid var(--suit); padding:26px 20px 20px;
+  display:flex; flex-direction:column; align-items:center;
+  position:relative; box-shadow:0 18px 50px rgba(0,0,0,.4); margin:auto;
+}
+/* Overhang comes from the negative offsets, not the size, so the bubble
+   can grow freely. */
+.el-pop-bubble{
+  position:absolute; width:76px; height:76px; border-radius:50%;
+  background:#fff; border:10px solid var(--suit);
+  display:flex; align-items:center; justify-content:center;
+  font-size:40px; font-weight:800; color:#2b2822;
+}
+/* Atomic number top-left and bottom-right; suit glyph top-right and
+   bottom-left. */
+.el-pop-bubble.tr{top:-18px; right:-18px}
+.el-pop-bubble.bl{bottom:-18px; left:-18px}
+.el-pop-bubble.tl{top:-18px; left:-18px}
+.el-pop-bubble.br{bottom:-18px; right:-18px}
+.el-pop-bubble img{width:58%; height:58%; object-fit:contain}
+/* Metal's glyph is 1.5x and may spill past the bubble. */
+.el-pop-bubble.suit-icon-big img{width:87%; height:87%}
+/* Fills the space above the pill and centres the symbol + name in it. */
+.el-pop-mid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:0}
+.el-pop-symbol{
+  font-size:96px; font-weight:800; color:#1f1c17; line-height:1;
+  letter-spacing:-.01em; text-align:center;
+}
+.el-pop-name{margin-top:14px; font-size:26px; font-weight:700; color:#3a362f; text-align:center}
+.el-pop-pill{
+  margin-top:auto; font-size:12px; font-weight:800; letter-spacing:.08em;
+  text-transform:uppercase; color:#fff; background:var(--suit);
+  padding:5px 14px; border-radius:999px; white-space:nowrap;
+}
+/* Icon-only components (item art, or the element symbol), each tappable
+   (see the #cpIngredients handler). */
+.pc-ping{display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:32px; line-height:1}
+.pc-ping.elem{
+  background:#fff; border:2px solid #000; border-radius:8px; color:#181614;
+  font-size:14px; font-weight:800; padding:5px 9px;
+}
+.pc-plus{color:#5a5548; font-weight:700; font-size:14px}
+
+/* session summary */
+.sumgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin:16px 0 4px}
+.sumstat{background:var(--bg-soft); border:1.5px solid var(--line2); border-radius:13px; padding:13px 14px}
+.sumstat .n{font-size:27px; font-weight:800; letter-spacing:-1px; line-height:1.1}
+.sumstat .l{font-size:11px; font-weight:800; letter-spacing:.6px; color:var(--mute); margin-top:2px}
+.sumcaps{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
+.sumcap{background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
+  border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
+
+/* hint popover */
+#hint{
+  position:absolute; z-index:85; background:var(--toast-bg); color:var(--toast-ink);
+  border-radius:11px; padding:10px 13px; font-size:13.5px; font-weight:600; max-width:280px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3); display:none; line-height:1.45;
+}
+#hint.open{display:block}
+#hint b{font-weight:800}
+
+/* Professor Mouse (see #mouseTip). z-index 75: above dialogs and #hub (72),
+   so a tip pointing at a hub button paints its spotlight (#mouseHighlight,
+   73) and bubble over it. Raised to 10000 by .tut-coach-active during the
+   "How to Play" walkthrough to clear #tour (200), #mgOverlay (220) and the
+   coach spotlight (9997-9999).
+
+   Four corner anchors, never the centre-bottom: each tip picks the corner
+   that keeps the mouse clear of its target (see showMouseTip()'s anchor),
+   and the bubble stretches toward the screen centre. Right-side anchors use
+   row-reverse so the image stays at the true corner, and the bubble's
+   speech-tail corner always points back at the image. */
+#mouseTip{
+  position:fixed; z-index:75;
+  display:flex; max-width:min(600px, 92vw);
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+#mouseTip.tut-coach-active{ z-index:10000; }
+#mouseTip.show{opacity:1; pointer-events:auto}
+#mouseTip.anchor-bottom-left{ left:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; transform:translateY(14px); }
+#mouseTip.anchor-bottom-left.show{ transform:translateY(0); }
+/* "Tap a pin to start tracking!" (openPinsTray()) fires while #pinsTray is
+   open (up to 45vh), so the bubble moves up to sit on the tray's top edge.
+   #pinsTray comes before #mouseTip in the DOM, so the sibling selector
+   applies only while it's open. */
+#pinsTray.open ~ #mouseTip.anchor-bottom-left{ bottom:45vh; }
+#mouseTip.anchor-bottom-right{ right:16px; bottom:calc(var(--hub-h, 67px) + 14px); align-items:flex-end; flex-direction:row-reverse; transform:translateY(14px); }
+#mouseTip.anchor-bottom-right.show{ transform:translateY(0); }
+#mouseTip.anchor-top-left{ left:16px; top:14px; align-items:flex-start; transform:translateY(-14px); }
+#mouseTip.anchor-top-left.show{ transform:translateY(0); }
+#mouseTip.anchor-top-right{ right:16px; top:14px; align-items:flex-start; flex-direction:row-reverse; transform:translateY(-14px); }
+#mouseTip.anchor-top-right.show{ transform:translateY(0); }
+/* Centre anchor: for the rare tip that needs full attention. A plain
+   image-left/bubble-right row with uniform rounding, popping in with a
+   scale (no direction to slide from). left/top 50% already match the
+   centred 768px frame, so no wide-viewport correction. */
+#mouseTip.anchor-center{
+  left:50%; top:50%; align-items:center;
+  transform:translate(-50%, -50%) scale(.92);
+}
+#mouseTip.anchor-center.show{ transform:translate(-50%, -50%) scale(1); }
+#mouseTip.anchor-center .mouse-bubble{ border-radius:22px; }
+#mouseTipImg{
+  width:114px; height:auto; flex:none; margin-right:-24px; margin-bottom:-9px;
+  filter:drop-shadow(0 9px 15px rgba(0,0,0,.5)); position:relative; z-index:2;
+}
+/* Row-reverse puts the image on the right, so its tuck-in overlap comes
+   from margin-left. */
+#mouseTip.anchor-bottom-right #mouseTipImg, #mouseTip.anchor-top-right #mouseTipImg{
+  margin-right:0; margin-left:-24px;
+}
+.mouse-bubble{
+  position:relative; background:var(--card); border:3px solid var(--gold);
+  padding:19px 42px 19px 28px; box-shadow:0 14px 34px rgba(0,0,0,.5);
+}
+/* Speech-tail corner points back at the image at ITS corner -- border-
+   radius order is top-left/top-right/bottom-right/bottom-left. */
+#mouseTip.anchor-bottom-left .mouse-bubble{ border-radius:22px 22px 22px 6px; }
+#mouseTip.anchor-bottom-right .mouse-bubble{ border-radius:22px 22px 6px 22px; }
+#mouseTip.anchor-top-left .mouse-bubble{ border-radius:6px 22px 22px 22px; }
+#mouseTip.anchor-top-right .mouse-bubble{ border-radius:22px 6px 22px 22px; }
+.mouse-bubble p{font-size:19px; font-weight:700; color:var(--ink); line-height:1.42; margin:0}
+.mouse-tip-close{
+  position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
+  background:var(--sunken); color:var(--mute); font-size:14px; display:flex; align-items:center; justify-content:center;
+}
+/* [hidden] loses to the class's display:flex (same trap as .mn-children);
+   renderTutCoach() hides this during the walkthrough. */
+.mouse-tip-close[hidden]{display:none}
+/* Next/step-counter row, walkthrough only (renderTutCoach()). */
+.mouse-tip-tour{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  margin-top:14px; padding-top:14px; border-top:1.5px solid var(--line2);
+}
+/* Same [hidden]-vs-class trap: without this the row would show on every
+   one-off tip. */
+.mouse-tip-tour[hidden]{display:none}
+.mouse-tip-step{font-size:11px; font-weight:800; color:var(--mute); letter-spacing:.4px}
+.mouse-tip-tour .bigbtn{padding:9px 18px; font-size:13px}
+
+/* Spotlight around the tip's target (positionMouseHighlight()/
+   showMouseTip()'s targetSel): a huge box-shadow darkens everything except
+   the target, which stays clickable. z-index 73 so it darkens the hub
+   around a hub target; #mouseTip (75) stays above it. */
+#mouseHighlight{
+  position:fixed; z-index:73; border-radius:14px; box-sizing:border-box;
+  box-shadow:0 0 0 9999px rgba(8,10,14,.74); pointer-events:none; opacity:0;
+  transition:opacity .2s ease, left .25s ease, top .25s ease, width .25s ease, height .25s ease;
+}
+#mouseHighlight.show{opacity:1}

@@ -21,7 +21,10 @@ sys.modules["bg"] = bg
 spec.loader.exec_module(bg)
 
 # ---- CORE_SET, read live from elementia.html (JS is the source of truth) --
-html = (REPO / "game" / "elementia.html").read_text(encoding="utf-8")
+import sys as _sys
+_sys.path.insert(0, str(REPO / "game"))
+from game_source import read_game_source  # noqa: E402  (page + every file it loads)
+html = read_game_source()
 m = re.search(r"const CORE_SET = new Set\(\[(.*?)\]\);", html, re.DOTALL)
 if not m:
     raise SystemExit("Could not find CORE_SET in elementia.html")

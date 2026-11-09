@@ -1,0 +1,100 @@
+/* Dark is the only palette -- no Light theme, no data-theme attribute, no
+   prefers-color-scheme handling. One set of variables, defined once. */
+:root{
+  color-scheme:dark;
+  --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
+  /* Teal-navy palette shared with the bottom hub bar: --card/--sunken/--line
+     are the hub's own three shades; --bg/--bg-soft extend the family darker. */
+  --line:#2a5a72; --line2:#1c4257; --bg:#0f2733; --card:#163544;
+  --bg-soft:#122e3c; --sunken:#1c4257; --pip:#c9d3e0;
+  --ok:#3fb46c; --ok-soft:#16301f; --ok-line:#2c5c3c; --ok-bright:#4fe583;
+  --bad:#f0674c; --bad-soft:#371913; --bad-dark:#a3311d;
+  --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
+  --hub-map:#4d7cf2; --hub-travel:#3aa9a0; --hub-shop:#e0793c;
+  --jobcard-bg:#2a1a30;
+  --collection:#8a5ce0; --collection-soft:#241c3a; --collection-line:#4a3a75;
+  --farm-bg:#2b2317; --farm-line:#7a5a2c; --farm-ink:#d9a15c;
+  --cap-grad:linear-gradient(90deg,#251f10,#1c1a15);
+  --cap-grad-can:linear-gradient(90deg,#12281a,#151f19);
+  --toast-bg:#e8edf4; --toast-ink:#0f2733;
+  --shadow:rgba(0,0,0,.45);
+  --backdrop-wash:rgba(18,23,31,.42);
+  --backdrop-wash-light:rgba(18,23,31,.18);
+  --item-bg-start:rgba(20,26,35,.92);
+  --item-bg-end:rgba(20,26,35,.30);
+  /* Thin outline that follows an icon's actual silhouette (drop-shadow tracks
+     alpha edges; box-shadow can't). Eight sub-pixel offsets read as an even
+     stroke. Applied to the icon itself, never its badge. */
+  --icon-outline:
+    drop-shadow(.6px 0 0 #000) drop-shadow(-.6px 0 0 #000)
+    drop-shadow(0 .6px 0 #000) drop-shadow(0 -.6px 0 #000)
+    drop-shadow(.45px .45px 0 #000) drop-shadow(-.45px -.45px 0 #000)
+    drop-shadow(.45px -.45px 0 #000) drop-shadow(-.45px .45px 0 #000);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI','Helvetica Neue',Arial,'Segoe UI Emoji','Noto Color Emoji',sans-serif;
+  color:var(--ink); background:var(--bg); line-height:1.35;
+}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+button:disabled{cursor:not-allowed}
+
+/* Lock-In -> station fade curtain (see fadeThroughBlack()). Above every
+   tray/overlay/hub so the hand-off is fully hidden. */
+#fadeCurtain{
+  position:fixed; inset:0; z-index:9000; background:#000; opacity:0; pointer-events:none;
+  transition:opacity .5s ease;
+}
+#fadeCurtain.on{opacity:1; pointer-events:auto}
+
+/* ---------------------------------------------------------- low motion ---
+   html.low-motion (see lowMotion()): every transition/animation resolves
+   instantly except the few re-enabled below (Quark Meter fill, dice
+   tumble/reveal, Lock-In fade). Pulsing markers go steady instead of
+   ending invisible. Mini-games (#mgOverlay) are excluded. */
+/* :where() keeps this blanket rule at near-zero specificity, so the
+   "kept" exceptions just below (plain class/id selectors) always win. */
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *)),
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *))::before,
+html.low-motion body :where(*:not(#mgOverlay, #mgOverlay *))::after{
+  transition-duration:0s !important; transition-delay:0s !important;
+  animation-duration:.001s !important; animation-delay:0s !important; animation-iteration-count:1 !important;
+}
+html.low-motion .map-node.here::after, html.low-motion .map-node.selected::before,
+html.low-motion .map-pick-note, html.low-motion .bingo-cell-addcap,
+html.low-motion #bootScreen .boot-icon{animation:none !important}
+/* Kept: the Quark count-up's meter fill, the dice themselves, the fade. */
+html.low-motion body .qm-seg-fill{transition-duration:.3s !important}
+html.low-motion body .die.tumbling{animation-duration:.5s !important}
+html.low-motion body #fadeCurtain{transition-duration:.5s !important}
+/* Rolled dice float over the top of the shop instead of pushing it down
+   (see playRollAnimation()). */
+html.low-motion .playbar{margin-top:0}
+.playbar.lm-overlay{position:relative; height:0; overflow:visible; z-index:6}
+.playbar.lm-overlay .rolled{
+  position:absolute; left:0; right:0; top:6px; padding:8px; border-radius:14px;
+  background:rgba(12,22,30,.92); box-shadow:0 8px 20px rgba(0,0,0,.45);
+}
+
+/* Boot screen: the page is large, so the raw UI skeleton would show until
+   the main script finishes. #bootScreen is tiny and asset-free so it paints
+   instantly; the boot section at the end adds .game-ready to reveal the UI. */
+#bootScreen{
+  position:fixed; inset:0; z-index:99999;
+  background:var(--bg); display:flex; align-items:center; justify-content:center;
+}
+#bootScreen .boot-icon{ font-size:64px; line-height:1; animation:bootPulse 1.6s ease-in-out infinite; }
+@keyframes bootPulse{ 0%,100%{opacity:.45} 50%{opacity:1} }
+body:not(.game-ready) > *:not(#bootScreen){ visibility:hidden !important; }
+body.game-ready #bootScreen{ display:none; }
+
+/* Station backdrop art, fixed behind everything (negative z-index) so it
+   only shows in the gutters around cards. Full viewport width, top-anchored;
+   the fade is baked into the image. Only shown on station screens (see
+   updateBackdrop()). */
+#backdrop{
+  position:fixed; inset:0; z-index:-4; pointer-events:none;
+  background-size:100% auto; background-position:top center; background-repeat:no-repeat;
+  opacity:0; transition:opacity .3s ease;
+}
+#backdrop.show{opacity:1}

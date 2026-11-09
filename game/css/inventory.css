@@ -1,0 +1,369 @@
+/* ------------------------------------------------------- inventory --- */
+#scrim{position:fixed; inset:0; background:rgba(31,39,51,.34); z-index:50; display:none}
+/* Lock-In banner above the peeked Display Mat (see syncLockInBanner()).
+   Below #drawer (60), above #scrim. JS sets `bottom` to the drawer's top
+   edge so it fills everything above the tray. */
+/* flex-start, not center: a centred column taller than its box is clipped
+   at both ends and the top can't be scrolled to. */
+#lockInBanner{
+  display:none; position:fixed; left:0; right:0; top:0; z-index:59;
+  flex-direction:column; align-items:center; justify-content:flex-start; gap:10px;
+  padding:16px 28px; text-align:center; overflow-y:auto;
+  background:rgba(10,14,20,.92); border-bottom:3px solid var(--gold);
+}
+#lockInBanner.show{display:flex}
+#lockInBannerText{
+  margin:0; color:#fff; font-weight:800; font-size:19px; line-height:1.5;
+}
+/* Quark Score explainer (filled once at load), smaller than the main
+   instruction. Icon rows reuse buildMatFilterBar()'s markup as plain spans. */
+#lockInQuarkTutorial{
+  display:flex; flex-direction:column; gap:4px; max-width:340px;
+  color:var(--ink2); font-size:12px; font-weight:600; line-height:1.3;
+}
+#lockInQuarkTutorial .liqt-icons{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:5px; margin:1px 0;
+}
+/* "medium size" per direct request -- same 24px a station/suit icon
+   already reads at elsewhere on this same screen (see .mat-fbtn). */
+#lockInQuarkTutorial .liqt-ic{
+  width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:14px; background:var(--st, var(--suit, #4a4f5c)); flex:none;
+}
+#lockInQuarkTutorial .liqt-ic :is(img,svg){width:16px; height:16px}
+/* Two short stacked lines, quieter than the main instruction. */
+#matRulesOverlay{z-index:70}
+.mat-rules-box{max-width:420px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:12px}
+.mat-rules-box h2{margin:0}
+.mat-rules-box .btnrow{margin-top:4px}
+#lockInQuarkTutorial{font-size:13px}
+/* Small "?" badge on the Display Mat page's bottom-right corner. */
+.mat-rules-btn{
+  position:absolute; right:-6px; bottom:-6px; z-index:4;
+  width:28px; height:28px; border-radius:50%; padding:0;
+  background:#221f1a; color:#fff; border:2px solid var(--gold);
+  font-size:15px; font-weight:800; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.mat-rules-box .libt-sub{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-weight:700; font-size:14px; color:var(--ink2); margin-top:4px;
+}
+#scrim.open{display:block}
+/* Bottom sheet sliding up from behind the hub, like #convert. Taller than
+   #convert's 60vh because it holds the Display Mat plus the lists. */
+#drawer{
+  position:fixed; left:0; right:0; z-index:60;
+  bottom:var(--hub-h, 67px); max-height:82vh;
+  background:var(--card); border-top:2.5px solid var(--gold);
+  border-radius:16px 16px 0 0; box-shadow:0 -8px 20px rgba(0,0,0,.22);
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  display:flex; flex-direction:column;
+}
+#drawer.open{transform:translateY(0)}
+/* The Inventory / Display Mat tray and its contents appear instantly --
+   no transitions or animations (Lock-In's scoring bounces are JS-driven
+   and unaffected). */
+#drawer, #drawer *, #drawer *::before, #drawer *::after,
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #lockInBanner, #lockInBanner *{
+  transition:none !important; animation:none !important;
+}
+/* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher
+   than the hub-flush position every other state of this tray uses, per
+   explicit request. */
+#drawer.open:not(.expanded){bottom:calc(var(--hub-h, 67px) + 2mm)}
+/* Combo Lab (see openComboLab()): reuses the real #drawer with a throwaway
+   state (every Classic item, empty mat), forced .open.expanded, with
+   everything else hidden via this attribute. The drawer also drops its hub
+   reservation so it fills the screen. */
+[data-combo-lab] #topbar, [data-combo-lab] #hub, [data-combo-lab] #screen,
+[data-combo-lab] #backdrop, [data-combo-lab] #pinsBtn, [data-combo-lab] #pinsTray,
+[data-combo-lab] #quickConvertBtn, [data-combo-lab] #trackedPill, [data-combo-lab] #scrim,
+[data-combo-lab] #tour{
+  display:none !important;
+}
+[data-combo-lab] #drawer{bottom:0}
+/* The lab's only exit: tray headers (.dhead) are hidden game-wide and
+   there's no outside scrim to tap, so it gets a spelled-out button above
+   the Sort/Filter buttons. */
+#comboLabExitBtn{
+  display:none; position:fixed; top:0; left:0; right:0; z-index:300;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px; border:none;
+  background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%); color:#fff;
+  font-size:14px; font-weight:800; letter-spacing:.2px; cursor:pointer; text-align:center;
+}
+[data-combo-lab] #comboLabExitBtn{display:block}
+/* Push the mat down so it isn't under the fixed exit bar. */
+[data-combo-lab] #drawerTop{padding-top:calc(52px + env(safe-area-inset-top, 0px))}
+/* `top` has no base value, so it is deliberately NOT transitioned: a
+   transition with no defined end value left `top` stuck mid-way and broke
+   the next close (translateY(100%) from the wrong position). Only the
+   transform animates. */
+/* Classic's two-stage tray (see renderClassicDrawer()): "peeked" by default
+   -- .dbody hidden, so the tray is just .dhead + #drawerTop. .expanded pins
+   the top edge to the screen top (top:0) and reveals .dbody, which scrolls
+   under the fixed #drawerTop. Non-Classic drawers always get .expanded
+   (renderLegacyDrawer()). */
+/* max-height:none is required: the base 82vh cap would otherwise leave a
+   gap above the hub on most phones. */
+#drawer.expanded{top:0; max-height:none}
+#drawer:not(.expanded) .dbody{display:none}
+.dhead{display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line)}
+/* Tray header strips are hidden everywhere (Inventory/Pinned/Convert/
+   Marketplace/To-Do List): every tray closes on an outside tap or its own
+   trigger. Kept in the DOM because render code still writes #jobTitle and
+   #drawerScoreCount. */
+.dhead{display:none}
+/* Marketplace tray title icon at 2x. vertical-align reset to 0 since flex
+   centring now does the alignment. */
+#jobTitle .marketicon{width:2em; height:2em; vertical-align:0}
+/* The drawer covers the topbar's score, so it has its own readout. */
+#drawerScore{
+  display:flex; align-items:center; gap:4px; flex:none; line-height:1;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); color:var(--gold);
+  border-radius:999px; padding:6px 12px 5px; font-weight:800;
+}
+#drawerScore .n{font-size:15px; letter-spacing:-.3px}
+#drawerScore .l{font-size:9px; letter-spacing:.4px}
+.dbody{overflow-y:auto; padding:16px 18px 40px; flex:1}
+/* Line where the scrolling item list meets the fixed mat zone above
+   (#drawerTop) -- the only separation now that .dhead is hidden. */
+#drawer .dbody{border-top:2px solid var(--gold)}
+/* Collapsible mat zone (see #matCollapseBar). The bar is zero-height so the
+   button sits centred on the gold line; when the mat is hidden, the button
+   drops just below the line so the screen edge doesn't cut it. */
+#drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
+#drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
+#matCollapseBar{position:relative; height:0; z-index:4; display:none}
+#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
+#matCollapseBtn{
+  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+  width:46px; height:24px; border-radius:999px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold);
+  box-shadow:0 2px 6px rgba(0,0,0,.35); transition:transform .3s;
+}
+#drawer.mat-collapsed #matCollapseBtn{transform:translate(-50%,2px)}
+.mcb-chev{
+  width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
+  transform:translateY(2px) rotate(45deg); transition:transform .3s;
+}
+#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
+.sec-label{font-size:11px; font-weight:800; letter-spacing:1.3px; color:var(--mute);
+  margin:18px 0 9px; padding-bottom:6px; border-bottom:1.5px solid var(--line2)}
+.sec-label:first-child{margin-top:0}
+/* Mini element card (white face, thick suit border) with the count
+   underneath; tapping opens the full element card (showElCardPop()).
+   Sorted by atomic number in JS. Fixed 8-column grid so 16 elements always
+   make two tidy rows. */
+.elgrid{display:grid; grid-template-columns:repeat(8, 1fr); gap:6px 5px}
+.elbox{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:none; border:none; padding:0; cursor:pointer; min-width:0;
+}
+.elsym{
+  position:relative; display:flex; align-items:center; justify-content:center; width:100%; aspect-ratio:1;
+  padding:0; border:5px solid var(--suit); border-radius:8px;
+  font-weight:800; font-size:13px; color:#221f1a; background:#fff;
+}
+.elqty{font-weight:800; font-size:9px; color:var(--ink)}
+/* Dark text on the Classic Elements page's light parchment (--ink is for
+   dark backgrounds). */
+.mat-zone-page .elqty{color:#221f1a}
+/* Convert quick grid: elements with fewer than 3 can't be the FROM side. */
+.elbox.invalid{opacity:.4; cursor:not-allowed}
+
+/* element conversion */
+/* Goal card (#convertGoalCard): empty and hidden (:empty) when Convert
+   opens from the floating button. Otherwise holds one unmodified itemHTML()
+   card, identical to the shop's, sitting on #convert's top border
+   (bottom:100%). That's why #convert has no overflow:hidden. */
+.convert-goal-card:empty{display:none}
+.convert-goal-card{
+  position:absolute; left:16px; right:16px; bottom:100%; margin-bottom:-2px; z-index:1;
+}
+.convert-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:32px 0 26px}
+.convert-box{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  width:112px; height:112px; border-radius:16px; border:8px solid var(--line);
+  background:var(--bg-soft); box-shadow:0 2px 0 var(--line), 0 5px 12px rgba(0,0,0,.2);
+  color:#fff; transition:transform .08s, box-shadow .08s, border-color .12s, background .12s, color .12s;
+}
+.convert-box:hover{border-color:var(--mute)}
+.convert-box:active{transform:translateY(2px); box-shadow:0 0 0 var(--line)}
+/* Picked: paintElement() sets white background, suit border and dark text
+   inline. Empty ("+") state just inherits. */
+.convert-box.filled{border-style:solid}
+.convert-box .convert-sym{font-size:30px; font-weight:800; color:inherit; line-height:1}
+.convert-box .convert-label{
+  font-size:15px; font-weight:800; color:inherit; text-align:center; padding:0 6px;
+}
+/* The arrow is also the Convert action. Styled like the floating Convert
+   button; disabled until both sides are picked and affordable, then turns
+   --ok green. */
+.convert-arrow{
+  width:56px; height:56px; border-radius:50%; flex:none; padding:0; margin:0;
+  background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--card) 70%);
+  border:3px solid var(--gold); color:var(--ink);
+  display:flex; align-items:center; justify-content:center; font-size:22px;
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.28);
+  transition:background .2s ease, color .2s ease, border-color .2s ease, transform .08s, box-shadow .1s cubic-bezier(.3,.8,.4,1);
+}
+.convert-arrow:hover{background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--bg-soft) 70%)}
+.convert-arrow:not(:disabled){
+  cursor:pointer;
+  background:radial-gradient(circle at 32% 26%, var(--ok-soft) 0%, var(--ok-soft) 70%);
+  border-color:var(--ok-bright); color:var(--ok);
+}
+.convert-arrow:not(:disabled):active{
+  transform:translateY(2px);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.12), inset 0 -1px 3px rgba(0,0,0,.1);
+}
+.convert-arrow:disabled{cursor:not-allowed; opacity:.7}
+/* Each side of the row, and the arrow, in its own column, centred against
+   the tallest (the arrow + "3:1" label). */
+.convert-col{display:flex; flex-direction:column; align-items:center; gap:8px}
+/* The "3:1" ratio, once, under the arrow. */
+.convert-qty{font-size:24px; font-weight:800; color:#fff; line-height:1}
+/* FROM box: three diagonally stacked squares. The two ghosts are real
+   earlier siblings, not ::before/::after -- a negative-z pseudo-element
+   still paints over its own box's background. Paint order alone puts
+   siblings behind. Ghosts trail down-left so the real box anchors the
+   cluster. */
+.convert-stack{position:relative; width:112px; height:112px}
+.convert-stack .convert-box{position:absolute; inset:0}
+.convert-ghost{
+  position:absolute; inset:0; border-radius:16px;
+  border:8px dashed var(--line); background:var(--bg-soft); pointer-events:none;
+}
+.convert-ghost:nth-of-type(1){ transform:translate(-28px,28px) }
+.convert-ghost:nth-of-type(2){ transform:translate(-14px,14px) }
+.convert-stack.filled .convert-ghost{ border-style:solid }
+/* The flying result clone in playConvertAnimation() -- above the hub too,
+   since its destination is the inventory icon inside it. */
+.convert-fly-clone{position:fixed; z-index:150; pointer-events:none}
+/* Small kicker + subtext instead of a big dialog title, so it reads as
+   "you're looking at your own stuff" rather than a generic picker. */
+.convert-picker-kicker{font-size:12px; font-weight:800; letter-spacing:1.1px; text-transform:uppercase; color:var(--mute)}
+.convert-picker-sub{font-size:12.5px; color:var(--ink2); margin:2px 0 12px; line-height:1.4}
+.convert-picker-grid{display:flex; flex-wrap:wrap; gap:10px; max-height:50vh; overflow-y:auto; margin:6px 0 4px}
+/* Tile colours come from paintElement() inline, like the main Convert
+   boxes. */
+.convert-pick{
+  display:flex; flex-direction:column; align-items:center; gap:5px; padding:0;
+  border:none; border-radius:0; background:none; min-width:52px;
+  transition:transform .08s;
+}
+.convert-pick:hover:not(:disabled){transform:translateY(-1px)}
+/* The same mini element box as the station pools (white face, suit border
+   via elementColorAttr()). */
+.convert-pick .elsym{
+  min-width:56px; font-size:23px; color:#221f1a; border-width:7px; border-radius:9px;
+}
+/* FROM side: greyed and inert without enough to convert. */
+.convert-pick.invalid{opacity:.4}
+.convert-pick:disabled{cursor:not-allowed}
+.convert-pick .pickqty{
+  font-size:13px; font-weight:800; color:var(--ink);
+}
+/* Suit-spend balloon (openSuitSpendBalloon()): a small speech bubble on the
+   suit-cost badge that opened it -- no backdrop, no text, just rows of
+   .convert-pick elements (each suit's four core elements, see
+   SUIT_CORE_ELEMENTS). Placed by placeSuitSpendBalloon() (above, flips
+   below if clipped). */
+#suitSpendBalloon{
+  position:absolute; z-index:80; background:var(--card); border:2px solid var(--line);
+  border-radius:16px; padding:12px; box-shadow:0 10px 28px rgba(0,0,0,.4);
+  display:none;
+}
+#suitSpendBalloon.open{display:block}
+/* Tail: a diamond half-tucked behind the bubble seam (z-index:-1). */
+#suitSpendBalloon .ssb-tail{
+  position:absolute; width:16px; height:16px; left:50%; margin-left:-8px;
+  background:var(--card); transform:rotate(45deg); z-index:-1;
+}
+#suitSpendBalloon.above .ssb-tail{ bottom:-7px; }
+#suitSpendBalloon.below .ssb-tail{ top:-7px; }
+#suitSpendRows{display:flex; flex-direction:column; gap:10px}
+.ssb-row{display:flex; gap:8px}
+/* Checkmark on a picked element, top-left so it doesn't cover the suit
+   badge (top-right). */
+.convert-pick .ssb-picked{
+  position:absolute; top:-4px; left:-4px; width:18px; height:18px; border-radius:50%;
+  background:var(--ok-bright); color:#0f2733; font-size:11px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card);
+}
+/* .convert-pick itself has no positioning context by default -- needed so
+   .ssb-picked's absolute corner badge resolves against ITS OWN box, not
+   the row/balloon. */
+.ssb-row .convert-pick{position:relative}
+.empty{color:var(--mute); font-size:14px; font-style:italic}
+
+/* history */
+.hist-header{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.hist-header h2{margin:0}
+.histexport-btn{flex:none; font-size:12.5px; font-weight:700; padding:6px 10px}
+.histexport-btn.done{color:var(--ok)}
+.histrows{display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto}
+/* flex-shrink:0 so a long list scrolls instead of every row being crushed
+   to fit. */
+.histentry{border:1.5px solid var(--line); border-radius:11px; background:var(--bg-soft); overflow:hidden; flex-shrink:0}
+/* Toggle row + per-run export button side by side (a button can't nest in
+   a button). */
+.histrow-line{display:flex; align-items:stretch}
+.histrow{
+  display:flex; align-items:center; gap:12px; padding:10px 13px; flex:1; min-width:0;
+  border:none; border-radius:0; background:transparent; cursor:pointer; color:inherit;
+}
+.histrow:hover{background:rgba(255,255,255,.04)}
+/* Per-run export: copies just this run as JSON (historyList handler's
+   data-hist-export branch). Icon-only, flush right. */
+.histrow-export{
+  flex:none; width:38px; border:none; border-left:1.5px solid var(--line);
+  background:transparent; color:var(--mute); font-size:15px; cursor:pointer;
+}
+.histrow-export:hover{background:rgba(255,255,255,.04); color:var(--ink)}
+.histrow-export.done{color:var(--ok)}
+.histvisits{font-weight:800; font-size:13.5px; white-space:nowrap}
+.histscore{font-weight:800; font-size:13.5px; color:var(--gold); white-space:nowrap}
+.histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
+.histnone{font-size:13px; color:var(--mute); font-weight:700}
+/* Collections list: reuses the .histrows/.histentry shell; read-only rows
+   with an optional "Add to Mat" (Classic, see renderCollectionsList()). */
+/* Text+icons on the left, action button on the right, centred vertically
+   (like a shop row). */
+.collection-row{padding:10px 13px; display:flex; align-items:center; gap:12px}
+.collection-row .cr-main{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px}
+.collection-row .cr-line1{display:flex; align-items:baseline; gap:8px}
+.collection-row .cr-name{font-weight:800; font-size:13.5px; color:var(--collection)}
+/* Bare icons, no border/background pill -- explicit request, replacing
+   the plain comma-joined item-name text this row used to show. Doubled
+   from 19px to 38px per explicit request. */
+.collection-row .cr-icons{display:flex; flex-wrap:wrap; gap:8px; font-size:38px; line-height:1}
+.collection-row .cr-icon img{width:1em; height:1em}
+.collection-row .cr-bonus{font-size:12px; font-weight:800; color:var(--gold)}
+.collection-card{position:relative}
+.collection-card .cr-check{
+  position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%;
+  background:var(--ok); color:#fff; font-size:12px; font-weight:900; line-height:1;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--bg-soft);
+}
+.collection-card.owns-all{border-color:var(--ok-line)}
+.collection-row .cr-icon.missing{opacity:.35; filter:grayscale(1)}
+.cr-toggle{flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:14px;
+  font-size:10.5px; font-weight:800; color:var(--ink2); cursor:pointer}
+.cr-toggle:has(input:disabled){opacity:.45; cursor:not-allowed}
+.histarrow{flex:none; color:var(--mute); font-size:12px}
+.histdetail{border-top:1.5px solid var(--line); padding:8px 13px 10px}
+.histturns{display:flex; flex-direction:column; gap:8px; max-height:40vh; overflow-y:auto}
+/* One block per visit: turn + station, then what was rolled and what was
+   crafted. */
+.histturn{display:flex; flex-direction:column; gap:1px; font-size:12.5px; line-height:1.4; flex-shrink:0}
+.histturn + .histturn{border-top:1px solid var(--line); padding-top:7px}
+.histturn-head{display:flex; align-items:baseline; gap:8px}
+.histturn-n{flex:none; width:18px; color:var(--mute); font-weight:800; text-align:right}
+.histturn-station{flex:none; font-weight:700; white-space:nowrap}
+.histturn-line{padding-left:26px; color:var(--ink2); min-width:0}
+.histturn-label{font-weight:800; color:var(--mute); margin-right:5px}

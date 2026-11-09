@@ -1,0 +1,58 @@
+/* ------------------------------------------------------------- map --- */
+.map-head{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:6px}
+.map-head h1{font-size:30px; font-weight:800; letter-spacing:-.6px}
+/* Positioned with a z-index so it sits above the floating pills in the
+   same top strip. */
+.map-sub{color:var(--ink2); font-size:15px; margin-bottom:18px; position:relative; z-index:33}
+/* Pinned-items tray, opened from the pins button. Tapping a chip tracks
+   that item and highlights its ingredient closure on station cards (see
+   stationItemIconsHTML()/componentClosure()). Sourced from
+   prefs.pinnedItems (see togglePin()). */
+.map-job-chips{display:flex; gap:8px; flex-wrap:wrap; align-items:center; min-height:29px}
+.map-job-chip{
+  display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+  border:1.5px solid var(--line); background:var(--card); font-weight:700; font-size:13px;
+}
+.map-job-chip:hover{background:var(--bg-soft)}
+.map-job-chip.selected{border-color:var(--ok-line); background:var(--ok-soft); color:var(--ok)}
+/* Marks the chip currently being tracked (magnifying-glass badge, matching
+   #pinsBtn). */
+.mj-search-badge{font-size:13px; line-height:1}
+.mj-em{font-size:16px; line-height:1}
+/* The "choose your first station" prompt, centred over the map. A solid
+   banner (it's a new run's first instruction) with a light pulse; reduced
+   motion stops the pulse. */
+.map-pick-note{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5;
+  width:fit-content; max-width:78%; margin:0; padding:10px 18px;
+  text-align:center; color:#fff; font-weight:800; font-size:19px; line-height:1.35;
+  /* Solid dark fill that hugs the text (fit-content) so it stands out on a
+     busy map. */
+  background:rgba(15,20,28,.85);
+  border:2px solid var(--ok); border-radius:16px;
+  box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft);
+  animation:pickNotePulse 2.2s ease-in-out infinite;
+}
+@keyframes pickNotePulse{
+  0%,100%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 4px var(--ok-soft)}
+  50%{box-shadow:0 6px 20px rgba(0,0,0,.4), 0 0 0 9px rgba(63,180,108,0)}
+}
+.pinned-empty-note{font-size:12.5px; color:var(--mute); font-weight:600}
+
+/* Classic intro logo (see playClassicIntro()): a full-screen, click-through
+   layer so the logo can sit dead centre above everything. .show plays the
+   bounce-in; it's simply hidden again afterward. */
+#introLogo{
+  position:fixed; inset:0; z-index:95;
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+#introLogo img{
+  width:min(78vw, 420px); filter:drop-shadow(0 10px 30px rgba(0,0,0,.5));
+  opacity:0; transform:scale(.4);
+}
+#introLogo.show img{animation:introLogoBounce .5s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes introLogoBounce{
+  0%{opacity:0; transform:scale(.4)}
+  60%{opacity:1; transform:scale(1.08)}
+  100%{opacity:1; transform:scale(1)}
+}

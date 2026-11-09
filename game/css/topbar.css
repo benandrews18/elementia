@@ -1,0 +1,221 @@
+/* ---------------------------------------------------------- top bar --- */
+/* Two floating pills over the map art (hidden on other screens). Fixed, so
+   no flow space. z-index low-30s: above screen content, below every real
+   window (station card, hint, Item Reference, drawers -- all 40+).
+   --topbar-h is measured from this for things that must clear it. */
+#topbar{
+  position:fixed; top:0; left:0; right:0; z-index:30; display:flex; justify-content:space-between;
+  align-items:center; padding:10px 14px; background:transparent; pointer-events:none;
+}
+body:not([data-screen="map"]) #topbar{display:none}
+/* Nothing to report yet on the "choose your first station" screen -- see
+   render()'s data-picking toggle. */
+body[data-picking] #topbar{display:none}
+.tbtn{
+  border:1.5px solid var(--line); border-radius:10px; padding:7px 13px;
+  font-size:14px; font-weight:700; background:var(--card); white-space:nowrap;
+}
+.tbtn:hover{border-color:var(--mute); background:var(--bg-soft)}
+.tbtn.ghost{border-color:transparent; color:var(--mute); font-weight:600}
+.tbtn.ghost:hover{color:var(--ink); background:var(--sunken)}
+:focus-visible{outline:3px solid var(--ok); outline-offset:2px; border-radius:6px}
+
+/* Visits + score pills. pointer-events back on here (the topbar has them
+   off so the gap between pills doesn't block taps). */
+.pill{
+  pointer-events:auto; flex:none; display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px 7px 10px; border-radius:999px; line-height:1;
+  background:rgba(20,18,16,.58); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:1.5px solid rgba(255,255,255,.14); box-shadow:0 3px 10px rgba(0,0,0,.28);
+  color:#fff; font-weight:800; font-size:14px; letter-spacing:.2px;
+}
+.pill-ic{font-size:18px; line-height:1}
+.pill[hidden]{display:none}
+.daypill{padding:5px 6px}
+.daypill .day-svg{width:52px; height:26px; display:block}
+.daypill.sunset{border-color:rgba(226,178,90,.7); box-shadow:0 0 0 2px rgba(226,178,90,.25), 0 3px 10px rgba(0,0,0,.28)}
+/* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's
+   pills (30) but under every tray, drawer and overlay (33+). */
+#quarkTopBar{
+  position:fixed; top:0; left:0; right:0; z-index:31; display:none; cursor:pointer;
+  padding:8px 14px 6px; background:linear-gradient(180deg, rgba(10,24,32,.96), rgba(10,24,32,.88));
+  border-bottom:1.5px solid var(--line); box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+body.has-qtop #quarkTopBar{display:block}
+[data-combo-lab] #quarkTopBar{display:none}
+#quarkTopBar .qtop-card{max-width:760px; margin:0 auto}
+body.has-qtop #topbar{top:var(--qtop-h, 52px)}
+body.has-qtop main#screen{padding-top:calc(var(--qtop-h, 52px) + 4px)}
+.pill-gold{color:var(--gold)}
+
+/* Bottom hub: every global action, on every screen. Home is the raised
+   centre circle (it changes screens; the others open panels). Side buttons
+   overhang the bar slightly (see --hub-overhang) -- kept modest so they
+   never collide with .floatbtn/#trackedPill above. */
+/* How much shorter #hub's computed height gets, which moves its top edge.
+   Margin-top on a flex-end item only changes the line height, not the
+   item's position. 11.5px lands the bar's top flush with the side buttons'
+   circles; tuned empirically. */
+:root{ --hub-overhang:11.5px; }
+/* Teal-navy bar (images/game ui reference 0903.png). */
+/* No horizontal padding, so the outermost badges sit flush on the screen
+   edges (.hub-side groups size to their buttons). */
+#hub{
+  position:fixed; left:0; right:0; bottom:0; z-index:72;
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg, #1c4257, #163544); border-top:1.5px solid #2a5a72;
+  box-shadow:0 -6px 20px rgba(0,0,0,.25);
+  display:flex; justify-content:space-between; align-items:flex-end; gap:0;
+}
+/* Classic's opening beat (see playClassicIntro()): the hub stays visible
+   but inert until the intro tray closes (closeJobBoard()/
+   closeBingoIntroTray()); same for the map's station nodes below. Separate
+   from body[data-picking], which covers the whole pre-start state. */
+body[data-intro-sequence] #hub{pointer-events:none}
+body[data-intro-sequence] .map-node{pointer-events:none}
+/* The 4 side buttons sit in two flush groups; #hubHome is #hub's middle
+   flex child and space-between centres it. */
+/* flex:1 on group and buttons: the side buttons share whatever width
+   #hubHome's 76px leaves, so the bar fills edge to edge at any width. */
+.hub-side{display:flex; align-items:flex-end; gap:0; flex:1; min-width:0}
+.hub-side .hubbtn{flex:1; width:auto; max-width:none; padding:6px 4px}
+/* No tap delay or grey tap flash on any hub/floating button. */
+.hubbtn, .floatbtn{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+/* Icon + label sit directly on the bar colour, no card behind them
+   (images/game ui reference 0903.png). */
+/* Pale border on every button so each has a defined edge. */
+/* Slightly lighter than the bar, with an inset bevel and small drop shadow
+   so it reads raised. Hover/press states layer a second background-image on
+   top of this gradient rather than replacing it. */
+.hubbtn{
+  flex:1; max-width:100px; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px;
+  padding:6px 4px; margin-top:calc(-1 * var(--hub-overhang)); border-radius:15px;
+  background:linear-gradient(180deg, #2a5a72, #1c4257);
+  box-shadow:inset 0 1px 2px rgba(255,255,255,.28), inset 0 -3px 5px rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.25);
+  border:1.5px solid rgba(255,255,255,.22); color:#fff; position:relative;
+  transition:background .1s ease, filter .12s ease;
+}
+.hubbtn:hover{background:linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)), linear-gradient(180deg, #2a5a72, #1c4257)}
+.hubbtn:disabled{opacity:.35; cursor:not-allowed}
+.hubbtn:disabled:hover{background:linear-gradient(180deg, #2a5a72, #1c4257)}
+/* Sinks INTO its own bevel (the inset highlight/shadow above flips
+   direction) rather than collapsing to nothing, plus the same small
+   press-down travel every other hub control uses. */
+.hubbtn:not(:disabled):active{
+  transform:translateY(2px);
+  background:linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)), linear-gradient(180deg, #2a5a72, #1c4257);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.35), inset 0 -1px 2px rgba(255,255,255,.12);
+}
+/* No fixed size: the glyph scales with the flex slot. */
+.hubbtn .hi{
+  width:auto; height:auto; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; line-height:1;
+}
+.hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px; color:#fff}
+.hubbtn.active{background:linear-gradient(rgba(63,180,108,.28), rgba(63,180,108,.28)), linear-gradient(180deg, #2a5a72, #1c4257)}
+.hubbtn.active .hl{color:var(--ok)}
+.hubbtn:disabled .hi{filter:grayscale(.5) brightness(.85)}
+
+#hubHome[aria-disabled="true"]{pointer-events:none}
+#hubHome{
+  flex:none; width:76px; height:76px; max-width:none; border-radius:50%; gap:1px;
+  margin:-26px 4px 0; color:#fff; justify-content:center;
+  background:radial-gradient(circle at 32% 26%, #7ee89a 0%, #3fb46c 55%, #278049 100%);
+  border:5px solid #f2a93a;
+  box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.4),
+    inset 0 -5px 8px rgba(0,0,0,.22), 0 5px 16px rgba(0,0,0,.35);
+  transition:filter .2s ease, box-shadow .2s ease, border-color .2s ease;
+  /* The -26px margin above only changes the flex row's height (see
+     --hub-overhang); this `top` is what actually lifts the circle above the
+     side buttons. */
+  top:-4px;
+}
+#hubHome:hover{filter:brightness(1.06)}
+/* #hubHome is the glossy circle itself, so its .hi stays plain text. Press
+   feedback lives on #hubHome (id selector outranks the shared fallbacks);
+   translateY gives the same "sink into its shadow" feel as .bigbtn. */
+#hubHome .hi{
+  width:auto; height:auto; background:none; border:none; box-shadow:none; font-size:37px;
+}
+/* The marketplace art reads small at 1em, so it's scaled 2x here only.
+   transform, not width/height: a layout-size change pushed this face's
+   label lower than every other face's. */
+#hubHome .hi .marketicon{transform:scale(2)}
+#hubHome:not(:disabled):active{
+  transform:translateY(3px);
+  box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
+}
+/* color:#000 must be explicit: .hubbtn .hl{color:#fff} is a direct rule on
+   .hl and beats inherited colour regardless of specificity. */
+#hubHome .hl{font-size:10px; color:#000}
+/* Each Home face gets its own colour so a face change is noticeable:
+   Roll green (go), Market gold, Shop orange, Travel teal (journey), Map
+   neutral blue, Close inert grey. */
+/* Each face sets --face-color and shares one glossy gradient. Close keeps a
+   flat, switched-off look instead. */
+/* Black label text on every face now (was white/muted-grey per face) --
+   explicit ask, applies uniformly regardless of how bright or dark that
+   face's own background color is. */
+#hubHome.face-roll{--face-color:var(--ok); color:#000}
+#hubHome.face-market{--face-color:var(--gold); color:#000}
+#hubHome.face-shop{--face-color:var(--hub-shop); color:#000}
+#hubHome.face-travel{--face-color:var(--hub-travel); color:#000}
+/* Lock In: purple (--collection), distinct from Market gold and Travel
+   teal -- its own higher-stakes beat. */
+#hubHome.face-lockin{--face-color:var(--collection); color:#000}
+#hubHome.face-map{--face-color:var(--hub-map); color:#000}
+#hubHome.face-roll, #hubHome.face-market, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
+  background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
+    var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
+}
+/* Close: the same pale blue-grey as shop item cards, so it reads as
+   deliberately inert. */
+#hubHome.face-close{background:linear-gradient(to right, #dde7f4, #c9daee); color:#000; box-shadow:none}
+#hubHome.face-close:hover{filter:none}
+#hubHome .hub-badge{top:-2px; right:-2px}
+.hub-badge{
+  position:absolute; top:2px; right:calc(50% - 22px); min-width:17px; height:17px; padding:0 4px;
+  border-radius:999px; background:var(--bad); color:#fff; font-size:10px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--card);
+}
+.hub-badge.ok{background:var(--ok)}
+/* Same badge, recentered for a round 52px floating button instead of a
+   hub slot -- plain corner placement rather than the hub's own
+   width-relative centering math. */
+.floatbtn .hub-badge{top:-4px; right:-4px}
+/* Convert's badge shows a count (conversions available, see updateHub()),
+   so it gets more room than the plain "!" dot. */
+#quickConvertBtn .hub-badge{
+  top:-7px; right:-7px; min-width:24px; height:24px; padding:0 6px; font-size:13px;
+}
+
+/* Bottom padding so the last content on a screen can scroll clear of the
+   floating pins/convert buttons above the hub. */
+main{max-width:1180px; margin:0 auto; padding:22px 18px calc(var(--hub-h, 67px) + 80px)}
+/* Map screen: no top padding, so the map art reaches the top of the
+   viewport. */
+body[data-screen="map"] main{padding-top:0}
+/* Map: no extra bottom clearance -- the art already has margin below the
+   lowest node. */
+body[data-screen="map"] main{padding-bottom:var(--hub-h, 67px)}
+/* Fills the viewport exactly (dvh, with vh fallback) and stacks hint +
+   .map-canvas in a column; the canvas takes the leftover height, so the
+   map never scrolls at any device height. */
+body[data-screen="map"] main{
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh;
+}
+/* Item Reference and Marketplace need a z-index so they stack above the
+   floating pills/pins/convert buttons. */
+body[data-screen="codex"] #screen, body[data-screen="market"] #screen{position:relative; z-index:33}
+/* Hide the pins/convert buttons and tracked pill while Item Reference or
+   Marketplace is open; the hub bar stays. */
+body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn,
+body[data-screen="codex"] #trackedPill,
+body[data-screen="market"] #pinsBtn, body[data-screen="market"] #quickConvertBtn,
+body[data-screen="market"] #trackedPill{display:none}
+/* Cross-hide: Convert's button hides while Pins is open, and vice versa
+   (see updateHub()). ID selectors so this beats .floatbtn's display:flex. */
+#pinsBtn.cross-hide, #quickConvertBtn.cross-hide, #trackedPill.cross-hide{display:none}

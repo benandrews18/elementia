@@ -1,0 +1,215 @@
+/* ------------------------------------------------- reference sheet --- */
+/* Sticky below the topbar (var(--topbar-h)) so search stays reachable;
+   opaque background since rows scroll under it. */
+.refbar{
+  display:flex; gap:8px; align-items:center; flex-wrap:nowrap; margin-bottom:14px;
+  position:sticky; top:var(--topbar-h, 73px); z-index:10; background:var(--bg);
+  padding:10px 0; border-bottom:1px solid var(--line2);
+}
+/* min-width:0 lets the search shrink so #refSort never wraps to its own
+   line (.refbar is nowrap). */
+#refFilter{flex:1; min-width:0; padding:10px 13px; border:1.5px solid var(--line);
+  border-radius:10px; font:inherit; font-size:15px; background:var(--card); color:var(--ink)}
+#refFilter::placeholder{color:var(--mute)}
+#refSort{flex:none; padding:10px 8px; border:1.5px solid var(--line);
+  border-radius:10px; font:inherit; font-size:12.5px; font-weight:700; background:var(--card); color:var(--ink)}
+/* Full-width row: big icon column on the left, name/points/recipe/location
+   stacked to its right (images/Item Reference UI*.png). */
+.reftable{background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.refrow{position:relative; display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--line2); cursor:pointer}
+.refrow:last-child{border-bottom:none}
+.refrow:hover{background:var(--bg-soft)}
+.refrow.owned{background:var(--ok-soft)}
+.refrow.owned:hover{filter:brightness(.98)}
+/* Icon column: the icon plus its suit row (.refsuits) below. */
+.refem-col{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none; width:54px}
+.refem{font-size:42px; line-height:1; width:54px; text-align:center; padding-top:3px}
+/* Bare suit glyphs under the icon: a solid var(--suit) fill masked to the
+   art (--suit-mask, see refSuitsHTML()), since CSS colour can't tint a
+   raster <img>. */
+.refsuits{display:flex; gap:3px; justify-content:center}
+.refsuit{
+  display:inline-block; width:12px; height:12px; background-color:var(--suit);
+  -webkit-mask-image:var(--suit-mask); mask-image:var(--suit-mask);
+  -webkit-mask-size:contain; mask-size:contain;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:center; mask-position:center;
+}
+.refbody{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px}
+.reftop{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.refname{font-weight:800; font-size:17px}
+.reftop .tick{color:var(--ok); font-size:14px; flex:none}
+.reftop .refpts{margin-left:auto}
+.refpts{display:inline-flex; align-items:center; gap:3px; font-weight:800; font-size:12.5px;
+  color:var(--gold); background:var(--gold-soft); border-radius:999px; padding:2px 8px; white-space:nowrap; flex:none}
+.refwhere{display:flex; flex-wrap:wrap; gap:5px; align-items:center; font-size:13px; color:var(--ink2); font-weight:600}
+.refwhere span{white-space:nowrap}
+.refpin{
+  flex:none; align-self:flex-start; width:34px; height:34px; border-radius:9px;
+  border:1.5px solid var(--line); background:var(--card); font-size:15px; cursor:pointer;
+  opacity:.5; filter:grayscale(1);
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+  transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), opacity .12s, filter .12s, border-color .12s, background .12s;
+}
+.refpin:hover{opacity:.85}
+.refpin.active{opacity:1; filter:none; border-color:var(--gold); background:var(--gold-soft)}
+.refpin:active{transform:translateY(2px); box-shadow:0 0 0 transparent}
+/* Shop pin button in the top-left corner, pairing with .item-pin-badge.
+   Round, 28px like the other corner badges. Placed after .refpin so its
+   size and radius win on source order. Lighter border than .refpin's,
+   since .refpin's opacity:.5 would make that almost invisible. */
+/* Revised 2026-10-31: 1.5x (42px, matching .item-pin-badge), and off reads
+   as plain greyscale rather than faded -- on is full colour, gold ring. */
+.shop-pin{
+  position:absolute; top:-14px; left:-14px; z-index:3;
+  width:42px; height:42px; border-radius:50%; font-size:21px;
+  border-color:rgba(255,255,255,.4); opacity:1;
+}
+.shop-pin:hover{opacity:1}
+.shop-pin.active{border:2px solid var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 8px rgba(226,178,90,.6)}
+.ref-pinned-heading{
+  font-size:11px; font-weight:800; letter-spacing:.8px; color:var(--gold); margin:4px 0 8px;
+}
+.reftable.ref-pinned{margin-bottom:20px; box-shadow:0 0 0 1.5px var(--gold-soft)}
+/* To-Do List hint toggle (computeTodoHint()), between the "Pinned" heading
+   and the rows. */
+.todo-hint-btn{
+  display:flex; align-items:center; gap:6px; margin-bottom:10px;
+  font-size:12px; font-weight:800; color:var(--ink2);
+  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:7px 14px;
+  cursor:pointer;
+}
+.todo-hint-btn:hover{color:var(--ink); border-color:var(--gold-line)}
+.todo-hint-card{
+  display:flex; gap:12px; align-items:center; margin-bottom:14px; padding:10px 12px;
+  background:var(--collection-soft); border:1.5px solid var(--collection-line); border-radius:12px;
+}
+.todo-hint-icon{font-size:34px; line-height:1; flex:none}
+.todo-hint-icon :is(img,svg){width:34px; height:34px}
+.todo-hint-body{min-width:0}
+.todo-hint-title{font-size:15px; font-weight:800; color:#fff}
+.todo-hint-why{font-size:12px; color:var(--ink2); margin:2px 0 4px}
+.todo-hint-where{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; font-weight:700; color:var(--ink2)}
+.todo-hint-empty{font-size:12.5px; color:var(--mute); margin-bottom:14px}
+.refexpand{
+  align-self:flex-start; background:none; border:none; padding:2px 0; margin-top:2px;
+  font-size:12px; font-weight:800; color:var(--gold); cursor:pointer;
+}
+.refexpand:hover{text-decoration:underline}
+/* The expanded breakdown breaks out of .refbody's squeezed width to use the
+   full row. */
+.ref-tree{margin:6px -48px 0 -68px}
+/* Landing spot after a deep-link from a job card -- fades out on its own,
+   doesn't need to be dismissed. */
+.ref-highlight{animation:ref-flash 1.6s ease}
+@keyframes ref-flash{
+  0%, 100%{box-shadow:none}
+  15%{box-shadow:inset 0 0 0 999px var(--gold-soft)}
+}
+
+/* Settings: one bordered row per setting. Single actions are <button>s;
+   toggles are <label>s wrapping the checkbox so the whole row flips it. */
+.setnote{margin:-4px 0 12px; font-size:13px; color:var(--ink2); line-height:1.45}
+.setting-row{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  padding:11px 13px; margin-bottom:8px; border:1.5px solid var(--line); border-radius:12px;
+  background:var(--card); cursor:pointer;
+}
+.setting-row:last-child{margin-bottom:0}
+button.setting-row:hover{border-color:var(--mute); background:var(--bg-soft)}
+.setting-row.warn{border-color:var(--bad-soft); background:var(--bad-soft)}
+button.setting-row.warn:hover{border-color:var(--bad); background:var(--bad-soft); filter:brightness(1.04)}
+.setting-ico{font-size:19px; line-height:1; flex:none; width:24px; text-align:center}
+.setting-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.setting-label{font-weight:700; font-size:14.5px}
+.setting-row.warn .setting-label{color:var(--bad)}
+.setting-sub{font-size:12px; color:var(--mute); line-height:1.35}
+.setbtn{
+  flex:none; border:1.5px solid var(--line); border-radius:9px; padding:7px 13px;
+  font-size:13px; font-weight:800; background:var(--bg-soft); color:var(--ink); white-space:nowrap;
+}
+button.setting-row:hover .setbtn{border-color:var(--mute)}
+.setbtn.warn{background:var(--card); border-color:var(--bad); color:var(--bad)}
+
+/* Settings screens (and Mode Select's history row): chunky glossy "arcade
+   menu" buttons, ribbon headers and icon tiles in Elementia's palette.
+   Scoped with :is(...) so other uses of .sec-label/.bigbtn are unaffected. */
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .sec-label{
+  display:inline-block; font-size:11px; font-weight:800; letter-spacing:1px;
+  color:#2a2110; text-transform:uppercase; border:none;
+  background:linear-gradient(180deg, #f0d38a, var(--gold) 75%);
+  border-radius:999px; padding:6px 16px 5px;
+  box-shadow:0 3px 0 #7a5c22, 0 5px 10px rgba(0,0,0,.32);
+  margin:20px 0 12px;
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .sec-label:first-child{margin-top:0}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-row{
+  background:linear-gradient(180deg, #38445a, #202836 62%);
+  border:2px solid #10141b; border-radius:14px; padding:13px 14px; margin-bottom:12px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.38);
+  transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1), background .12s;
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover{background:linear-gradient(180deg, #404d66, #26303f 62%); border-color:#171d26}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:not(:disabled):active{
+  transform:translateY(4px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 #10141b, 0 3px 8px rgba(0,0,0,.3);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-row.warn{
+  background:linear-gradient(180deg, #5c3226, #351712 62%); border-color:#1c0b08;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #1c0b08, 0 7px 14px rgba(0,0,0,.38);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row.warn:hover{background:linear-gradient(180deg, #6e3c2e, #431e17 62%)}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setting-ico{
+  width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 2px 0 rgba(0,0,0,.3);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setbtn{
+  border-radius:10px; border:1.5px solid #10141b;
+  background:linear-gradient(180deg, #4a5568, #2a3140 65%); color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 2px 0 #10141b;
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) button.setting-row:hover .setbtn{background:linear-gradient(180deg, #56637a, #313a4a 65%)}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .setbtn.warn{
+  background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border-color:#3a140c; color:#2a0d07;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 #3a140c;
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn{
+  background:linear-gradient(180deg, #57d488, var(--ok) 62%); border:2px solid #184a29; color:#0a2015;
+  border-radius:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 0 #184a29, 0 7px 14px rgba(0,0,0,.35);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.sec{
+  background:linear-gradient(180deg, #55627a, #2c3444 62%); border-color:#10141b; color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 4px 0 #10141b, 0 7px 14px rgba(0,0,0,.35);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn.warn{
+  background:linear-gradient(180deg, #d9634a, var(--bad) 65%); border:2px solid #3a140c; color:#2a0d07;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 4px 0 #3a140c, 0 7px 14px rgba(0,0,0,.35);
+}
+:is(#settings, #settingsRules, #settingsDev, #modeOverlay) .bigbtn:not(:disabled):active{
+  transform:translateY(4px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 0 0 transparent, 0 3px 8px rgba(0,0,0,.3);
+}
+
+/* toggle switch -- a real checkbox underneath (keeps native a11y + the
+   existing .checked-based JS working unchanged), fully restyled on top. */
+.switch{
+  appearance:none; -webkit-appearance:none; flex:none; position:relative;
+  width:40px; height:23px; border-radius:999px; background:var(--sunken);
+  border:1.5px solid var(--line); cursor:pointer; transition:background .16s, border-color .16s;
+}
+.switch::before{
+  content:""; position:absolute; top:1.5px; left:1.5px; width:17px; height:17px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); transition:transform .16s;
+}
+.switch:checked{background:var(--ok); border-color:var(--ok)}
+.switch:checked::before{transform:translateX(17px)}
+
+.setversion{margin-top:18px; font-size:11.5px; color:var(--mute); text-align:center}
+
+
+.orca,.coral,.flour,.lighthouse,.tunnel,.brassbar,.rubbertire,.rubbersq,.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon,.microchip,.lifeicon,.ecosystemicon,.gemcollectionicon,.pearlicon,.rubyicon,.opalicon,.turquoiseicon,.ambericon,.diamondicon,.noto-icon,.alcan,.marketicon,.converticon,.sorticon,.filtericon{width:1em; height:1em; vertical-align:-.15em; display:inline-block}
+/* Wide source art (six gems in a row): contain it rather than squash it
+   into the square. */
+.gemcollectionicon{object-fit:contain}

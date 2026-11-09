@@ -5,7 +5,7 @@ Regenerate the playable game's embedded data from build_guide.py.
 build_guide.py stays the single source of truth (per HANDOFF.md §2). This
 script does NOT re-render the whole page -- it surgically swaps the JSON
 between the __GAME_DATA_START__ / __GAME_DATA_END__ markers in
-elementia.html, so all the game's HTML/CSS/JS is edited in place as normal.
+js/data.js (and simulate.html), so everything else is edited in place.
 
 Usage:  python game/build_game.py
 Then:   python game/build_game.py --check     (verify only, no write)
@@ -20,7 +20,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 GUIDE = HERE.parent / "Elementia_Handoff" / "handoff" / "pdf_generation" / "build_guide.py"
 REACHABILITY_CSV = HERE.parent / "Elementia_Handoff" / "handoff" / "simulation" / "reachability_grid.csv"
-TARGETS = [HERE / "elementia.html", HERE / "simulate.html"]
+TARGETS = [HERE / "js" / "data.js", HERE / "simulate.html"]
 
 START, END = "/*__GAME_DATA_START__*/", "/*__GAME_DATA_END__*/"
 

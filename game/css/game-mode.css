@@ -1,0 +1,289 @@
+/* ------------------------------------------------------- game mode --- */
+.mode-options{display:flex; flex-direction:column; gap:12px; margin:16px 0 4px}
+/* [hidden] alone loses to .mode-card's display:flex; this makes the hidden
+   attribute on mode cards (see refreshModePicker()) work. */
+.mode-card[hidden]{display:none}
+/* One bordered card per mode holding its info and both buttons
+   (Continue/New Game). */
+.mode-card{
+  display:flex; flex-direction:column; gap:12px;
+  padding:16px; border-radius:14px; border:2px solid var(--line); background:var(--bg-soft);
+}
+.mode-card-info{display:flex; flex-direction:column; align-items:flex-start; gap:4px}
+.mode-emoji{font-size:28px; line-height:1}
+.mode-name{font-size:17px; font-weight:800}
+/* "N visits · M points" (readModeSave() has a save) or "New" (it doesn't)
+   -- see refreshModePicker(). */
+.mode-stats{font-size:12px; font-weight:800; color:var(--gold); margin-top:2px}
+.mode-card-actions{display:flex; gap:8px}
+.mode-card-actions .bigbtn{flex:1; padding:11px 10px; font-size:14px}
+
+
+/* Recursive to-do tree: every node expands independently down to raw
+   elements; indentation comes from normal nesting. */
+/* The whole breakdown at 1.2x via zoom, so every nested level and custom
+   icon scales together. Rendered by the To-Do List and Item Reference (see
+   refExpandHTML()). */
+.mission-tree{display:flex; flex-direction:column; gap:10px; zoom:1.2}
+/* Indent less per level at that size so deep trees keep room for names. */
+.mission-tree .mn-children{padding-left:8px; margin-left:5px}
+.mission-node{margin-left:2px}
+.mn-row{display:flex; align-items:center; gap:8px}
+.mn-head{
+  display:flex; align-items:center; gap:8px; flex:1; min-width:0; text-align:left;
+  background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:9px 11px;
+}
+.mission-node.done > .mn-row .mn-head{border-color:var(--ok-line); background:var(--ok-soft)}
+.mn-arrow{color:var(--mute); font-size:11px; transition:transform .15s; flex:none}
+.mn-head.open .mn-arrow{transform:rotate(90deg)}
+.mn-emoji{font-size:17px; flex:none}
+.mn-name{flex:1; min-width:0; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.mn-tick{color:var(--ok); font-weight:800; flex:none}
+/* where to get it -- station emoji only, no text */
+.mn-where{flex:none; display:flex; align-items:center; gap:3px; font-size:14px; line-height:1}
+.mn-where .orca,.mn-where .coral,.mn-where .flour,.mn-where .lighthouse,.mn-where .tunnel,.mn-where .brassbar,.mn-where .rubbertire,.mn-where .rubbersq,.mn-where .wheelicon,.mn-where .furnaceicon,.mn-where .ovenicon,.mn-where .bananabreadicon,.mn-where .turbineicon,.mn-where .steelicon,.mn-where .fossilicon,.mn-where .concreteicon,.mn-where .fiberglassicon,.mn-where .logcabinicon,.mn-where .microchip,.mn-where .lifeicon,.mn-where .ecosystemicon,.mn-where .gemcollectionicon,.mn-where .pearlicon,.mn-where .rubyicon,.mn-where .opalicon,.mn-where .turquoiseicon,.mn-where .ambericon,.mn-where .diamondicon,.mn-where .noto-icon,.alcan{width:1em; height:1em}
+/* Dashed guide line down each child group, on the wrapper so it runs
+   continuously past the gaps between rows. */
+.mn-children{
+  display:flex; flex-direction:column; gap:6px; margin-top:6px;
+  padding-left:16px; margin-left:8px; border-left:2px dashed var(--line2);
+}
+/* Needed: [hidden]'s display:none loses to the class rule above, so
+   collapsed nodes (jobNodeHTML() relies on [hidden]) would stay visible. */
+.mn-children[hidden]{display:none}
+.mn-leaf{
+  display:flex; align-items:center; gap:8px; padding:7px 11px;
+  border-radius:9px; border:1.5px solid var(--line2); font-size:13px; font-weight:700;
+}
+.mn-leaf.have{border-color:var(--ok-line); background:var(--ok-soft); color:var(--ok)}
+.mn-leaf.need{color:var(--mute)}
+.mn-leaf .mn-where{margin-left:auto}
+/* Boxed element symbol (like the printed element cards) so raw elements
+   read differently from items. --suit set inline. */
+.mn-elsym{
+  display:inline-flex; align-items:center; justify-content:center; aspect-ratio:1;
+  font-weight:800; border:5px solid var(--suit); border-radius:5px;
+  min-width:24px; padding:1px; font-size:13px; flex:none; background:#fff; color:#221f1a;
+}
+.mn-elname{font-weight:600; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* The path map: one background image (backdrops/diamond_map_full.webp,
+   794x1981) with round station buttons placed by percentage
+   (MAP_NODE_POS) and dashed connectors/arrows drawn from MAP_EDGES (see
+   mapPathsHTML()). The canvas is a flex child that fills whatever height is
+   left above the hub, and the art stretches to fill it
+   (background-size:100% 100%), so the whole map fits with no scrolling at
+   any height. Nodes still line up because image and nodes scale against
+   the same box; node size follows the canvas WIDTH, which never changes.
+   The "Tap a station" hint is centred inside the canvas. */
+/* Full-bleed within main's side padding -- the map is the one edge-to-edge
+   screen. */
+.map-canvas{
+  position:relative; width:calc(100% + 36px); margin:0 -18px;
+  flex:1 1 auto; min-height:0;
+  overflow:hidden; background:var(--card);
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+}
+/* The art lives on ::before so it alone can be faded; nodes and paths stay
+   fully opaque. */
+.map-canvas::before{
+  content:""; position:absolute; inset:0;
+  background:url("../backdrops/diamond_map_full.webp") center/100% 100% no-repeat;
+  opacity:.96;
+}
+.map-paths{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none}
+/* Gold with a dark halo so paths read over both the dark sky and the busy
+   terrain. Same gold as the "reachable" node ring. */
+/* Muted by default; only edges out of the current station get the bright
+   .active style (see mapPathsHTML()'s `here`). Before the first pick,
+   every edge is active. */
+.map-path-line{
+  stroke:rgba(255,255,255,.2); stroke-width:4.2; stroke-dasharray:5 4.5; stroke-linecap:round;
+  vector-effect:non-scaling-stroke;
+}
+.map-path-line.active{
+  stroke:#ffce54; stroke-width:5.2;
+  filter:drop-shadow(0 0 .5px rgba(0,0,0,.9)) drop-shadow(0 0 1px rgba(0,0,0,.7));
+}
+/* z-index:0 makes this a stacking context, so the badges' negative
+   z-index only tucks them behind their own node instead of behind unrelated
+   page content. */
+.map-nodes{position:absolute; inset:0; z-index:0}
+/* Opaque buttons so state reads from the button's own colour; unreachable
+   uses filter (not opacity) so the art doesn't show through. */
+.map-node{
+  position:absolute; width:19.5%; aspect-ratio:1; transform:translate(-50%,-50%);
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:#122e3c; border:7px solid #4a5566; cursor:pointer; z-index:0;
+  transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s, border-color .12s, filter .12s;
+  padding:0;
+}
+/* Squishy press feedback on every map button; scale stacks on top of each
+   state's translate(-50%,-50%) centring. */
+.map-node:active{transform:translate(-50%,-50%) scale(.88)}
+.map-node .mn-em{font-size:min(10vw,46px); line-height:1}
+/* Mini-Games best-run badge (renderArcadeMap()); only arcade nodes set it. */
+.arcade-best-badge{
+  position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:#2a2110; font-size:10.5px; font-weight:800;
+  padding:1px 7px; border-radius:999px; white-space:nowrap;
+  box-shadow:0 1px 4px rgba(0,0,0,.4); border:1.5px solid var(--card);
+}
+/* "here": animated pulse ring plus a floating label. */
+.map-node.here{border-color:var(--ok); box-shadow:0 0 0 4px var(--ok-soft); z-index:2}
+.map-node.here::after{
+  content:""; position:absolute; inset:-8px; border-radius:50%;
+  border:2.5px solid var(--ok); animation:here-pulse 1.8s ease-out infinite;
+}
+@keyframes here-pulse{
+  0%{transform:scale(.85); opacity:.9} 100%{transform:scale(1.35); opacity:0}
+}
+.map-node.here .mn-here-label{
+  position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%);
+  font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:#fff; background:var(--ok); padding:3px 8px; border-radius:999px; white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+/* Reachable rings use each station's suit colour (--suit, set in
+   renderMap()); "here" stays green and "unreachable" greyscale. */
+.map-node.reachable{border-color:var(--suit, #ffce54); box-shadow:0 0 0 3px color-mix(in srgb, var(--suit, #ffce54) 25%, transparent), 0 2px 10px var(--shadow)}
+.map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
+.map-node.unreachable{filter:grayscale(1) brightness(.55)}
+/* Selected node: thick gold ring with its own pulse (on ::before, so it
+   can't collide with .here's ::after). */
+.map-node.selected{
+  box-shadow:0 0 0 8px var(--gold), 0 0 24px 4px rgba(226,178,90,.6);
+  z-index:3;
+}
+.map-node.selected::before{
+  content:""; position:absolute; inset:-14px; border-radius:50%;
+  border:4px solid var(--gold); animation:here-pulse 1.4s ease-out infinite;
+}
+/* Tracked-item badge above a map node, pointing back to the tracked item
+   (like .item-pin-badge in a shop). It must be a SIBLING of .map-node, not
+   a child: a negative-z-index child still paints above its parent's own
+   background. As siblings, z-index:-1 vs the node's 0-3 keeps it behind
+   the circle, with only its top peeking out. Same left/top % anchor and
+   translate(-50%,-50%) as the node, plus -60px on Y. */
+/* Smaller badge; the -60px offset is unchanged, so it clears the node even
+   more. */
+.map-node-tracked-badge{
+  position:absolute; transform:translate(-50%, calc(-50% - 60px));
+  width:42px; height:42px; border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:24px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
+}
+/* Bare glyph, no circle/background of its own -- just a small "this is
+   what's being tracked" marker riding the badge's own corner, not a
+   second competing chip. */
+.map-node-tracked-glass{
+  position:absolute; top:-1.5px; right:-1.5px; font-size:12px; line-height:1;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));
+}
+/* Capstone badge on the initial station-pick map (see renderMap()): same
+   slot as the tracked badge (never both on one node), gold instead of
+   green. Kept in lockstep with that badge's size/position/stacking. */
+.map-node-capstone-badge{
+  position:absolute; transform:translate(-50%, calc(-50% - 60px));
+  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
+}
+/* The station card floats over the map, pinned near the top, so it's
+   always reachable. */
+/* position:fixed, not sticky: sticky still takes flow space, so content
+   below would shift as the card appears and disappears. */
+.map-card-wrap{
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  max-width:1180px; margin:0 auto; pointer-events:none;
+}
+.map-card-wrap .map-card{pointer-events:auto}
+/* Edge-to-edge (no side padding on the wrap above, no side radius here)
+   so the item row below has the full screen width to lay every item out
+   on one line instead of wrapping. */
+.map-card{
+  background:var(--card); background-size:cover; background-position:center;
+  border:1px solid var(--line); border-left:none; border-right:none; border-top:12px solid var(--suit);
+  border-radius:0; padding:16px 17px 15px; text-align:left; width:100%;
+  display:flex; flex-direction:column; gap:11px;
+}
+/* Extra side padding so the title never sits under the floating
+   visits/score pills (see .pill/#topbar). */
+.map-card .row1{display:flex; align-items:center; gap:11px}
+.map-card .em{font-size:31px; line-height:1; filter:drop-shadow(0 1px 3px rgba(0,0,0,.4))}
+.map-card h2{font-size:19px; font-weight:800; letter-spacing:-.3px; flex:1}
+/* Same gold ring colour and 3px weight as .station-item-icon.job-highlight
+   in the item row below -- this pill names what those rings are marking. */
+.mc-tracked{
+  flex:none; max-width:45%; display:inline-flex; align-items:center; gap:6px;
+  padding:3px 10px; border-radius:999px; border:3px solid var(--gold);
+  background:var(--gold-soft); font-size:12.5px; font-weight:800; color:var(--ink);
+}
+.mct-glass{font-size:13px; line-height:1; flex:none}
+.mct-em{font-size:15px; line-height:1; flex:none}
+.mct-em img, .mct-em svg{width:1em; height:1em}
+.mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* Element pool on the preview card: mirrors .gather/.gcol/.gchip so 6
+   elements fit one row on a narrow phone. Separate classes on purpose --
+   the tractor-harvest tap gate checks for .gchip and must not fire here. */
+.pool{display:flex; gap:10px; justify-content:center; flex-wrap:nowrap}
+.pcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
+  align-items:center; gap:7px; container-type:inline-size}
+.pchip{
+  position:relative; width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
+  text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
+  display:flex; align-items:center; justify-content:center;
+}
+.pchip .psym{line-height:1; font-size:min(32px, 55cqw)}
+.pnum{position:absolute; top:2px; left:4px; font-size:9px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
+.pname{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
+/* Every item sold here, icon-only. Items in the tracked item's ingredient
+   closure are highlighted rather than filtered (see
+   stationItemIconsHTML()). */
+/* Breaks to a second line every 10 icons (the .station-items-break spacer).
+   Negative margin + padding lets edge items reach the card edge. overflow
+   stays visible so the highlight ring and owned badge (which poke past the
+   icon box) aren't clipped. */
+.station-items{
+  display:flex; gap:7px 7px; flex-wrap:wrap; align-items:center; min-height:19px;
+  overflow:visible; margin:0 -17px; padding:9px 17px;
+}
+.station-items-break{flex-basis:100%; height:0}
+.station-item-icon{
+  flex:none; position:relative; font-size:19px; line-height:1;
+  border-radius:7px; padding:3px; box-shadow:0 0 0 3px transparent;
+}
+/* Ownership reads via a small checkmark badge (same "corner bubble"
+   language as .job-badge/.hub-badge elsewhere) instead of dimming --
+   icons stay fully colored either way. */
+.station-item-icon.owned::after{
+  content:"✓"; position:absolute; top:-5px; right:-5px; width:14px; height:14px;
+  border-radius:50%; background:var(--ok); color:#fff; font-size:9px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card);
+}
+/* Highlight ring following the icon's rounded-square edge, visible even on
+   unowned (grey) icons; a soft background and glow keep it readable over
+   busy art. */
+.station-item-icon.job-highlight{
+  box-shadow:0 0 0 3px var(--gold), 0 0 10px rgba(226,178,90,.55);
+  background:var(--gold-soft);
+}
+/* Dashed rule sits above the capstone line, same as it always did --
+   capstone info is the last thing on the card now. */
+.capline{
+  display:flex; align-items:center; gap:12px; font-size:20px; color:var(--ink2); cursor:pointer;
+  border-top:1px dashed var(--line); padding-top:10px; margin-top:2px;
+}
+/* Never-visited station preview (see mapCardHTML()) -- stands in for the
+   whole .station-items/.capline block, so it gets that block's own
+   top border/spacing instead of just floating loose. */
+.cap-em{font-size:28.5px; line-height:1}
+.cap-name{color:#fff; font-weight:700}
+.capline.done{color:var(--ok); font-weight:700}
+.capline.done .cap-name{color:var(--ok)}
+/* Informational only now -- confirming travel itself lives on the hub's
+   own Travel face (see mapCardHTML()'s statusNote/hubHomeFace()). */
+.map-status-note{
+  font-size:12.5px; font-weight:700; color:var(--mute); text-align:center;
+  border-top:1px dashed var(--line); padding-top:10px; margin:0;
+}

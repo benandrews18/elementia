@@ -14,10 +14,12 @@ current?" bug from 2026-07-28). This script does the same transforms
 deterministically:
 
   1. Strip the outer <!DOCTYPE html>/<html>/<head>/<body> wrapper tags.
-  2. Strip the PWA (manifest + service worker) IIFE, replacing it with a
-     one-line comment explaining the omission.
-  3. Inline assets/images.js (the embedded icon/art data, split out of
-     elementia.html 2026-11-05) back into a plain <script> block.
+  2. Inline every local stylesheet (css/*.css) and script (assets/images.js,
+     js/*.js, minigames/*.js) back into <style>/<script> blocks, in page
+     order -- the Artifact CSP blocks <script src>/<link href> requests.
+     js/pwa.js (manifest + service worker) is replaced with a comment
+     explaining the omission; the landscape edition still carries that
+     block inline between its PWA/boot markers, which are stripped instead.
   4. Inline every tutorial/*.webp, backdrops/*.webp, and banners/*.webp
      image reference as a base64 data URI -- the Artifact is a single file
      with no sidecar assets, so the relative paths elementia.html uses for
@@ -81,6 +83,7 @@ def strip_document_wrapper(text):
 
 
 def strip_pwa_block(text):
+    """Landscape edition only: its PWA block is inline, between markers."""
     i, j = text.find(PWA_START), text.find(BOOT_START)
     if i == -1 or j == -1 or j < i:
         raise SystemExit(
@@ -117,14 +120,36 @@ def inline_local_images(text):
     return text
 
 
-IMAGES_TAG = '<script src="assets/images.js"></script>'
+LOCAL_SCRIPT_RE = re.compile(r'<script src="(?!https?:)([^"]+)"></script>')
+LOCAL_STYLE_RE = re.compile(r'<link rel="stylesheet" href="(?!https?:)([^"]+)">')
+PWA_FILE = "js/pwa.js"
 
 
-def inline_image_script(text):
-    if text.count(IMAGES_TAG) != 1:
-        raise SystemExit(f"Expected exactly one {IMAGES_TAG} in {SRC.name}.")
-    js = (HERE / "assets" / "images.js").read_text(encoding="utf-8")
-    return text.replace(IMAGES_TAG, "<script>\n" + js + "\n</script>")
+def inline_local_files(text):
+    """Replace each local <script src>/<link rel=stylesheet> with its contents."""
+    def read(rel, closer):
+        p = HERE / rel
+        if not p.exists():
+            raise SystemExit(f"{SRC.name} loads {rel}, which doesn't exist.")
+        body = p.read_text(encoding="utf-8")
+        if closer in body.lower():
+            raise SystemExit(f"{rel} contains a literal '{closer}' -- cannot inline safely.")
+        return body
+
+    def script(m):
+        rel = m.group(1)
+        if rel == PWA_FILE:
+            return "<script>\n" + PWA_REPLACEMENT + "</script>"
+        return "<script>\n" + read(rel, "</script") + "\n</script>"
+
+    def style(m):
+        # url("../x") in css/*.css is relative to the stylesheet; once inlined
+        # into the page it is relative to the page again.
+        css = read(m.group(1), "</style").replace('url("../', 'url("')
+        return "<style>\n" + css + "\n</style>"
+
+    text = LOCAL_SCRIPT_RE.sub(script, text)
+    return LOCAL_STYLE_RE.sub(style, text)
 
 
 def find_version(text):
@@ -142,12 +167,13 @@ def check_risky_patterns(text):
 
 def main():
     src_text = SRC.read_text(encoding="utf-8")
-    version = find_version(src_text)
-
     out_text = strip_document_wrapper(src_text)
-    out_text = strip_pwa_block(out_text)
-    if not LANDSCAPE:
-        out_text = inline_image_script(out_text)
+    if LANDSCAPE:
+        out_text = strip_pwa_block(out_text)
+    elif f'<script src="{PWA_FILE}"></script>' not in out_text:
+        raise SystemExit(f"Expected {PWA_FILE} in {SRC.name} -- update PWA_FILE.")
+    out_text = inline_local_files(out_text)
+    version = find_version(out_text)
     out_text = inline_local_images(out_text)
 
     hits = check_risky_patterns(out_text)

@@ -71,11 +71,14 @@ def subzone_stations():
     with no JS changes -- these are graph nodes with zero AvgVisits data,
     same treatment avg_visits_from() already gives Brass/Trombone/Cruise
     Ship above."""
-    html = ELEMENTIA_HTML.read_text(encoding="utf-8")
+    import sys
+    sys.path.insert(0, str(HERE.parent))
+    from game_source import read_game_source
+    html = read_game_source()
     start = html.find("const SUBZONES = [")
     end = html.find("SUBZONES.forEach(sz =>")
     if start < 0 or end < 0:
-        raise SystemExit("Could not find SUBZONES block in elementia.html")
+        return []  # sub-zones were removed with Adventure mode (2026-11-05)
     block = html[start:end]
 
     entry_re = re.compile(

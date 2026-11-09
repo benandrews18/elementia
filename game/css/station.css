@@ -1,0 +1,412 @@
+/* --------------------------------------------------------- station --- */
+/* No background: the fixed page-level #backdrop is the only station-art
+   layer and shows through this card and the item rows. */
+.sheet{
+  background:transparent;
+  border:1px solid var(--line);
+  border-radius:18px;
+}
+/* Title bar + element pool: one continuous dark card in every theme so the
+   coloured chips and dice keep their contrast. Top corners are rounded here
+   rather than clipped by .sheet, because overflow:hidden on an ancestor
+   breaks position:sticky (see .stationhead.frozen). The suit stripe lives
+   here too so it travels with the header when frozen. */
+.stationhead{
+  background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%);
+  padding-bottom:18px;
+  border-radius:17px 17px 0 0;
+  border-top:16px solid var(--suit);
+}
+/* Centered, with extra side padding so the title clears the floating
+   visits/score pills that float over this same top band on every screen
+   -- see .pill/#topbar. */
+.sheet-head{display:flex; align-items:center; gap:16px; padding:20px 26px 14px}
+.sheet-head .em{font-size:44px; line-height:1}
+/* inline-flex so the row spans just the title plus .empty-el-badge, with
+   the badge centred on the title and the same 16px gap as .sheet-head. */
+.sheet-head h1{
+  font-size:31px; font-weight:800; letter-spacing:-.6px; color:#fff;
+  display:inline-flex; align-items:center; gap:16px;
+}
+.station-title-wrap{min-width:0}
+.sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
+/* Experimental (prefs.expTractorHarvest): decorative only. Tapping the
+   element chips is the actual interaction (handleScreenClick()'s
+   [data-elem] branch). */
+.station-tractor-badge{font-size:26px; line-height:1; flex:none}
+/* Same small-pill language .mn-here-label already uses elsewhere for a
+   short status readout riding along a label row. */
+.tractor-taps-left{
+  display:inline-block; margin-left:8px; padding:2px 9px; border-radius:999px;
+  background:var(--gold-soft); color:var(--gold); font-size:11px; font-weight:800;
+  letter-spacing:.04em; text-transform:none; vertical-align:middle;
+}
+/* Sub-zone travel button: appears once the player owns the station's
+   unlock item (Rocket/Sailboat/Library, see SUBZONE_TRAVEL), and doubles as
+   "Back" inside a sub-zone. An icon-only circle in the header's top-right
+   corner (label as a tooltip): an inline label overflowed narrow phones
+   with long station names. */
+.stationhead{position:relative}
+/* Header pinned to the top until this visit's roll has landed and
+   finished animating (renderStation()'s stationheadFrozen), so the pool and
+   dice stay visible; normal flow afterward. */
+.stationhead.frozen{position:sticky; top:0; z-index:4}
+
+/* Always one row: .sheet can be narrow even in a wide viewport, so a media
+   query is the wrong signal. .gcol shrinks (min-width:0) instead. */
+.gather{
+  margin:4px 26px 0; padding:0 16px; display:flex; gap:10px; justify-content:center; flex-wrap:nowrap;
+}
+.gcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
+  align-items:center; gap:7px; container-type:inline-size}
+/* Square white element chip (--suit set inline, see renderStation()),
+   kept square via aspect-ratio. The symbol's size is in cqw (relative to
+   .gcol) so it shrinks with the chip, capped at 26px. */
+.gchip{
+  position:relative; width:100%; aspect-ratio:1; background:#fff; color:#221f1a; font-weight:800;
+  text-align:center; padding:4px; border-radius:9px; border:5px solid var(--suit);
+  display:flex; align-items:center; justify-content:center;
+}
+.gchip .gsym{line-height:1; font-size:min(32px, 55cqw)}
+/* Atomic number, top-left: a plain numeral, so it doesn't compete with the
+   suit badge in the opposite corner. */
+.gnum{position:absolute; top:2px; left:4px; font-size:9px; font-weight:800; color:var(--suit); line-height:1; z-index:1}
+/* Element name under the chip; fixed size, legible at the chip's smallest
+   width. */
+.gname{font-size:8.5px; font-weight:700; color:var(--ink2); text-align:center; line-height:1.15}
+/* Base die box shared by the legend and roll dice (sizing per context);
+   dots come from .die-1..6. */
+.die{background-repeat:no-repeat}
+/* Die dots as radial-gradient backgrounds, one recipe per face (PIPS,
+   shared with the Python guide generator) -- no child nodes. Percentages
+   make them scale to any die size. Grid: 20/50/80% on each axis. */
+.die-1{background-image:radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:50% 50%; background-size:30% 30%}
+.die-2{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 80%; background-size:30% 30%, 30% 30%}
+.die-3{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 50% 50%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%}
+.die-4{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%}
+.die-5{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 50% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
+.die-6{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
+  background-position:20% 20%, 80% 20%, 20% 50%, 80% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
+/* Legend die under each chip, showing which face lands on that element.
+   Needs its own border. */
+.gcol > .die{
+  width:min(24px, 60cqw); height:min(24px, 60cqw); margin:0 auto;
+  background-color:var(--card); border:2px solid var(--line); border-radius:6px;
+}
+@keyframes tumble{
+  0%{transform:rotate(0) scale(1)} 25%{transform:rotate(-18deg) scale(1.12)}
+  50%{transform:rotate(14deg) scale(.94)} 75%{transform:rotate(-8deg) scale(1.06)}
+  100%{transform:rotate(0) scale(1)}
+}
+.die.tumbling{animation:tumble .5s ease-in-out}
+
+/* .playbar is empty until a roll, then holds the rolled row while it flies
+   to the inventory, tweening its height 0 -> row -> 0 (see triggerRoll()/
+   playRollAnimation()). overflow:hidden keeps the tween clean. */
+.playbar{margin:16px 26px 0; display:flex; align-items:center; gap:16px; flex-wrap:wrap; overflow:hidden}
+/* Mid-flight state: pulled out of normal flow so it can travel to the
+   inventory hub icon in a straight line regardless of what's reflowing
+   underneath it (see flyToInventory()). */
+#rollPopup{
+  position:fixed; inset:0; z-index:140; display:flex; align-items:safe center; justify-content:center; overflow-y:auto;
+  padding:16px; background:rgba(6,14,20,.62);
+  opacity:0; pointer-events:none; transition:opacity .22s ease;
+}
+#rollPopup.open{opacity:1; pointer-events:auto}
+.roll-popup-box{
+  width:min(440px, 100%); background:var(--card); border:2px solid var(--line);
+  border-radius:18px; padding:18px 16px 16px; box-shadow:0 16px 40px rgba(0,0,0,.5);
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+}
+.roll-popup-title{font-weight:800; font-size:15px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink2)}
+/* Each rolled element is a larger copy of the pool chip: white square,
+   suit border, atomic number top-left, suit badge top-right, name inside.
+   All fixed px and laid out up front; the die sits on top and fades out
+   (opacity only), so nothing resizes or shifts. */
+#rollPopupRow{display:grid; grid-template-columns:repeat(3, 84px); justify-content:center; gap:14px 16px}
+.rollchip{display:flex; flex-direction:column; align-items:center; gap:6px; width:84px}
+.rc-face{
+  position:relative; box-sizing:border-box; width:84px; height:84px; border-radius:12px;
+  background:#fff; color:#221f1a; border:6px solid var(--suit);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding-top:6px;
+}
+.rc-sym{font-size:32px; font-weight:800; line-height:1}
+.rc-num{position:absolute; top:4px; left:6px; font-size:12px; font-weight:800; color:var(--suit); line-height:1}
+.rc-face .el-suit-badge{top:-7px; right:-7px; width:20px; height:20px}
+.rc-name{max-width:100%; font-size:10.5px; font-weight:700; color:#000; line-height:1; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.rc-sym, .rc-num, .rc-face .el-suit-badge, .rc-name{opacity:0; transition:opacity .18s ease}
+.rollchip.revealed .rc-sym, .rollchip.revealed .rc-num, .rollchip.revealed .el-suit-badge, .rollchip.revealed .rc-name{opacity:1}
+.rc-die{
+  position:absolute; inset:-6px; border-radius:12px; z-index:3;
+  background-color:var(--sunken); border:2px solid var(--line); box-sizing:border-box;
+  transition:opacity .18s ease;
+}
+.rollchip.revealed .rc-die{opacity:0}
+#rollCollect{min-width:60%; visibility:hidden; opacity:0; transition:opacity .2s ease}
+#rollCollect.show{visibility:visible; opacity:1}
+/* nowrap + equal flex columns (like .gather) so a full 6-dice roll always
+   fits one line. */
+.rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
+
+/* make here */
+.makewrap{padding:20px 8px 24px}
+.col-label{font-size:12px; font-weight:800; letter-spacing:1.5px; color:#fff;
+  text-shadow:0 1px 2px rgba(0,0,0,.55), 0 1px 8px rgba(0,0,0,.25);
+  padding-bottom:8px; border-bottom:2px solid var(--line2); margin-bottom:14px}
+/* "ITEM SHOP": its own larger centred line; the Crafted Items toggle
+   renders separately above the crafted list (see shopBodyHTML()). */
+.col-label.shop-label{text-align:center; font-size:16px; letter-spacing:.8px}
+/* Same border-drawn chevron as .job-board-heading::before, in currentColor,
+   so every collapse control matches. */
+.shop-collapse-toggle{
+  display:flex; align-items:center; gap:6px; margin-bottom:9px;
+  font-size:11px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
+  background:var(--sunken); border:1.5px solid var(--line2); border-radius:999px; padding:5px 12px 5px 10px;
+  white-space:nowrap;
+}
+.shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+.collapse-chevron{
+  flex:none; width:8px; height:8px;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(-45deg) translate(-1px,-1px); transition:transform .18s ease;
+}
+.shop-collapse-toggle.active .collapse-chevron{transform:rotate(45deg) translate(-2px,-1px)}
+/* Paintbrush shortcut to the Arrange screen, beside the Crafted Items
+   toggle (same gating). Opens with this station's suit colour as the
+   background (see [data-arrange-bg]). */
+.shop-toggle-row{display:flex; align-items:center; gap:8px; margin-bottom:9px}
+.shop-toggle-row .shop-collapse-toggle{margin-bottom:0}
+.arrange-launch-btn{
+  flex:none; display:flex; align-items:center; justify-content:center;
+  width:30px; height:30px; border-radius:50%;
+  background:var(--sunken); border:1.5px solid var(--line2); font-size:14px;
+}
+.arrange-launch-btn:hover{background:var(--bg-soft)}
+/* Collapsed crafted-items row: same icons as the map preview strip, but
+   wrapping. */
+.crafted-row{
+  display:flex; flex-wrap:wrap; gap:9px; align-items:center;
+  padding:10px 12px; margin-bottom:9px; border-radius:12px;
+  background:var(--sunken); border:1.5px solid var(--line2);
+}
+.crafted-row .station-item-icon{font-size:22px}
+/* Sits in the dark .stationhead card above the dice, not .makewrap --
+   own spacing/no divider line rather than inheriting .col-label's
+   light-section border, but identical text treatment. */
+.col-label.elements-label{margin:14px 26px 0; padding-bottom:0; border-bottom:none}
+.shop{display:flex; flex-direction:column; gap:9px}
+/* The Craft button fills the card's right edge top to bottom
+   (align-self:stretch), so .item has no padding (it's on .irow). No
+   overflow:hidden -- it would clip the owned and pin badges, which poke past
+   the card; the button rounds its own right corners instead. */
+/* Full suit-coloured border (the element-card look, scaled down). The
+   points bubble only appears on the inspection popup (.pc-card). */
+.item{
+  position:relative; cursor:pointer;
+  display:flex; align-items:stretch; border-radius:14px;
+  border:4px solid var(--suit);
+  background:linear-gradient(to right, var(--item-bg-start), var(--item-bg-end));
+}
+/* Halved from the old 10px on every side so the icon slot (see .item .iem
+   below) sits roughly twice as close to the card's own outer border. */
+/* align-items:stretch so .ibody matches .iem's height: the name aligns
+   with the icon box's top and the recipe with its bottom. */
+.item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:stretch; padding:5px 10px 5px 5px}
+.capbox .item .irow{padding:0}
+.item.can{background:var(--ok-soft); border-color:var(--ok-line)}
+/* Shop lists: a thin pale grey border on every row (other .item contexts
+   keep the suit colour) so the list reads calm. "Ready to craft" is shown
+   by the Craft button alone (.craftbtn.go). Same specificity as
+   .item.can's border-color -- this wins by coming later. */
+.shop .item{ border-width:2px; border-color:var(--pip); }
+/* Light card face for shop rows only (images/game ui reference 0903.png);
+   other .item contexts stay dark. */
+/* Slightly translucent so the page's teal-navy shows through. */
+.shop .item{
+  background:linear-gradient(to right, rgba(221,231,244,.72), rgba(201,218,238,.72));
+  box-shadow:0 2px 5px rgba(0,0,0,.18);
+}
+.shop .item .iname{color:#1c2b3d}
+.shop .item .tier{background:rgba(255,255,255,.6); color:#3a4a5c}
+.shop .item .recipe, .shop .item .plus{color:#4d6076}
+/* Green ring for items that feed the tracked item. Inset so a thicker
+   ring eats into padding instead of the gap between cards. */
+.item.job-highlight{
+  box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
+}
+/* Shop lists drop this ring: readiness is the Craft button's job (see
+   .craftbtn.go). */
+.shop .item.job-highlight{box-shadow:none}
+.item.owned{opacity:.62}
+/* Owned checkmark, the same badge used everywhere ownership shows, sized
+   like the crafted-items icons (28px). Top-right, clear of the top-left
+   pin/tracked badge. */
+.item.owned::after{
+  content:"✓"; position:absolute; top:-8px; right:-8px; width:28px; height:28px;
+  border-radius:50%; background:var(--ok); color:#fff; font-size:15px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card); z-index:1;
+}
+/* "Needed for <tracked item>" badge: shows the TRACKED item's icon, and
+   takes the pin button's top-left slot -- a card shows one or the other,
+   never both (see itemHTML()). */
+.todo-hl{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px}
+.item-pin-badge{
+  cursor:pointer;
+  position:absolute; top:-14px; left:-14px; z-index:3; width:42px; height:42px;
+  border-radius:50%; background:var(--card); border:2px solid var(--ok);
+  display:flex; align-items:center; justify-content:center; font-size:21px; line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+/* Glossy bevelled icon slot (images/game ui reference 0903.png), with the
+   icon close to its edge. */
+/* 72px slot, fixed dark blue fill. Suit identity now lives in the suit-cost
+   badges by the name (itemSuitCosts()/.isuit-badge), not the slot colour. */
+.item .iem{
+  font-size:52px; line-height:1; width:72px; height:72px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:12px; border:3px solid var(--line);
+  background:var(--sunken);
+  box-shadow:inset 0 2px 3px rgba(255,255,255,.25), inset 0 -4px 6px rgba(0,0,0,.25);
+}
+/* Column with space-between: name pinned to the top, recipe to the bottom,
+   both aligned with .iem's border. */
+.item .ibody{flex:1; min-width:0; display:flex; flex-direction:column; justify-content:space-between}
+.item .itop{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.iname{font-size:18px; font-weight:800; letter-spacing:-.2px}
+/* Suit-cost badges next to the name, 5+ point items only (see
+   itemSuitCosts()). */
+.isuit-costs{display:inline-flex; gap:4px; vertical-align:middle}
+/* Tappable once the recipe and suit cost are payable (itemHTML()'s "can"):
+   opens the suit-spend balloon, same as Craft (see handleScreenClick()). */
+.isuit-costs.interactive{cursor:pointer}
+.isuit-costs.interactive:hover{transform:translateY(-1px)}
+/* Sized up a notch (18px -> 22px) for better legibility next to the name. */
+.isuit-badge{
+  width:22px; height:22px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--suit); box-shadow:inset 0 1px 2px rgba(255,255,255,.35), inset 0 -1px 2px rgba(0,0,0,.25);
+}
+/* Not enough SURPLUS of this suit beyond what the recipe already needs
+   (suitSurplusOfSuit()): fill desaturated and icon dimmed, so it still
+   reads as this suit. */
+.isuit-badge.need{filter:grayscale(.7) brightness(.75)}
+/* Green ring while the suit-spend balloon is open (updateSuitBadgeProgress()),
+   on each slot still needing picks; overrides .need's dimming. */
+.isuit-badge.picking{filter:none; box-shadow:0 0 0 3px var(--ok-bright), inset 0 1px 2px rgba(255,255,255,.35), inset 0 -1px 2px rgba(0,0,0,.25)}
+/* Corner suit badge for element squares (see elSuitBadgeHTML()). Overhangs
+   the edge; the square's thick border keeps it clear of the symbol. */
+.el-suit-badge{
+  position:absolute; top:-4px; right:-4px; width:13px; height:13px; border-radius:50%;
+  background:var(--suit); display:flex; align-items:center; justify-content:center;
+  box-shadow:0 1px 2px rgba(0,0,0,.45); z-index:2;
+}
+.el-suit-badge img{width:70%; height:70%; object-fit:contain; filter:brightness(0) invert(1)}
+/* SUIT_ICON art is black on transparent; inverted to white on the solid
+   suit fill. */
+.isuit-badge img{width:60%; height:60%; object-fit:contain; filter:brightness(0) invert(1)}
+.tier{font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink2); background:var(--sunken);
+  padding:2px 7px; border-radius:5px}
+/* Recipe left-aligned with the item name. */
+.recipe{font-size:14px; color:var(--ink2); margin-top:8px; display:flex; flex-wrap:wrap;
+  align-items:center; justify-content:flex-start; gap:5px}
+.plus{color:#fff; font-weight:700}
+/* Item tokens are icon-only (tap opens its card, see tokenHTML()); element
+   tokens (.tok.el) are real buttons, styled separately. */
+/* 28px so most longer capstone recipes fit on one line. */
+.tok{display:inline-flex; align-items:center; gap:2px; font-weight:700; font-size:26px; line-height:1; position:relative}
+/* Inner wrapper so the outline below hits only the art, not the checkmark
+   sibling. */
+.tok-icon{display:inline-flex}
+/* Outline following the art's real shape (drop-shadow tracks pixels for
+   images and emoji alike); four 1px offsets make an even outline. */
+.tok-icon{filter:drop-shadow(1px 0 0 #000) drop-shadow(-1px 0 0 #000) drop-shadow(0 1px 0 #000) drop-shadow(0 -1px 0 #000)}
+/* Same green circle+checkmark language as .item.owned::after, scaled down
+   for these smaller inline tokens -- shown on any owned/have token,
+   element or item alike. */
+.tok-check{
+  position:absolute; top:-6px; right:-6px; width:15px; height:15px; border-radius:50%;
+  background:var(--ok); color:#fff; font-size:9px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1;
+  box-shadow:0 0 0 2px var(--card); z-index:2;
+}
+/* Shop recipes: black border/text, no fill; ownership is shown by
+   .tok-check. Other .tok.el contexts keep green/red. */
+.shop .tok.el, .shop .tok.el.have{
+  background:#fff; border-color:#1c2b3d; color:#1c2b3d;
+}
+/* Missing elements stay red. */
+.shop .tok.el.need{
+  background:#fff; border-color:var(--bad-dark); color:var(--bad-dark);
+}
+/* Pushable button with an offset ledge shadow. Full-strength --ok border so
+   it matches .tok.need's weight. */
+.tok.el{
+  cursor:pointer; position:relative; font-weight:800; font-size:15px;
+  padding:6px 11px; border-radius:9px; border:1.5px solid;
+  box-shadow:0 2px 0 rgba(0,0,0,.25);
+  transition:transform .1s cubic-bezier(.3,.8,.4,1), box-shadow .1s cubic-bezier(.3,.8,.4,1),
+    filter .12s, background .12s, border-color .12s;
+}
+.tok.el.have{background:var(--ok-soft); border-color:var(--ok); color:var(--ok)}
+.tok.el.need{background:var(--bad-soft); border-color:var(--bad); color:var(--bad); cursor:help}
+.tok.el.need:hover{filter:brightness(1.08)}
+.tok.el:not(:disabled):active{transform:translateY(2px); box-shadow:0 0 0 transparent}
+/* Glow when a conversion could cover this exact shortfall now (see
+   tokenHTML()) -- "tap Convert, then tap me". */
+.tok.el.need:has(.tok-convert-badge){box-shadow:0 2px 0 rgba(0,0,0,.25), 0 0 0 3px rgba(240,103,76,.45)}
+.shop .tok.el.need:has(.tok-convert-badge){box-shadow:0 0 0 3px rgba(240,103,76,.35)}
+.tok .cat{font-size:10px; font-weight:800; color:var(--gold)}
+/* Bare icon now -- no pill/card chrome and no conversion count any more,
+   just the convert-arrows glyph itself sitting in the token's corner as a
+   quiet "tap Convert" hint. */
+/* Sized to match .tok-check's footprint (~19-20px). */
+.tok-convert-badge{
+  position:absolute; top:-9px; right:-9px; width:20px; height:20px;
+  display:flex; align-items:center; justify-content:center; z-index:2;
+}
+.tok-convert-badge .converticon{width:20px; height:20px}
+/* Tapping a not-yet-craftable Craft button -- see bounceMissingItems(). */
+.missing-items-note{
+  position:fixed; z-index:80; pointer-events:none; white-space:nowrap;
+  background:var(--bad); color:#fff; font-weight:800; font-size:12px;
+  padding:6px 11px; border-radius:8px;
+  box-shadow:0 3px 10px rgba(0,0,0,.35);
+}
+.craftbtn{
+  flex:none; align-self:center; width:60px; margin:0 10px 0 2px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  border:none; border-radius:10px;
+  padding:10px 5px; font-size:13px; font-weight:800; line-height:1.15; background:var(--sunken); color:var(--mute);
+}
+/* Craft "go" state: glossy gold/orange (images/game ui reference
+   0903.png), deliberately not the green used for status. Inset highlight
+   and an offset ledge shadow it sinks into on press, shared with .bigbtn. */
+.craftbtn.go{
+  background:linear-gradient(180deg, #ffce6b, #f0a428 62%); color:#fff;
+  text-shadow:0 1px 2px rgba(120,60,0,.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 3px 0 #a05d12;
+}
+.craftbtn.go:hover{filter:brightness(1.05)}
+.craftbtn.go:not(:disabled):active{
+  transform:translateY(3px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 transparent;
+}
+.craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
+.craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
+
+.capbox{margin-top:16px; background:var(--cap-grad);
+  border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
+.capbox.can{border-color:var(--ok); background:var(--cap-grad-can)}
+.capbox .item{padding:0; background:none; border:none}
+/* The capstone item has no padding/border, so the highlight ring goes on
+   .capbox instead. */
+.capbox:has(.item.job-highlight){
+  box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
+}
+.capbox .item.job-highlight{box-shadow:none}

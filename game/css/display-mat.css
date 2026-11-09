@@ -1,0 +1,405 @@
+/* =====================================================================
+   Display Mat -- see js/mat-scoring.js, js/display-mat.js and
+   renderClassicDrawer()/renderMatTop(). Lives inside the Inventory drawer:
+   the 8-slot grid and Elements tab in #drawerTop, a filter bar
+   (#matFilters), then the scrollable grid of owned items in #drawerBody.
+   Cards reuse #cardPop's printed-card look (.pc-card) at cell size. */
+/* #drawerTop sits outside .dbody, so it needs .dbody's side padding
+   itself. */
+/* --mat-row-h: the mat grid's own per-row height formula, shared with
+   .mat-zone-page (see its own comment) so the two never drift apart. */
+#drawerTop{container-type:inline-size; padding:10px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
+/* The score card: Quark Meter above the combo row (see renderMatTop()).
+   Visible on both the Display Mat and Elements tabs. */
+.mat-score-card{display:flex; flex-direction:column; gap:4px; margin-bottom:6px}
+/* Quark icon | meter | total bubble, one line (see renderMatTop()). */
+.qm-line{display:flex; align-items:flex-end; gap:8px}
+.qm-line .quark-meter-wrap{flex:1; min-width:0; margin-top:0}
+.qm-quark-ic{flex:none; font-size:22px; line-height:1; margin-bottom:-3px}
+.qm-total{
+  flex:none; min-width:56px; padding:4px 10px; border-radius:999px; margin-bottom:-4px;
+  background:var(--gold-soft); border:1.5px solid var(--gold); color:var(--gold);
+  font-size:15px; font-weight:900; line-height:1.1; text-align:center; font-variant-numeric:tabular-nums;
+}
+/* Combo chips only. min-height of one chip (50px) so the mat below doesn't
+   jump when combos appear or disappear. */
+.mat-score-row{
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px 10px; min-height:40px;
+}
+/* "Points on Display x Combo Multiplier = Quarks", spelled out on one line
+   above the chips. */
+.mat-score-stats{
+  display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; gap:6px 10px;
+}
+/* Quark Meter: four separate pill segments across the score card. Each
+   fills smoothly through its own slice of this round's thresholds (see
+   lockInTiersForRound()): 0->one, one->two, two->three, then headroom above
+   three. A segment glows gold (.lit) only when it's full. */
+/* Two stacked rows now (labels, then the segment bar itself) instead of
+   one flex row of segments -- see renderMatTop()'s own Quark Meter
+   comment for why. */
+/* Extra top margin reserves room for .qm-cap-label, which sits above this
+   whole row (see below) rather than in the flow of anything else. */
+.quark-meter-wrap{display:flex; flex-direction:column; gap:3px; width:100%; position:relative; margin-top:4px}
+.qm-labels{position:relative; width:100%; height:12px}
+/* Each label sits right above its own breakpoint icon (renderMatTop()'s
+   qmCumPcts). The two at the right edge (dice-3 and the "?" cap)
+   right-align so they don't overflow. */
+.qm-seg-label{
+  position:absolute; top:0; transform:translateX(-50%); text-align:center; font-size:10px; font-weight:800;
+  color:var(--ink2); font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.qm-seg-label.qm-label-end{transform:none; text-align:right}
+/* One row above the dice-3 number, gold like the other "?" element
+   accents. */
+.qm-cap-label{color:var(--gold)}
+.qm-segs-row{display:flex; gap:6px; width:100%; position:relative}
+.qm-seg{
+  position:relative; flex:1; height:14px; border-radius:6px; overflow:hidden;
+  background:var(--line);
+}
+/* Gold fill; opacity shows "still filling" vs the glowing .lit state. */
+.qm-seg-fill{
+  position:absolute; inset:0; width:0; border-radius:6px;
+  background:var(--gold); opacity:.55;
+  transition:width .3s cubic-bezier(.3,.8,.4,1);
+}
+.qm-seg.lit .qm-seg-fill{
+  opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7);
+}
+/* The "?" (Empty Element) square (emptyElSquareHTML()), used everywhere it
+   appears: the element-square look (white face, thick border, corner suit
+   badge) with a black border, a "?" instead of a symbol, no atomic number,
+   and a solid black suit badge. */
+.empty-el-square{
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  flex:none; border:3px solid #000; border-radius:7px; background:#fff; color:#181614; font-weight:800;
+}
+.empty-el-square .el-suit-badge{background:#000}
+/* Icons at the three breakpoints between segments, placed by percentage
+   (the 3px gaps are negligible). Gold once the score has reached that
+   break (emptyElementsForScore()). */
+.qm-break{position:absolute; top:50%; transform:translate(-50%,-50%); z-index:2}
+.qm-break .empty-el-square{box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.qm-break.lit .empty-el-square{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+/* The "?" breakpoint shares dice-3's x (the 100% mark) but sits above the
+   meter, right-aligned like .qm-cap-label. */
+/* The "?" (Empty Element) breakpoint caps the meter's right end, inline
+   with the three dice (see renderMatTop()'s own 4-segment comment). */
+.qm-break-end{left:auto; right:0; transform:translate(25%,-50%)}
+/* Breakpoint rewards are bonus dice, shown as die faces in the same
+   white-face/thick-border style. */
+.qm-break-dice{
+  display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+  border:3px solid #000; border-radius:7px; background:#fff; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
+.qm-break.lit .qm-break-dice{background:var(--gold); box-shadow:0 0 8px rgba(226,178,90,.85), 0 2px 4px rgba(0,0,0,.4)}
+/* "?" counter next to the station title (emptyElBadgeHTML()/
+   renderStation()): disabled and dim at 0 rather than hidden. The square is
+   sized to match the chips (syncEmptyElBadgeSize()), count underneath. */
+/* Nested inside the title's <h1>, so a changing digit count only reflows
+   the title row, not .sheet-head or the pool below. */
+.empty-el-badge{
+  flex:none;
+  display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+  padding:0; border:none; background:none;
+  cursor:pointer; opacity:.45;
+}
+.empty-el-badge:disabled{cursor:default}
+.empty-el-badge.active{opacity:1}
+.empty-el-badge.active .empty-el-square{box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
+.empty-el-badge b{font-size:12px; font-weight:900; color:#fff; line-height:1}
+.empty-el-badge.active b{color:var(--gold)}
+/* Legacy "?" spotlight mode (enterEmptyElCashIn()): everything fades except
+   the element row and this badge. .station-title-text is separate from the
+   badge so the name can dim without dimming the badge. */
+body.empty-el-cashin #topbar, body.empty-el-cashin .sheet-head .em,
+body.empty-el-cashin .sheet-head .station-title-text,
+body.empty-el-cashin .station-tractor-badge,
+body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
+  opacity:.15; pointer-events:none; transition:opacity .2s;
+}
+/* A dark scrim on top of the faded content; the spotlighted row and badge
+   are raised above it. */
+#emptyElCashinScrim{
+  position:fixed; inset:0; z-index:73; background:#000; opacity:0; pointer-events:none;
+  transition:opacity .2s;
+}
+body.empty-el-cashin #emptyElCashinScrim{opacity:.55}
+body.empty-el-cashin .gather, body.empty-el-cashin .empty-el-badge,
+body.empty-el-cashin .empty-el-cashin-hint{position:relative; z-index:74}
+.empty-el-cashin-hint{display:none; text-align:center; font-weight:700; font-size:15px; color:#fff; margin:12px 26px 0}
+body.empty-el-cashin .empty-el-cashin-hint{display:block}
+.mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
+/* Combo chip: icon on top, count below (see matComboChipHTML()). */
+/* No tile background or border -- just the icon and count, 1.5x larger. */
+.mm-combo{
+  display:flex; flex-direction:column; align-items:center; gap:1px; padding:6px 7px 2px 3px;
+  color:var(--gold); min-width:30px; background:none; border:none; cursor:pointer;
+}
+.mm-combo:active{transform:scale(.92)}
+/* Combo count, riding the icon's own top-right corner (see
+   matComboChipHTML()). */
+.mm-ccount{
+  position:absolute; top:-6px; right:-8px; min-width:17px; height:17px; padding:0 3px;
+  border-radius:999px; background:var(--gold); color:#181614; border:1.5px solid #000;
+  font-size:10.5px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums;
+  display:flex; align-items:center; justify-content:center;
+}
+.mm-combo b{font-size:18px; font-weight:900; line-height:1; font-variant-numeric:tabular-nums}
+/* Collections stay a horizontal pill (icon, name, +bonus) so the name has
+   room. */
+.mm-combo.col{color:var(--collection)}
+.mm-combo.col b{font-size:11px; font-weight:800; white-space:nowrap}
+.mm-combo.col i{font-style:normal; font-size:11px; font-weight:800}
+/* A collection chip placed ahead of its reveal beat (playLockInSequence(),
+   matComboChipsHTML()): invisible but already in position, so revealing it
+   doesn't shift layout. transform/opacity only, so bouncePulse() still
+   works. */
+.mm-combo.col.discovering{opacity:0; transform:scale(.4)}
+.mm-combo.col .mm-ccount{background:var(--collection); color:#fff}
+.mm-cico{position:relative; width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:16.5px; background:var(--st, var(--suit, #4a4f5c)); flex:none}
+.mm-cico :is(img,svg){width:18px; height:18px}
+/* Outline station/item icons, not suit glyphs (those read fine as is). */
+.mm-cico.station :is(img,svg), .mm-cico.component :is(img,svg){filter:var(--icon-outline)}
+/* Component combos get a parchment background like the mat cards. */
+.mm-cico.component{background:#f2e6cc}
+.mm-cico.star{background:var(--collection-soft); border:1.5px solid var(--collection); color:#ffd166; font-size:17px}
+.mm-combo-none{font-size:11.5px; color:var(--mute); align-self:center}
+#comboInfoOverlay{z-index:76}
+#comboInfoTitle{display:flex; align-items:center; gap:8px}
+.ci-title-ic{font-size:24px; line-height:1}
+.ci-title-ic :is(img,svg){width:26px; height:26px}
+.combo-info-list{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-top:8px}
+.combo-info-card{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px;
+  background:#f2e6cc; color:#181614; border:2px solid #000}
+.ci-em{font-size:24px; line-height:1}
+.ci-em :is(img,svg){width:26px; height:26px}
+.ci-name{flex:1; min-width:0; font-weight:800; font-size:13px}
+.ci-pts{flex:none; min-width:24px; height:24px; border-radius:999px; background:var(--gold); border:1.5px solid #000;
+  font-size:11.5px; font-weight:900; display:flex; align-items:center; justify-content:center}
+
+/* Row height computed from #drawerTop's width (container query, cqw) via
+   --mat-row-h, not per-cell aspect-ratio: a 2-wide capstone cell must be
+   the same height as its neighbours. grid-auto-rows:1fr doesn't work here
+   (no definite height). .mat-zone-page uses the same variable so switching
+   tabs never resizes the tray. */
+.mat-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr);
+  grid-auto-rows:var(--mat-row-h);
+  gap:8px;
+}
+.mm-slot{position:relative}
+.mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
+.mm-slot.wide{grid-column:span 2}
+/* Leftover from an old pointer-based tap detector (now a plain click
+   listener); harmless. */
+.mm-slot.filled{touch-action:none}
+
+/* The mat/Elements zone as a "page" with two folder tabs (see
+   renderMatTop()). Tabs and Clear/Layouts share one normal-flow row
+   (.mat-zone-topbar) above it. */
+.mat-zone-wrap{position:relative}
+/* Quick actions left, tabs right (.mat-quick-actions takes margin-right:
+   auto), directly above the page with no gap so the tabs read as attached.
+   Bottom-aligned. */
+.mat-zone-topbar{display:flex; align-items:flex-end; gap:8px}
+/* Fixed height (--mat-row-h, shared with .mat-grid) so switching tabs never
+   resizes the tray; a long elements list scrolls inside. A different
+   parchment shade per page. */
+.mat-zone-page{
+  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 8px + 20px);
+  max-height:calc(var(--mat-row-h) * 2 + 8px + 20px); overflow-y:auto;
+  border-radius:14px 14px 4px 14px; border:2px solid; padding:10px;
+}
+.mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}
+.mat-zone-page.zone-elements{background:#f2e6cc; border-color:#c3a06a}
+/* margin-left:auto puts the tabs at the right edge whether or not the
+   quick actions are present (the Elements page has none). */
+.mat-zone-tabs{display:flex; gap:2px; margin-left:auto}
+.mat-tab{
+  padding:7px 14px 6px; border:2px solid; border-bottom:none; border-radius:10px 10px 0 0;
+  font-size:11px; font-weight:800; letter-spacing:.3px; color:#3a2f1e; cursor:pointer;
+}
+.mat-tab.tab-mat{background:#cda874; border-color:#a67c4a}
+.mat-tab.tab-elements{background:#f2e6cc; border-color:#c3a06a}
+/* The inactive tab is dimmed and nudged down behind the active page. */
+.mat-tab:not(.active){filter:brightness(.72); transform:translateY(4px)}
+.mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
+/* Clear/Layouts on the left of .mat-zone-topbar, as normal flex children
+   (two absolutely positioned corners overlapped on narrow phones). */
+.mat-quick-actions{display:flex; gap:8px}
+.mat-quick-btn{
+  width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--gold-line); background:var(--gold); color:#181614; font-size:15px;
+  cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,.35);
+}
+.mat-quick-btn:active{transform:translateY(2px); box-shadow:0 1px 2px rgba(0,0,0,.35)}
+/* Clear is a labelled pill -- a trash icon alone was ambiguous. Same style
+   as .mat-quick-btn, auto width. */
+.mat-quick-btn.text{
+  width:auto; height:34px; border-radius:17px; padding:0 14px; font-size:12.5px; font-weight:800;
+}
+/* Held elements on the mat page use the drawer's .elgrid (2 rows of 8). */
+
+/* Search box only; station/suit filters and sort live in their own trays
+   (#matFilterTray/#matSortTray). Built once (buildMatFilterBar()), never
+   re-rendered, so typing never loses focus. */
+.mat-filters{margin:14px 0 10px; display:flex; align-items:center; gap:8px}
+.mat-fsearch{
+  flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
+  background:var(--sunken); color:var(--ink); font-size:13px; box-sizing:border-box;
+}
+/* Opens the same #collectionsOverlay as the welcome screen
+   (openCollectionsOverlay()); a plain button sized to sit with the search
+   bar. */
+.mat-collections-btn{
+  flex:none; width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+  font-size:18px; border-radius:8px; border:1.5px solid var(--collection-line);
+  background:var(--collection-soft); color:var(--ink);
+}
+.mat-collections-btn:hover{background:var(--sunken)}
+
+/* Sort/Filter floating buttons: same style and corners as #pinsBtn/
+   #quickConvertBtn, raised above #drawer.expanded (60). Their icons
+   (__SORT__/__FILTER__) are black glyphs, inverted to white. */
+/* [hidden] loses to .floatbtn's display:flex, so this forces display:none
+   -- these must not catch taps while hidden. */
+#matSortBtn[hidden], #matFilterBtn[hidden]{display:none}
+.mat-sf-btn{left:16px; z-index:61}
+#matFilterBtn.mat-sf-btn{left:auto; right:16px}
+.mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
+/* Scrim for the Sort/Filter trays (not #scrim, which would close the whole
+   drawer). toggleMatSideTray() sets `top` inline to #matFilters' position,
+   so it doesn't cover the mat above the search bar. */
+.mat-sf-scrim{position:fixed; left:0; right:0; bottom:0; background:rgba(10,14,20,.5); z-index:62}
+#matSortTray, #matFilterTray{
+  position:fixed; bottom:0; width:50vw; max-width:260px; z-index:63;
+  background:var(--card); box-shadow:0 0 24px rgba(0,0,0,.5);
+  padding:16px 16px 16px;
+  display:flex; flex-direction:column; gap:8px; overflow-y:auto;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+#matSortTray{left:0; transform:translateX(-100%)}
+#matFilterTray{right:0; transform:translateX(100%)}
+#matSortTray.open, #matFilterTray.open{transform:translateX(0)}
+.mat-tray-h{font-size:13px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--ink2); margin:0 0 4px}
+.mat-tray-option{
+  padding:10px 12px; border-radius:10px; text-align:left;
+  background:var(--sunken); border:1.5px solid var(--line); color:var(--ink);
+  font-size:13px; font-weight:700;
+}
+.mat-tray-option.active{border-color:var(--gold); color:var(--gold); background:var(--gold-soft)}
+/* Two stacked sections: stations in a 2x4 grid, suits below a hairline.
+   Icon-only buttons. */
+.mat-filter-section{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  padding-bottom:14px; margin-bottom:14px; border-bottom:1.5px solid var(--line);
+}
+/* Suits use the same 4-per-row grid and size as stations. */
+.mat-filter-section.suits{padding-bottom:0; margin-bottom:0; border-bottom:none}
+/* Square, icon-only buttons. */
+.mat-fbtn{
+  display:flex; align-items:center; justify-content:center; aspect-ratio:1; width:100%;
+  padding:0; border-radius:12px;
+  background:var(--st, var(--suit, var(--sunken))); border:1.5px solid var(--line); font-size:22px;
+  opacity:.5; filter:saturate(.4); overflow:hidden; color:#fff;
+}
+/* Caps raw <img> icons (Noto art is ~160px intrinsic), which otherwise
+   blow out of the row. */
+.mat-fbtn :is(img,svg){width:24px; height:24px; object-fit:contain; flex:none}
+/* Station chips only -- this same .mat-fbtn class is shared with the suit
+   filter row right below it (#matFSuits), and element suits are
+   explicitly exempt from the icon-outline treatment. */
+.mat-fbtn[data-mat-fstation] :is(img,svg){filter:var(--icon-outline)}
+.mat-fbtn.on{opacity:1; filter:none; box-shadow:0 0 0 2px var(--gold)}
+/* The scrollable grid of owned items, in #drawerBody (.dbody already
+   scrolls). --mat-row-h is repeated here because #drawerBody is a sibling of
+   #drawerTop, not a descendant; the value matches since both have the same
+   content width. Gives 2-wide capstone cells the same row height as the
+   Display Mat. */
+.mat-results-grid{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
+  container-type:inline-size; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4);
+  grid-auto-rows:var(--mat-row-h);
+}
+.mat-results-grid .mm-card{width:100%; height:100%}
+/* Capstones span 2 columns, as on the mat (matCardHTML()'s "wide" class,
+   tray only). */
+.mat-results-grid .mm-card.wide{grid-column:span 2}
+/* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
+   collapsible with the shared .collapse-chevron. */
+.mat-tier-section{margin-bottom:14px}
+.mat-tier-section:last-child{margin-bottom:0}
+.mat-tier-heading{
+  display:flex; align-items:center; gap:8px; width:100%; margin:0 0 10px;
+  padding:6px 0; border:none; background:none; cursor:pointer;
+  font-size:13px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
+  -webkit-user-select:none; user-select:none;
+}
+.mat-tier-line{flex:1; height:2px; background:var(--line2)}
+.mat-tier-heading .collapse-chevron{flex:none}
+/* These sections default open, so the expanded rotation is the resting
+   state and .collapsed flips it. */
+.mat-tier-heading .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
+.mat-tier-section.collapsed .mat-tier-heading .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
+.mat-tier-section.collapsed .mat-results-grid{display:none}
+
+/* Parchment face like the BINGO cards. No overflow:hidden, so the corner
+   badges (.mm-pts/.mm-pips/.mm-station) can straddle the border. */
+.mm-card{
+  position:relative; width:100%; height:100%; background:#f2e6cc; color:#181614;
+  border-radius:12px; border:4px solid #000; padding:5px 3px 3px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.35);
+}
+/* Corner badges 1.25x and the main icon 2x; the card's aspect ratio is
+   unchanged. */
+.mm-pts{
+  position:absolute; top:-3px; left:-3px; z-index:2; min-width:28px; height:28px; padding:0 4px;
+  border-radius:999px; display:flex; align-items:center; justify-content:center;
+  background:var(--gold); color:#181614; border:2px solid #000;
+  font-size:13px; font-weight:900; font-variant-numeric:tabular-nums;
+}
+.mm-card.complete .mm-pts{box-shadow:0 0 0 2px var(--gold), 0 0 6px rgba(226,178,90,.85)}
+.mm-pips{position:absolute; top:-3px; right:-3px; z-index:2; display:flex; flex-direction:column; gap:2px}
+/* Station badge, suit pips and name 1.5x for legibility (mat and
+   full-inventory grid share this markup). */
+.mm-pip{
+  width:27px; height:27px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--suit); border:1.5px solid #000; font-size:15px; color:#fff; line-height:1;
+}
+.mm-pip :is(img,svg){width:16px; height:16px}
+/* "Lit" (part of a live combo): a large static halo, shared by .mm-pip and
+   .mm-station. */
+.mm-pip.lit, .mm-station.lit{ box-shadow:0 0 0 3.5px var(--gold), 0 0 10px rgba(226,178,90,.9); }
+.mm-icon{font-size:44px; line-height:1; margin-top:3px}
+.mm-icon :is(img,svg){width:44px; height:44px; object-fit:contain}
+.mm-name{
+  font-size:10.5px; font-weight:800; line-height:1.1; padding:1px 2px; overflow:hidden; width:100%;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+/* Station badges: a row (one per home station, see MAT_CARDS), centred on
+   the bottom edge and poking 3px past it. 26px so three fit. */
+.mm-stations{
+  position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); z-index:2;
+  display:flex; align-items:center; justify-content:center; gap:3px;
+}
+.mm-station{
+  width:26px; height:26px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center; background:var(--st); border:1.5px solid #000; font-size:14.5px;
+}
+.mm-station :is(img,svg){width:17px; height:17px; object-fit:contain; filter:var(--icon-outline)}
+/* No more "ON MAT" pill -- the faded filter below already reads as
+   "already placed" on its own; a label repeating the same fact was
+   redundant, per explicit request. */
+.mm-card.on{filter:brightness(.6) saturate(.7)}
+
+/* Above #cardPop (70): toggleMatCard() messages can fire from the mat
+   button inside that popup (#cpMatBtn). */
+.mat-toast{
+  position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:75;
+  background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
+  box-shadow:0 4px 14px rgba(0,0,0,.4); white-space:nowrap;
+}

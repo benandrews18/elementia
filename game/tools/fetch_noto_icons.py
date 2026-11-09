@@ -61,7 +61,10 @@ def subzone_emoji():
     why (not on the map, never simulated, deliberately outside the
     Python-round-tripped pipeline). Pulled out here with a regex instead
     of ast.literal_eval since it's JS, not Python."""
-    html = TARGET_HTML.read_text(encoding="utf-8")
+    import sys
+    sys.path.insert(0, str(HERE.parent))
+    from game_source import read_game_source
+    html = read_game_source()
     start = html.find("const SUBZONES = [")
     end = html.find("SUBZONES.forEach(sz =>")
     if start < 0 or end < 0:
