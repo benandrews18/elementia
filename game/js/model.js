@@ -6,15 +6,8 @@
    Derived model — mirrors simulation/model.py's parse_requirements().
    Raw elements are consumed; crafted items are PERMANENT UNLOCKS.
    ===================================================================== */
-/* Dice per roll: 3, +1 once the player owns a Tractor
-   (prefs.expTractorHarvest). Guarded because loadAll() calls this before
-   state exists. Re-run whenever the Tractor could have changed (craft(), a
-   save loading). */
-let TAKE = 3;
-function applyDiceCount(){
-  const tractorBonus = prefs.expTractorHarvest && state && state.items && state.items.includes("Tractor") ? 1 : 0;
-  TAKE = 3 + tractorBonus;
-}
+/* Dice per roll. */
+const TAKE = 3;
 /* The run's hard stop (also the visits pill's denominator). Lines up with
    LOCKIN_ROUND_ANCHORS ending at visit 40. */
 const DEFAULT_MAX_VISITS = 40;
@@ -53,8 +46,9 @@ const ELEMENT_NAMES = {
   Zn:"Zinc",
 };
 /* The 16 core elements taught in the tutorial ("just 16 of them make up
-   nearly everything", see #tutIntro). Zn is a bonus element found only on
-   the Island sub-zone, so it's left out here; it works everywhere else. */
+   nearly everything", see #tutIntro). Zn isn't rollable any more (it came
+   from the removed sub-zones); it stays in the tables below only so an old
+   save that still holds some displays it. */
 const CORE_ELEMENT_SYMS = ["H","C","N","O","P","S","K","Ca","Si","Al","Mg","Ni","Fe","Ti","Cu","Ag"];
 /* Matches ELEMENT_SUITS/ELEMENTS in build_element_cards.py -- the suit
    pill shown on the element-card popup (see showElCardPop()). */
@@ -225,9 +219,8 @@ const ATOMIC_NUMBER = {
   C:6, H:1, N:7, O:8, S:16, K:19, Ca:20,
   Si:14, Al:13, Mg:12, P:15, Fe:26, Ti:22, Cu:29, Ag:47, Ni:28, Zn:30,
 };
-// Every element a Classic player can actually roll (the 8 real stations;
-// Zn only appears on the Island sub-zone). Keeps Zn out of Convert's TO
-// list in Classic (renderConvertPicker()).
+// Every element a player can actually roll (the 8 stations' dice). Convert's
+// TO list (renderConvertPicker()).
 const CLASSIC_ELEMENTS = [...new Set(DATA.stations.flatMap(s => s.dice))];
 
 /* Element suit palette ("Chemical Role", Palette A), matching the printed

@@ -5,7 +5,6 @@
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
-    if (emptyElCashInMode){ exitEmptyElCashIn(); return; }
     const open = document.querySelector(".overlay.open");
     if (open && open.id === "lockInRewardOverlay"){ dismissLockInRewardModal(); return; }
     if (open){ closeOverlay(open.id); return; }
@@ -150,29 +149,6 @@ function handleScreenClick(ev){
   // the inventory drawer.
   const elemBtn = ev.target.closest("[data-elem]");
   if (elemBtn){
-    // Legacy "?" spotlight mode (enterEmptyElCashIn()): pool chips trade a "?"
-    // for that element instead.
-    if (emptyElCashInMode && elemBtn.classList.contains("gchip")){
-      cashInEmptyElement(elemBtn.dataset.elem);
-      return;
-    }
-    // Experimental (prefs.expTractorHarvest): tapping the station's own pool
-    // chip (.gchip) harvests 1 of it while a Tractor is owned and taps remain;
-    // tallied in visitLog like doRoll().
-    if (prefs.expTractorHarvest && elemBtn.classList.contains("gchip")
-        && owns("Tractor") && state.tractorTapsLeft > 0){
-      const sym = elemBtn.dataset.elem;
-      state.elements[sym] = count(sym) + 1;
-      state.tractorTapsLeft--;
-      if (state.visitLog && state.visitLog.length){
-        const turn = state.visitLog[state.visitLog.length - 1];
-        if (!turn.elements) turn.elements = {};
-        turn.elements[sym] = (turn.elements[sym] || 0) + 1;
-      }
-      save();
-      render();
-      return;
-    }
     showElCardPop(elemBtn.dataset.elem);
     return;
   }
@@ -185,7 +161,7 @@ function handleScreenClick(ev){
     const name = shopPinBtn.dataset.shopPin;
     const iconRect = shopPinBtn.closest(".item")?.querySelector(".iem")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     render();
     if (track) flyItemToTracker(name, iconRect);

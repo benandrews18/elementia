@@ -27,7 +27,6 @@ function modeHasSave(mode){ return readModeSave(mode) !== null; }
 function loadAll(){
   try { prefs = Object.assign(prefs, JSON.parse(lsGet(PREFS_KEY) || "{}")); } catch(e){}
   delete prefs.theme; // theme choice no longer exists -- drop it from any older save
-  applyDiceCount();
   loadHistory();
 
   const raw = lsGet(saveKeyFor("classic"));
@@ -94,13 +93,7 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   autoCardInspection:true,
   // Low motion (see lowMotion()/html.low-motion): null = follow the
   // device's own "reduce motion" setting, true/false = player's override.
-  lowMotion:null,
-  // Experimental toggles, off by default (toggleJobSelect()/conversionRate()/
-  // Tractor harvest/applyDiceCount()). A full run with them off cleared every
-  // capstone comfortably, so the base game ships without them.
-  expCompassTracking:false,
-  expTieredConversion:false,
-  expTractorHarvest:false};
+  lowMotion:null};
 /* The tracked item (ephemeral UI state, not saved): highlights its
    ingredient closure on station cards (componentClosure()/
    stationItemIconsHTML()/renderMap()). */

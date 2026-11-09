@@ -40,9 +40,8 @@ function renderConvertQuickGrid(){
   if (!grid) return;
   const syms = Object.keys(state.elements).filter(k => state.elements[k] > 0)
     .sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
-  const rate = conversionRate();
   grid.innerHTML = syms.map(s => {
-    const valid = rate != null && count(s) >= rate;
+    const valid = count(s) >= CONVERT_RATE;
     return `<button type="button" class="elbox ${valid ? "" : "invalid"}" data-elem="${esc(s)}" ${valid ? "" : "disabled"} style="--suit:${ELEMENT_COLOR[s]}">` +
       `<span class="elsym">${esc(s)}${elSuitBadgeHTML(s)}</span><span class="elqty">${count(s)}</span></button>`;
   }).join("");
@@ -72,8 +71,7 @@ function updateConvertUI(){
     convertTo ? (ELEMENT_NAMES[convertTo] || convertTo) : "Pick element";
   paintElement(toBox, convertTo);
 
-  const rate = conversionRate();
-  const ready = convertFrom && convertTo && convertFrom !== convertTo && rate != null && count(convertFrom) >= rate;
+  const ready = convertFrom && convertTo && convertFrom !== convertTo && count(convertFrom) >= CONVERT_RATE;
   document.getElementById("convertGo").disabled = !ready;
 }
 function renderConvertPicker(){
@@ -106,8 +104,7 @@ function renderConvertPicker(){
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
       </button>`;
-    const rate = conversionRate();
-    const valid = rate != null && count(s) >= rate;
+    const valid = count(s) >= CONVERT_RATE;
     return `<button type="button" class="convert-pick ${valid ? "" : "invalid"}" data-sym="${esc(s)}" ${valid ? "" : "disabled"} title="${esc(ELEMENT_NAMES[s] || s)}">
         <span class="elsym" ${suitStyle}>${esc(s)}${elSuitBadgeHTML(s)}</span>
         <span class="pickqty">×${count(s)}</span>
@@ -129,9 +126,8 @@ document.getElementById("convertPickerGrid").addEventListener("click", ev => {
 });
 document.getElementById("convertPickerClose").addEventListener("click", () => closeOverlay("convertPicker"));
 document.getElementById("convertGo").addEventListener("click", () => {
-  const rate = conversionRate();
-  if (!convertFrom || !convertTo || convertFrom === convertTo || rate == null || count(convertFrom) < rate) return;
-  state.elements[convertFrom] = count(convertFrom) - rate;
+  if (!convertFrom || !convertTo || convertFrom === convertTo || count(convertFrom) < CONVERT_RATE) return;
+  state.elements[convertFrom] = count(convertFrom) - CONVERT_RATE;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
   save();

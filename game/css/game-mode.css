@@ -223,8 +223,7 @@
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 /* Element pool on the preview card: mirrors .gather/.gcol/.gchip so 6
-   elements fit one row on a narrow phone. Separate classes on purpose --
-   the tractor-harvest tap gate checks for .gchip and must not fire here. */
+   elements fit one row on a narrow phone. */
 .pool{display:flex; gap:10px; justify-content:center; flex-wrap:nowrap}
 .pcol{flex:1 1 0; min-width:0; max-width:104px; display:flex; flex-direction:column;
   align-items:center; gap:7px; container-type:inline-size}

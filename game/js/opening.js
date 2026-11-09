@@ -284,7 +284,7 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
     const name = shopPinBtn.dataset.shopPin;
     const iconRect = shopPinBtn.closest("[data-item-card]")?.querySelector(".iem")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     renderJobBoard();
     render();

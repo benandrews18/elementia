@@ -110,26 +110,6 @@
 .empty-el-badge.active .empty-el-square{box-shadow:0 0 8px rgba(226,178,90,.7), 0 2px 4px rgba(0,0,0,.35)}
 .empty-el-badge b{font-size:12px; font-weight:900; color:#fff; line-height:1}
 .empty-el-badge.active b{color:var(--gold)}
-/* Legacy "?" spotlight mode (enterEmptyElCashIn()): everything fades except
-   the element row and this badge. .station-title-text is separate from the
-   badge so the name can dim without dimming the badge. */
-body.empty-el-cashin #topbar, body.empty-el-cashin .sheet-head .em,
-body.empty-el-cashin .sheet-head .station-title-text,
-body.empty-el-cashin .station-tractor-badge,
-body.empty-el-cashin .playbar, body.empty-el-cashin .makewrap, body.empty-el-cashin #hub{
-  opacity:.15; pointer-events:none; transition:opacity .2s;
-}
-/* A dark scrim on top of the faded content; the spotlighted row and badge
-   are raised above it. */
-#emptyElCashinScrim{
-  position:fixed; inset:0; z-index:73; background:#000; opacity:0; pointer-events:none;
-  transition:opacity .2s;
-}
-body.empty-el-cashin #emptyElCashinScrim{opacity:.55}
-body.empty-el-cashin .gather, body.empty-el-cashin .empty-el-badge,
-body.empty-el-cashin .empty-el-cashin-hint{position:relative; z-index:74}
-.empty-el-cashin-hint{display:none; text-align:center; font-weight:700; font-size:15px; color:#fff; margin:12px 26px 0}
-body.empty-el-cashin .empty-el-cashin-hint{display:block}
 .mat-combos{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 auto; min-width:0}
 /* Combo chip: icon on top, count below (see matComboChipHTML()). */
 /* No tile background or border -- just the icon and count, 1.5x larger. */

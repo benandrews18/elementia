@@ -1,29 +1,16 @@
 /* =====================================================================
-   crafting.js -- Crafting rules: owns()/count(), element conversion rates, canCraft(),
+   crafting.js -- Crafting rules: owns()/count(), the element conversion rate, canCraft(),
    craft(), performSingleCraft(), and ingredient closures
    (componentClosure()/stillNeededClosure()) used by the To-Do List.
    ===================================================================== */
 const owns  = n => state.items.includes(n);
 const count = s => state.elements[s] || 0;
-/* Experimental (prefs.expTieredConversion, off by default): elements per
-   conversion from the best tool owned -- Star 1:1, Oven 2:1, Furnace 3:1.
-   Off: flat 3:1. Null (on, no tool yet) means conversion is unavailable.
-   Every conversion call site reads this instead of a hardcoded 3. */
-function conversionRate(){
-  if (!prefs.expTieredConversion) return 3;
-  if (owns("Star")) return 1;
-  if (owns("Oven")) return 2;
-  if (owns("Furnace")) return 3;
-  return null;
-}
-// Total conversions available now at conversionRate(), across all elements
-// -- the Convert badge count (updateHub()), repeated on missing-element
-// tokens (tokenHTML()).
-const totalConvertibleCount = () => {
-  const rate = conversionRate();
-  if (!rate) return 0;
-  return [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / rate), 0);
-};
+/* Elements spent per conversion (3 of one for 1 of another). */
+const CONVERT_RATE = 3;
+// Total conversions available now, across all elements -- the Convert badge
+// count (updateHub()), repeated on missing-element tokens (tokenHTML()).
+const totalConvertibleCount = () =>
+  [...ELEMENTS].reduce((sum, sym) => sum + Math.floor(count(sym) / CONVERT_RATE), 0);
 
 /* Group a recipe's requirements: elements accumulate, items are unique. */
 function needsOf(reqs){
@@ -77,7 +64,6 @@ function craft(entry, opts={}){
   checkBingoCompletion(entry.name);
   checkBingoLines();
   checkCraftedEverything();
-  applyDiceCount(); // Tractor may have just been crafted -- see its own comment
   // Log the craft on the current turn (goStation() always pushes one first).
   if (state.visitLog && state.visitLog.length) state.visitLog[state.visitLog.length - 1].items.push(entry.name);
   save();

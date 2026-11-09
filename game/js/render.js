@@ -63,7 +63,6 @@ function render(resetScroll){
   updateBackdrop();
   applyRefFilter();
   hideHint();
-  if (screen !== "station" && emptyElCashInMode) exitEmptyElCashIn(); // cash-in only ever makes sense on a station screen
   if (screen === "map") syncMapPaths();
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
   // Measured live (not a constant) so the fixed map card sits right under the

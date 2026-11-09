@@ -18,8 +18,7 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
   const station = CORE_ITEM_STATION[name];
   const entry = ENTRIES.find(e => e.name === name && e.station === station);
   // Every station that sells this item (Water, Clay, Glass, Steel, ... sell at
-  // 2-3), canonical station first -- a card combos with all of them. Sub-zone
-  // rows are dropped. A capstone shows its own station twice instead, so it
+  // 2-3), canonical station first -- a card combos with all of them. A capstone shows its own station twice instead, so it
   // counts double toward that station's combo.
   const stations = ITEM_TIER[name] === "CAPSTONE" ? [station, station]
     : [station, ...ENTRIES.filter(e => e.name === name).map(e => e.station)]

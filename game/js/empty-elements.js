@@ -97,29 +97,3 @@ function syncEmptyElBadgeSize(){
     suitBadge.style.height = suitPx + "px";
   }
 }
-/* Legacy "?" spotlight mode: the station's element row and the badge stay
-   bright while everything else fades (body.empty-el-cashin); tapping a chip
-   cashes in, tapping elsewhere backs out. Superseded by openEmptyElPicker(). */
-let emptyElCashInMode = false;
-function enterEmptyElCashIn(){
-  if (!((state.emptyElements || 0) > 0) || !current) return;
-  emptyElCashInMode = true;
-  document.body.classList.add("empty-el-cashin");
-}
-function exitEmptyElCashIn(){
-  emptyElCashInMode = false;
-  document.body.classList.remove("empty-el-cashin");
-}
-function cashInEmptyElement(sym){
-  if (!((state.emptyElements || 0) > 0)) return;
-  state.emptyElements -= 1;
-  state.elements[sym] = (state.elements[sym] || 0) + 1;
-  save();
-  exitEmptyElCashIn();
-  render();
-}
-document.addEventListener("click", ev => {
-  if (!emptyElCashInMode) return;
-  if (ev.target.closest(".gather") || ev.target.closest("#emptyElBadgeBtn")) return;
-  exitEmptyElCashIn();
-});

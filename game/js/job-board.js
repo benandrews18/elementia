@@ -142,10 +142,7 @@ function closeJobBoard(){
 
 /* Shared by the topbar's job chips and the (legacy, now-unreachable)
    [data-select-job] case in #screen's own click handler. */
-// Experimental (prefs.expCompassTracking): tracking requires a Compass;
-// untracking is always allowed.
 function toggleJobSelect(name){
-  if (prefs.expCompassTracking && !owns("Compass") && selectedJobItem !== name) return;
   selectedJobItem = selectedJobItem === name ? null : name;
   render();
 }
@@ -282,7 +279,7 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     const name = bcPinBtn.dataset.pin;
     const iconRect = bcPinBtn.closest(".bingo-cell")?.querySelector(".bc-icon")?.getBoundingClientRect();
     togglePin(name);
-    const track = isPinned(name) && (!prefs.expCompassTracking || owns("Compass"));
+    const track = isPinned(name);
     if (track) selectedJobItem = name;
     renderJobBoard();
     render();
@@ -308,9 +305,8 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     const name = pinBtn.dataset.pin;
     togglePin(name);
     // Pinning from a card also tracks the item, so its ingredient
-    // ring shows everywhere at once. Same Compass gate as toggleJobSelect()
-    // (prefs.expCompassTracking).
-    if (isPinned(name) && (!prefs.expCompassTracking || owns("Compass"))) selectedJobItem = name;
+    // ring shows everywhere at once.
+    if (isPinned(name)) selectedJobItem = name;
     renderJobBoard();
     render();
     return;

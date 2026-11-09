@@ -22,7 +22,6 @@ function chooseMode(mode){
 function resumeMode(mode){
   const saved = readModeSave(mode);
   state = Object.assign(freshState(), saved, {mode});
-  applyDiceCount();
   closeOverlay("modeOverlay");
   screen = "map"; current = null; selectedMapStation = null;
   render(true);
@@ -34,7 +33,6 @@ function resumeMode(mode){
 function startFreshMode(mode){
   state = freshState();
   state.mode = mode;
-  applyDiceCount();
   selectedJobItem = null;
   mouseTipsShown = new Set();
   prefs.pinnedItems = [];

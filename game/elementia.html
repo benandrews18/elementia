@@ -65,9 +65,6 @@
 <main id="screen"></main>
 
 <div id="scrim"></div>
-<!-- Darkening layer for the legacy "?" spotlight (body.empty-el-cashin):
-     sits above the faded content and below the highlighted row and badge. -->
-<div id="emptyElCashinScrim"></div>
 <!-- Legacy Lock-In banner above the half-height mat (syncLockInBanner()).
      No longer shown -- its rules moved to #matRulesOverlay. -->
 <div id="lockInBanner" aria-hidden="true">
@@ -484,28 +481,6 @@
       </span>
       <span class="setbtn">View</span>
     </button>
-    <p class="setnote">Experimental mechanics -- off changes nothing.</p>
-    <div class="setting-row">
-      <span class="setting-ico">🧭</span>
-      <span class="setting-body">
-        <span class="setting-label">Compass-gated tracking</span>
-      </span>
-      <input type="checkbox" id="setExpCompassTracking" class="switch" aria-label="Require a Compass to track an item">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🔥</span>
-      <span class="setting-body">
-        <span class="setting-label">Tiered element conversion</span>
-      </span>
-      <input type="checkbox" id="setExpTieredConversion" class="switch" aria-label="Furnace/Oven/Star tiered conversion rates">
-    </div>
-    <div class="setting-row">
-      <span class="setting-ico">🚜</span>
-      <span class="setting-body">
-        <span class="setting-label">Tractor: harvest taps + 1 extra die</span>
-      </span>
-      <input type="checkbox" id="setExpTractorHarvest" class="switch" aria-label="Tap elements to harvest, and roll 1 extra die, with a Tractor">
-    </div>
 
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>

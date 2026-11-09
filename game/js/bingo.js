@@ -191,21 +191,3 @@ function checkBingoLines(){
   });
   scheduleBingoSequence();
 }
-/* The element a square's item would pay: the majority suit of its suit
-   tags (itemSuitCosts(), ties at random), else any Classic element
-   (CLASSIC_ELEMENTS). No longer used by the BINGO sequence, which pays "?"
-   elements. */
-function elementForBingoClear(name){
-  const pips = itemSuitCosts(name);
-  let suit = null;
-  if (pips.length){
-    const counts = {};
-    pips.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
-    const top = Math.max(...Object.values(counts));
-    const tied = Object.keys(counts).filter(k => counts[k] === top);
-    suit = tied[Math.floor(Math.random() * tied.length)];
-  }
-  const pool = (suit ? CLASSIC_ELEMENTS.filter(el => ELEMENT_SUIT[el] === suit) : null) || [];
-  const finalPool = pool.length ? pool : CLASSIC_ELEMENTS;
-  return finalPool[Math.floor(Math.random() * finalPool.length)];
-}

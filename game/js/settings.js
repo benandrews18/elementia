@@ -14,31 +14,7 @@ function openSettings(){
 document.getElementById("setDevBack").addEventListener("click", () => openSettingsScreen("settings"));
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
-const setExpCompassTrackingBox = document.getElementById("setExpCompassTracking");
-const setExpTieredConversionBox = document.getElementById("setExpTieredConversion");
-const setExpTractorHarvestBox = document.getElementById("setExpTractorHarvest");
-function openSettingsDev(){
-  setExpCompassTrackingBox.checked = !!prefs.expCompassTracking;
-  setExpTieredConversionBox.checked = !!prefs.expTieredConversion;
-  setExpTractorHarvestBox.checked = !!prefs.expTractorHarvest;
-  openSettingsScreen("settingsDev");
-}
-document.getElementById("settingsDevBtn").addEventListener("click", openSettingsDev);
-// Applies immediately (no Save): a dev toggle, not a game rule.
-setExpCompassTrackingBox.addEventListener("change", () => {
-  prefs.expCompassTracking = setExpCompassTrackingBox.checked;
-  savePrefs();
-});
-setExpTieredConversionBox.addEventListener("change", () => {
-  prefs.expTieredConversion = setExpTieredConversionBox.checked;
-  savePrefs();
-  updateHub(); // Convert button's own icon reflects the new rate immediately
-});
-setExpTractorHarvestBox.addEventListener("change", () => {
-  prefs.expTractorHarvest = setExpTractorHarvestBox.checked;
-  savePrefs();
-  applyDiceCount(); // may add/remove the +1 bonus immediately if a Tractor's already owned
-});
+document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
 
 function openSettingsRules(){
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;

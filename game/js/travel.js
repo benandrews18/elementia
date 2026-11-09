@@ -13,10 +13,6 @@ function goStation(name){
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
   state.pendingRoll = null; state.lastRoll = null;
-  // Experimental (prefs.expTractorHarvest): fresh harvest taps (= TAKE) each
-  // new visit. The free "Shop" re-entry skips goStation(), so it doesn't
-  // reset them.
-  state.tractorTapsLeft = TAKE;
   // One turn-log entry per real visit, before any crafting or rolling can
   // add to it.
   if (!state.visitLog) state.visitLog = [];
@@ -52,8 +48,6 @@ function goStation(name){
   if (pendingRevealNames) flushPendingReveal();
 }
 function goMap(){
-  // A sub-zone has no map node (no MAP_ADJ entry), so land back on its
-  // parent station (SUBZONE_PARENT) -- otherwise nothing is reachable.
   if (current){ state.priorStation = state.lastStation; state.lastStation = current; }
   screen = "map"; current = null; state.lastRoll = null; selectedMapStation = null;
   save(); render(false);

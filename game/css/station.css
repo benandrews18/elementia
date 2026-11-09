@@ -30,22 +30,6 @@
 }
 .station-title-wrap{min-width:0}
 .sheet-head .flavor{font-size:13px; color:rgba(255,255,255,.7); font-style:italic; margin-top:2px}
-/* Experimental (prefs.expTractorHarvest): decorative only. Tapping the
-   element chips is the actual interaction (handleScreenClick()'s
-   [data-elem] branch). */
-.station-tractor-badge{font-size:26px; line-height:1; flex:none}
-/* Same small-pill language .mn-here-label already uses elsewhere for a
-   short status readout riding along a label row. */
-.tractor-taps-left{
-  display:inline-block; margin-left:8px; padding:2px 9px; border-radius:999px;
-  background:var(--gold-soft); color:var(--gold); font-size:11px; font-weight:800;
-  letter-spacing:.04em; text-transform:none; vertical-align:middle;
-}
-/* Sub-zone travel button: appears once the player owns the station's
-   unlock item (Rocket/Sailboat/Library, see SUBZONE_TRAVEL), and doubles as
-   "Back" inside a sub-zone. An icon-only circle in the header's top-right
-   corner (label as a tooltip): an inline label overflowed narrow phones
-   with long station names. */
 .stationhead{position:relative}
 /* Header pinned to the top until this visit's roll has landed and
    finished animating (renderStation()'s stationheadFrozen), so the pool and

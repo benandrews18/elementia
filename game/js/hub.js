@@ -242,14 +242,7 @@ function updateHub(){
   const totalConvertible = totalConvertibleCount();
   const canConvert = totalConvertible > 0;
   setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
-  // Experimental (prefs.expTieredConversion): the button icon shows the tool
-  // setting the rate (Star/Oven/Furnace), or the normal convert art.
-  {
-    const tool = prefs.expTieredConversion
-      ? (owns("Star") ? "Star" : owns("Oven") ? "Oven" : owns("Furnace") ? "Furnace" : null)
-      : null;
-    document.getElementById("quickConvertBtn").innerHTML = tool ? em(ITEM_EMOJI[tool]) : em("__CONVERT__");
-  }
+  document.getElementById("quickConvertBtn").innerHTML = em("__CONVERT__");
   // Once revealed, Convert stays on screen for good (a persisted flag, since
   // holdings can drop again). Revealed as soon as the player holds any element
   // (right after the starting gift).

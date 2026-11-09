@@ -49,14 +49,9 @@ function renderStation(name){
         <div class="station-title-wrap">
           <h1><span class="station-title-text">${esc(s.name)}</span></h1>
         </div>
-        ${prefs.expTractorHarvest && owns("Tractor")
-          ? `<span class="station-tractor-badge" title="Tractor: tap elements below to harvest">🚜</span>` : ""}
       </div>
-      <div class="col-label elements-label">ELEMENTS FOUND HERE:${
-        prefs.expTractorHarvest && owns("Tractor")
-          ? ` <span class="tractor-taps-left">${state.tractorTapsLeft || 0} taps left</span>` : ""}</div>
+      <div class="col-label elements-label">ELEMENTS FOUND HERE:</div>
       <div class="gather">${gather}</div>
-      <p class="empty-el-cashin-hint">Which element should be created?</p>
       ${playBar}
     </div>
     <div class="makewrap">

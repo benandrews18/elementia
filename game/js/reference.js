@@ -108,9 +108,8 @@ function renderCodex(){
   });
 
   // Every item, every mode -- Item Reference is where spoilers are allowed
-  // (the walkthrough promises "look up any item's recipe"). Exceptions:
-  // sub-zones the player hasn't visited stay off the list, and Classic shows
-  // only CORE_SET. That check uses the NAME (CORE_ITEM_NAMES): rows are
+  // (the walkthrough promises "look up any item's recipe"). Exception:
+  // only CORE_SET is shown. That check uses the NAME (CORE_ITEM_NAMES): rows are
   // deduped to one station, which may not be the item's core one (Glass).
   const rows = allRows
     .filter(row => CORE_ITEM_NAMES.has(row.name));
