@@ -278,7 +278,15 @@ function ensureBingoCard(){
   // opening.
   const stale = state.bingoCard && state.bingoCard.some(n => !CORE_ITEM_NAMES.has(n));
   if (!state.bingoCard || state.bingoCard.length !== need || stale){
+    // Replacing an old card: its line progress and centre choice belong to
+    // that card, so they go with it.
+    if (state.bingoCard){
+      state.bingoLinesCompleted = [];
+      state.pendingBingoClears = [];
+      state.bingoCenterChosen = false;
+    }
     state.bingoCard = drawBingoCard();
+    save();
   }
   return state.bingoCard;
 }

@@ -146,9 +146,11 @@ function suitCostNeed(entry){
 }
 // Elements of `suit` still free after reserving what the recipe itself
 // needs; the suit-spend balloon only offers this much, so paying a suit
-// cost never eats into the recipe.
+// cost never eats into the recipe. Counts only the suit's core elements --
+// the same ones the balloon offers -- so a leftover Zn can't make a cost
+// look payable that the balloon can't actually pay.
 function suitSurplusOfSuit(suit, reserved){
-  return Object.keys(ELEMENT_SUIT).filter(el => ELEMENT_SUIT[el] === suit)
+  return (SUIT_CORE_ELEMENTS[suit] || [])
     .reduce((sum, el) => sum + Math.max(0, count(el) - (reserved[el] || 0)), 0);
 }
 // True when every suit the cost demands has enough surplus beyond the
