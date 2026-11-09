@@ -352,3 +352,19 @@
 .histturn-station{flex:none; font-weight:700; white-space:nowrap}
 .histturn-line{padding-left:26px; color:var(--ink2); min-width:0}
 .histturn-label{font-weight:800; color:var(--mute); margin-right:5px}
+
+/* Trophies (js/trophies.js): a grid of tiles. Locked ones are dark
+   silhouettes with a hint; earned ones are in colour with the date. */
+.trophy-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; max-height:55vh; overflow-y:auto; padding:4px}
+.trophy{
+  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+  padding:10px 6px; border-radius:12px; background:var(--bg-soft); border:1.5px solid var(--line);
+}
+.trophy.earned{background:var(--gold-soft); border-color:var(--gold)}
+.trophy-ic{font-size:34px; line-height:1}
+.trophy-ic :is(img,svg){width:34px; height:34px; object-fit:contain}
+.trophy:not(.earned) .trophy-ic{filter:brightness(0) opacity(.45)}
+.trophy-name{font-size:12px; font-weight:800; color:var(--ink)}
+.trophy:not(.earned) .trophy-name{color:var(--mute)}
+.trophy-sub{font-size:10.5px; line-height:1.3; color:var(--ink2)}
+

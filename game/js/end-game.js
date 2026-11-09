@@ -121,6 +121,8 @@ function showEndGame(){
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
+  // Trophies are earned when a run completes (awardTrophies()).
+  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies());
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
   showSessionEndBackdrop();
   openOverlay("endGame");

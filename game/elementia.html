@@ -286,6 +286,7 @@
     <p id="endSub"></p>
     <div class="sumgrid" id="endGrid"></div>
     <div id="endCapsWrap"></div>
+    <div id="endTrophiesWrap"></div>
     <div id="endFlavorWrap"></div>
     <div class="btnrow">
       <button type="button" class="bigbtn" id="endContinue" hidden>Keep playing (Overtime)</button>
@@ -553,6 +554,16 @@
   </div>
 </div>
 
+<!-- Trophies (js/trophies.js), opened from the home screen. -->
+<div class="overlay" id="trophies" role="dialog" aria-modal="true" aria-labelledby="trophiesTitle">
+  <div class="sheetbox">
+    <h2 id="trophiesTitle">🎖️ Trophies</h2>
+    <p id="trophiesCount"></p>
+    <div id="trophiesList"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="trophiesClose">Close</button></div>
+  </div>
+</div>
+
 <!-- Combo info popup (openComboInfo()): the cards behind a tapped combo
      chip, or the collections themselves for the star. -->
 <div class="overlay" id="comboInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="comboInfoTitle">
@@ -688,6 +699,7 @@
       <button type="button" id="tourArcadeBtn" class="bigbtn sec">🎮 Mini-Games</button>
       <button type="button" id="tourComboLabBtn" class="bigbtn sec">🧪 Combo Lab</button>
       <button type="button" id="tourCollectionsBtn" class="bigbtn sec">🏆 Collections</button>
+      <button type="button" id="tourTrophiesBtn" class="bigbtn sec">🎖️ Trophies</button>
       <button type="button" id="tourSettingsBtn" class="bigbtn sec">⚙️ Settings</button>
     </div>
   </div>
@@ -801,6 +813,7 @@
 <script src="js/opening.js"></script>
 <script src="js/bingo.js"></script>
 <script src="js/end-game.js"></script>
+<script src="js/trophies.js"></script>
 <script src="js/welcome.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/convert.js"></script>

@@ -38,7 +38,7 @@ Load order, by area:
 4. **Screens:** `map`, `station`, `reference`, `pins`, `job-board` (the BINGO / To-Do tray)
 5. **Moments:** `card-popup`, `craft-animations`, `roll`, `travel`, `minigames`, `suit-spend`
 6. **Display Mat and Lock-In:** `display-mat`, `mat-layouts`, `combo-lab`, `arrange`, `lock-in`, `empty-elements`
-7. **Run flow:** `opening`, `bingo`, `end-game`, `welcome`
+7. **Run flow:** `opening`, `bingo`, `end-game`, `trophies`, `welcome`
 8. **Settings and input:** `settings`, `convert`, `tour`, `input`
 9. **Startup:** `pwa` (manifest + service worker), `boot` (load save, first render). `boot` must stay last.
 

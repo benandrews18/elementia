@@ -109,6 +109,9 @@
     goMap(); await wait(400);
     expect(state.runComplete && isOpen("endGame") && !document.getElementById("endContinue").hidden,
       "turn 24 should open the run-complete screen with Keep playing");
+    expect(loadTrophies()["first-run"], "completing a run should award the First Run trophy (own storage key)");
+    expect(document.getElementById("endTrophiesWrap").textContent.includes("First Run"),
+      "the run-complete screen should list the new trophy");
     document.getElementById("endContinue").click(); await wait(200);
     expect(!isOpen("endGame") && !state.ended, "Keep playing should close the screen and continue");
     state.mat = []; state.visits = RUN_COMPLETE_VISIT + 1; lockInCommitted = false;
