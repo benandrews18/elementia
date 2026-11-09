@@ -81,7 +81,7 @@ let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigame
   // collection on the mat that has never been locked in shows no chip
   // (renderMatTop()).
   everUnlockedMatCollections:[],
-  guidedTutorialEnabled:false, tutorialHintsSeen:[], arcadeHighScores:{},
+  guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,

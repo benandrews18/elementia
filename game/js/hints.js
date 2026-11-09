@@ -145,6 +145,51 @@ function queueTutorialHintOnce(id, pose, html, anchor, targetSel){
   pendingMouseTips.push({pose, html, anchor, targetSel});
   return true;
 }
+/* New-player walkthrough. Professor Mouse covers the first few presses
+   as they happen: Roll at a station, Craft, Convert, then the centre Home
+   button back to the map, and later (goMap()) the Market. Each tip shows
+   once per player (prefs.tutorialHintsSeen). It waits for an idle screen
+   -- nothing modal open, no roll or mini-game, no other tip -- so it never
+   blocks input or stacks; a tip that can't show yet is NOT marked seen and
+   is retried on the next render(). */
+function walkthroughIdle(){
+  return !anyOverlayOpen() && !blockingEventOpen() && !openPanelName()
+    && !pendingMouseTips.length && !rollAnimationInProgress
+    && !document.body.hasAttribute("data-intro-sequence")
+    && !document.getElementById("mouseTip").classList.contains("show")
+    && !document.getElementById("rollPopup").classList.contains("open")
+    && !document.getElementById("mgOverlay").classList.contains("show")
+    && !document.getElementById("tour").classList.contains("open");
+}
+function tryWalkthroughTip(id, pose, html, anchor, targetSel){
+  if (!walkthroughIdle()) return false;
+  return showTutorialHintOnce(id, pose, html, anchor, targetSel);
+}
+// Called at the end of every render().
+function maybeShowWalkthroughTip(){
+  if (prefs.guidedTutorialEnabled === false || !walkthroughIdle()) return;
+  if (screen !== "station" || !current) return;
+  if (!state.rolledHere){
+    if (state.pendingRoll != null)
+      tryWalkthroughTip("firstroll", 3, "Tap <b>Roll</b> to roll this station's dice!", "bottom-left", "#hubHome");
+    return;
+  }
+  const craftable = document.querySelector("#screen .craftbtn.go");
+  if (craftable){
+    tryWalkthroughTip("firstcraft", 7, "You have what you need. Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
+    return;
+  }
+  if (totalConvertibleCount() > 0 && tryWalkthroughTip("firstconvert", 5,
+      "Convert Elements! Trade 3 of one element for 1 of another.", "center", "#quickConvertBtn")){
+    queueTutorialHintOnce("converttapmissing", 7,
+      "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
+    return;
+  }
+  if (tryWalkthroughTip("gomap", 12, "All done here? Tap the <b>Map</b> button to head back.", "bottom-left", "#hubHome")) return;
+  // After the basics: the tracked item's badge on shop cards (itemHTML()).
+  if (document.querySelector("#screen .item-pin-badge"))
+    tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
+}
 document.getElementById("mouseTip").addEventListener("click", ev => {
   if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
 });

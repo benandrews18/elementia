@@ -10,16 +10,6 @@ function renderStation(name){
   const capEntry    = all.find(e => e.tier === "CAPSTONE");
   const capRevealed = !!capEntry;
   const idx = e => ENTRIES.indexOf(e);
-  // Tutorial follow-up to openPinsTray()'s hint: the first time a shop shows
-  // the tracked item's badge (itemHTML()'s pinBadge), point it out once.
-  if (selectedJobItem){
-    const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
-    if (shopEntries.some(e => jobTree.has(e.name))){
-      showTutorialHintOnce("pintrackshop", 7,
-        "This badge marks what it feeds!",
-        "bottom-right", ".item-pin-badge");
-    }
-  }
 
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().

@@ -71,6 +71,7 @@ function render(resetScroll){
   // The hub's height is measured live too, and everything that must clear it
   // (job sheet, pins tray, drawer, overlay padding) reads --hub-h.
   document.documentElement.style.setProperty("--hub-h", document.getElementById("hub").offsetHeight + "px");
+  maybeShowWalkthroughTip();
 }
 
 /* Station and Marketplace backdrop only (not the map, inventory, reference

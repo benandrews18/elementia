@@ -46,6 +46,6 @@ function goMap(){
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at Home's Market face.
   if (state.visits >= 1 && !state.marketVisited){
-    showTutorialHintOnce("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
+    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
   }
 }

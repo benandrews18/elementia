@@ -248,21 +248,9 @@ function updateHub(){
   // (right after the starting gift).
   const holdsElements = Object.values(state.elements).some(v => v > 0);
   if (holdsElements && !state.convertRevealed){
+    // Its tip comes later, with the walkthrough (maybeShowWalkthroughTip()),
+    // once a conversion is actually possible.
     state.convertRevealed = true;
-    // The moment the button first appears. Deferred past its 320ms slide-in so
-    // the spotlight measures the button's final position, not its off-screen
-    // one. Centre anchor: a full-attention beat.
-    setTimeout(() => {
-      const shown = showTutorialHintOnce("firstconvert", 5, "Convert Elements!", "center", "#quickConvertBtn");
-      // A second bubble, queued behind the first (queueTutorialHintOnce()) and
-      // shown when the player dismisses it. Only queued if the first really just
-      // showed (shown === true) -- otherwise nothing would ever flush it. The
-      // .tok.el.need target is resolved at display time.
-      if (shown){
-        queueTutorialHintOnce("converttapmissing", 7,
-          "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
-      }
-    }, 350);
   }
 
   // Floating buttons stay off-screen until useful: Pins once an item is
