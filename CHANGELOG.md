@@ -8,6 +8,11 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## v2026.11.08d (Steel is tier 1)
+
+- **Steel** is now tier 1 (Material) instead of tier 2, so it takes a half
+  square on the Display Mat and shows tier I.
+
 ## v2026.11.08c (default settings)
 
 - **Defaults for new players:** auto card inspection on, mouse tips on,

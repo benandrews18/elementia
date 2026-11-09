@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08c",
+ "version": "2026.11.08d",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -357,7 +357,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__STEEL__",
      "Steel",
-     "COMPONENT",
+     "MATERIAL",
      "Fe + C + __FURNACE__ Furnace",
      1
     ],
@@ -633,7 +633,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__STEEL__",
      "Steel",
-     "COMPONENT",
+     "MATERIAL",
      "Fe + C + __FURNACE__ Furnace",
      1
     ],
