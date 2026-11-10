@@ -55,6 +55,14 @@
     if (e) { performSingleCraft(e); await wait(2500); closeOverlay("cardPop"); await wait(500); }
   });
   await step("drawer", async () => { openDrawer(); render(); await wait(200); matDrawerView = "elements"; renderMatTop(); matDrawerView = "mat"; renderMatTop(); closeDrawer(); });
+  // Sort/Filter/Hide-mat must show on open even without a mat redraw.
+  await step("float buttons", async () => {
+    openDrawer({ peeked: true }); closeDrawer(); openDrawer();
+    if (document.getElementById("matFilterBtn").hidden || document.getElementById("matHideBtn").hidden)
+      errs.push("Inventory opened without its Filter/Hide-mat buttons");
+    closeDrawer();
+    if (!document.getElementById("matHideBtn").hidden) errs.push("Hide-mat button still shown after closing the Inventory");
+  });
   await step("todo", async () => { openJobBoard(); await wait(400); closeJobBoard(); await wait(300); });
   await step("market", async () => { openJobSelectTray(); await wait(500); bingoTab = "capstones"; renderJobBoard(); bingoTab = "bingo"; renderJobBoard(); closeJobBoard(); await wait(300); });
   await step("itemref", async () => { screen = "codex"; render(true); await wait(200); log.refRows = document.querySelectorAll(".refrow").length; screen = "station"; render(); });

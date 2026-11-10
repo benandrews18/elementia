@@ -232,12 +232,7 @@ function renderMatTop(){
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
   document.getElementById("drawerTop").innerHTML = scoreRowHTML +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
-  // Sort/Filter only apply to the full item list (#drawer.expanded); hide
-  // them, and close their trays, otherwise.
-  document.getElementById("matSortBtn").hidden = !matTrayExpanded;
-  document.getElementById("matFilterBtn").hidden = !matTrayExpanded;
-  document.getElementById("matHideBtn").hidden = !matTrayExpanded;
-  if (!matTrayExpanded) closeMatSideTrays();
+  syncMatFloatBtns();
   if (matDrawerView === "mat") renderMatGridCells(s);
   renderQuarkTopBar();
 }

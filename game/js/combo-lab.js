@@ -43,10 +43,7 @@ function closeComboLab(){
   const drawerEl = document.getElementById("drawer");
   drawerEl.classList.remove("open", "expanded");
   drawerEl.setAttribute("aria-hidden", "true");
-  document.getElementById("matSortBtn").hidden = true;
-  document.getElementById("matFilterBtn").hidden = true;
-  document.getElementById("matHideBtn").hidden = true;
-  closeMatSideTrays();
+  syncMatFloatBtns();
   render();
 }
 document.getElementById("tourComboLabBtn").addEventListener("click", () => {

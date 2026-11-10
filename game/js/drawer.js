@@ -15,6 +15,7 @@ const openDrawer = (opts = {}) => {
   drawer.classList.toggle("expanded", !opts.peeked);
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
+  syncMatFloatBtns();
   updateHub();
   maybeShowBreakpointGateNotice();
 };
@@ -28,15 +29,18 @@ const closeDrawer = () => {
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
-  // #matSortBtn/#matFilterBtn are separate fixed elements, so closing the
-  // drawer must hide them (and their trays) too, or they'd sit over
-  // #pinsBtn/#quickConvertBtn.
-  document.getElementById("matSortBtn").hidden = true;
-  document.getElementById("matFilterBtn").hidden = true;
-  document.getElementById("matHideBtn").hidden = true;
-  closeMatSideTrays();
+  syncMatFloatBtns();
   updateHub();
 };
+
+// Sort/Filter/Hide-mat float outside #drawer and only apply to the full
+// item list, so show them exactly when matTrayExpanded. Call after every
+// change to it: opening the tray doesn't redraw the mat.
+function syncMatFloatBtns(){
+  for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
+    document.getElementById(id).hidden = !matTrayExpanded;
+  if (!matTrayExpanded) closeMatSideTrays();
+}
 
 function renderDrawer(){
   return renderClassicDrawer();
@@ -54,20 +58,17 @@ function expandDrawerToFull(){
 }
 // Mirror of expandDrawerToFull(): collapse to the peeked view without
 // closing. Only used mid Lock-In (#hubInv's handler).
-// "^" on the gold divider: hide/show the Display Mat zone so the card list
-// gets the whole tray (#matCollapseBar). Resets to shown on every open.
+// #matHideBtn: hide/show the Display Mat zone so the card list gets the
+// whole tray. Resets to shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  for (const id of ["matCollapseBtn", "matHideBtn"]){
-    const btn = document.getElementById(id);
-    btn.setAttribute("aria-expanded", String(!on));
-    btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
-    btn.title = btn.getAttribute("aria-label");
-  }
+  const btn = document.getElementById("matHideBtn");
+  btn.setAttribute("aria-expanded", String(!on));
+  btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+  btn.title = btn.getAttribute("aria-label");
 }
-for (const id of ["matCollapseBtn", "matHideBtn"])
-  document.getElementById(id).addEventListener("click", () =>
-    setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
+document.getElementById("matHideBtn").addEventListener("click", () =>
+  setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);
   matTrayExpanded = false;
