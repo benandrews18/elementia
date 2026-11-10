@@ -1523,7 +1523,7 @@ body[data-screen="market"] #trackedPill{display:none}
    no transitions or animations (Lock-In's scoring bounces are JS-driven
    and unaffected). */
 #drawer, #drawer *, #drawer *::before, #drawer *::after,
-#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn{
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #matHideBtn{
   transition:none !important; animation:none !important;
 }
 /* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher
@@ -3258,9 +3258,14 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    (__SORT__/__FILTER__) are black glyphs, inverted to white. */
 /* [hidden] loses to .floatbtn's display:flex, so this forces display:none
    -- these must not catch taps while hidden. */
-#matSortBtn[hidden], #matFilterBtn[hidden]{display:none}
+#matSortBtn[hidden], #matFilterBtn[hidden], #matHideBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
+/* Hide/Show mat: right corner, one button-height above Filter. Its chevron
+   flips like #matCollapseBtn's (aria-expanded mirrors .mat-collapsed). */
+#matHideBtn.mat-sf-btn{left:auto; right:16px; bottom:calc(var(--hub-h, 67px) + 14px + 56px + 12px); color:var(--gold)}
+#matHideBtn .mcb-chev{width:13px; height:13px; border-width:3.5px}
+#matHideBtn[aria-expanded="false"] .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
 /* Scrim for the Sort/Filter trays (not #scrim, which would close the whole
    drawer). toggleMatSideTray() sets `top` inline to #matFilters' position,
@@ -3430,7 +3435,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   /* The side tray keeps its 24px overhang past the frame's left edge. */
   #jobSheet{left:calc(var(--frame-x) - 24px)}
   #pinsBtn, #matSortBtn, #mouseTip.anchor-bottom-left, #mouseTip.anchor-top-left{left:calc(var(--frame-x) + 16px)}
-  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
+  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #matHideBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
   #trackedPill{left:calc(var(--frame-x) + 56px)}
   #matSortTray{left:var(--frame-x)}
   #matFilterTray{right:var(--frame-x)}
@@ -3530,6 +3535,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
+<!-- Thumb-reach twin of #matCollapseBtn, stacked above #matFilterBtn. -->
+<button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
      built from game data (buildMatFilterBar()). -->
@@ -7314,6 +7321,7 @@ const closeDrawer = () => {
   // #pinsBtn/#quickConvertBtn.
   document.getElementById("matSortBtn").hidden = true;
   document.getElementById("matFilterBtn").hidden = true;
+  document.getElementById("matHideBtn").hidden = true;
   closeMatSideTrays();
   updateHub();
 };
@@ -7338,12 +7346,16 @@ function expandDrawerToFull(){
 // gets the whole tray (#matCollapseBar). Resets to shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  const btn = document.getElementById("matCollapseBtn");
-  btn.setAttribute("aria-expanded", String(!on));
-  btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+  for (const id of ["matCollapseBtn", "matHideBtn"]){
+    const btn = document.getElementById(id);
+    btn.setAttribute("aria-expanded", String(!on));
+    btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+    btn.title = btn.getAttribute("aria-label");
+  }
 }
-document.getElementById("matCollapseBtn").addEventListener("click", () =>
-  setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
+for (const id of ["matCollapseBtn", "matHideBtn"])
+  document.getElementById(id).addEventListener("click", () =>
+    setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);
   matTrayExpanded = false;
@@ -9517,6 +9529,7 @@ function renderMatTop(){
   // them, and close their trays, otherwise.
   document.getElementById("matSortBtn").hidden = !matTrayExpanded;
   document.getElementById("matFilterBtn").hidden = !matTrayExpanded;
+  document.getElementById("matHideBtn").hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
   if (matDrawerView === "mat") renderMatGridCells(s);
   renderQuarkTopBar();
@@ -10025,6 +10038,7 @@ function closeComboLab(){
   drawerEl.setAttribute("aria-hidden", "true");
   document.getElementById("matSortBtn").hidden = true;
   document.getElementById("matFilterBtn").hidden = true;
+  document.getElementById("matHideBtn").hidden = true;
   closeMatSideTrays();
   render();
 }
