@@ -178,14 +178,16 @@
 .mm-slot.filled{touch-action:none}
 /* Tier 1 squares: up to two stacked in one slot (matUnits()), together the
    height of a normal card. */
-.mm-slot.stack{display:flex; flex-direction:column; align-items:center; gap:6px}
+/* 2px gap and full slot width (not square) so the two cards are as big as
+   the slot allows. */
+.mm-slot.stack{display:flex; flex-direction:column; align-items:stretch; gap:2px}
 .mm-slot.stack > .mm-card.mini, .mm-mini-empty{
-  flex:1 1 0; min-height:0; width:auto; height:auto; aspect-ratio:1; max-width:100%;
+  flex:1 1 0; min-height:0; width:auto; height:auto;
 }
 .mm-mini-empty{border:2px dashed var(--line); border-radius:10px}
 .mm-card.mini{padding:2px; border-width:3px; border-radius:10px}
-.mm-card.mini .mm-icon{font-size:26px; margin:0}
-.mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
+.mm-card.mini .mm-icon{font-size:32px; margin:0}
+.mm-card.mini .mm-icon :is(img,svg){width:32px; height:32px}
 .mm-card.mini .mm-name{display:none}
 .mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
 .mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}

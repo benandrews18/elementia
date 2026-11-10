@@ -13,6 +13,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **Hide/show the Display Mat from the corner:** in the full Inventory, a
   round arrow button above Filter (bottom right, thumb reach) hides or shows
   the mat, same as the "^" on the gold line. No content change.
+- **Bigger tier 1 cards on the Display Mat:** the two stacked tier 1 cards
+  now fill their slot's width with a 2px gap (was 6px), and their icons
+  are larger.
 
 ## v2026.11.08e (tier cleanup)
 
