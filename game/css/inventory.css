@@ -115,26 +115,13 @@
 /* Line where the scrolling item list meets the fixed mat zone above
    (#drawerTop) -- the only separation now that .dhead is hidden. */
 #drawer .dbody{border-top:2px solid var(--gold)}
-/* Collapsible mat zone (see #matCollapseBar). The bar is zero-height so the
-   button sits centred on the gold line; when the mat is hidden, the button
-   drops just below the line so the screen edge doesn't cut it. */
+/* Collapsible mat zone (#matHideBtn, setMatCollapsed()). */
 #drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
 #drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
-#matCollapseBar{position:relative; height:0; z-index:4; display:none}
-#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
-#matCollapseBtn{
-  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
-  width:46px; height:24px; border-radius:999px; padding:0;
-  display:flex; align-items:center; justify-content:center;
-  background:var(--card); border:2px solid var(--gold); color:var(--gold);
-  box-shadow:0 2px 6px rgba(0,0,0,.35); transition:transform .3s;
-}
-#drawer.mat-collapsed #matCollapseBtn{transform:translate(-50%,2px)}
 .mcb-chev{
   width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
   transform:translateY(2px) rotate(45deg); transition:transform .3s;
 }
-#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .sec-label{font-size:11px; font-weight:800; letter-spacing:1.3px; color:var(--mute);
   margin:18px 0 9px; padding-bottom:6px; border-bottom:1.5px solid var(--line2)}
 .sec-label:first-child{margin-top:0}

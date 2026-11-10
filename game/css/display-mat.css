@@ -268,8 +268,8 @@
 #matSortBtn[hidden], #matFilterBtn[hidden], #matHideBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
-/* Hide/Show mat: right corner, one button-height above Filter. Its chevron
-   flips like #matCollapseBtn's (aria-expanded mirrors .mat-collapsed). */
+/* Hide/Show mat: right corner, one button-height above Filter. The chevron
+   flips with aria-expanded (setMatCollapsed()). */
 #matHideBtn.mat-sf-btn{left:auto; right:16px; bottom:calc(var(--hub-h, 67px) + 14px + 56px + 12px); color:var(--gold)}
 #matHideBtn .mcb-chev{width:13px; height:13px; border-width:3.5px}
 #matHideBtn[aria-expanded="false"] .mcb-chev{transform:translateY(-2px) rotate(225deg)}

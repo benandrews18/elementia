@@ -90,10 +90,6 @@
   <!-- No in-tray "View All Items" control: the hub's Inventory button
        expands the half view (see #hubInv's click handler). -->
   <div id="drawerTop"></div>
-  <!-- "^" toggle on the gold line between the mat and the card list: hides
-       the mat zone so the list fills the tray. Full view only; see
-       toggleMatCollapsed(). -->
-  <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
@@ -115,7 +111,7 @@
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
-<!-- Thumb-reach twin of #matCollapseBtn, stacked above #matFilterBtn. -->
+<!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
 <button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
