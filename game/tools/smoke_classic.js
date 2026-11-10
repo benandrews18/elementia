@@ -84,6 +84,13 @@
 
   // Rule checks: each pushes an error when a rule breaks.
   const expect = (ok, msg) => { if (!ok) errs.push("rule: " + msg); };
+  // Auto-place: crafts keep landing on the mat until they'd overflow it --
+  // tier 1 cards stack two per slot, so that's more than 8 crafts.
+  { const saved = state; state = freshState();
+    const t1 = ENTRIES.filter(e => e.tier === "MATERIAL" && e.reqs.every(r => r.kind === "element")).slice(0, 10);
+    t1.forEach(e => { e.reqs.forEach(r => state.elements[r.name] = 99); craft(e); });
+    expect(t1.length < 10 || state.mat.length === 10, `10 tier 1 crafts should all auto-place, got ${state.mat.length}`);
+    state = saved; }
   await step("rules", async () => {
     // New-player default settings (the runner starts with empty storage).
     expect(prefs.autoCardInspection === true && prefs.guidedTutorialEnabled === true

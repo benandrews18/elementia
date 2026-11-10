@@ -43,14 +43,16 @@ function craft(entry, opts={}){
   Object.keys(state.elements).forEach(k => { if (state.elements[k] <= 0) delete state.elements[k]; });
 
   state.items.push(entry.name);
-  // Auto-place each of a Classic run's first 8 crafts on the Display Mat (an
-  // empty mat early on looks broken), using the same matFits() check as
-  // toggleMatCard(). After that the player arranges it.
-  if (state.items.length <= 8){
-    const matCard = MAT_CARD_BY_NAME[entry.name];
-    if (matCard && !state.mat.includes(entry.name) && matFits(matOnMat().concat([matCard]))){
-      state.mat.push(entry.name);
-    }
+  // Auto-place a run's first crafts on the Display Mat (an empty mat early
+  // on looks broken): every craft until the crafts so far would no longer
+  // fit on one mat (8 slots, two tier 1 cards per slot), and only if this
+  // card fits the mat as the player has it now. After that the player
+  // arranges it.
+  const matCard = MAT_CARD_BY_NAME[entry.name];
+  if (matCard && !state.mat.includes(entry.name)
+      && matFits(state.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean))
+      && matFits(matOnMat().concat([matCard]))){
+    state.mat.push(entry.name);
   }
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.

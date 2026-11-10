@@ -20,6 +20,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   hide/show control for the Display Mat.
 - **Fix:** opening the Inventory sometimes left out the floating Sort,
   Filter and hide/show buttons until a card was added or removed.
+- **Fix:** new crafts auto-place on the Display Mat until the mat is full.
+  It used to stop after 8 crafts, which left the mat half empty now that
+  tier 1 cards stack two per slot.
 
 ## v2026.11.08e (tier cleanup)
 
