@@ -1587,26 +1587,13 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Line where the scrolling item list meets the fixed mat zone above
    (#drawerTop) -- the only separation now that .dhead is hidden. */
 #drawer .dbody{border-top:2px solid var(--gold)}
-/* Collapsible mat zone (see #matCollapseBar). The bar is zero-height so the
-   button sits centred on the gold line; when the mat is hidden, the button
-   drops just below the line so the screen edge doesn't cut it. */
+/* Collapsible mat zone (#matHideBtn, setMatCollapsed()). */
 #drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
 #drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
-#matCollapseBar{position:relative; height:0; z-index:4; display:none}
-#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
-#matCollapseBtn{
-  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
-  width:46px; height:24px; border-radius:999px; padding:0;
-  display:flex; align-items:center; justify-content:center;
-  background:var(--card); border:2px solid var(--gold); color:var(--gold);
-  box-shadow:0 2px 6px rgba(0,0,0,.35); transition:transform .3s;
-}
-#drawer.mat-collapsed #matCollapseBtn{transform:translate(-50%,2px)}
 .mcb-chev{
   width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
   transform:translateY(2px) rotate(45deg); transition:transform .3s;
 }
-#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .sec-label{font-size:11px; font-weight:800; letter-spacing:1.3px; color:var(--mute);
   margin:18px 0 9px; padding-bottom:6px; border-bottom:1.5px solid var(--line2)}
 .sec-label:first-child{margin-top:0}
@@ -3263,8 +3250,8 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 #matSortBtn[hidden], #matFilterBtn[hidden], #matHideBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
-/* Hide/Show mat: right corner, one button-height above Filter. Its chevron
-   flips like #matCollapseBtn's (aria-expanded mirrors .mat-collapsed). */
+/* Hide/Show mat: right corner, one button-height above Filter. The chevron
+   flips with aria-expanded (setMatCollapsed()). */
 #matHideBtn.mat-sf-btn{left:auto; right:16px; bottom:calc(var(--hub-h, 67px) + 14px + 56px + 12px); color:var(--gold)}
 #matHideBtn .mcb-chev{width:13px; height:13px; border-width:3.5px}
 #matHideBtn[aria-expanded="false"] .mcb-chev{transform:translateY(-2px) rotate(225deg)}
@@ -3512,10 +3499,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <!-- No in-tray "View All Items" control: the hub's Inventory button
        expands the half view (see #hubInv's click handler). -->
   <div id="drawerTop"></div>
-  <!-- "^" toggle on the gold line between the mat and the card list: hides
-       the mat zone so the list fills the tray. Full view only; see
-       toggleMatCollapsed(). -->
-  <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
@@ -3537,7 +3520,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
-<!-- Thumb-reach twin of #matCollapseBtn, stacked above #matFilterBtn. -->
+<!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
 <button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
@@ -7305,6 +7288,7 @@ const openDrawer = (opts = {}) => {
   drawer.classList.toggle("expanded", !opts.peeked);
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
+  syncMatFloatBtns();
   updateHub();
   maybeShowBreakpointGateNotice();
 };
@@ -7318,15 +7302,18 @@ const closeDrawer = () => {
   drawer.classList.remove("open", "expanded"); scrim.classList.remove("open");
   matTrayExpanded = false;
   drawer.setAttribute("aria-hidden", "true");
-  // #matSortBtn/#matFilterBtn are separate fixed elements, so closing the
-  // drawer must hide them (and their trays) too, or they'd sit over
-  // #pinsBtn/#quickConvertBtn.
-  document.getElementById("matSortBtn").hidden = true;
-  document.getElementById("matFilterBtn").hidden = true;
-  document.getElementById("matHideBtn").hidden = true;
-  closeMatSideTrays();
+  syncMatFloatBtns();
   updateHub();
 };
+
+// Sort/Filter/Hide-mat float outside #drawer and only apply to the full
+// item list, so show them exactly when matTrayExpanded. Call after every
+// change to it: opening the tray doesn't redraw the mat.
+function syncMatFloatBtns(){
+  for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
+    document.getElementById(id).hidden = !matTrayExpanded;
+  if (!matTrayExpanded) closeMatSideTrays();
+}
 
 function renderDrawer(){
   return renderClassicDrawer();
@@ -7344,20 +7331,17 @@ function expandDrawerToFull(){
 }
 // Mirror of expandDrawerToFull(): collapse to the peeked view without
 // closing. Only used mid Lock-In (#hubInv's handler).
-// "^" on the gold divider: hide/show the Display Mat zone so the card list
-// gets the whole tray (#matCollapseBar). Resets to shown on every open.
+// #matHideBtn: hide/show the Display Mat zone so the card list gets the
+// whole tray. Resets to shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  for (const id of ["matCollapseBtn", "matHideBtn"]){
-    const btn = document.getElementById(id);
-    btn.setAttribute("aria-expanded", String(!on));
-    btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
-    btn.title = btn.getAttribute("aria-label");
-  }
+  const btn = document.getElementById("matHideBtn");
+  btn.setAttribute("aria-expanded", String(!on));
+  btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+  btn.title = btn.getAttribute("aria-label");
 }
-for (const id of ["matCollapseBtn", "matHideBtn"])
-  document.getElementById(id).addEventListener("click", () =>
-    setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
+document.getElementById("matHideBtn").addEventListener("click", () =>
+  setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);
   matTrayExpanded = false;
@@ -9527,12 +9511,7 @@ function renderMatTop(){
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
   document.getElementById("drawerTop").innerHTML = scoreRowHTML +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
-  // Sort/Filter only apply to the full item list (#drawer.expanded); hide
-  // them, and close their trays, otherwise.
-  document.getElementById("matSortBtn").hidden = !matTrayExpanded;
-  document.getElementById("matFilterBtn").hidden = !matTrayExpanded;
-  document.getElementById("matHideBtn").hidden = !matTrayExpanded;
-  if (!matTrayExpanded) closeMatSideTrays();
+  syncMatFloatBtns();
   if (matDrawerView === "mat") renderMatGridCells(s);
   renderQuarkTopBar();
 }
@@ -10038,10 +10017,7 @@ function closeComboLab(){
   const drawerEl = document.getElementById("drawer");
   drawerEl.classList.remove("open", "expanded");
   drawerEl.setAttribute("aria-hidden", "true");
-  document.getElementById("matSortBtn").hidden = true;
-  document.getElementById("matFilterBtn").hidden = true;
-  document.getElementById("matHideBtn").hidden = true;
-  closeMatSideTrays();
+  syncMatFloatBtns();
   render();
 }
 document.getElementById("tourComboLabBtn").addEventListener("click", () => {
