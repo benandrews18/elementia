@@ -33,6 +33,7 @@ const closeDrawer = () => {
   // #pinsBtn/#quickConvertBtn.
   document.getElementById("matSortBtn").hidden = true;
   document.getElementById("matFilterBtn").hidden = true;
+  document.getElementById("matHideBtn").hidden = true;
   closeMatSideTrays();
   updateHub();
 };
@@ -57,12 +58,16 @@ function expandDrawerToFull(){
 // gets the whole tray (#matCollapseBar). Resets to shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  const btn = document.getElementById("matCollapseBtn");
-  btn.setAttribute("aria-expanded", String(!on));
-  btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+  for (const id of ["matCollapseBtn", "matHideBtn"]){
+    const btn = document.getElementById(id);
+    btn.setAttribute("aria-expanded", String(!on));
+    btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
+    btn.title = btn.getAttribute("aria-label");
+  }
 }
-document.getElementById("matCollapseBtn").addEventListener("click", () =>
-  setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
+for (const id of ["matCollapseBtn", "matHideBtn"])
+  document.getElementById(id).addEventListener("click", () =>
+    setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);
   matTrayExpanded = false;

@@ -30,7 +30,7 @@
   /* The side tray keeps its 24px overhang past the frame's left edge. */
   #jobSheet{left:calc(var(--frame-x) - 24px)}
   #pinsBtn, #matSortBtn, #mouseTip.anchor-bottom-left, #mouseTip.anchor-top-left{left:calc(var(--frame-x) + 16px)}
-  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
+  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #matHideBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
   #trackedPill{left:calc(var(--frame-x) + 56px)}
   #matSortTray{left:var(--frame-x)}
   #matFilterTray{right:var(--frame-x)}

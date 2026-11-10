@@ -51,7 +51,7 @@
    no transitions or animations (Lock-In's scoring bounces are JS-driven
    and unaffected). */
 #drawer, #drawer *, #drawer *::before, #drawer *::after,
-#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn{
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #matHideBtn{
   transition:none !important; animation:none !important;
 }
 /* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher

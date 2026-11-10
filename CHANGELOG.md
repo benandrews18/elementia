@@ -8,6 +8,12 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-09 (UI)
+
+- **Hide/show the Display Mat from the corner:** in the full Inventory, a
+  round arrow button above Filter (bottom right, thumb reach) hides or shows
+  the mat, same as the "^" on the gold line. No content change.
+
 ## v2026.11.08e (tier cleanup)
 
 - **Tier 1 now:** Magnet, Tools, Concrete, Glass, Rubber (cheap, simple

@@ -236,6 +236,7 @@ function renderMatTop(){
   // them, and close their trays, otherwise.
   document.getElementById("matSortBtn").hidden = !matTrayExpanded;
   document.getElementById("matFilterBtn").hidden = !matTrayExpanded;
+  document.getElementById("matHideBtn").hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
   if (matDrawerView === "mat") renderMatGridCells(s);
   renderQuarkTopBar();
