@@ -3,7 +3,8 @@
 
    "?" elements (Empty Elements): earned at the top Quark breakpoint and from
    BINGO lines. A held "?" trades 1-for-1 for any element of the CURRENT
-   station, whenever the player likes (openEmptyElPicker()).
+   station (or, off a station, the one the player stands at on the map),
+   whenever the player likes (openEmptyElPicker()).
    ===================================================================== */
 // The shared "?" square (.empty-el-square), used everywhere this currency
 // appears. px sets the size and scales the "?" and corner badge.
@@ -21,22 +22,16 @@ function emptyElBadgeHTML(){
       title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
       aria-label="${n} Empty Elements held">${emptyElSquareHTML(24)}<b>${n}</b></button>`;
 }
-// The "?" counter in the Convert tray's top-right (#convertEmptyEl). It only
-// works at a station (it picks from that station's pool); elsewhere it's
-// disabled with a title saying why.
+// The "?" counter in the Convert tray's top-right (#convertEmptyEl), so a
+// "?" can be cashed in from anywhere Convert opens (map, Marketplace).
 function renderConvertEmptyEl(){
   const el = document.getElementById("convertEmptyEl");
   if (!el) return;
   el.innerHTML = emptyElBadgeHTML();
-  const btn = el.querySelector("#emptyElBadgeBtn");
-  if (btn && screen !== "station" && (state.emptyElements || 0) > 0){
-    btn.disabled = true;
-    btn.title = `${state.emptyElements} Empty Element${state.emptyElements === 1 ? "" : "s"} held -- visit a station to cash one in for an element found there`;
-  }
 }
 document.getElementById("convertEmptyEl").addEventListener("click", ev => {
   if (!ev.target.closest("#emptyElBadgeBtn")) return;
-  if (screen !== "station" || !((state.emptyElements || 0) > 0)) return;
+  if (!((state.emptyElements || 0) > 0)) return;
   closeOverlay("convert");
   openEmptyElPicker();
 });
@@ -44,7 +39,7 @@ document.getElementById("convertEmptyEl").addEventListener("click", ev => {
    the same .gather/.gcol/.gchip row as the shop -- and the picked element
    flies into the inventory. */
 function openEmptyElPicker(){
-  const s = current && STATION_BY_NAME[current];
+  const s = STATION_BY_NAME[current || state.lastStation];
   if (!s || !((state.emptyElements || 0) > 0)) return;
   const pool = sortedDice(s);
   const row = pool.map((sym, i) =>

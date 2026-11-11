@@ -52,6 +52,12 @@
 .empty-el-pick-box .gather{margin:14px 0 4px}
 .lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
 #bingoCraftOverlay{z-index:70}
+/* Over the BINGO craft card, Convert (tray, scrim, button) comes up above it
+   so the player can convert without leaving the Marketplace. */
+body:has(#bingoCraftOverlay.open) #convertScrim{z-index:71}
+body:has(#bingoCraftOverlay.open) #convert{z-index:72}
+body:has(#bingoCraftOverlay.open) #quickConvertBtn{z-index:73}
+body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
 /* Locks the tray against taps for the pre-animation pause plus the
    animation itself (see runBingoSequence()'s own comment) --

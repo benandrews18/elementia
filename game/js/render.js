@@ -56,6 +56,7 @@ function render(resetScroll){
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
+  if (bingoCraftEntry) renderBingoCraftCard();
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();

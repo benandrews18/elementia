@@ -237,12 +237,22 @@ function closeCapstoneOverlay(){
 /* Craft-from-BINGO (#bingoCraftOverlay): the real itemHTML() card, so it
    behaves exactly like the shop. craft() never checks the current station,
    so crafting away from an item's home is safe. */
+let bingoCraftEntry = null;
 function openBingoCraftOverlay(entry){
-  document.getElementById("bingoCraftOverlayBody").innerHTML =
-    `<div class="shop">${itemHTML(entry, ENTRIES.indexOf(entry))}</div>`;
+  bingoCraftEntry = entry;
   openOverlay("bingoCraftOverlay");
+  renderBingoCraftCard();
+}
+// Called from render() too, so a conversion made over this card (Convert
+// sits above it while it's open) updates its tokens and Craft button.
+function renderBingoCraftCard(){
+  if (!bingoCraftEntry || !document.getElementById("bingoCraftOverlay").classList.contains("open")) return;
+  document.getElementById("bingoCraftOverlayBody").innerHTML =
+    `<div class="shop">${itemHTML(bingoCraftEntry, ENTRIES.indexOf(bingoCraftEntry))}</div>`;
 }
 function closeBingoCraftOverlay(){
+  bingoCraftEntry = null;
+  if (document.getElementById("convert").classList.contains("open")) closeOverlay("convert");
   closeOverlay("bingoCraftOverlay");
 }
 // Shared tail for both craft paths (Craft tap, or the suit balloon's async
@@ -250,6 +260,7 @@ function closeBingoCraftOverlay(){
 // bounceCardAppear() looks up [data-item-card], or it would find this card
 // and pop it back in.
 function finishBingoCraft(){
+  bingoCraftEntry = null;
   document.getElementById("bingoCraftOverlayBody").innerHTML = "";
   closeBingoCraftOverlay();
   renderJobBoard();
