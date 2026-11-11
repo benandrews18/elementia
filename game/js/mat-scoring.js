@@ -245,10 +245,6 @@ function matScore(mat){
    draw. */
 const BINGO_SIZE = 5;
 const BINGO_MIN_POINTS = 5;
-// Flat bonus per line: pricier lines already pay more through their items'
-// points. Awarded once per line, ever (checkBingoLines()/
-// state.bingoLinesCompleted).
-const BINGO_LINE_BONUS = 20;
 function bingoEligibleItems(){
   return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
 }
@@ -470,10 +466,6 @@ const STATION_BG = {
   "The City":           "backdrops/quarry.webp", // TODO(#127): re-art as city, not quarry
   "The Observatory":    "backdrops/observatory.webp",
 };
-/* Earns STATIONS_VISITED_BONUS (see stationsVisitedBonusBadgeHTML()). */
-function allStationsVisited(){
-  return Object.keys(MAP_NODE_POS).every(name => state.visitedStations[name]);
-}
 function shuffle(arr){
   for (let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));

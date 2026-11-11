@@ -291,18 +291,13 @@ const ENTRIES = [];       // {station, emoji, name, tier, recipe, points, reqs, 
 const ITEM_EMOJI = {};    // name -> emoji, for inventory display
 const ITEM_TIER  = {};
 const ITEM_POINTS = {};
-// Classic: a one-time score bonus for visiting every station, shown on the
-// stations-visited card (stationsVisitedBonusBadgeHTML()).
-const STATIONS_VISITED_BONUS = 15;
+// Score is the points of the items crafted -- no BINGO-line or
+// every-station bonus any more.
 // Parameterized so the main menu can score the saved run too
 // (refreshModePicker()) without swapping the live `state`
 // global out and back in just to reuse this math.
 function scoreOf(st){
-  const base = st.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
-  const stationsBonus = Object.keys(MAP_NODE_POS).every(name => st.visitedStations[name])
-    ? STATIONS_VISITED_BONUS : 0;
-  const bingoBonus = (st.bingoLinesCompleted || []).length * BINGO_LINE_BONUS;
-  return base + stationsBonus + bingoBonus;
+  return st.items.reduce((sum, n) => sum + (ITEM_POINTS[n] || 0), 0);
 }
 function score(){ return scoreOf(state); }
 

@@ -18,6 +18,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   first breakpoint at a check still ends the run.
 - **Turn clock:** larger, numbered only at the checkpoints (3, 6, ... 24)
   with tick marks for the turns between.
+- **No more score bonuses** for BINGO lines (+20 each) or visiting all 8
+  stations (+15). Score is now just the points of the items you've
+  crafted. The "+pts" line on the BINGO reward and the +15 badge on the
+  stations-visited card are gone.
 
 ## 2026-11-11 (fix)
 

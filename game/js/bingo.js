@@ -139,13 +139,12 @@ function finishBingoSequence(){
   // Anything that landed while this was playing gets its own turn next.
   scheduleBingoSequence();
 }
-/* The reward popup for however many lines just completed: one "?" per line
-   plus the line bonus. */
+/* The reward popup for however many lines just completed: one "?" per line. */
 function openBingoClearOverlay(lineCount){
   const qs = Array.from({length: lineCount}, () => emptyElSquareHTML(48)).join("");
   document.getElementById("bingoClearOverlayBody").innerHTML = `
     <h2 id="bingoClearTitle">🎉 BINGO!</h2>
-    <p>${lineCount === 1 ? "Line complete" : `${lineCount} lines complete`} · +${lineCount * BINGO_LINE_BONUS} pts</p>
+    <p>${lineCount === 1 ? "Line complete" : `${lineCount} lines complete`}</p>
     <div class="bingo-q-reward"><span>+${lineCount}</span>${qs}</div>
     <div class="btnrow"><button type="button" class="bigbtn" id="bingoClearOkBtn">Nice!</button></div>`;
   openOverlay("bingoClearOverlay");

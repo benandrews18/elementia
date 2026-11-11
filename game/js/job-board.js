@@ -20,7 +20,7 @@ function renderJobBoard(){
           // job board -- jobs can't be taken here). The BINGO card is always shown;
           // before a capstone is chosen its centre is an "Add Capstone" square that
           // opens the picker overlay (openCapstoneOverlay()).
-          ? `<div class="market-classic-progress">${stationsVisitedBonusBadgeHTML()}${marketStationProgressHTML()}</div>${bingoCardHTML()}`
+          ? `<div class="market-classic-progress">${marketStationProgressHTML()}</div>${bingoCardHTML()}`
           : classicPinsAndJobsHTML();
   // Only the BINGO view has cells to animate; a no-op otherwise.
   if (full) scheduleBingoSequence();
@@ -237,11 +237,6 @@ function marketStationProgressHTML(){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
     <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
-}
-// The STATIONS_VISITED_BONUS badge beside the row.
-function stationsVisitedBonusBadgeHTML(){
-  const done = allStationsVisited();
-  return `<span class="market-progress-bonus${done ? " done" : ""}">${done ? "✓ " : ""}+${STATIONS_VISITED_BONUS}</span>`;
 }
 
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
