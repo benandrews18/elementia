@@ -332,6 +332,12 @@
 /* Capstones span 2 columns, as on the mat (matCardHTML()'s "wide" class,
    tray only). */
 .mat-results-grid .mm-card.wide{grid-column:span 2}
+/* Tier 1: half-height cells, the size they take stacked on the mat. */
+.mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
+/* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
+   row is owned. Gold edge = on the mat. */
+.mat-shop-list .tok-check{display:none}
+.mat-shop-list .item.on-mat{border-color:var(--gold)}
 /* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
    collapsible with the shared .collapse-chevron. */
 .mat-tier-section{margin-bottom:14px}
@@ -348,7 +354,7 @@
    state and .collapsed flips it. */
 .mat-tier-heading .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
 .mat-tier-section.collapsed .mat-tier-heading .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
-.mat-tier-section.collapsed .mat-results-grid{display:none}
+.mat-tier-section.collapsed :is(.mat-results-grid, .mat-shop-list){display:none}
 
 /* Parchment face like the BINGO cards. No overflow:hidden, so the corner
    badges (.mm-pts/.mm-pips/.mm-station) can straddle the border. */

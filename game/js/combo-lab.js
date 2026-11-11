@@ -67,10 +67,10 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   }
   // The results grid (renderClassicDrawer()): tap opens the card popup
   // (openMatCardPop()), where adding/removing happens.
-  const matCard = ev.target.closest("[data-mat-card]");
-  if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  const matCard = ev.target.closest("[data-mat-card]");
+  if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
   const iBtn = ev.target.closest("[data-item]");
   if (!iBtn) return;
   const entry = ENTRIES.find(e => e.name === iBtn.dataset.item);

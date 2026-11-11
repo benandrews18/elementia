@@ -8,6 +8,16 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-10 (UI)
+
+- **Inventory list view:** a new button next to Collections (📋 / 🃏)
+  switches the items under the Display Mat between cards and shop-style
+  rows (icon, name, suit costs, recipe with component icons and element
+  tags). Your choice is remembered. Items on the mat get a gold edge.
+- **Inventory sections now follow item tier** (Tier 1-3, Capstones), which
+  is also card size, instead of point bands. Tier 1 cards show at half
+  height, the size they take on the mat.
+
 ## 2026-11-09 (UI)
 
 - **Hide/show the Display Mat from the corner:** in the full Inventory, a

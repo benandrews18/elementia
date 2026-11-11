@@ -75,6 +75,8 @@ let codexReturnDrawerPeeked = null;
 /* Defaults for a new player: auto card inspection on, mouse tips on
    (guidedTutorialEnabled), mini-games off, low motion off. */
 let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
+  // Inventory item list: shop-style rows instead of cards (setItemsListView()).
+  itemsListView:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
   // Combo Lab or a run can be recalled later (openMatLayoutsOverlay()).
   savedMatLayouts:[],

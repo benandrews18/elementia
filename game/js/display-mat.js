@@ -258,13 +258,13 @@ function matVisibleInventory(){
   };
   return list.sort(sorts[matFilt.sort] || sorts.points);
 }
-/* Point bands for the tray's dividers (separate from ITEM_TIER), highest
-   first to match the default points-descending sort. */
+/* The tray's sections, by item tier (ITEM_TIER), which also sets card size
+   on the mat. Highest first. */
 const MAT_TIER_BANDS = [
-  { key: "capstone", label: "Capstones", min: 30, max: Infinity },
-  { key: "t3", label: "Tier 3", min: 20, max: 29 },
-  { key: "t2", label: "Tier 2", min: 10, max: 19 },
-  { key: "t1", label: "Tier 1", min: 0, max: 9 },
+  { key: "capstone", label: "Capstones", tier: "CAPSTONE" },
+  { key: "t3", label: "Tier 3", tier: "CREATION" },
+  { key: "t2", label: "Tier 2", tier: "COMPONENT" },
+  { key: "t1", label: "Tier 1", tier: "MATERIAL" },
 ];
 // Collapsed band keys: an in-memory Set (like matFilt), so collapsed
 // sections survive re-renders but not a reload.
@@ -282,16 +282,40 @@ function matResultsGridHTML(){
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
   return MAT_TIER_BANDS.map(band => {
-    const items = inv.filter(c => c.points >= band.min && c.points <= band.max);
+    const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
     return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
         <button type="button" class="mat-tier-heading" data-mat-tier="${band.key}">
           <span class="mat-tier-line"></span>${esc(band.label)}<span class="collapse-chevron"></span><span class="mat-tier-line"></span>
         </button>
-        <div class="mat-results-grid">${items.map(c => matCardHTML(c.name, { tray: true, cls: "small" })).join("")}</div>
+        ${prefs.itemsListView
+          ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
+          // Tier 1 cards at half height, as they stack on the mat.
+          : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
+              matCardHTML(c.name, { tray: true, cls: band.key === "t1" ? "small mini" : "small" })).join("")}</div>`}
       </div>`;
   }).join("");
+}
+/* List view: the item as its station shop row (itemRowHTML()), read-only.
+   Tap opens the same card popup as the card view. */
+function matShopRowHTML(name){
+  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+  if (!entry) return "";
+  return `<div class="item ${state.mat.includes(name) ? "on-mat" : ""}" data-mat-card="${esc(name)}" role="button" tabindex="0">
+    ${itemRowHTML(entry, false, true)}</div>`;
+}
+function setItemsListView(on){
+  prefs.itemsListView = on; savePrefs();
+  syncMatViewBtn();
+  renderMatResultsGrid();
+}
+function syncMatViewBtn(){
+  const b = document.getElementById("matViewBtn"), on = !!prefs.itemsListView;
+  b.innerHTML = on ? "🃏" : "📋";
+  b.title = on ? "Show as cards" : "Show as a list";
+  b.setAttribute("aria-label", b.title);
+  b.setAttribute("aria-pressed", String(on));
 }
 function renderMatResultsGrid(){
   document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
@@ -334,6 +358,7 @@ function renderClassicDrawer(){
   document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
   buildMatFilterBar();
   syncMatFilterBar();
+  syncMatViewBtn();
   renderMatTop();
   return matResultsGridHTML();
 }
@@ -447,6 +472,7 @@ function clearMatDisplay(){
   render();
 }
 document.getElementById("matCollectionsBtn").addEventListener("click", () => openCollectionsOverlay());
+document.getElementById("matViewBtn").addEventListener("click", () => setItemsListView(!prefs.itemsListView));
 document.getElementById("matFStations").addEventListener("click", ev => {
   const b = ev.target.closest("[data-mat-fstation]");
   if (!b) return;

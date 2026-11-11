@@ -20,12 +20,14 @@ function dieFace(v){
   return `<div class="die die-${v}"></div>`;
 }
 
-function tokenHTML(r, groupedEls){
+// plain: inventory list (already crafted), so no have/need colouring and no
+// convert count -- also skips totalConvertibleCount() per token.
+function tokenHTML(r, groupedEls, plain){
   // Element tokens open the element card (same as tapping one anywhere
   // else).
   if (r.kind === "element"){
     const need = groupedEls[r.name], have = count(r.name);
-    const ok = have >= need;
+    const ok = plain || have >= need;
     const suit = ELEMENT_COLOR_DARK[r.name] || "#4a4f5c";
     // Missing tokens only: the global conversion count (as on the Convert
     // badge), hinting that Convert could cover this.
@@ -47,7 +49,7 @@ function tokenHTML(r, groupedEls){
     (r.catalyst ? '<span class="cat">not spent</span>' : "") + "</span>";
 }
 
-function recipeHTML(entry){
+function recipeHTML(entry, plain){
   const {els} = needsOf(entry.reqs);
   const seen = new Set();
   const toks = entry.reqs.filter(r => {
@@ -55,7 +57,7 @@ function recipeHTML(entry){
     if (seen.has(k)) return false;
     seen.add(k); return true;
   });
-  return sortIngredientTokens(toks).map(r => tokenHTML(r, els)).join('<span class="plus">+</span>');
+  return sortIngredientTokens(toks).map(r => tokenHTML(r, els, plain)).join('<span class="plus">+</span>');
 }
 
 function itemHTML(entry, idx){
@@ -87,13 +89,18 @@ function itemHTML(entry, idx){
     : `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" aria-disabled="${can ? "false" : "true"}">Craft</button>`;
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
     ${pinSlot}
-    <div class="irow">
+    ${itemRowHTML(entry, can)}${btn}</div>`;
+}
+// The icon/name/suit costs/recipe row, shared by the shop and the
+// Inventory's list view (matShopRowHTML()).
+function itemRowHTML(entry, can, plain){
+  return `<div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
         <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can)}</div>
-        <div class="recipe">${recipeHTML(entry)}</div>
+        <div class="recipe">${recipeHTML(entry, plain)}</div>
       </div>
-    </div>${btn}</div>`;
+    </div>`;
 }
 
 /* Compact crafted-items row (when "Collapse crafted" is on, see
