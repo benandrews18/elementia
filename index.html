@@ -6661,6 +6661,9 @@ function closeOverlay(id){
   if (SETTINGS_OVERLAY_IDS.includes(id) && !anySettingsOpen()){
     document.getElementById("tour").classList.remove("behind-settings");
   }
+  // The BINGO reward closes by its button, a backdrop tap or Escape; every
+  // one must finish the sequence, or #jobSheet stays locked (frozen game).
+  if (id === "bingoClearOverlay") finishBingoSequence();
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
   // carry it off-screen -- clear it here (every close path comes through).
   // Reset convertGoalEntry too: render() calls renderConvertGoalCard() every
@@ -11533,6 +11536,7 @@ function runBingoSequence(){
 // 5. Runs once the reward popup is dismissed (or straight after the
 // square bounces when no line was completed).
 function finishBingoSequence(){
+  if (!bingoClearInProgress) return;
   bingoClearInProgress = false;
   jobSheet.classList.remove("bingo-clearing");
   if (bingoSeqAutoOpened){
@@ -11555,8 +11559,7 @@ function openBingoClearOverlay(lineCount){
 }
 document.getElementById("bingoClearOverlayBody").addEventListener("click", ev => {
   if (!ev.target.closest("#bingoClearOkBtn")) return;
-  closeOverlay("bingoClearOverlay");
-  finishBingoSequence();
+  closeOverlay("bingoClearOverlay"); // finishes the sequence (closeOverlay())
 });
 
 /* BINGO card flip-in (runBingoRevealSequence()): from edge-on (rotateY
