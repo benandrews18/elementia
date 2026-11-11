@@ -8,7 +8,9 @@
    itself. */
 /* --mat-row-h: the mat grid's own per-row height formula, shared with
    .mat-zone-page (see its own comment) so the two never drift apart. */
-#drawerTop{container-type:inline-size; padding:10px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
+/* 100cqw minus the page's padding+border (2 x 7px) and the grid's three
+   5px gaps, over 4 columns, at the card's 1:1.4 shape. */
+#drawerTop{container-type:inline-size; padding:10px 6px 0; --mat-row-h:calc(((100cqw - 29px) / 4) * 1.4)}
 /* The score card: Quark Meter above the combo row (see renderMatTop()).
    Visible on both the Display Mat and Elements tabs. */
 .mat-score-card{display:flex; flex-direction:column; gap:4px; margin-bottom:6px}
@@ -168,7 +170,7 @@
 .mat-grid{
   display:grid; grid-template-columns:repeat(4, 1fr);
   grid-auto-rows:var(--mat-row-h);
-  gap:8px;
+  gap:5px;
 }
 .mm-slot{position:relative}
 .mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
@@ -208,9 +210,9 @@
    resizes the tray; a long elements list scrolls inside. A different
    parchment shade per page. */
 .mat-zone-page{
-  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 8px + 20px);
-  max-height:calc(var(--mat-row-h) * 2 + 8px + 20px); overflow-y:auto;
-  border-radius:14px 14px 4px 14px; border:2px solid; padding:10px;
+  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 5px + 14px);
+  max-height:calc(var(--mat-row-h) * 2 + 5px + 14px); overflow-y:auto;
+  border-radius:14px 14px 4px 14px; border:2px solid; padding:5px;
 }
 .mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}
 .mat-zone-page.zone-elements{background:#f2e6cc; border-color:#c3a06a}
