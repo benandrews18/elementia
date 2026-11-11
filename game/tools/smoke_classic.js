@@ -55,6 +55,23 @@
     if (e) { performSingleCraft(e); await wait(2500); closeOverlay("cardPop"); await wait(500); }
   });
   await step("drawer", async () => { openDrawer(); render(); await wait(200); matDrawerView = "elements"; renderMatTop(); matDrawerView = "mat"; renderMatTop(); closeDrawer(); });
+  // BINGO reward dismissed by a backdrop tap (not "Nice!") must unlock the
+  // tray -- it used to leave #jobSheet locked and the game frozen.
+  await step("bingo reward backdrop", async () => {
+    ensureBingoCard();
+    const savedLines = state.bingoLinesCompleted.slice(), savedQ = state.emptyElements;
+    state.pendingBingoClears = [0];
+    runBingoSequence();
+    const ov = document.getElementById("bingoClearOverlay");
+    for (let i = 0; i < 40 && !ov.classList.contains("open"); i++) await wait(100);
+    if (!ov.classList.contains("open")) errs.push("BINGO reward never opened");
+    ov.click();
+    if (bingoClearInProgress || jobSheet.classList.contains("bingo-clearing"))
+      errs.push("BINGO tray still locked after the reward was dismissed by a backdrop tap");
+    await wait(2000);
+    if (jobSheet.classList.contains("open")) errs.push("BINGO tray never closed after the reward");
+    state.bingoLinesCompleted = savedLines; state.emptyElements = savedQ;
+  });
   // Sort/Filter/Hide-mat must show on open even without a mat redraw.
   await step("float buttons", async () => {
     openDrawer({ peeked: true }); closeDrawer(); openDrawer();

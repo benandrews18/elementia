@@ -129,6 +129,7 @@ function runBingoSequence(){
 // 5. Runs once the reward popup is dismissed (or straight after the
 // square bounces when no line was completed).
 function finishBingoSequence(){
+  if (!bingoClearInProgress) return;
   bingoClearInProgress = false;
   jobSheet.classList.remove("bingo-clearing");
   if (bingoSeqAutoOpened){
@@ -151,8 +152,7 @@ function openBingoClearOverlay(lineCount){
 }
 document.getElementById("bingoClearOverlayBody").addEventListener("click", ev => {
   if (!ev.target.closest("#bingoClearOkBtn")) return;
-  closeOverlay("bingoClearOverlay");
-  finishBingoSequence();
+  closeOverlay("bingoClearOverlay"); // finishes the sequence (closeOverlay())
 });
 
 /* BINGO card flip-in (runBingoRevealSequence()): from edge-on (rotateY

@@ -8,6 +8,13 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (fix)
+
+- **Fix: game froze after a BINGO.** Closing the BINGO reward window by
+  tapping outside it (or Escape) instead of "Nice!" left the Marketplace
+  tray locked over the screen. Every way of closing it now finishes the
+  BINGO sequence.
+
 ## 2026-11-10 (UI)
 
 - **Market on the hub:** the Market button sits where Settings was, so

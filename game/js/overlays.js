@@ -35,6 +35,9 @@ function closeOverlay(id){
   if (SETTINGS_OVERLAY_IDS.includes(id) && !anySettingsOpen()){
     document.getElementById("tour").classList.remove("behind-settings");
   }
+  // The BINGO reward closes by its button, a backdrop tap or Escape; every
+  // one must finish the sequence, or #jobSheet stays locked (frozen game).
+  if (id === "bingoClearOverlay") finishBingoSequence();
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
   // carry it off-screen -- clear it here (every close path comes through).
   // Reset convertGoalEntry too: render() calls renderConvertGoalCard() every
