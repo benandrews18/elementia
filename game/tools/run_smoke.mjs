@@ -35,7 +35,13 @@ try {
   await send("Page.navigate", { url: `http://127.0.0.1:${HTTP}/elementia.html` });
   await wait(3000);
   await evalJS("localStorage.clear(); sessionStorage.clear(); location.reload()");
-  await wait(3000);
+  // Wait for boot, not a fixed time: on a busy machine 3s wasn't always
+  // enough, and the smoke script then threw before setting __smoke.
+  for (let i = 0; i < 60; i++) {
+    await wait(500);
+    try { if (await evalJS("document.readyState === 'complete' && typeof state !== 'undefined' && typeof render === 'function'")) break; } catch {}
+  }
+  await wait(500);
   await evalJS(readFileSync(join(GAME, "tools", "smoke_classic.js"), "utf8"));
   let log = null;
   for (let i = 0; i < 60 && !log; i++) { await wait(1000); log = JSON.parse(await evalJS("JSON.stringify(window.__smoke || null)")); }
