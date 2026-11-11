@@ -32,7 +32,7 @@ body[data-picking] #topbar{display:none}
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
 .clockpill{padding:3px; border-radius:50%}
-.clock-svg{width:68px; height:68px; display:block}
+.clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 .clockpill.checkpoint{border-color:rgba(226,178,90,.8); box-shadow:0 0 0 3px rgba(226,178,90,.35), 0 3px 10px rgba(0,0,0,.28)}
