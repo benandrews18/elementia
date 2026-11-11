@@ -10,6 +10,22 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-10 (UI)
 
+- **Market on the hub:** the Market button sits where Settings was, so
+  BINGO and capstones open from anywhere. Settings is a small cog in the
+  top-right corner. Home stays "Map" on the map screen.
+- **Turn clock:** the day/night pill is gone. The turn counter is a clock
+  dial with a tick for every checkpoint (every 3rd turn); it glows on a
+  checkpoint turn. The rule is unchanged: from turn 9, missing the first
+  Quark breakpoint at a checkpoint ends the run.
+- **Convert from a BINGO item:** while a BINGO item's craft card is open,
+  the Convert button and tray come up on top of it.
+- **Cash in "?" anywhere:** Convert's "?" counter now works on the map and
+  in the Marketplace, for an element of the station you're standing at.
+- **Slim item list:** list view rows are one line (icon, name, suits,
+  stations). Tap one to open its full shop row; Add / Remove buttons
+  appear above Home.
+- **Bigger Display Mat cards:** less padding around the mat and between
+  slots (about 15% wider cards on a phone).
 - **Inventory list view:** a new button next to Collections (📋 / 🃏)
   switches the items under the Display Mat between cards and shop-style
   rows (icon, name, suit costs, recipe with component icons and element
