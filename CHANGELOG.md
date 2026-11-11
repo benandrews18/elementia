@@ -14,6 +14,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   tapping outside it (or Escape) instead of "Nice!" left the Marketplace
   tray locked over the screen. Every way of closing it now finishes the
   BINGO sequence.
+- **Owned components checked on item cards:** in an item's card view, each
+  component item you already own gets the shop's small green check.
 
 ## 2026-11-10 (UI)
 

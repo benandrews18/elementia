@@ -57,7 +57,9 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
       ? `<span class="pc-ping elem" data-elem="${esc(r.name)}" title="${esc(r.name)}">${esc(r.name)}</span>`
       : (() => {
           const refIdx = ENTRIES.findIndex(e => e.name === r.name);
-          return `<span class="pc-ping"${refIdx >= 0 ? ` data-item-card="${refIdx}"` : ""} title="${esc(r.name)}">${em(r.emoji)}</span>`;
+          // Owned components get the shop's green check (.tok-check).
+          const check = owns(r.name) ? '<span class="tok-check">✓</span>' : "";
+          return `<span class="pc-ping"${refIdx >= 0 ? ` data-item-card="${refIdx}"` : ""} title="${esc(r.name)}${owns(r.name) ? " (owned)" : ""}">${em(r.emoji)}${check}</span>`;
         })();
     return (i ? '<span class="pc-plus">+</span>' : "") + body;
   }).join("");

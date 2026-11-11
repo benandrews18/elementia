@@ -184,7 +184,8 @@
 }
 /* Icon-only components (item art, or the element symbol), each tappable
    (see the #cpIngredients handler). */
-.pc-ping{display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:32px; line-height:1}
+.pc-ping{position:relative; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:32px; line-height:1}
+.pc-ping .tok-check{top:-4px; right:-6px; width:17px; height:17px; font-size:10px}
 .pc-ping.elem{
   background:#fff; border:2px solid #000; border-radius:8px; color:#181614;
   font-size:14px; font-weight:800; padding:5px 9px;
