@@ -13,9 +13,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **Market on the hub:** the Market button sits where Settings was, so
   BINGO and capstones open from anywhere. Settings is a small cog in the
   top-right corner. Home stays "Map" on the map screen.
-- **Turn clock:** the day/night pill is gone. The turn counter is a clock
-  dial with a tick for every checkpoint (every 3rd turn); it glows on a
-  checkpoint turn. The rule is unchanged: from turn 9, missing the first
+- **Turn clock:** the day/night pill is gone. The turn counter is a 24-hour
+  clock numbered 1-24, with a hand pointing at the current turn (circled).
+  Checkpoint turns (every 3rd) are the big numbers on the inner ring; the
+  clock glows on a checkpoint turn. In Overtime the centre reads OT. The rule is unchanged: from turn 9, missing the first
   Quark breakpoint at a checkpoint ends the run.
 - **Convert from a BINGO item:** while a BINGO item's craft card is open,
   the Convert button and tray come up on top of it.
