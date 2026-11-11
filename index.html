@@ -2554,7 +2554,8 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 }
 /* Icon-only components (item art, or the element symbol), each tappable
    (see the #cpIngredients handler). */
-.pc-ping{display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:32px; line-height:1}
+.pc-ping{position:relative; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-size:32px; line-height:1}
+.pc-ping .tok-check{top:-4px; right:-6px; width:17px; height:17px; font-size:10px}
 .pc-ping.elem{
   background:#fff; border:2px solid #000; border-radius:8px; color:#181614;
   font-size:14px; font-weight:800; padding:5px 9px;
@@ -8380,7 +8381,9 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
       ? `<span class="pc-ping elem" data-elem="${esc(r.name)}" title="${esc(r.name)}">${esc(r.name)}</span>`
       : (() => {
           const refIdx = ENTRIES.findIndex(e => e.name === r.name);
-          return `<span class="pc-ping"${refIdx >= 0 ? ` data-item-card="${refIdx}"` : ""} title="${esc(r.name)}">${em(r.emoji)}</span>`;
+          // Owned components get the shop's green check (.tok-check).
+          const check = owns(r.name) ? '<span class="tok-check">✓</span>' : "";
+          return `<span class="pc-ping"${refIdx >= 0 ? ` data-item-card="${refIdx}"` : ""} title="${esc(r.name)}${owns(r.name) ? " (owned)" : ""}">${em(r.emoji)}${check}</span>`;
         })();
     return (i ? '<span class="pc-plus">+</span>' : "") + body;
   }).join("");
