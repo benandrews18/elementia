@@ -128,7 +128,7 @@ function classicTutSlides(){
     </div>
     <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row">${dayCycleSVG(DAY_PHASES[2]).replace('class="day-svg"', 'class="day-svg" style="width:52px; height:26px"')}<span class="ct-sub" style="margin:0">Scored every trip -- from day 3, a miss at sunset ends the run</span></div>`;
+    <div class="ct-row"><span style="width:34px; height:34px; flex:none">${turnClockSVG(9)}</span><span class="ct-sub" style="margin:0">Scored every trip -- from turn 9, a miss at a checkpoint (every 3rd turn) ends the run</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){

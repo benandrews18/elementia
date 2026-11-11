@@ -31,9 +31,19 @@ body[data-picking] #topbar{display:none}
 }
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
-.daypill{padding:5px 6px}
-.daypill .day-svg{width:52px; height:26px; display:block}
-.daypill.sunset{border-color:rgba(226,178,90,.7); box-shadow:0 0 0 2px rgba(226,178,90,.25), 0 3px 10px rgba(0,0,0,.28)}
+.clockpill{padding:4px 14px 4px 5px}
+.clock-svg{width:30px; height:30px; display:block}
+.clockpill.checkpoint{border-color:rgba(226,178,90,.8); box-shadow:0 0 0 3px rgba(226,178,90,.35), 0 3px 10px rgba(0,0,0,.28)}
+/* Settings cog: top right on every screen, under every tray/overlay. */
+#settingsBtn{
+  position:fixed; z-index:32; top:10px; right:14px; width:40px; height:40px; padding:0;
+  border-radius:50%; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center;
+  background:rgba(20,18,16,.58); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:1.5px solid rgba(255,255,255,.14); box-shadow:0 3px 10px rgba(0,0,0,.28);
+  touch-action:manipulation;
+}
+body.has-qtop #settingsBtn{top:calc(var(--qtop-h, 52px) + 10px)}
+body[data-picking] #settingsBtn, [data-combo-lab] #settingsBtn{display:none}
 /* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's
    pills (30) but under every tray, drawer and overlay (33+). */
 #quarkTopBar{
@@ -139,10 +149,10 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 #hubHome .hi{
   width:auto; height:auto; background:none; border:none; box-shadow:none; font-size:37px;
 }
-/* The marketplace art reads small at 1em, so it's scaled 2x here only.
+/* The marketplace art reads small at 1em, so it's scaled up here only.
    transform, not width/height: a layout-size change pushed this face's
    label lower than every other face's. */
-#hubHome .hi .marketicon{transform:scale(2)}
+#hubMarket .hi .marketicon{transform:scale(1.6)}
 #hubHome:not(:disabled):active{
   transform:translateY(3px);
   box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
@@ -159,14 +169,13 @@ body[data-intro-sequence] .map-node{pointer-events:none}
    explicit ask, applies uniformly regardless of how bright or dark that
    face's own background color is. */
 #hubHome.face-roll{--face-color:var(--ok); color:#000}
-#hubHome.face-market{--face-color:var(--gold); color:#000}
 #hubHome.face-shop{--face-color:var(--hub-shop); color:#000}
 #hubHome.face-travel{--face-color:var(--hub-travel); color:#000}
 /* Lock In: purple (--collection), distinct from Market gold and Travel
    teal -- its own higher-stakes beat. */
 #hubHome.face-lockin{--face-color:var(--collection); color:#000}
 #hubHome.face-map{--face-color:var(--hub-map); color:#000}
-#hubHome.face-roll, #hubHome.face-market, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
+#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }

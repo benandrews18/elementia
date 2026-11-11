@@ -52,14 +52,16 @@
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
-  <div class="pill" title="Station visits" aria-label="Station visits">
-    <span class="pill-ic">🥾</span><span><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
+  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns">
+    <span class="pill-ic" id="turnClockFace"></span><span><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
   </div>
   <div class="pill pill-gold" id="scorePill" title="Total score" aria-label="Total score">
     <span class="pill-ic">⭐</span><span id="scoreCount">0</span>
   </div>
-  <div class="pill daypill" id="dayPill" hidden></div>
 </header>
+<!-- Settings: a small cog, top right on every screen (the hub's slot is the
+     Marketplace now). -->
+<button type="button" id="settingsBtn" aria-label="Settings" title="Settings">⚙️</button>
 <div id="quarkTopBar" role="button" tabindex="0" aria-label="Quark Meter -- open the Display Mat"></div>
 
 <main id="screen"></main>
@@ -140,7 +142,7 @@
   <button type="button" class="hubbtn" id="hubHome"><span class="hi">🗺️</span><span class="hl">Map</span></button>
   <div class="hub-side hub-side-right">
     <button type="button" class="hubbtn" id="hubCodex"><span class="hi">📖</span><span class="hl">Items</span></button>
-    <button type="button" class="hubbtn" id="hubSettings"><span class="hi">⚙️</span><span class="hl">Settings</span></button>
+    <button type="button" class="hubbtn" id="hubMarket"><span class="hi"></span><span class="hl">Market</span></button>
   </div>
 </nav>
 

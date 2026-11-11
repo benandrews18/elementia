@@ -1,42 +1,40 @@
 /* =====================================================================
    render.js -- render(): redraws the current screen and the shared chrome, plus the
-   day-cycle pill and the station backdrop.
+   turn clock and the station backdrop.
    ===================================================================== */
-/* Classic's day cycle, top-right in place of the score: each 3-visit day
-   goes sunrise -> midday -> sunset; sunset checks can end the run (see
-   MAT_CHECK_EVERY). One small SVG: horizon, the sun's arc, and the sun's
-   position for this visit. */
-const DAY_PHASES = [
-  { key: "sunrise", label: "Sunrise", sky: ["#f6a35c", "#5b6fb0"], at: [9, 25] },
-  { key: "midday",  label: "Midday",  sky: ["#8fd3ff", "#3d8fd8"], at: [30, 8] },
-  { key: "sunset",  label: "Sunset",  sky: ["#e0603c", "#5a3a7a"], at: [51, 25] },
-];
-function dayCycleSVG(phase){
-  const [x, y] = phase.at;
-  return `<svg class="day-svg" viewBox="0 0 60 30" aria-hidden="true">
-    <defs><linearGradient id="daySky-${phase.key}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${phase.sky[1]}"/><stop offset="1" stop-color="${phase.sky[0]}"/></linearGradient>
-      <clipPath id="dayClip-${phase.key}"><rect x="0" y="0" width="60" height="28" rx="6"/></clipPath></defs>
-    <rect x="0" y="0" width="60" height="28" rx="6" fill="url(#daySky-${phase.key})"/>
-    <path d="M7 28 A23 23 0 0 1 53 28" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-dasharray="2.5 2.5"/>
-    <g clip-path="url(#dayClip-${phase.key})"><circle cx="${x}" cy="${y}" r="6" fill="#ffd94a" stroke="#fff3b0" stroke-width="1.5"/></g>
-    <rect x="2" y="26.5" width="56" height="3" rx="1.2" fill="#2a3b2a"/>
+/* Turn clock, top-left: a dial whose hand and filled wedge show this
+   run's turns out of RUN_COMPLETE_VISIT. One tick per Display Mat
+   checkpoint (every MAT_CHECK_EVERY turns); on a checkpoint turn the pill
+   glows, since from BREAKPOINT_GATE_VISIT on missing the first Quark
+   breakpoint there ends the run (confirmLockIn()). */
+function turnClockSVG(visits){
+  const f = (visits % RUN_COMPLETE_VISIT) / RUN_COMPLETE_VISIT || (visits ? 1 : 0);
+  const a = f * 2 * Math.PI, x = 15 + 11 * Math.sin(a), y = 15 - 11 * Math.cos(a);
+  const n = RUN_COMPLETE_VISIT / MAT_CHECK_EVERY;
+  const ticks = Array.from({length: n}, (_, i) => {
+    const t = (i + 1) / n * 2 * Math.PI;
+    return `<line x1="${15 + 11 * Math.sin(t)}" y1="${15 - 11 * Math.cos(t)}" x2="${15 + 13.5 * Math.sin(t)}" y2="${15 - 13.5 * Math.cos(t)}"/>`;
+  }).join("");
+  const wedge = f >= 1 ? `<circle cx="15" cy="15" r="11" fill="rgba(226,178,90,.55)"/>`
+    : f > 0 ? `<path d="M15 15 L15 4 A11 11 0 ${f > .5 ? 1 : 0} 1 ${x} ${y} Z" fill="rgba(226,178,90,.55)"/>` : "";
+  return `<svg class="clock-svg" viewBox="0 0 30 30" aria-hidden="true">
+    <circle cx="15" cy="15" r="14" fill="#f4ead2" stroke="#e2b25a" stroke-width="2"/>
+    ${wedge}<g stroke="#5a4a2a" stroke-width="1.6" stroke-linecap="round">${ticks}</g>
+    <line x1="15" y1="15" x2="${x}" y2="${y}" stroke="#2a2018" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="15" cy="15" r="2" fill="#2a2018"/>
   </svg>`;
 }
-function renderDayCycle(){
-  const pill = document.getElementById("dayPill");
+function renderTurnClock(){
   document.getElementById("scorePill").hidden = true;
-  pill.hidden = false;
-  const v = Math.max(1, state.visits);
-  const phase = DAY_PHASES[(v - 1) % MAT_CHECK_EVERY];
-  const day = Math.ceil(v / MAT_CHECK_EVERY);
-  const note = phase.key !== "sunset" ? ""
-    : state.visits >= BREAKPOINT_GATE_VISIT ? " -- miss the first Quark breakpoint when you next travel and the run ends"
-    : " -- your Display Mat is checked when you next travel";
-  pill.title = `Day ${day}, ${phase.label}${note}`;
+  const pill = document.getElementById("turnClock");
+  document.getElementById("turnClockFace").innerHTML = turnClockSVG(state.visits);
+  const checkpoint = isSunsetVisit();
+  pill.classList.toggle("checkpoint", checkpoint);
+  const note = !checkpoint ? ""
+    : state.visits >= BREAKPOINT_GATE_VISIT ? " -- checkpoint: miss the first Quark breakpoint when you next travel and the run ends"
+    : " -- checkpoint: your Display Mat is checked when you next travel";
+  pill.title = `Turn ${state.visits} of ${RUN_COMPLETE_VISIT}${note}`;
   pill.setAttribute("aria-label", pill.title);
-  pill.innerHTML = dayCycleSVG(phase);
-  pill.classList.toggle("sunset", phase.key === "sunset");
 }
 function render(resetScroll){
   applyLowMotion();
@@ -51,7 +49,7 @@ function render(resetScroll){
   document.getElementById("visitCount").textContent = state.visits;
   document.getElementById("visitMax").textContent = visitLimitLabel();
   document.getElementById("scoreCount").textContent = score();
-  renderDayCycle();
+  renderTurnClock();
   renderQuarkTopBar();
   document.getElementById("drawerScoreCount").textContent = score();
   document.getElementById("drawerBody").innerHTML = renderDrawer();

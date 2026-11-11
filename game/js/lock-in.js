@@ -112,7 +112,7 @@ function confirmLockIn(){
     if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
     askConfirm(state.runComplete
       ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
-      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
+      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;
@@ -372,7 +372,7 @@ function maybeShowBreakpointGateNotice(){
   state.sawBreakpointGateNotice = true;
   save();
   queueEventToast("warn", "⚠️", "Breakpoints now matter",
-    "From now on, missing your first Quark breakpoint at sunset ends your run.");
+    "From now on, missing your first Quark breakpoint at a checkpoint (every 3rd turn, the glowing clock) ends your run.");
 }
 
 // Fill-in for the mat rules popup's two summary lines.
