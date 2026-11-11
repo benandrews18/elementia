@@ -297,16 +297,51 @@ function matResultsGridHTML(){
       </div>`;
   }).join("");
 }
-/* List view: the item as its station shop row (itemRowHTML()), read-only.
-   Tap opens the same card popup as the card view. */
+/* List view: one slim line per item (icon, name, suit pips, home
+   stations). Tapping one expands it to its station shop row
+   (itemRowHTML()); only one is open at a time (matListOpen), and while it
+   is, #matListActions offers Add/Remove above the hub. */
+let matListOpen = null;
 function matShopRowHTML(name){
-  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-  if (!entry) return "";
-  return `<div class="item ${state.mat.includes(name) ? "on-mat" : ""}" data-mat-card="${esc(name)}" role="button" tabindex="0">
-    ${itemRowHTML(entry, false, true)}</div>`;
+  const c = MAT_CARD_BY_NAME[name];
+  if (!c) return "";
+  const onMat = state.mat.includes(name) ? " on-mat" : "";
+  if (name === matListOpen){
+    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+    if (entry) return `<div class="item open${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
+      ${itemRowHTML(entry, false, true)}</div>`;
+  }
+  const pips = c.pips.map(s => `<span class="ms-pip" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
+  const stations = c.stations.map(st => `<span class="ms-station" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
+  return `<div class="mat-slim${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
+    <span class="ms-icon">${em(c.emoji)}</span><span class="ms-name">${esc(name)}</span>
+    <span class="ms-pips">${pips}</span><span class="ms-stations">${stations}</span></div>`;
 }
+function toggleMatListRow(name){
+  matListOpen = matListOpen === name ? null : name;
+  renderMatResultsGrid();
+  document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
+}
+/* Add/Remove for the open list row, above Home. Shown only while a row is
+   open in the full tray (syncMatFloatBtns()). */
+function syncMatListActions(){
+  const bar = document.getElementById("matListActions");
+  const show = matTrayExpanded && prefs.itemsListView && !!matListOpen && owns(matListOpen);
+  bar.hidden = !show;
+  if (!show) return;
+  const onMat = state.mat.includes(matListOpen);
+  document.getElementById("matListAdd").disabled = onMat;
+  document.getElementById("matListRemove").disabled = !onMat;
+}
+document.getElementById("matListAdd").addEventListener("click", () => {
+  if (matListOpen && !state.mat.includes(matListOpen)) toggleMatCard(matListOpen);
+});
+document.getElementById("matListRemove").addEventListener("click", () => {
+  if (matListOpen && state.mat.includes(matListOpen)) toggleMatCard(matListOpen);
+});
 function setItemsListView(on){
   prefs.itemsListView = on; savePrefs();
+  matListOpen = null;
   syncMatViewBtn();
   renderMatResultsGrid();
 }
@@ -319,6 +354,7 @@ function syncMatViewBtn(){
 }
 function renderMatResultsGrid(){
   document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
+  syncMatListActions();
 }
 
 /* Filter buttons are built once and only toggled afterwards

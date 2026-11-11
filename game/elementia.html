@@ -114,6 +114,11 @@
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
+<!-- List view: Add/Remove for the open row, above Home (syncMatListActions()). -->
+<div id="matListActions" hidden>
+  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
+  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
+</div>
 <!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
 <button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 

@@ -21,6 +21,7 @@ const openDrawer = (opts = {}) => {
 };
 const closeDrawer = () => {
   setMatCollapsed(false);
+  matListOpen = null;
   // Combo Lab hides #hub, so this close is the lab's only exit.
   if (comboLabActive){ closeComboLab(); return; }
   // Remove .expanded here: translateY(100%) only moves the box by its own
@@ -40,6 +41,7 @@ function syncMatFloatBtns(){
   for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
     document.getElementById(id).hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
+  syncMatListActions();
 }
 
 function renderDrawer(){

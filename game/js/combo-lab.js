@@ -69,6 +69,8 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   // (openMatCardPop()), where adding/removing happens.
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  const listRow = ev.target.closest("[data-mat-row]");
+  if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
   const matCard = ev.target.closest("[data-mat-card]");
   if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
   const iBtn = ev.target.closest("[data-item]");
