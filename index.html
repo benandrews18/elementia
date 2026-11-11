@@ -157,9 +157,19 @@ body[data-picking] #topbar{display:none}
 }
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
-.daypill{padding:5px 6px}
-.daypill .day-svg{width:52px; height:26px; display:block}
-.daypill.sunset{border-color:rgba(226,178,90,.7); box-shadow:0 0 0 2px rgba(226,178,90,.25), 0 3px 10px rgba(0,0,0,.28)}
+.clockpill{padding:4px 14px 4px 5px}
+.clock-svg{width:30px; height:30px; display:block}
+.clockpill.checkpoint{border-color:rgba(226,178,90,.8); box-shadow:0 0 0 3px rgba(226,178,90,.35), 0 3px 10px rgba(0,0,0,.28)}
+/* Settings cog: top right on every screen, under every tray/overlay. */
+#settingsBtn{
+  position:fixed; z-index:32; top:10px; right:14px; width:40px; height:40px; padding:0;
+  border-radius:50%; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center;
+  background:rgba(20,18,16,.58); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border:1.5px solid rgba(255,255,255,.14); box-shadow:0 3px 10px rgba(0,0,0,.28);
+  touch-action:manipulation;
+}
+body.has-qtop #settingsBtn{top:calc(var(--qtop-h, 52px) + 10px)}
+body[data-picking] #settingsBtn, [data-combo-lab] #settingsBtn{display:none}
 /* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's
    pills (30) but under every tray, drawer and overlay (33+). */
 #quarkTopBar{
@@ -265,10 +275,10 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 #hubHome .hi{
   width:auto; height:auto; background:none; border:none; box-shadow:none; font-size:37px;
 }
-/* The marketplace art reads small at 1em, so it's scaled 2x here only.
+/* The marketplace art reads small at 1em, so it's scaled up here only.
    transform, not width/height: a layout-size change pushed this face's
    label lower than every other face's. */
-#hubHome .hi .marketicon{transform:scale(2)}
+#hubMarket .hi .marketicon{transform:scale(1.6)}
 #hubHome:not(:disabled):active{
   transform:translateY(3px);
   box-shadow:0 0 0 3px var(--card), inset 0 3px 5px rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.18);
@@ -285,14 +295,13 @@ body[data-intro-sequence] .map-node{pointer-events:none}
    explicit ask, applies uniformly regardless of how bright or dark that
    face's own background color is. */
 #hubHome.face-roll{--face-color:var(--ok); color:#000}
-#hubHome.face-market{--face-color:var(--gold); color:#000}
 #hubHome.face-shop{--face-color:var(--hub-shop); color:#000}
 #hubHome.face-travel{--face-color:var(--hub-travel); color:#000}
 /* Lock In: purple (--collection), distinct from Market gold and Travel
    teal -- its own higher-stakes beat. */
 #hubHome.face-lockin{--face-color:var(--collection); color:#000}
 #hubHome.face-map{--face-color:var(--hub-map); color:#000}
-#hubHome.face-roll, #hubHome.face-market, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
+#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }
@@ -2092,6 +2101,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .empty-el-pick-box .gather{margin:14px 0 4px}
 .lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
 #bingoCraftOverlay{z-index:70}
+/* Over the BINGO craft card, Convert (tray, scrim, button) comes up above it
+   so the player can convert without leaving the Marketplace. */
+body:has(#bingoCraftOverlay.open) #convertScrim{z-index:71}
+body:has(#bingoCraftOverlay.open) #convert{z-index:72}
+body:has(#bingoCraftOverlay.open) #quickConvertBtn{z-index:73}
+body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
 /* Locks the tray against taps for the pre-animation pause plus the
    animation itself (see runBingoSequence()'s own comment) --
@@ -2990,7 +3005,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    itself. */
 /* --mat-row-h: the mat grid's own per-row height formula, shared with
    .mat-zone-page (see its own comment) so the two never drift apart. */
-#drawerTop{container-type:inline-size; padding:10px 18px 0; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4)}
+/* 100cqw minus the page's padding+border (2 x 7px) and the grid's three
+   5px gaps, over 4 columns, at the card's 1:1.4 shape. */
+#drawerTop{container-type:inline-size; padding:10px 6px 0; --mat-row-h:calc(((100cqw - 29px) / 4) * 1.4)}
 /* The score card: Quark Meter above the combo row (see renderMatTop()).
    Visible on both the Display Mat and Elements tabs. */
 .mat-score-card{display:flex; flex-direction:column; gap:4px; margin-bottom:6px}
@@ -3150,7 +3167,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-grid{
   display:grid; grid-template-columns:repeat(4, 1fr);
   grid-auto-rows:var(--mat-row-h);
-  gap:8px;
+  gap:5px;
 }
 .mm-slot{position:relative}
 .mm-slot.empty{border:2px dashed var(--line); border-radius:12px}
@@ -3190,9 +3207,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    resizes the tray; a long elements list scrolls inside. A different
    parchment shade per page. */
 .mat-zone-page{
-  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 8px + 20px);
-  max-height:calc(var(--mat-row-h) * 2 + 8px + 20px); overflow-y:auto;
-  border-radius:14px 14px 4px 14px; border:2px solid; padding:10px;
+  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 5px + 14px);
+  max-height:calc(var(--mat-row-h) * 2 + 5px + 14px); overflow-y:auto;
+  border-radius:14px 14px 4px 14px; border:2px solid; padding:5px;
 }
 .mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}
 .mat-zone-page.zone-elements{background:#f2e6cc; border-color:#c3a06a}
@@ -3318,8 +3335,42 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
+.mat-shop-list{gap:6px}
 .mat-shop-list .tok-check{display:none}
 .mat-shop-list .item.on-mat{border-color:var(--gold)}
+.mat-shop-list .item.open{border-width:3px; border-color:var(--ok)}
+.mat-shop-list .item.open.on-mat{border-color:var(--gold)}
+/* Slim row: icon | name (one line, ellipsis) | suit pips | home stations. */
+.mat-slim{
+  display:flex; align-items:center; gap:8px; padding:5px 8px 5px 5px; cursor:pointer;
+  border-radius:10px; border:2px solid var(--line2); background:var(--card);
+}
+.mat-slim.on-mat{border-color:var(--gold); background:linear-gradient(90deg, var(--gold-soft), var(--card) 60%)}
+.ms-icon{flex:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+  font-size:26px; line-height:1; border-radius:8px; background:var(--sunken)}
+.ms-icon :is(img,svg){width:26px; height:26px}
+.ms-name{flex:1; min-width:0; font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ms-pips, .ms-stations{flex:none; display:flex; gap:3px}
+.ms-pip, .ms-station{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:12px; line-height:1}
+.ms-pip{background:var(--suit)}
+.ms-pip :is(img,svg){width:13px; height:13px}
+.ms-station{background:var(--st); border:1.5px solid rgba(0,0,0,.35)}
+.ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
+/* Add/Remove for the open row: centred just above Home, clear of the
+   Sort (left) and Filter/Hide (right) float buttons. */
+#matListActions{
+  position:fixed; z-index:61; left:50%; transform:translateX(-50%);
+  bottom:calc(var(--hub-h, 67px) + 30px); display:flex; gap:8px;
+}
+#matListActions[hidden]{display:none}
+.mat-list-act{
+  padding:9px 12px; border-radius:999px; font-size:13px; font-weight:900; white-space:nowrap;
+  border:2px solid #000; box-shadow:0 3px 8px rgba(0,0,0,.4); color:#181614;
+}
+.mat-list-act.add{background:var(--ok); color:#fff}
+.mat-list-act.remove{background:var(--gold)}
+.mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
 /* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
    collapsible with the shared .collapse-chevron. */
 .mat-tier-section{margin-bottom:14px}
@@ -3430,6 +3481,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   /* The side tray keeps its 24px overhang past the frame's left edge. */
   #jobSheet{left:calc(var(--frame-x) - 24px)}
   #pinsBtn, #matSortBtn, #mouseTip.anchor-bottom-left, #mouseTip.anchor-top-left{left:calc(var(--frame-x) + 16px)}
+  #settingsBtn{right:calc(var(--frame-x) + 14px)}
   #quickConvertBtn, #matFilterBtn.mat-sf-btn, #matHideBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
   #trackedPill{left:calc(var(--frame-x) + 56px)}
   #matSortTray{left:var(--frame-x)}
@@ -3467,14 +3519,16 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
-  <div class="pill" title="Station visits" aria-label="Station visits">
-    <span class="pill-ic">🥾</span><span><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
+  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns">
+    <span class="pill-ic" id="turnClockFace"></span><span><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
   </div>
   <div class="pill pill-gold" id="scorePill" title="Total score" aria-label="Total score">
     <span class="pill-ic">⭐</span><span id="scoreCount">0</span>
   </div>
-  <div class="pill daypill" id="dayPill" hidden></div>
 </header>
+<!-- Settings: a small cog, top right on every screen (the hub's slot is the
+     Marketplace now). -->
+<button type="button" id="settingsBtn" aria-label="Settings" title="Settings">⚙️</button>
 <div id="quarkTopBar" role="button" tabindex="0" aria-label="Quark Meter -- open the Display Mat"></div>
 
 <main id="screen"></main>
@@ -3527,6 +3581,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
+<!-- List view: Add/Remove for the open row, above Home (syncMatListActions()). -->
+<div id="matListActions" hidden>
+  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
+  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
+</div>
 <!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
 <button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
@@ -3555,7 +3614,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <button type="button" class="hubbtn" id="hubHome"><span class="hi">🗺️</span><span class="hl">Map</span></button>
   <div class="hub-side hub-side-right">
     <button type="button" class="hubbtn" id="hubCodex"><span class="hi">📖</span><span class="hl">Items</span></button>
-    <button type="button" class="hubbtn" id="hubSettings"><span class="hi">⚙️</span><span class="hl">Settings</span></button>
+    <button type="button" class="hubbtn" id="hubMarket"><span class="hi"></span><span class="hl">Market</span></button>
   </div>
 </nav>
 
@@ -6856,43 +6915,41 @@ document.addEventListener("click", ev => {
 <script>
 /* =====================================================================
    render.js -- render(): redraws the current screen and the shared chrome, plus the
-   day-cycle pill and the station backdrop.
+   turn clock and the station backdrop.
    ===================================================================== */
-/* Classic's day cycle, top-right in place of the score: each 3-visit day
-   goes sunrise -> midday -> sunset; sunset checks can end the run (see
-   MAT_CHECK_EVERY). One small SVG: horizon, the sun's arc, and the sun's
-   position for this visit. */
-const DAY_PHASES = [
-  { key: "sunrise", label: "Sunrise", sky: ["#f6a35c", "#5b6fb0"], at: [9, 25] },
-  { key: "midday",  label: "Midday",  sky: ["#8fd3ff", "#3d8fd8"], at: [30, 8] },
-  { key: "sunset",  label: "Sunset",  sky: ["#e0603c", "#5a3a7a"], at: [51, 25] },
-];
-function dayCycleSVG(phase){
-  const [x, y] = phase.at;
-  return `<svg class="day-svg" viewBox="0 0 60 30" aria-hidden="true">
-    <defs><linearGradient id="daySky-${phase.key}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${phase.sky[1]}"/><stop offset="1" stop-color="${phase.sky[0]}"/></linearGradient>
-      <clipPath id="dayClip-${phase.key}"><rect x="0" y="0" width="60" height="28" rx="6"/></clipPath></defs>
-    <rect x="0" y="0" width="60" height="28" rx="6" fill="url(#daySky-${phase.key})"/>
-    <path d="M7 28 A23 23 0 0 1 53 28" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-dasharray="2.5 2.5"/>
-    <g clip-path="url(#dayClip-${phase.key})"><circle cx="${x}" cy="${y}" r="6" fill="#ffd94a" stroke="#fff3b0" stroke-width="1.5"/></g>
-    <rect x="2" y="26.5" width="56" height="3" rx="1.2" fill="#2a3b2a"/>
+/* Turn clock, top-left: a dial whose hand and filled wedge show this
+   run's turns out of RUN_COMPLETE_VISIT. One tick per Display Mat
+   checkpoint (every MAT_CHECK_EVERY turns); on a checkpoint turn the pill
+   glows, since from BREAKPOINT_GATE_VISIT on missing the first Quark
+   breakpoint there ends the run (confirmLockIn()). */
+function turnClockSVG(visits){
+  const f = (visits % RUN_COMPLETE_VISIT) / RUN_COMPLETE_VISIT || (visits ? 1 : 0);
+  const a = f * 2 * Math.PI, x = 15 + 11 * Math.sin(a), y = 15 - 11 * Math.cos(a);
+  const n = RUN_COMPLETE_VISIT / MAT_CHECK_EVERY;
+  const ticks = Array.from({length: n}, (_, i) => {
+    const t = (i + 1) / n * 2 * Math.PI;
+    return `<line x1="${15 + 11 * Math.sin(t)}" y1="${15 - 11 * Math.cos(t)}" x2="${15 + 13.5 * Math.sin(t)}" y2="${15 - 13.5 * Math.cos(t)}"/>`;
+  }).join("");
+  const wedge = f >= 1 ? `<circle cx="15" cy="15" r="11" fill="rgba(226,178,90,.55)"/>`
+    : f > 0 ? `<path d="M15 15 L15 4 A11 11 0 ${f > .5 ? 1 : 0} 1 ${x} ${y} Z" fill="rgba(226,178,90,.55)"/>` : "";
+  return `<svg class="clock-svg" viewBox="0 0 30 30" aria-hidden="true">
+    <circle cx="15" cy="15" r="14" fill="#f4ead2" stroke="#e2b25a" stroke-width="2"/>
+    ${wedge}<g stroke="#5a4a2a" stroke-width="1.6" stroke-linecap="round">${ticks}</g>
+    <line x1="15" y1="15" x2="${x}" y2="${y}" stroke="#2a2018" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="15" cy="15" r="2" fill="#2a2018"/>
   </svg>`;
 }
-function renderDayCycle(){
-  const pill = document.getElementById("dayPill");
+function renderTurnClock(){
   document.getElementById("scorePill").hidden = true;
-  pill.hidden = false;
-  const v = Math.max(1, state.visits);
-  const phase = DAY_PHASES[(v - 1) % MAT_CHECK_EVERY];
-  const day = Math.ceil(v / MAT_CHECK_EVERY);
-  const note = phase.key !== "sunset" ? ""
-    : state.visits >= BREAKPOINT_GATE_VISIT ? " -- miss the first Quark breakpoint when you next travel and the run ends"
-    : " -- your Display Mat is checked when you next travel";
-  pill.title = `Day ${day}, ${phase.label}${note}`;
+  const pill = document.getElementById("turnClock");
+  document.getElementById("turnClockFace").innerHTML = turnClockSVG(state.visits);
+  const checkpoint = isSunsetVisit();
+  pill.classList.toggle("checkpoint", checkpoint);
+  const note = !checkpoint ? ""
+    : state.visits >= BREAKPOINT_GATE_VISIT ? " -- checkpoint: miss the first Quark breakpoint when you next travel and the run ends"
+    : " -- checkpoint: your Display Mat is checked when you next travel";
+  pill.title = `Turn ${state.visits} of ${RUN_COMPLETE_VISIT}${note}`;
   pill.setAttribute("aria-label", pill.title);
-  pill.innerHTML = dayCycleSVG(phase);
-  pill.classList.toggle("sunset", phase.key === "sunset");
 }
 function render(resetScroll){
   applyLowMotion();
@@ -6907,13 +6964,14 @@ function render(resetScroll){
   document.getElementById("visitCount").textContent = state.visits;
   document.getElementById("visitMax").textContent = visitLimitLabel();
   document.getElementById("scoreCount").textContent = score();
-  renderDayCycle();
+  renderTurnClock();
   renderQuarkTopBar();
   document.getElementById("drawerScoreCount").textContent = score();
   document.getElementById("drawerBody").innerHTML = renderDrawer();
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
+  if (bingoCraftEntry) renderBingoCraftCard();
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();
@@ -7043,7 +7101,6 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   if (face === "roll"){ triggerRoll(); return; }
   // The full Marketplace tray (openJobSelectTray()); the hub's To-Do List
   // button is openJobBoard().
-  if (face === "market"){ openJobSelectTray(); return; }
   // Free re-entry into the current station: no goStation() (that spends a
   // visit), just point current/screen back at it.
   if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
@@ -7076,6 +7133,8 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // The Marketplace tray reads "Map" but still has to be closed; the map is
   // already underneath.
   if (face === "map" && openPanelName() === "jobs"){ closeJobBoard(); return; }
+  // Already on the map: Home just reads "Map" there.
+  if (screen === "map") return;
   goHome(); // face === "map"
 });
 document.getElementById("hubInv").addEventListener("click", () => {
@@ -7103,7 +7162,18 @@ document.getElementById("hubCodex").addEventListener("click", () => {
     screen = "codex"; render(true);
   });
 });
-document.getElementById("hubSettings").addEventListener("click", () => hubPanelClick("settings", openSettings));
+document.getElementById("settingsBtn").addEventListener("click", () => hubPanelClick("settings", openSettings));
+// Marketplace: the full BINGO/Capstones tray (openJobSelectTray()) from
+// anywhere. Shares #jobSheet with the To-Do List, so it toggles on the
+// variant, not hubPanelClick()'s panel name.
+document.getElementById("hubMarket").querySelector(".hi").innerHTML = em("__MARKETPLACE__");
+document.getElementById("hubMarket").addEventListener("click", () => {
+  const open = openPanelName();
+  if (open === "jobs" && jobSheetVariant === "full"){ closeJobBoard(); return; }
+  if (open === "jobs"){ closeJobBoard(); openJobSelectTray(); return; }
+  if (open && open !== "codex" && open !== "drawer") closePanelByName(open);
+  openJobSelectTray();
+});
 document.getElementById("hubJobs").addEventListener("click", () => hubPanelClick("jobs", openJobBoard));
 
 /* Hub button states: job board progress, active screen, and Home's own
@@ -7122,7 +7192,6 @@ function setHubHomeFace(face){
     // The same Market icon/label in every mode, even though Classic's tap opens
     // the BINGO tray. Custom art (__MARKETPLACE__) via em(), which returns an
     // <img> -- hence innerHTML below.
-    market: { hi: em("__MARKETPLACE__"), hl: "Market" },
     // Free re-entry into the current station (hubHomeFace()): a shopping cart,
     // distinct from Market's stall art.
     shop:   { hi: "🛒", hl: "Shop" },
@@ -7139,7 +7208,7 @@ function setHubHomeFace(face){
     // innerHTML: the market face's icon is an <img> (see FACES.market).
     home.querySelector(".hi").innerHTML = target.hi;
     home.querySelector(".hl").textContent = target.hl;
-    home.classList.remove("face-roll", "face-market", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
+    home.classList.remove("face-roll", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
   if (isCoinPair && !lowMotion()){
@@ -7171,7 +7240,9 @@ function updateHub(){
   // button.
   document.getElementById("hubJobs").classList.toggle("active",
     jobSheet.classList.contains("open") && jobSheetVariant === "compact");
-  document.getElementById("hubSettings").classList.toggle("active", anySettingsOpen());
+  document.getElementById("settingsBtn").classList.toggle("active", anySettingsOpen());
+  document.getElementById("hubMarket").classList.toggle("active",
+    jobSheet.classList.contains("open") && jobSheetVariant === "full");
   const pinsOpen = pinsTray.classList.contains("open");
   const convertOpen = document.getElementById("convert").classList.contains("open");
   document.getElementById("pinsBtn").classList.toggle("active", pinsOpen);
@@ -7213,19 +7284,13 @@ function updateHub(){
   home.setAttribute("aria-disabled", face === "lockin" && lockInCommitted ? "true" : "false");
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
-    : face === "market" ? "Open the Marketplace"
     : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : face === "lockin" ? "Lock in your Display Mat"
     : "Back to the station map";
-  // Home's Market face gets a "!" only until the Marketplace is first opened
-  // (state.marketVisited, set by openMarket()/openJobSelectTray()); it never
-  // returns -- the Marketplace has its own in-context indicators.
-  if (face === "market" && !state.marketVisited){
-    setHubBadge("hubHome", "!");
-  } else {
-    setHubBadge("hubHome", null);
-  }
+  // The Market button gets a "!" until the Marketplace is first opened
+  // (state.marketVisited, set by openJobSelectTray()).
+  setHubBadge("hubMarket", state.marketVisited ? null : "!");
 }
 
 /* Whether the player can travel to the selected map station right now
@@ -7238,7 +7303,6 @@ function canTravelTo(name){
    this, so they never disagree.
      close  -- a panel is open; tap closes it.
      roll   -- at a station, this visit's dice not yet rolled.
-     market -- on the map, nothing selected.
      shop   -- on the map with the CURRENT station selected; tap re-enters it
                for free (no visit spent, shop as left).
      travel -- on the map with another reachable station selected (see
@@ -7268,7 +7332,6 @@ function hubHomeFace(){
   // (canTravelTo() refuses the current station).
   if (screen === "map" && selectedMapStation && selectedMapStation === state.lastStation) return "shop";
   if (screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)) return "travel";
-  if (screen === "map") return "market";
   return "map";
 }
 
@@ -7312,6 +7375,7 @@ const openDrawer = (opts = {}) => {
 };
 const closeDrawer = () => {
   setMatCollapsed(false);
+  matListOpen = null;
   // Combo Lab hides #hub, so this close is the lab's only exit.
   if (comboLabActive){ closeComboLab(); return; }
   // Remove .expanded here: translateY(100%) only moves the box by its own
@@ -7331,6 +7395,7 @@ function syncMatFloatBtns(){
   for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
     document.getElementById(id).hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
+  syncMatListActions();
 }
 
 function renderDrawer(){
@@ -8965,9 +9030,9 @@ function goMap(){
     state.runComplete = true; save(); fireConfetti(); showEndGame();
   }
   // One-time tip: back on the map after the first visit without ever opening
-  // the Marketplace, point at Home's Market face.
+  // the Marketplace, point at the hub's Market button.
   if (state.visits >= 1 && !state.marketVisited){
-    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubHome");
+    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubMarket");
   }
 }
 
@@ -9594,16 +9659,51 @@ function matResultsGridHTML(){
       </div>`;
   }).join("");
 }
-/* List view: the item as its station shop row (itemRowHTML()), read-only.
-   Tap opens the same card popup as the card view. */
+/* List view: one slim line per item (icon, name, suit pips, home
+   stations). Tapping one expands it to its station shop row
+   (itemRowHTML()); only one is open at a time (matListOpen), and while it
+   is, #matListActions offers Add/Remove above the hub. */
+let matListOpen = null;
 function matShopRowHTML(name){
-  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-  if (!entry) return "";
-  return `<div class="item ${state.mat.includes(name) ? "on-mat" : ""}" data-mat-card="${esc(name)}" role="button" tabindex="0">
-    ${itemRowHTML(entry, false, true)}</div>`;
+  const c = MAT_CARD_BY_NAME[name];
+  if (!c) return "";
+  const onMat = state.mat.includes(name) ? " on-mat" : "";
+  if (name === matListOpen){
+    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+    if (entry) return `<div class="item open${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
+      ${itemRowHTML(entry, false, true)}</div>`;
+  }
+  const pips = c.pips.map(s => `<span class="ms-pip" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
+  const stations = c.stations.map(st => `<span class="ms-station" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
+  return `<div class="mat-slim${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
+    <span class="ms-icon">${em(c.emoji)}</span><span class="ms-name">${esc(name)}</span>
+    <span class="ms-pips">${pips}</span><span class="ms-stations">${stations}</span></div>`;
 }
+function toggleMatListRow(name){
+  matListOpen = matListOpen === name ? null : name;
+  renderMatResultsGrid();
+  document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
+}
+/* Add/Remove for the open list row, above Home. Shown only while a row is
+   open in the full tray (syncMatFloatBtns()). */
+function syncMatListActions(){
+  const bar = document.getElementById("matListActions");
+  const show = matTrayExpanded && prefs.itemsListView && !!matListOpen && owns(matListOpen);
+  bar.hidden = !show;
+  if (!show) return;
+  const onMat = state.mat.includes(matListOpen);
+  document.getElementById("matListAdd").disabled = onMat;
+  document.getElementById("matListRemove").disabled = !onMat;
+}
+document.getElementById("matListAdd").addEventListener("click", () => {
+  if (matListOpen && !state.mat.includes(matListOpen)) toggleMatCard(matListOpen);
+});
+document.getElementById("matListRemove").addEventListener("click", () => {
+  if (matListOpen && state.mat.includes(matListOpen)) toggleMatCard(matListOpen);
+});
 function setItemsListView(on){
   prefs.itemsListView = on; savePrefs();
+  matListOpen = null;
   syncMatViewBtn();
   renderMatResultsGrid();
 }
@@ -9616,6 +9716,7 @@ function syncMatViewBtn(){
 }
 function renderMatResultsGrid(){
   document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
+  syncMatListActions();
 }
 
 /* Filter buttons are built once and only toggled afterwards
@@ -10087,6 +10188,8 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   // (openMatCardPop()), where adding/removing happens.
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  const listRow = ev.target.closest("[data-mat-row]");
+  if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
   const matCard = ev.target.closest("[data-mat-card]");
   if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
   const iBtn = ev.target.closest("[data-item]");
@@ -10418,7 +10521,7 @@ function confirmLockIn(){
     if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
     askConfirm(state.runComplete
       ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
-      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at sunset -- not enough to clear the first Quark breakpoint. From visit ${BREAKPOINT_GATE_VISIT} on, missing it at sunset ends your run here. End it now?`,
+      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;
@@ -10678,7 +10781,7 @@ function maybeShowBreakpointGateNotice(){
   state.sawBreakpointGateNotice = true;
   save();
   queueEventToast("warn", "⚠️", "Breakpoints now matter",
-    "From now on, missing your first Quark breakpoint at sunset ends your run.");
+    "From now on, missing your first Quark breakpoint at a checkpoint (every 3rd turn, the glowing clock) ends your run.");
 }
 
 // Fill-in for the mat rules popup's two summary lines.
@@ -10708,7 +10811,8 @@ document.getElementById("lockInQuarkTutorial").innerHTML = `
 
    "?" elements (Empty Elements): earned at the top Quark breakpoint and from
    BINGO lines. A held "?" trades 1-for-1 for any element of the CURRENT
-   station, whenever the player likes (openEmptyElPicker()).
+   station (or, off a station, the one the player stands at on the map),
+   whenever the player likes (openEmptyElPicker()).
    ===================================================================== */
 // The shared "?" square (.empty-el-square), used everywhere this currency
 // appears. px sets the size and scales the "?" and corner badge.
@@ -10726,22 +10830,16 @@ function emptyElBadgeHTML(){
       title="${n} Empty Element${n === 1 ? "" : "s"} held${n > 0 ? " -- tap to cash one in for an element found here" : ""}"
       aria-label="${n} Empty Elements held">${emptyElSquareHTML(24)}<b>${n}</b></button>`;
 }
-// The "?" counter in the Convert tray's top-right (#convertEmptyEl). It only
-// works at a station (it picks from that station's pool); elsewhere it's
-// disabled with a title saying why.
+// The "?" counter in the Convert tray's top-right (#convertEmptyEl), so a
+// "?" can be cashed in from anywhere Convert opens (map, Marketplace).
 function renderConvertEmptyEl(){
   const el = document.getElementById("convertEmptyEl");
   if (!el) return;
   el.innerHTML = emptyElBadgeHTML();
-  const btn = el.querySelector("#emptyElBadgeBtn");
-  if (btn && screen !== "station" && (state.emptyElements || 0) > 0){
-    btn.disabled = true;
-    btn.title = `${state.emptyElements} Empty Element${state.emptyElements === 1 ? "" : "s"} held -- visit a station to cash one in for an element found there`;
-  }
 }
 document.getElementById("convertEmptyEl").addEventListener("click", ev => {
   if (!ev.target.closest("#emptyElBadgeBtn")) return;
-  if (screen !== "station" || !((state.emptyElements || 0) > 0)) return;
+  if (!((state.emptyElements || 0) > 0)) return;
   closeOverlay("convert");
   openEmptyElPicker();
 });
@@ -10749,7 +10847,7 @@ document.getElementById("convertEmptyEl").addEventListener("click", ev => {
    the same .gather/.gcol/.gchip row as the shop -- and the picked element
    flies into the inventory. */
 function openEmptyElPicker(){
-  const s = current && STATION_BY_NAME[current];
+  const s = STATION_BY_NAME[current || state.lastStation];
   if (!s || !((state.emptyElements || 0) > 0)) return;
   const pool = sortedDice(s);
   const row = pool.map((sym, i) =>
@@ -11044,12 +11142,22 @@ function closeCapstoneOverlay(){
 /* Craft-from-BINGO (#bingoCraftOverlay): the real itemHTML() card, so it
    behaves exactly like the shop. craft() never checks the current station,
    so crafting away from an item's home is safe. */
+let bingoCraftEntry = null;
 function openBingoCraftOverlay(entry){
-  document.getElementById("bingoCraftOverlayBody").innerHTML =
-    `<div class="shop">${itemHTML(entry, ENTRIES.indexOf(entry))}</div>`;
+  bingoCraftEntry = entry;
   openOverlay("bingoCraftOverlay");
+  renderBingoCraftCard();
+}
+// Called from render() too, so a conversion made over this card (Convert
+// sits above it while it's open) updates its tokens and Craft button.
+function renderBingoCraftCard(){
+  if (!bingoCraftEntry || !document.getElementById("bingoCraftOverlay").classList.contains("open")) return;
+  document.getElementById("bingoCraftOverlayBody").innerHTML =
+    `<div class="shop">${itemHTML(bingoCraftEntry, ENTRIES.indexOf(bingoCraftEntry))}</div>`;
 }
 function closeBingoCraftOverlay(){
+  bingoCraftEntry = null;
+  if (document.getElementById("convert").classList.contains("open")) closeOverlay("convert");
   closeOverlay("bingoCraftOverlay");
 }
 // Shared tail for both craft paths (Craft tap, or the suit balloon's async
@@ -11057,6 +11165,7 @@ function closeBingoCraftOverlay(){
 // bounceCardAppear() looks up [data-item-card], or it would find this card
 // and pop it back in.
 function finishBingoCraft(){
+  bingoCraftEntry = null;
   document.getElementById("bingoCraftOverlayBody").innerHTML = "";
   closeBingoCraftOverlay();
   renderJobBoard();
@@ -11857,7 +11966,7 @@ function classicTutSlides(){
     </div>
     <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row">${dayCycleSVG(DAY_PHASES[2]).replace('class="day-svg"', 'class="day-svg" style="width:52px; height:26px"')}<span class="ct-sub" style="margin:0">Scored every trip -- from day 3, a miss at sunset ends the run</span></div>`;
+    <div class="ct-row"><span style="width:34px; height:34px; flex:none">${turnClockSVG(9)}</span><span class="ct-sub" style="margin:0">Scored every trip -- from turn 9, a miss at a checkpoint (every 3rd turn) ends the run</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){
@@ -12210,7 +12319,14 @@ function playConvertAnimation(toSym){
 
 // The icon is set in updateHub() (__CONVERT__, or the current conversion
 // tool's icon), which runs on every render.
-document.getElementById("quickConvertBtn").addEventListener("click", () => hubPanelClick("convert", openConvertScreen));
+document.getElementById("quickConvertBtn").addEventListener("click", () => {
+  if (bingoCraftEntry){
+    document.getElementById("convert").classList.contains("open") ? closeOverlay("convert") : openConvertScreen();
+    updateHub();
+    return;
+  }
+  hubPanelClick("convert", openConvertScreen);
+});
 
 </script>
 <script>
@@ -12312,7 +12428,8 @@ function tutCoachSteps(){
       text: "To-Do List: the items you're tracking." },
     { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },
     { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "Look up any item's recipe here." },
-    { sel: "#hubSettings", pose: 2, anchor: "bottom-right", text: "Adjust rules or go to Main Menu." },
+    { sel: "#hubMarket", pose: 2, anchor: "bottom-right", text: "The Market: BINGO and capstones, from anywhere." },
+    { sel: "#settingsBtn", pose: 2, anchor: "top-right", text: "Settings: adjust rules or go to Main Menu." },
     { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 Go build!" },
   ];
 }
