@@ -162,11 +162,11 @@ function quarkMeterLineHTML(s){
       <span class="qm-total" aria-label="${s.total.toLocaleString()} Quarks">${s.total.toLocaleString()}</span>
     </div>`;
 }
-/* Which visit's breakpoints the meter shows: the current visit's (the one
-   the next Lock-In scores against), and in Classic never earlier than the
-   first check on visit 3. */
+/* Which visit's breakpoints the meter shows: the next checkpoint's (the
+   one the next Lock-In scores against), never earlier than the first check
+   on visit 3. */
 function matCheckRound(){
-  return Math.max(MAT_CHECK_EVERY, state.visits);
+  return Math.max(MAT_CHECK_EVERY, Math.ceil(state.visits / MAT_CHECK_EVERY) * MAT_CHECK_EVERY);
 }
 /* Classic, after the first mat check: the Quark Meter rides along the top
    of every screen (just above #topbar's pills, below every tray/overlay),

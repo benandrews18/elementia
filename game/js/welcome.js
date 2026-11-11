@@ -128,7 +128,7 @@ function classicTutSlides(){
     </div>
     <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(9)}</span><span class="ct-sub" style="margin:0">Scored every trip -- from turn 9, a miss at a checkpoint (every 3rd turn) ends the run</span></div>`;
+    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(9)}</span><span class="ct-sub" style="margin:0">Checked every 3rd turn -- its dice last 3 turns. From turn 9, a miss ends the run</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){

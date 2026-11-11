@@ -139,6 +139,13 @@
     expect(matOccupancy(t1) === 2, `3 tier 1 cards should use 2 slots, used ${matOccupancy(t1)}`);
     expect(matScore(t1).base === t1.reduce((n, c) => n + c.points, 0), "stacked tier 1 cards should each score");
 
+    // The mat is checked only when leaving a checkpoint turn (every 3rd).
+    { const v = state.visits;
+      const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });
+      expect(checks.join() === "3,6,9", `mat checks should be on turns 3, 6, 9 only, got ${checks.join()}`);
+      state.visits = 4; expect(matCheckRound() === 6, "the Quark meter between checks should show the next checkpoint's breakpoints");
+      state.visits = v; }
+
     // Turn 24 completes the run: the end screen offers Keep playing, and in
     // Overtime an empty board (0 Quarks) at any Lock-In asks to end the run.
     const isOpen = id => document.getElementById(id).classList.contains("open");

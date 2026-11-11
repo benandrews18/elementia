@@ -345,7 +345,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
   // rather than a whole separate celebration beat, since it's additive to
   // whatever the dice count already says.
-  document.getElementById("lockInRewardSub").textContent = n ? `🎲 +${n} on your next roll` : "";
+  document.getElementById("lockInRewardSub").textContent = n ? `🎲 +${n} on each roll until the next check (3 turns)` : "";
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
   extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";

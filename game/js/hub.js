@@ -106,8 +106,8 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     // Nothing owned yet: skip the Lock-In doorway (an empty mat would look
     // broken) and travel straight away.
     if (isClassicFirstPick()){ playStartingGift(selectedMapStation); return; }
-    // Classic: no mat check before the first sunset (MAT_CHECK_EVERY); after
-    // that every trip opens the mat, even an empty one.
+    // The mat is only checked when leaving a checkpoint turn (every 3rd,
+    // isMatCheckVisit()); other trips travel straight away.
     if (!isMatCheckVisit()){ goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;

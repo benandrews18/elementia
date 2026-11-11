@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (rules)
+
+- **Display Mat checks every 3rd turn only.** Travelling from turn 3, 6,
+  9, ... opens the board check; other trips go straight to the next
+  station. The bonus dice from a check apply to every roll until the next
+  check (3 turns), and its "?" reward is paid once, at the check. The Quark
+  meter shows the next checkpoint's breakpoints. From turn 9, missing the
+  first breakpoint at a check still ends the run.
+- **Turn clock:** larger, numbered only at the checkpoints (3, 6, ... 24)
+  with tick marks for the turns between.
+
 ## 2026-11-11 (fix)
 
 - **Fix: game froze after a BINGO.** Closing the BINGO reward window by

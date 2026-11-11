@@ -21,17 +21,17 @@ function visitLimitLabel(){ return state && state.runComplete ? `${MAX_VISITS} O
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
 const BREAKPOINT_GATE_VISIT = 9;
-/* Classic days are MAT_CHECK_EVERY visits long (see renderDayCycle()). The
-   first Display Mat check is on leaving visit 3 (the first sunset); after
-   that the mat is checked on every trip. Before the first check each roll
-   is MAT_PRE_CHECK_DICE dice; after it, TAKE plus the latest check's bonus
-   dice (state.matBonusDice, see doRoll()). Game Over is only at stake on a
-   sunset check from BREAKPOINT_GATE_VISIT on (isSunsetVisit()/
-   confirmLockIn()). */
+/* The Display Mat is checked only at checkpoints: on leaving every
+   MAT_CHECK_EVERY-th turn (3, 6, 9, ...; the big numbers on the turn
+   clock). Before the first check each roll is MAT_PRE_CHECK_DICE dice;
+   after it, TAKE plus the latest check's bonus dice (state.matBonusDice,
+   see doRoll()), so a check's dice carry through the next 3 turns. Its "?"
+   reward is paid once, at the check (finishLockIn()). Game Over is at stake
+   at a check from BREAKPOINT_GATE_VISIT on (confirmLockIn()). */
 const MAT_CHECK_EVERY = 3;
 const MAT_PRE_CHECK_DICE = 4;
 function isMatCheckVisit(){
-  return state.visits >= MAT_CHECK_EVERY;
+  return state.visits >= MAT_CHECK_EVERY && state.visits % MAT_CHECK_EVERY === 0;
 }
 function isSunsetVisit(){
   return state.visits > 0 && state.visits % MAT_CHECK_EVERY === 0;
