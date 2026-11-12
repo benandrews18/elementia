@@ -47,7 +47,7 @@ function goMap(){
   // start a new game. Older saves already past it get this on their next
   // return to the map.
   else if (state.visits >= RUN_COMPLETE_VISIT && !state.runComplete && !state.ended){
-    state.runComplete = true; save(); fireConfetti(); showEndGame();
+    state.runComplete = true; grantStars(STARS_RUN); save(); fireConfetti(); showEndGame();
   }
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at the hub's Market button.

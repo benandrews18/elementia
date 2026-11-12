@@ -78,9 +78,13 @@ function matComboChipsHTML(s, revealAll){
   const showStar = revealAll ? s.cols.length > 0 : known.length > 0;
   const star = !showStar ? "" :
     `<button type="button" class="mm-combo col${known.length ? "" : " discovering"}" data-combo-kind="collection" data-combo-name="${COLLECTIONS_CHIP}" title="Named collections on your mat"><span class="mm-cico star">★<span class="mm-ccount">${known.length}</span></span></button>`;
+  // A complete collection the player hasn't discovered yet: a "!" that
+  // says so (not during the Lock-In reveal, which shows it for real).
+  const hidden = !revealAll && s.cols.some(c => !prefs.everUnlockedMatCollections.includes(c.id))
+    ? `<button type="button" class="mm-combo hidden-col" data-hidden-col title="A hidden collection is on your mat"><span class="mm-cico hidden-ic">!</span></button>` : "";
   return s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
-    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star;
+    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star + hidden;
 }
 
 /* Fills #matGrid only, using the matScore() the caller already has. */
@@ -478,6 +482,10 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
+  if (ev.target.closest("[data-hidden-col]")){
+    showMatToast("You have a hidden collection on your mat! Lock in your board to discover it.");
+    return;
+  }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }

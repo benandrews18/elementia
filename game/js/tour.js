@@ -37,6 +37,7 @@ function showWelcomeSlide(){
   tourIdx = 0;
   document.getElementById("tour").classList.add("open", "welcome");
   tourRender();
+  syncCollectionsBtn();
   // No mouse tip here (or on the mode-select screen right after, see
   // openModePicker()) -- Professor Mouse stays absent from both, only
   // appearing once real gameplay starts.

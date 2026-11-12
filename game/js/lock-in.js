@@ -257,7 +257,9 @@ function playLockInSequence(reward){
           chipEl.classList.remove("discovering");
           if (!prefs.everUnlockedMatCollections.includes(beat.colId)){
             prefs.everUnlockedMatCollections.push(beat.colId);
+            if (prefs.collectionClues) delete prefs.collectionClues[beat.colId];
             savePrefs();
+            grantStars(STARS_DISCOVERY);
           }
           const countEl = chipEl.querySelector(".mm-ccount");
           if (countEl) countEl.textContent =

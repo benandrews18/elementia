@@ -8,6 +8,21 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (collection clues)
+
+- **Hidden collection "!":** when the mat holds a complete collection you
+  haven't discovered, a "!" shows in the combo row; tapping it says to
+  lock in to discover it.
+- **Stars:** earned by finishing a run (+5), each new trophy (+2) and each
+  collection discovered by playing (+1). Kept across runs; the end screen
+  shows how many a run earned, and the Main Menu's Collections button shows
+  your total.
+- **Collection clues** (Main Menu > Collections): spend 3 Stars for a clue,
+  or Open all for as many as you can afford. Each comes in a gift box you
+  tap open: a random undiscovered collection's name and one of its items.
+  Collections without a clue come first; once every item of a collection
+  is revealed, it counts as discovered. Clues are listed under Clues.
+
 ## v2026.11.11 (tier changes)
 
 - **Tier 2 now:** Concrete, Glass, Rubber (were tier 1, so they take a

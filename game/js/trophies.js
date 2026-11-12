@@ -50,6 +50,7 @@ function awardTrophies(){
   const at = new Date().toLocaleDateString("en-CA"); // local YYYY-MM-DD
   fresh.forEach(t => { got[t.id] = {at}; });
   lsSet(TROPHY_KEY, JSON.stringify(got));
+  grantStars(fresh.length * STARS_TROPHY);
   return fresh;
 }
 function trophyTileHTML(t, earned){

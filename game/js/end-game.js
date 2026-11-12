@@ -116,7 +116,8 @@ function showEndGame(){
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
   // Trophies are earned when a run completes (awardTrophies()).
-  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies());
+  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies()) +
+    (completing && state.starsEarned ? `<p class="end-stars">⭐ +${state.starsEarned} Stars this run -- open collection clues from the Main Menu</p>` : "");
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
   showSessionEndBackdrop();
   openOverlay("endGame");

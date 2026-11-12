@@ -171,6 +171,30 @@
       expect(h && itemReqsMet(h.entry) && h.roots.length === 1, `hint should be actionable, got ${h && h.name}`);
       prefs.pinnedItems = savedPins; state.items = savedItems; }
 
+    // Collection clues: Stars buy clues; a clue names an undiscovered
+    // collection and one of its items; its last item discovers it.
+    { const savedPrefs = JSON.stringify({stars: prefs.stars, clues: prefs.collectionClues, unl: prefs.everUnlockedMatCollections});
+      prefs.stars = 0; prefs.collectionClues = {}; grantStars(7);
+      expect(prefs.stars === 7, "grantStars should add to prefs.stars");
+      const before = prefs.everUnlockedMatCollections.length;
+      const c = MAT_COLLECTIONS.find(x => !prefs.everUnlockedMatCollections.includes(x.id));
+      let clue = null;
+      for (let i = 0; i < c.items.length; i++){
+        // force the clue onto c: everything else counts as discovered for this check
+        const save = prefs.everUnlockedMatCollections;
+        prefs.everUnlockedMatCollections = MAT_COLLECTIONS.filter(x => x !== c).map(x => x.id);
+        clue = drawCollectionClue();
+        prefs.everUnlockedMatCollections = save.concat(clue.discovered ? [c.id] : []);
+      }
+      expect(clue && clue.c === c && clue.discovered && !prefs.collectionClues[c.id], "revealing a collection's last item should discover it");
+      buyClues(1); closeOverlay("clueOpen");
+      expect(prefs.stars === 4, `one clue should cost ${CLUE_COST} Stars (left ${prefs.stars})`);
+      // the "!" chip for a complete, undiscovered collection on the mat
+      const d = MAT_COLLECTIONS.find(x => !prefs.everUnlockedMatCollections.includes(x.id) && x.items.length <= 4);
+      expect(matComboChipsHTML(matScore(d.items.map(n => MAT_CARD_BY_NAME[n])), false).includes("data-hidden-col"),
+        "a hidden collection on the mat should show a ! chip");
+      const sp = JSON.parse(savedPrefs); prefs.stars = sp.stars; prefs.collectionClues = sp.clues; prefs.everUnlockedMatCollections = sp.unl; savePrefs(); }
+
     // The mat is checked only when leaving a checkpoint turn (every 3rd).
     { const v = state.visits;
       const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });

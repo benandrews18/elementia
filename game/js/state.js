@@ -129,6 +129,7 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
+    starsEarned: 0, // Stars earned this run (grantStars()), shown on the end screen.
     marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
