@@ -187,6 +187,14 @@ function lockInScoreBeats(mat, s){
       pointsDelta: 0, multDelta: g.bonus,
       chipKind: g.kind, chipName: g.name,
     }));
+  // Capstone signatures: whatever the rules add beyond the beats above, as
+  // one points beat and one multiplier beat, each bouncing its capstone.
+  const sigCards = names => mat.filter(c => names.includes(c.name)).map(c => c.name);
+  const ptsSoFar = beats.reduce((n, b) => n + b.pointsDelta, 0);
+  const ptsSig = (s.base + s.colBonus) - ptsSoFar;
+  if (ptsSig) beats.push({ cardNames: sigCards(["Robot", "Homestead", "Maglev Train", "Space Station"]), pointsDelta: ptsSig, multDelta: 0 });
+  const multSig = s.mult - 1 - beats.reduce((n, b) => n + b.multDelta, 0);
+  if (multSig) beats.push({ cardNames: sigCards(["Coral Reef", "Ecosystem"]), pointsDelta: 0, multDelta: multSig });
   return beats;
 }
 // Write the headline numbers directly -- a renderMatTop() mid-sequence would
@@ -290,6 +298,8 @@ function playLockInSequence(reward){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
+  // Old Growth: board checks in a row with Ecosystem on the mat.
+  state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;

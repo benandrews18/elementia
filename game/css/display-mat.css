@@ -10,7 +10,9 @@
    .mat-zone-page (see its own comment) so the two never drift apart. */
 /* 100cqw minus the page's padding+border (2 x 7px) and the grid's three
    5px gaps, over 4 columns, at the card's 1:1.4 shape. */
-#drawerTop{container-type:inline-size; padding:10px 6px 0; --mat-row-h:calc(((100cqw - 29px) / 4) * 1.4)}
+/* --mat-cols is 5 with Metropolis (renderMatTop()); rows stay card-shaped. */
+#drawerTop{container-type:inline-size; padding:10px 6px 0; --mat-cols:4;
+  --mat-row-h:calc(((100cqw - 14px - (var(--mat-cols) - 1) * 5px) / var(--mat-cols)) * 1.4)}
 /* The score card: Quark Meter above the combo row (see renderMatTop()).
    Visible on both the Display Mat and Elements tabs. */
 .mat-score-card{display:flex; flex-direction:column; gap:4px; margin-bottom:6px}
@@ -127,6 +129,10 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   color:var(--gold); min-width:30px; background:none; border:none; cursor:pointer;
 }
 .mm-combo:active{transform:scale(.92)}
+/* Capstone signature chip: the capstone's icon and its live effect. */
+.mm-cico.sig-ic{background:#f2e6cc; border:2px solid var(--gold)}
+.mm-combo.sig b{font-size:13px}
+.mm-combo.sig.off{opacity:.45}
 .mm-cico.hidden-ic{background:var(--bad); color:#fff; font-size:18px; font-weight:900; border:2px solid #fff;
   animation:hiddenColPulse 1.6s ease-in-out infinite}
 @keyframes hiddenColPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,103,76,.6)} 50%{box-shadow:0 0 0 6px rgba(240,103,76,0)}}
@@ -179,7 +185,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    (no definite height). .mat-zone-page uses the same variable so switching
    tabs never resizes the tray. */
 .mat-grid{
-  display:grid; grid-template-columns:repeat(4, 1fr);
+  display:grid; grid-template-columns:repeat(var(--mat-cols, 4), 1fr);
   grid-auto-rows:var(--mat-row-h);
   gap:5px;
 }
@@ -475,6 +481,6 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 /* Above #cardPop (70) so a mat message is never hidden behind it. */
 .mat-toast{
   position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:75;
-  background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
-  box-shadow:0 4px 14px rgba(0,0,0,.4); white-space:nowrap;
+  background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.4); width:max-content; max-width:calc(100vw - 48px); text-align:center;
 }

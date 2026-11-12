@@ -39,6 +39,13 @@ const MAT_CARD_BY_NAME = {};
 MAT_CARDS.forEach(c => { MAT_CARD_BY_NAME[c.name] = c; });
 
 const matIsCapstone = c => c.tier === "CAPSTONE";
+const matHas = (cards, name) => cards.some(c => c.name === name);
+/* The mat's shape for these cards: Metropolis (Expansion) adds a column
+   (10 slots); Maglev Train (Freight) stacks tier 1 three to a slot. */
+function matLayout(cards){
+  const cols = matHas(cards, "Metropolis") ? MAT_SLOTS_COLS + 1 : MAT_SLOTS_COLS;
+  return { cols, slots: cols * MAT_SLOTS_ROWS, perSlot: matHas(cards, "Maglev Train") ? 3 : MAT_TIER1_PER_SLOT };
+}
 const matSlotsOf = c => matIsCapstone(c) ? MAT_CAPSTONE_SLOTS : 1;
 const matComboTier = k => {
   let b = 0;
@@ -55,10 +62,10 @@ const matIsTier1 = c => c.tier === "MATERIAL";
    [{card, idx}], w:1} for tier 1 squares. A tier 1 card joins the first
    stack with room, else starts a new one where it sits in mat order. */
 function matUnits(cards){
-  const units = [];
+  const units = [], perSlot = matLayout(cards).perSlot;
   cards.forEach((c, i) => {
     if (!matIsTier1(c)){ units.push({card:c, idx:i, w:matSlotsOf(c)}); return; }
-    const open = units.find(u => u.stack && u.stack.length < MAT_TIER1_PER_SLOT);
+    const open = units.find(u => u.stack && u.stack.length < perSlot);
     if (open) open.stack.push({card:c, idx:i});
     else units.push({stack:[{card:c, idx:i}], w:1});
   });
@@ -68,17 +75,17 @@ function matUnits(cards){
    lone last column pads out -- and the pad still costs a slot. Occupancy
    comes from the packing, not a sum of widths. */
 function matPackCells(cards){
-  const cells = [];
+  const cells = [], cols = matLayout(cards).cols;
   let col = 0;
   matUnits(cards).forEach(u => {
-    if (col + u.w > MAT_SLOTS_COLS){ while (col < MAT_SLOTS_COLS){ cells.push({w:1}); col++; } col = 0; }
+    if (col + u.w > cols){ while (col < cols){ cells.push({w:1}); col++; } col = 0; }
     cells.push(u);
-    col = (col + u.w) % MAT_SLOTS_COLS;
+    col = (col + u.w) % cols;
   });
   return cells;
 }
 const matOccupancy = cards => matPackCells(cards).reduce((n, c) => n + c.w, 0);
-const matFits = cards => matOccupancy(cards) <= MAT_SLOTS_TOTAL;
+const matFits = cards => matOccupancy(cards) <= matLayout(cards).slots;
 
 /* A card's DIRECT recipe items only; cards "share a component" when the same
    name appears on both. */
@@ -223,7 +230,17 @@ const MAT_COLLECTIONS = buildMatCollections();
 const matCompletedIn = mat => MAT_COLLECTIONS.filter(col => col.done(mat));
 
 function matScore(mat){
-  const base = mat.reduce((n, c) => n + c.points * (matIsComplete(c, mat) ? 2 : 1), 0);
+  const has = n => matHas(mat, n);
+  const dest = has("Space Station") ? matDestination() : null;
+  // A card's points with the capstone point rules: Freight +2 (tier 1),
+  // Upgrade +5, complete recipe x2 (Home-Grown x3), Orbit x2.
+  const cardPts = c => {
+    let p = c.points + (has("Maglev Train") && matIsTier1(c) ? 2 : 0) + (has("Robot") ? 5 : 0);
+    if (matIsComplete(c, mat)) p *= has("Homestead") ? 3 : 2;
+    if (dest && c.stations.includes(dest)) p *= 2;
+    return p;
+  };
+  const base = mat.reduce((n, c) => n + cardPts(c), 0);
   const completeNames = new Set(mat.filter(c => matIsComplete(c, mat)).map(c => c.name));
   const g = matGroupsOf(mat);
   const combos = {
@@ -235,8 +252,25 @@ function matScore(mat){
     .reduce((n, grp) => n + grp.bonus, 0);
   const cols = matCompletedIn(mat);
   const colBonus = cols.reduce((n, c) => n + c.bonus, 0);
-  const mult = 1 + comboBonus;
-  return { base, combos, completeNames, cols, colBonus, mult, total: (base + colBonus) * mult };
+  // Signature multipliers: Biodiversity (stations on the mat) and Old
+  // Growth (board checks in a row, counting this one).
+  const stationsOn = new Set(mat.flatMap(c => c.stations)).size;
+  const coralMult = has("Coral Reef") ? stationsOn : 0;
+  const ecoMult = has("Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
+  const mult = 1 + comboBonus + coralMult + ecoMult;
+  const layered = has("Fruit Cake") && Object.keys(ELEMENT_SUIT_LABEL).every(s => mat.some(c => c.pips.includes(s)));
+  // What each capstone on the mat is doing right now (combo-row chips).
+  const sigs = [];
+  if (has("Coral Reef")) sigs.push({ name: "Coral Reef", label: `+${coralMult}`, on: true });
+  if (has("Robot")) sigs.push({ name: "Robot", label: `+${5 * mat.length}`, on: true });
+  if (has("Homestead")) sigs.push({ name: "Homestead", label: "×3", on: completeNames.size > 0 });
+  if (has("Maglev Train")) sigs.push({ name: "Maglev Train", label: `+${2 * mat.filter(matIsTier1).length}`, on: mat.some(matIsTier1) });
+  if (has("Ecosystem")) sigs.push({ name: "Ecosystem", label: `+${ecoMult}`, on: true });
+  if (has("Fruit Cake")) sigs.push({ name: "Fruit Cake", label: "×2", on: layered });
+  if (has("Metropolis")) sigs.push({ name: "Metropolis", label: "+2", on: true });
+  if (has("Space Station")) sigs.push({ name: "Space Station", label: "×2", on: !!dest && mat.some(c => c.stations.includes(dest)) });
+  const pre = (base + colBonus) * mult;
+  return { base, combos, completeNames, cols, colBonus, mult, sigs, layered, total: layered ? pre * 2 : pre };
 }
 
 /* BINGO card (Classic's Marketplace tray, see bingoCardHTML()). Eligible
@@ -281,10 +315,25 @@ function bingoEligibleItems(){
 function bingoCapstoneChoices(){
   return bingoEligibleItems().filter(n => ITEM_TIER[n] === "CAPSTONE");
 }
-/* Each capstone's Display Mat rule, as the one line shown on its
-   (landscape) card. Empty until the signature rules are built -- the card
-   hides the line when there's no text. */
-const CAPSTONE_SIGNATURES = {};
+/* Each capstone's signature rule while it's on the mat (two capstones:
+   both apply). Scored in matScore(); the shape rules (Freight, Expansion)
+   in matLayout(). The line is shown on its landscape card. */
+const CAPSTONE_SIGNATURES = {
+  "Coral Reef":    "Biodiversity: +1 multiplier for each different station on your mat.",
+  "Robot":         "Upgrade: every card on your mat scores +5.",
+  "Homestead":     "Home-Grown: cards with their whole recipe on your mat score ×3 instead of ×2.",
+  "Maglev Train":  "Freight: tier 1 cards stack 3 to a slot and score +2 each.",
+  "Ecosystem":     "Old Growth: +1 multiplier for each board check in a row it's been on your mat.",
+  "Fruit Cake":    "Four-Layer Cake: all 4 suits on your mat doubles your Quarks.",
+  "Metropolis":    "Expansion: your mat has 2 extra slots.",
+  "Space Station": "Orbit: cards from the station you're travelling to score ×2.",
+};
+/* Orbit's station: where the Lock-In is travelling to, or the station
+   picked on the map (a preview); none otherwise. */
+function matDestination(){
+  if (typeof travelPromptFor !== "undefined" && travelPromptFor) return travelPromptFor;
+  return screen === "map" && selectedMapStation && selectedMapStation !== state.lastStation ? selectedMapStation : null;
+}
 /* Roman-numeral tier: MATERIAL I, COMPONENT II, CREATION III, CAPSTONE IV. */
 const TIER_NUMERAL = {MATERIAL:"I", COMPONENT:"II", CREATION:"III", CAPSTONE:"IV"};
 function tierBadgeHTML(name){

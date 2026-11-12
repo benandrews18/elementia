@@ -195,6 +195,38 @@
         "a hidden collection on the mat should show a ! chip");
       const sp = JSON.parse(savedPrefs); prefs.stars = sp.stars; prefs.collectionClues = sp.clues; prefs.everUnlockedMatCollections = sp.unl; savePrefs(); }
 
+    // Capstone signatures (each only while its capstone is on the mat).
+    { const C = n => MAT_CARD_BY_NAME[n], savedStreak = state.ecoStreak, savedTP = travelPromptFor;
+      const plain = MAT_CARDS.filter(c => !matIsCapstone(c) && !matIsTier1(c));
+      const t1 = MAT_CARDS.filter(matIsTier1);
+      const two = plain.filter(c => !matIsComplete(c, [c])).slice(0, 2);
+      const sc = (cards) => matScore(cards);
+      // Robot: +5 per card on the mat (itself included).
+      { const a = sc([C("Robot"), ...two]), b0 = [C("Robot"), ...two].reduce((n, c) => n + c.points, 0);
+        expect(a.base === b0 + 15, `Robot should add +5 per card (base ${a.base}, plain ${b0})`); }
+      // Metropolis: 10 slots, 5 columns.
+      { const L = matLayout([C("Metropolis")]); expect(L.slots === 10 && L.cols === 5, "Metropolis should give 10 slots");
+        expect(matFits([C("Metropolis"), ...plain.slice(0, 8)]) && !matFits([C("Metropolis"), ...plain.slice(0, 9)]), "Metropolis mat should hold its 2 + 8 more"); }
+      // Maglev Train: tier 1 stacks 3 to a slot, +2 each.
+      { expect(matOccupancy([C("Maglev Train"), ...t1.slice(0, 3)]) === 3, "Maglev Train: 3 tier 1 cards should share one slot");
+        const base = sc([C("Maglev Train"), t1[0]]).base; expect(base === C("Maglev Train").points + t1[0].points + 2, "Maglev Train: tier 1 +2"); }
+      // Ecosystem: +1 multiplier per check in a row, counting this one.
+      { state.ecoStreak = 2; expect(sc([C("Ecosystem")]).mult - sc([C("Ecosystem")]).sigs.length * 0 >= 4, "Ecosystem streak 2 should add +3 multiplier");
+        state.ecoStreak = savedStreak; }
+      // Fruit Cake: all 4 suits doubles the total.
+      { const suits = Object.keys(ELEMENT_SUIT_LABEL), pick = suits.map(su => plain.find(c => c.pips.includes(su)));
+        const m = [C("Fruit Cake"), ...pick]; const s1 = sc(m);
+        expect(s1.layered && s1.total === (s1.base + s1.colBonus) * s1.mult * 2, "Fruit Cake with 4 suits should double the Quarks"); }
+      // Coral Reef: +1 multiplier per different station.
+      { const m = [C("Coral Reef"), ...two]; const k = new Set(m.flatMap(c => c.stations)).size;
+        const plainMult = matScore(two).mult; expect(sc(m).sigs.find(g => g.name === "Coral Reef").label === `+${k}`, "Coral Reef should count stations"); }
+      // Space Station: cards from the destination score x2.
+      { const card = plain.find(c => c.stations.length === 1 && !matIsComplete(c, [c]));
+        travelPromptFor = card.station; const a = sc([C("Space Station"), card]).base;
+        travelPromptFor = null; const b = sc([C("Space Station"), card]).base;
+        expect(a - b === card.points, `Space Station should double cards from the destination (${a} vs ${b})`); }
+      travelPromptFor = savedTP; }
+
     // The mat is checked only when leaving a checkpoint turn (every 3rd).
     { const v = state.visits;
       const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });

@@ -82,7 +82,10 @@ function matComboChipsHTML(s, revealAll){
   // says so (not during the Lock-In reveal, which shows it for real).
   const hidden = !revealAll && s.cols.some(c => !prefs.everUnlockedMatCollections.includes(c.id))
     ? `<button type="button" class="mm-combo hidden-col" data-hidden-col title="A hidden collection is on your mat"><span class="mm-cico hidden-ic">!</span></button>` : "";
-  return s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
+  // Each capstone's signature, with what it's adding right now (dim when
+  // its condition isn't met); tap for the rule.
+  const sigs = (s.sigs || []).map(g => `<button type="button" class="mm-combo sig${g.on ? "" : " off"}" data-sig="${esc(g.name)}" title="${esc(CAPSTONE_SIGNATURES[g.name])}"><span class="mm-cico sig-ic">${em(ITEM_EMOJI[g.name])}</span><b>${esc(g.label)}</b></button>`).join("");
+  return sigs + s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
     s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star + hidden;
 }
@@ -92,16 +95,17 @@ function matComboChipsHTML(s, revealAll){
    opens its inspection view (#drawerTop's click listener). */
 function renderMatGridCells(s){
   const mat = matOnMat();
+  const L = matLayout(mat);
   const cells = matPackCells(mat);
   const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
   const html = cells.map(cell => cell.stack
     // Tier 1 squares, stacked; an open half shows as a small dashed square.
     ? `<div class="mm-slot filled stack">${cell.stack.map(t => card(t.card, "mini")).join("")}${
-        cell.stack.length < MAT_TIER1_PER_SLOT ? `<span class="mm-mini-empty"></span>` : ""}</div>`
+        cell.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
     : cell.card
     ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${card(cell.card)}</div>`
     : `<div class="mm-slot empty"></div>`);
-  for (let n = cells.reduce((a, c) => a + c.w, 0); n < MAT_SLOTS_TOTAL; n++){
+  for (let n = cells.reduce((a, c) => a + c.w, 0); n < L.slots; n++){
     html.push(`<div class="mm-slot empty"></div>`);
   }
   document.getElementById("matGrid").innerHTML = html.join("");
@@ -246,6 +250,7 @@ function renderMatTop(){
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
+  document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   syncMatFloatBtns();
@@ -422,11 +427,13 @@ function syncMatFilterBar(){
    as a row of icons, then how full it is in half-slots -- a tier 1 card
    takes 1, a normal card 2, a capstone 4, of 16. Tap to show the mat. */
 function matMiniRowHTML(mat){
-  const used = mat.reduce((n, c) => n + (matIsTier1(c) ? 1 : matSlotsOf(c) * 2), 0);
+  // In tier 1 units: a slot holds perSlot of them (Freight: 3).
+  const L = matLayout(mat);
+  const used = mat.reduce((n, c) => n + (matIsTier1(c) ? 1 : matSlotsOf(c) * L.perSlot), 0);
   const icons = mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("");
   return `<button type="button" class="mat-mini-row" id="matMiniRow" title="Show the Display Mat">
     <span class="mmr-icons">${icons || '<span class="mmr-empty">Nothing on the mat yet</span>'}</span>
-    <span class="mmr-room">${used}/${MAT_SLOTS_TOTAL * 2}</span></button>`;
+    <span class="mmr-room">${used}/${L.slots * L.perSlot}</span></button>`;
 }
 function renderClassicDrawer(){
   document.getElementById("matFilters").hidden = false;
@@ -440,7 +447,12 @@ function renderClassicDrawer(){
 
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
-  if (i !== -1){ state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return; }
+  if (i !== -1){
+    // Taking off Metropolis/Maglev Train shrinks the mat: only if the rest fit.
+    const rest = state.mat.filter(n => n !== name).map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+    if (!matFits(rest)){ showMatToast(`Make room first -- without ${name} the rest won't fit.`); return; }
+    state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return;
+  }
   const card = MAT_CARD_BY_NAME[name];
   if (!card || !owns(name)) return;
   if (!matFits(matOnMat().concat([card]))){
@@ -471,6 +483,8 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
+  const sigChip = ev.target.closest("[data-sig]");
+  if (sigChip){ showMatToast(CAPSTONE_SIGNATURES[sigChip.dataset.sig]); return; }
   if (ev.target.closest("[data-hidden-col]")){
     showMatToast("You have a hidden collection on your mat! Lock in your board to discover it.");
     return;

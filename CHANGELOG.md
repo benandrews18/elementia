@@ -8,6 +8,32 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (capstone signatures)
+
+Each capstone now has a signature rule while it's on the Display Mat (two
+capstones: both apply). The rule is on its landscape card, and a chip in
+the combo row shows what it's adding right now (tap it for the rule).
+
+- **Coral Reef -- Biodiversity:** +1 multiplier for each different station
+  on the mat.
+- **Robot -- Upgrade:** every card on the mat scores +5.
+- **Homestead -- Home-Grown:** cards with their whole recipe on the mat
+  score x3 instead of x2.
+- **Maglev Train -- Freight:** tier 1 cards stack 3 to a slot and score +2.
+- **Ecosystem -- Old Growth:** +1 multiplier for each board check in a row
+  it's been on the mat (counting this one).
+- **Fruit Cake -- Four-Layer Cake:** all 4 suits on the mat doubles the
+  Quarks.
+- **Metropolis -- Expansion:** the mat has 2 extra slots (5 columns).
+  It can't come off while the rest wouldn't fit without it.
+- **Space Station -- Orbit:** cards from the station you're travelling to
+  score x2.
+
+First-pass numbers (random mats vs 8 random cards): Coral Reef 2.2x,
+Metropolis 2.1x, Fruit Cake 1.9x, Robot 1.5x, Ecosystem 1.3x (1.8x by its
+4th check in a row), Space Station 1.2x, Maglev 1.2x, Homestead 1.1x --
+the situational ones score more on mats built around them. Expect tuning.
+
 ## 2026-11-11 (item cards)
 
 - **Capstone cards are landscape** in the card view: the same card, just a
