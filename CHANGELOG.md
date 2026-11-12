@@ -14,6 +14,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   opened from the inventory still lists your clues but has no shop.
 - **Saved Layouts and Collections always fit the screen** above the hub;
   their lists scroll inside the window.
+- **Board check reward window:** the title now says it all ("+3 dice on
+  your rolls for the next 3 turns") above the dice, with no extra text. A
+  "?" earned at the top breakpoint shows as "+1 Unknown Element"; tap its
+  icon for what it does.
 
 ## 2026-11-11 (capstone signatures)
 

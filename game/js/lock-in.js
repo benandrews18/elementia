@@ -351,19 +351,21 @@ function fadeThroughBlack(midpoint){
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
+  // The title says it all: how many dice, for how long.
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
-    : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
+    : `+${n} ${n === 1 ? "die" : "dice"} on your rolls for the next 3 turns`;
   const reduced = lowMotion();
   document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
     `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
-  // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
-  // rather than a whole separate celebration beat, since it's additive to
-  // whatever the dice count already says.
-  document.getElementById("lockInRewardSub").textContent = n ? `🎲 +${n} on each roll until the next check (3 turns)` : "";
+  // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
+  // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
-  extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";
+  extra.innerHTML = gotEmptyElement ? `
+    <div class="lre-line"><span>+1 Unknown Element</span>
+      <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
+    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -374,9 +376,16 @@ function dismissLockInRewardModal(){
   if (onDone) onDone();
 }
 document.getElementById("lockInRewardNice").addEventListener("click", dismissLockInRewardModal);
-// A backdrop tap dismisses like Nice, so the pending travel still runs.
+// A backdrop tap dismisses like Nice, so the pending travel still runs. The
+// "?" square toggles its hint.
 document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
-  if (ev.target === ev.currentTarget) dismissLockInRewardModal();
+  if (ev.target === ev.currentTarget){ dismissLockInRewardModal(); return; }
+  const q = ev.target.closest("#lockInRewardQ");
+  if (q){
+    const hint = document.getElementById("lockInRewardHint");
+    hint.hidden = !hint.hidden;
+    q.setAttribute("aria-expanded", String(!hint.hidden));
+  }
 });
 
 /* A board check opening (hub's Travel on a checkpoint turn): a banner
