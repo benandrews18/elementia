@@ -8,6 +8,22 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (inventory and Lock-In)
+
+- **Inventory, both views:** tapping an item selects it -- in the list it
+  opens in place, in card view the card is outlined and its shop row docks
+  under the mat. The open row shows its station(s) and points top-right and
+  nothing is faded. Add (green) / Remove (red) sit above Home.
+- **List rows** end in a points bubble.
+- **Show/hide is back on the gold line** (a little smaller; the corner
+  button is gone). Collapsed, the mat becomes a minimized board: the Quark
+  meter, the combo row, and the mat's cards as icons with how full it is
+  (x/16 -- a tier 1 card takes 1, a normal card 2, a capstone 4).
+- **More room at the bottom** of the item list, so the last items scroll
+  clear of the buttons.
+- **Lock-In scoring is smoother** and nothing can be tapped until the
+  reward appears.
+
 ## 2026-11-11 (Marketplace test)
 
 - **New Marketplace layout (default): 3 rows of 4.** Each row is three
