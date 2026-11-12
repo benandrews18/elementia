@@ -367,16 +367,20 @@ document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
   if (ev.target === ev.currentTarget) dismissLockInRewardModal();
 });
 
-// One-time warning the first time the mat is viewed on
-// BREAKPOINT_GATE_VISIT: from now on missing the first breakpoint at sunset
-// ends the run.
-function maybeShowBreakpointGateNotice(){
-  if (state.visits !== BREAKPOINT_GATE_VISIT || state.sawBreakpointGateNotice) return;
-  state.sawBreakpointGateNotice = true;
-  save();
-  queueEventToast("warn", "⚠️", "Breakpoints now matter",
-    "From now on, missing your first Quark breakpoint at a checkpoint (every 3rd turn, the glowing clock) ends your run.");
+/* A board check opening (hub's Travel on a checkpoint turn): a banner
+   drops in with the turn and bounces away; the very first check ever also
+   opens the Display Mat rules (prefs.sawMatCheckTutorial). */
+function announceMatCheck(){
+  queueEventToast("check", "⚛️", `Turn ${state.visits} / ${RUN_COMPLETE_VISIT}`, "Display Mat Score");
+  if (!prefs.sawMatCheckTutorial){
+    prefs.sawMatCheckTutorial = true; savePrefs();
+    openMatRules();
+  }
 }
+document.getElementById("matCheckTutorial").innerHTML = `
+  <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
+  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
+  <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
 document.getElementById("lockInBannerSub").innerHTML =

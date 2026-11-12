@@ -71,10 +71,18 @@
      corner (see renderMatTop()). -->
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
   <div class="sheetbox mat-rules-box">
-    <h2 id="matRulesTitle">Display Mat</h2>
-    <p class="libt-sub" id="lockInBannerSub"></p>
-    <div id="lockInQuarkTutorial"></div>
-    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesOk">Got it</button></div>
+    <!-- Page 1: the check itself; page 2: Quark combos (openMatRules()). -->
+    <div class="mat-rules-page" id="matRulesPage1">
+      <h2 id="matRulesTitle">⚛️ Display Mat Score</h2>
+      <div id="matCheckTutorial"></div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesNext">Next</button></div>
+    </div>
+    <div class="mat-rules-page" id="matRulesPage2" hidden>
+      <h2>Quark Combos</h2>
+      <p class="libt-sub" id="lockInBannerSub"></p>
+      <div id="lockInQuarkTutorial"></div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesOk">Got it</button></div>
+    </div>
   </div>
 </div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">

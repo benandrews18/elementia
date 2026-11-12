@@ -150,7 +150,7 @@ function freshState(){
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.
-    sawBreakpointGateNotice: false, // One-shot: whether the turn-10 "breakpoints now matter"
+    sawBreakpointGateNotice: false, // Unused (the warning banner is gone; old saves carry it). Was: the turn-9 "breakpoints now matter"
                        // notice has fired yet this run (see BREAKPOINT_GATE_VISIT).
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).

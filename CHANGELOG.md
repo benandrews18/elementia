@@ -8,6 +8,18 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (board check)
+
+- **Board check banner:** when the Display Mat is checked, a banner drops
+  in with the turn ("Turn 6 / 24 -- Display Mat Score") and bounces away.
+- **First check explained:** the first check ever opens a two-page window:
+  how the check works (every 3 turns; your Quark Score earns bonus dice for
+  the next 3 stations, plus a "?" at the top breakpoint; from turn 9 a
+  score below the first breakpoint ends the run), then Next for Quark
+  combos. The mat's "?" button opens the same two pages.
+- **Removed** the "Breakpoints now matter" warning banner; the rule is in
+  that window instead.
+
 ## 2026-11-11 (Market goal row, better hint)
 
 - **No capstones in the Market draw.** The capstone you pick at the start

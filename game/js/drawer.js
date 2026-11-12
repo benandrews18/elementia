@@ -17,7 +17,6 @@ const openDrawer = (opts = {}) => {
   drawer.setAttribute("aria-hidden", "false");
   syncMatFloatBtns();
   updateHub();
-  maybeShowBreakpointGateNotice();
 };
 const closeDrawer = () => {
   setMatCollapsed(false);

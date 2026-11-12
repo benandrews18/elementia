@@ -112,9 +112,10 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      // Revised 2026-11-02: straight to the full inventory -- the mat's
-      // rules live behind its own "?" button now (see #matRulesOverlay).
+      // Straight to the full inventory; a banner names the check, and the
+      // first check ever explains it (announceMatCheck()).
       openDrawer();
+      announceMatCheck();
       return;
     }
     goStation(selectedMapStation);

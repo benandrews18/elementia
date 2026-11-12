@@ -113,7 +113,19 @@ let matTrayExpanded = false;
 // The latest matScore(), cached for the Lock-In sequence and grid refreshes.
 let matLastScore = null;
 
+/* The Display Mat rules, two pages: how the check works, then Quark combos.
+   Opened by the mat's "?" and automatically at the first check ever. */
+function openMatRules(){
+  document.getElementById("matRulesPage1").hidden = false;
+  document.getElementById("matRulesPage2").hidden = true;
+  openOverlay("matRulesOverlay");
+}
 document.getElementById("matRulesOverlay").addEventListener("click", ev => {
+  if (ev.target.closest("#matRulesNext")){
+    document.getElementById("matRulesPage1").hidden = true;
+    document.getElementById("matRulesPage2").hidden = false;
+    return;
+  }
   if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")) closeOverlay("matRulesOverlay");
 });
 
@@ -475,7 +487,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
-  if (ev.target.closest("#matRulesBtn")){ openOverlay("matRulesOverlay"); return; }
+  if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
     openComboInfo(comboChip.dataset.comboKind, comboChip.dataset.comboName);

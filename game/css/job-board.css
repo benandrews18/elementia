@@ -235,6 +235,8 @@
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
 #eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
 #eventToast.et-market{background:var(--ok-soft); border-bottom-color:var(--ok)}
+#eventToast.et-check{background:var(--gold-soft); border-bottom-color:var(--gold)}
+#eventToast.et-check .ct-title{color:var(--gold)}
 #eventToast.et-market .ct-title{color:var(--ok)}
 #eventToast .ct-icon :is(img,svg){width:30px; height:30px}
 /* This kind's text is a sentence, so it uses body sizing, not the bold

@@ -61,6 +61,9 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
 /* Above the Marketplace tray (69) too. */
 #emptyElTip{z-index:76; align-items:center}
+.mat-rules-page[hidden]{display:none}
+.mct-line{margin:8px 0; line-height:1.45}
+.mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
 .empty-el-tip{max-width:360px; text-align:center}
 .empty-el-tip p{margin:8px 0}
 .eet-icon{display:flex; justify-content:center; margin-bottom:6px}
