@@ -1851,6 +1851,46 @@ body[data-screen="market"] #trackedPill{display:none}
 }
 .collection-card.owns-all{border-color:var(--ok-line)}
 .collection-row .cr-icon.missing{opacity:.35; filter:grayscale(1)}
+.cr-unknown{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px;
+  border:2px dashed var(--line); color:var(--mute); font-weight:900}
+.coll-stars{margin-left:6px; color:var(--gold); font-weight:900}
+.end-stars{margin:8px 0 0; font-weight:800; color:var(--gold); text-align:center; font-size:13px}
+/* Clue shop at the top of Collections. */
+.clue-shop{padding:12px; border-radius:14px; border:2px solid var(--gold); background:var(--gold-soft)}
+.clue-shop-top{display:flex; align-items:center; gap:10px; margin-bottom:8px}
+.clue-stars{font-size:20px; font-weight:900; color:var(--gold)}
+.clue-shop-title{font-weight:900; font-size:15px}
+.clue-shop-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.clue-shop-btns .bigbtn{width:100%; padding-left:6px; padding-right:6px; font-size:14px}
+.clue-how{font-size:11.5px; color:var(--ink2); margin:8px 0 0}
+/* Gift box opening, card-pack style. */
+#clueOpen{z-index:80; align-items:center}
+.clue-open-box{max-width:340px; text-align:center; position:relative; overflow:hidden}
+.clue-count{font-size:12px; font-weight:800; letter-spacing:.5px; color:var(--mute); margin:0}
+.clue-box{font-size:110px; line-height:1; background:none; border:none; cursor:pointer; padding:18px;
+  animation:clueWobble 1.4s ease-in-out infinite; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+.clue-box.opening{animation:clueShake .65s cubic-bezier(.36,.07,.19,.97) forwards}
+.clue-tap{font-weight:800; color:var(--gold); margin:0}
+@keyframes clueWobble{0%,100%{transform:rotate(0) scale(1)} 20%{transform:rotate(-6deg) scale(1.04)} 40%{transform:rotate(5deg) scale(1.04)} 60%{transform:rotate(0) scale(1)}}
+@keyframes clueShake{0%{transform:scale(1)} 15%{transform:rotate(-12deg) scale(1.1)} 30%{transform:rotate(12deg) scale(1.15)} 45%{transform:rotate(-14deg) scale(1.2)} 60%{transform:rotate(14deg) scale(1.25)} 80%{transform:scale(1.5); opacity:1} 100%{transform:scale(2.2); opacity:0}}
+.clue-burst{position:absolute; inset:-40%; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,226,140,.9) 0%, rgba(255,226,140,0) 45%), repeating-conic-gradient(rgba(255,214,102,.35) 0 10deg, transparent 10deg 20deg);
+  animation:clueBurst .9s ease-out forwards}
+@keyframes clueBurst{0%{opacity:1; transform:scale(.2) rotate(0)} 100%{opacity:0; transform:scale(1.4) rotate(40deg)}}
+.clue-card{position:relative; margin:6px 0 14px; padding:16px 12px; border-radius:16px; background:#f2e6cc; color:#181614;
+  border:3px solid var(--gold); box-shadow:0 8px 20px rgba(0,0,0,.4); animation:clueFlip .55s cubic-bezier(.3,1.3,.4,1)}
+.clue-card.found{border-color:var(--ok-bright); background:#e3f0dc}
+@keyframes clueFlip{0%{transform:perspective(600px) rotateY(90deg) scale(.7); opacity:0} 100%{transform:none; opacity:1}}
+.clue-kicker{font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:#8a5a12}
+.clue-card.found .clue-kicker{color:#1e7a43}
+.clue-name{font-size:22px; font-weight:900; margin:2px 0 10px}
+.clue-icons{display:flex; justify-content:center; gap:8px; flex-wrap:wrap}
+.clue-ic{width:46px; height:46px; display:flex; align-items:center; justify-content:center; font-size:34px; border-radius:12px; background:#fff8e6; border:2px solid #c3a06a}
+.clue-ic :is(img,svg){width:34px; height:34px}
+.clue-ic.new{border-color:var(--gold); box-shadow:0 0 0 3px rgba(226,178,90,.6)}
+.clue-ic.unknown{font-size:22px; font-weight:900; color:#a08a66; border-style:dashed; background:none}
+.clue-new{font-size:12.5px; font-weight:700; margin-top:10px; color:#5b4a33}
+@media (prefers-reduced-motion:reduce){.clue-box, .clue-box.opening, .clue-burst, .clue-card{animation:none}}
 .cr-toggle{flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:14px;
   font-size:10.5px; font-weight:800; color:var(--ink2); cursor:pointer}
 .cr-toggle:has(input:disabled){opacity:.45; cursor:not-allowed}
@@ -3123,6 +3163,10 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   color:var(--gold); min-width:30px; background:none; border:none; cursor:pointer;
 }
 .mm-combo:active{transform:scale(.92)}
+.mm-cico.hidden-ic{background:var(--bad); color:#fff; font-size:18px; font-weight:900; border:2px solid #fff;
+  animation:hiddenColPulse 1.6s ease-in-out infinite}
+@keyframes hiddenColPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,103,76,.6)} 50%{box-shadow:0 0 0 6px rgba(240,103,76,0)}}
+@media (prefers-reduced-motion:reduce){.mm-cico.hidden-ic{animation:none}}
 /* Combo count, riding the icon's own top-right corner (see
    matComboChipHTML()). */
 .mm-ccount{
@@ -4057,6 +4101,11 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
     <div id="collectionsList"></div>
     <div class="btnrow"><button type="button" class="bigbtn sec" id="collectionsClose">Close</button></div>
   </div>
+</div>
+
+<!-- Collection clue gift boxes (openClueBoxes()), over Collections. -->
+<div class="overlay" id="clueOpen" data-no-dismiss role="dialog" aria-modal="true" aria-label="Open your clues">
+  <div class="sheetbox clue-open-box" id="clueOpenBody"></div>
 </div>
 
 <!-- Trophies (js/trophies.js), opened from the home screen. -->
@@ -6278,6 +6327,7 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
+    starsEarned: 0, // Stars earned this run (grantStars()), shown on the end screen.
     marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
@@ -9094,7 +9144,7 @@ function goMap(){
   // start a new game. Older saves already past it get this on their next
   // return to the map.
   else if (state.visits >= RUN_COMPLETE_VISIT && !state.runComplete && !state.ended){
-    state.runComplete = true; save(); fireConfetti(); showEndGame();
+    state.runComplete = true; grantStars(STARS_RUN); save(); fireConfetti(); showEndGame();
   }
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at the hub's Market button.
@@ -9507,9 +9557,13 @@ function matComboChipsHTML(s, revealAll){
   const showStar = revealAll ? s.cols.length > 0 : known.length > 0;
   const star = !showStar ? "" :
     `<button type="button" class="mm-combo col${known.length ? "" : " discovering"}" data-combo-kind="collection" data-combo-name="${COLLECTIONS_CHIP}" title="Named collections on your mat"><span class="mm-cico star">★<span class="mm-ccount">${known.length}</span></span></button>`;
+  // A complete collection the player hasn't discovered yet: a "!" that
+  // says so (not during the Lock-In reveal, which shows it for real).
+  const hidden = !revealAll && s.cols.some(c => !prefs.everUnlockedMatCollections.includes(c.id))
+    ? `<button type="button" class="mm-combo hidden-col" data-hidden-col title="A hidden collection is on your mat"><span class="mm-cico hidden-ic">!</span></button>` : "";
   return s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
-    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star;
+    s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star + hidden;
 }
 
 /* Fills #matGrid only, using the matScore() the caller already has. */
@@ -9907,6 +9961,10 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
+  if (ev.target.closest("[data-hidden-col]")){
+    showMatToast("You have a hidden collection on your mat! Lock in your board to discover it.");
+    return;
+  }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
@@ -10108,14 +10166,29 @@ function renderCollectionsList(){
   document.getElementById("collectionsCount").textContent =
     `${unlocked.length} / ${total} Collections Unlocked`;
   const list = document.getElementById("collectionsList");
-  if (!unlocked.length){
-    list.innerHTML = '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection to reveal it here.</p>';
-    return;
-  }
+  const stars = prefs.stars || 0, can = Math.floor(stars / CLUE_COST), left = total - unlocked.length;
+  const shop = `<div class="clue-shop">
+      <div class="clue-shop-top"><span class="clue-stars">⭐ ${stars}</span><span class="clue-shop-title">Collection Clues</span></div>
+      <div class="clue-shop-btns">
+        <button type="button" class="bigbtn" id="clueBuyOne" ${can && left ? "" : "disabled"}>🎁 1 clue · ${CLUE_COST} ⭐</button>
+        <button type="button" class="bigbtn sec" id="clueBuyAll" ${can > 1 && left ? "" : "disabled"}>🎁 Open all${can > 1 ? ` (${can})` : ""}</button>
+      </div>
+      <p class="clue-how">Earn ⭐: finish a run +${STARS_RUN}, new trophy +${STARS_TROPHY}, discover a collection +${STARS_DISCOVERY}</p>
+    </div>`;
+  const clues = prefs.collectionClues || {};
+  const leads = MAT_COLLECTIONS.filter(c => clues[c.id] && !prefs.everUnlockedMatCollections.includes(c.id));
+  const leadsHTML = leads.length ? `<div class="sec-label" style="margin-top:12px">🔎 CLUES</div><div class="histrows">${leads.map(c => `
+    <div class="histentry collection-card clue-lead"><div class="collection-row"><div class="cr-main">
+      <div class="cr-line1"><span class="cr-name">${esc(c.name)}</span><span class="cr-bonus">+${c.bonus}</span></div>
+      <span class="cr-icons">${c.items.map(n => clues[c.id].includes(n)
+        ? `<span class="cr-icon" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>` : `<span class="cr-icon cr-unknown">?</span>`).join("")}</span>
+    </div></div></div>`).join("")}</div>` : "";
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
-  list.innerHTML = `<div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`;
+  list.innerHTML = shop + leadsHTML + (unlocked.length
+    ? `<div class="sec-label" style="margin-top:12px">DISCOVERED</div><div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`
+    : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>');
 }
 /* A named collection's card, shared by the Collections menu and the combo
    star's popup (openComboInfo()). A green check once every member is owned.
@@ -10144,6 +10217,100 @@ function namedCollectionCardHTML(c, withToggle){
       </div>
     </div>`;
 }
+/* --------------------------------------------------------- Stars --- */
+/* Stars (prefs.stars, kept across runs) buy collection clues. Earned:
+   finishing a run, each new trophy, each collection discovered by playing.
+   state.starsEarned is this run's total, for the end screen. */
+const STARS_RUN = 5, STARS_TROPHY = 2, STARS_DISCOVERY = 1, CLUE_COST = 3;
+function grantStars(n){
+  if (!n) return;
+  prefs.stars = (prefs.stars || 0) + n; savePrefs();
+  state.starsEarned = (state.starsEarned || 0) + n;
+  syncCollectionsBtn();
+}
+function syncCollectionsBtn(){
+  const b = document.getElementById("tourCollectionsBtn");
+  b.innerHTML = `🏆 Collections${prefs.stars ? ` <span class="coll-stars">⭐ ${prefs.stars}</span>` : ""}`;
+}
+/* One clue: a random undiscovered collection's name plus one more of its
+   items, preferring collections without a clue yet. Revealing its last
+   item discovers it. Clues live in prefs.collectionClues {id: [items]}. */
+function drawCollectionClue(){
+  const clues = prefs.collectionClues || (prefs.collectionClues = {});
+  const hidden = MAT_COLLECTIONS.filter(c => !prefs.everUnlockedMatCollections.includes(c.id));
+  if (!hidden.length) return null;
+  const fresh = hidden.filter(c => !clues[c.id]);
+  const pool = fresh.length ? fresh : hidden;
+  const c = pool[Math.floor(Math.random() * pool.length)];
+  const known = clues[c.id] || [];
+  const item = shuffle(c.items.filter(n => !known.includes(n)))[0];
+  clues[c.id] = [...known, item];
+  const discovered = clues[c.id].length >= c.items.length;
+  if (discovered){ prefs.everUnlockedMatCollections.push(c.id); delete clues[c.id]; }
+  return { c, item, known: discovered ? c.items : clues[c.id], discovered };
+}
+/* Spends Stars for n clues up front (saved before any animation), then
+   opens them one gift box at a time (openClueBoxes()). */
+function buyClues(n){
+  const hiddenLeft = MAT_COLLECTIONS.filter(c => !prefs.everUnlockedMatCollections.includes(c.id)).length;
+  n = Math.min(n, Math.floor((prefs.stars || 0) / CLUE_COST));
+  if (n < 1 || !hiddenLeft) return;
+  const got = [];
+  for (let i = 0; i < n; i++){ const clue = drawCollectionClue(); if (!clue) break; got.push(clue); }
+  prefs.stars -= got.length * CLUE_COST;
+  savePrefs(); syncCollectionsBtn();
+  renderCollectionsList();
+  openClueBoxes(got);
+}
+/* The gift box: wobbles until tapped, bursts open, and the clue card flips
+   in. "Next" brings the next box. */
+let clueQueue = [], clueIdx = 0;
+function openClueBoxes(list){
+  clueQueue = list; clueIdx = 0;
+  showClueBox();
+  openOverlay("clueOpen");
+}
+function showClueBox(){
+  const left = clueQueue.length - clueIdx;
+  document.getElementById("clueOpenBody").innerHTML = `
+    <p class="clue-count">Gift ${clueIdx + 1} of ${clueQueue.length}</p>
+    <button type="button" class="clue-box" id="clueBox" aria-label="Open the gift">🎁</button>
+    <p class="clue-tap">Tap to open!</p>`;
+  if (left <= 0) closeOverlay("clueOpen");
+}
+function revealClue(){
+  const clue = clueQueue[clueIdx];
+  const box = document.getElementById("clueBox");
+  if (!clue || !box || box.classList.contains("opening")) return;
+  box.classList.add("opening");
+  const show = () => {
+    const c = clue.c;
+    const icons = c.items.map(n => clue.known.includes(n)
+      ? `<span class="clue-ic${n === clue.item ? " new" : ""}" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`
+      : `<span class="clue-ic unknown">?</span>`).join("");
+    const last = clueIdx >= clueQueue.length - 1;
+    document.getElementById("clueOpenBody").innerHTML = `
+      <div class="clue-burst" aria-hidden="true"></div>
+      <div class="clue-card${clue.discovered ? " found" : ""}">
+        <div class="clue-kicker">${clue.discovered ? "Collection discovered!" : "New clue"}</div>
+        <div class="clue-name">${esc(c.name)}</div>
+        <div class="clue-icons">${icons}</div>
+        <div class="clue-new">${clue.discovered ? `+${c.bonus} on your mat when it's all there` : `${esc(clue.item)} is in this collection`}</div>
+      </div>
+      <div class="btnrow" style="justify-content:center">
+        <button type="button" class="bigbtn" id="clueNext">${last ? "Done" : `Next gift (${clueQueue.length - clueIdx - 1} left)`}</button>
+      </div>`;
+  };
+  if (lowMotion()) show(); else setTimeout(show, 650);
+}
+document.getElementById("clueOpen").addEventListener("click", ev => {
+  if (ev.target.closest("#clueBox")){ revealClue(); return; }
+  if (ev.target.closest("#clueNext")){ clueIdx++; showClueBox(); return; }
+});
+document.getElementById("collectionsList").addEventListener("click", ev => {
+  if (ev.target.closest("#clueBuyOne")) buyClues(1);
+  else if (ev.target.closest("#clueBuyAll")) buyClues(Infinity);
+});
 // Opened from the welcome screen (#tourCollectionsBtn) and from the
 // inventory filter bar (#matCollectionsBtn) -- the same overlay either way.
 // The #tour layering class is harmless when #tour isn't open.
@@ -10763,7 +10930,9 @@ function playLockInSequence(reward){
           chipEl.classList.remove("discovering");
           if (!prefs.everUnlockedMatCollections.includes(beat.colId)){
             prefs.everUnlockedMatCollections.push(beat.colId);
+            if (prefs.collectionClues) delete prefs.collectionClues[beat.colId];
             savePrefs();
+            grantStars(STARS_DISCOVERY);
           }
           const countEl = chipEl.querySelector(".mm-ccount");
           if (countEl) countEl.textContent =
@@ -11851,7 +12020,8 @@ function showEndGame(){
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
   // Trophies are earned when a run completes (awardTrophies()).
-  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies());
+  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies()) +
+    (completing && state.starsEarned ? `<p class="end-stars">⭐ +${state.starsEarned} Stars this run -- open collection clues from the Main Menu</p>` : "");
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
   showSessionEndBackdrop();
   openOverlay("endGame");
@@ -11944,6 +12114,7 @@ function awardTrophies(){
   const at = new Date().toLocaleDateString("en-CA"); // local YYYY-MM-DD
   fresh.forEach(t => { got[t.id] = {at}; });
   lsSet(TROPHY_KEY, JSON.stringify(got));
+  grantStars(fresh.length * STARS_TROPHY);
   return fresh;
 }
 function trophyTileHTML(t, earned){
@@ -12512,6 +12683,7 @@ function showWelcomeSlide(){
   tourIdx = 0;
   document.getElementById("tour").classList.add("open", "welcome");
   tourRender();
+  syncCollectionsBtn();
   // No mouse tip here (or on the mode-select screen right after, see
   // openModePicker()) -- Professor Mouse stays absent from both, only
   // appearing once real gameplay starts.
