@@ -6293,6 +6293,12 @@ const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
 const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
 
 function savePrefs(){ lsSet(PREFS_KEY, JSON.stringify(prefs)); }
+/* Drops the last-placed cards until the mat fits (they stay owned). For
+   anything that can shrink the mat: a tier change in an old save, or
+   Maglev Train / Metropolis coming off with a collection. */
+function trimMatToFit(){
+  while (state.mat.length && !matFits(state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean))) state.mat.pop();
+}
 // Skipped until a run has started (state.mode is set to "classic" then).
 // Skipped in Combo Lab: its sandbox state would overwrite the real save
 // (see openComboLab()).
@@ -6321,9 +6327,8 @@ function loadAll(){
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
-  // A tier change (tier 1 -> 2) can make an old mat overfull: drop the
-  // last-placed cards until it fits (they stay owned).
-  while (state.mat.length && !matFits(state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean))) state.mat.pop();
+  // A tier change (tier 1 -> 2) can make an old mat overfull.
+  trimMatToFit();
   // Saves from before the 3x4 layout keep their 5x5 card.
   if (state.bingoCard && state.bingoCard.length === BINGO_SIZE * BINGO_SIZE) state.bingoLayout = "bingo";
   // Saves from before the 3-visit mat check -- a run already past its first
@@ -10432,6 +10437,7 @@ function removeCollectionFromMat(id){
   const c = MAT_COLLECTIONS.find(x => x.id === id);
   if (!c) return;
   state.mat = state.mat.filter(n => !c.items.includes(n));
+  trimMatToFit(); // Maglev Train is in collections; without it tier 1 stacks shrink
   save();
   renderCollectionsList();
   renderMatTop(); renderMatResultsGrid();
