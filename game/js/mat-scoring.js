@@ -253,14 +253,25 @@ const BINGO_MIN_POINTS = 5;
    Fixed per run so switching the setting can't redraw a card mid-run. */
 const MARKET_ROWS = 3, MARKET_ROW_LEN = 4;
 const marketRowsMode = () => state.bingoLayout === "rows";
-/* Each row: three tier 3 items and one odd one out -- tier 2 in two rows,
-   a tier 4 (capstone) in the other -- shuffled within the row. */
-function drawRowCard(){
-  const pool = t => shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] === t));
-  const t3 = pool("CREATION"), odd = shuffle([...pool("COMPONENT").slice(0, 2), pool("CAPSTONE")[0]]);
-  const card = [];
-  for (let r = 0; r < MARKET_ROWS; r++) card.push(...shuffle([...t3.slice(r * 3, r * 3 + 3), odd[r]]));
-  return card;
+/* Rows of three tier 3 items and one tier 2, shuffled within the row; no
+   capstones. Given the run's chosen capstone, the first row is that
+   capstone plus three items from its station -- ones that feed it first,
+   tier 3 before tier 2 -- so the run starts with a clear goal. */
+function drawRowCard(capstone){
+  const eligible = bingoEligibleItems().filter(n => ITEM_TIER[n] !== "CAPSTONE");
+  const used = new Set(), rows = [];
+  if (capstone){
+    const feeds = new Set(componentClosure(capstone));
+    const rank = n => (feeds.has(n) ? 0 : 2) + (ITEM_TIER[n] === "CREATION" ? 0 : 1);
+    const mates = shuffle(eligible.filter(n => CORE_ITEM_STATION[n] === CORE_ITEM_STATION[capstone]))
+      .sort((a, b) => rank(a) - rank(b)).slice(0, MARKET_ROW_LEN - 1);
+    [capstone, ...mates].forEach(n => used.add(n));
+    rows.push(shuffle([capstone, ...mates]));
+  }
+  const t3 = shuffle(eligible.filter(n => ITEM_TIER[n] === "CREATION" && !used.has(n)));
+  const t2 = shuffle(eligible.filter(n => ITEM_TIER[n] === "COMPONENT" && !used.has(n)));
+  while (rows.length < MARKET_ROWS) rows.push(shuffle([...t3.splice(0, 3), ...t2.splice(0, 1)]));
+  return rows.flat();
 }
 function bingoEligibleItems(){
   return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
@@ -325,11 +336,16 @@ const BINGO_CENTER_IDX = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BI
    capstone was already on the card (replaced with a non-capstone of the
    same tier), so no item ever appears twice. */
 function setBingoCenter(name){
-  // The rows layout has no centre; the capstone choice just pins/tracks it.
-  if (marketRowsMode()){ ensureBingoCard(); state.bingoCenterChosen = true; save(); return; }
   if (name === BINGO_RANDOM_CAPSTONE){
     const choices = bingoCapstoneChoices();
     name = choices[Math.floor(Math.random() * choices.length)];
+  }
+  // Rows layout: no centre -- the chosen capstone gets its own station row
+  // (drawRowCard()). Only redrawn before any row has paid out.
+  if (marketRowsMode()){
+    if (!(state.bingoLinesCompleted || []).length) state.bingoCard = drawRowCard(name);
+    else ensureBingoCard();
+    state.bingoCenterChosen = true; save(); return;
   }
   const card = ensureBingoCard().slice();
   const dupIdx = card.findIndex((n, i) => i !== BINGO_CENTER_IDX && n === name);
