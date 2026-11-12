@@ -3450,15 +3450,24 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
 /* Add/Remove for the open row: centred just above Home, clear of the
    Sort (left) and Filter/Hide (right) float buttons. */
+/* Below the hub (72) so it hides behind it: down out of sight when no item
+   is selected, bouncing up when one is (syncMatListActions()). */
 #matListActions{
-  position:fixed; z-index:61; left:50%; transform:translateX(-50%);
-  bottom:calc(var(--hub-h, 67px) + 30px); display:flex; gap:8px;
+  position:fixed; z-index:61; left:50%; display:flex; gap:10px;
+  bottom:calc(var(--hub-h, 67px) + 22px);
+  transform:translate(-50%, calc(100% + 40px)); pointer-events:none;
+  transition:transform .32s cubic-bezier(.5,0,.75,0);
 }
-#matListActions[hidden]{display:none}
+#matListActions.show{transform:translate(-50%, 0); pointer-events:auto;
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+html.low-motion #matListActions{transition:none}
 .mat-list-act{
-  padding:9px 12px; border-radius:999px; font-size:13px; font-weight:900; white-space:nowrap;
-  border:2px solid #000; box-shadow:0 3px 8px rgba(0,0,0,.4); color:#181614;
+  width:76px; height:68px; padding:6px 4px; border-radius:16px; font-size:13px; font-weight:900;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  border:2.5px solid #000; box-shadow:0 4px 0 rgba(0,0,0,.45), 0 6px 12px rgba(0,0,0,.35); color:#181614;
 }
+.mla-ic{font-size:22px; line-height:1}
+.mat-list-act:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
@@ -3683,9 +3692,9 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
 <!-- List view: Add/Remove for the open row, above Home (syncMatListActions()). -->
-<div id="matListActions" hidden>
-  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
-  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
+<div id="matListActions" aria-hidden="true">
+  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat"><span class="mla-ic">➕</span>Add</button>
+  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat"><span class="mla-ic">➖</span>Remove</button>
 </div>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
@@ -4125,6 +4134,11 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
     <div class="clue-shop-btns" id="clueShopBtns" hidden></div>
     <div id="collectionsList"></div>
   </div>
+</div>
+
+<!-- A collection just completed on the mat (maybeShowCollectionFound()). -->
+<div class="overlay" id="collectionFound" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="collectionFoundName">
+  <div class="sheetbox clue-open-box" id="collectionFoundBody"></div>
 </div>
 
 <!-- Collection clue gift boxes (openClueBoxes()), over Collections. -->
@@ -5803,7 +5817,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"bake-sale",               name:"Bake Sale",               items:["Fruit Cake","Apple Pie","Banana Bread"] },
   { id:"robotics-lab",            name:"Robotics Lab",            items:["Robot","Computer","Car","Turbine Blade"] },
   { id:"woodshop",                name:"Woodshop",                items:["Tree","Canoe","Log Cabin","Wheel"] },
-  { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Computer"] },
+  { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Microchip"] },
   { id:"skyline",                 name:"Skyline",                 items:["Building","Skyscraper","Museum"] },
   { id:"mission-control",         name:"Mission Control",         items:["Computer","Rocket","Satellite Dish"] },
   { id:"barn-raising",            name:"Barn Raising",            items:["Farm","Wheel","Log Cabin"] },
@@ -7209,6 +7223,7 @@ function render(resetScroll){
   renderConvertGoalCard();
   if (bingoCraftEntry) renderBingoCraftCard();
   maybeShowEmptyElTip();
+  maybeShowCollectionFound();
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();
@@ -9800,6 +9815,7 @@ function renderMatTop(){
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
+  maybeShowCollectionFound();
   document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
@@ -9911,7 +9927,9 @@ function toggleMatListRow(name){
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
-  bar.hidden = !show;
+  // Slides up from behind the hub (.show), and back down when hidden.
+  bar.classList.toggle("show", show);
+  bar.setAttribute("aria-hidden", String(!show));
   if (!show) return;
   const onMat = state.mat.includes(matListOpen);
   document.getElementById("matListAdd").disabled = onMat;
@@ -10298,6 +10316,48 @@ function namedCollectionCardHTML(c, withToggle){
       </div>
     </div>`;
 }
+/* -------------------------------------------- collection discovery --- */
+/* A collection is discovered the moment it's complete on the Display Mat
+   (any run, not Combo Lab): a window shows it and "Add to Collections"
+   saves it. Called from render() and renderMatTop(); waits while anything
+   else is on screen. One at a time, in collection order. */
+let collectionFoundTimer = null, collectionFoundShowing = null;
+function maybeShowCollectionFound(){
+  if (comboLabActive || collectionFoundShowing || collectionFoundTimer || !state || !state.mode) return;
+  const c = matCompletedIn(matOnMat()).find(x => !prefs.everUnlockedMatCollections.includes(x.id));
+  if (!c) return;
+  const busy = anyOverlayOpen() || bingoClearInProgress || document.body.classList.contains("lockin-playing")
+    || (typeof lockInCommitted !== "undefined" && lockInCommitted);
+  if (busy){
+    collectionFoundTimer = setTimeout(() => { collectionFoundTimer = null; maybeShowCollectionFound(); }, 500);
+    return;
+  }
+  collectionFoundShowing = c.id;
+  document.getElementById("collectionFoundBody").innerHTML = `
+    <div class="clue-burst" aria-hidden="true"></div>
+    <div class="clue-card found">
+      <div class="clue-kicker">New collection!</div>
+      <div class="clue-name" id="collectionFoundName">${esc(c.name)}</div>
+      <div class="clue-icons">${c.items.map(n => `<span class="clue-ic" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>
+      <div class="clue-new">+${c.bonus} on your mat whenever it's all there</div>
+    </div>
+    <div class="btnrow" style="justify-content:center">
+      <button type="button" class="bigbtn" id="collectionFoundAdd">🏆 Add to Collections</button>
+    </div>`;
+  openOverlay("collectionFound");
+}
+document.getElementById("collectionFound").addEventListener("click", ev => {
+  if (!ev.target.closest("#collectionFoundAdd") || !collectionFoundShowing) return;
+  const id = collectionFoundShowing;
+  if (!prefs.everUnlockedMatCollections.includes(id)) prefs.everUnlockedMatCollections.push(id);
+  if (prefs.collectionClues) delete prefs.collectionClues[id];
+  savePrefs();
+  grantStars(STARS_DISCOVERY);
+  collectionFoundShowing = null;
+  closeOverlay("collectionFound");
+  if (drawer.classList.contains("open")) renderMatTop();
+  maybeShowCollectionFound(); // another one completed by the same move
+});
 /* --------------------------------------------------------- Stars --- */
 /* Stars (prefs.stars, kept across runs) buy collection clues. Earned:
    finishing a run, each new trophy, each collection discovered by playing.
