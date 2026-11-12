@@ -65,8 +65,6 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
     renderMatResultsGrid();
     return;
   }
-  // The results grid (renderClassicDrawer()): tap opens the card popup
-  // (openMatCardPop()), where adding/removing happens.
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const listRow = ev.target.closest("[data-mat-row]");

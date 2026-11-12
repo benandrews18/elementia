@@ -19,6 +19,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   combos. The mat's "?" button opens the same two pages.
 - **Removed** the "Breakpoints now matter" warning banner; the rule is in
   that window instead.
+- **Tapping a card on the Display Mat** now selects it like tapping it in
+  the item list (its shop row and Add/Remove), instead of opening the old
+  card popup.
 
 ## 2026-11-11 (Market goal row, better hint)
 
