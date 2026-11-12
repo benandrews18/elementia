@@ -3313,6 +3313,16 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
   background:var(--sunken); color:var(--ink); font-size:13px; box-sizing:border-box;
 }
+/* Saved Layouts and Collections always fit the screen above the hub: the
+   box is capped and its list scrolls inside. */
+:is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox{
+  display:flex; flex-direction:column; padding:18px 16px;
+  max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom));
+}
+:is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
+#matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
+#matLayoutsOverlay .btnrow{flex-wrap:wrap}
+#matLayoutsOverlay #matLayoutName{min-width:0 !important; flex:1 1 140px !important}
 /* Opens the same #collectionsOverlay as the welcome screen
    (openCollectionsOverlay()); a plain button sized to sit with the search
    bar. */
@@ -10251,7 +10261,7 @@ function renderCollectionsList(){
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
-  list.innerHTML = shop + leadsHTML + (unlocked.length
+  list.innerHTML = (collectionsFromMenu ? shop : "") + leadsHTML + (unlocked.length
     ? `<div class="sec-label" style="margin-top:12px">DISCOVERED</div><div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`
     : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>');
 }
@@ -10379,7 +10389,10 @@ document.getElementById("collectionsList").addEventListener("click", ev => {
 // Opened from the welcome screen (#tourCollectionsBtn) and from the
 // inventory filter bar (#matCollectionsBtn) -- the same overlay either way.
 // The #tour layering class is harmless when #tour isn't open.
-function openCollectionsOverlay(){
+// The clue shop only shows when opened from the main menu (not in a run).
+let collectionsFromMenu = false;
+function openCollectionsOverlay(fromMenu = false){
+  collectionsFromMenu = fromMenu;
   renderCollectionsList();
   document.getElementById("tour").classList.add("behind-settings");
   openOverlay("collectionsOverlay");
@@ -10415,7 +10428,7 @@ document.getElementById("collectionsList").addEventListener("change", ev => {
   if (sw.checked) addCollectionToMat(sw.dataset.toggleCollection);
   else removeCollectionFromMat(sw.dataset.toggleCollection);
 });
-document.getElementById("tourCollectionsBtn").addEventListener("click", openCollectionsOverlay);
+document.getElementById("tourCollectionsBtn").addEventListener("click", () => openCollectionsOverlay(true));
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
 document.getElementById("matLayoutName").addEventListener("keydown", ev => {
   if (ev.key === "Enter") saveMatLayout();
