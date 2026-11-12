@@ -4,6 +4,7 @@
    ===================================================================== */
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
+  if (document.body.classList.contains("lockin-playing")){ e.preventDefault(); return; }
   if (e.key === "Escape"){
     // The topmost (last in page order) open overlay.
     const open = [...document.querySelectorAll(".overlay.open")].pop();

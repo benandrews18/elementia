@@ -209,7 +209,7 @@ function setQuarkMeterProgress(total){
     if (!seg) return;
     const pct = hi > lo ? Math.max(0, Math.min(100, ((total - lo) / (hi - lo)) * 100)) : (total >= lo ? 100 : 0);
     const fill = seg.querySelector(".qm-seg-fill");
-    if (fill) fill.style.width = pct + "%";
+    if (fill) fill.style.transform = `scaleX(${pct / 100})`;
     seg.classList.toggle("lit", pct >= 100);
   });
   const passed = emptyElementsForScore(total, matCheckRound());
@@ -223,6 +223,7 @@ function setQuarkMeterProgress(total){
    finishLockIn() runs (its modal is the one place the reward is shown).
    The timing is fixed; bouncePulse() itself handles reduced motion. */
 function playLockInSequence(reward){
+  document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
@@ -287,6 +288,7 @@ function playLockInSequence(reward){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
+  document.body.classList.remove("lockin-playing"); // never leave input blocked
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;
   state.matBonusDice = delta;
@@ -336,6 +338,7 @@ function fadeThroughBlack(midpoint){
   }, FADE_MS);
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
+  document.body.classList.remove("lockin-playing");
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
     : `You earned +${n} ${n === 1 ? "die" : "dice"}`;

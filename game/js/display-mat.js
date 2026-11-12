@@ -134,7 +134,7 @@ function quarkMeterLineHTML(s){
   const qmCumPcts = [25, 50, 75, 100];
   const qmSegs = qmDiceBounds.slice(1).map((hi, i) => {
     const pct = qmSegRange(qmDiceBounds[i], hi);
-    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
+    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="transform:scaleX(${pct / 100})"></span></span>`;
   }).join("");
   const qmLabels = [1, 2, 3].map(i =>
     `<span class="qm-seg-label" style="left:${qmCumPcts[i - 1]}%">${Math.round(qmDiceBounds[i]).toLocaleString()}</span>`).join("") +

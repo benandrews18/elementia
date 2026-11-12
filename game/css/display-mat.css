@@ -62,10 +62,17 @@
 }
 /* Gold fill; opacity shows "still filling" vs the glowing .lit state. */
 .qm-seg-fill{
-  position:absolute; inset:0; width:0; border-radius:6px;
+  position:absolute; inset:0; border-radius:6px; transform-origin:left; transform:scaleX(0);
   background:var(--gold); opacity:.55;
-  transition:width .3s cubic-bezier(.3,.8,.4,1);
+  transition:transform .3s cubic-bezier(.3,.8,.4,1);
 }
+/* Lock-In scoring (playLockInSequence()): each bouncing card, chip and the
+   total get their own compositor layer, so a bounce only re-composites --
+   without it every frame re-rasterises the cards' icon outlines (eight
+   drop-shadows each, --icon-outline). And nothing can be tapped until the
+   reward modal appears. */
+body.lockin-playing #drawerTop :is(.mm-card, .mm-combo, .qm-total, .qm-seg-fill){will-change:transform}
+body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .qm-seg.lit .qm-seg-fill{
   opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7);
 }
