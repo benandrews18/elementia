@@ -1533,7 +1533,7 @@ body[data-screen="market"] #trackedPill{display:none}
    no transitions or animations (Lock-In's scoring bounces are JS-driven
    and unaffected). */
 #drawer, #drawer *, #drawer *::before, #drawer *::after,
-#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #matHideBtn{
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn{
   transition:none !important; animation:none !important;
 }
 /* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher
@@ -1597,9 +1597,24 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Line where the scrolling item list meets the fixed mat zone above
    (#drawerTop) -- the only separation now that .dhead is hidden. */
 #drawer .dbody{border-top:2px solid var(--gold)}
-/* Collapsible mat zone (#matHideBtn, setMatCollapsed()). */
-#drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
-#drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
+/* Collapsible mat (#matCollapseBtn, setMatCollapsed()): collapsed, the mat
+   page gives way to the minimized board (.mat-mini-row) under the meter
+   and combo row. The bar is zero-height so the button sits centred on the
+   gold line. */
+#drawer.mat-collapsed .mat-zone-wrap{display:none}
+#matCollapseBar{position:relative; height:0; z-index:4; display:none}
+#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
+#matCollapseBtn{
+  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+  width:38px; height:20px; border-radius:999px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
+/* Room to scroll the last items clear of the Sort/Filter buttons and
+   Add/Remove. */
+#drawer.expanded .dbody{padding-bottom:150px}
 .mcb-chev{
   width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
   transform:translateY(2px) rotate(45deg); transition:transform .3s;
@@ -3061,10 +3076,17 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 }
 /* Gold fill; opacity shows "still filling" vs the glowing .lit state. */
 .qm-seg-fill{
-  position:absolute; inset:0; width:0; border-radius:6px;
+  position:absolute; inset:0; border-radius:6px; transform-origin:left; transform:scaleX(0);
   background:var(--gold); opacity:.55;
-  transition:width .3s cubic-bezier(.3,.8,.4,1);
+  transition:transform .3s cubic-bezier(.3,.8,.4,1);
 }
+/* Lock-In scoring (playLockInSequence()): each bouncing card, chip and the
+   total get their own compositor layer, so a bounce only re-composites --
+   without it every frame re-rasterises the cards' icon outlines (eight
+   drop-shadows each, --icon-outline). And nothing can be tapped until the
+   reward modal appears. */
+body.lockin-playing #drawerTop :is(.mm-card, .mm-combo, .qm-total, .qm-seg-fill){will-change:transform}
+body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .qm-seg.lit .qm-seg-fill{
   opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7);
 }
@@ -3266,14 +3288,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    (__SORT__/__FILTER__) are black glyphs, inverted to white. */
 /* [hidden] loses to .floatbtn's display:flex, so this forces display:none
    -- these must not catch taps while hidden. */
-#matSortBtn[hidden], #matFilterBtn[hidden], #matHideBtn[hidden]{display:none}
+#matSortBtn[hidden], #matFilterBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
-/* Hide/Show mat: right corner, one button-height above Filter. The chevron
-   flips with aria-expanded (setMatCollapsed()). */
-#matHideBtn.mat-sf-btn{left:auto; right:16px; bottom:calc(var(--hub-h, 67px) + 14px + 56px + 12px); color:var(--gold)}
-#matHideBtn .mcb-chev{width:13px; height:13px; border-width:3.5px}
-#matHideBtn[aria-expanded="false"] .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
 /* Scrim for the Sort/Filter trays (not #scrim, which would close the whole
    drawer). toggleMatSideTray() sets `top` inline to #matFilters' position,
@@ -3338,7 +3355,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
 .mat-shop-list{gap:6px}
-.mat-shop-list .tok-check{display:none}
+.mat-shop-list .tok-check, .mat-sel-panel .tok-check{display:none}
 .mat-shop-list .item.on-mat{border-color:var(--gold)}
 .mat-shop-list .item.open{border-width:3px; border-color:var(--ok)}
 .mat-shop-list .item.open.on-mat{border-color:var(--gold)}
@@ -3353,6 +3370,27 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .ms-icon :is(img,svg){width:26px; height:26px}
 .ms-name{flex:1; min-width:0; font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .ms-pips, .ms-stations{flex:none; display:flex; gap:3px}
+/* Points bubble, furthest right on a slim row and in the open row's corner. */
+.ms-pts{flex:none; min-width:24px; height:24px; padding:0 5px; border-radius:999px; border:1.5px solid #000;
+  background:var(--gold); color:#181614; font-size:12px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; line-height:1}
+/* Open row: home station(s) + points in the top-right corner. */
+.item.open{position:relative}
+.mo-corner{position:absolute; top:6px; right:6px; z-index:2; display:flex; gap:3px; align-items:center}
+.item.open .irow{padding-right:72px}
+/* Card view: the selected card's shop row, docked under the mat. */
+.mat-sel-panel{position:sticky; top:0; z-index:3; margin:-8px -4px 12px; padding:8px 4px;
+  background:var(--card); box-shadow:0 6px 10px -6px rgba(0,0,0,.5)}
+.mm-card.selected{outline:4px solid var(--ok); outline-offset:2px; filter:none}
+/* Minimized board: only while the mat is collapsed. */
+.mat-mini-row{display:none; width:100%; align-items:center; gap:8px; margin:2px 0 8px; padding:6px 8px;
+  border-radius:12px; border:2px solid #a67c4a; background:#cda874; color:#181614; cursor:pointer; text-align:left}
+#drawer.mat-collapsed .mat-mini-row{display:flex}
+.mmr-icons{flex:1; min-width:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.mmr-ic{flex:none; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1}
+.mmr-ic :is(img,svg){width:24px; height:24px}
+.mmr-empty{font-size:12px; font-weight:700; opacity:.7}
+.mmr-room{flex:none; font-weight:900; font-size:14px; font-variant-numeric:tabular-nums}
 .ms-pip, .ms-station{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:12px; line-height:1}
 .ms-pip{background:var(--suit)}
@@ -3371,7 +3409,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   border:2px solid #000; box-shadow:0 3px 8px rgba(0,0,0,.4); color:#181614;
 }
 .mat-list-act.add{background:var(--ok); color:#fff}
-.mat-list-act.remove{background:var(--gold)}
+.mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
 /* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
    collapsible with the shared .collapse-chevron. */
@@ -3484,7 +3522,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   #jobSheet{left:calc(var(--frame-x) - 24px)}
   #pinsBtn, #matSortBtn, #mouseTip.anchor-bottom-left, #mouseTip.anchor-top-left{left:calc(var(--frame-x) + 16px)}
   #settingsBtn{right:calc(var(--frame-x) + 14px)}
-  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #matHideBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
+  #quickConvertBtn, #matFilterBtn.mat-sf-btn, #mouseTip.anchor-bottom-right, #mouseTip.anchor-top-right{right:calc(var(--frame-x) + 16px)}
   #trackedPill{left:calc(var(--frame-x) + 56px)}
   #matSortTray{left:var(--frame-x)}
   #matFilterTray{right:var(--frame-x)}
@@ -3561,6 +3599,9 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <!-- No in-tray "View All Items" control: the hub's Inventory button
        expands the half view (see #hubInv's click handler). -->
   <div id="drawerTop"></div>
+  <!-- Show/hide on the gold line between the mat and the list: collapses the
+       mat to its minimized board (setMatCollapsed()). Full view only. -->
+  <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
@@ -3588,8 +3629,6 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
   <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
   <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
 </div>
-<!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
-<button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
      built from game data (buildMatFilterBar()). -->
@@ -5349,7 +5388,8 @@ function suitCostPayable(entry){
    recipe needs) exceeds N, so 1 of 2 shows one lit and one grey. Counting
    raw holdings instead made items look affordable when the recipe had
    already claimed those elements. */
-function suitCostBadgesHTML(entry, interactive){
+// plain: the inventory's read-only shop row -- every badge full colour.
+function suitCostBadgesHTML(entry, interactive, plain){
   const costs = itemSuitCosts(entry.name);
   if (!costs.length) return "";
   const {els: reserved} = needsOf(entry.reqs);
@@ -5360,7 +5400,7 @@ function suitCostBadgesHTML(entry, interactive){
   return `<span class="isuit-costs${interactive ? " interactive" : ""}">${costs.map(s => {
     const idx = seenCount[s] || 0;
     seenCount[s] = idx + 1;
-    const have = suitSurplusOfSuit(s, reserved) > idx;
+    const have = plain || suitSurplusOfSuit(s, reserved) > idx;
     return `<span class="isuit-badge${have ? "" : " need"}" data-suit="${s}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
   }).join("")}</span>`;
 }
@@ -6655,7 +6695,7 @@ function itemRowHTML(entry, can, plain){
   return `<div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can)}</div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can, plain)}</div>
         <div class="recipe">${recipeHTML(entry, plain)}</div>
       </div>
     </div>`;
@@ -7451,7 +7491,7 @@ const closeDrawer = () => {
 // item list, so show them exactly when matTrayExpanded. Call after every
 // change to it: opening the tray doesn't redraw the mat.
 function syncMatFloatBtns(){
-  for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
+  for (const id of ["matSortBtn", "matFilterBtn"])
     document.getElementById(id).hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
   syncMatListActions();
@@ -7473,16 +7513,17 @@ function expandDrawerToFull(){
 }
 // Mirror of expandDrawerToFull(): collapse to the peeked view without
 // closing. Only used mid Lock-In (#hubInv's handler).
-// #matHideBtn: hide/show the Display Mat zone so the card list gets the
-// whole tray. Resets to shown on every open.
+// #matCollapseBtn: collapse the Display Mat to its minimized board (meter,
+// combos, a row of the mat's icons) so the list gets the tray. Resets to
+// shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  const btn = document.getElementById("matHideBtn");
+  const btn = document.getElementById("matCollapseBtn");
   btn.setAttribute("aria-expanded", String(!on));
   btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
   btn.title = btn.getAttribute("aria-label");
 }
-document.getElementById("matHideBtn").addEventListener("click", () =>
+document.getElementById("matCollapseBtn").addEventListener("click", () =>
   setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);
@@ -9552,7 +9593,7 @@ function quarkMeterLineHTML(s){
   const qmCumPcts = [25, 50, 75, 100];
   const qmSegs = qmDiceBounds.slice(1).map((hi, i) => {
     const pct = qmSegRange(qmDiceBounds[i], hi);
-    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="width:${pct}%"></span></span>`;
+    return `<span class="qm-seg${pct >= 100 ? " lit" : ""}"><span class="qm-seg-fill" style="transform:scaleX(${pct / 100})"></span></span>`;
   }).join("");
   const qmLabels = [1, 2, 3].map(i =>
     `<span class="qm-seg-label" style="left:${qmCumPcts[i - 1]}%">${Math.round(qmDiceBounds[i]).toLocaleString()}</span>`).join("") +
@@ -9648,7 +9689,7 @@ function renderMatTop(){
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
-  document.getElementById("drawerTop").innerHTML = scoreRowHTML +
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   syncMatFloatBtns();
   if (matDrawerView === "mat") renderMatGridCells(s);
@@ -9699,7 +9740,7 @@ function matResultsGridHTML(){
       ? "Nothing matches those filters."
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
-  return MAT_TIER_BANDS.map(band => {
+  const sections = MAT_TIER_BANDS.map(band => {
     const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
@@ -9711,40 +9752,53 @@ function matResultsGridHTML(){
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
           // Tier 1 cards at half height, as they stack on the mat.
           : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
-              matCardHTML(c.name, { tray: true, cls: band.key === "t1" ? "small mini" : "small" })).join("")}</div>`}
+              matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
+  // Card view: the tapped card's shop row docks at the top of the list,
+  // just under the mat (sticky), while the card itself is highlighted.
+  const panel = !prefs.itemsListView && matListOpen && owns(matListOpen)
+    ? `<div class="shop mat-sel-panel">${matOpenRowHTML(matListOpen)}</div>` : "";
+  return panel + sections;
 }
-/* List view: one slim line per item (icon, name, suit pips, home
-   stations). Tapping one expands it to its station shop row
-   (itemRowHTML()); only one is open at a time (matListOpen), and while it
-   is, #matListActions offers Add/Remove above the hub. */
+/* The selected item (matListOpen), in both views. List view: one slim line
+   per item (icon, name, suit pips, home stations, points); tapping one
+   expands it in place to its station shop row. Card view: tapping a card
+   highlights it and docks the same shop row under the mat. Either way
+   #matListActions offers Add/Remove above the hub. */
 let matListOpen = null;
+const matStationBadgesHTML = (c, cls) => c.stations.map(st =>
+  `<span class="${cls}" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
+// The open item's full shop row: read-only (plain: nothing faded), with its
+// home station(s) and points bubble in the top-right corner.
+function matOpenRowHTML(name){
+  const c = MAT_CARD_BY_NAME[name];
+  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+  if (!c || !entry) return "";
+  return `<div class="item open${state.mat.includes(name) ? " on-mat" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
+      <span class="mo-corner">${matStationBadgesHTML(c, "ms-station")}<span class="ms-pts" title="${c.points} points">${c.points}</span></span>
+      ${itemRowHTML(entry, false, true)}</div>`;
+}
 function matShopRowHTML(name){
   const c = MAT_CARD_BY_NAME[name];
   if (!c) return "";
-  const onMat = state.mat.includes(name) ? " on-mat" : "";
-  if (name === matListOpen){
-    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-    if (entry) return `<div class="item open${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
-      ${itemRowHTML(entry, false, true)}</div>`;
-  }
+  if (name === matListOpen) return matOpenRowHTML(name);
   const pips = c.pips.map(s => `<span class="ms-pip" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
-  const stations = c.stations.map(st => `<span class="ms-station" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
-  return `<div class="mat-slim${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
+  return `<div class="mat-slim${state.mat.includes(name) ? " on-mat" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
     <span class="ms-icon">${em(c.emoji)}</span><span class="ms-name">${esc(name)}</span>
-    <span class="ms-pips">${pips}</span><span class="ms-stations">${stations}</span></div>`;
+    <span class="ms-pips">${pips}</span><span class="ms-stations">${matStationBadgesHTML(c, "ms-station")}</span>
+    <span class="ms-pts" title="${c.points} points">${c.points}</span></div>`;
 }
 function toggleMatListRow(name){
   matListOpen = matListOpen === name ? null : name;
   renderMatResultsGrid();
-  document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
+  if (prefs.itemsListView) document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
 }
-/* Add/Remove for the open list row, above Home. Shown only while a row is
-   open in the full tray (syncMatFloatBtns()). */
+/* Add/Remove for the selected item, above Home. Shown only while one is
+   selected in the full tray (syncMatFloatBtns()). */
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
-  const show = matTrayExpanded && prefs.itemsListView && !!matListOpen && owns(matListOpen);
+  const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
   bar.hidden = !show;
   if (!show) return;
   const onMat = state.mat.includes(matListOpen);
@@ -9807,6 +9861,16 @@ function syncMatFilterBar(){
 
 /* Classic drawer body: the mat/Elements zone + score (#drawerTop), the
    filter bar (#matFilters), and the item grid (returned for #drawerBody). */
+/* Minimized board (shown only while the mat is collapsed): the mat's cards
+   as a row of icons, then how full it is in half-slots -- a tier 1 card
+   takes 1, a normal card 2, a capstone 4, of 16. Tap to show the mat. */
+function matMiniRowHTML(mat){
+  const used = mat.reduce((n, c) => n + (matIsTier1(c) ? 1 : matSlotsOf(c) * 2), 0);
+  const icons = mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("");
+  return `<button type="button" class="mat-mini-row" id="matMiniRow" title="Show the Display Mat">
+    <span class="mmr-icons">${icons || '<span class="mmr-empty">Nothing on the mat yet</span>'}</span>
+    <span class="mmr-room">${used}/${MAT_SLOTS_TOTAL * 2}</span></button>`;
+}
 function renderClassicDrawer(){
   document.getElementById("matFilters").hidden = false;
   document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
@@ -9867,6 +9931,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     renderMatTop();
     return;
   }
+  if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
   if (ev.target.closest("#matRulesBtn")){ openOverlay("matRulesOverlay"); return; }
@@ -10246,8 +10311,10 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const listRow = ev.target.closest("[data-mat-row]");
   if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
+  // The results grid (card view): tap selects the card -- its shop row docks
+  // under the mat with Add/Remove (toggleMatListRow()), as in the list view.
   const matCard = ev.target.closest("[data-mat-card]");
-  if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
+  if (matCard){ toggleMatListRow(matCard.dataset.matCard); return; }
   const iBtn = ev.target.closest("[data-item]");
   if (!iBtn) return;
   const entry = ENTRIES.find(e => e.name === iBtn.dataset.item);
@@ -10674,7 +10741,7 @@ function setQuarkMeterProgress(total){
     if (!seg) return;
     const pct = hi > lo ? Math.max(0, Math.min(100, ((total - lo) / (hi - lo)) * 100)) : (total >= lo ? 100 : 0);
     const fill = seg.querySelector(".qm-seg-fill");
-    if (fill) fill.style.width = pct + "%";
+    if (fill) fill.style.transform = `scaleX(${pct / 100})`;
     seg.classList.toggle("lit", pct >= 100);
   });
   const passed = emptyElementsForScore(total, matCheckRound());
@@ -10688,6 +10755,7 @@ function setQuarkMeterProgress(total){
    finishLockIn() runs (its modal is the one place the reward is shown).
    The timing is fixed; bouncePulse() itself handles reduced motion. */
 function playLockInSequence(reward){
+  document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
@@ -10752,6 +10820,7 @@ function playLockInSequence(reward){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
+  document.body.classList.remove("lockin-playing"); // never leave input blocked
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;
   state.matBonusDice = delta;
@@ -10801,6 +10870,7 @@ function fadeThroughBlack(midpoint){
   }, FADE_MS);
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
+  document.body.classList.remove("lockin-playing");
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
     : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
@@ -12580,6 +12650,7 @@ document.getElementById("tourSettingsBtn").addEventListener("click", () => {
    ===================================================================== */
 document.addEventListener("click", hideHint);
 document.addEventListener("keydown", e => {
+  if (document.body.classList.contains("lockin-playing")){ e.preventDefault(); return; }
   if (e.key === "Escape"){
     // The topmost (last in page order) open overlay.
     const open = [...document.querySelectorAll(".overlay.open")].pop();
