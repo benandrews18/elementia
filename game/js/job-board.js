@@ -261,12 +261,6 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     renderJobBoard();
     return;
   }
-  const capInspect = ev.target.closest("[data-cap-inspect]");
-  if (capInspect){
-    const entry = ENTRIES[+capInspect.dataset.capInspect];
-    if (entry) showCardPop(entry, false);
-    return;
-  }
 
   const hintBtn = ev.target.closest("[data-todo-hint]");
   if (hintBtn){ todoHintOpen = !todoHintOpen; renderJobBoard(); return; }
@@ -286,6 +280,13 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
     return;
   }
 
+  // Capstone squares (checked after their own 📌 above): the item card.
+  const capInspect = ev.target.closest("[data-cap-inspect]");
+  if (capInspect){
+    const entry = ENTRIES[+capInspect.dataset.capInspect];
+    if (entry) showCardPop(entry, false);
+    return;
+  }
   // BINGO squares: an owned item opens its inspection card; an unowned one
   // opens the craft-from-here card (openBingoCraftOverlay()), so it can be made
   // without travelling.

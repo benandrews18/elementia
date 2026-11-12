@@ -391,15 +391,17 @@ function capstoneGridHTML(){
    cellIdx is its index on the card (null for the rows layout's capstone
    squares, which aren't part of any row). Tapping it crafts or inspects
    (the .bingo-cell[data-item-card] handler). */
-function bingoCellHTML(name, cellIdx){
+function bingoCellHTML(name, cellIdx, inspectOnly){
     const idx = ENTRIES.findIndex(e => e.name === name);
     // Craftable now gets the same green ring as owned (on the parchment face),
     // so actionable squares stand out (craft via openBingoCraftOverlay()).
     const owned = owns(name);
-    const craftable = !owned && idx >= 0 && canCraft(ENTRIES[idx]);
+    const craftable = !inspectOnly && !owned && idx >= 0 && canCraft(ENTRIES[idx]);
     const cls = owned ? "bingo-cell owned" : craftable ? "bingo-cell craftable" : "bingo-cell";
     const pinned = isPinned(name);
-    return `<div class="${cls}"${cellIdx === null ? "" : ` data-cell-idx="${cellIdx}"`} data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+    // inspectOnly (the Capstones list): data-cap-inspect opens the item card
+    // instead of the craft card.
+    return `<div class="${cls}"${cellIdx === null ? "" : ` data-cell-idx="${cellIdx}"`} ${inspectOnly ? "data-cap-inspect" : "data-item-card"}="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
         aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
       <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
@@ -407,8 +409,9 @@ function bingoCellHTML(name, cellIdx){
       ${tierBadgeHTML(name)}
     </div>`;
 }
-/* Rows layout: 3 rows of 4, each ending in its "?" reward (a check once
-   paid, state.bingoLinesCompleted), then every capstone, pinnable, below. */
+/* Rows layout: the Market panel (3 rows of 4, the only squares craftable
+   from here, each row ending in its "?" reward or a check once paid) and,
+   below it, every capstone as a pinnable list -- tapping one inspects it. */
 function marketRowsHTML(){
   const card = ensureBingoCard();
   const rows = bingoLines().map((line, r) => {
@@ -418,13 +421,15 @@ function marketRowsHTML(){
       <span class="mrow-reward" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
     </div>`;
   }).join("");
-  const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null)).join("");
+  const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null, true)).join("");
   return `<div class="bingo-page mrow-page">
-    <h3 class="bingo-title">Marketplace</h3>
-    <p class="bingo-subhint">Tap an item to craft it right here. Finish a row for a "?" element.</p>
-    <div class="bingo-wrap">${rows}</div>
-    <h3 class="bingo-title mrow-caps-title">🏆 Capstones</h3>
-    <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${caps}</div></div>
+    <section class="mrow-market" aria-labelledby="mrowMarketTitle">
+      <h3 class="mrow-head" id="mrowMarketTitle">🛒 Market</h3>
+      <p class="mrow-sub">Craft these right here. Finish a row for a "?".</p>
+      ${rows}
+    </section>
+    <h3 class="mrow-head mrow-caps-head">🏆 Capstones</h3>
+    <div class="bingo-grid bingo-pick-grid mrow-caps">${caps}</div>
   </div>`;
 }
 function bingoCardHTML(){

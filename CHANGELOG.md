@@ -23,6 +23,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   menu).
 - **To-Do List:** the item you're tracking always sits at the top, with a
   gold rim and a 🔍 badge on its corner.
+- **Marketplace fits without scrolling.** The 3 rows sit in a framed
+  "Market" panel -- the only items you can craft from the tray. The
+  Capstones below are a reference list: tapping one opens its item card
+  (its 📌 still pins it).
 
 ## 2026-11-11 (inventory and Lock-In)
 
