@@ -267,14 +267,9 @@
    (__SORT__/__FILTER__) are black glyphs, inverted to white. */
 /* [hidden] loses to .floatbtn's display:flex, so this forces display:none
    -- these must not catch taps while hidden. */
-#matSortBtn[hidden], #matFilterBtn[hidden], #matHideBtn[hidden]{display:none}
+#matSortBtn[hidden], #matFilterBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
-/* Hide/Show mat: right corner, one button-height above Filter. The chevron
-   flips with aria-expanded (setMatCollapsed()). */
-#matHideBtn.mat-sf-btn{left:auto; right:16px; bottom:calc(var(--hub-h, 67px) + 14px + 56px + 12px); color:var(--gold)}
-#matHideBtn .mcb-chev{width:13px; height:13px; border-width:3.5px}
-#matHideBtn[aria-expanded="false"] .mcb-chev{transform:translateY(-2px) rotate(225deg)}
 .mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
 /* Scrim for the Sort/Filter trays (not #scrim, which would close the whole
    drawer). toggleMatSideTray() sets `top` inline to #matFilters' position,
@@ -339,7 +334,7 @@
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
 .mat-shop-list{gap:6px}
-.mat-shop-list .tok-check{display:none}
+.mat-shop-list .tok-check, .mat-sel-panel .tok-check{display:none}
 .mat-shop-list .item.on-mat{border-color:var(--gold)}
 .mat-shop-list .item.open{border-width:3px; border-color:var(--ok)}
 .mat-shop-list .item.open.on-mat{border-color:var(--gold)}
@@ -354,6 +349,27 @@
 .ms-icon :is(img,svg){width:26px; height:26px}
 .ms-name{flex:1; min-width:0; font-weight:800; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .ms-pips, .ms-stations{flex:none; display:flex; gap:3px}
+/* Points bubble, furthest right on a slim row and in the open row's corner. */
+.ms-pts{flex:none; min-width:24px; height:24px; padding:0 5px; border-radius:999px; border:1.5px solid #000;
+  background:var(--gold); color:#181614; font-size:12px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; line-height:1}
+/* Open row: home station(s) + points in the top-right corner. */
+.item.open{position:relative}
+.mo-corner{position:absolute; top:6px; right:6px; z-index:2; display:flex; gap:3px; align-items:center}
+.item.open .irow{padding-right:72px}
+/* Card view: the selected card's shop row, docked under the mat. */
+.mat-sel-panel{position:sticky; top:0; z-index:3; margin:-8px -4px 12px; padding:8px 4px;
+  background:var(--card); box-shadow:0 6px 10px -6px rgba(0,0,0,.5)}
+.mm-card.selected{outline:4px solid var(--ok); outline-offset:2px; filter:none}
+/* Minimized board: only while the mat is collapsed. */
+.mat-mini-row{display:none; width:100%; align-items:center; gap:8px; margin:2px 0 8px; padding:6px 8px;
+  border-radius:12px; border:2px solid #a67c4a; background:#cda874; color:#181614; cursor:pointer; text-align:left}
+#drawer.mat-collapsed .mat-mini-row{display:flex}
+.mmr-icons{flex:1; min-width:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.mmr-ic{flex:none; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1}
+.mmr-ic :is(img,svg){width:24px; height:24px}
+.mmr-empty{font-size:12px; font-weight:700; opacity:.7}
+.mmr-room{flex:none; font-weight:900; font-size:14px; font-variant-numeric:tabular-nums}
 .ms-pip, .ms-station{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   font-size:12px; line-height:1}
 .ms-pip{background:var(--suit)}
@@ -372,7 +388,7 @@
   border:2px solid #000; box-shadow:0 3px 8px rgba(0,0,0,.4); color:#181614;
 }
 .mat-list-act.add{background:var(--ok); color:#fff}
-.mat-list-act.remove{background:var(--gold)}
+.mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
 /* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
    collapsible with the shared .collapse-chevron. */

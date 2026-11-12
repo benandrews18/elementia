@@ -38,7 +38,7 @@ const closeDrawer = () => {
 // item list, so show them exactly when matTrayExpanded. Call after every
 // change to it: opening the tray doesn't redraw the mat.
 function syncMatFloatBtns(){
-  for (const id of ["matSortBtn", "matFilterBtn", "matHideBtn"])
+  for (const id of ["matSortBtn", "matFilterBtn"])
     document.getElementById(id).hidden = !matTrayExpanded;
   if (!matTrayExpanded) closeMatSideTrays();
   syncMatListActions();
@@ -60,16 +60,17 @@ function expandDrawerToFull(){
 }
 // Mirror of expandDrawerToFull(): collapse to the peeked view without
 // closing. Only used mid Lock-In (#hubInv's handler).
-// #matHideBtn: hide/show the Display Mat zone so the card list gets the
-// whole tray. Resets to shown on every open.
+// #matCollapseBtn: collapse the Display Mat to its minimized board (meter,
+// combos, a row of the mat's icons) so the list gets the tray. Resets to
+// shown on every open.
 function setMatCollapsed(on){
   drawer.classList.toggle("mat-collapsed", on);
-  const btn = document.getElementById("matHideBtn");
+  const btn = document.getElementById("matCollapseBtn");
   btn.setAttribute("aria-expanded", String(!on));
   btn.setAttribute("aria-label", on ? "Show the Display Mat" : "Hide the Display Mat");
   btn.title = btn.getAttribute("aria-label");
 }
-document.getElementById("matHideBtn").addEventListener("click", () =>
+document.getElementById("matCollapseBtn").addEventListener("click", () =>
   setMatCollapsed(!drawer.classList.contains("mat-collapsed")));
 function collapseDrawerToPeeked(){
   setMatCollapsed(false);

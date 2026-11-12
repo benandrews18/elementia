@@ -51,7 +51,7 @@
    no transitions or animations (Lock-In's scoring bounces are JS-driven
    and unaffected). */
 #drawer, #drawer *, #drawer *::before, #drawer *::after,
-#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn, #matHideBtn{
+#matSortTray, #matFilterTray, #matSortBtn, #matFilterBtn{
   transition:none !important; animation:none !important;
 }
 /* Half-view only (the peeked, not-yet-expanded stage) -- sits 2mm higher
@@ -115,9 +115,24 @@
 /* Line where the scrolling item list meets the fixed mat zone above
    (#drawerTop) -- the only separation now that .dhead is hidden. */
 #drawer .dbody{border-top:2px solid var(--gold)}
-/* Collapsible mat zone (#matHideBtn, setMatCollapsed()). */
-#drawerTop{max-height:100vh; transition:max-height .3s cubic-bezier(.3,.8,.4,1), padding-top .3s}
-#drawer.mat-collapsed #drawerTop{max-height:0; padding-top:0; overflow:hidden}
+/* Collapsible mat (#matCollapseBtn, setMatCollapsed()): collapsed, the mat
+   page gives way to the minimized board (.mat-mini-row) under the meter
+   and combo row. The bar is zero-height so the button sits centred on the
+   gold line. */
+#drawer.mat-collapsed .mat-zone-wrap{display:none}
+#matCollapseBar{position:relative; height:0; z-index:4; display:none}
+#drawer.expanded:has(#drawerTop:not(:empty)) #matCollapseBar{display:block}
+#matCollapseBtn{
+  position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+  width:38px; height:20px; border-radius:999px; padding:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--card); border:2px solid var(--gold); color:var(--gold);
+  box-shadow:0 2px 6px rgba(0,0,0,.35);
+}
+#drawer.mat-collapsed .mcb-chev{transform:translateY(-2px) rotate(225deg)}
+/* Room to scroll the last items clear of the Sort/Filter buttons and
+   Add/Remove. */
+#drawer.expanded .dbody{padding-bottom:150px}
 .mcb-chev{
   width:9px; height:9px; border-left:2.5px solid currentColor; border-top:2.5px solid currentColor;
   transform:translateY(2px) rotate(45deg); transition:transform .3s;

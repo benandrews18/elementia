@@ -75,10 +75,10 @@
   // Sort/Filter/Hide-mat must show on open even without a mat redraw.
   await step("float buttons", async () => {
     openDrawer({ peeked: true }); closeDrawer(); openDrawer();
-    if (document.getElementById("matFilterBtn").hidden || document.getElementById("matHideBtn").hidden)
-      errs.push("Inventory opened without its Filter/Hide-mat buttons");
+    if (document.getElementById("matFilterBtn").hidden || document.getElementById("matSortBtn").hidden)
+      errs.push("Inventory opened without its Sort/Filter buttons");
     closeDrawer();
-    if (!document.getElementById("matHideBtn").hidden) errs.push("Hide-mat button still shown after closing the Inventory");
+    if (!document.getElementById("matFilterBtn").hidden) errs.push("Filter button still shown after closing the Inventory");
   });
   await step("todo", async () => { openJobBoard(); await wait(400); closeJobBoard(); await wait(300); });
   await step("market", async () => { openJobSelectTray(); await wait(500); bingoTab = "capstones"; renderJobBoard(); bingoTab = "bingo"; renderJobBoard(); closeJobBoard(); await wait(300); });

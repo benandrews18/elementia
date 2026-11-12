@@ -165,7 +165,8 @@ function suitCostPayable(entry){
    recipe needs) exceeds N, so 1 of 2 shows one lit and one grey. Counting
    raw holdings instead made items look affordable when the recipe had
    already claimed those elements. */
-function suitCostBadgesHTML(entry, interactive){
+// plain: the inventory's read-only shop row -- every badge full colour.
+function suitCostBadgesHTML(entry, interactive, plain){
   const costs = itemSuitCosts(entry.name);
   if (!costs.length) return "";
   const {els: reserved} = needsOf(entry.reqs);
@@ -176,7 +177,7 @@ function suitCostBadgesHTML(entry, interactive){
   return `<span class="isuit-costs${interactive ? " interactive" : ""}">${costs.map(s => {
     const idx = seenCount[s] || 0;
     seenCount[s] = idx + 1;
-    const have = suitSurplusOfSuit(s, reserved) > idx;
+    const have = plain || suitSurplusOfSuit(s, reserved) > idx;
     return `<span class="isuit-badge${have ? "" : " need"}" data-suit="${s}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]} suit cost${have ? "" : " (not enough held yet)"}">${SUIT_ICON[s]}</span>`;
   }).join("")}</span>`;
 }

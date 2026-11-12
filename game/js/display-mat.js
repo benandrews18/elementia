@@ -230,7 +230,7 @@ function renderMatTop(){
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
-  document.getElementById("drawerTop").innerHTML = scoreRowHTML +
+  document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   syncMatFloatBtns();
   if (matDrawerView === "mat") renderMatGridCells(s);
@@ -281,7 +281,7 @@ function matResultsGridHTML(){
       ? "Nothing matches those filters."
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
-  return MAT_TIER_BANDS.map(band => {
+  const sections = MAT_TIER_BANDS.map(band => {
     const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
@@ -293,40 +293,53 @@ function matResultsGridHTML(){
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
           // Tier 1 cards at half height, as they stack on the mat.
           : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
-              matCardHTML(c.name, { tray: true, cls: band.key === "t1" ? "small mini" : "small" })).join("")}</div>`}
+              matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
+  // Card view: the tapped card's shop row docks at the top of the list,
+  // just under the mat (sticky), while the card itself is highlighted.
+  const panel = !prefs.itemsListView && matListOpen && owns(matListOpen)
+    ? `<div class="shop mat-sel-panel">${matOpenRowHTML(matListOpen)}</div>` : "";
+  return panel + sections;
 }
-/* List view: one slim line per item (icon, name, suit pips, home
-   stations). Tapping one expands it to its station shop row
-   (itemRowHTML()); only one is open at a time (matListOpen), and while it
-   is, #matListActions offers Add/Remove above the hub. */
+/* The selected item (matListOpen), in both views. List view: one slim line
+   per item (icon, name, suit pips, home stations, points); tapping one
+   expands it in place to its station shop row. Card view: tapping a card
+   highlights it and docks the same shop row under the mat. Either way
+   #matListActions offers Add/Remove above the hub. */
 let matListOpen = null;
+const matStationBadgesHTML = (c, cls) => c.stations.map(st =>
+  `<span class="${cls}" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
+// The open item's full shop row: read-only (plain: nothing faded), with its
+// home station(s) and points bubble in the top-right corner.
+function matOpenRowHTML(name){
+  const c = MAT_CARD_BY_NAME[name];
+  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+  if (!c || !entry) return "";
+  return `<div class="item open${state.mat.includes(name) ? " on-mat" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
+      <span class="mo-corner">${matStationBadgesHTML(c, "ms-station")}<span class="ms-pts" title="${c.points} points">${c.points}</span></span>
+      ${itemRowHTML(entry, false, true)}</div>`;
+}
 function matShopRowHTML(name){
   const c = MAT_CARD_BY_NAME[name];
   if (!c) return "";
-  const onMat = state.mat.includes(name) ? " on-mat" : "";
-  if (name === matListOpen){
-    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-    if (entry) return `<div class="item open${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="true">
-      ${itemRowHTML(entry, false, true)}</div>`;
-  }
+  if (name === matListOpen) return matOpenRowHTML(name);
   const pips = c.pips.map(s => `<span class="ms-pip" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
-  const stations = c.stations.map(st => `<span class="ms-station" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
-  return `<div class="mat-slim${onMat}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
+  return `<div class="mat-slim${state.mat.includes(name) ? " on-mat" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
     <span class="ms-icon">${em(c.emoji)}</span><span class="ms-name">${esc(name)}</span>
-    <span class="ms-pips">${pips}</span><span class="ms-stations">${stations}</span></div>`;
+    <span class="ms-pips">${pips}</span><span class="ms-stations">${matStationBadgesHTML(c, "ms-station")}</span>
+    <span class="ms-pts" title="${c.points} points">${c.points}</span></div>`;
 }
 function toggleMatListRow(name){
   matListOpen = matListOpen === name ? null : name;
   renderMatResultsGrid();
-  document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
+  if (prefs.itemsListView) document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
 }
-/* Add/Remove for the open list row, above Home. Shown only while a row is
-   open in the full tray (syncMatFloatBtns()). */
+/* Add/Remove for the selected item, above Home. Shown only while one is
+   selected in the full tray (syncMatFloatBtns()). */
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
-  const show = matTrayExpanded && prefs.itemsListView && !!matListOpen && owns(matListOpen);
+  const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
   bar.hidden = !show;
   if (!show) return;
   const onMat = state.mat.includes(matListOpen);
@@ -389,6 +402,16 @@ function syncMatFilterBar(){
 
 /* Classic drawer body: the mat/Elements zone + score (#drawerTop), the
    filter bar (#matFilters), and the item grid (returned for #drawerBody). */
+/* Minimized board (shown only while the mat is collapsed): the mat's cards
+   as a row of icons, then how full it is in half-slots -- a tier 1 card
+   takes 1, a normal card 2, a capstone 4, of 16. Tap to show the mat. */
+function matMiniRowHTML(mat){
+  const used = mat.reduce((n, c) => n + (matIsTier1(c) ? 1 : matSlotsOf(c) * 2), 0);
+  const icons = mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("");
+  return `<button type="button" class="mat-mini-row" id="matMiniRow" title="Show the Display Mat">
+    <span class="mmr-icons">${icons || '<span class="mmr-empty">Nothing on the mat yet</span>'}</span>
+    <span class="mmr-room">${used}/${MAT_SLOTS_TOTAL * 2}</span></button>`;
+}
 function renderClassicDrawer(){
   document.getElementById("matFilters").hidden = false;
   document.getElementById("drawer").classList.toggle("expanded", matTrayExpanded);
@@ -449,6 +472,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     renderMatTop();
     return;
   }
+  if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
   if (ev.target.closest("#matRulesBtn")){ openOverlay("matRulesOverlay"); return; }

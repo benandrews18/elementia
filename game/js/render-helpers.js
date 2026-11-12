@@ -97,7 +97,7 @@ function itemRowHTML(entry, can, plain){
   return `<div class="irow">
       <div class="iem" style="--item-suit:${SUIT_COLOR[itemSuitOf(entry.name)]}">${em(entry.emoji)}</div>
       <div class="ibody">
-        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can)}</div>
+        <div class="itop"><span class="iname">${esc(entry.name)}</span>${suitCostBadgesHTML(entry, can, plain)}</div>
         <div class="recipe">${recipeHTML(entry, plain)}</div>
       </div>
     </div>`;

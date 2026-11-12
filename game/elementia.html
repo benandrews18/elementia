@@ -92,6 +92,9 @@
   <!-- No in-tray "View All Items" control: the hub's Inventory button
        expands the half view (see #hubInv's click handler). -->
   <div id="drawerTop"></div>
+  <!-- Show/hide on the gold line between the mat and the list: collapses the
+       mat to its minimized board (setMatCollapsed()). Full view only. -->
+  <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
@@ -119,8 +122,6 @@
   <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
   <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
 </div>
-<!-- Hide/show the Display Mat (setMatCollapsed()), stacked above #matFilterBtn. -->
-<button type="button" class="floatbtn mat-sf-btn" id="matHideBtn" title="Hide the Display Mat" aria-label="Hide the Display Mat" aria-expanded="true" hidden><span class="mcb-chev"></span></button>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
      built from game data (buildMatFilterBar()). -->

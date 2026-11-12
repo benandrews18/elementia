@@ -71,8 +71,10 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const listRow = ev.target.closest("[data-mat-row]");
   if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
+  // The results grid (card view): tap selects the card -- its shop row docks
+  // under the mat with Add/Remove (toggleMatListRow()), as in the list view.
   const matCard = ev.target.closest("[data-mat-card]");
-  if (matCard){ openMatCardPop(matCard.dataset.matCard); return; }
+  if (matCard){ toggleMatListRow(matCard.dataset.matCard); return; }
   const iBtn = ev.target.closest("[data-item]");
   if (!iBtn) return;
   const entry = ENTRIES.find(e => e.name === iBtn.dataset.item);
