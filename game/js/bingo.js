@@ -34,7 +34,7 @@ function releaseBingoCraftHold(){
   scheduleBingoSequence();
 }
 function bingoSequenceBlocked(){
-  return bingoCraftHold || anyOverlayOpen() || startingGiftInProgress || bingoRevealInProgress
+  return bingoCraftHold || anyOverlayOpen() || startingGiftInProgress
     || document.getElementById("rollPopup").classList.contains("open")
     || state.ended;
 }
@@ -169,7 +169,7 @@ document.getElementById("bingoClearOverlayBody").addEventListener("click", ev =>
   closeOverlay("bingoClearOverlay"); // finishes the sequence (closeOverlay())
 });
 
-/* BINGO card flip-in (runBingoRevealSequence()): from edge-on (rotateY
+/* BINGO square flip-in (chooseBingoCapstone()'s centre): from edge-on (rotateY
    -100deg) to flat, with .bingo-grid's perspective for 3D depth. Separate
    from bounceCardAppear(), which the crafted strip uses. */
 function bingoCellFlipAppear(cell){

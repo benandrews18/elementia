@@ -183,11 +183,10 @@ function openJobBoard(){
   openJobSheet();
 }
 function closeJobBoard(){
-  // Not dismissible mid-animation: during the flip-in reveal
-  // (runBingoRevealSequence()), the BINGO sequence (runBingoSequence()), or
-  // the opening capstone sequence -- a scrim tap would leave things
-  // half-done.
-  if (bingoRevealInProgress || bingoClearInProgress || capstoneIntroInProgress) return;
+  // Not dismissible mid-animation: during the BINGO sequence
+  // (runBingoSequence()) or the opening capstone sequence -- a scrim tap
+  // would leave things half-done.
+  if (bingoClearInProgress || capstoneIntroInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
@@ -313,7 +312,7 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   // own squares -- each opens that capstone's inspection card.
   const bingoTabBtn = ev.target.closest("[data-bingo-tab]");
   if (bingoTabBtn){
-    if (bingoRevealInProgress || bingoClearInProgress) return;
+    if (bingoClearInProgress) return;
     bingoTab = bingoTabBtn.dataset.bingoTab;
     renderJobBoard();
     return;

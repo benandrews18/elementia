@@ -1,19 +1,7 @@
 /* =====================================================================
    opening.js -- Run opening: the capstone choice and confirmation, the starting gift,
-   the pin tip, and the legacy BINGO-opening path for older saves.
-
-   Legacy BINGO opening: the tray opens with the 24 non-centre squares
-   flipping in, and the centre waits as an "Add Capstone" square. New runs
-   choose a capstone first instead (openCapstoneChoice() below); this path
-   remains for the "Add Capstone" square.
+   the pin tip, and the 5x5 card's "Add Capstone" square (older saves).
    ===================================================================== */
-// True only while runBingoRevealSequence()'s own staggered flip-in is
-// actively playing -- blocks closeJobBoard() for that brief window (see
-// its own comment) and does nothing else.
-let bingoRevealInProgress = false;
-// True only during that legacy opening: picking a capstone then also
-// retracts the tray (chooseBingoCapstone()).
-let bingoIntroActive = false;
 /* =====================================================================
    Classic's opening choice: rules slides -> pick a Capstone -> confirm.
    The capstone becomes the BINGO centre and its station the starting
@@ -181,49 +169,14 @@ function openTodoAt(name){
   target.classList.add("todo-hl");
   setTimeout(() => target.scrollIntoView({block: "center", behavior: lowMotion() ? "auto" : "smooth"}), 350);
 }
-function startBingoCapstonePicker(){
-  bingoIntroActive = true;
-  openJobSelectTray();
-  runBingoRevealSequence();
-}
-const BINGO_REVEAL_STAGGER_MS = 30;
-const BINGO_BOUNCE_AWAY_MS = 380;
-/* Flips every square but the centre open in a staggered wave. Per-cell
-   setTimeout, not onfinish (which never fires in a background tab). */
-function runBingoRevealSequence(){
-  const cells = [...document.querySelectorAll("#jobSheetBody .bingo-cell")];
-  bingoRevealInProgress = true;
-  cells.forEach((cell, i) => {
-    if (i === BINGO_CENTER_IDX) return; // stays a static placeholder -- see bingoCardHTML()
-    const order = i < BINGO_CENTER_IDX ? i : i - 1; // stagger order skips the center's own index
-    setTimeout(() => bingoCellFlipAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
-  });
-  const lastStaggerMs = (cells.length - 1) * BINGO_REVEAL_STAGGER_MS;
-  // +480: bingoCellFlipAppear()'s own animation duration -- waits for the
-  // very LAST square to actually finish flipping, not just start, before
-  // handing the hub/hint back to the player.
-  setTimeout(() => {
-    bingoRevealInProgress = false;
-    // data-intro-sequence is cleared when the tray closes (closeJobBoard()/
-    // closeBingoIntroTray()), not here.
-    updateHub();
-    render();
-  }, lastStaggerMs + 480);
-}
 /* Choosing from the capstone overlay (or "Random"): sets the centre
-   (setBingoCenter()), closes the overlay and flips the centre square in.
-   During the legacy opening the tray also retracts a beat later; otherwise
-   it stays open. */
+   (setBingoCenter()), closes the overlay and flips the centre square in. */
 function chooseBingoCapstone(name){
   setBingoCenter(name);
   closeCapstoneOverlay();
   renderJobBoard();
   const centerCell = document.querySelectorAll("#jobSheetBody .bingo-cell")[BINGO_CENTER_IDX];
   bingoCellFlipAppear(centerCell);
-  if (bingoIntroActive){
-    bingoIntroActive = false;
-    setTimeout(closeBingoIntroTray, 1000);
-  }
 }
 /* The capstone-choice grid as an overlay over the BINGO tray, opened from
    the "Add Capstone" square. */
@@ -319,25 +272,6 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
   performSingleCraft(entry);
   finishBingoCraft();
 });
-/* Bounces the tray away with a plain CSS animation (WAAPI's fill could
-   override the tray's own transform later), then snaps to the closed state
-   with transitions off. Also clears data-intro-sequence, like
-   closeJobBoard(). */
-function closeBingoIntroTray(){
-  jobSheet.classList.add("bounce-away");
-  setTimeout(() => {
-    jobSheet.style.transition = "none";
-    jobSheet.classList.remove("bounce-away", "open");
-    jobScrim.classList.remove("open");
-    jobSheet.offsetHeight; // force reflow
-    jobSheet.style.transition = "";
-    jobSheet.setAttribute("aria-hidden", "true");
-    document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
-    document.body.removeAttribute("data-intro-sequence");
-    updateHub();
-    render();
-  }, BINGO_BOUNCE_AWAY_MS);
-}
 
 /* Legacy Classic starting gift, used when a run starts from the map: the
    first station hands over one of each element in its dice pool and its

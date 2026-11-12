@@ -14,6 +14,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   collection with Maglev Train took it off the mat, but its tier 1 stacks
   of 3 stayed and no longer fit 2 to a slot. The mat now drops its
   last-placed cards until it fits (they stay owned).
+- **Saved layouts ask before deleting** ("Delete the layout ...? This can't
+  be undone.").
+- Code cleanup: removed the unused legacy BINGO flip-in intro and a few
+  unused helpers and settings; the inventory list is only rebuilt while the
+  inventory is open.
 
 ## 2026-11-11 (windows)
 

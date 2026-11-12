@@ -29,15 +29,6 @@
   transform:translateY(-100%);
 }
 #jobSheet.top-tray.open{transform:none}
-/* Classic intro tray exit (closeBingoIntroTray()): pop then shrink away.
-   Plain CSS animation, not WAAPI, so no lingering fill fights the tray's
-   own transform/transition. */
-@keyframes tray-bounce-away{
-  0%{transform:scale(1); opacity:1}
-  30%{transform:scale(1.03); opacity:1}
-  100%{transform:scale(.85); opacity:0}
-}
-#jobSheet.bounce-away{animation:tray-bounce-away .32s cubic-bezier(.3,.8,.4,1) forwards}
 /* Less bottom padding: this tray shrink-wraps its content. */
 #jobSheet.top-tray .dbody{padding-bottom:16px}
 /* Stations-visited row, full width at the top of the BINGO tray

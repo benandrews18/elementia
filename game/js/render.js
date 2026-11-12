@@ -60,7 +60,9 @@ function render(resetScroll){
   renderTurnClock();
   renderQuarkTopBar();
   document.getElementById("drawerScoreCount").textContent = score();
-  document.getElementById("drawerBody").innerHTML = renderDrawer();
+  // The inventory's contents only while it's open; openDrawer() builds them
+  // on opening.
+  if (drawer.classList.contains("open")) document.getElementById("drawerBody").innerHTML = renderDrawer();
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();

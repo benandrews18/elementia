@@ -243,8 +243,7 @@
   transition:transform .08s;
 }
 .convert-pick:hover:not(:disabled){transform:translateY(-1px)}
-/* The same mini element box as the station pools (white face, suit border
-   via elementColorAttr()). */
+/* The same mini element box as the station pools (white face, suit border). */
 .convert-pick .elsym{
   min-width:56px; font-size:23px; color:#221f1a; border-width:7px; border-radius:9px;
 }

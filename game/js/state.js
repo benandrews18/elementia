@@ -4,7 +4,6 @@
    ===================================================================== */
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
-const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
 
 function savePrefs(){ lsSet(PREFS_KEY, JSON.stringify(prefs)); }
 /* Drops the last-placed cards until the mat fits (they stay owned). For
@@ -84,7 +83,7 @@ let codexReturnDrawerPeeked = null;
 // so results stay comparable if difficulty is retuned.
 /* Defaults for a new player: auto card inspection on, mouse tips on
    (guidedTutorialEnabled), mini-games off, low motion off. */
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
+let prefs = {pinnedItems:[], minigamesEnabled:false,
   // Inventory item list: shop-style rows instead of cards (setItemsListView()).
   itemsListView:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
@@ -130,7 +129,7 @@ function freshState(){
     ended: false,      // session summary already shown for this run
     mode: null,        // always "classic" once a run starts
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
-                          // "visited every station" bonus and the Market's progress row.
+                          // Market's stations-visited row.
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
@@ -150,18 +149,13 @@ function freshState(){
     pendingBingoClears: [], // [lineIndex] completed but not yet played (runBingoSequence(), which
                             // runs once the craft's own effects finish).
     // The "?" elements held (Empty Elements): earned at the top Quark
-    // breakpoint and from BINGO lines; spent via openEmptyElPicker().
+    // breakpoint and from Market rows; spent via openEmptyElPicker().
     emptyElements: 0,
-    // Non-Classic Lock-In reward: a dice delta (-1..+2) applied by the next
-    // doRoll() at the destination, then reset. Classic uses
-    // state.matBonusDice instead.
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
     matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.
-    sawBreakpointGateNotice: false, // Unused (the warning banner is gone; old saves carry it). Was: the turn-9 "breakpoints now matter"
-                       // notice has fired yet this run (see BREAKPOINT_GATE_VISIT).
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).
     craftedEverything: false, // Classic: every CORE_ITEM_NAMES item owned -- see checkCraftedEverything().

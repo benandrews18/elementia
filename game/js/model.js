@@ -260,11 +260,6 @@ function paintElement(el, sym){
     el.style.color = "";
   }
 }
-/* The same colours as an inline style string, for template-built HTML. */
-function elementColorAttr(sym){
-  if (!ELEMENT_COLOR[sym]) return "";
-  return `style="background:#fff;border-color:${ELEMENT_COLOR[sym]}"`;
-}
 
 /* A station's dice in order, sorted by atomic number. Both the die-face
    legend and doRoll() read this, so face N always means the same element. */

@@ -56,6 +56,11 @@ function loadMatLayout(i){
   closeMatLayoutsOverlay();
 }
 function deleteMatLayout(i){
+  const L = prefs.savedMatLayouts[i];
+  if (!L) return;
+  askConfirm(`Delete the layout "${L.name}"? This can't be undone.`, () => deleteMatLayoutNow(i));
+}
+function deleteMatLayoutNow(i){
   prefs.savedMatLayouts.splice(i, 1);
   savePrefs();
   renderMatLayoutsList();

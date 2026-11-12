@@ -80,8 +80,8 @@ body.has-qtop main#screen{padding-top:calc(var(--qtop-h, 52px) + 4px)}
   display:flex; justify-content:space-between; align-items:flex-end; gap:0;
 }
 /* Classic's opening beat (see playClassicIntro()): the hub stays visible
-   but inert until the intro tray closes (closeJobBoard()/
-   closeBingoIntroTray()); same for the map's station nodes below. Separate
+   but inert until the intro tray closes (closeJobBoard()); same for the
+   map's station nodes below. Separate
    from body[data-picking], which covers the whole pre-start state. */
 body[data-intro-sequence] #hub{pointer-events:none}
 body[data-intro-sequence] .map-node{pointer-events:none}
