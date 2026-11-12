@@ -297,29 +297,21 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .pc-sig{margin-top:8px; padding:6px 8px; border-radius:10px; background:#fff3d6; border:1.5px solid #c79a2e;
   font-size:12.5px; font-weight:700; line-height:1.3; color:#3a2a08}
 .pc-sig[hidden]{display:none}
-/* Capstones: a double-wide (landscape) card. Same corner badges; the art
-   takes the left column, title/components/rule the right. */
-#cardPop.cap-landscape .pc-card-wrap{max-width:600px}
-#cardPop.cap-landscape .pc-card{
-  aspect-ratio:10/7; padding:16px 18px 14px;
-  display:grid; grid-template-columns:42% 1fr; column-gap:14px; align-content:center;
-}
-#cardPop.cap-landscape .pc-icon-wrap{grid-column:1; grid-row:1 / span 6; flex:none}
-#cardPop.cap-landscape .pc-icon{font-size:min(110px, 22vw)}
-#cardPop.cap-landscape :is(.pc-title, .pc-divider, .pc-label, .pc-ingredients, .pc-sig){grid-column:2}
-#cardPop.cap-landscape .pc-title{padding:0 40px 0 0; text-align:left; font-size:20px; margin-top:0}
+/* Capstones: the same card, landscape. Only the frame changes shape --
+   layout, text and corner badges stay where they are on a portrait card;
+   the art shrinks to the shorter card. */
+#cardPop.cap-landscape .pc-card-wrap{max-width:560px}
+#cardPop.cap-landscape .pc-card{aspect-ratio:7/5}
+/* The art takes whatever height is left (portrait gives it a fixed half),
+   so the shorter card still fits its title, components and rule. */
+#cardPop.cap-landscape .pc-icon-wrap{flex:1 1 0; min-height:56px}
+#cardPop.cap-landscape .pc-icon{font-size:min(72px, 16vw)}
+#cardPop.cap-landscape .pc-card{padding-top:14px; padding-bottom:12px}
+#cardPop.cap-landscape .pc-title{margin-top:2px}
 #cardPop.cap-landscape .pc-divider{margin:6px 0}
 #cardPop.cap-landscape .pc-label{margin-bottom:5px}
-/* Landscape corner badges a little smaller, and the suit costs run along
-   the top edge (stacked down the side they covered the text). Padding
-   clears them. */
-#cardPop.cap-landscape .pc-card{border-width:12px; padding:34px 34px 30px 16px}
-#cardPop.cap-landscape :is(.pc-badge, .pc-station-badge, .pc-suitcost-badge){width:46px; height:46px; border-width:3px}
-#cardPop.cap-landscape .pc-badge{top:-12px; left:-12px}
-#cardPop.cap-landscape .pc-badge .n{font-size:22px}
-#cardPop.cap-landscape .pc-station-badge{bottom:-12px; right:-12px}
-#cardPop.cap-landscape .pc-suitcosts{top:-12px; right:-12px; flex-direction:row-reverse; gap:6px}
-#cardPop.cap-landscape .pc-title{padding-right:0}
+/* Clear of the suit-cost column down the right edge. */
+#cardPop.cap-landscape :is(.pc-ingredients, .pc-sig){margin-right:32px}
 /* Below the card, its own tap target, so it can stopPropagation without
    triggering tap-to-dismiss. */
 /* Holds Item Info alongside the (usually hidden) Back button -- a plain

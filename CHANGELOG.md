@@ -10,10 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-11 (item cards)
 
-- **Capstone cards are landscape** (double-wide) in the card view, with the
-  same corner badges (suit costs along the top edge) and room for a line
-  about what the capstone does on the Display Mat (coming with the
-  capstone rules).
+- **Capstone cards are landscape** in the card view: the same card, just a
+  wider frame -- art, title, components and corner badges where they are
+  on a portrait card -- with room for a line about what the capstone does
+  on the Display Mat (coming with the capstone rules).
 - **Inventory:** tapping the picture in an item's open shop row opens its
   item card, as in the Marketplace.
 - **Removed** the Display Mat Add/Remove button from the item card; adding
