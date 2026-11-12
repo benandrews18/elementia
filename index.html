@@ -302,8 +302,9 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 /* Lock In: purple (--collection), distinct from Market gold and Travel
    teal -- its own higher-stakes beat. */
 #hubHome.face-lockin{--face-color:var(--collection); color:#000}
+#hubHome.face-final{--face-color:var(--gold); color:#000}
 #hubHome.face-map{--face-color:var(--hub-map); color:#000}
-#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
+#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-final, #hubHome.face-map{
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }
@@ -6418,6 +6419,13 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
+    // End of turn 24: one last Display Mat score before Run Complete
+    // (startFinalCheck()). bestMatScore -- the top Quark score -- is the
+    // run's score; item points (score()) are its item score.
+    finalCheckPending: false,
+    // Every board check's Quark score [{v: visit, q: quarks, final?}], for
+    // History exports.
+    checkLog: [],
     ecoStreak: 0, // Old Growth: board checks in a row with Ecosystem on the mat (finishLockIn()).
     starsEarned: 0, // Stars earned this run (grantStars()), shown on the end screen.
     marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.
@@ -6490,7 +6498,11 @@ function recordHistory(){
     mode: state.mode,
     date: new Date().toISOString(),
     visits: state.visits,
-    score: score(),
+    // The run's score is its top Quark score; item points are itemScore.
+    // (Runs recorded before 2026-11-12 have only score = item points.)
+    score: Math.round(state.bestMatScore || 0),
+    itemScore: score(),
+    checks: JSON.parse(JSON.stringify(state.checkLog || [])),
     capstones: CAPSTONES.filter(owns),
     // Deep copy: state is about to be wiped. Per visit: station, rolls, crafts.
     visitLog: JSON.parse(JSON.stringify(state.visitLog || [])),
@@ -6539,7 +6551,7 @@ function renderHistory(){
       <div class="histrow-line">
         <button type="button" class="histrow" data-hist-toggle="${i}" aria-expanded="${open}">
           <span class="histvisits">${h.visits} turn${h.visits === 1 ? "" : "s"}</span>
-          <span class="histscore">${h.score} pts</span>
+          <span class="histscore">${h.itemScore !== undefined ? `⚛️ ${h.score.toLocaleString()}` : `${h.score} pts`}</span>
           <span class="histcaps">${h.capstones.length
             ? h.capstones.map(n => em(ITEM_EMOJI[n])).join("")
             : '<span class="histnone">—</span>'}</span>
@@ -7383,6 +7395,11 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // The mat is already open when this face shows -- just score it
   // (confirmLockIn()).
   if (face === "lockin"){ if (!lockInCommitted) confirmLockIn(); return; }
+  // Final Score: opens the mat if it's closed, else scores it.
+  if (face === "final"){
+    if (!drawer.classList.contains("open")){ matDrawerView = "mat"; openDrawer(); return; }
+    confirmFinalLockIn(); return;
+  }
   // The Marketplace tray reads "Map" but still has to be closed; the map is
   // already underneath.
   if (face === "map" && openPanelName() === "jobs"){ closeJobBoard(); return; }
@@ -7451,6 +7468,7 @@ function setHubHomeFace(face){
     travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     // Classic's Lock-In face (hubHomeFace()); other modes keep plain "travel".
     lockin: { hi: "🔒", hl: "Lock In" },
+    final:  { hi: "🏁", hl: "Final Score" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
   };
@@ -7461,7 +7479,7 @@ function setHubHomeFace(face){
     // innerHTML: the market face's icon is an <img> (see FACES.market).
     home.querySelector(".hi").innerHTML = target.hi;
     home.querySelector(".hl").textContent = target.hl;
-    home.classList.remove("face-roll", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
+    home.classList.remove("face-final", "face-roll", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
   if (isCoinPair && !lowMotion()){
@@ -7540,6 +7558,7 @@ function updateHub(){
     : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : face === "lockin" ? "Lock in your Display Mat"
+    : face === "final" ? "Lock in your mat for your final score"
     : "Back to the station map";
   // The Market button gets a "!" until the Marketplace is first opened
   // (state.marketVisited, set by openJobSelectTray()).
@@ -7574,6 +7593,8 @@ function hubHomeFace(){
   // The full Marketplace tray (jobSheetVariant === "full", opened by Home)
   // reads "Map" -- leaving it is just returning to the map. The hub's compact
   // To-Do tray falls through to "close".
+  // Turn 24 is over: the only way on is the final score (no travel).
+  if (state.finalCheckPending && (!panel || panel === "drawer")) return "final";
   if (panel === "jobs" && jobSheetVariant === "full") return "map";
   // Lock In only through the travel doorway: travelPromptFor ===
   // selectedMapStation is set only by tapping Travel, so opening the mat any
@@ -9230,7 +9251,7 @@ function goMap(){
   // start a new game. Older saves already past it get this on their next
   // return to the map.
   else if (state.visits >= RUN_COMPLETE_VISIT && !state.runComplete && !state.ended){
-    state.runComplete = true; grantStars(STARS_RUN); save(); fireConfetti(); showEndGame();
+    startFinalCheck();
   }
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at the hub's Market button.
@@ -11056,7 +11077,7 @@ function setQuarkMeterProgress(total){
    combos would otherwise never leave 0), Quarks bounce once more, and
    finishLockIn() runs (its modal is the one place the reward is shown).
    The timing is fixed; bouncePulse() itself handles reduced motion. */
-function playLockInSequence(reward){
+function playLockInSequence(reward, onDone = finishLockIn){
   document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
@@ -11116,7 +11137,7 @@ function playLockInSequence(reward){
     bouncePulse(document.querySelector("#drawerTop .qm-total"));
   }, afterBeats);
   const afterQuarks = afterBeats + LOCKIN_BOUNCE_DURATION_MS + 300;
-  setTimeout(() => finishLockIn(reward), afterQuarks);
+  setTimeout(() => onDone(reward), afterQuarks);
 }
 // Apply the Lock-In reward and travel. Classic: the dice bonus lasts until
 // the next check (state.matBonusDice); other modes: a one-trip delta
@@ -11124,6 +11145,7 @@ function playLockInSequence(reward){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
+  (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(matScore(matOnMat()).total) });
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
@@ -11214,6 +11236,38 @@ document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
   }
 });
 
+/* The final score: back on the map after turn 24's shopping, the mat
+   opens for one last Lock-In (Home's "Final Score" face). Its Quarks count
+   toward the run's score (state.bestMatScore, the top Quark score); then
+   Run Complete. No travel and no reward dice. */
+function startFinalCheck(){
+  state.finalCheckPending = true;
+  save();
+  matDrawerView = "mat";
+  openDrawer();
+  queueEventToast("check", "🏁", `Turn ${RUN_COMPLETE_VISIT} / ${RUN_COMPLETE_VISIT}`, "Final Score -- lock in your best mat");
+  updateHub();
+}
+function confirmFinalLockIn(){
+  if (lockInCommitted) return;
+  lockInCommitted = true;
+  const s = matScore(matOnMat());
+  state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
+  updateHub();
+  playLockInSequence(0, () => finishFinalCheck(s.total));
+}
+function finishFinalCheck(total){
+  document.body.classList.remove("lockin-playing");
+  (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
+  state.finalCheckPending = false;
+  lockInCommitted = false;
+  closeDrawer();
+  state.runComplete = true;
+  grantStars(STARS_RUN);
+  save();
+  fireConfetti();
+  showEndGame();
+}
 /* A board check opening (hub's Travel on a checkpoint turn): a banner
    drops in with the turn and bounces away; the very first check ever also
    opens the Display Mat rules (prefs.sawMatCheckTutorial). */
@@ -12017,7 +12071,8 @@ function checkBingoLines(){
 function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
   return `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">SCORE (TOP QUARKS)</div></div>
+    <div class="sumstat"><div class="n">${score()}</div><div class="l">ITEM SCORE</div></div>
     <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
     ${extraCells || ""}`;
@@ -12119,8 +12174,7 @@ function showEndGame(){
 
   const top = topVisitedStation();
   const topStation = top && STATION_BY_NAME[top.name];
-  const extraCells = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
+  const extraCells = `${
       top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
