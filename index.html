@@ -10088,13 +10088,6 @@ function toggleMatCard(name){
   renderMatTop(); renderMatResultsGrid(); save();
 }
 
-/* Tapping any Display Mat card (browse grid or mat slot) opens its
-   inspection popup (add/remove lives there, #cpMatBtn). Uses
-   CORE_ITEM_STATION to find the card's real ENTRIES row. */
-function openMatCardPop(name){
-  const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
-  if (entry) showCardPop(entry, false, false, true);
-}
 
 let matToastTimer = null;
 function showMatToast(msg){
@@ -10133,10 +10126,11 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     // A tier 1 stack holds two cards: open the one tapped.
     const cardBtn = ev.target.closest("[data-mat-card]") || filledSlot.querySelector("[data-mat-card]");
     if (cardBtn){
-      // Peeked view: expand to the full view FIRST (expandDrawerToFull()) so the
-      // popup docks under the gold line as usual.
+      // Same as tapping it in the item list (toggleMatListRow()): selects it,
+      // showing its shop row and Add/Remove. Peeked view: expand to the full
+      // view first so that row has somewhere to show.
       expandDrawerToFull();
-      openMatCardPop(cardBtn.dataset.matCard);
+      toggleMatListRow(cardBtn.dataset.matCard);
     }
     return;
   }
@@ -10488,8 +10482,6 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
     renderMatResultsGrid();
     return;
   }
-  // The results grid (renderClassicDrawer()): tap opens the card popup
-  // (openMatCardPop()), where adding/removing happens.
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   const listRow = ev.target.closest("[data-mat-row]");
