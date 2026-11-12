@@ -68,6 +68,7 @@ function render(resetScroll){
   renderConvertGoalCard();
   if (bingoCraftEntry) renderBingoCraftCard();
   maybeShowEmptyElTip();
+  maybeShowCollectionFound();
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();

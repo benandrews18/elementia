@@ -250,6 +250,7 @@ function renderMatTop(){
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
+  maybeShowCollectionFound();
   document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
@@ -361,7 +362,9 @@ function toggleMatListRow(name){
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
-  bar.hidden = !show;
+  // Slides up from behind the hub (.show), and back down when hidden.
+  bar.classList.toggle("show", show);
+  bar.setAttribute("aria-hidden", String(!show));
   if (!show) return;
   const onMat = state.mat.includes(matListOpen);
   document.getElementById("matListAdd").disabled = onMat;

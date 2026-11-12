@@ -126,9 +126,9 @@
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
 <!-- List view: Add/Remove for the open row, above Home (syncMatListActions()). -->
-<div id="matListActions" hidden>
-  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat">➕ Add</button>
-  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat">➖ Remove</button>
+<div id="matListActions" aria-hidden="true">
+  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat"><span class="mla-ic">➕</span>Add</button>
+  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat"><span class="mla-ic">➖</span>Remove</button>
 </div>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
@@ -568,6 +568,11 @@
     <div class="clue-shop-btns" id="clueShopBtns" hidden></div>
     <div id="collectionsList"></div>
   </div>
+</div>
+
+<!-- A collection just completed on the mat (maybeShowCollectionFound()). -->
+<div class="overlay" id="collectionFound" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="collectionFoundName">
+  <div class="sheetbox clue-open-box" id="collectionFoundBody"></div>
 </div>
 
 <!-- Collection clue gift boxes (openClueBoxes()), over Collections. -->

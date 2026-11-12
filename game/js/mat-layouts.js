@@ -136,6 +136,48 @@ function namedCollectionCardHTML(c, withToggle){
       </div>
     </div>`;
 }
+/* -------------------------------------------- collection discovery --- */
+/* A collection is discovered the moment it's complete on the Display Mat
+   (any run, not Combo Lab): a window shows it and "Add to Collections"
+   saves it. Called from render() and renderMatTop(); waits while anything
+   else is on screen. One at a time, in collection order. */
+let collectionFoundTimer = null, collectionFoundShowing = null;
+function maybeShowCollectionFound(){
+  if (comboLabActive || collectionFoundShowing || collectionFoundTimer || !state || !state.mode) return;
+  const c = matCompletedIn(matOnMat()).find(x => !prefs.everUnlockedMatCollections.includes(x.id));
+  if (!c) return;
+  const busy = anyOverlayOpen() || bingoClearInProgress || document.body.classList.contains("lockin-playing")
+    || (typeof lockInCommitted !== "undefined" && lockInCommitted);
+  if (busy){
+    collectionFoundTimer = setTimeout(() => { collectionFoundTimer = null; maybeShowCollectionFound(); }, 500);
+    return;
+  }
+  collectionFoundShowing = c.id;
+  document.getElementById("collectionFoundBody").innerHTML = `
+    <div class="clue-burst" aria-hidden="true"></div>
+    <div class="clue-card found">
+      <div class="clue-kicker">New collection!</div>
+      <div class="clue-name" id="collectionFoundName">${esc(c.name)}</div>
+      <div class="clue-icons">${c.items.map(n => `<span class="clue-ic" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>
+      <div class="clue-new">+${c.bonus} on your mat whenever it's all there</div>
+    </div>
+    <div class="btnrow" style="justify-content:center">
+      <button type="button" class="bigbtn" id="collectionFoundAdd">🏆 Add to Collections</button>
+    </div>`;
+  openOverlay("collectionFound");
+}
+document.getElementById("collectionFound").addEventListener("click", ev => {
+  if (!ev.target.closest("#collectionFoundAdd") || !collectionFoundShowing) return;
+  const id = collectionFoundShowing;
+  if (!prefs.everUnlockedMatCollections.includes(id)) prefs.everUnlockedMatCollections.push(id);
+  if (prefs.collectionClues) delete prefs.collectionClues[id];
+  savePrefs();
+  grantStars(STARS_DISCOVERY);
+  collectionFoundShowing = null;
+  closeOverlay("collectionFound");
+  if (drawer.classList.contains("open")) renderMatTop();
+  maybeShowCollectionFound(); // another one completed by the same move
+});
 /* --------------------------------------------------------- Stars --- */
 /* Stars (prefs.stars, kept across runs) buy collection clues. Earned:
    finishing a run, each new trophy, each collection discovered by playing.

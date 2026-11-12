@@ -55,6 +55,24 @@
     if (e) { performSingleCraft(e); await wait(2500); closeOverlay("cardPop"); await wait(500); }
   });
   await step("drawer", async () => { openDrawer(); render(); await wait(200); matDrawerView = "elements"; renderMatTop(); matDrawerView = "mat"; renderMatTop(); closeDrawer(); });
+  // A collection completed on the mat is discovered right away: a window
+  // shows it and "Add to Collections" saves it (+1 Star).
+  await step("collection found", async () => {
+    const saved = {items: state.items.slice(), mat: state.mat.slice(), unl: prefs.everUnlockedMatCollections.slice(), stars: prefs.stars};
+    const c = MAT_COLLECTIONS.find(x => !prefs.everUnlockedMatCollections.includes(x.id) && matFits(x.items.map(n => MAT_CARD_BY_NAME[n])));
+    document.querySelectorAll(".overlay.open").forEach(o => closeOverlay(o.id));
+    state.items = [...new Set([...state.items, ...c.items])]; state.mat = c.items.slice(); prefs.stars = 0;
+    render(); await wait(700);
+    const ov = document.getElementById("collectionFound");
+    if (!ov.classList.contains("open")) errs.push(`completing ${c.name} on the mat should open the collection window`);
+    else {
+      document.getElementById("collectionFoundAdd").click();
+      if (!prefs.everUnlockedMatCollections.includes(c.id) || prefs.stars !== STARS_DISCOVERY || ov.classList.contains("open"))
+        errs.push("Add to Collections should discover it, pay a Star and close");
+    }
+    state.items = saved.items; state.mat = saved.mat; prefs.everUnlockedMatCollections = saved.unl; prefs.stars = saved.stars; savePrefs();
+    render();
+  });
   // BINGO reward dismissed by a backdrop tap (not "Nice!") must unlock the
   // tray -- it used to leave #jobSheet locked and the game frozen.
   await step("bingo reward backdrop", async () => {

@@ -408,15 +408,24 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
 /* Add/Remove for the open row: centred just above Home, clear of the
    Sort (left) and Filter/Hide (right) float buttons. */
+/* Below the hub (72) so it hides behind it: down out of sight when no item
+   is selected, bouncing up when one is (syncMatListActions()). */
 #matListActions{
-  position:fixed; z-index:61; left:50%; transform:translateX(-50%);
-  bottom:calc(var(--hub-h, 67px) + 30px); display:flex; gap:8px;
+  position:fixed; z-index:61; left:50%; display:flex; gap:10px;
+  bottom:calc(var(--hub-h, 67px) + 22px);
+  transform:translate(-50%, calc(100% + 40px)); pointer-events:none;
+  transition:transform .32s cubic-bezier(.5,0,.75,0);
 }
-#matListActions[hidden]{display:none}
+#matListActions.show{transform:translate(-50%, 0); pointer-events:auto;
+  transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+html.low-motion #matListActions{transition:none}
 .mat-list-act{
-  padding:9px 12px; border-radius:999px; font-size:13px; font-weight:900; white-space:nowrap;
-  border:2px solid #000; box-shadow:0 3px 8px rgba(0,0,0,.4); color:#181614;
+  width:76px; height:68px; padding:6px 4px; border-radius:16px; font-size:13px; font-weight:900;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  border:2.5px solid #000; box-shadow:0 4px 0 rgba(0,0,0,.45), 0 6px 12px rgba(0,0,0,.35); color:#181614;
 }
+.mla-ic{font-size:22px; line-height:1}
+.mat-list-act:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
