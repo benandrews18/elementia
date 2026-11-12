@@ -114,6 +114,7 @@ function openJobSelectTray(){
   jobSheetVariant = "full";
   bingoTab = "bingo";
   state.marketVisited = true;
+  state.marketUnseen = false;
   openJobSheet();
   updateHub();
 }

@@ -84,6 +84,21 @@ function runBingoSequence(){
   const lines = [...(state.pendingBingoClears || [])];
   bingoPendingSquares = [];
   if (!squares.length && !lines.length) return;
+  // Only the very first Marketplace square (ever, prefs) opens the tray to
+  // show what happened; after that a square alone is a toast plus a "!" on
+  // the Market button (state.marketUnseen) until the Market is opened. A
+  // finished line/row still opens the tray all the way for its "?".
+  const trayOpen = jobSheet.classList.contains("open") && jobSheetVariant === "full";
+  if (!lines.length && !trayOpen && prefs.sawMarketSquareTray){
+    squares.forEach(i => {
+      const name = state.bingoCard[i];
+      queueEventToast("market", em(ITEM_EMOJI[name]), "Marketplace item done", name);
+    });
+    state.marketUnseen = true;
+    save(); updateHub();
+    return;
+  }
+  if (!prefs.sawMarketSquareTray){ prefs.sawMarketSquareTray = true; savePrefs(); }
   bingoClearInProgress = true;
 
   // 1. Tray in from the top, on the BINGO page.

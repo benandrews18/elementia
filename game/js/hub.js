@@ -283,7 +283,9 @@ function updateHub(){
     : "Back to the station map";
   // The Market button gets a "!" until the Marketplace is first opened
   // (state.marketVisited, set by openJobSelectTray()).
-  setHubBadge("hubMarket", state.marketVisited ? null : "!");
+  // ...and again whenever a Market square was finished out of sight
+  // (state.marketUnseen, see runBingoSequence()).
+  setHubBadge("hubMarket", state.marketVisited && !state.marketUnseen ? null : "!");
 }
 
 /* Whether the player can travel to the selected map station right now
