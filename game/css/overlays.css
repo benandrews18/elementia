@@ -59,6 +59,14 @@ body:has(#bingoCraftOverlay.open) #convert{z-index:72}
 body:has(#bingoCraftOverlay.open) #quickConvertBtn{z-index:73}
 body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
+/* Above the Marketplace tray (69) too. */
+#emptyElTip{z-index:76; align-items:center}
+.empty-el-tip{max-width:360px; text-align:center}
+.empty-el-tip p{margin:8px 0}
+.eet-icon{display:flex; justify-content:center; margin-bottom:6px}
+.eet-convert{display:inline-flex; vertical-align:middle; width:30px; height:30px; border-radius:50%;
+  align-items:center; justify-content:center; background:var(--card); border:2px solid var(--gold)}
+.eet-convert :is(img,svg){width:20px; height:20px}
 /* Locks the tray against taps for the pre-animation pause plus the
    animation itself (see runBingoSequence()'s own comment) --
    nothing in here should be interruptible mid-beat. */

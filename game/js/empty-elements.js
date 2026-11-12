@@ -35,6 +35,30 @@ document.getElementById("convertEmptyEl").addEventListener("click", ev => {
   closeOverlay("convert");
   openEmptyElPicker();
 });
+/* The first time a player ever holds a "?" (prefs.sawEmptyElTip), a short
+   popout explains it -- once whatever handed it over (BINGO reward,
+   Lock-In) has finished. Called from render(); polls while busy. */
+let emptyElTipTimer = null;
+function maybeShowEmptyElTip(){
+  if (prefs.sawEmptyElTip || !((state.emptyElements || 0) > 0) || emptyElTipTimer) return;
+  const busy = anyOverlayOpen() || bingoClearInProgress || startingGiftInProgress
+    || document.body.classList.contains("lockin-playing") || !!state.ended;
+  if (busy){
+    emptyElTipTimer = setTimeout(() => { emptyElTipTimer = null; maybeShowEmptyElTip(); }, 500);
+    return;
+  }
+  prefs.sawEmptyElTip = true; savePrefs();
+  document.getElementById("emptyElTipBody").innerHTML = `
+    <div class="eet-icon">${emptyElSquareHTML(56)}</div>
+    <h2 id="emptyElTipTitle">Unknown Element!</h2>
+    <p>An Unknown Element can become <b>any element</b> from the station you're at.</p>
+    <p class="eet-where">Use it from the <span class="eet-convert">${em("__CONVERT__")}</span> <b>Convert</b> menu.</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="emptyElTipOk">Got it</button></div>`;
+  openOverlay("emptyElTip");
+}
+document.getElementById("emptyElTip").addEventListener("click", ev => {
+  if (ev.target.closest("#emptyElTipOk")) closeOverlay("emptyElTip");
+});
 /* Spending a "?" opens a popout with the current station's element pool --
    the same .gather/.gcol/.gchip row as the shop -- and the picked element
    flies into the inventory. */
