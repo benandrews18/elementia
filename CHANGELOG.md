@@ -22,6 +22,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **Tapping a card on the Display Mat** now selects it like tapping it in
   the item list (its shop row and Add/Remove), instead of opening the old
   card popup.
+- **Minimized Display Mat** shows its cards as 2 rows of 8, so all of
+  them are visible (it scrolled sideways before).
 
 ## 2026-11-11 (Market goal row, better hint)
 

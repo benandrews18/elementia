@@ -372,9 +372,12 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-mini-row{display:none; width:100%; align-items:center; gap:8px; margin:2px 0 8px; padding:6px 8px;
   border-radius:12px; border:2px solid #a67c4a; background:#cda874; color:#181614; cursor:pointer; text-align:left}
 #drawer.mat-collapsed .mat-mini-row{display:flex}
-.mmr-icons{flex:1; min-width:0; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
-.mmr-ic{flex:none; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1}
+/* 2 rows of 8: the mat holds at most 16 cards (all tier 1), so every one
+   shows. */
+.mmr-icons{flex:1; min-width:0; display:grid; grid-template-columns:repeat(8, 1fr); gap:3px}
+.mmr-ic{height:28px; display:flex; align-items:center; justify-content:center; font-size:22px; line-height:1}
 .mmr-ic :is(img,svg){width:24px; height:24px}
+.mmr-empty{grid-column:1 / -1}
 .mmr-empty{font-size:12px; font-weight:700; opacity:.7}
 .mmr-room{flex:none; font-weight:900; font-size:14px; font-variant-numeric:tabular-nums}
 .ms-pip, .ms-station{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
