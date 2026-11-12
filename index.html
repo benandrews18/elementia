@@ -742,6 +742,8 @@ body[data-screen="market"] #trackedPill{display:none}
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
 #eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
 #eventToast.et-market{background:var(--ok-soft); border-bottom-color:var(--ok)}
+#eventToast.et-check{background:var(--gold-soft); border-bottom-color:var(--gold)}
+#eventToast.et-check .ct-title{color:var(--gold)}
 #eventToast.et-market .ct-title{color:var(--ok)}
 #eventToast .ct-icon :is(img,svg){width:30px; height:30px}
 /* This kind's text is a sentence, so it uses body sizing, not the bold
@@ -2149,6 +2151,9 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
 /* Above the Marketplace tray (69) too. */
 #emptyElTip{z-index:76; align-items:center}
+.mat-rules-page[hidden]{display:none}
+.mct-line{margin:8px 0; line-height:1.45}
+.mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
 .empty-el-tip{max-width:360px; text-align:center}
 .empty-el-tip p{margin:8px 0}
 .eet-icon{display:flex; justify-content:center; margin-bottom:6px}
@@ -3632,10 +3637,18 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
      corner (see renderMatTop()). -->
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
   <div class="sheetbox mat-rules-box">
-    <h2 id="matRulesTitle">Display Mat</h2>
-    <p class="libt-sub" id="lockInBannerSub"></p>
-    <div id="lockInQuarkTutorial"></div>
-    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesOk">Got it</button></div>
+    <!-- Page 1: the check itself; page 2: Quark combos (openMatRules()). -->
+    <div class="mat-rules-page" id="matRulesPage1">
+      <h2 id="matRulesTitle">⚛️ Display Mat Score</h2>
+      <div id="matCheckTutorial"></div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesNext">Next</button></div>
+    </div>
+    <div class="mat-rules-page" id="matRulesPage2" hidden>
+      <h2>Quark Combos</h2>
+      <p class="libt-sub" id="lockInBannerSub"></p>
+      <div id="lockInQuarkTutorial"></div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="matRulesOk">Got it</button></div>
+    </div>
   </div>
 </div>
 <aside id="drawer" aria-label="Inventory" aria-hidden="true">
@@ -6376,7 +6389,7 @@ function freshState(){
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.
-    sawBreakpointGateNotice: false, // One-shot: whether the turn-10 "breakpoints now matter"
+    sawBreakpointGateNotice: false, // Unused (the warning banner is gone; old saves carry it). Was: the turn-9 "breakpoints now matter"
                        // notice has fired yet this run (see BREAKPOINT_GATE_VISIT).
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).
@@ -7305,9 +7318,10 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      // Revised 2026-11-02: straight to the full inventory -- the mat's
-      // rules live behind its own "?" button now (see #matRulesOverlay).
+      // Straight to the full inventory; a banner names the check, and the
+      // first check ever explains it (announceMatCheck()).
       openDrawer();
+      announceMatCheck();
       return;
     }
     goStation(selectedMapStation);
@@ -7559,7 +7573,6 @@ const openDrawer = (opts = {}) => {
   drawer.setAttribute("aria-hidden", "false");
   syncMatFloatBtns();
   updateHub();
-  maybeShowBreakpointGateNotice();
 };
 const closeDrawer = () => {
   setMatCollapsed(false);
@@ -9730,7 +9743,19 @@ let matTrayExpanded = false;
 // The latest matScore(), cached for the Lock-In sequence and grid refreshes.
 let matLastScore = null;
 
+/* The Display Mat rules, two pages: how the check works, then Quark combos.
+   Opened by the mat's "?" and automatically at the first check ever. */
+function openMatRules(){
+  document.getElementById("matRulesPage1").hidden = false;
+  document.getElementById("matRulesPage2").hidden = true;
+  openOverlay("matRulesOverlay");
+}
 document.getElementById("matRulesOverlay").addEventListener("click", ev => {
+  if (ev.target.closest("#matRulesNext")){
+    document.getElementById("matRulesPage1").hidden = true;
+    document.getElementById("matRulesPage2").hidden = false;
+    return;
+  }
   if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")) closeOverlay("matRulesOverlay");
 });
 
@@ -10092,7 +10117,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
-  if (ev.target.closest("#matRulesBtn")){ openOverlay("matRulesOverlay"); return; }
+  if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
     openComboInfo(comboChip.dataset.comboKind, comboChip.dataset.comboName);
@@ -11057,16 +11082,20 @@ document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
   if (ev.target === ev.currentTarget) dismissLockInRewardModal();
 });
 
-// One-time warning the first time the mat is viewed on
-// BREAKPOINT_GATE_VISIT: from now on missing the first breakpoint at sunset
-// ends the run.
-function maybeShowBreakpointGateNotice(){
-  if (state.visits !== BREAKPOINT_GATE_VISIT || state.sawBreakpointGateNotice) return;
-  state.sawBreakpointGateNotice = true;
-  save();
-  queueEventToast("warn", "⚠️", "Breakpoints now matter",
-    "From now on, missing your first Quark breakpoint at a checkpoint (every 3rd turn, the glowing clock) ends your run.");
+/* A board check opening (hub's Travel on a checkpoint turn): a banner
+   drops in with the turn and bounces away; the very first check ever also
+   opens the Display Mat rules (prefs.sawMatCheckTutorial). */
+function announceMatCheck(){
+  queueEventToast("check", "⚛️", `Turn ${state.visits} / ${RUN_COMPLETE_VISIT}`, "Display Mat Score");
+  if (!prefs.sawMatCheckTutorial){
+    prefs.sawMatCheckTutorial = true; savePrefs();
+    openMatRules();
+  }
 }
+document.getElementById("matCheckTutorial").innerHTML = `
+  <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
+  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
+  <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
 document.getElementById("lockInBannerSub").innerHTML =
