@@ -31,50 +31,105 @@ function renderJobBoard(){
    Nothing renders when nothing is pinned. Switching which pin is tracked
    happens in the Pins tray. Job cards are retired in Classic. */
 /* "What should I craft next?": looks through every pinned item's remaining
-   ingredient tree (stillNeededClosure()). Prefers items already buildable
-   from owned items, then items that feed several pinned goals, then fewer
-   remaining steps. Ignores which elements happen to be held (they reset
-   every visit). null when everything is owned. */
+   ingredient tree (stillNeededClosure()) and suggests only items whose
+   components are all owned, so the advice can be acted on. Ranked by:
+   craftable right now, pinned items it feeds, unowned items that use it
+   directly, fewest missing elements, points. null when everything is
+   owned. */
 function computeTodoHint(){
   const roots = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name) && !owns(name));
   if (!roots.length) return null;
-
-  const usage = new Map(); // candidate item name -> Set of pinned roots it feeds
-  roots.forEach(root => {
-    new Set([root, ...stillNeededClosure(root)]).forEach(name => {
-      if (!usage.has(name)) usage.set(name, new Set());
-      usage.get(name).add(root);
+  // Every unowned item still needed, with the pinned items it feeds and how
+  // many unowned items in those breakdowns use it directly.
+  const feeds = new Map(), parents = new Map();
+  roots.forEach(root => [root, ...stillNeededClosure(root)].forEach(name => {
+    if (!feeds.has(name)) feeds.set(name, new Set());
+    feeds.get(name).add(root);
+    const e = ENTRIES.find(x => x.name === name);
+    if (e) needsOf(e.reqs).items.forEach(it => {
+      if (owns(it.name)) return;
+      if (!parents.has(it.name)) parents.set(it.name, new Set());
+      parents.get(it.name).add(name);
     });
-  });
-
+  }));
+  // Only items the player could make next (every component owned) -- a
+  // suggestion they can act on, never one blocked by another missing item.
   let best = null;
-  usage.forEach((rootSet, name) => {
-    const entry = ENTRIES.find(e => e.name === name);
-    if (!entry) return;
-    const candidate = {
-      name, entry, usageCount: rootSet.size,
-      ready: itemReqsMet(entry),
-      remaining: stillNeededClosure(name).length,
+  feeds.forEach((rootSet, name) => {
+    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]) || ENTRIES.find(e => e.name === name);
+    if (!entry || !itemReqsMet(entry)) return;
+    const {els} = needsOf(entry.reqs);
+    const missingEls = Object.keys(els).filter(sym => count(sym) < els[sym]);
+    const c = {
+      name, entry, roots: [...rootSet], usageCount: rootSet.size,
+      uses: (parents.get(name) || new Set()).size,
+      canNow: canCraft(entry) && suitCostPayable(entry),
+      missingEls,
     };
-    const better = !best
-      || (candidate.ready && !best.ready)
-      || (candidate.ready === best.ready && candidate.usageCount > best.usageCount)
-      || (candidate.ready === best.ready && candidate.usageCount === best.usageCount && candidate.remaining < best.remaining)
-      || (candidate.ready === best.ready && candidate.usageCount === best.usageCount && candidate.remaining === best.remaining && candidate.name.localeCompare(best.name) < 0);
-    if (better) best = candidate;
+    // Craftable now, then feeds the most pinned items, then is used in the
+    // most places, then is missing the fewest elements, then is worth more.
+    const key = x => [x.canNow ? 1 : 0, x.usageCount, x.uses, -x.missingEls.length, ITEM_POINTS[x.name] || 0];
+    // Ties after all of that: alphabetical, so the hint never flickers.
+    const cmp = (a, b) => { const ka = key(a), kb = key(b);
+      for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
+      return b.name.localeCompare(a.name); };
+    if (!best || cmp(c, best) > 0) best = c;
   });
   if (!best) return null;
   return { ...best, homes: ENTRIES.filter(x => x.name === best.name).map(x => x.station) };
 }
+/* Every path from a pinned item's breakdown down to target, as name trails
+   (child of root ... target), through unowned items only. */
+function hintTrails(root, target){
+  const out = [];
+  const walk = (cur, trail) => {
+    if (out.length >= 8 || trail.length > 8) return;
+    const e = ENTRIES.find(x => x.name === cur);
+    if (!e) return;
+    needsOf(e.reqs).items.forEach(it => {
+      if (trail.includes(it.name)) return;
+      if (it.name === target){ out.push([...trail, it.name]); return; }
+      if (!owns(it.name)) walk(it.name, [...trail, it.name]);
+    });
+  };
+  walk(root, []);
+  return out;
+}
+// The suggested item while the hint is open; jobNodeHTML()/the pinned rows
+// highlight it (.hint-hl).
+let todoHintTarget = null;
+/* Turning the hint on opens every breakdown that leads to the suggestion,
+   down to it, so it can be seen (highlighted) wherever it's needed. */
+function expandTodoHintPaths(){
+  const hint = computeTodoHint();
+  if (!hint) return;
+  hint.roots.forEach(root => {
+    if (root === hint.name) return;
+    jobExpanded.add("refroot/" + root);
+    hintTrails(root, hint.name).forEach(trail => {
+      let path = "ref/" + root;
+      trail.slice(0, -1).forEach(n => { path += "/" + n; jobExpanded.add(path); });
+    });
+  });
+}
 function todoHintResultHTML(){
   const hint = computeTodoHint();
+  todoHintTarget = hint ? hint.name : null;
   if (!hint) return `<p class="todo-hint-empty">Everything on your list is already crafted!</p>`;
   const homesHTML = hint.homes.map(h => `<span>${em(STATION_BY_NAME[h].emoji)} ${esc(h)}</span>`).join("");
+  const others = hint.roots.filter(r => r !== hint.name);
+  const why = others.length
+    ? `Needed for ${others.slice(0, 2).map(esc).join(" and ")}${others.length > 2 ? ` and ${others.length - 2} more` : ""}`
+    : "It's on your list";
+  const status = hint.canNow ? "You can craft it now!"
+    : hint.missingEls.length ? `Still need: ${hint.missingEls.map(esc).join(", ")}`
+    : "You have its elements -- check its suit cost";
   return `<div class="todo-hint-card">
       <div class="todo-hint-icon">${em(hint.entry.emoji)}</div>
       <div class="todo-hint-body">
         <div class="todo-hint-title">Try crafting ${esc(hint.name)}</div>
-        <div class="todo-hint-why">${hint.usageCount > 1 ? `Feeds ${hint.usageCount} items on your list` : "On your list"}${hint.ready ? " — you have everything it needs" : ""}</div>
+        <div class="todo-hint-why">${why}</div>
+        <div class="todo-hint-why${hint.canNow ? " ready" : ""}">${status}</div>
         <div class="todo-hint-where">${homesHTML}</div>
       </div>
     </div>`;
@@ -88,8 +143,9 @@ function classicPinsAndJobsHTML(){
       💡 ${todoHintOpen ? "Hide Hint" : "Get a Hint"}
     </button>${todoHintOpen ? todoHintResultHTML() : ""}`;
   return `<div class="ref-pinned-heading">📌 Pinned</div>${hintHTML}<div class="reftable ref-pinned">${
-      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name), name === selectedJobItem
-        ? { cls: "tracked", badge: '<span class="todo-tracked-badge" title="Currently tracked">🔍</span>' } : {})).join("")
+      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name), {
+        cls: [name === selectedJobItem ? "tracked" : "", todoHintOpen && name === todoHintTarget ? "hint-hl" : ""].join(" "),
+        badge: name === selectedJobItem ? '<span class="todo-tracked-badge" title="Currently tracked">🔍</span>' : "" })).join("")
     }</div>`;
 }
 /* Shared open logic; jobSheetVariant decides the content and whether the
@@ -202,7 +258,8 @@ function jobNodeHTML(name, kind, path, seen){
 
   // The same pin button as the top-level row, so a component can be pinned
   // from deep in a breakdown.
-  return `<div class="mission-node ${has ? "done" : ""}">
+  const hintHl = todoHintOpen && name === todoHintTarget ? " hint-hl" : "";
+  return `<div class="mission-node ${has ? "done" : ""}${hintHl}">
     <div class="mn-row">
       ${has ? '<span class="mn-tick">✓</span>' : ""}
       <button type="button" class="mn-head${open ? " open" : ""}" data-toggle="${esc(path)}" aria-expanded="${open}">
@@ -263,7 +320,14 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   }
 
   const hintBtn = ev.target.closest("[data-todo-hint]");
-  if (hintBtn){ todoHintOpen = !todoHintOpen; renderJobBoard(); return; }
+  if (hintBtn){
+    todoHintOpen = !todoHintOpen;
+    if (todoHintOpen) expandTodoHintPaths();
+    renderJobBoard();
+    if (todoHintOpen) setTimeout(() => document.querySelector("#jobSheetBody .mission-node.hint-hl > .mn-row, #jobSheetBody .refrow.hint-hl")
+      ?.scrollIntoView({block: "center", behavior: lowMotion() ? "auto" : "smooth"}), 50);
+    return;
+  }
 
   // A BINGO square's corner pin, checked before the whole-cell handler below
   // (which would also match it).

@@ -275,6 +275,11 @@
   border-radius:50%; background:radial-gradient(circle at 35% 35%, #ff8a7a, #c23b2a 60%, #7d1f14);
   box-shadow:0 2px 3px rgba(0,0,0,.45);
 }
+/* The hint's suggestion, wherever it shows in the breakdowns. */
+#jobSheet .mission-node.hint-hl > .mn-row{outline:3px solid var(--ok-bright); outline-offset:1px; border-radius:10px;
+  background:rgba(63,180,108,.18)}
+#jobSheet .ref-pinned .refrow.hint-hl{box-shadow:0 0 0 3px var(--ok-bright), 0 4px 0 rgba(0,0,0,.35)}
+.todo-hint-why.ready{color:var(--ok-bright); font-weight:800}
 /* The tracked card (first in the list): gold rim and a 🔍 on its corner. */
 #jobSheet .ref-pinned .refrow.tracked{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.25)}
 .todo-tracked-badge{

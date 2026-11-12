@@ -151,6 +151,26 @@
         "the 5x5 setting should give a 5x5 card with 12 lines");
       prefs.classicBingo = savedPref; state = saved; }
 
+    // Rows layout: no capstones in the random draw; the chosen capstone gets
+    // a row with items from its own station.
+    { const saved = state, savedPref = prefs.classicBingo;
+      prefs.classicBingo = false; state = freshState();
+      expect(!ensureBingoCard().some(n => ITEM_TIER[n] === "CAPSTONE"), "the Market draw should have no capstones");
+      const cap = bingoCapstoneChoices()[0];
+      setBingoCenter(cap);
+      const row = bingoLines()[0].map(i => state.bingoCard[i]);
+      expect(row.includes(cap) && row.every(n => CORE_ITEM_STATION[n] === CORE_ITEM_STATION[cap])
+        && new Set(state.bingoCard).size === 12 && state.bingoCard.filter(n => ITEM_TIER[n] === "CAPSTONE").length === 1,
+        `the chosen capstone should get a row from its own station, got ${row.join(", ")}`);
+      prefs.classicBingo = savedPref; state = saved; }
+
+    // The To-Do hint only suggests something whose components are all owned.
+    { const savedPins = prefs.pinnedItems.slice(), savedItems = state.items.slice();
+      prefs.pinnedItems = [bingoCapstoneChoices()[0]]; state.items = [];
+      const h = computeTodoHint();
+      expect(h && itemReqsMet(h.entry) && h.roots.length === 1, `hint should be actionable, got ${h && h.name}`);
+      prefs.pinnedItems = savedPins; state.items = savedItems; }
+
     // The mat is checked only when leaving a checkpoint turn (every 3rd).
     { const v = state.visits;
       const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });
