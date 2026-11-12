@@ -52,6 +52,8 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   // Icon-only components; tapping opens that ingredient's card (item: this
   // popup again; element: the element card). See the #cpIngredients handler,
   // which stops propagation so the tap doesn't dismiss.
+  // 6+ components (Fruit Cake): slightly smaller so they fit one line.
+  document.getElementById("cpIngredients").classList.toggle("many", toks.length >= 6);
   document.getElementById("cpIngredients").innerHTML = toks.map((r, i) => {
     const body = r.kind === "element"
       ? `<span class="pc-ping elem" data-elem="${esc(r.name)}" title="${esc(r.name)}">${esc(r.name)}</span>`

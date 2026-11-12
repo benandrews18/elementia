@@ -312,6 +312,8 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 #cardPop.cap-landscape .pc-label{margin-bottom:5px}
 /* Clear of the suit-cost column down the right edge. */
 #cardPop.cap-landscape :is(.pc-ingredients, .pc-sig){margin-right:32px}
+#cardPop.cap-landscape .pc-ingredients.many{gap:4px}
+#cardPop.cap-landscape .pc-ingredients.many .pc-ping{font-size:28px}
 /* Below the card, its own tap target, so it can stopPropagation without
    triggering tap-to-dismiss. */
 /* Holds Item Info alongside the (usually hidden) Back button -- a plain
