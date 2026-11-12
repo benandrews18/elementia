@@ -420,6 +420,7 @@ function bingoCellHTML(name, cellIdx, inspectOnly){
     return `<div class="${cls}"${cellIdx === null ? "" : ` data-cell-idx="${cellIdx}"`} ${inspectOnly ? "data-cap-inspect" : "data-item-card"}="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
       <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
         aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
+      ${inspectOnly ? `<span class="bc-station bc-station-badge" title="${esc(CORE_ITEM_STATION[name])}">${em(STATION_BY_NAME[CORE_ITEM_STATION[name]].emoji)}</span>` : ""}
       <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
       <span class="bc-name">${esc(name)}</span>
       ${tierBadgeHTML(name)}
@@ -440,11 +441,14 @@ function marketRowsHTML(){
   const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null, true)).join("");
   return `<div class="bingo-page mrow-page">
     <section class="mrow-market" aria-labelledby="mrowMarketTitle">
-      <h3 class="mrow-head" id="mrowMarketTitle">🛒 Market</h3>
-      <p class="mrow-sub">Craft these right here. Finish a row for a "?".</p>
+      <div class="mrow-top">
+        <h3 class="mrow-head" id="mrowMarketTitle" title="Craft these right here">🛒 Market</h3>
+        <span class="mrow-gift" title="Finish a row to earn a &quot;?&quot; element" aria-label="Row reward">🎁</span>
+      </div>
       ${rows}
     </section>
     <h3 class="mrow-head mrow-caps-head">🏆 Capstones</h3>
+    <p class="mrow-caps-sub">Capstones must be crafted at their own station</p>
     <div class="bingo-grid bingo-pick-grid mrow-caps">${caps}</div>
   </div>`;
 }

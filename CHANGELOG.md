@@ -24,6 +24,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   card popup.
 - **Minimized Display Mat** shows its cards as 2 rows of 8, so all of
   them are visible (it scrolled sideways before).
+- **Marketplace tray, tidied:** the stations-visited row has no card of its
+  own; the Market rows sit on their own card, with a 🎁 over the row
+  rewards instead of a line of text. Capstones say "Capstones must be
+  crafted at their own station" and show their station's icon top-left.
+  Squares are a touch smaller so the whole tray fits a phone without
+  scrolling (checked down to a 412 x 720 screen).
 
 ## 2026-11-11 (Market goal row, better hint)
 
