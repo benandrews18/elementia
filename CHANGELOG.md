@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (item cards)
+
+- **Capstone cards are landscape** (double-wide) in the card view, with the
+  same corner badges (suit costs along the top edge) and room for a line
+  about what the capstone does on the Display Mat (coming with the
+  capstone rules).
+- **Inventory:** tapping the picture in an item's open shop row opens its
+  item card, as in the Marketplace.
+- **Removed** the Display Mat Add/Remove button from the item card; adding
+  and removing happens in the inventory.
+
 ## 2026-11-11 (collection clues)
 
 - **Hidden collection "!":** when the mat holds a complete collection you

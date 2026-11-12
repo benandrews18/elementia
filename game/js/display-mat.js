@@ -438,17 +438,6 @@ function renderClassicDrawer(){
   return matResultsGridHTML();
 }
 
-/* Keeps #cpMatBtn's label, aria state and styling in sync (initial paint
-   and after each toggle). */
-function setMatBtnState(btn, onMat){
-  btn.classList.toggle("active", onMat);
-  btn.setAttribute("aria-pressed", onMat);
-  // aria-label stays the fuller sentence (better for screen readers);
-  // only the visible text is the plain one-word button label.
-  btn.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
-  const visibleLabel = onMat ? "Remove" : "Add";
-  btn.innerHTML = `<span class="cp-matbtn-ic">${onMat ? "➖" : "➕"}</span>${esc(visibleLabel)}`;
-}
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
   if (i !== -1){ state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return; }

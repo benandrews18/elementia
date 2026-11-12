@@ -472,8 +472,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    redundant, per explicit request. */
 .mm-card.on{filter:brightness(.6) saturate(.7)}
 
-/* Above #cardPop (70): toggleMatCard() messages can fire from the mat
-   button inside that popup (#cpMatBtn). */
+/* Above #cardPop (70) so a mat message is never hidden behind it. */
 .mat-toast{
   position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:75;
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;

@@ -235,6 +235,9 @@
       <div class="pc-divider"></div>
       <div class="pc-label">Components:</div>
       <div class="pc-ingredients" id="cpIngredients"></div>
+      <!-- Capstones only: what the card does on the Display Mat
+           (CAPSTONE_SIGNATURES). -->
+      <div class="pc-sig" id="cpSig" hidden></div>
     </div>
     <div class="pc-actions">
       <!-- Shown after drilling into a component's card (#cpIngredients
@@ -247,10 +250,6 @@
       <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
       <button type="button" class="pc-pin-btn refpin" id="cpPinBtn" aria-label="Pin to To-Do List" aria-pressed="false">📌</button>
     </div>
-    <!-- Classic only, for an owned mat card (showCardPop()): the big
-         add/remove-from-mat button on its own row. Label set by
-         setMatBtnState(). Hidden on the post-craft popup. -->
-    <button type="button" class="pc-matbtn-lg" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false"></button>
   </div>
 </div>
 

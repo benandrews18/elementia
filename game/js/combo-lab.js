@@ -67,6 +67,14 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  // The open row's square picture opens the item card (as in the Market).
+  const openPic = ev.target.closest(".item.open .iem");
+  if (openPic){
+    const name = openPic.closest("[data-mat-row]").dataset.matRow;
+    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+    if (entry) showCardPop(entry, false);
+    return;
+  }
   const listRow = ev.target.closest("[data-mat-row]");
   if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
   // The results grid (card view): tap selects the card -- its shop row docks

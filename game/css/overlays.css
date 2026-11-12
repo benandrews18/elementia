@@ -294,6 +294,32 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .pc-divider{border-top:1.5px solid #000; margin:10px 0 10px}
 .pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:#5a5548; margin-bottom:9px}
 .pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.pc-sig{margin-top:8px; padding:6px 8px; border-radius:10px; background:#fff3d6; border:1.5px solid #c79a2e;
+  font-size:12.5px; font-weight:700; line-height:1.3; color:#3a2a08}
+.pc-sig[hidden]{display:none}
+/* Capstones: a double-wide (landscape) card. Same corner badges; the art
+   takes the left column, title/components/rule the right. */
+#cardPop.cap-landscape .pc-card-wrap{max-width:600px}
+#cardPop.cap-landscape .pc-card{
+  aspect-ratio:10/7; padding:16px 18px 14px;
+  display:grid; grid-template-columns:42% 1fr; column-gap:14px; align-content:center;
+}
+#cardPop.cap-landscape .pc-icon-wrap{grid-column:1; grid-row:1 / span 6; flex:none}
+#cardPop.cap-landscape .pc-icon{font-size:min(110px, 22vw)}
+#cardPop.cap-landscape :is(.pc-title, .pc-divider, .pc-label, .pc-ingredients, .pc-sig){grid-column:2}
+#cardPop.cap-landscape .pc-title{padding:0 40px 0 0; text-align:left; font-size:20px; margin-top:0}
+#cardPop.cap-landscape .pc-divider{margin:6px 0}
+#cardPop.cap-landscape .pc-label{margin-bottom:5px}
+/* Landscape corner badges a little smaller, and the suit costs run along
+   the top edge (stacked down the side they covered the text). Padding
+   clears them. */
+#cardPop.cap-landscape .pc-card{border-width:12px; padding:34px 34px 30px 16px}
+#cardPop.cap-landscape :is(.pc-badge, .pc-station-badge, .pc-suitcost-badge){width:46px; height:46px; border-width:3px}
+#cardPop.cap-landscape .pc-badge{top:-12px; left:-12px}
+#cardPop.cap-landscape .pc-badge .n{font-size:22px}
+#cardPop.cap-landscape .pc-station-badge{bottom:-12px; right:-12px}
+#cardPop.cap-landscape .pc-suitcosts{top:-12px; right:-12px; flex-direction:row-reverse; gap:6px}
+#cardPop.cap-landscape .pc-title{padding-right:0}
 /* Below the card, its own tap target, so it can stopPropagation without
    triggering tap-to-dismiss. */
 /* Holds Item Info alongside the (usually hidden) Back button -- a plain
@@ -312,16 +338,3 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 /* Pin toggle with .refpin's look (grey off, gold on), centred in the
    .pc-actions row. */
 .pc-pin-btn{align-self:center}
-/* Large full-width mat button on its own row below Item Info/Pin, easy to
-   hit. Purple, tying it to the Display Mat's other purple accents. */
-.pc-matbtn-lg{
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  width:100%; padding:14px; border:none; border-radius:14px;
-  background:var(--collection); color:#fff; font-size:15px; font-weight:800;
-  letter-spacing:.2px; cursor:pointer; box-shadow:0 4px 0 var(--collection-line);
-  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
-}
-.pc-matbtn-lg[hidden]{display:none}
-.pc-matbtn-lg.active{background:color-mix(in srgb, var(--collection) 80%, black)}
-.pc-matbtn-lg:not(:disabled):active{transform:translateY(4px); box-shadow:0 0 0 transparent}
-.cp-matbtn-ic{font-size:17px; line-height:1}

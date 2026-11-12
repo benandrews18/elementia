@@ -281,6 +281,10 @@ function bingoEligibleItems(){
 function bingoCapstoneChoices(){
   return bingoEligibleItems().filter(n => ITEM_TIER[n] === "CAPSTONE");
 }
+/* Each capstone's Display Mat rule, as the one line shown on its
+   (landscape) card. Empty until the signature rules are built -- the card
+   hides the line when there's no text. */
+const CAPSTONE_SIGNATURES = {};
 /* Roman-numeral tier: MATERIAL I, COMPONENT II, CREATION III, CAPSTONE IV. */
 const TIER_NUMERAL = {MATERIAL:"I", COMPONENT:"II", CREATION:"III", CAPSTONE:"IV"};
 function tierBadgeHTML(name){

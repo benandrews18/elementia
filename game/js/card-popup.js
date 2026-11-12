@@ -18,6 +18,13 @@ let cardPopBackStack = [];
 function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   if (!keepBackStack) cardPopBackStack = [];
   cardPopEntry = entry;
+  // Capstones show as a double-wide (landscape) card with room for their
+  // Display Mat rule.
+  const isCap = ITEM_TIER[entry.name] === "CAPSTONE";
+  document.getElementById("cardPop").classList.toggle("cap-landscape", isCap);
+  const sig = document.getElementById("cpSig");
+  sig.textContent = (isCap && CAPSTONE_SIGNATURES[entry.name]) || "";
+  sig.hidden = !sig.textContent;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
   cpCard.style.setProperty("--suit", su.color);
@@ -60,12 +67,6 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   const pinBtn = document.getElementById("cpPinBtn");
   pinBtn.classList.toggle("active", isPinned(entry.name));
   pinBtn.setAttribute("aria-pressed", isPinned(entry.name));
-  // Display Mat Add/Remove (#cpMatBtn) for an owned mat card; not on the
-  // "just crafted" popup (autoDismiss) -- Item Info and the pin are all that
-  // card offers (2026-11-03).
-  const matEligible = !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
-  document.getElementById("cpMatBtn").hidden = !matEligible || autoDismiss;
-  if (matEligible) setMatBtnState(document.getElementById("cpMatBtn"), state.mat.includes(entry.name));
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => closeOverlay("cardPop"), 3800);
@@ -143,14 +144,6 @@ document.getElementById("cpPinBtn").addEventListener("click", ev => {
   ev.currentTarget.classList.toggle("active", pinned);
   ev.currentTarget.setAttribute("aria-pressed", pinned);
   render();
-});
-/* Mat toggle: stays on the card, like the pin. toggleMatCard() refreshes
-   the drawer itself. */
-document.getElementById("cpMatBtn").addEventListener("click", ev => {
-  ev.stopPropagation();
-  if (!cardPopEntry) return;
-  toggleMatCard(cardPopEntry.name);
-  setMatBtnState(ev.currentTarget, state.mat.includes(cardPopEntry.name));
 });
 
 /* -------------------------------------------------- element card popup --- */
