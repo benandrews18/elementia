@@ -733,6 +733,9 @@ body[data-screen="market"] #trackedPill{display:none}
 #eventToast .ct-bonus{flex:none; font-size:14px; font-weight:800}
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
 #eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
+#eventToast.et-market{background:var(--ok-soft); border-bottom-color:var(--ok)}
+#eventToast.et-market .ct-title{color:var(--ok)}
+#eventToast .ct-icon :is(img,svg){width:30px; height:30px}
 /* This kind's text is a sentence, so it uses body sizing, not the bold
    item-name style. */
 #eventToast.et-warn .ct-name{font-size:13.5px; font-weight:600; color:var(--ink2)}
@@ -2124,6 +2127,14 @@ body:has(#bingoCraftOverlay.open) #convert{z-index:72}
 body:has(#bingoCraftOverlay.open) #quickConvertBtn{z-index:73}
 body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
+/* Above the Marketplace tray (69) too. */
+#emptyElTip{z-index:76; align-items:center}
+.empty-el-tip{max-width:360px; text-align:center}
+.empty-el-tip p{margin:8px 0}
+.eet-icon{display:flex; justify-content:center; margin-bottom:6px}
+.eet-convert{display:inline-flex; vertical-align:middle; width:30px; height:30px; border-radius:50%;
+  align-items:center; justify-content:center; background:var(--card); border:2px solid var(--gold)}
+.eet-convert :is(img,svg){width:20px; height:20px}
 /* Locks the tray against taps for the pre-animation pause plus the
    animation itself (see runBingoSequence()'s own comment) --
    nothing in here should be interruptible mid-beat. */
@@ -2584,6 +2595,29 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .sumcaps{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
 .sumcap{background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
   border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
+/* End screen: one phone screen tall -- the stats scroll inside .end-body
+   if they must, the buttons stay at the bottom. */
+#endGame .end-box{display:flex; flex-direction:column; padding:16px 16px 14px;
+  max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom))}
+#endGame #endTitle{margin:0 0 4px; text-align:center}
+#endGame .end-body{flex:1; min-height:0; overflow-y:auto}
+#endGame #endSub{margin:0 0 4px; font-size:13px}
+#endGame .sumgrid{grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 2px}
+#endGame .sumstat{padding:7px 8px; border-radius:10px}
+#endGame .sumstat .n{font-size:20px; letter-spacing:-.5px}
+#endGame .sumstat .l{font-size:9px; letter-spacing:.3px}
+#endGame .sumstat-wide{grid-column:span 2}
+#endGame .sum-station{display:flex; align-items:center; gap:6px; font-size:16px; letter-spacing:0}
+#endGame .sum-st-ic{flex:none; display:flex; font-size:22px}
+#endGame .sum-st-ic :is(img,svg){width:24px; height:24px}
+#endGame .sec-label{margin:10px 0 4px !important}
+#endGame .sumcaps{gap:5px; margin-top:4px}
+#endGame .sumcap{padding:3px 7px; font-size:12px}
+#endGame .trophy-grid{max-height:none; gap:6px; padding:0}
+#endGame .end-foot{flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
+#endGame .end-foot .bigbtn{width:100%; padding-left:8px; padding-right:8px}
+#endGame .end-foot .bigbtn:first-child:not([hidden]){grid-column:1 / -1}
+#endGame .end-foot [hidden]{display:none}
 
 /* hint popover */
 #hint{
@@ -3795,19 +3829,29 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
      at sunset from BREAKPOINT_GATE_VISIT on, or crafted every item. Extra
      BINGO/top-score tiles and the Biggest Turn strip. -->
 <div class="overlay" id="endGame" role="dialog" aria-modal="true" aria-labelledby="endTitle">
-  <div class="sheetbox">
+  <!-- Fits one phone screen: the stats scroll inside .end-body if they must,
+       the buttons stay pinned at the bottom (.end-foot). -->
+  <div class="sheetbox end-box">
     <h2 id="endTitle">🏁 Game Over</h2>
-    <p id="endSub"></p>
-    <div class="sumgrid" id="endGrid"></div>
-    <div id="endCapsWrap"></div>
-    <div id="endTrophiesWrap"></div>
-    <div id="endFlavorWrap"></div>
-    <div class="btnrow">
-      <button type="button" class="bigbtn" id="endContinue" hidden>Keep playing (Overtime)</button>
-      <button type="button" class="bigbtn sec" id="endNew">Start a new session</button>
+    <div class="end-body">
+      <p id="endSub"></p>
+      <div class="sumgrid" id="endGrid"></div>
+      <div id="endCapsWrap"></div>
+      <div id="endTrophiesWrap"></div>
+      <div id="endFlavorWrap"></div>
+    </div>
+    <div class="end-foot">
+      <button type="button" class="bigbtn" id="endContinue" hidden>Continue in Overtime</button>
+      <button type="button" class="bigbtn sec" id="endNew">New Game</button>
       <button type="button" class="bigbtn sec" id="endReview">Review my collection</button>
+      <button type="button" class="bigbtn sec" id="endMenu">Main Menu</button>
     </div>
   </div>
+</div>
+
+<!-- First "?" ever: what an Unknown Element is (maybeShowEmptyElTip()). -->
+<div class="overlay" id="emptyElTip" role="dialog" aria-modal="true" aria-labelledby="emptyElTipTitle">
+  <div class="sheetbox empty-el-tip" id="emptyElTipBody"></div>
 </div>
 
 <!-- In-page confirm: window.confirm() is suppressed in sandboxed frames. -->
@@ -6267,6 +6311,7 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
+    marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.
     arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
              // Collection discovery lives in prefs.everUnlockedMatCollections,
@@ -7071,6 +7116,7 @@ function render(resetScroll){
   renderTrackedPill();
   renderConvertGoalCard();
   if (bingoCraftEntry) renderBingoCraftCard();
+  maybeShowEmptyElTip();
   renderConvertEmptyEl();
   updateHub();
   updateBackdrop();
@@ -7389,7 +7435,9 @@ function updateHub(){
     : "Back to the station map";
   // The Market button gets a "!" until the Marketplace is first opened
   // (state.marketVisited, set by openJobSelectTray()).
-  setHubBadge("hubMarket", state.marketVisited ? null : "!");
+  // ...and again whenever a Market square was finished out of sight
+  // (state.marketUnseen, see runBingoSequence()).
+  setHubBadge("hubMarket", state.marketVisited && !state.marketUnseen ? null : "!");
 }
 
 /* Whether the player can travel to the selected map station right now
@@ -8200,6 +8248,7 @@ function openJobSelectTray(){
   jobSheetVariant = "full";
   bingoTab = "bingo";
   state.marketVisited = true;
+  state.marketUnseen = false;
   openJobSheet();
   updateHub();
 }
@@ -10969,6 +11018,30 @@ document.getElementById("convertEmptyEl").addEventListener("click", ev => {
   closeOverlay("convert");
   openEmptyElPicker();
 });
+/* The first time a player ever holds a "?" (prefs.sawEmptyElTip), a short
+   popout explains it -- once whatever handed it over (BINGO reward,
+   Lock-In) has finished. Called from render(); polls while busy. */
+let emptyElTipTimer = null;
+function maybeShowEmptyElTip(){
+  if (prefs.sawEmptyElTip || !((state.emptyElements || 0) > 0) || emptyElTipTimer) return;
+  const busy = anyOverlayOpen() || bingoClearInProgress || startingGiftInProgress
+    || document.body.classList.contains("lockin-playing") || !!state.ended;
+  if (busy){
+    emptyElTipTimer = setTimeout(() => { emptyElTipTimer = null; maybeShowEmptyElTip(); }, 500);
+    return;
+  }
+  prefs.sawEmptyElTip = true; savePrefs();
+  document.getElementById("emptyElTipBody").innerHTML = `
+    <div class="eet-icon">${emptyElSquareHTML(56)}</div>
+    <h2 id="emptyElTipTitle">Unknown Element!</h2>
+    <p>An Unknown Element can become <b>any element</b> from the station you're at.</p>
+    <p class="eet-where">Use it from the <span class="eet-convert">${em("__CONVERT__")}</span> <b>Convert</b> menu.</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="emptyElTipOk">Got it</button></div>`;
+  openOverlay("emptyElTip");
+}
+document.getElementById("emptyElTip").addEventListener("click", ev => {
+  if (ev.target.closest("#emptyElTipOk")) closeOverlay("emptyElTip");
+});
 /* Spending a "?" opens a popout with the current station's element pool --
    the same .gather/.gcol/.gchip row as the shop -- and the picked element
    flies into the inventory. */
@@ -11607,6 +11680,21 @@ function runBingoSequence(){
   const lines = [...(state.pendingBingoClears || [])];
   bingoPendingSquares = [];
   if (!squares.length && !lines.length) return;
+  // Only the very first Marketplace square (ever, prefs) opens the tray to
+  // show what happened; after that a square alone is a toast plus a "!" on
+  // the Market button (state.marketUnseen) until the Market is opened. A
+  // finished line/row still opens the tray all the way for its "?".
+  const trayOpen = jobSheet.classList.contains("open") && jobSheetVariant === "full";
+  if (!lines.length && !trayOpen && prefs.sawMarketSquareTray){
+    squares.forEach(i => {
+      const name = state.bingoCard[i];
+      queueEventToast("market", em(ITEM_EMOJI[name]), "Marketplace item done", name);
+    });
+    state.marketUnseen = true;
+    save(); updateHub();
+    return;
+  }
+  if (!prefs.sawMarketSquareTray){ prefs.sawMarketSquareTray = true; savePrefs(); }
   bingoClearInProgress = true;
 
   // 1. Tray in from the top, on the BINGO page.
@@ -11724,14 +11812,10 @@ function checkBingoLines(){
    caller append its own tiles. */
 function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
-  const elementsHeld = Object.values(state.elements).reduce((a,b) => a+b, 0);
-  const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
   return `
     <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
     <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
-    <div class="sumstat"><div class="n">${byTier("CREATION")}</div><div class="l">CREATIONS</div></div>
-    <div class="sumstat"><div class="n">${elementsHeld}</div><div class="l">ELEMENTS LEFT</div></div>
     ${extraCells || ""}`;
 }
 function capstonesSectionHTML(){
@@ -11816,8 +11900,9 @@ function showEndGame(){
     : state.craftedEverything ? "🏆 Every Item Crafted!"
     : state.reachedHardLimit ? "🎉 You Reached the End!"
     : state.runComplete ? "⏱️ Overtime Over" : "🏁 Game Over";
-  document.getElementById("endSub").textContent = completing
-    ? `You made it to turn ${RUN_COMPLETE_VISIT}! Keep playing in Overtime to craft every item, but every Lock-In must now clear the first Quark breakpoint. Or start a new game.`
+  // Run Complete: the title says it all (keeps the screen to one phone height).
+  document.getElementById("endSub").hidden = completing;
+  document.getElementById("endSub").textContent = completing ? ""
     : state.craftedEverything
     ? `You crafted every item in Elementia in ${state.visits} visits -- here's your run:`
     : state.reachedHardLimit
@@ -11827,15 +11912,12 @@ function showEndGame(){
     : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
   document.getElementById("endContinue").hidden = !completing;
   document.getElementById("endReview").hidden = completing;
-  document.getElementById("endNew").textContent = completing ? "New game" : "Start a new session";
 
-  const bingoTotal = bingoLines().length;
-  const bingoDone = (state.bingoLinesCompleted || []).length;
   const top = topVisitedStation();
+  const topStation = top && STATION_BY_NAME[top.name];
   const extraCells = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${bingoDone}<span style="font-size:16px;color:var(--mute)">/${bingoTotal}</span></div><div class="l">${marketRowsMode() ? "MARKET ROWS" : "BINGO LINES"}</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
-      top ? `<div class="sumstat"><div class="n" style="font-size:18px">${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
+      top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
@@ -11873,6 +11955,10 @@ document.getElementById("endNew").addEventListener("click", () => {
 document.getElementById("endContinue").addEventListener("click", () => closeOverlay("endGame"));
 document.getElementById("endReview").addEventListener("click", () => {
   closeOverlay("endGame"); openDrawer();
+});
+// Main Menu leaves the run saved (Play continues it), like Settings' button.
+document.getElementById("endMenu").addEventListener("click", () => {
+  closeOverlay("endGame"); showWelcomeSlide();
 });
 
 </script>
