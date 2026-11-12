@@ -225,6 +225,14 @@
         travelPromptFor = card.station; const a = sc([C("Space Station"), card]).base;
         travelPromptFor = null; const b = sc([C("Space Station"), card]).base;
         expect(a - b === card.points, `Space Station should double cards from the destination (${a} vs ${b})`); }
+      // Switching off a collection that takes Maglev Train away must still
+      // leave a mat that fits (its tier 1 stacks drop from 3 to 2 a slot).
+      { const saved = {items: state.items, mat: state.mat};
+        const t1n = t1.map(c => c.name), other = plain[0].name;
+        state.items = ["Maglev Train", other, ...t1n]; state.mat = ["Maglev Train", ...t1n, other];
+        removeCollectionFromMat(MAT_COLLECTIONS.find(c => c.items.includes("Maglev Train")).id);
+        expect(matFits(matOnMat()), `removing Maglev Train's collection overfilled the mat (${matOccupancy(matOnMat())} slots)`);
+        state.items = saved.items; state.mat = saved.mat; }
       travelPromptFor = savedTP; }
 
     // The mat is checked only when leaving a checkpoint turn (every 3rd).

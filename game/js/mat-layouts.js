@@ -257,6 +257,7 @@ function removeCollectionFromMat(id){
   const c = MAT_COLLECTIONS.find(x => x.id === id);
   if (!c) return;
   state.mat = state.mat.filter(n => !c.items.includes(n));
+  trimMatToFit(); // Maglev Train is in collections; without it tier 1 stacks shrink
   save();
   renderCollectionsList();
   renderMatTop(); renderMatResultsGrid();

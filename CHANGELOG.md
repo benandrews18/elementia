@@ -8,6 +8,13 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (fix)
+
+- **Fix: switching off a collection could overfill the Display Mat.** A
+  collection with Maglev Train took it off the mat, but its tier 1 stacks
+  of 3 stayed and no longer fit 2 to a slot. The mat now drops its
+  last-placed cards until it fits (they stay owned).
+
 ## 2026-11-11 (windows)
 
 - **Collection clues are bought from the Main Menu only**; Collections
