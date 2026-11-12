@@ -8,6 +8,20 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (end screen, Market, "?")
+
+- **Run Complete fits one phone screen:** title only, then score, items
+  built, capstones, top Quark score and the most-visited station (with its
+  icon). Creations, elements left and BINGO lines are gone. Continue in
+  Overtime / New Game / Main Menu sit at the bottom.
+- **Marketplace squares:** the tray opens by itself only the first time a
+  player ever finishes one. After that it's a toast at the top and a red
+  "!" on the Market button until the Market is opened. Finishing a whole
+  row still opens the tray for its "?".
+- **First "?":** the first time a player gets an Unknown Element, a popout
+  explains it (any element from the station you're at, from the Convert
+  menu).
+
 ## 2026-11-11 (inventory and Lock-In)
 
 - **Inventory, both views:** tapping an item selects it -- in the list it
