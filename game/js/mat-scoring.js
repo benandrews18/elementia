@@ -495,7 +495,8 @@ function marketRowsHTML(){
   return `<div class="bingo-page mrow-page">
     <section class="mrow-market" aria-labelledby="mrowMarketTitle">
       <div class="mrow-top">
-        <h3 class="mrow-head" id="mrowMarketTitle" title="Craft these right here">🛒 Market</h3>
+        <h3 class="mrow-head" id="mrowMarketTitle">🛒 Market</h3>
+        <span class="mrow-hint">Tap on an item to craft directly from here!</span>
         <span class="mrow-gift" title="Finish a row to earn a &quot;?&quot; element" aria-label="Row reward">🎁</span>
       </div>
       ${rows}
