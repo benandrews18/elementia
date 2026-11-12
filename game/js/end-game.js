@@ -7,7 +7,8 @@
 function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
   return `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">SCORE (TOP QUARKS)</div></div>
+    <div class="sumstat"><div class="n">${score()}</div><div class="l">ITEM SCORE</div></div>
     <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
     ${extraCells || ""}`;
@@ -109,8 +110,7 @@ function showEndGame(){
 
   const top = topVisitedStation();
   const topStation = top && STATION_BY_NAME[top.name];
-  const extraCells = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
+  const extraCells = `${
       top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);

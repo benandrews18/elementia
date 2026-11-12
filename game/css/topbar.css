@@ -176,8 +176,9 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 /* Lock In: purple (--collection), distinct from Market gold and Travel
    teal -- its own higher-stakes beat. */
 #hubHome.face-lockin{--face-color:var(--collection); color:#000}
+#hubHome.face-final{--face-color:var(--gold); color:#000}
 #hubHome.face-map{--face-color:var(--hub-map); color:#000}
-#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-map{
+#hubHome.face-roll, #hubHome.face-shop, #hubHome.face-travel, #hubHome.face-lockin, #hubHome.face-final, #hubHome.face-map{
   background:radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--face-color) 55%, white) 0%,
     var(--face-color) 55%, color-mix(in srgb, var(--face-color) 75%, black) 100%);
 }

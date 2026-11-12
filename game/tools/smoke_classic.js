@@ -263,10 +263,20 @@
     // Turn 24 completes the run: the end screen offers Keep playing, and in
     // Overtime an empty board (0 Quarks) at any Lock-In asks to end the run.
     const isOpen = id => document.getElementById(id).classList.contains("open");
-    state.visits = RUN_COMPLETE_VISIT; state.runComplete = false; state.ended = false;
+    // Turn 24 ends with a final mat score first (Home's Final Score face).
+    state.visits = RUN_COMPLETE_VISIT; state.runComplete = false; state.ended = false; state.bestMatScore = 0;
+    state.mat = state.items.filter(n => MAT_CARD_BY_NAME[n]).slice(0, 4); lockInCommitted = false;
     goMap(); await wait(400);
+    expect(state.finalCheckPending && hubHomeFace() === "final" && drawer.classList.contains("open") && !state.runComplete,
+      "back on the map after turn 24 should open the mat for the final score");
+    const finalQ = Math.round(matScore(matOnMat()).total);
+    document.getElementById("hubHome").click();
+    for (let i = 0; i < 80 && !isOpen("endGame"); i++) await wait(200);
     expect(state.runComplete && isOpen("endGame") && !document.getElementById("endContinue").hidden,
-      "turn 24 should open the run-complete screen with Keep playing");
+      "the final score should lead to the run-complete screen with Keep playing");
+    const last = (state.checkLog || []).slice(-1)[0];
+    expect(last && last.final && last.q === finalQ && Math.round(state.bestMatScore) >= finalQ,
+      `the final score should be logged and count toward the top Quark score (${finalQ})`);
     expect(loadTrophies()["first-run"], "completing a run should award the First Run trophy (own storage key)");
     expect(document.getElementById("endTrophiesWrap").textContent.includes("First Run"),
       "the run-complete screen should list the new trophy");

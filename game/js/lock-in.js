@@ -230,7 +230,7 @@ function setQuarkMeterProgress(total){
    combos would otherwise never leave 0), Quarks bounce once more, and
    finishLockIn() runs (its modal is the one place the reward is shown).
    The timing is fixed; bouncePulse() itself handles reduced motion. */
-function playLockInSequence(reward){
+function playLockInSequence(reward, onDone = finishLockIn){
   document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
@@ -290,7 +290,7 @@ function playLockInSequence(reward){
     bouncePulse(document.querySelector("#drawerTop .qm-total"));
   }, afterBeats);
   const afterQuarks = afterBeats + LOCKIN_BOUNCE_DURATION_MS + 300;
-  setTimeout(() => finishLockIn(reward), afterQuarks);
+  setTimeout(() => onDone(reward), afterQuarks);
 }
 // Apply the Lock-In reward and travel. Classic: the dice bonus lasts until
 // the next check (state.matBonusDice); other modes: a one-trip delta
@@ -298,6 +298,7 @@ function playLockInSequence(reward){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
+  (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(matScore(matOnMat()).total) });
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
@@ -388,6 +389,38 @@ document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
   }
 });
 
+/* The final score: back on the map after turn 24's shopping, the mat
+   opens for one last Lock-In (Home's "Final Score" face). Its Quarks count
+   toward the run's score (state.bestMatScore, the top Quark score); then
+   Run Complete. No travel and no reward dice. */
+function startFinalCheck(){
+  state.finalCheckPending = true;
+  save();
+  matDrawerView = "mat";
+  openDrawer();
+  queueEventToast("check", "🏁", `Turn ${RUN_COMPLETE_VISIT} / ${RUN_COMPLETE_VISIT}`, "Final Score -- lock in your best mat");
+  updateHub();
+}
+function confirmFinalLockIn(){
+  if (lockInCommitted) return;
+  lockInCommitted = true;
+  const s = matScore(matOnMat());
+  state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
+  updateHub();
+  playLockInSequence(0, () => finishFinalCheck(s.total));
+}
+function finishFinalCheck(total){
+  document.body.classList.remove("lockin-playing");
+  (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
+  state.finalCheckPending = false;
+  lockInCommitted = false;
+  closeDrawer();
+  state.runComplete = true;
+  grantStars(STARS_RUN);
+  save();
+  fireConfetti();
+  showEndGame();
+}
 /* A board check opening (hub's Travel on a checkpoint turn): a banner
    drops in with the turn and bounces away; the very first check ever also
    opens the Display Mat rules (prefs.sawMatCheckTutorial). */

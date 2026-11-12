@@ -16,7 +16,11 @@ function recordHistory(){
     mode: state.mode,
     date: new Date().toISOString(),
     visits: state.visits,
-    score: score(),
+    // The run's score is its top Quark score; item points are itemScore.
+    // (Runs recorded before 2026-11-12 have only score = item points.)
+    score: Math.round(state.bestMatScore || 0),
+    itemScore: score(),
+    checks: JSON.parse(JSON.stringify(state.checkLog || [])),
     capstones: CAPSTONES.filter(owns),
     // Deep copy: state is about to be wiped. Per visit: station, rolls, crafts.
     visitLog: JSON.parse(JSON.stringify(state.visitLog || [])),
@@ -65,7 +69,7 @@ function renderHistory(){
       <div class="histrow-line">
         <button type="button" class="histrow" data-hist-toggle="${i}" aria-expanded="${open}">
           <span class="histvisits">${h.visits} turn${h.visits === 1 ? "" : "s"}</span>
-          <span class="histscore">${h.score} pts</span>
+          <span class="histscore">${h.itemScore !== undefined ? `⚛️ ${h.score.toLocaleString()}` : `${h.score} pts`}</span>
           <span class="histcaps">${h.capstones.length
             ? h.capstones.map(n => em(ITEM_EMOJI[n])).join("")
             : '<span class="histnone">—</span>'}</span>

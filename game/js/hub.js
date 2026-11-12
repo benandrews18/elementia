@@ -124,6 +124,11 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   // The mat is already open when this face shows -- just score it
   // (confirmLockIn()).
   if (face === "lockin"){ if (!lockInCommitted) confirmLockIn(); return; }
+  // Final Score: opens the mat if it's closed, else scores it.
+  if (face === "final"){
+    if (!drawer.classList.contains("open")){ matDrawerView = "mat"; openDrawer(); return; }
+    confirmFinalLockIn(); return;
+  }
   // The Marketplace tray reads "Map" but still has to be closed; the map is
   // already underneath.
   if (face === "map" && openPanelName() === "jobs"){ closeJobBoard(); return; }
@@ -192,6 +197,7 @@ function setHubHomeFace(face){
     travel: { hi: viaAir ? "🚁" : "🥾", hl: "Travel" },
     // Classic's Lock-In face (hubHomeFace()); other modes keep plain "travel".
     lockin: { hi: "🔒", hl: "Lock In" },
+    final:  { hi: "🏁", hl: "Final Score" },
     map:    { hi: "🗺️", hl: "Map" },
     close:  { hi: "⬅️", hl: "Close" },
   };
@@ -202,7 +208,7 @@ function setHubHomeFace(face){
     // innerHTML: the market face's icon is an <img> (see FACES.market).
     home.querySelector(".hi").innerHTML = target.hi;
     home.querySelector(".hl").textContent = target.hl;
-    home.classList.remove("face-roll", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
+    home.classList.remove("face-final", "face-roll", "face-shop", "face-travel", "face-lockin", "face-map", "face-close");
     home.classList.add("face-" + face);
   };
   if (isCoinPair && !lowMotion()){
@@ -281,6 +287,7 @@ function updateHub(){
     : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : face === "lockin" ? "Lock in your Display Mat"
+    : face === "final" ? "Lock in your mat for your final score"
     : "Back to the station map";
   // The Market button gets a "!" until the Marketplace is first opened
   // (state.marketVisited, set by openJobSelectTray()).
@@ -315,6 +322,8 @@ function hubHomeFace(){
   // The full Marketplace tray (jobSheetVariant === "full", opened by Home)
   // reads "Map" -- leaving it is just returning to the map. The hub's compact
   // To-Do tray falls through to "close".
+  // Turn 24 is over: the only way on is the final score (no travel).
+  if (state.finalCheckPending && (!panel || panel === "drawer")) return "final";
   if (panel === "jobs" && jobSheetVariant === "full") return "map";
   // Lock In only through the travel doorway: travelPromptFor ===
   // selectedMapStation is set only by tapping Travel, so opening the mat any

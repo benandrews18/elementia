@@ -133,6 +133,13 @@ function freshState(){
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
+    // End of turn 24: one last Display Mat score before Run Complete
+    // (startFinalCheck()). bestMatScore -- the top Quark score -- is the
+    // run's score; item points (score()) are its item score.
+    finalCheckPending: false,
+    // Every board check's Quark score [{v: visit, q: quarks, final?}], for
+    // History exports.
+    checkLog: [],
     ecoStreak: 0, // Old Growth: board checks in a row with Ecosystem on the mat (finishLockIn()).
     starsEarned: 0, // Stars earned this run (grantStars()), shown on the end screen.
     marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.

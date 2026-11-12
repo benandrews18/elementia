@@ -8,6 +8,18 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-12 (final score)
+
+- **Final score at the end of turn 24:** back on the map after turn 24's
+  shopping, the Display Mat opens for one last Lock-In (Home becomes
+  "Final Score"; no travel, no dice). Then Run Complete.
+- **A run's score is now its top Quark score** -- the best of every board
+  check and the final one. **Item score** (the old score: crafted items'
+  points) is shown beside it on the end screen.
+- History records both (score = top Quarks, itemScore = item points), plus
+  every board check's Quark score (`checks`), so exports show how the mat
+  did through the run. Older History entries keep their item-point score.
+
 ## 2026-11-11 (collections, Add/Remove)
 
 - **Collections are discovered on the mat:** the moment a Display Mat
