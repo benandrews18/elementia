@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (collections, Add/Remove)
+
+- **Collections are discovered on the mat:** the moment a Display Mat
+  arrangement completes a collection you haven't found, a window shows it;
+  tap "Add to Collections" to save it (+1 Star). Lock-In no longer has to
+  happen first.
+- **Synthetics** is now Plastic + Fiberglass + Microchip (was Computer).
+- **Add / Remove** in the inventory are bigger square buttons that bounce
+  up from behind the bottom hub when an item is selected, and drop back
+  down when it isn't.
+
 ## 2026-11-11 (fix)
 
 - **Fix: switching off a collection could overfill the Display Mat.** A

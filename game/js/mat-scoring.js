@@ -198,7 +198,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"bake-sale",               name:"Bake Sale",               items:["Fruit Cake","Apple Pie","Banana Bread"] },
   { id:"robotics-lab",            name:"Robotics Lab",            items:["Robot","Computer","Car","Turbine Blade"] },
   { id:"woodshop",                name:"Woodshop",                items:["Tree","Canoe","Log Cabin","Wheel"] },
-  { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Computer"] },
+  { id:"synthetics",              name:"Synthetics",              items:["Plastic","Fiberglass","Microchip"] },
   { id:"skyline",                 name:"Skyline",                 items:["Building","Skyscraper","Museum"] },
   { id:"mission-control",         name:"Mission Control",         items:["Computer","Rocket","Satellite Dish"] },
   { id:"barn-raising",            name:"Barn Raising",            items:["Farm","Wheel","Log Cabin"] },
