@@ -8,6 +8,13 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (windows)
+
+- **Collection clues are bought from the Main Menu only**; Collections
+  opened from the inventory still lists your clues but has no shop.
+- **Saved Layouts and Collections always fit the screen** above the hub;
+  their lists scroll inside the window.
+
 ## 2026-11-11 (capstone signatures)
 
 Each capstone now has a signature rule while it's on the Display Mat (two

@@ -269,6 +269,16 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   flex:1; min-width:0; padding:8px 10px; border-radius:8px; border:1.5px solid var(--line);
   background:var(--sunken); color:var(--ink); font-size:13px; box-sizing:border-box;
 }
+/* Saved Layouts and Collections always fit the screen above the hub: the
+   box is capped and its list scrolls inside. */
+:is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox{
+  display:flex; flex-direction:column; padding:18px 16px;
+  max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom));
+}
+:is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
+#matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
+#matLayoutsOverlay .btnrow{flex-wrap:wrap}
+#matLayoutsOverlay #matLayoutName{min-width:0 !important; flex:1 1 140px !important}
 /* Opens the same #collectionsOverlay as the welcome screen
    (openCollectionsOverlay()); a plain button sized to sit with the search
    bar. */

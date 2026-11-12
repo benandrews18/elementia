@@ -98,7 +98,7 @@ function renderCollectionsList(){
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
-  list.innerHTML = shop + leadsHTML + (unlocked.length
+  list.innerHTML = (collectionsFromMenu ? shop : "") + leadsHTML + (unlocked.length
     ? `<div class="sec-label" style="margin-top:12px">DISCOVERED</div><div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`
     : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>');
 }
@@ -226,7 +226,10 @@ document.getElementById("collectionsList").addEventListener("click", ev => {
 // Opened from the welcome screen (#tourCollectionsBtn) and from the
 // inventory filter bar (#matCollectionsBtn) -- the same overlay either way.
 // The #tour layering class is harmless when #tour isn't open.
-function openCollectionsOverlay(){
+// The clue shop only shows when opened from the main menu (not in a run).
+let collectionsFromMenu = false;
+function openCollectionsOverlay(fromMenu = false){
+  collectionsFromMenu = fromMenu;
   renderCollectionsList();
   document.getElementById("tour").classList.add("behind-settings");
   openOverlay("collectionsOverlay");
@@ -262,7 +265,7 @@ document.getElementById("collectionsList").addEventListener("change", ev => {
   if (sw.checked) addCollectionToMat(sw.dataset.toggleCollection);
   else removeCollectionFromMat(sw.dataset.toggleCollection);
 });
-document.getElementById("tourCollectionsBtn").addEventListener("click", openCollectionsOverlay);
+document.getElementById("tourCollectionsBtn").addEventListener("click", () => openCollectionsOverlay(true));
 document.getElementById("matLayoutSaveBtn").addEventListener("click", saveMatLayout);
 document.getElementById("matLayoutName").addEventListener("keydown", ev => {
   if (ev.key === "Enter") saveMatLayout();
