@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (Market goal row, better hint)
+
+- **No capstones in the Market draw.** The capstone you pick at the start
+  gets its own Market row: the capstone plus three items from its station
+  (ones that go into it first), so every run starts with a clear goal.
+- **To-Do hint, reworked:** it only suggests something you can make next
+  (all its components owned), choosing what you can craft right now first,
+  then what feeds the most pinned items and is used in the most places. It
+  says what it's needed for and which elements are still missing, and
+  turning it on opens every breakdown that uses it and highlights it there.
+
 ## 2026-11-11 (end screen, Market, "?")
 
 - **Run Complete fits one phone screen:** title only, then score, items
