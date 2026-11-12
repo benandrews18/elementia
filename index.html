@@ -2186,7 +2186,12 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 .empty-el-pick-box{max-width:560px; text-align:center}
 .empty-el-pick-box h2{margin:0 0 4px; display:flex; align-items:center; justify-content:center; gap:10px}
 .empty-el-pick-box .gather{margin:14px 0 4px}
-.lockin-reward-extra:not([hidden]){display:flex; align-items:center; justify-content:center; gap:8px; font-size:20px}
+.lockin-reward-extra:not([hidden]){display:block; margin:4px 0 12px}
+.lre-line{display:flex; align-items:center; justify-content:center; gap:10px; font-size:18px; font-weight:900; color:var(--ink)}
+.lre-q{padding:0; border:none; background:none; cursor:pointer; line-height:0}
+.lre-q:active{transform:scale(.92)}
+.lre-hint{margin:8px auto 0; max-width:300px; font-size:13px; font-weight:700; color:var(--ink2); line-height:1.4}
+.lre-hint[hidden]{display:none}
 #bingoCraftOverlay{z-index:70}
 /* Over the BINGO craft card, Convert (tray, scrim, button) comes up above it
    so the player can convert without leaving the Marketplace. */
@@ -2261,8 +2266,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
    pops; opacity:0 hides each die until its turn. */
 .lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
 html.low-motion .lockin-reward-die{animation:none; opacity:1}
-.lockin-reward-sub{text-align:center; font-weight:700; color:var(--ink2); margin:-2px 0 10px}
-.lockin-reward-extra{text-align:center; font-weight:800; color:var(--collection); margin:-2px 0 10px}
+
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter
    padding/font than a normal .btnrow pair so none of the three has to
    wrap to its own row. */
@@ -3887,8 +3891,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   <div class="sheetbox lockin-reward-box" style="max-width:420px">
     <h2 id="lockInRewardTitle"></h2>
     <div class="lockin-reward-dice" id="lockInRewardDice"></div>
-    <p class="lockin-reward-sub" id="lockInRewardSub"></p>
-    <p class="lockin-reward-extra" id="lockInRewardExtra" hidden></p>
+    <div class="lockin-reward-extra" id="lockInRewardExtra" hidden></div>
     <div class="btnrow">
       <button type="button" class="bigbtn" id="lockInRewardNice">Nice</button>
     </div>
@@ -11110,19 +11113,21 @@ function fadeThroughBlack(midpoint){
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
+  // The title says it all: how many dice, for how long.
   document.getElementById("lockInRewardTitle").textContent = n === 0
     ? "No bonus dice this time"
-    : `You earned +${n} ${n === 1 ? "die" : "dice"}`;
+    : `+${n} ${n === 1 ? "die" : "dice"} on your rolls for the next 3 turns`;
   const reduced = lowMotion();
   document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
     `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
-  // Tier 4's own extra (see finishLockIn()) -- a plain line below the dice
-  // rather than a whole separate celebration beat, since it's additive to
-  // whatever the dice count already says.
-  document.getElementById("lockInRewardSub").textContent = n ? `🎲 +${n} on each roll until the next check (3 turns)` : "";
+  // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
+  // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
   extra.hidden = !gotEmptyElement;
-  extra.innerHTML = gotEmptyElement ? `<span>+1</span>${emptyElSquareHTML(30)}` : "";
+  extra.innerHTML = gotEmptyElement ? `
+    <div class="lre-line"><span>+1 Unknown Element</span>
+      <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
+    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -11133,9 +11138,16 @@ function dismissLockInRewardModal(){
   if (onDone) onDone();
 }
 document.getElementById("lockInRewardNice").addEventListener("click", dismissLockInRewardModal);
-// A backdrop tap dismisses like Nice, so the pending travel still runs.
+// A backdrop tap dismisses like Nice, so the pending travel still runs. The
+// "?" square toggles its hint.
 document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
-  if (ev.target === ev.currentTarget) dismissLockInRewardModal();
+  if (ev.target === ev.currentTarget){ dismissLockInRewardModal(); return; }
+  const q = ev.target.closest("#lockInRewardQ");
+  if (q){
+    const hint = document.getElementById("lockInRewardHint");
+    hint.hidden = !hint.hidden;
+    q.setAttribute("aria-expanded", String(!hint.hidden));
+  }
 });
 
 /* A board check opening (hub's Travel on a checkpoint turn): a banner
