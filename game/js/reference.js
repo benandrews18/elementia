@@ -77,8 +77,8 @@ function refStyleRowHTML(entry, opts){
   const homes = ENTRIES.filter(x => x.name === entry.name).map(x => x.station);
   const control = opts.rightControl || `<button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(entry.name)}"
     title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(entry.name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>`;
-  return `<div class="refrow ${has ? "owned" : ""}" data-refname="${esc(entry.name)}" data-toggle="${path}">
-    <div class="refem-col"><div class="refem">${em(entry.emoji)}</div>${refSuitsHTML(entry.name)}</div>
+  return `<div class="refrow ${has ? "owned" : ""} ${opts.cls || ""}" data-refname="${esc(entry.name)}" data-toggle="${path}">
+    ${opts.badge || ""}<div class="refem-col"><div class="refem">${em(entry.emoji)}</div>${refSuitsHTML(entry.name)}</div>
     <div class="refbody">
       <div class="reftop">
         <span class="refname">${esc(entry.name)}</span>

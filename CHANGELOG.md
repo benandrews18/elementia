@@ -21,6 +21,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **First "?":** the first time a player gets an Unknown Element, a popout
   explains it (any element from the station you're at, from the Convert
   menu).
+- **To-Do List:** the item you're tracking always sits at the top, with a
+  gold rim and a 🔍 badge on its corner.
 
 ## 2026-11-11 (inventory and Lock-In)
 

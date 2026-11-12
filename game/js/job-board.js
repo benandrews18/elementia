@@ -80,13 +80,16 @@ function todoHintResultHTML(){
     </div>`;
 }
 function classicPinsAndJobsHTML(){
-  const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
+  // The tracked item (selectedJobItem) always leads, with a 🔍 corner badge.
+  const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name))
+    .sort((a, b) => (b === selectedJobItem) - (a === selectedJobItem));
   if (!names.length) return "";
   const hintHTML = `<button type="button" class="todo-hint-btn" data-todo-hint aria-expanded="${todoHintOpen}">
       💡 ${todoHintOpen ? "Hide Hint" : "Get a Hint"}
     </button>${todoHintOpen ? todoHintResultHTML() : ""}`;
   return `<div class="ref-pinned-heading">📌 Pinned</div>${hintHTML}<div class="reftable ref-pinned">${
-      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
+      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name), name === selectedJobItem
+        ? { cls: "tracked", badge: '<span class="todo-tracked-badge" title="Currently tracked">🔍</span>' } : {})).join("")
     }</div>`;
 }
 /* Shared open logic; jobSheetVariant decides the content and whether the
