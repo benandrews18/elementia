@@ -558,10 +558,15 @@
      (renderCollectionsList()). -->
 <div class="overlay" id="collectionsOverlay" role="dialog" aria-modal="true" aria-labelledby="collectionsTitle">
   <div class="sheetbox">
-    <h2 id="collectionsTitle">🏆 Collections</h2>
+    <button type="button" class="cp-close-x coll-x" id="collectionsClose" aria-label="Close">✕</button>
+    <div class="coll-head">
+      <h2 id="collectionsTitle">🏆 Collections</h2>
+      <span class="coll-star-bubble" id="collectionsStars" hidden></span>
+    </div>
     <p id="collectionsCount"></p>
+    <!-- Main Menu only: the clue buttons (renderCollectionsList()). -->
+    <div class="clue-shop-btns" id="clueShopBtns" hidden></div>
     <div id="collectionsList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="collectionsClose">Close</button></div>
   </div>
 </div>
 

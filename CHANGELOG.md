@@ -18,6 +18,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   your rolls for the next 3 turns") above the dice, with no extra text. A
   "?" earned at the top breakpoint shows as "+1 Unknown Element"; tap its
   icon for what it does.
+- **Collections window:** Stars in a bubble beside the title, an X in the
+  top-right corner (no Close button), and the two clue buttons right under
+  the count (no card or extra text). Collections you have clues for sit in
+  the one list in their normal place, marked "clue".
 
 ## 2026-11-11 (capstone signatures)
 

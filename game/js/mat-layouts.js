@@ -78,29 +78,31 @@ function renderCollectionsList(){
   document.getElementById("collectionsCount").textContent =
     `${unlocked.length} / ${total} Collections Unlocked`;
   const list = document.getElementById("collectionsList");
+  // Main Menu only: Stars in a bubble by the title, the two clue buttons
+  // under the count.
   const stars = prefs.stars || 0, can = Math.floor(stars / CLUE_COST), left = total - unlocked.length;
-  const shop = `<div class="clue-shop">
-      <div class="clue-shop-top"><span class="clue-stars">⭐ ${stars}</span><span class="clue-shop-title">Collection Clues</span></div>
-      <div class="clue-shop-btns">
-        <button type="button" class="bigbtn" id="clueBuyOne" ${can && left ? "" : "disabled"}>🎁 1 clue · ${CLUE_COST} ⭐</button>
-        <button type="button" class="bigbtn sec" id="clueBuyAll" ${can > 1 && left ? "" : "disabled"}>🎁 Open all${can > 1 ? ` (${can})` : ""}</button>
-      </div>
-      <p class="clue-how">Earn ⭐: finish a run +${STARS_RUN}, new trophy +${STARS_TROPHY}, discover a collection +${STARS_DISCOVERY}</p>
-    </div>`;
+  const starsEl = document.getElementById("collectionsStars"), btns = document.getElementById("clueShopBtns");
+  starsEl.hidden = btns.hidden = !collectionsFromMenu;
+  starsEl.textContent = `⭐ ${stars}`;
+  btns.innerHTML = `
+    <button type="button" class="bigbtn" id="clueBuyOne" ${can && left ? "" : "disabled"}>🎁 1 clue · ${CLUE_COST} ⭐</button>
+    <button type="button" class="bigbtn sec" id="clueBuyAll" ${can > 1 && left ? "" : "disabled"}>🎁 Open all${can > 1 ? ` (${can})` : ""}</button>`;
+  // One list, in collection order: discovered ones, and ones you have clues
+  // for (their unknown items as "?").
   const clues = prefs.collectionClues || {};
-  const leads = MAT_COLLECTIONS.filter(c => clues[c.id] && !prefs.everUnlockedMatCollections.includes(c.id));
-  const leadsHTML = leads.length ? `<div class="sec-label" style="margin-top:12px">🔎 CLUES</div><div class="histrows">${leads.map(c => `
+  const shown = MAT_COLLECTIONS.filter(c => prefs.everUnlockedMatCollections.includes(c.id) || clues[c.id]);
+  const leadHTML = c => `
     <div class="histentry collection-card clue-lead"><div class="collection-row"><div class="cr-main">
-      <div class="cr-line1"><span class="cr-name">${esc(c.name)}</span><span class="cr-bonus">+${c.bonus}</span></div>
+      <div class="cr-line1"><span class="cr-name">${esc(c.name)}</span><span class="cr-bonus">+${c.bonus}</span><span class="cr-clue">🔎 clue</span></div>
       <span class="cr-icons">${c.items.map(n => clues[c.id].includes(n)
         ? `<span class="cr-icon" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>` : `<span class="cr-icon cr-unknown">?</span>`).join("")}</span>
-    </div></div></div>`).join("")}</div>` : "";
+    </div></div></div>`;
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
-  list.innerHTML = (collectionsFromMenu ? shop : "") + leadsHTML + (unlocked.length
-    ? `<div class="sec-label" style="margin-top:12px">DISCOVERED</div><div class="histrows">${unlocked.map(c => namedCollectionCardHTML(c, true)).join("")}</div>`
-    : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>');
+  list.innerHTML = shown.length
+    ? `<div class="histrows">${shown.map(c => prefs.everUnlockedMatCollections.includes(c.id) ? namedCollectionCardHTML(c, true) : leadHTML(c)).join("")}</div>`
+    : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>';
 }
 /* A named collection's card, shared by the Collections menu and the combo
    star's popup (openComboInfo()). A green check once every member is owned.
@@ -219,7 +221,7 @@ document.getElementById("clueOpen").addEventListener("click", ev => {
   if (ev.target.closest("#clueBox")){ revealClue(); return; }
   if (ev.target.closest("#clueNext")){ clueIdx++; showClueBox(); return; }
 });
-document.getElementById("collectionsList").addEventListener("click", ev => {
+document.getElementById("clueShopBtns").addEventListener("click", ev => {
   if (ev.target.closest("#clueBuyOne")) buyClues(1);
   else if (ev.target.closest("#clueBuyAll")) buyClues(Infinity);
 });

@@ -343,14 +343,18 @@
   border:2px dashed var(--line); color:var(--mute); font-weight:900}
 .coll-stars{margin-left:6px; color:var(--gold); font-weight:900}
 .end-stars{margin:8px 0 0; font-weight:800; color:var(--gold); text-align:center; font-size:13px}
-/* Clue shop at the top of Collections. */
-.clue-shop{padding:12px; border-radius:14px; border:2px solid var(--gold); background:var(--gold-soft)}
-.clue-shop-top{display:flex; align-items:center; gap:10px; margin-bottom:8px}
-.clue-stars{font-size:20px; font-weight:900; color:var(--gold)}
-.clue-shop-title{font-weight:900; font-size:15px}
-.clue-shop-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+/* Collections header: title, Stars bubble (Main Menu), X top-right; the
+   clue buttons sit under the count. */
+.coll-head{display:flex; align-items:center; gap:10px; padding-right:44px}
+.coll-head h2{margin:0}
+.coll-star-bubble{flex:none; padding:4px 10px; border-radius:999px; background:var(--gold-soft); border:2px solid var(--gold);
+  color:var(--gold); font-weight:900; font-size:15px; line-height:1.2}
+.coll-star-bubble[hidden]{display:none}
+.coll-x{top:12px; right:12px; width:36px; height:36px; font-size:17px}
+.clue-shop-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 10px}
+.clue-shop-btns[hidden]{display:none}
 .clue-shop-btns .bigbtn{width:100%; padding-left:6px; padding-right:6px; font-size:14px}
-.clue-how{font-size:11.5px; color:var(--ink2); margin:8px 0 0}
+.cr-clue{font-size:11px; font-weight:800; color:var(--mute); margin-left:auto}
 /* Gift box opening, card-pack style. */
 #clueOpen{z-index:80; align-items:center}
 .clue-open-box{max-width:340px; text-align:center; position:relative; overflow:hidden}
