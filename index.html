@@ -2429,6 +2429,32 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .pc-divider{border-top:1.5px solid #000; margin:10px 0 10px}
 .pc-label{font-size:11px; font-weight:800; letter-spacing:1px; color:#5a5548; margin-bottom:9px}
 .pc-ingredients{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.pc-sig{margin-top:8px; padding:6px 8px; border-radius:10px; background:#fff3d6; border:1.5px solid #c79a2e;
+  font-size:12.5px; font-weight:700; line-height:1.3; color:#3a2a08}
+.pc-sig[hidden]{display:none}
+/* Capstones: a double-wide (landscape) card. Same corner badges; the art
+   takes the left column, title/components/rule the right. */
+#cardPop.cap-landscape .pc-card-wrap{max-width:600px}
+#cardPop.cap-landscape .pc-card{
+  aspect-ratio:10/7; padding:16px 18px 14px;
+  display:grid; grid-template-columns:42% 1fr; column-gap:14px; align-content:center;
+}
+#cardPop.cap-landscape .pc-icon-wrap{grid-column:1; grid-row:1 / span 6; flex:none}
+#cardPop.cap-landscape .pc-icon{font-size:min(110px, 22vw)}
+#cardPop.cap-landscape :is(.pc-title, .pc-divider, .pc-label, .pc-ingredients, .pc-sig){grid-column:2}
+#cardPop.cap-landscape .pc-title{padding:0 40px 0 0; text-align:left; font-size:20px; margin-top:0}
+#cardPop.cap-landscape .pc-divider{margin:6px 0}
+#cardPop.cap-landscape .pc-label{margin-bottom:5px}
+/* Landscape corner badges a little smaller, and the suit costs run along
+   the top edge (stacked down the side they covered the text). Padding
+   clears them. */
+#cardPop.cap-landscape .pc-card{border-width:12px; padding:34px 34px 30px 16px}
+#cardPop.cap-landscape :is(.pc-badge, .pc-station-badge, .pc-suitcost-badge){width:46px; height:46px; border-width:3px}
+#cardPop.cap-landscape .pc-badge{top:-12px; left:-12px}
+#cardPop.cap-landscape .pc-badge .n{font-size:22px}
+#cardPop.cap-landscape .pc-station-badge{bottom:-12px; right:-12px}
+#cardPop.cap-landscape .pc-suitcosts{top:-12px; right:-12px; flex-direction:row-reverse; gap:6px}
+#cardPop.cap-landscape .pc-title{padding-right:0}
 /* Below the card, its own tap target, so it can stopPropagation without
    triggering tap-to-dismiss. */
 /* Holds Item Info alongside the (usually hidden) Back button -- a plain
@@ -2447,19 +2473,6 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 /* Pin toggle with .refpin's look (grey off, gold on), centred in the
    .pc-actions row. */
 .pc-pin-btn{align-self:center}
-/* Large full-width mat button on its own row below Item Info/Pin, easy to
-   hit. Purple, tying it to the Display Mat's other purple accents. */
-.pc-matbtn-lg{
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  width:100%; padding:14px; border:none; border-radius:14px;
-  background:var(--collection); color:#fff; font-size:15px; font-weight:800;
-  letter-spacing:.2px; cursor:pointer; box-shadow:0 4px 0 var(--collection-line);
-  transition:transform .12s cubic-bezier(.3,.8,.4,1), box-shadow .12s cubic-bezier(.3,.8,.4,1);
-}
-.pc-matbtn-lg[hidden]{display:none}
-.pc-matbtn-lg.active{background:color-mix(in srgb, var(--collection) 80%, black)}
-.pc-matbtn-lg:not(:disabled):active{transform:translateY(4px); box-shadow:0 0 0 transparent}
-.cp-matbtn-ic{font-size:17px; line-height:1}
 
 </style>
 <style>
@@ -3508,8 +3521,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    redundant, per explicit request. */
 .mm-card.on{filter:brightness(.6) saturate(.7)}
 
-/* Above #cardPop (70): toggleMatCard() messages can fire from the mat
-   button inside that popup (#cpMatBtn). */
+/* Above #cardPop (70) so a mat message is never hidden behind it. */
 .mat-toast{
   position:fixed; left:50%; bottom:calc(var(--hub-h, 67px) + 16px); transform:translateX(-50%); z-index:75;
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:999px;
@@ -3771,6 +3783,9 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
       <div class="pc-divider"></div>
       <div class="pc-label">Components:</div>
       <div class="pc-ingredients" id="cpIngredients"></div>
+      <!-- Capstones only: what the card does on the Display Mat
+           (CAPSTONE_SIGNATURES). -->
+      <div class="pc-sig" id="cpSig" hidden></div>
     </div>
     <div class="pc-actions">
       <!-- Shown after drilling into a component's card (#cpIngredients
@@ -3783,10 +3798,6 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
       <button type="button" class="pc-tree-btn" id="cpTreeBtn">Item Info</button>
       <button type="button" class="pc-pin-btn refpin" id="cpPinBtn" aria-label="Pin to To-Do List" aria-pressed="false">📌</button>
     </div>
-    <!-- Classic only, for an owned mat card (showCardPop()): the big
-         add/remove-from-mat button on its own row. Label set by
-         setMatBtnState(). Hidden on the post-craft popup. -->
-    <button type="button" class="pc-matbtn-lg" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false"></button>
   </div>
 </div>
 
@@ -5867,6 +5878,10 @@ function bingoEligibleItems(){
 function bingoCapstoneChoices(){
   return bingoEligibleItems().filter(n => ITEM_TIER[n] === "CAPSTONE");
 }
+/* Each capstone's Display Mat rule, as the one line shown on its
+   (landscape) card. Empty until the signature rules are built -- the card
+   hides the line when there's no text. */
+const CAPSTONE_SIGNATURES = {};
 /* Roman-numeral tier: MATERIAL I, COMPONENT II, CREATION III, CAPSTONE IV. */
 const TIER_NUMERAL = {MATERIAL:"I", COMPONENT:"II", CREATION:"III", CAPSTONE:"IV"};
 function tierBadgeHTML(name){
@@ -8560,6 +8575,13 @@ let cardPopBackStack = [];
 function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   if (!keepBackStack) cardPopBackStack = [];
   cardPopEntry = entry;
+  // Capstones show as a double-wide (landscape) card with room for their
+  // Display Mat rule.
+  const isCap = ITEM_TIER[entry.name] === "CAPSTONE";
+  document.getElementById("cardPop").classList.toggle("cap-landscape", isCap);
+  const sig = document.getElementById("cpSig");
+  sig.textContent = (isCap && CAPSTONE_SIGNATURES[entry.name]) || "";
+  sig.hidden = !sig.textContent;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
   cpCard.style.setProperty("--suit", su.color);
@@ -8602,12 +8624,6 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   const pinBtn = document.getElementById("cpPinBtn");
   pinBtn.classList.toggle("active", isPinned(entry.name));
   pinBtn.setAttribute("aria-pressed", isPinned(entry.name));
-  // Display Mat Add/Remove (#cpMatBtn) for an owned mat card; not on the
-  // "just crafted" popup (autoDismiss) -- Item Info and the pin are all that
-  // card offers (2026-11-03).
-  const matEligible = !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
-  document.getElementById("cpMatBtn").hidden = !matEligible || autoDismiss;
-  if (matEligible) setMatBtnState(document.getElementById("cpMatBtn"), state.mat.includes(entry.name));
   openOverlay("cardPop");
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => closeOverlay("cardPop"), 3800);
@@ -8685,14 +8701,6 @@ document.getElementById("cpPinBtn").addEventListener("click", ev => {
   ev.currentTarget.classList.toggle("active", pinned);
   ev.currentTarget.setAttribute("aria-pressed", pinned);
   render();
-});
-/* Mat toggle: stays on the card, like the pin. toggleMatCard() refreshes
-   the drawer itself. */
-document.getElementById("cpMatBtn").addEventListener("click", ev => {
-  ev.stopPropagation();
-  if (!cardPopEntry) return;
-  toggleMatCard(cardPopEntry.name);
-  setMatBtnState(ev.currentTarget, state.mat.includes(cardPopEntry.name));
 });
 
 /* -------------------------------------------------- element card popup --- */
@@ -9917,17 +9925,6 @@ function renderClassicDrawer(){
   return matResultsGridHTML();
 }
 
-/* Keeps #cpMatBtn's label, aria state and styling in sync (initial paint
-   and after each toggle). */
-function setMatBtnState(btn, onMat){
-  btn.classList.toggle("active", onMat);
-  btn.setAttribute("aria-pressed", onMat);
-  // aria-label stays the fuller sentence (better for screen readers);
-  // only the visible text is the plain one-word button label.
-  btn.setAttribute("aria-label", onMat ? "Remove from Display Mat" : "Add to Display Mat");
-  const visibleLabel = onMat ? "Remove" : "Add";
-  btn.innerHTML = `<span class="cp-matbtn-ic">${onMat ? "➖" : "➕"}</span>${esc(visibleLabel)}`;
-}
 function toggleMatCard(name){
   const i = state.mat.indexOf(name);
   if (i !== -1){ state.mat.splice(i, 1); renderMatTop(); renderMatResultsGrid(); save(); return; }
@@ -10450,6 +10447,14 @@ document.getElementById("drawerBody").addEventListener("click", ev => {
   }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
+  // The open row's square picture opens the item card (as in the Market).
+  const openPic = ev.target.closest(".item.open .iem");
+  if (openPic){
+    const name = openPic.closest("[data-mat-row]").dataset.matRow;
+    const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]);
+    if (entry) showCardPop(entry, false);
+    return;
+  }
   const listRow = ev.target.closest("[data-mat-row]");
   if (listRow){ toggleMatListRow(listRow.dataset.matRow); return; }
   // The results grid (card view): tap selects the card -- its shop row docks
