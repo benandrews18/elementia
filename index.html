@@ -206,8 +206,8 @@ body.has-qtop main#screen{padding-top:calc(var(--qtop-h, 52px) + 4px)}
   display:flex; justify-content:space-between; align-items:flex-end; gap:0;
 }
 /* Classic's opening beat (see playClassicIntro()): the hub stays visible
-   but inert until the intro tray closes (closeJobBoard()/
-   closeBingoIntroTray()); same for the map's station nodes below. Separate
+   but inert until the intro tray closes (closeJobBoard()); same for the
+   map's station nodes below. Separate
    from body[data-picking], which covers the whole pre-start state. */
 body[data-intro-sequence] #hub{pointer-events:none}
 body[data-intro-sequence] .map-node{pointer-events:none}
@@ -536,15 +536,6 @@ body[data-screen="market"] #trackedPill{display:none}
   transform:translateY(-100%);
 }
 #jobSheet.top-tray.open{transform:none}
-/* Classic intro tray exit (closeBingoIntroTray()): pop then shrink away.
-   Plain CSS animation, not WAAPI, so no lingering fill fights the tray's
-   own transform/transition. */
-@keyframes tray-bounce-away{
-  0%{transform:scale(1); opacity:1}
-  30%{transform:scale(1.03); opacity:1}
-  100%{transform:scale(.85); opacity:0}
-}
-#jobSheet.bounce-away{animation:tray-bounce-away .32s cubic-bezier(.3,.8,.4,1) forwards}
 /* Less bottom padding: this tray shrink-wraps its content. */
 #jobSheet.top-tray .dbody{padding-bottom:16px}
 /* Stations-visited row, full width at the top of the BINGO tray
@@ -1756,8 +1747,7 @@ body[data-screen="market"] #trackedPill{display:none}
   transition:transform .08s;
 }
 .convert-pick:hover:not(:disabled){transform:translateY(-1px)}
-/* The same mini element box as the station pools (white face, suit border
-   via elementColorAttr()). */
+/* The same mini element box as the station pools (white face, suit border). */
 .convert-pick .elsym{
   min-width:56px; font-size:23px; color:#221f1a; border-width:7px; border-radius:9px;
 }
@@ -5549,11 +5539,6 @@ function paintElement(el, sym){
     el.style.color = "";
   }
 }
-/* The same colours as an inline style string, for template-built HTML. */
-function elementColorAttr(sym){
-  if (!ELEMENT_COLOR[sym]) return "";
-  return `style="background:#fff;border-color:${ELEMENT_COLOR[sym]}"`;
-}
 
 /* A station's dice in order, sorted by atomic number. Both the die-face
    legend and doRoll() read this, so face N always means the same element. */
@@ -6290,7 +6275,6 @@ const mapNodeTopStyle = name => {
    ===================================================================== */
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
-const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
 
 function savePrefs(){ lsSet(PREFS_KEY, JSON.stringify(prefs)); }
 /* Drops the last-placed cards until the mat fits (they stay owned). For
@@ -6370,7 +6354,7 @@ let codexReturnDrawerPeeked = null;
 // so results stay comparable if difficulty is retuned.
 /* Defaults for a new player: auto card inspection on, mouse tips on
    (guidedTutorialEnabled), mini-games off, low motion off. */
-let prefs = {maxVisits:DEFAULT_MAX_VISITS, diceCount:3, pinnedItems:[], minigamesEnabled:false,
+let prefs = {pinnedItems:[], minigamesEnabled:false,
   // Inventory item list: shop-style rows instead of cards (setItemsListView()).
   itemsListView:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
@@ -6416,7 +6400,7 @@ function freshState(){
     ended: false,      // session summary already shown for this run
     mode: null,        // always "classic" once a run starts
     visitedStations: {}, // {stationName: true} -- every station ever entered, for the
-                          // "visited every station" bonus and the Market's progress row.
+                          // Market's stations-visited row.
     collapseCraftedItems: true, // global "Collapse crafted" toggle for every station shop -- on by default
     convertRevealed: false, // true forever once the floating Convert button has appeared once
     marketVisited: false, // true once the Marketplace tray has been opened (openJobSelectTray()).
@@ -6436,18 +6420,13 @@ function freshState(){
     pendingBingoClears: [], // [lineIndex] completed but not yet played (runBingoSequence(), which
                             // runs once the craft's own effects finish).
     // The "?" elements held (Empty Elements): earned at the top Quark
-    // breakpoint and from BINGO lines; spent via openEmptyElPicker().
+    // breakpoint and from Market rows; spent via openEmptyElPicker().
     emptyElements: 0,
-    // Non-Classic Lock-In reward: a dice delta (-1..+2) applied by the next
-    // doRoll() at the destination, then reset. Classic uses
-    // state.matBonusDice instead.
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
     matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.
-    sawBreakpointGateNotice: false, // Unused (the warning banner is gone; old saves carry it). Was: the turn-9 "breakpoints now matter"
-                       // notice has fired yet this run (see BREAKPOINT_GATE_VISIT).
     finalGameOver: false, // True once a sunset Lock-In from BREAKPOINT_GATE_VISIT on missed the
                           // first breakpoint and the player confirmed ending (confirmLockIn()).
     craftedEverything: false, // Classic: every CORE_ITEM_NAMES item owned -- see checkCraftedEverything().
@@ -7222,7 +7201,9 @@ function render(resetScroll){
   renderTurnClock();
   renderQuarkTopBar();
   document.getElementById("drawerScoreCount").textContent = score();
-  document.getElementById("drawerBody").innerHTML = renderDrawer();
+  // The inventory's contents only while it's open; openDrawer() builds them
+  // on opening.
+  if (drawer.classList.contains("open")) document.getElementById("drawerBody").innerHTML = renderDrawer();
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
@@ -7626,6 +7607,8 @@ const openDrawer = (opts = {}) => {
   setMatCollapsed(false);
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
+  // render() skips the inventory while it's closed, so build it now.
+  document.getElementById("drawerBody").innerHTML = renderDrawer();
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   syncMatFloatBtns();
@@ -8428,11 +8411,10 @@ function openJobBoard(){
   openJobSheet();
 }
 function closeJobBoard(){
-  // Not dismissible mid-animation: during the flip-in reveal
-  // (runBingoRevealSequence()), the BINGO sequence (runBingoSequence()), or
-  // the opening capstone sequence -- a scrim tap would leave things
-  // half-done.
-  if (bingoRevealInProgress || bingoClearInProgress || capstoneIntroInProgress) return;
+  // Not dismissible mid-animation: during the BINGO sequence
+  // (runBingoSequence()) or the opening capstone sequence -- a scrim tap
+  // would leave things half-done.
+  if (bingoClearInProgress || capstoneIntroInProgress) return;
   jobSheet.classList.remove("open"); jobScrim.classList.remove("open");
   jobSheet.setAttribute("aria-hidden", "true");
   document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
@@ -8558,7 +8540,7 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   // own squares -- each opens that capstone's inspection card.
   const bingoTabBtn = ev.target.closest("[data-bingo-tab]");
   if (bingoTabBtn){
-    if (bingoRevealInProgress || bingoClearInProgress) return;
+    if (bingoClearInProgress) return;
     bingoTab = bingoTabBtn.dataset.bingoTab;
     renderJobBoard();
     return;
@@ -10236,6 +10218,11 @@ function loadMatLayout(i){
   closeMatLayoutsOverlay();
 }
 function deleteMatLayout(i){
+  const L = prefs.savedMatLayouts[i];
+  if (!L) return;
+  askConfirm(`Delete the layout "${L.name}"? This can't be undone.`, () => deleteMatLayoutNow(i));
+}
+function deleteMatLayoutNow(i){
   prefs.savedMatLayouts.splice(i, 1);
   savePrefs();
   renderMatLayoutsList();
@@ -11327,20 +11314,8 @@ function syncEmptyElBadgeSize(){
 <script>
 /* =====================================================================
    opening.js -- Run opening: the capstone choice and confirmation, the starting gift,
-   the pin tip, and the legacy BINGO-opening path for older saves.
-
-   Legacy BINGO opening: the tray opens with the 24 non-centre squares
-   flipping in, and the centre waits as an "Add Capstone" square. New runs
-   choose a capstone first instead (openCapstoneChoice() below); this path
-   remains for the "Add Capstone" square.
+   the pin tip, and the 5x5 card's "Add Capstone" square (older saves).
    ===================================================================== */
-// True only while runBingoRevealSequence()'s own staggered flip-in is
-// actively playing -- blocks closeJobBoard() for that brief window (see
-// its own comment) and does nothing else.
-let bingoRevealInProgress = false;
-// True only during that legacy opening: picking a capstone then also
-// retracts the tray (chooseBingoCapstone()).
-let bingoIntroActive = false;
 /* =====================================================================
    Classic's opening choice: rules slides -> pick a Capstone -> confirm.
    The capstone becomes the BINGO centre and its station the starting
@@ -11508,49 +11483,14 @@ function openTodoAt(name){
   target.classList.add("todo-hl");
   setTimeout(() => target.scrollIntoView({block: "center", behavior: lowMotion() ? "auto" : "smooth"}), 350);
 }
-function startBingoCapstonePicker(){
-  bingoIntroActive = true;
-  openJobSelectTray();
-  runBingoRevealSequence();
-}
-const BINGO_REVEAL_STAGGER_MS = 30;
-const BINGO_BOUNCE_AWAY_MS = 380;
-/* Flips every square but the centre open in a staggered wave. Per-cell
-   setTimeout, not onfinish (which never fires in a background tab). */
-function runBingoRevealSequence(){
-  const cells = [...document.querySelectorAll("#jobSheetBody .bingo-cell")];
-  bingoRevealInProgress = true;
-  cells.forEach((cell, i) => {
-    if (i === BINGO_CENTER_IDX) return; // stays a static placeholder -- see bingoCardHTML()
-    const order = i < BINGO_CENTER_IDX ? i : i - 1; // stagger order skips the center's own index
-    setTimeout(() => bingoCellFlipAppear(cell), (order + 1) * BINGO_REVEAL_STAGGER_MS);
-  });
-  const lastStaggerMs = (cells.length - 1) * BINGO_REVEAL_STAGGER_MS;
-  // +480: bingoCellFlipAppear()'s own animation duration -- waits for the
-  // very LAST square to actually finish flipping, not just start, before
-  // handing the hub/hint back to the player.
-  setTimeout(() => {
-    bingoRevealInProgress = false;
-    // data-intro-sequence is cleared when the tray closes (closeJobBoard()/
-    // closeBingoIntroTray()), not here.
-    updateHub();
-    render();
-  }, lastStaggerMs + 480);
-}
 /* Choosing from the capstone overlay (or "Random"): sets the centre
-   (setBingoCenter()), closes the overlay and flips the centre square in.
-   During the legacy opening the tray also retracts a beat later; otherwise
-   it stays open. */
+   (setBingoCenter()), closes the overlay and flips the centre square in. */
 function chooseBingoCapstone(name){
   setBingoCenter(name);
   closeCapstoneOverlay();
   renderJobBoard();
   const centerCell = document.querySelectorAll("#jobSheetBody .bingo-cell")[BINGO_CENTER_IDX];
   bingoCellFlipAppear(centerCell);
-  if (bingoIntroActive){
-    bingoIntroActive = false;
-    setTimeout(closeBingoIntroTray, 1000);
-  }
 }
 /* The capstone-choice grid as an overlay over the BINGO tray, opened from
    the "Add Capstone" square. */
@@ -11646,25 +11586,6 @@ document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
   performSingleCraft(entry);
   finishBingoCraft();
 });
-/* Bounces the tray away with a plain CSS animation (WAAPI's fill could
-   override the tray's own transform later), then snaps to the closed state
-   with transitions off. Also clears data-intro-sequence, like
-   closeJobBoard(). */
-function closeBingoIntroTray(){
-  jobSheet.classList.add("bounce-away");
-  setTimeout(() => {
-    jobSheet.style.transition = "none";
-    jobSheet.classList.remove("bounce-away", "open");
-    jobScrim.classList.remove("open");
-    jobSheet.offsetHeight; // force reflow
-    jobSheet.style.transition = "";
-    jobSheet.setAttribute("aria-hidden", "true");
-    document.getElementById("hubJobs").setAttribute("aria-expanded", "false");
-    document.body.removeAttribute("data-intro-sequence");
-    updateHub();
-    render();
-  }, BINGO_BOUNCE_AWAY_MS);
-}
 
 /* Legacy Classic starting gift, used when a run starts from the map: the
    first station hands over one of each element in its dice pool and its
@@ -11853,7 +11774,7 @@ function releaseBingoCraftHold(){
   scheduleBingoSequence();
 }
 function bingoSequenceBlocked(){
-  return bingoCraftHold || anyOverlayOpen() || startingGiftInProgress || bingoRevealInProgress
+  return bingoCraftHold || anyOverlayOpen() || startingGiftInProgress
     || document.getElementById("rollPopup").classList.contains("open")
     || state.ended;
 }
@@ -11988,7 +11909,7 @@ document.getElementById("bingoClearOverlayBody").addEventListener("click", ev =>
   closeOverlay("bingoClearOverlay"); // finishes the sequence (closeOverlay())
 });
 
-/* BINGO card flip-in (runBingoRevealSequence()): from edge-on (rotateY
+/* BINGO square flip-in (chooseBingoCapstone()'s centre): from edge-on (rotateY
    -100deg) to flat, with .bingo-grid's perspective for 3D depth. Separate
    from bounceCardAppear(), which the crafted strip uses. */
 function bingoCellFlipAppear(cell){
