@@ -12,18 +12,11 @@ let cardPopEntry = null;
 // time (updateCardPopBackBtn()). Cleared on every fresh open (see
 // keepBackStack).
 let cardPopBackStack = [];
-// Whether the current card is in "mat panel" mode; kept through drill-in and
-// Back (reset with cardPopBackStack) so browsing from the mat stays in the
-// small panel.
-let cardPopMatPanel = false;
 /* autoDismiss: true for the post-craft popup; false when tapped to
    inspect. keepBackStack: true only for drill-in/Back calls; otherwise the
-   back stack is cleared. matPanel: null leaves cardPopMatPanel unchanged (so
-   drill-in/Back can't drop out of panel mode); only openMatCardPop() passes
-   true. */
-function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel = null){
-  if (!keepBackStack){ cardPopBackStack = []; cardPopMatPanel = false; }
-  if (matPanel !== null) cardPopMatPanel = matPanel;
+   back stack is cleared. */
+function showCardPop(entry, autoDismiss = true, keepBackStack = false){
+  if (!keepBackStack) cardPopBackStack = [];
   cardPopEntry = entry;
   const su = DATA.suits[STATION_BY_NAME[entry.station].suit];
   const cpCard = document.getElementById("cpCard");
@@ -67,97 +60,15 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false, matPanel 
   const pinBtn = document.getElementById("cpPinBtn");
   pinBtn.classList.toggle("active", isPinned(entry.name));
   pinBtn.setAttribute("aria-pressed", isPinned(entry.name));
-  // Display Mat controls (Classic, owned, mat-eligible only): the panel gets
-  // Place/Remove/Close (#cpMatToggles), other contexts the single #cpMatBtn.
-  // This popup is the only add/remove entry point (see toggleMatCard()).
+  // Display Mat Add/Remove (#cpMatBtn) for an owned mat card; not on the
+  // "just crafted" popup (autoDismiss) -- Item Info and the pin are all that
+  // card offers (2026-11-03).
   const matEligible = !!MAT_CARD_BY_NAME[entry.name] && owns(entry.name);
-  document.getElementById("cardPop").classList.toggle("mat-panel", cardPopMatPanel);
-  document.getElementById("cpMatToggles").hidden = !(cardPopMatPanel && matEligible);
-  // Not on the "just crafted" popup (autoDismiss) -- Item Info and the pin
-  // are all that card offers (2026-11-03).
-  document.getElementById("cpMatBtn").hidden = !(!cardPopMatPanel && matEligible) || autoDismiss;
-  if (cardPopMatPanel){
-    if (matEligible) setMatToggleState(state.mat.includes(entry.name), null);
-  } else if (matEligible){
-    setMatBtnState(document.getElementById("cpMatBtn"), state.mat.includes(entry.name));
-  }
+  document.getElementById("cpMatBtn").hidden = !matEligible || autoDismiss;
+  if (matEligible) setMatBtnState(document.getElementById("cpMatBtn"), state.mat.includes(entry.name));
   openOverlay("cardPop");
-  if (cardPopMatPanel) positionCardPopMatPanel();
-  // Reset every inline style positionCardPopMatPanel() sets, or a normal card
-  // shown after a mat-panel one inherits stale values (a leftover paddingTop
-  // once pushed post-craft cards far down the screen).
-  else {
-    document.getElementById("cardPop").style.paddingTop = "";
-    document.getElementById("cpMatBackdrop").style.top = "";
-    document.getElementById("cpMatBackdrop").style.bottom = "";
-    document.querySelector(".pc-card-scale").style.width = "";
-    document.querySelector(".pc-card-scale").style.height = "";
-    document.getElementById("cpCard").style.transform = "";
-    document.getElementById("cpMatToggles").style.left = "";
-    document.getElementById("cpMatToggles").style.bottom = "";
-  }
   clearTimeout(cardPopTimer);
   if (autoDismiss) cardPopTimer = setTimeout(() => closeOverlay("cardPop"), 3800);
-}
-/* Docks the card just under #drawerTop and scales .pc-card to fill the
-   space down to the hub (CSS can't size this box -- see the
-   #cardPop.mat-panel CSS). Recomputed on every open since #drawerTop's
-   height changes. #drawer and .overlay share the same left/right rules, so
-   the right edge needs no math; the card WIDTH and the toggle stack's
-   position do (see maxCardW). */
-function positionCardPopMatPanel(){
-  const cardPop = document.getElementById("cardPop");
-  const drawerTopBottom = document.getElementById("drawerTop").getBoundingClientRect().bottom;
-  const paddingTop = Math.max(0, drawerTopBottom + 10);
-  cardPop.style.paddingTop = paddingTop + "px";
-  // Available height = the real viewport height, minus the padding-top
-  // just set and the hub-reservation padding-bottom every overlay already
-  // carries (see .overlay's own comment).
-  const hubPad = parseFloat(getComputedStyle(cardPop).paddingBottom) || 0;
-  const availH = Math.max(0, window.innerHeight - paddingTop - hubPad);
-  // The full-width dim layer (.pc-mat-backdrop) covers the same band as this
-  // panel's padding, ignoring the side padding.
-  const backdrop = document.getElementById("cpMatBackdrop");
-  backdrop.style.top = paddingTop + "px";
-  backdrop.style.bottom = hubPad + "px";
-  // Card width is capped three ways: by the available height (5:7), at its
-  // native 300px, and so the toggle stack (66px) plus breathing room still
-  // fits beside it.
-  const contentW = cardPop.clientWidth - 20 - 14; // .overlay's own left padding (20) + this panel's own right padding (14)
-  const toggleStackW = 66;
-  // 56px of slack: with less, the card's shadow blur (0 10px 28px) visually
-  // covered the toggles.
-  const maxCardW = Math.max(0, Math.min(300, availH * 5 / 7, contentW - toggleStackW - 56));
-  const scaleBox = document.querySelector(".pc-card-scale");
-  scaleBox.style.width = maxCardW + "px";
-  scaleBox.style.height = (maxCardW * 7 / 5) + "px";
-  // .pc-card's own natural width (300, its own 5:7 ratio) is the only
-  // fixed reference point this needs.
-  const scale = maxCardW > 0 ? (maxCardW / 300) : 0.5;
-  document.getElementById("cpCard").style.transform = `scale(${scale})`;
-  // Toggle stack: flush left, centred against the card's height (both share
-  // the same bottom anchor).
-  const cardW = maxCardW, cardH = maxCardW * 7 / 5;
-  const toggles = document.getElementById("cpMatToggles");
-  const togglesH = toggles.offsetHeight;
-  // Toggles pinned flush to the content box's left edge (the same 20px page
-  // margin as other edge controls), so all the slack sits between them and
-  // the card.
-  toggles.style.left = "0px";
-  toggles.style.bottom = Math.max(0, (cardH - togglesH) / 2) + "px";
-}
-/* Place/Remove state. onMat: whether the card is on the mat now.
-   bounceTarget: "place" | "remove" | null -- the button that just became
-   active and should bounce. */
-function setMatToggleState(onMat, bounceTarget){
-  const placeBtn = document.getElementById("cpPlaceBtn");
-  const removeBtn = document.getElementById("cpRemoveBtn");
-  placeBtn.classList.toggle("lit", !onMat);
-  removeBtn.classList.toggle("lit", onMat);
-  placeBtn.disabled = onMat;
-  removeBtn.disabled = !onMat;
-  if (bounceTarget === "place"){ placeBtn.classList.remove("bounce"); void placeBtn.offsetWidth; placeBtn.classList.add("bounce"); }
-  if (bounceTarget === "remove"){ removeBtn.classList.remove("bounce"); void removeBtn.offsetWidth; removeBtn.classList.add("bounce"); }
 }
 /* Shows/hides #cpBackBtn based on cardPopBackStack -- the icon inside it
    is always the entry on top of the stack (the card this one was drilled
@@ -240,31 +151,6 @@ document.getElementById("cpMatBtn").addEventListener("click", ev => {
   if (!cardPopEntry) return;
   toggleMatCard(cardPopEntry.name);
   setMatBtnState(ev.currentTarget, state.mat.includes(cardPopEntry.name));
-});
-/* Mat-panel Place/Remove (setMatToggleState()). Each checks `disabled`
-   itself, since some browsers still deliver clicks to disabled buttons.
-   toggleMatCard() can no-op (mat full), so re-read state.mat afterwards
-   rather than assuming success. */
-document.getElementById("cpPlaceBtn").addEventListener("click", ev => {
-  ev.stopPropagation();
-  if (!cardPopEntry || ev.currentTarget.disabled) return;
-  const before = state.mat.includes(cardPopEntry.name);
-  toggleMatCard(cardPopEntry.name);
-  const after = state.mat.includes(cardPopEntry.name);
-  setMatToggleState(after, after !== before ? "remove" : null);
-});
-document.getElementById("cpRemoveBtn").addEventListener("click", ev => {
-  ev.stopPropagation();
-  if (!cardPopEntry || ev.currentTarget.disabled) return;
-  const before = state.mat.includes(cardPopEntry.name);
-  toggleMatCard(cardPopEntry.name);
-  const after = state.mat.includes(cardPopEntry.name);
-  setMatToggleState(after, after !== before ? "place" : null);
-});
-document.getElementById("cpMatCloseBtn").addEventListener("click", ev => {
-  ev.stopPropagation();
-  clearTimeout(cardPopTimer);
-  closeOverlay("cardPop");
 });
 
 /* -------------------------------------------------- element card popup --- */

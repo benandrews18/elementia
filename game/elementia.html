@@ -225,35 +225,16 @@
   <!-- 2026-11-02: explicit dismiss; the tap falls through to #cardPop's own
        tap-anywhere-to-close listener. -->
   <button type="button" class="cp-close-x" id="cpCloseX" aria-label="Close">✕</button>
-  <div class="pc-mat-backdrop" id="cpMatBackdrop" aria-hidden="true"></div>
   <div class="pc-card-wrap">
-    <!-- Mat-panel mode only (#cardPop.mat-panel, openMatCardPop()): separate
-         Add/Remove/Close buttons, only the applicable one lit (see
-         setMatToggleState()). Every other context uses #cpMatBtn instead. -->
-    <div class="pc-mat-toggles" id="cpMatToggles" hidden>
-      <button type="button" class="pc-mat-toggle-btn place" id="cpPlaceBtn" aria-label="Add to Display Mat">
-        <span class="pc-mat-toggle-ic">+</span>Add
-      </button>
-      <button type="button" class="pc-mat-toggle-btn remove" id="cpRemoveBtn" aria-label="Remove from Display Mat">
-        <span class="pc-mat-toggle-ic">−</span>Remove
-      </button>
-      <button type="button" class="pc-mat-toggle-btn close" id="cpMatCloseBtn" aria-label="Close">
-        <span class="pc-mat-toggle-ic">✕</span>Close
-      </button>
-    </div>
-    <!-- display:contents normally; #cardPop.mat-panel gives it a real box for
-         .pc-card's transform:scale() to shrink into (see setCardPopScale()). -->
-    <div class="pc-card-scale">
-      <div class="pc-card" id="cpCard">
-        <div class="pc-suitcosts" id="cpSuitCosts"></div>
-        <div class="pc-station-badge" id="cpStationBadge"></div>
-        <div class="pc-badge"><span class="n" id="cpPts"></span></div>
-        <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
-        <div class="pc-title" id="cpName"></div>
-        <div class="pc-divider"></div>
-        <div class="pc-label">Components:</div>
-        <div class="pc-ingredients" id="cpIngredients"></div>
-      </div>
+    <div class="pc-card" id="cpCard">
+      <div class="pc-suitcosts" id="cpSuitCosts"></div>
+      <div class="pc-station-badge" id="cpStationBadge"></div>
+      <div class="pc-badge"><span class="n" id="cpPts"></span></div>
+      <div class="pc-icon-wrap"><span class="pc-icon" id="cpIcon"></span></div>
+      <div class="pc-title" id="cpName"></div>
+      <div class="pc-divider"></div>
+      <div class="pc-label">Components:</div>
+      <div class="pc-ingredients" id="cpIngredients"></div>
     </div>
     <div class="pc-actions">
       <!-- Shown after drilling into a component's card (#cpIngredients
@@ -268,8 +249,7 @@
     </div>
     <!-- Classic only, for an owned mat card (showCardPop()): the big
          add/remove-from-mat button on its own row. Label set by
-         setMatBtnState(). Hidden on the post-craft popup and in mat-panel
-         mode (see #cpMatToggles). -->
+         setMatBtnState(). Hidden on the post-craft popup. -->
     <button type="button" class="pc-matbtn-lg" id="cpMatBtn" hidden aria-label="Add to Display Mat" aria-pressed="false"></button>
   </div>
 </div>
