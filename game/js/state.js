@@ -35,6 +35,9 @@ function loadAll(){
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
+  // A tier change (tier 1 -> 2) can make an old mat overfull: drop the
+  // last-placed cards until it fits (they stay owned).
+  while (state.mat.length && !matFits(state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean))) state.mat.pop();
   // Saves from before the 3x4 layout keep their 5x5 card.
   if (state.bingoCard && state.bingoCard.length === BINGO_SIZE * BINGO_SIZE) state.bingoLayout = "bingo";
   // Saves from before the 3-visit mat check -- a run already past its first

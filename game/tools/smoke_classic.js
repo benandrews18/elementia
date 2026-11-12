@@ -201,6 +201,12 @@
     const isNew = loadAll();
     expect(!isNew && owns("Water") && state.visits === 5 && Array.isArray(state.mat) && state.mode === "classic",
       "old save did not load cleanly");
+    // A mat that overflows after a tier change is trimmed on load.
+    const nonT1 = MAT_CARDS.filter(c => !matIsTier1(c) && !matIsCapstone(c)).slice(0, 10).map(c => c.name);
+    localStorage.setItem(SAVE_KEY, JSON.stringify({items: nonT1, mat: nonT1, visits: 5, mode: "classic"}));
+    loadAll();
+    expect(state.mat.length === MAT_SLOTS_TOTAL && matFits(matOnMat()) && nonT1.every(owns),
+      `an overfull mat should be trimmed to fit on load (kept ${state.mat.length})`);
     render();
   });
   log.errs = errs;

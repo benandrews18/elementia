@@ -8,6 +8,14 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## v2026.11.11 (tier changes)
+
+- **Tier 2 now:** Concrete, Glass, Rubber (were tier 1, so they take a
+  full Display Mat slot instead of half).
+- **Concrete** 3 -> 4 points. **Tools** 3 -> 2 points.
+- A saved mat that no longer fits after this is trimmed on load (the
+  last-placed cards come off; they stay owned).
+
 ## 2026-11-11 (board check)
 
 - **Board check banner:** when the Display Mat is checked, a banner drops

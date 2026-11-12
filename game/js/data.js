@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08e",
+ "version": "2026.11.11",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -373,7 +373,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Tools",
      "MATERIAL",
      "Ti + Al + Fe",
-     3
+     2
     ],
     [
      "__FURNACE__",
@@ -385,7 +385,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__RUBBER__",
      "Rubber",
-     "MATERIAL",
+     "COMPONENT",
      "🛢️ Natural Gas + S",
      5
     ],
@@ -647,16 +647,16 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🪟",
      "Glass",
-     "MATERIAL",
+     "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
      4
     ],
     [
      "__CONCRETE__",
      "Concrete",
-     "MATERIAL",
+     "COMPONENT",
      "🏺 Clay + 🪨 Limestone",
-     3
+     4
     ],
     [
      "🌉",
@@ -720,7 +720,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Tools",
      "MATERIAL",
      "Ti + Al + Fe",
-     3
+     2
     ],
     [
      "__MICROCHIP__",
