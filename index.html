@@ -4406,7 +4406,7 @@ const NOTO_ICONS = {"⏳": NOTO_23f3, "☁️": NOTO_2601_fe0f, "♻️": NOTO_2
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.08e",
+ "version": "2026.11.11",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -4765,7 +4765,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Tools",
      "MATERIAL",
      "Ti + Al + Fe",
-     3
+     2
     ],
     [
      "__FURNACE__",
@@ -4777,7 +4777,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__RUBBER__",
      "Rubber",
-     "MATERIAL",
+     "COMPONENT",
      "🛢️ Natural Gas + S",
      5
     ],
@@ -5039,16 +5039,16 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🪟",
      "Glass",
-     "MATERIAL",
+     "COMPONENT",
      "⏳ Sand + 🪨 Limestone",
      4
     ],
     [
      "__CONCRETE__",
      "Concrete",
-     "MATERIAL",
+     "COMPONENT",
      "🏺 Clay + 🪨 Limestone",
-     3
+     4
     ],
     [
      "🌉",
@@ -5112,7 +5112,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Tools",
      "MATERIAL",
      "Ti + Al + Fe",
-     3
+     2
     ],
     [
      "__MICROCHIP__",
@@ -6184,6 +6184,9 @@ function loadAll(){
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
+  // A tier change (tier 1 -> 2) can make an old mat overfull: drop the
+  // last-placed cards until it fits (they stay owned).
+  while (state.mat.length && !matFits(state.mat.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean))) state.mat.pop();
   // Saves from before the 3x4 layout keep their 5x5 card.
   if (state.bingoCard && state.bingoCard.length === BINGO_SIZE * BINGO_SIZE) state.bingoLayout = "bingo";
   // Saves from before the 3-visit mat check -- a run already past its first
