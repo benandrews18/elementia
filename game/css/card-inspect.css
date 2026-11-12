@@ -200,6 +200,29 @@
 .sumcaps{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
 .sumcap{background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
   border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
+/* End screen: one phone screen tall -- the stats scroll inside .end-body
+   if they must, the buttons stay at the bottom. */
+#endGame .end-box{display:flex; flex-direction:column; padding:16px 16px 14px;
+  max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom))}
+#endGame #endTitle{margin:0 0 4px; text-align:center}
+#endGame .end-body{flex:1; min-height:0; overflow-y:auto}
+#endGame #endSub{margin:0 0 4px; font-size:13px}
+#endGame .sumgrid{grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 2px}
+#endGame .sumstat{padding:7px 8px; border-radius:10px}
+#endGame .sumstat .n{font-size:20px; letter-spacing:-.5px}
+#endGame .sumstat .l{font-size:9px; letter-spacing:.3px}
+#endGame .sumstat-wide{grid-column:span 2}
+#endGame .sum-station{display:flex; align-items:center; gap:6px; font-size:16px; letter-spacing:0}
+#endGame .sum-st-ic{flex:none; display:flex; font-size:22px}
+#endGame .sum-st-ic :is(img,svg){width:24px; height:24px}
+#endGame .sec-label{margin:10px 0 4px !important}
+#endGame .sumcaps{gap:5px; margin-top:4px}
+#endGame .sumcap{padding:3px 7px; font-size:12px}
+#endGame .trophy-grid{max-height:none; gap:6px; padding:0}
+#endGame .end-foot{flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
+#endGame .end-foot .bigbtn{width:100%; padding-left:8px; padding-right:8px}
+#endGame .end-foot .bigbtn:first-child:not([hidden]){grid-column:1 / -1}
+#endGame .end-foot [hidden]{display:none}
 
 /* hint popover */
 #hint{

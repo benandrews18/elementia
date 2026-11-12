@@ -6,14 +6,10 @@
    caller append its own tiles. */
 function sessionStatsGridHTML(extraCells){
   const caps = CAPSTONES.filter(owns);
-  const elementsHeld = Object.values(state.elements).reduce((a,b) => a+b, 0);
-  const byTier = t => state.items.filter(n => ITEM_TIER[n] === t).length;
   return `
     <div class="sumstat"><div class="n" style="color:var(--gold)">${score()}</div><div class="l">SCORE</div></div>
     <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
-    <div class="sumstat"><div class="n">${byTier("CREATION")}</div><div class="l">CREATIONS</div></div>
-    <div class="sumstat"><div class="n">${elementsHeld}</div><div class="l">ELEMENTS LEFT</div></div>
     ${extraCells || ""}`;
 }
 function capstonesSectionHTML(){
@@ -98,8 +94,9 @@ function showEndGame(){
     : state.craftedEverything ? "🏆 Every Item Crafted!"
     : state.reachedHardLimit ? "🎉 You Reached the End!"
     : state.runComplete ? "⏱️ Overtime Over" : "🏁 Game Over";
-  document.getElementById("endSub").textContent = completing
-    ? `You made it to turn ${RUN_COMPLETE_VISIT}! Keep playing in Overtime to craft every item, but every Lock-In must now clear the first Quark breakpoint. Or start a new game.`
+  // Run Complete: the title says it all (keeps the screen to one phone height).
+  document.getElementById("endSub").hidden = completing;
+  document.getElementById("endSub").textContent = completing ? ""
     : state.craftedEverything
     ? `You crafted every item in Elementia in ${state.visits} visits -- here's your run:`
     : state.reachedHardLimit
@@ -109,15 +106,12 @@ function showEndGame(){
     : `Game over -- missed the first Quark breakpoint on a Lock-In from visit ${BREAKPOINT_GATE_VISIT} on. Here's what you built:`;
   document.getElementById("endContinue").hidden = !completing;
   document.getElementById("endReview").hidden = completing;
-  document.getElementById("endNew").textContent = completing ? "New game" : "Start a new session";
 
-  const bingoTotal = bingoLines().length;
-  const bingoDone = (state.bingoLinesCompleted || []).length;
   const top = topVisitedStation();
+  const topStation = top && STATION_BY_NAME[top.name];
   const extraCells = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${bingoDone}<span style="font-size:16px;color:var(--mute)">/${bingoTotal}</span></div><div class="l">${marketRowsMode() ? "MARKET ROWS" : "BINGO LINES"}</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
-      top ? `<div class="sumstat"><div class="n" style="font-size:18px">${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
+      top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
 
   document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
@@ -155,4 +149,8 @@ document.getElementById("endNew").addEventListener("click", () => {
 document.getElementById("endContinue").addEventListener("click", () => closeOverlay("endGame"));
 document.getElementById("endReview").addEventListener("click", () => {
   closeOverlay("endGame"); openDrawer();
+});
+// Main Menu leaves the run saved (Play continues it), like Settings' button.
+document.getElementById("endMenu").addEventListener("click", () => {
+  closeOverlay("endGame"); showWelcomeSlide();
 });

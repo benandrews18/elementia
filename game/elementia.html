@@ -288,17 +288,22 @@
      at sunset from BREAKPOINT_GATE_VISIT on, or crafted every item. Extra
      BINGO/top-score tiles and the Biggest Turn strip. -->
 <div class="overlay" id="endGame" role="dialog" aria-modal="true" aria-labelledby="endTitle">
-  <div class="sheetbox">
+  <!-- Fits one phone screen: the stats scroll inside .end-body if they must,
+       the buttons stay pinned at the bottom (.end-foot). -->
+  <div class="sheetbox end-box">
     <h2 id="endTitle">🏁 Game Over</h2>
-    <p id="endSub"></p>
-    <div class="sumgrid" id="endGrid"></div>
-    <div id="endCapsWrap"></div>
-    <div id="endTrophiesWrap"></div>
-    <div id="endFlavorWrap"></div>
-    <div class="btnrow">
-      <button type="button" class="bigbtn" id="endContinue" hidden>Keep playing (Overtime)</button>
-      <button type="button" class="bigbtn sec" id="endNew">Start a new session</button>
+    <div class="end-body">
+      <p id="endSub"></p>
+      <div class="sumgrid" id="endGrid"></div>
+      <div id="endCapsWrap"></div>
+      <div id="endTrophiesWrap"></div>
+      <div id="endFlavorWrap"></div>
+    </div>
+    <div class="end-foot">
+      <button type="button" class="bigbtn" id="endContinue" hidden>Continue in Overtime</button>
+      <button type="button" class="bigbtn sec" id="endNew">New Game</button>
       <button type="button" class="bigbtn sec" id="endReview">Review my collection</button>
+      <button type="button" class="bigbtn sec" id="endMenu">Main Menu</button>
     </div>
   </div>
 </div>
