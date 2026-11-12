@@ -774,6 +774,13 @@ body[data-screen="market"] #trackedPill{display:none}
   border-radius:50%; background:radial-gradient(circle at 35% 35%, #ff8a7a, #c23b2a 60%, #7d1f14);
   box-shadow:0 2px 3px rgba(0,0,0,.45);
 }
+/* The tracked card (first in the list): gold rim and a 🔍 on its corner. */
+#jobSheet .ref-pinned .refrow.tracked{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.25)}
+.todo-tracked-badge{
+  position:absolute; top:-12px; right:-10px; z-index:3; width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:18px; line-height:1;
+  background:var(--gold); border:2px solid #000; box-shadow:0 2px 4px rgba(0,0,0,.4);
+}
 #jobSheet .ref-pinned .refname{color:#221f1a}
 #jobSheet .ref-pinned .refwhere{color:#5b4a33}
 #jobSheet .ref-pinned .refexpand{color:#8a5a12}
@@ -7916,8 +7923,8 @@ function refStyleRowHTML(entry, opts){
   const homes = ENTRIES.filter(x => x.name === entry.name).map(x => x.station);
   const control = opts.rightControl || `<button type="button" class="refpin ${pinned ? "active" : ""}" data-pin="${esc(entry.name)}"
     title="${pinned ? "Unpin" : "Pin to top"}" aria-label="${pinned ? "Unpin " : "Pin "}${esc(entry.name)}${pinned ? "" : " to top"}" aria-pressed="${pinned}">📌</button>`;
-  return `<div class="refrow ${has ? "owned" : ""}" data-refname="${esc(entry.name)}" data-toggle="${path}">
-    <div class="refem-col"><div class="refem">${em(entry.emoji)}</div>${refSuitsHTML(entry.name)}</div>
+  return `<div class="refrow ${has ? "owned" : ""} ${opts.cls || ""}" data-refname="${esc(entry.name)}" data-toggle="${path}">
+    ${opts.badge || ""}<div class="refem-col"><div class="refem">${em(entry.emoji)}</div>${refSuitsHTML(entry.name)}</div>
     <div class="refbody">
       <div class="reftop">
         <span class="refname">${esc(entry.name)}</span>
@@ -8214,13 +8221,16 @@ function todoHintResultHTML(){
     </div>`;
 }
 function classicPinsAndJobsHTML(){
-  const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name));
+  // The tracked item (selectedJobItem) always leads, with a 🔍 corner badge.
+  const names = prefs.pinnedItems.filter(name => ENTRIES.some(e => e.name === name))
+    .sort((a, b) => (b === selectedJobItem) - (a === selectedJobItem));
   if (!names.length) return "";
   const hintHTML = `<button type="button" class="todo-hint-btn" data-todo-hint aria-expanded="${todoHintOpen}">
       💡 ${todoHintOpen ? "Hide Hint" : "Get a Hint"}
     </button>${todoHintOpen ? todoHintResultHTML() : ""}`;
   return `<div class="ref-pinned-heading">📌 Pinned</div>${hintHTML}<div class="reftable ref-pinned">${
-      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name))).join("")
+      names.map(name => refStyleRowHTML(ENTRIES.find(e => e.name === name), name === selectedJobItem
+        ? { cls: "tracked", badge: '<span class="todo-tracked-badge" title="Currently tracked">🔍</span>' } : {})).join("")
     }</div>`;
 }
 /* Shared open logic; jobSheetVariant decides the content and whether the
