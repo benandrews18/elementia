@@ -35,6 +35,8 @@ function loadAll(){
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
+  // Saves from before the 3x4 layout keep their 5x5 card.
+  if (state.bingoCard && state.bingoCard.length === BINGO_SIZE * BINGO_SIZE) state.bingoLayout = "bingo";
   // Saves from before the 3-visit mat check -- a run already past its first
   // "day" counts as checked, so it keeps rolling TAKE rather than jumping to 6.
   if (state.matChecked === false && state.visits > MAT_CHECK_EVERY) state.matChecked = true;
@@ -128,7 +130,10 @@ function freshState(){
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
              // Collection discovery lives in prefs.everUnlockedMatCollections,
              // which survives resets.
-    bingoCard: null,  // [item x25] Classic BINGO card, drawn once per run by ensureBingoCard();
+    // Marketplace layout for this run: "rows" (3x4) or "bingo" (5x5); see
+    // marketRowsMode(). Picked from the setting when the run starts.
+    bingoLayout: prefs.classicBingo ? "bingo" : "rows",
+    bingoCard: null,  // [item x12 or x25] Marketplace card, drawn once per run by ensureBingoCard();
                       // null gives a fresh run a new draw.
     bingoLinesCompleted: [], // [lineIndex] completed lines (checkBingoLines()); never un-completes.
     pendingBingoClears: [], // [lineIndex] completed but not yet played (runBingoSequence(), which

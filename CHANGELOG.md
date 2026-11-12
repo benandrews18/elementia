@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-11 (Marketplace test)
+
+- **New Marketplace layout (default): 3 rows of 4.** Each row is three
+  tier 3 items plus one tier 2 or tier 4; finishing a row pays one "?"
+  element. All 8 capstones sit below the rows on the same page, each with
+  a pin button. No centre square: the capstone you pick at the start is
+  pinned and tracked as before.
+- **The 5x5 BINGO card is still there** behind Settings > Game Rules >
+  "5x5 BINGO card". The layout is fixed when a run starts, so the switch
+  applies from the next run. Saves already using a 5x5 card keep it.
+
 ## 2026-11-11 (rules)
 
 - **Display Mat checks every 3rd turn only.** Travelling from turn 3, 6,

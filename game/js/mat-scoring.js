@@ -245,6 +245,23 @@ function matScore(mat){
    draw. */
 const BINGO_SIZE = 5;
 const BINGO_MIN_POINTS = 5;
+/* Marketplace layout, fixed for the whole run (state.bingoLayout, set from
+   prefs.classicBingo by freshState()):
+     "rows"  -- 3 rows of 4, mostly tier 3; each finished row pays a "?".
+                All 8 capstones sit below the rows (default).
+     "bingo" -- the original 5x5 card with a chosen capstone in the centre.
+   Fixed per run so switching the setting can't redraw a card mid-run. */
+const MARKET_ROWS = 3, MARKET_ROW_LEN = 4;
+const marketRowsMode = () => state.bingoLayout === "rows";
+/* Each row: three tier 3 items and one odd one out -- tier 2 in two rows,
+   a tier 4 (capstone) in the other -- shuffled within the row. */
+function drawRowCard(){
+  const pool = t => shuffle(bingoEligibleItems().filter(n => ITEM_TIER[n] === t));
+  const t3 = pool("CREATION"), odd = shuffle([...pool("COMPONENT").slice(0, 2), pool("CAPSTONE")[0]]);
+  const card = [];
+  for (let r = 0; r < MARKET_ROWS; r++) card.push(...shuffle([...t3.slice(r * 3, r * 3 + 3), odd[r]]));
+  return card;
+}
 function bingoEligibleItems(){
   return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
 }
@@ -285,7 +302,7 @@ function drawBingoCard(chosenCenter){
   return [...others.slice(0, BINGO_CENTER_IDX), center, ...others.slice(BINGO_CENTER_IDX)];
 }
 function ensureBingoCard(){
-  const need = BINGO_SIZE * BINGO_SIZE;
+  const need = marketRowsMode() ? MARKET_ROWS * MARKET_ROW_LEN : BINGO_SIZE * BINGO_SIZE;
   // Also redraw if any square is no longer core (an old save after a
   // rebalance): bingoCardHTML() would throw on it and stop the tray from ever
   // opening.
@@ -298,7 +315,7 @@ function ensureBingoCard(){
       state.pendingBingoClears = [];
       state.bingoCenterChosen = false;
     }
-    state.bingoCard = drawBingoCard();
+    state.bingoCard = marketRowsMode() ? drawRowCard() : drawBingoCard();
     save();
   }
   return state.bingoCard;
@@ -308,6 +325,8 @@ const BINGO_CENTER_IDX = Math.floor(BINGO_SIZE / 2) * BINGO_SIZE + Math.floor(BI
    capstone was already on the card (replaced with a non-capstone of the
    same tier), so no item ever appears twice. */
 function setBingoCenter(name){
+  // The rows layout has no centre; the capstone choice just pins/tracks it.
+  if (marketRowsMode()){ ensureBingoCard(); state.bingoCenterChosen = true; save(); return; }
   if (name === BINGO_RANDOM_CAPSTONE){
     const choices = bingoCapstoneChoices();
     name = choices[Math.floor(Math.random() * choices.length)];
@@ -330,6 +349,8 @@ function setBingoCenter(name){
 // function of BINGO_SIZE, so it's cheap to recompute on every render
 // rather than caching it anywhere.
 function bingoLines(){
+  if (marketRowsMode())
+    return Array.from({length: MARKET_ROWS}, (_, r) => Array.from({length: MARKET_ROW_LEN}, (_, c) => r * MARKET_ROW_LEN + c));
   const n = BINGO_SIZE, lines = [], at = (r, c) => r * n + c;
   for (let r = 0; r < n; r++) lines.push(Array.from({length:n}, (_, c) => at(r, c)));
   for (let c = 0; c < n; c++) lines.push(Array.from({length:n}, (_, r) => at(r, c)));
@@ -366,7 +387,48 @@ function capstoneGridHTML(){
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
   </div>`;
 }
+/* One Marketplace square: owned / craftable ring, pin, icon, name, tier.
+   cellIdx is its index on the card (null for the rows layout's capstone
+   squares, which aren't part of any row). Tapping it crafts or inspects
+   (the .bingo-cell[data-item-card] handler). */
+function bingoCellHTML(name, cellIdx){
+    const idx = ENTRIES.findIndex(e => e.name === name);
+    // Craftable now gets the same green ring as owned (on the parchment face),
+    // so actionable squares stand out (craft via openBingoCraftOverlay()).
+    const owned = owns(name);
+    const craftable = !owned && idx >= 0 && canCraft(ENTRIES[idx]);
+    const cls = owned ? "bingo-cell owned" : craftable ? "bingo-cell craftable" : "bingo-cell";
+    const pinned = isPinned(name);
+    return `<div class="${cls}"${cellIdx === null ? "" : ` data-cell-idx="${cellIdx}"`} data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
+      <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
+        aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
+      <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
+      <span class="bc-name">${esc(name)}</span>
+      ${tierBadgeHTML(name)}
+    </div>`;
+}
+/* Rows layout: 3 rows of 4, each ending in its "?" reward (a check once
+   paid, state.bingoLinesCompleted), then every capstone, pinnable, below. */
+function marketRowsHTML(){
+  const card = ensureBingoCard();
+  const rows = bingoLines().map((line, r) => {
+    const done = (state.bingoLinesCompleted || []).includes(r);
+    return `<div class="mrow${done ? " done" : ""}">
+      <div class="bingo-grid mrow-grid">${line.map(i => bingoCellHTML(card[i], i)).join("")}</div>
+      <span class="mrow-reward" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
+    </div>`;
+  }).join("");
+  const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null)).join("");
+  return `<div class="bingo-page mrow-page">
+    <h3 class="bingo-title">Marketplace</h3>
+    <p class="bingo-subhint">Tap an item to craft it right here. Finish a row for a "?" element.</p>
+    <div class="bingo-wrap">${rows}</div>
+    <h3 class="bingo-title mrow-caps-title">🏆 Capstones</h3>
+    <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${caps}</div></div>
+  </div>`;
+}
 function bingoCardHTML(){
+  if (marketRowsMode()) return marketRowsHTML();
   if (bingoTab === "capstones") return capstoneGridHTML();
   const card = ensureBingoCard();
   const cells = card.map((name, i) => {
@@ -379,23 +441,7 @@ function bingoCardHTML(){
         <span class="bc-addcap-label">Add<br>Capstone</span>
       </div>`;
     }
-    const idx = ENTRIES.findIndex(e => e.name === name);
-    // Craftable now gets the same green ring as owned (on the parchment face),
-    // so actionable squares stand out (craft via openBingoCraftOverlay()).
-    const owned = owns(name);
-    const craftable = !owned && idx >= 0 && canCraft(ENTRIES[idx]);
-    const cls = owned ? "bingo-cell owned" : craftable ? "bingo-cell craftable" : "bingo-cell";
-    const pinned = isPinned(name);
-    // Once chosen, the centre is a normal cell; only the "Add Capstone"
-    // placeholder opens the picker.
-    const centerAttr = "";
-    return `<div class="${cls}"${centerAttr} data-cell-idx="${i}" data-item-card="${idx}" title="${esc(name)} -- ${ITEM_POINTS[name]} pts">
-      <button type="button" class="bc-pin ${pinned ? "on" : ""}" data-pin="${esc(name)}"
-        aria-label="${pinned ? "Unpin " : "Pin "}${esc(name)}" aria-pressed="${pinned}">📌</button>
-      <span class="bc-icon">${em(ITEM_EMOJI[name])}</span>
-      <span class="bc-name">${esc(name)}</span>
-      ${tierBadgeHTML(name)}
-    </div>`;
+    return bingoCellHTML(name, i);
   }).join("");
   return `${bingoTabsHTML()}<div class="bingo-page">
     <h3 class="bingo-title">Marketplace</h3>

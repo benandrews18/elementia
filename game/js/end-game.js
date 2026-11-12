@@ -115,7 +115,7 @@ function showEndGame(){
   const bingoDone = (state.bingoLinesCompleted || []).length;
   const top = topVisitedStation();
   const extraCells = `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${bingoDone}<span style="font-size:16px;color:var(--mute)">/${bingoTotal}</span></div><div class="l">BINGO LINES</div></div>
+    <div class="sumstat"><div class="n" style="color:var(--gold)">${bingoDone}<span style="font-size:16px;color:var(--mute)">/${bingoTotal}</span></div><div class="l">${marketRowsMode() ? "MARKET ROWS" : "BINGO LINES"}</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">TOP QUARK SCORE</div></div>${
       top ? `<div class="sumstat"><div class="n" style="font-size:18px">${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
 

@@ -139,6 +139,18 @@
     expect(matOccupancy(t1) === 2, `3 tier 1 cards should use 2 slots, used ${matOccupancy(t1)}`);
     expect(matScore(t1).base === t1.reduce((n, c) => n + c.points, 0), "stacked tier 1 cards should each score");
 
+    // Marketplace layouts: 3 rows of 4 by default, the 5x5 card behind
+    // prefs.classicBingo; the layout is fixed when the run starts.
+    { const saved = state, savedPref = prefs.classicBingo;
+      prefs.classicBingo = false; state = freshState();
+      expect(state.bingoLayout === "rows" && ensureBingoCard().length === 12 && bingoLines().length === 3
+        && bingoLines().every(l => l.length === 4), "default Marketplace should be 3 rows of 4");
+      expect(state.bingoCard.filter(n => ITEM_TIER[n] === "CREATION").length === 9, "rows should be mostly tier 3 (9 of 12)");
+      prefs.classicBingo = true; state = freshState();
+      expect(state.bingoLayout === "bingo" && ensureBingoCard().length === 25 && bingoLines().length === 12,
+        "the 5x5 setting should give a 5x5 card with 12 lines");
+      prefs.classicBingo = savedPref; state = saved; }
+
     // The mat is checked only when leaving a checkpoint turn (every 3rd).
     { const v = state.visits;
       const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });

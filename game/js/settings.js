@@ -6,6 +6,7 @@ const setMinigamesBox = document.getElementById("setMinigames");
 const setGuidedTutorialBox = document.getElementById("setGuidedTutorial");
 const setAutoCardInspectionBox = document.getElementById("setAutoCardInspection");
 const setLowMotionBox = document.getElementById("setLowMotion");
+const setClassicBingoBox = document.getElementById("setClassicBingo");
 // Just opens the hub (see #settings' own HTML comment) -- the 3 sub-
 // screens each have their own open function/handler below.
 function openSettings(){
@@ -21,6 +22,7 @@ function openSettingsRules(){
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;
   setAutoCardInspectionBox.checked = prefs.autoCardInspection !== false;
   setLowMotionBox.checked = lowMotion();
+  setClassicBingoBox.checked = !!prefs.classicBingo;
   openSettingsScreen("settingsRules");
 }
 document.getElementById("settingsRulesBtn").addEventListener("click", openSettingsRules);
@@ -33,6 +35,7 @@ document.getElementById("setSave").addEventListener("click", () => {
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
   prefs.autoCardInspection = setAutoCardInspectionBox.checked;
   prefs.lowMotion = setLowMotionBox.checked;
+  prefs.classicBingo = setClassicBingoBox.checked; // read by freshState() at the next run
   savePrefs();
   applyLowMotion();
   closeOverlay("settingsRules");

@@ -96,7 +96,7 @@ function tutCoachSteps(){
       text: "To-Do List: the items you're tracking." },
     { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },
     { sel: "#hubCodex", pose: 1, anchor: "bottom-right", text: "Look up any item's recipe here." },
-    { sel: "#hubMarket", pose: 2, anchor: "bottom-right", text: "The Market: BINGO and capstones, from anywhere." },
+    { sel: "#hubMarket", pose: 2, anchor: "bottom-right", text: "The Market: craft items and capstones from anywhere." },
     { sel: "#settingsBtn", pose: 2, anchor: "top-right", text: "Settings: adjust rules or go to Main Menu." },
     { sel: null, pose: 3, anchor: "top-right", text: "You're ready! 🎯 Go build!" },
   ];

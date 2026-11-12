@@ -143,8 +143,8 @@ function finishBingoSequence(){
 function openBingoClearOverlay(lineCount){
   const qs = Array.from({length: lineCount}, () => emptyElSquareHTML(48)).join("");
   document.getElementById("bingoClearOverlayBody").innerHTML = `
-    <h2 id="bingoClearTitle">🎉 BINGO!</h2>
-    <p>${lineCount === 1 ? "Line complete" : `${lineCount} lines complete`}</p>
+    <h2 id="bingoClearTitle">${marketRowsMode() ? "🎉 Row complete!" : "🎉 BINGO!"}</h2>
+    <p>${marketRowsMode() ? (lineCount === 1 ? "Here's your reward" : `${lineCount} rows complete`) : lineCount === 1 ? "Line complete" : `${lineCount} lines complete`}</p>
     <div class="bingo-q-reward"><span>+${lineCount}</span>${qs}</div>
     <div class="btnrow"><button type="button" class="bigbtn" id="bingoClearOkBtn">Nice!</button></div>`;
   openOverlay("bingoClearOverlay");
