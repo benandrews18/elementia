@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card view packing.** No tier headings in the station card view: one
+  grid, Tier 1 first, Tier 1 cards stacked two to a cell (only with each
+  other), and later cards fill any gap a two-wide capstone leaves.
+
 - **Crafted Items bar + card view selection.** Tip windows' hide button
   reads "✕ Hide". At stations, "CRAFTED ITEMS:" heads an always-visible bar
   (round > fold button, crafted icons, view switch). Folded crafted items
