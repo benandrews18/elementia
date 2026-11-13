@@ -745,8 +745,6 @@ body[data-screen="market"] #trackedPill{display:none}
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}
 #eventToast.et-warn .ct-title, #eventToast.et-warn .ct-bonus{color:var(--bad)}
 #eventToast.et-market{background:var(--ok-soft); border-bottom-color:var(--ok)}
-#eventToast.et-check{background:var(--gold-soft); border-bottom-color:var(--gold)}
-#eventToast.et-check .ct-title{color:var(--gold)}
 #eventToast.et-market .ct-title{color:var(--ok)}
 #eventToast .ct-icon :is(img,svg){width:30px; height:30px}
 /* This kind's text is a sentence, so it uses body sizing, not the bold
@@ -2202,6 +2200,31 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
 /* Above the Marketplace tray (69) too. */
 #emptyElTip{z-index:76; align-items:center}
+/* Board check scene change (playShutter()): above everything, blocking
+   taps while it plays. The panels meet at the middle along gold edges. */
+#shutter{position:fixed; inset:0; z-index:300; display:none; pointer-events:auto}
+#shutter.on{display:block}
+.sh-panel{
+  position:absolute; left:0; right:0; height:50.5%;
+  background:linear-gradient(180deg, #1d4a61, #12303f);
+  transition:transform .48s cubic-bezier(.65,0,.35,1.15);
+}
+.sh-top{top:0; transform:translateY(-102%); border-bottom:5px solid var(--gold);
+  box-shadow:0 6px 18px rgba(0,0,0,.5);
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 2px, transparent 2px 28px), linear-gradient(180deg, #12303f, #1d4a61)}
+.sh-bot{bottom:0; transform:translateY(102%); border-top:5px solid var(--gold);
+  box-shadow:0 -6px 18px rgba(0,0,0,.5);
+  background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 2px, transparent 2px 28px), linear-gradient(180deg, #1d4a61, #12303f)}
+#shutter.closed .sh-panel{transform:none}
+.sh-label{
+  position:absolute; left:0; right:0; top:50%; transform:translateY(-50%) scale(.8);
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+  opacity:0; transition:opacity .2s, transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+#shutter.closed .sh-label{opacity:1; transform:translateY(-50%) scale(1); transition-delay:.38s}
+.sh-l1{font-size:18px; font-weight:900; letter-spacing:1px; color:#fff; text-transform:uppercase;
+  padding:4px 14px; border-radius:999px; background:rgba(0,0,0,.35)}
+.sh-l2{font-size:32px; font-weight:900; color:var(--gold); text-shadow:0 3px 0 #000, 0 0 18px rgba(226,178,90,.5); line-height:1.1; padding:0 16px}
 .mat-rules-page[hidden]{display:none}
 .mct-line{margin:8px 0; line-height:1.45}
 .mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
@@ -3613,6 +3636,12 @@ html.low-motion #matListActions{transition:none}
 }
 
 </style>
+<!-- Board check scene change (playShutter()): two panels meet in the middle. -->
+<div id="shutter" aria-hidden="true">
+  <div class="sh-panel sh-top"></div>
+  <div class="sh-panel sh-bot"></div>
+  <div class="sh-label" role="status"><span class="sh-l1"></span><span class="sh-l2"></span></div>
+</div>
 <!-- Lock-In -> station fade (see fadeThroughBlack()). -->
 <div id="fadeCurtain" aria-hidden="true"></div>
 <div id="bootScreen" aria-hidden="true"><span class="boot-icon">⚗️</span></div>
@@ -7412,10 +7441,9 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      // Straight to the full inventory; a banner names the check, and the
-      // first check ever explains it (announceMatCheck()).
-      openDrawer();
-      announceMatCheck();
+      // The shutter scene change, then the full inventory; the first check
+      // ever also explains it (announceMatCheck()).
+      playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); });
       return;
     }
     goStation(selectedMapStation);
@@ -11273,9 +11301,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  openDrawer();
-  queueEventToast("check", "🏁", `Turn ${RUN_COMPLETE_VISIT} / ${RUN_COMPLETE_VISIT}`, "Final Score -- lock in your best mat");
-  updateHub();
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); });
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -11297,11 +11323,27 @@ function finishFinalCheck(total){
   fireConfetti();
   showEndGame();
 }
-/* A board check opening (hub's Travel on a checkpoint turn): a banner
-   drops in with the turn and bounces away; the very first check ever also
-   opens the Display Mat rules (prefs.sawMatCheckTutorial). */
+/* Scene change into a board check: two panels slide in from the top and
+   bottom, meet in the middle with the round and line2, and part again.
+   atClosed runs while the screen is covered (open the mat there). Low
+   motion: atClosed straight away. Input is blocked while it plays. */
+const SHUTTER_CLOSE_MS = 480, SHUTTER_HOLD_MS = 1100;
+function playShutter(line2, atClosed){
+  if (lowMotion()){ atClosed(); return; }
+  const el = document.getElementById("shutter");
+  el.querySelector(".sh-l1").textContent = `Round ${state.visits} / ${RUN_COMPLETE_VISIT}`;
+  el.querySelector(".sh-l2").textContent = line2;
+  el.classList.add("on");
+  el.offsetHeight; // start from open, so the panels slide in
+  el.classList.add("closed");
+  setTimeout(atClosed, SHUTTER_CLOSE_MS);
+  setTimeout(() => el.classList.remove("closed"), SHUTTER_CLOSE_MS + SHUTTER_HOLD_MS);
+  setTimeout(() => el.classList.remove("on"), SHUTTER_CLOSE_MS * 2 + SHUTTER_HOLD_MS);
+}
+/* A board check opening (hub's Travel on a checkpoint turn): the shutter
+   scene change, with the mat opening behind it; the very first check ever
+   also opens the Display Mat rules (prefs.sawMatCheckTutorial). */
 function announceMatCheck(){
-  queueEventToast("check", "⚛️", `Turn ${state.visits} / ${RUN_COMPLETE_VISIT}`, "Display Mat Score");
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
     openMatRules();
