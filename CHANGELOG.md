@@ -10,6 +10,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Inventory:** the selected item's card under the mat has a round X in
+  its bottom-right corner to dismiss it.
+
 - **Crafting animation, all at once:** the new card appears as soon as you
   tap Craft; the spent elements (now bigger) rise onto it, stack and pop,
   while the kept components peek up from the hub at the same time. Then

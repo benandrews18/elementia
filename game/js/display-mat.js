@@ -329,7 +329,8 @@ function syncMatSelPanel(){
   const panel = document.getElementById("matSelPanel");
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
   panel.hidden = !show;
-  panel.innerHTML = show ? matOpenRowHTML(matListOpen) : "";
+  panel.innerHTML = show ? matOpenRowHTML(matListOpen) +
+    '<button type="button" class="cp-close-x mat-sel-close" data-mat-sel-close aria-label="Close this item"></button>' : "";
 }
 /* The selected item (matListOpen), in both views. List view: one slim line
    per item (icon, name, suit pips, home stations, points). Either view:
