@@ -64,6 +64,20 @@ function handleScreenClick(ev){
     return;
   }
 
+  if (ev.target.closest("#shopViewBtn")){
+    prefs.shopCardView = !prefs.shopCardView; savePrefs();
+    stationCardOpen = null;
+    render();
+    return;
+  }
+  if (ev.target.closest("[data-st-card-close]")){ stationCardOpen = null; render(); return; }
+  const stCard = ev.target.closest(".st-cards [data-mat-card]");
+  if (stCard){
+    stationCardOpen = stationCardOpen === stCard.dataset.matCard ? null : stCard.dataset.matCard;
+    render();
+    return;
+  }
+
   if (ev.target.closest("#collapseCraftedBtn")){
     state.collapseCraftedItems = !state.collapseCraftedItems;
     save();

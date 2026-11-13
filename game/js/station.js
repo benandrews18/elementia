@@ -25,7 +25,12 @@ function renderStation(name){
   const capHTML = capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
         ${itemHTML(capEntry, idx(capEntry))}
       </div>` : "";
-  const shopBody = shopBodyHTML(shopEntries, idx, capHTML);
+  // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
+  const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
+      title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
+  const shopBody = prefs.shopCardView
+    ? `<div class="shop-toggle-row">${viewBtn}</div>` + shopCardsHTML(all, idx, capHTML)
+    : shopBodyHTML(shopEntries, idx, capHTML, viewBtn);
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
@@ -53,18 +58,18 @@ function renderStation(name){
    as full cards or fold into the compact craftedIconsHTML() row (capstones
    always keep their capbox). The toggle always renders first, just above
    wherever crafted items currently show. */
-function shopBodyHTML(shopEntries, idx, capHTML = ""){
+function shopBodyHTML(shopEntries, idx, capHTML = "", viewBtn = ""){
   // "Crafted Items": owns() is "crafted", so an item made anywhere shows here
   // at every station that sells it. No toggle until one item sold here is
   // crafted.
   const hasCraftedHere = shopEntries.some(e => owns(e.name));
   if (!hasCraftedHere){
-    return capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+    return `<div class="shop-toggle-row">${viewBtn}</div>` + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
   const toggle = `<div class="shop-toggle-row">
       <button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
         <span class="collapse-chevron"></span>Crafted Items
-      </button>
+      </button>${viewBtn}
     </div>`;
   if (!state.collapseCraftedItems){
     return toggle + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
@@ -73,6 +78,27 @@ function shopBodyHTML(shopEntries, idx, capHTML = ""){
   const rest = shopEntries.filter(e => !owns(e.name));
   const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
   return toggle + row + capHTML + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+}
+
+/* Card view: the station's items as Inventory cards (matCardHTML()), 4 to a
+   row, Tier 1 half height and capstones 2 wide, Tier 1 first. Tapping a card
+   shows its full shop row (craft, pin) above the cards (stationCardOpen). */
+let stationCardOpen = null;
+function shopCardsHTML(entries, idx, capHTML){
+  const open = entries.find(e => e.name === stationCardOpen);
+  const sel = !open ? "" : `<div class="st-card-sel">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
+      <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
+  const card = e => {
+    const owned = owns(e.name), t1 = e.tier === "MATERIAL";
+    return matCardHTML(e.name, { cls: [t1 ? "small mini" : "small", e.tier === "CAPSTONE" ? "wide" : "",
+      owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
+      e.name === stationCardOpen ? "selected" : ""].join(" ") });
+  };
+  return sel + `<div class="st-cards">${[...MAT_TIER_BANDS].reverse().map(b => {
+    const items = entries.filter(e => e.tier === b.tier);
+    return !items.length ? "" : `<div class="mat-tier-heading"><span class="mat-tier-line"></span>${esc(b.label)}<span class="mat-tier-line"></span></div>
+      <div class="mat-results-grid ${b.key === "t1" ? "half" : ""}">${items.map(card).join("")}</div>`;
+  }).join("")}</div>`;
 }
 
 /* Raw element boxes, shared by the legacy drawer and Classic's Elements

@@ -85,7 +85,7 @@ let codexReturnDrawerPeeked = null;
    (guidedTutorialEnabled), mini-games off, low motion off. */
 let prefs = {pinnedItems:[], minigamesEnabled:false,
   // Inventory item list: shop-style rows instead of cards (setItemsListView()).
-  itemsListView:false,
+  itemsListView:false, shopCardView:false,
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
   // Combo Lab or a run can be recalled later (openMatLayoutsOverlay()).
   savedMatLayouts:[],

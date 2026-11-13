@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Station shop card view.** A 🃏/📋 button switches a station's shop
+  between the list and Inventory-style cards: 4 to a row, Tier 1 half
+  height, capstones two wide, grouped Tier 1 first. Tap a card for its full
+  shop row (craft, pin); crafted cards are dimmed with a ✓, craftable ones
+  ringed green. The choice is remembered.
+
 - **Compact station shop.** No coloured ribbon: the dark header sits flush
   under the Quark meter. Tighter title spacing, no dice faces under the
   element pool, no "Item Shop" label. The capstone moves to the top of the

@@ -385,3 +385,25 @@
 /* The station's dark header sits flush under the Quark meter bar. */
 body.has-qtop[data-screen="station"] main#screen{padding-top:var(--qtop-h, 52px)}
 body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
+/* List/card view switch, right end of the shop's top row. */
+.shop-toggle-row:has(.shop-view-btn:only-child){justify-content:flex-end}
+.shop-view-btn{
+  flex:none; margin-left:auto; width:36px; height:36px; border-radius:10px; padding:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  background:var(--sunken); border:1.5px solid var(--line2); cursor:pointer;
+}
+/* Card view (shopCardsHTML()): the Inventory's card grid. The wrapper is
+   the container so the grid's cqw row height measures the shop's width. */
+.st-cards{container-type:inline-size}
+.st-cards .mat-results-grid{--mat-row-h:calc(((100cqw - 24px) / 4) * 1.4); margin-bottom:12px}
+.st-cards .mat-tier-heading{cursor:default; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.st-cards .mat-tier-line{background:rgba(255,255,255,.55)}
+.st-cards .mm-card.st-owned{filter:brightness(.7) saturate(.6)}
+.st-cards .mm-card.st-owned::after{
+  content:"✓"; position:absolute; right:-5px; bottom:-5px; width:20px; height:20px; border-radius:50%;
+  background:var(--ok); color:#fff; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center;
+}
+.st-cards .mm-card.st-can{outline:3px solid var(--ok); outline-offset:1px}
+.st-card-sel{position:relative; margin-bottom:12px}
+.st-card-sel > .item, .st-card-sel > .capbox{margin-bottom:0}
+.st-card-close{top:auto; right:auto; bottom:-12px; left:-8px; width:34px; height:34px}
