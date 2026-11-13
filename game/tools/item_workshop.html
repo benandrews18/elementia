@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Item Workshop</title>
+<!-- Tuning bench for the 61 retired items (tools/retired_items.js) as
+     capstone-unlocked station items. Reads the live game data and icons
+     (../js/data.js, ../js/model.js, ../assets/images.js), so current items
+     always match the game. Edits are a draft in this browser; Export gives
+     data.js / model.js text to paste. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+:root{
+  --bg:#ece0c4; --surface:#f7efdb; --raised:#fffaf0; --ink:#2a2218; --ink2:#5f513d; --mute:#8a7a62;
+  --line:#cdb68c; --gold:#a8771f; --gold-soft:#f3dfae; --navy:#22364a; --ok:#2f8a57; --warn:#b5541f; --new:#2f6fb5;
+  --display:"Fredoka","Trebuchet MS",system-ui,sans-serif; --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1922; --surface:#172533; --raised:#1d2e3f; --ink:#e8edf4; --ink2:#aab6c5; --mute:#7d8899;
+  --line:#2c3f52; --gold:#e2b25a; --gold-soft:#3a3222; --navy:#e2b25a; --ok:#4cc27e; --warn:#f08a54; --new:#6aa8f0; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1922; --surface:#172533; --raised:#1d2e3f; --ink:#e8edf4; --ink2:#aab6c5; --mute:#7d8899;
+  --line:#2c3f52; --gold:#e2b25a; --gold-soft:#3a3222; --navy:#e2b25a; --ok:#4cc27e; --warn:#f08a54; --new:#6aa8f0; color-scheme:dark }
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.45;
+  padding:20px max(16px, env(safe-area-inset-right, 0px)) 60px max(16px, env(safe-area-inset-left, 0px))}
+h1,h2,h3{font-family:var(--display); margin:0; text-wrap:balance}
+button, input, select{font:inherit; color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+.wrap{max-width:1240px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+header{display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px}
+header h1{font-size:clamp(26px, 4vw, 34px); font-weight:700}
+header p{margin:2px 0 0; color:var(--ink2); max-width:62ch}
+.btn{border:2px solid var(--line); background:var(--raised); border-radius:10px; padding:7px 13px; font-weight:800}
+.btn.primary{background:var(--navy); border-color:var(--navy); color:var(--bg)}
+.btn.small{padding:3px 9px; font-size:13px; border-radius:8px}
+.btn.danger{color:var(--warn)}
+.bar{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chip{display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; border:2px solid var(--line);
+  background:var(--raised); font-weight:800; font-size:13px}
+.chip[aria-pressed="true"]{background:var(--navy); border-color:var(--navy); color:var(--bg)}
+.seg{display:inline-flex; border:2px solid var(--line); border-radius:10px; overflow:hidden}
+.seg button{border:none; background:var(--raised); padding:5px 11px; font-weight:800; font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--navy); color:var(--bg)}
+#q{padding:6px 10px; border-radius:10px; border:2px solid var(--line); background:var(--raised); min-width:180px; flex:1; max-width:280px}
+.ic{display:inline-flex; align-items:center; justify-content:center; line-height:1}
+.ic img, .ic svg{width:1em; height:1em; object-fit:contain}
+
+.main{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,380px); gap:18px; align-items:start}
+@media (max-width:900px){ .main{grid-template-columns:minmax(0,1fr)} }
+.list{display:flex; flex-direction:column; gap:18px}
+.station{background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:10px}
+.st-head{display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px}
+.st-head h2{font-size:21px; display:flex; align-items:center; gap:8px}
+.st-head .ic{font-size:26px}
+.st-meta{font-size:13px; color:var(--ink2); display:flex; flex-wrap:wrap; gap:4px 12px}
+.st-meta b{color:var(--ink)}
+.tierrow{display:flex; flex-direction:column; gap:6px}
+.tierlbl{font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--mute)}
+.cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px}
+.card{position:relative; text-align:left; background:var(--raised); border:2px solid var(--line); border-radius:12px; padding:8px 9px;
+  display:flex; flex-direction:column; gap:4px; min-width:0}
+.card.new{border-style:dashed; border-color:var(--new)}
+.card.off{opacity:.45}
+.card.sel{outline:3px solid var(--gold); outline-offset:1px}
+.card.warned::after{content:"!"; position:absolute; top:-7px; right:-7px; width:20px; height:20px; border-radius:50%;
+  background:var(--warn); color:#fff; font-weight:900; font-size:12px; display:flex; align-items:center; justify-content:center}
+.c-top{display:flex; align-items:center; gap:7px; min-width:0}
+.c-top .ic{font-size:28px; flex:none}
+.c-name{font-weight:800; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0}
+.pts{flex:none; min-width:26px; height:24px; padding:0 6px; border-radius:999px; background:var(--gold); color:#181614; font-weight:900; font-size:12px;
+  display:inline-flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums}
+.c-row{display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:12px; color:var(--ink2); min-height:20px}
+.suit{width:18px; height:18px; border-radius:50%; background:var(--su); display:inline-flex; align-items:center; justify-content:center; flex:none}
+.suit img, .suit svg{width:11px; height:11px; filter:brightness(0) invert(1)}
+.tok{display:inline-flex; align-items:center; gap:2px; font-size:12px; font-weight:800}
+.tok.el{padding:0 5px; border-radius:6px; border:2px solid var(--su); background:#fff; color:#221f1a; line-height:1.3}
+.tok .ic{font-size:17px}
+.tag{font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:var(--new)}
+
+.editor{position:sticky; top:12px; background:var(--surface); border:2px solid var(--line); border-radius:16px; padding:14px;
+  display:flex; flex-direction:column; gap:10px; max-height:calc(100vh - 24px); overflow:auto}
+@media (max-width:900px){ .editor{position:static; max-height:none} }
+.editor .empty{color:var(--mute)}
+.ed-head{display:flex; align-items:center; gap:10px}
+.ed-head .ic{font-size:44px}
+.field{display:flex; flex-direction:column; gap:3px}
+.field label, .lbl{font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--mute)}
+.field input, .field select{padding:6px 9px; border-radius:9px; border:2px solid var(--line); background:var(--raised); width:100%}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.costs{display:flex; gap:6px; flex-wrap:wrap}
+.costs button{display:inline-flex; align-items:center; gap:5px; border:2px solid var(--line); background:var(--raised); border-radius:999px; padding:3px 9px 3px 4px; font-weight:800; font-size:12.5px}
+.costs button .n{min-width:14px; text-align:center}
+.recipe{display:flex; flex-wrap:wrap; gap:6px}
+.recipe .rt{display:inline-flex; align-items:center; gap:4px; border:2px solid var(--line); background:var(--raised); border-radius:999px; padding:2px 4px 2px 8px; font-weight:800; font-size:13px}
+.recipe .rt.bad{border-color:var(--warn); color:var(--warn)}
+.recipe .rt button{border:none; background:none; padding:0 4px; font-weight:900; color:var(--mute)}
+.addrow{display:flex; gap:6px}
+.addrow input{flex:1; padding:6px 9px; border-radius:9px; border:2px solid var(--line); background:var(--raised); min-width:0}
+.facts{display:flex; flex-direction:column; gap:4px; font-size:13.5px; border-top:2px dashed var(--line); padding-top:8px}
+.warn{color:var(--warn); font-weight:800}
+.ok{color:var(--ok); font-weight:800}
+dialog{border:2px solid var(--line); border-radius:16px; background:var(--surface); color:var(--ink); width:min(760px, 94vw); padding:16px}
+dialog::backdrop{background:rgba(10,14,20,.55)}
+dialog textarea{width:100%; height:55vh; font:12.5px/1.45 ui-monospace, Consolas, monospace; border-radius:10px; border:2px solid var(--line); background:var(--raised); color:var(--ink); padding:10px}
+.dl-row{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Item Workshop</h1>
+      <p>Tune the 61 retired items as items a station's shop unlocks once you craft its capstone. Tap a card to edit it. Dashed cards are new; tier comes from the element icons (none = I, one = II, two = III).</p>
+    </div>
+    <div class="bar">
+      <button class="btn" id="resetBtn" type="button">Reset all edits</button>
+      <button class="btn primary" id="exportBtn" type="button">Export</button>
+    </div>
+  </header>
+  <div class="bar" id="stationBar"></div>
+  <div class="bar">
+    <div class="seg" id="showSeg" role="group" aria-label="Show">
+      <button type="button" data-show="new">New items</button>
+      <button type="button" data-show="all">New + current</button>
+      <button type="button" data-show="current">Current only</button>
+    </div>
+    <input id="q" type="search" placeholder="Search names or components…" autocomplete="off">
+    <span id="tally" class="st-meta"></span>
+  </div>
+  <div class="main">
+    <div class="list" id="list"></div>
+    <aside class="editor" id="editor" aria-live="polite"></aside>
+  </div>
+</div>
+<dialog id="exportDlg">
+  <div class="dl-row"><h2>Export</h2><span class="bar"><button class="btn small" id="copyBtn" type="button">Copy</button><button class="btn small" id="closeDlg" type="button">Close</button></span></div>
+  <textarea id="exportText" readonly></textarea>
+</dialog>
+
+<script src="../assets/images.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/model.js"></script>
+<script src="../js/render-helpers.js"></script>
+<script src="retired_items.js"></script>
+<script>
+const KEY = "elementia-item-workshop-v1";
+const TIER = ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"];
+const TIER_LABEL = ["Tier I", "Tier II", "Tier III", "Capstone"];
+const SUITS = ["organic", "earth", "metal", "reactive"];
+const STATIONS = Object.values(DATA.stations);
+const icon = e => `<span class="ic">${RETIRED_ICONS[e] || CUSTOM_ICONS[e] || esc(e)}</span>`;
+const suitDot = s => `<span class="suit" style="--su:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`;
+const ELEMENT_LIST = [...new Set(STATIONS.flatMap(s => s.dice))].sort((a, b) => (ATOMIC_NUMBER[a] || 999) - (ATOMIC_NUMBER[b] || 999));
+
+/* ---- base items: the game's own, then the retired ones (with suggested costs) */
+function baseItems(){
+  const out = {};
+  STATIONS.forEach(st => [...st.shop, st.capstone].forEach(r => {
+    if (out[r[1]]){ out[r[1]].stations.push(st.name); return; }
+    out[r[1]] = {name: r[1], emoji: r[0], station: st.name, stations: [st.name], points: r[4], recipe: r[3],
+      costs: [...itemSuitCosts(r[1])], isNew: false, cap: r[2] === "CAPSTONE"};
+  }));
+  RETIRED_ITEMS.forEach(r => {
+    // Suggested start: cost count by points (as the current set runs), suit
+    // from the recipe's most common element suit.
+    const els = parseRecipe(r.recipe).filter(t => t.kind === "element").map(t => ELEMENT_SUIT[t.name]).filter(Boolean);
+    const top = els.sort((a, b) => els.filter(x => x === b).length - els.filter(x => x === a).length)[0] || "organic";
+    const n = r.points <= 4 ? 0 : r.points <= 11 ? 1 : 2;
+    out[r.name] = {name: r.name, emoji: r.emoji, station: r.station, stations: [r.station], points: r.points, recipe: r.recipe,
+      costs: Array(n).fill(top), isNew: true, include: true, oldTier: r.oldTier, suggested: true, cap: false};
+  });
+  return out;
+}
+const BASE = baseItems();
+let S = {ov: {}};
+try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && v.ov) S = v; } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const item = name => ({...BASE[name], ...(S.ov[name] || {})});
+const items = () => Object.keys(BASE).map(item);
+const live = () => items().filter(i => !i.isNew || i.include);
+const tierOf = i => i.cap ? 3 : Math.min(i.costs.length, 2);
+const capOf = st => STATIONS.find(s => s.name === st).capstone;
+
+/* ---- what each card's numbers mean */
+const comps = i => parseRecipe(i.recipe);
+// Points range per tier among the current items (the yardstick for new ones).
+const BANDS = (() => {
+  const b = [0, 1, 2].map(() => [Infinity, -Infinity]);
+  Object.values(BASE).filter(i => !i.isNew && !i.cap).forEach(i => {
+    const t = Math.min(i.costs.length, 2); b[t][0] = Math.min(b[t][0], i.points); b[t][1] = Math.max(b[t][1], i.points);
+  });
+  return b;
+})();
+// Capstones that must be crafted before this item can show up: its own
+// station's (if new), plus whatever its new components need.
+function unlocks(name, seen = new Set()){
+  const i = item(name); if (!i.name || seen.has(name)) return new Set();
+  seen.add(name);
+  const need = new Set(i.isNew ? [capOf(i.station)[1]] : []);
+  comps(i).filter(t => t.kind === "item" && BASE[t.name]).forEach(t => unlocks(t.name, seen).forEach(c => need.add(c)));
+  return need;
+}
+function warnings(i){
+  const w = [], names = new Set(live().map(x => x.name));
+  comps(i).forEach(t => {
+    if (t.kind === "item" && !names.has(t.name)) w.push(`${t.name} isn't in the game${BASE[t.name] ? " (switched off)" : ""}`);
+    if (t.kind === "element" && !ELEMENT_LIST.includes(t.name)) w.push(`No station rolls ${t.name}`);
+  });
+  if (!i.cap){
+    const [lo, hi] = BANDS[tierOf(i)];
+    if (i.points < lo || i.points > hi) w.push(`${i.points} pts is outside today's ${TIER_LABEL[tierOf(i)]} range (${lo}-${hi})`);
+  }
+  return w;
+}
+const usedIn = name => live().filter(x => comps(x).some(t => t.kind === "item" && t.name === name)).map(x => x.name);
+
+/* ---- view state */
+let view = {station: null, show: "new", q: "", sel: null};
+function tokHTML(t){
+  if (t.kind === "element") return `<span class="tok el" style="--su:${SUIT_COLOR[ELEMENT_SUIT[t.name]] || "#8a94a6"}">${esc(t.name)}${t.catalyst ? "*" : ""}</span>`;
+  const it = BASE[t.name];
+  return `<span class="tok" title="${esc(t.name)}">${icon(it ? item(t.name).emoji : t.emoji)}</span>`;
+}
+function cardHTML(i){
+  const w = warnings(i);
+  return `<button type="button" class="card${i.isNew ? " new" : ""}${i.isNew && !i.include ? " off" : ""}${view.sel === i.name ? " sel" : ""}${w.length ? " warned" : ""}" data-sel="${esc(i.name)}">
+    <span class="c-top">${icon(i.emoji)}<span class="c-name">${esc(i.name)}</span><span class="pts">${i.points}</span></span>
+    <span class="c-row">${i.costs.map(suitDot).join("") || '<span style="color:var(--mute)">no element icons</span>'}${i.isNew ? '<span class="tag">&nbsp;new</span>' : ""}</span>
+    <span class="c-row">${comps(i).map(tokHTML).join("<span>+</span>")}</span>
+  </button>`;
+}
+function render(){
+  document.getElementById("stationBar").innerHTML =
+    `<button type="button" class="chip" data-st="" aria-pressed="${!view.station}">All stations</button>` +
+    STATIONS.map(s => `<button type="button" class="chip" data-st="${esc(s.name)}" aria-pressed="${view.station === s.name}">${icon(s.emoji)} ${esc(s.name.replace(/^The /, ""))}</button>`).join("");
+  document.querySelectorAll("#showSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.show === view.show));
+  const q = view.q.toLowerCase();
+  const match = i => (view.show === "all" || (view.show === "new") === i.isNew) &&
+    (!q || i.name.toLowerCase().includes(q) || i.recipe.toLowerCase().includes(q));
+  const all = items();
+  const newOn = all.filter(i => i.isNew && i.include).length;
+  document.getElementById("tally").innerHTML = `<span><b>${newOn}</b> of ${RETIRED_ITEMS.length} new items switched on</span><span><b>${Object.keys(S.ov).length}</b> edited</span>`;
+  document.getElementById("list").innerHTML = STATIONS.filter(s => !view.station || s.name === view.station).map(st => {
+    const mine = all.filter(i => i.station === st.name && match(i));
+    if (!mine.length) return "";
+    const neu = all.filter(i => i.station === st.name && i.isNew && i.include);
+    const cap = st.capstone;
+    const tiers = [3, 2, 1, 0].map(t => {
+      const row = mine.filter(i => tierOf(i) === t).sort((a, b) => b.points - a.points);
+      return row.length ? `<div class="tierrow"><span class="tierlbl">${TIER_LABEL[t]} · ${row.length}</span><div class="cards">${row.map(cardHTML).join("")}</div></div>` : "";
+    }).join("");
+    return `<section class="station">
+      <div class="st-head"><h2>${icon(st.emoji)} ${esc(st.name)}</h2>
+        <span class="st-meta"><span>Unlocks after ${icon(cap[0])} <b>${esc(cap[1])}</b></span>
+        <span><b>${neu.length}</b> new · I ${neu.filter(i => tierOf(i) === 0).length} · II ${neu.filter(i => tierOf(i) === 1).length} · III ${neu.filter(i => tierOf(i) === 2).length}</span>
+        <span>new pts ${neu.length ? Math.min(...neu.map(i => i.points)) + "-" + Math.max(...neu.map(i => i.points)) : "-"}</span></span></div>
+      ${tiers}</section>`;
+  }).join("") || '<p class="st-meta">Nothing matches.</p>';
+  renderEditor();
+}
+function renderEditor(){
+  const ed = document.getElementById("editor");
+  if (!view.sel){ ed.innerHTML = '<h2>Edit an item</h2><p class="empty">Tap any card to change its icon, station, points, element icons and components.</p>'; return; }
+  const i = item(view.sel), w = warnings(i), u = [...unlocks(i.name)], used = usedIn(i.name);
+  const counts = Object.fromEntries(SUITS.map(s => [s, i.costs.filter(c => c === s).length]));
+  ed.innerHTML = `
+    <div class="ed-head">${icon(i.emoji)}<div><h2>${esc(i.name)}</h2>
+      <span class="st-meta">${TIER_LABEL[tierOf(i)]}${i.isNew ? ` · was ${esc(i.oldTier)}` : ""}${S.ov[i.name] ? ' · <span class="ok">edited</span>' : ""}</span></div></div>
+    ${i.isNew ? `<label class="bar"><input type="checkbox" data-f="include" ${i.include ? "checked" : ""}> In the game</label>` : ""}
+    <div class="two">
+      <div class="field"><label for="f-emoji">Icon (emoji or __MARKER__)</label><input id="f-emoji" data-f="emoji" value="${esc(i.emoji)}"></div>
+      <div class="field"><label for="f-pts">Points</label><input id="f-pts" data-f="points" type="number" min="0" value="${i.points}"></div>
+    </div>
+    <div class="field"><label for="f-st">Station</label><select id="f-st" data-f="station">${STATIONS.map(s => `<option ${s.name === i.station ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select></div>
+    <div class="field"><span class="lbl">Element icons (${i.costs.length}${i.cap ? ", capstone" : ""}) -- tap to add, right-click to remove</span>
+      <div class="costs">${SUITS.map(s => `<button type="button" data-cost="${s}">${suitDot(s)} ${ELEMENT_SUIT_LABEL[s].toLowerCase()} <span class="n">${counts[s] || ""}</span></button>`).join("")}
+        <button type="button" data-cost-clear>clear</button></div>${i.suggested && !S.ov[i.name]?.costs ? '<span class="st-meta">Suggested from its points and recipe.</span>' : ""}</div>
+    <div class="field"><span class="lbl">Components</span>
+      <div class="recipe">${comps(i).map((t, k) => `<span class="rt${t.kind === "item" && !live().some(x => x.name === t.name) ? " bad" : ""}">${t.kind === "item" ? icon(BASE[t.name] ? item(t.name).emoji : t.emoji) : ""}${esc(t.name)}${t.catalyst ? "*" : ""}<button type="button" data-rm="${k}" aria-label="Remove ${esc(t.name)}">×</button></span>`).join("")}</div>
+      <div class="addrow"><input id="addTok" list="tokList" placeholder="Add an element (C) or item…"><button type="button" class="btn small" id="addBtn">Add</button></div>
+      <datalist id="tokList">${ELEMENT_LIST.map(e => `<option value="${e}">`).join("")}${live().filter(x => x.name !== i.name).map(x => `<option value="${esc(x.name)}">`).join("")}</datalist></div>
+    <div class="facts">
+      ${w.length ? w.map(x => `<span class="warn">⚠ ${esc(x)}</span>`).join("") : '<span class="ok">✓ No problems found</span>'}
+      <span><b>Shows up after:</b> ${u.length ? u.map(c => `${icon(item(c).emoji)} ${esc(c)}`).join(", ") : "start of the game"}</span>
+      <span><b>Used in:</b> ${used.length ? used.map(n => `<button type="button" class="btn small" data-sel="${esc(n)}">${esc(n)}</button>`).join(" ") : "nothing"}</span>
+      <span><b>Elements spent:</b> ${comps(i).filter(t => t.kind === "element" && !t.catalyst).length} in the recipe + ${i.costs.length} element tax</span>
+    </div>
+    ${S.ov[i.name] ? '<button type="button" class="btn small danger" id="resetItem">Reset this item</button>' : ""}`;
+}
+
+/* ---- editing */
+function setField(f, v){
+  const o = S.ov[view.sel] || (S.ov[view.sel] = {});
+  o[f] = v; save(); render();
+}
+function setRecipe(toks){
+  setField("recipe", toks.map(t => (t.kind === "element" ? t.name : `${t.emoji} ${t.name}`) + (t.catalyst ? "*" : "")).join(" + "));
+}
+document.addEventListener("click", ev => {
+  const sel = ev.target.closest("[data-sel]");
+  if (sel){ view.sel = sel.dataset.sel; render(); if (innerWidth <= 900) document.getElementById("editor").scrollIntoView({behavior: "smooth"}); return; }
+  const st = ev.target.closest("[data-st]");
+  if (st){ view.station = st.dataset.st || null; render(); return; }
+  const sh = ev.target.closest("[data-show]");
+  if (sh){ view.show = sh.dataset.show; render(); return; }
+  const cost = ev.target.closest("[data-cost]");
+  // Three icons is a capstone, so other items stop at two.
+  if (cost){ const it = item(view.sel), c = [...it.costs]; if (c.length < (it.cap ? 3 : 2)) c.push(cost.dataset.cost); setField("costs", c); return; }
+  if (ev.target.closest("[data-cost-clear]")){ setField("costs", []); return; }
+  const rm = ev.target.closest("[data-rm]");
+  if (rm){ const t = comps(item(view.sel)); t.splice(+rm.dataset.rm, 1); setRecipe(t); return; }
+  if (ev.target.closest("#addBtn")) addTok();
+  if (ev.target.closest("#resetItem")){ delete S.ov[view.sel]; save(); render(); }
+});
+document.addEventListener("contextmenu", ev => {
+  const cost = ev.target.closest("[data-cost]");
+  if (!cost) return;
+  ev.preventDefault();
+  const c = [...item(view.sel).costs], k = c.lastIndexOf(cost.dataset.cost);
+  if (k >= 0){ c.splice(k, 1); setField("costs", c); }
+});
+function addTok(){
+  const v = document.getElementById("addTok").value.trim();
+  if (!v) return;
+  const t = comps(item(view.sel));
+  if (ELEMENT_LIST.includes(v)) t.push({kind: "element", name: v});
+  else if (BASE[v]) t.push({kind: "item", name: v, emoji: item(v).emoji});
+  else { document.getElementById("addTok").setCustomValidity("Not an element or item"); document.getElementById("addTok").reportValidity(); return; }
+  setRecipe(t);
+}
+document.addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.id === "addTok") addTok(); });
+document.addEventListener("change", ev => {
+  const f = ev.target.dataset.f;
+  if (!f) return;
+  setField(f, f === "points" ? Math.max(0, +ev.target.value || 0) : f === "include" ? ev.target.checked : ev.target.value);
+});
+document.getElementById("q").addEventListener("input", ev => { view.q = ev.target.value; render(); });
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Reset every edit back to the starting values?")){ S = {ov: {}}; save(); render(); }
+});
+
+/* ---- export: data.js rows for the new items, model.js suit costs, and any
+   current items you changed */
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const all = items(), q = s => JSON.stringify(s);
+  const row = i => `[${q(i.emoji)}, ${q(i.name)}, ${q(TIER[tierOf(i)])}, ${q(i.recipe)}, ${i.points}]`;
+  const lines = ["// data.js -- capstone-unlocked rows, per station (switched-on new items)"];
+  STATIONS.forEach(st => {
+    const neu = all.filter(i => i.isNew && i.include && i.station === st.name).sort((a, b) => tierOf(a) - tierOf(b) || a.points - b.points);
+    if (neu.length) lines.push(`${q(st.name)}: [\n  ${neu.map(row).join(",\n  ")}\n],`);
+  });
+  lines.push("", "// model.js -- ITEM_SUIT_COST_TABLE entries for them");
+  all.filter(i => i.isNew && i.include && i.costs.length).forEach(i => lines.push(`  ${q(i.name)}: ${q(i.costs)},`));
+  const changed = all.filter(i => !i.isNew && S.ov[i.name]);
+  if (changed.length){
+    lines.push("", "// Current items you changed (station: row / suit costs)");
+    changed.forEach(i => lines.push(`// ${i.station}: ${row(i)}  costs ${q(i.costs)}`));
+  }
+  const off = all.filter(i => i.isNew && !i.include).map(i => i.name);
+  if (off.length) lines.push("", `// Switched off: ${off.join(", ")}`);
+  document.getElementById("exportText").value = lines.join("\n");
+  document.getElementById("exportDlg").showModal();
+});
+document.getElementById("closeDlg").addEventListener("click", () => document.getElementById("exportDlg").close());
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const b = document.getElementById("copyBtn");
+  try { await navigator.clipboard.writeText(document.getElementById("exportText").value); b.textContent = "Copied"; }
+  catch (e) { document.getElementById("exportText").select(); b.textContent = "Press Ctrl+C"; }
+  setTimeout(() => { b.textContent = "Copy"; }, 1500);
+});
+render();
+</script>
+</body>
+</html>
