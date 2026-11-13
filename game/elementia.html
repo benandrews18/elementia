@@ -198,6 +198,7 @@
   <div class="mouse-bubble">
     <button type="button" class="mouse-tip-close" id="mouseTipClose" aria-label="Dismiss">✕</button>
     <p id="mouseTipText"></p>
+    <button type="button" class="tip-hide-x" id="mouseTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
     <!-- Walkthrough controls, shown only during "How to Play"
          (tutCoachSteps()/renderTutCoach()). -->
     <div class="mouse-tip-tour" id="mouseTipTour" hidden>
@@ -360,6 +361,7 @@
     <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
     <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>
+    <button type="button" class="tip-hide-x" id="pinTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
   </div>
 </div>
 <div class="overlay" id="emptyElPick" role="dialog" aria-modal="true" aria-labelledby="emptyElPickTitle">
@@ -712,6 +714,7 @@
   <div class="ct-box">
     <div class="ct-slide" id="ctSlide"></div>
     <div class="ct-foot">
+      <button type="button" class="tip-hide-x" id="ctHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
       <div class="ct-dots" id="ctDots"></div>
       <button type="button" class="bigbtn" id="ctNext">Next</button>
     </div>

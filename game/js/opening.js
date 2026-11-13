@@ -109,7 +109,8 @@ function confirmCapstoneChoice(name){
     openJobBoard();
     setTimeout(() => {
       capStartPending = {stationName, dice};
-      openOverlay("pinTip");
+      if (tipHidden("pinTip")) finishPinTip();
+      else openOverlay("pinTip");
     }, reduced ? 0 : 450);
   }, beat2At);
 }
@@ -117,7 +118,11 @@ function confirmCapstoneChoice(name){
 // the chosen station's shop.
 let capStartPending = null;
 document.getElementById("pinTip").addEventListener("click", ev => {
-  if (!ev.target.closest("#pinTipOk")) return;
+  if (ev.target.closest("#pinTipHide")) hideTipForever("pinTip");
+  else if (!ev.target.closest("#pinTipOk")) return;
+  finishPinTip();
+});
+function finishPinTip(){
   closeOverlay("pinTip");
   const pending = capStartPending;
   capStartPending = null;
@@ -133,7 +138,7 @@ document.getElementById("pinTip").addEventListener("click", ev => {
     }
     save(); updateHub();
   }), lowMotion() ? 0 : 350);
-});
+}
 /* The tracked-item badge on a shop card opens the To-Do List with the
    tracked item's breakdown unfolded down to THIS item, outlined in gold.
    Tree paths follow jobNodeHTML(): "ref/<root>/<child>/...". */

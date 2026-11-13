@@ -278,6 +278,11 @@
       const r15 = drawOrder(15);
       expect(!r15 || CHECK_ORDERS[r15.id].kind === "restriction", "orders after round 12 should be restrictions");
       state.matChecked = mc; state.matBonusDice = fb; state.tripDice = td; state.order = o; state.mat = m;
+      // A tip window hidden with its ✕ is skipped straight to what follows it.
+      { const h = prefs.hiddenTips; let ran = 0; prefs.hiddenTips = ["classicTut"];
+        openClassicTutorial(() => ran++);
+        expect(ran === 1 && !document.getElementById("classicTut").classList.contains("open"), "a hidden how-to-play tutorial should be skipped");
+        prefs.hiddenTips = h; }
       state.visits = v; }
 
     // Turn 24 completes the run: the end screen offers Keep playing, and in

@@ -43,6 +43,15 @@
    with a light scrim so the list above it stays readable. */
 #pinTip{z-index:72; align-items:flex-end; background:rgba(10,14,20,.3)}
 .pin-tip-box{max-width:420px; text-align:center}
+/* "Don't show this again": a small ✕ in a tip window's bottom-left corner. */
+.tip-hide-x{
+  flex:none; width:30px; height:30px; padding:0; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;
+  border:2px solid var(--line); background:var(--sunken); color:var(--mute); box-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.pin-tip-box #pinTipHide{position:absolute; left:-14px; bottom:-14px}
+#mouseTipHide{position:absolute; left:-12px; bottom:-12px}
+.mouse-bubble:has(#mouseTipClose[hidden]) #mouseTipHide{display:none}
 .pin-tip-box h2{margin:0 0 6px}
 .pin-tip-box p{margin:0 0 6px; color:var(--ink2); font-size:14px; line-height:1.4}
 /* The "?" element picker (#emptyElPick) -- the station's own element pool

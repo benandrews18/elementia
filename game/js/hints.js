@@ -192,6 +192,12 @@ function maybeShowWalkthroughTip(){
     tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
+  if (ev.target.closest("#mouseTipHide")){
+    prefs.guidedTutorialEnabled = false; savePrefs();
+    pendingMouseTips.length = 0;
+    hideMouseTip();
+    return;
+  }
   if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
 });
 // The next tap anywhere also dismisses the tip (capture phase, without

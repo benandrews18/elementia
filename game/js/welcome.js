@@ -138,7 +138,13 @@ function renderClassicTut(){
   document.getElementById("ctDots").innerHTML = slides.map((_, i) => `<span class="${i === ctIdx ? "on" : ""}"></span>`).join("");
   document.getElementById("ctNext").textContent = ctIdx === slides.length - 1 ? "Let's play" : "Next";
 }
+const tipHidden = id => (prefs.hiddenTips || []).includes(id);
+function hideTipForever(id){
+  prefs.hiddenTips = [...new Set([...(prefs.hiddenTips || []), id])];
+  savePrefs();
+}
 function openClassicTutorial(onDone){
+  if (tipHidden("classicTut")){ if (onDone) onDone(); return; }
   ctIdx = 0;
   ctOnDone = onDone;
   const el = document.getElementById("classicTut");
@@ -147,8 +153,8 @@ function openClassicTutorial(onDone){
   renderClassicTut();
   document.getElementById("ctNext").focus({preventScroll: true});
 }
-function classicTutNext(){
-  if (ctIdx < classicTutSlides().length - 1){ ctIdx++; renderClassicTut(); return; }
+function classicTutNext(skipRest){
+  if (!skipRest && ctIdx < classicTutSlides().length - 1){ ctIdx++; renderClassicTut(); return; }
   const el = document.getElementById("classicTut");
   el.classList.remove("open");
   el.setAttribute("aria-hidden", "true");
@@ -156,8 +162,13 @@ function classicTutNext(){
   ctOnDone = null;
   if (done) done();
 }
-document.getElementById("ctNext").addEventListener("click", classicTutNext);
-document.getElementById("ctSlide").addEventListener("click", classicTutNext);
+document.getElementById("ctNext").addEventListener("click", () => classicTutNext());
+document.getElementById("ctHide").addEventListener("click", ev => {
+  ev.stopPropagation();
+  hideTipForever("classicTut");
+  classicTutNext(true);
+});
+document.getElementById("ctSlide").addEventListener("click", () => classicTutNext());
 document.getElementById("modeOverlay").addEventListener("click", ev => {
   const newBtn = ev.target.closest("[data-mode-newgame]");
   if (newBtn){ newRun(); return; }

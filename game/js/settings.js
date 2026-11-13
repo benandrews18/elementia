@@ -32,6 +32,8 @@ document.getElementById("setSave").addEventListener("click", () => {
   // showTutorialHintOnce() itself checks this live, so toggling it off
   // stops any further tips immediately, mid-run included -- no separate
   // state to unwind.
+  // Turning tips on also brings back every tip window hidden with its ✕.
+  if (setGuidedTutorialBox.checked && prefs.guidedTutorialEnabled === false) prefs.hiddenTips = [];
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
   prefs.autoCardInspection = setAutoCardInspectionBox.checked;
   prefs.lowMotion = setLowMotionBox.checked;

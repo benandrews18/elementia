@@ -98,6 +98,7 @@ let prefs = {pinnedItems:[], minigamesEnabled:false,
   // capstone-unlocked items these have revealed (openComboLab()).
   capstonesEverCrafted:[],
   guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
+  hiddenTips:[], // tip windows hidden with their corner ✕ (hideTipForever()); cleared by turning Tips back on
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,

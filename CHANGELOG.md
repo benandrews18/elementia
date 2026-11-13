@@ -10,6 +10,15 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Saved Layouts, Last button, tips.** Saved Layouts is a wider window
+  with a corner ✕, a 💾 button by the name field, the score pill left of
+  each name, a trash bubble on each card's corner and no combo counts;
+  Collections is just as wide. ↺ now asks first, quick-saves the current mat
+  ("Layout Quick Save" pill, flipped blue ↻) and a second tap brings it
+  back. The how-to-play slides, the Pin Items tip and Professor Mouse's
+  bubbles get a ✕ in the bottom-left to stop showing them (Settings > Tips
+  brings them back).
+
 - **Dice between board checks + check orders.** Every trip that isn't a
   board check is now a quiet check: the mat's current Quark score (against
   that round's normal breakpoints) sets the trip's bonus dice, never below
