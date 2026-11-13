@@ -115,7 +115,7 @@ const ITEM_SUIT_COST_TABLE = {
   "Solar Panel": ["reactive"], Farm: ["earth"], Building: ["earth"], Clock: ["reactive"],
   Plastic: ["reactive"], Flour: ["organic"], Dough: ["organic"], Microchip: ["metal"],
   Wheel: ["earth"], Fiberglass: ["reactive"], Chicken: ["organic"], Fossil: ["earth"],
-  Salmon: ["organic"],
+  Salmon: ["organic"], Tree: ["organic"],
 
   Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
   Diamond: ["earth", "earth"], Orca: ["organic", "organic"],

@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Saved layouts show what they're worth (content 2026.11.13b):** each
+  saved Display Mat slot shows its point total, its combo chips and its
+  card icons, compact like the minimized board. Tap a slot to load it.
+- **Tree** is now Tier 2: 10 points (was 9) with an organic element icon.
+  **Farm** is now 11 points (was 10).
+
 - **Item tiers now match their element icons (content 2026.11.13):** no
   icons = Tier 1, one = Tier 2, two = Tier 3, three = Capstone, everywhere
   (Inventory, mat stacking, Maglev's Freight bonus, Marketplace and BINGO

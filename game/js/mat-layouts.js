@@ -12,16 +12,26 @@ function renderMatLayoutsList(){
     list.innerHTML = '<p class="empty">No saved layouts yet -- arrange the mat, then save it above.</p>';
     return;
   }
-  list.innerHTML = `<div class="histrows">${layouts.map((L, i) => `
-    <div class="histentry">
+  // Each slot: name and the layout's point total, then its combos and
+  // cards like the minimized board (matMiniRowHTML()). Tap anywhere to load.
+  list.innerHTML = `<div class="histrows">${layouts.map((L, i) => {
+    const mat = L.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+    const s = matScore(mat);
+    return `
+    <div class="histentry ml-slot">
       <div class="histrow-line">
         <button type="button" class="histrow" data-mat-layout-load="${i}">
           <span class="histvisits">${esc(L.name)}</span>
-          <span class="histcaps">${L.items.length} card${L.items.length === 1 ? "" : "s"}</span>
+          <span class="ms-pts ml-pts" title="${Math.round(s.total)} points">${Math.round(s.total)}</span>
         </button>
         <button type="button" class="histrow-export" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
       </div>
-    </div>`).join("")}</div>`;
+      <div class="ml-body" data-mat-layout-load="${i}">
+        <div class="mat-combos">${matComboChipsHTML(s, false)}</div>
+        <div class="mmr-icons">${mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("")}</div>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
 }
 function openMatLayoutsOverlay(){
   renderMatLayoutsList();

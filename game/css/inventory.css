@@ -312,6 +312,12 @@
 .histrow-export:hover{background:rgba(255,255,255,.04); color:var(--ink)}
 .histrow-export.done{color:var(--ok)}
 .histvisits{font-weight:800; font-size:13.5px; white-space:nowrap}
+/* Saved layout slot (renderMatLayoutsList()): combos + card icons under
+   the name row; the chips are display only here, a tap loads the layout. */
+.ml-pts{margin-left:auto}
+.ml-body{display:flex; flex-direction:column; gap:4px; padding:0 10px 8px; cursor:pointer}
+.ml-body .mat-combos:empty{display:none}
+.ml-body .mm-combo{pointer-events:none; padding-top:4px}
 .histscore{font-weight:800; font-size:13.5px; color:var(--gold); white-space:nowrap}
 .histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
 .histnone{font-size:13px; color:var(--mute); font-weight:700}

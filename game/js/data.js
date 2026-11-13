@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.13",
+ "version": "2026.11.13b",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -295,7 +295,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Farm",
      "COMPONENT",
      "🌱 Soil + 🛠️ Tools + 💧 Water",
-     10
+     11
     ],
     [
      "🌾",
@@ -470,9 +470,9 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌳",
      "Tree",
-     "MATERIAL",
+     "COMPONENT",
      "🌱 Soil + 💧 Water + C + O",
-     9
+     10
     ],
     [
      "🛶",
