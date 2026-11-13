@@ -12820,7 +12820,8 @@ function startNewRun(){
 /* "New Game": confirms only if there's a real save with progress. */
 function newRun(){
   if (!hasSave()){ startNewRun(); return; }
-  askConfirm("Start a new run? Your current save will be erased.", startNewRun);
+  // restartRun(), not startNewRun(): the run being replaced goes into History.
+  askConfirm("Start a new run? Your current save will be erased.", restartRun);
 }
 
 // True while the intro logo shows (playClassicIntro()): hides the map's
