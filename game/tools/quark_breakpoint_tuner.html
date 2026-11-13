@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quark Breakpoint Tuner</title>
+<style>
+:root{
+  --bg:#0f2733; --bg-soft:#122e3c; --card:#163544; --sunken:#1c4257; --line:#2a5a72; --line2:#1c4257;
+  --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
+  --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
+  --t1:#3aa9a0; --t2:#4d7cf2; --t3:#e0793c; --t4:#e2b25a;
+  --shadow:rgba(0,0,0,.4);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f2f0e9; --bg-soft:#e9e5da; --card:#fffdf8; --sunken:#eee9dc; --line:#d8d0bd; --line2:#e3ddca;
+    --ink:#241f14; --ink2:#5a5140; --mute:#8a7f68;
+    --gold-soft:#fbeecb; --gold-line:#e2b25a;
+    --shadow:rgba(60,50,20,.14);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f2f0e9; --bg-soft:#e9e5da; --card:#fffdf8; --sunken:#eee9dc; --line:#d8d0bd; --line2:#e3ddca;
+  --ink:#241f14; --ink2:#5a5140; --mute:#8a7f68;
+  --gold-soft:#fbeecb; --gold-line:#e2b25a;
+  --shadow:rgba(60,50,20,.14);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+  padding:22px 18px 40px;
+}
+h1{font-weight:700; font-size:clamp(22px,4vw,30px); letter-spacing:.01em; text-wrap:balance; margin:0 0 4px}
+.sub{color:var(--ink2); font-size:14px; line-height:1.55; max-width:680px; margin:0 0 22px}
+.sub b{color:var(--ink)}
+.wrap{max-width:1000px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
+.panel{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  box-shadow:0 10px 28px var(--shadow); padding:18px 20px 20px;
+}
+.chart-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px}
+.chart-head h2{font-size:16px; margin:0}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; font-weight:600; color:var(--ink2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:14px; height:3px; border-radius:2px; display:inline-block}
+.chart-box{width:100%; overflow-x:auto}
+svg{width:100%; height:auto; min-width:640px; display:block}
+.axis-label{fill:var(--mute); font-size:11px}
+.grid-line{stroke:var(--line2); stroke-width:1}
+.ceiling-line{stroke:#f0674c; stroke-width:1.5; stroke-dasharray:8 5}
+.ceiling-label{fill:#f0674c; font-size:11.5px; font-weight:700}
+td input.unreachable{border-color:#f0674c; color:#f0674c}
+svg{touch-action:none; user-select:none}
+svg.dragging{cursor:grabbing !important}
+.hint{font-size:12px; color:var(--mute); margin-top:8px}
+.table-scroll{overflow:auto; max-height:520px}
+table{border-collapse:collapse; width:100%; min-width:560px; font-variant-numeric:tabular-nums}
+th, td{padding:6px 10px; text-align:center; border-bottom:1px solid var(--line2); font-size:13px}
+th{
+  font-weight:600; font-size:12px; letter-spacing:.03em; position:sticky; top:0; background:var(--card);
+  color:var(--ink2); text-transform:uppercase; border-bottom:2px solid var(--line); z-index:1;
+}
+th.round-col, td.round-col{text-align:left; font-weight:700; color:var(--ink)}
+tr.edited td.round-col::after{content:" •"; color:var(--gold)}
+td input{
+  width:76px; text-align:center; font-variant-numeric:tabular-nums; font-size:13.5px; font-weight:600;
+  color:var(--ink); background:var(--sunken); border:1.5px solid var(--line); border-radius:7px;
+  padding:5px 4px; font-family:inherit;
+}
+td input:focus{outline:none; border-color:var(--gold)}
+td input.bad{border-color:#f0674c}
+.tier-swatch{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:1px}
+.actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:16px}
+button{
+  font-family:inherit; font-size:13.5px; font-weight:700; border-radius:10px; padding:10px 16px;
+  border:1.5px solid var(--line); background:var(--sunken); color:var(--ink); cursor:pointer;
+}
+button.primary{background:var(--gold); border-color:var(--gold); color:#241d10}
+button:hover{filter:brightness(1.08)}
+button:focus-visible, input:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+.copied{color:var(--t1); font-size:12.5px; font-weight:700; opacity:0; transition:opacity .15s}
+.copied.show{opacity:1}
+.zoom-bar{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin:4px 0 10px; font-size:12.5px; font-weight:600; color:var(--ink2)}
+.zoom-bar label{display:inline-flex; align-items:center; gap:6px}
+.zoom-bar input{
+  width:72px; padding:5px 6px; text-align:center; font:inherit; font-variant-numeric:tabular-nums;
+  color:var(--ink); background:var(--sunken); border:1.5px solid var(--line); border-radius:7px;
+}
+.zoom-bar input:focus{outline:none; border-color:var(--gold)}
+.zoom-presets{display:flex; flex-wrap:wrap; gap:6px}
+.zoom-presets button{padding:5px 10px; font-size:12px; border-radius:8px}
+.runs-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:16px 0 4px; padding-top:14px; border-top:1px solid var(--line2)}
+.runs-head h3{font-size:14px; margin:0}
+.runs-note{font-size:12px; color:var(--mute); line-height:1.5; margin:0 0 10px; max-width:720px}
+.runs-btns{display:flex; gap:6px}
+.runs-btns button{padding:5px 10px; font-size:12px; border-radius:8px}
+.run-chips{display:flex; flex-wrap:wrap; gap:6px}
+.run-chip{
+  display:inline-flex; align-items:center; gap:6px; padding:5px 10px 5px 7px; border-radius:999px;
+  font-size:12px; font-weight:600; background:var(--sunken); border:1.5px solid var(--line); color:var(--mute);
+}
+.run-chip i{width:16px; height:0; border-top:2.5px dashed var(--run); opacity:.35}
+.run-chip[aria-pressed="true"]{color:var(--ink); border-color:var(--run)}
+.run-chip[aria-pressed="true"] i{opacity:1}
+.run-chip b{font-weight:800}
+.run-line{fill:none; stroke-width:1.8; stroke-dasharray:5 4; stroke-linejoin:round; opacity:.85; pointer-events:none}
+.run-line.hot{stroke-width:3.2; opacity:1}
+.fit-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; margin:0 0 12px; padding:12px 14px; background:var(--bg-soft); border:1px solid var(--line2); border-radius:12px; font-size:12.5px; color:var(--ink2)}
+.fit-bar h3{margin:0; font-size:13.5px; color:var(--ink); font-weight:700}
+.fit-scale{display:inline-flex; align-items:center; gap:8px; font-weight:600}
+.fit-scale input[type=range]{width:180px; accent-color:var(--gold)}
+.fit-scale input[type=number]{
+  width:64px; padding:5px 6px; text-align:center; font:inherit; font-weight:700; font-variant-numeric:tabular-nums;
+  color:var(--ink); background:var(--sunken); border:1.5px solid var(--line); border-radius:7px;
+}
+.fit-bar button{padding:6px 11px; font-size:12px; border-radius:8px}
+.fit-bar label.chk{display:inline-flex; align-items:center; gap:6px; font-weight:600; cursor:pointer}
+.fit-params{flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:11.5px; color:var(--mute); font-variant-numeric:tabular-nums}
+.fit-params b{color:var(--ink2); font-weight:700}
+.ghost-line{fill:none; stroke-width:1.5; stroke-dasharray:2 4; opacity:.75; pointer-events:none}
+textarea{
+  width:100%; min-height:150px; margin-top:12px; background:var(--bg-soft); color:var(--ink);
+  border:1.5px solid var(--line); border-radius:10px; padding:12px 14px; font-family:'SFMono-Regular',Consolas,monospace;
+  font-size:12.5px; line-height:1.55; resize:vertical;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+.quiet-line{opacity:.5}
+.official-dot{pointer-events:none}
+td .off{display:block; font-size:11px; font-weight:800; color:var(--gold); text-align:right; padding-right:4px; line-height:1.2}
+tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>Quark Breakpoint Tuner</h1>
+    <p class="sub">Two kinds of Display Mat check. A <b>quiet check</b> happens every time a player travels: the mat's Quark score sets that trip's bonus dice (thin smooth lines, the table below). Every 3rd visit is an <b>official check</b> (shutter, Lock-In, orders): its breakpoints are the quiet ones <b>plus the bump</b>, so the thick line &mdash; what a player actually has to beat at each visit &mdash; jumps up at visits 3, 6, 9&hellip; and drops back after. The official result is also a dice floor for the next 3 visits. Drag the dots (quiet values) or use the sliders, then copy the code back into chat.</p>
+  </div>
+
+  <div class="panel">
+    <div class="chart-head">
+      <h2>Quarks required, by visit</h2>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="zoom-bar" id="zoomBar">
+      <label>Visits <input type="number" id="zx0" min="1" max="39" step="1"> – <input type="number" id="zx1" min="2" max="40" step="1"></label>
+      <label>Quarks <input type="number" id="zy0" min="0" step="100"> – <input type="number" id="zy1" min="100" step="100"></label>
+      <div class="zoom-presets">
+        <button type="button" data-zoom="full">Full view</button>
+        <button type="button" data-zoom="early">Visits 1–12</button>
+        <button type="button" data-zoom="mid">Visits 10–25</button>
+        <button type="button" data-zoom="late">Visits 20–40</button>
+        <button type="button" data-zoom="fit">Fit Quarks</button>
+      </div>
+    </div>
+    <div class="fit-bar" id="fitBar">
+      <h3>Smooth &amp; scale</h3>
+      <label class="fit-scale">All lines at <input type="range" id="fitRange" min="30" max="150" step="1"> <input type="number" id="fitPct" min="30" max="150" step="1">%</label>
+      <button type="button" id="refitBtn" title="Fit a fresh curve through each line as it stands now (handy after dragging a few dots)">Refit to table</button>
+      <label class="chk"><input type="checkbox" id="ghostChk" checked> Show hand-drawn lines</label>
+      <label class="fit-scale">Official checks (every 3rd visit) <input type="range" id="bumpRange" min="0" max="80" step="1"> +<input type="number" id="bumpPct" min="0" max="80" step="1">%</label>
+      <div class="fit-params" id="fitParams"></div>
+    </div>
+    <div class="chart-box"><svg id="chart" viewBox="0 0 900 460" role="img" aria-label="Breakpoint curves by visit"></svg></div>
+    <div class="runs-head">
+      <h3>Your past runs <span style="font-weight:500;color:var(--mute)">(read-only)</span></h3>
+      <div class="runs-btns"><button type="button" id="runsAll">Show all</button><button type="button" id="runsNone">Hide all</button></div>
+    </div>
+    <p class="runs-note">Dashed lines: for each run you exported, the best Display Mat score the items you'd crafted <b>by that visit</b> could have made, scored with today's rules (a search, so treat it as close to — not exactly — the ceiling). Runs before Sept 14 ended at visit 20. The Oct 31 and Nov 1 runs were played with the starting gift; Nov 1 is the only one with the 6-dice first day and mat checks every trip. Tap a run to toggle it; hover to highlight.</p>
+    <div class="run-chips" id="runChips"></div>
+    <p class="hint">Press near any dot and drag up or down to set it; keep dragging sideways to sketch the same tier across neighbouring visits (snaps to 5; values can go up to 9,995 even if the chart is zoomed in). Each tier should stay at or above the one below it — a cell gets a red border if it doesn't. Red text means the value is above the 4,784 maximum and can never be reached (dashed red line on the chart). <b>Smooth &amp; scale</b>: each line is a best-fit S-curve through your hand-drawn table (dotted lines); the slider scales all four together. Dragging a dot still works, but moving the slider redraws every line from the curves &mdash; press <i>Refit to table</i> first to keep your edits.</p>
+  </div>
+
+  <div class="panel">
+    <div class="table-scroll"><table id="dataTable"></table></div>
+    <div class="actions">
+      <button class="primary" id="copyBtn">Copy 40-visit LOCKIN_ROUND_ANCHORS</button>
+      <button id="resetBtn">Reset to hand-drawn table (100%)</button>
+      <span class="copied" id="copiedMsg">Copied — paste it back into chat ✓</span>
+    </div>
+    <textarea id="codeOut" spellcheck="false" readonly aria-label="Generated array"></textarea>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // Base values -- the quiet-check table live in the game
+  // (LOCKIN_ROUND_ANCHORS in js/lock-in.js, copied 2026-11-13):
+  // [visit, oneDieMin, twoDiceMin, threeDiceMin, emptyElementMin].
+  const ORIGINAL = [
+    [1,   0,     5,     5,     5],
+    [2,   5,     15,    20,    35],
+    [3,   10,    35,    55,    100],
+    [4,   25,    75,    115,   205],
+    [5,   45,    125,   200,   355],
+    [6,   75,    190,   320,   545],
+    [7,   110,   270,   470,   770],
+    [8,   150,   365,   645,   1030],
+    [9,   205,   475,   850,   1315],
+    [10,  265,   600,   1075,  1615],
+    [11,  340,   740,   1315,  1925],
+    [12,  420,   890,   1565,  2230],
+    [13,  510,   1050,  1825,  2530],
+    [14,  610,   1220,  2085,  2820],
+    [15,  720,   1395,  2345,  3095],
+    [16,  840,   1580,  2595,  3350],
+    [17,  970,   1765,  2835,  3590],
+    [18,  1105,  1955,  3070,  3815],
+    [19,  1250,  2150,  3285,  4015],
+    [20,  1405,  2340,  3490,  4200],
+    [21,  1560,  2530,  3685,  4370],
+    [22,  1725,  2720,  3865,  4525],
+    [23,  1895,  2905,  4030,  4665],
+    [24,  2065,  3090,  4180,  4795],
+    [25,  2245,  3265,  4320,  4910],
+    [26,  2425,  3440,  4450,  5015],
+    [27,  2605,  3605,  4570,  5110],
+    [28,  2790,  3770,  4680,  5195],
+    [29,  2975,  3925,  4780,  5275],
+    [30,  3155,  4075,  4870,  5345],
+    [31,  3340,  4220,  4955,  5410],
+    [32,  3525,  4360,  5035,  5470],
+    [33,  3705,  4495,  5105,  5525],
+    [34,  3885,  4620,  5170,  5575],
+    [35,  4060,  4745,  5230,  5620],
+    [36,  4235,  4860,  5290,  5660],
+    [37,  4405,  4970,  5340,  5700],
+    [38,  4570,  5075,  5385,  5735],
+    [39,  4735,  5175,  5430,  5770],
+    [40,  4895,  5270,  5470,  5800],
+  ];
+
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#999"; }
+  const TIERS = [
+    {label:"1 die",            color:getVar("--t1")},
+    {label:"2 dice",           color:getVar("--t2")},
+    {label:"3 dice",           color:getVar("--t3")},
+    {label:"? Empty Element",  color:getVar("--t4")},
+  ];
+
+  let data = ORIGINAL.map(row => row.slice());
+  // Official checks: every CHECK_EVERY-th visit, breakpoints x (1 + bump).
+  // Applied after the S-curve fit, so smoothing never flattens the jumps.
+  const CHECK_EVERY = 3;
+  let bump = 0.25;
+  try { const b = localStorage.getItem("qbt2-bump"); if (b !== null && isFinite(+b)) bump = +b; } catch(e){}
+  const isCheck = v => v % CHECK_EVERY === 0;
+  const official = v => Math.round(v * (1 + bump) / 5) * 5;
+  // What a player has to beat at visit r, per tier: official at checks.
+  const need = (row, ti) => isCheck(row[0]) ? official(row[ti]) : row[ti];
+
+  // ---- smooth & scale ---------------------------------------------------
+  // Every breakpoint line rises slowly, climbs, then levels off, so each is
+  // fitted with an S-curve (Hill function): Quarks = top * v^n / (mid^n + v^n).
+  //   top -- the level the line flattens out at
+  //   mid -- the visit where it's halfway there
+  //   n   -- how steep the climb is
+  // Fitted by grid search over mid and n; top has an exact least-squares
+  // answer for each pair. The slider then scales all four curves together.
+  const hill = (p, v) => p.top * Math.pow(v, p.n) / (Math.pow(p.mid, p.n) + Math.pow(v, p.n));
+  function fitHill(ys){
+    let best = null;
+    for (let mid = 2; mid <= 40.001; mid += 0.1){
+      for (let n = 1; n <= 6.001; n += 0.02){
+        let gy = 0, gg = 0;
+        const g = ys.map((y, k) => { const t = Math.pow(k + 1, n); const gv = t / (Math.pow(mid, n) + t); gy += gv * y; gg += gv * gv; return gv; });
+        const top = gy / gg;
+        let err = 0; g.forEach((gv, k) => { const d = top * gv - ys[k]; err += d * d; });
+        if (!best || err < best.err) best = {top, mid, n, err};
+      }
+    }
+    best.rmse = Math.sqrt(best.err / ys.length);
+    return best;
+  }
+  let fitScale = 1;                  // 100% = the table live in the game
+  let fits = [];                      // one {top, mid, n, rmse} per tier, at 100%
+  let ghost = ORIGINAL.map(r => r.slice()); // the lines the curves were fitted to
+  let showGhost = true;
+  try { const g = localStorage.getItem("qbt2-ghost"); if (g !== null) showGhost = g === "1"; } catch(e){}
+  function refit(src, scale){
+    // src is the table as it stands at `scale`; divide that back out so the
+    // stored curves are always at 100% and the slider keeps its meaning.
+    ghost = src.map(r => [r[0], ...r.slice(1).map(v => v / scale)]);
+    fits = [1, 2, 3, 4].map(ti => fitHill(ghost.map(r => r[ti])));
+  }
+  function applyFit(){
+    data = ORIGINAL.map(r => [r[0], ...fits.map(p =>
+      Math.max(0, Math.min(VAL_MAX, Math.round(hill(p, r[0]) * fitScale / 5) * 5)))]);
+  }
+
+  // Values themselves may go anywhere from 0 to VAL_MAX; what's SHOWN is
+  // a separate, zoomable window (view) over that space -- visits x0..x1,
+  // Quarks y0..y1. Anything outside the window is clipped, not changed.
+  const VAL_MAX = 9995;
+  // The best Display Mat score possible with every item owned, as the game
+  // records it (MAT_ABSOLUTE_CEILING in js/lock-in.js, from 2026-11-02;
+  // tier and capstone changes since may have moved it). A breakpoint above
+  // this line can't be reached.
+  const CEILING = 4784;
+  const FULL_VIEW = {x0:1, x1:40, y0:0, y1:5600};
+  let view = {...FULL_VIEW};
+  try {
+    const v = JSON.parse(localStorage.getItem("qbt2-view") || "null");
+    if (v && v.x1 > v.x0 && v.y1 > v.y0) view = v;
+  } catch(e){}
+  const saveView = () => { try { localStorage.setItem("qbt2-view", JSON.stringify(view)); } catch(e){} };
+  const PAD = {l:64, r:20, t:16, b:40};
+  const VW = 900, VH = 460;
+  const plotW = VW - PAD.l - PAD.r, plotH = VH - PAD.t - PAD.b;
+  const xFor = r => PAD.l + (r - view.x0) / (view.x1 - view.x0) * plotW;
+  const yFor = v => PAD.t + (1 - (v - view.y0) / (view.y1 - view.y0)) * plotH;
+  const inView = (r, v) => r >= view.x0 && r <= view.x1 && v >= view.y0 && v <= view.y1;
+  function valFromY(y){
+    const v = view.y0 + (1 - (y - PAD.t) / plotH) * (view.y1 - view.y0);
+    return Math.max(0, Math.min(VAL_MAX, Math.round(v / 5) * 5));
+  }
+
+  const svg = document.getElementById("chart");
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs){
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+
+  const legend = document.getElementById("legend");
+  TIERS.forEach(t => {
+    const span = document.createElement("span");
+    span.innerHTML = `<i style="background:${t.color}"></i>${t.label}`;
+    legend.appendChild(span);
+  });
+  legend.insertAdjacentHTML("beforeend", '<span>thin = quiet check · thick = what you need · &#9670; = official check</span>');
+
+  const rowEdited = ri => data[ri].some((v, k) => v !== ORIGINAL[ri][k]);
+  const outOfOrder = (ri, ti) => ti > 1 && data[ri][ti] < data[ri][ti - 1];
+
+  function buildTable(){
+    const table = document.getElementById("dataTable");
+    const head = "<thead><tr><th class=\"round-col\">Visit</th>" +
+      TIERS.map(t => `<th><span class="tier-swatch" style="background:${t.color}"></span>${t.label}</th>`).join("") +
+      "</tr></thead>";
+    const body = "<tbody>" + data.map((row, ri) =>
+      `<tr data-row="${ri}" class="${rowEdited(ri) ? "edited" : ""}${isCheck(row[0]) ? " check-row" : ""}"><td class="round-col">${row[0]}</td>` +
+      TIERS.map((t, ti) =>
+        `<td><input type="number" min="0" max="9995" step="5" data-row="${ri}" data-tier="${ti + 1}" value="${row[ti + 1]}" aria-label="Visit ${row[0]} ${t.label}" class="${outOfOrder(ri, ti + 1) ? "bad" : ""}${row[ti + 1] > CEILING ? " unreachable" : ""}">${isCheck(row[0]) ? `<span class="off" data-off="${ri}-${ti + 1}"></span>` : ""}</td>`
+      ).join("") + `</tr>`
+    ).join("") + "</tbody>";
+    table.innerHTML = head + body;
+    data.forEach((r, ri) => { if (isCheck(r[0])) setTimeout(() => refreshRow(ri)); });
+    table.querySelectorAll("input").forEach(inp => {
+      const commit = () => {
+        if (inp.value === "") return; // mid-edit: wait for a real number
+        const ri = +inp.dataset.row, ti = +inp.dataset.tier;
+        data[ri][ti] = Math.max(0, Math.min(VAL_MAX, Math.round(+inp.value)));
+        refreshRow(ri);
+        drawChart();
+        updateCode();
+      };
+      inp.addEventListener("input", commit);
+      inp.addEventListener("change", commit);
+    });
+  }
+  function refreshRow(ri){
+    const tr = document.querySelector(`tr[data-row="${ri}"]`);
+    if (!tr) return;
+    tr.classList.toggle("edited", rowEdited(ri));
+    tr.querySelectorAll("input").forEach(inp => {
+      const ti = +inp.dataset.tier;
+      if (document.activeElement !== inp) inp.value = data[ri][ti];
+      inp.classList.toggle("bad", outOfOrder(ri, ti));
+      inp.classList.toggle("unreachable", data[ri][ti] > CEILING);
+    });
+    tr.querySelectorAll("[data-off]").forEach(sp => {
+      const ti = +sp.dataset.off.split("-")[1], v = official(data[ri][ti]);
+      sp.textContent = "check " + v.toLocaleString();
+      sp.style.color = v > CEILING ? "#f0674c" : "";
+    });
+  }
+
+  // Built once; every later change only moves existing nodes (setting
+  // attributes in place), so a drag never loses the element it grabbed
+  // and table edits redraw the chart instantly.
+  const lines = [], dots = [], sawLines = [], offDots = [];
+  // Exported runs (History > Export, pasted into chat Sept 3-14, plus Oct 31 and Nov 1), reduced
+  // to one number per visit: the best Display Mat score reachable from
+  // what had been crafted by then. Display only -- never editable, never
+  // part of the copied array.
+  const RUNS = [{"d":"2026-09-03 03:11","s":414,"c":3,"v":[1,1,2,3,120,252,510,710,710,710,970,1122,2926,2926,2926,3586,3633,3633,3633,3768]},{"d":"2026-09-04 04:22","s":644,"c":4,"v":[0,1,69,165,266,282,660,1116,1116,1221,1221,1508,3289,3289,3289,3717,3717,3717,3717,3717]},{"d":"2026-09-04 04:39","s":679,"c":3,"v":[0,1,72,128,140,423,423,650,650,650,1356,2856,2856,2880,2880,3211,3576,3576,3576,3717]},{"d":"2026-09-04 14:31","s":57,"c":0,"v":[0,28,28,30,34,60,60,704,704,704,704,704,704,704,704,704,704,704,704,704]},{"d":"2026-09-04 18:08","s":34,"c":0,"v":[0,0,0,0,0,0,0,0,2,2,2,66,69,69,215,215,215,215,490,490]},{"d":"2026-09-05 20:48","s":313,"c":2,"v":[1,2,522,522,540,540,680,882,882,1104,1176,1246,1605,1908,2736,3003,3003,3003,3003,3150]},{"d":"2026-09-05 21:12","s":409,"c":1,"v":[0,1,12,21,530,1131,1131,1131,1131,1680,1680,1818,1818,2204,2520,2520,2520,2520,2720,2720]},{"d":"2026-09-06 03:55","s":346,"c":1,"v":[1,28,30,32,105,126,376,726,1200,2024,2024,2024,2323,2337,2337,2448,2448,2856,2856,2856]},{"d":"2026-09-06 05:13","s":278,"c":1,"v":[1,2,39,125,192,385,385,408,1530,2436,2436,2436,2436,2436,2436,2436,2948,3108,3108,3108]},{"d":"2026-09-08 04:16","s":86,"c":0,"v":[0,2,32,186,186,256,256,360,477,477,513,576,576,576,712,712,1030,1030,1030,1030]},{"d":"2026-09-08 05:20","s":454,"c":2,"v":[0,0,0,48,54,150,150,198,217,1200,1632,1632,1632,2220,2220,3276,3276,3276,3276,3276]},{"d":"2026-09-09 05:17","s":358,"c":0,"v":[0,1,6,24,154,490,996,1664,1664,1674,1887,1887,1887,2970,2970,2992,2992,3440,3440,3680]},{"d":"2026-09-09 05:31","s":323,"c":1,"v":[0,28,45,156,352,513,513,690,924,924,1152,1152,1152,1372,1372,2599,3280,3280,3280,3280]},{"d":"2026-09-10 05:22","s":311,"c":2,"v":[1,3,8,384,468,710,710,710,828,962,962,1526,1526,1904,2016,2016,2016,2016,2156,3258]},{"d":"2026-09-11 15:55","s":418,"c":2,"v":[1,2,8,208,208,650,902,902,1032,1980,1980,1980,2960,2960,2960,2960,2960,2960,2960,3276]},{"d":"2026-09-11 17:58","s":378,"c":2,"v":[0,1,24,531,531,770,770,891,1200,1703,1703,1703,1716,1716,1716,2720,2720,2720,3289,3289]},{"d":"2026-09-14 03:08","s":1408,"c":8,"v":[0,1,2,4,175,259,312,312,540,747,747,950,950,1287,1440,1440,1440,1476,2304,2304,2322,2322,3013,3211,3576,3576,3576,3576,3576,3576,3576,3580,3580,3580,3580,3580,3580,3580,3580,3580,3726]},{"d":"2026-10-31 07:33","s":1408,"c":8,"v":[3,3,4,5,5,36,120,120,164,612,612,1144,1515,1515,1564,2185,2185,2185,2185,2185,2286,2286,2698,2698,3102,3168,3168,3168,3168,3168,3168,3168,3806,3806,3806,3895,3895,4284,4473,4473]},{"d":"2026-11-01 20:50","s":1408,"c":8,"v":[28,38,42,240,513,513,513,984,984,2040,2394,2394,2394,2394,2398,2720,2720,2720,3135,3982,4334,4334,4473,4473,4473,4473]},{"d":"2026-11-02 06:04","s":1408,"c":8,"v":[28,28,45,48,266,996,1664,2312,2312,2312,2312,2394,2790,2900,3680,3680,3680,4784,4784,4784,4784,4784,4784,4784]},{"d":"2026-11-03 05:37","s":1408,"c":8,"v":[28,30,30,57,80,174,343,343,1200,2304,2304,2304,2520,2790,2790,3480,3480,3480,3480,3480,4040,4439,4683,4683,4683,4738,4784,4784,4784,4784]}];
+  const runColor = i => `hsl(${(i * 360 / RUNS.length + 200) % 360} 55% 68%)`;
+  let runOn = RUNS.map(() => true);
+  try { const saved = JSON.parse(localStorage.getItem("qbt-runs-on") || "null"); if (Array.isArray(saved) && saved.length === RUNS.length) runOn = saved; } catch(e){}
+  const saveRunOn = () => { try { localStorage.setItem("qbt-runs-on", JSON.stringify(runOn)); } catch(e){} };
+  let runsLayer = null, runLines = [];
+  function buildRunChips(){
+    const box = document.getElementById("runChips");
+    box.innerHTML = RUNS.map((r, i) =>
+      `<button type="button" class="run-chip" data-run="${i}" aria-pressed="${runOn[i]}" style="--run:${runColor(i)}" title="${r.v.length} visits · ${r.s} score · ${r.c}/8 capstones · best mat ${r.v[r.v.length - 1].toLocaleString()} Quarks"><i></i>${r.d.slice(5, 10).replace("-", "/")} <b>${r.s}</b> pts</button>`).join("");
+    box.querySelectorAll(".run-chip").forEach(b => {
+      const i = +b.dataset.run;
+      b.addEventListener("click", () => { runOn[i] = !runOn[i]; b.setAttribute("aria-pressed", runOn[i]); saveRunOn(); drawRuns(); });
+      b.addEventListener("mouseenter", () => runLines[i] && runLines[i].classList.add("hot"));
+      b.addEventListener("mouseleave", () => runLines[i] && runLines[i].classList.remove("hot"));
+    });
+  }
+  function drawRuns(){
+    RUNS.forEach((r, i) => {
+      const pl = runLines[i];
+      pl.style.display = runOn[i] ? "" : "none";
+      pl.setAttribute("points", r.v.slice(0, 40).map((v, k) => `${xFor(k + 1)},${yFor(v)}`).join(" "));
+    });
+  }
+  function setAllRuns(on){
+    runOn = RUNS.map(() => on); saveRunOn();
+    document.querySelectorAll(".run-chip").forEach(b => b.setAttribute("aria-pressed", on));
+    drawRuns();
+  }
+  document.getElementById("runsAll").addEventListener("click", () => setAllRuns(true));
+  document.getElementById("runsNone").addEventListener("click", () => setAllRuns(false));
+  // A "nice" tick step (1/2/5 x 10^n) giving roughly `target` ticks.
+  function niceStep(span, target){
+    const raw = span / target, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  }
+  let axesLayer = null, plotLayer = null;
+  function drawAxes(){
+    axesLayer.innerHTML = "";
+    if (CEILING >= view.y0 && CEILING <= view.y1){
+      const y = yFor(CEILING);
+      axesLayer.appendChild(el("line", {class:"ceiling-line", x1:PAD.l, x2:VW - PAD.r, y1:y, y2:y}));
+      const t = el("text", {class:"ceiling-label", x:VW - PAD.r - 4, y:y - 6, "text-anchor":"end"});
+      t.textContent = "Max possible mat: " + CEILING.toLocaleString();
+      axesLayer.appendChild(t);
+    }
+    const ys = niceStep(view.y1 - view.y0, 6);
+    for (let v = Math.ceil(view.y0 / ys) * ys; v <= view.y1 + 1e-9; v += ys){
+      const y = yFor(v);
+      axesLayer.appendChild(el("line", {class:"grid-line", x1:PAD.l, x2:VW - PAD.r, y1:y, y2:y}));
+      const t = el("text", {class:"axis-label", x:PAD.l - 8, y:y + 4, "text-anchor":"end"});
+      t.textContent = Math.round(v).toLocaleString();
+      axesLayer.appendChild(t);
+    }
+    const xs = Math.max(1, niceStep(view.x1 - view.x0, 9));
+    const firstX = view.x0 === 1 && xs > 1 ? xs : Math.ceil(view.x0 / xs) * xs;
+    const xTicks = [view.x0];
+    for (let r = firstX; r <= view.x1; r += xs) if (r !== view.x0) xTicks.push(r);
+    xTicks.forEach(r => {
+      const t = el("text", {class:"axis-label", x:xFor(r), y:VH - PAD.b + 20, "text-anchor":"middle"});
+      t.textContent = "V" + r;
+      axesLayer.appendChild(t);
+    });
+  }
+  function buildChart(){
+    svg.innerHTML = "";
+    const defs = el("defs", {});
+    const cp = el("clipPath", {id:"plotClip"});
+    // A few px of slack so a dot sitting exactly on an edge isn't half cut.
+    cp.appendChild(el("rect", {x:PAD.l - 7, y:PAD.t - 7, width:plotW + 14, height:plotH + 14}));
+    defs.appendChild(cp);
+    svg.appendChild(defs);
+    axesLayer = el("g", {});
+    svg.appendChild(axesLayer);
+    plotLayer = el("g", {"clip-path":"url(#plotClip)"});
+    svg.appendChild(plotLayer);
+    runsLayer = el("g", {"pointer-events":"none"});
+    plotLayer.appendChild(runsLayer);
+    runLines = RUNS.map((r, i) => {
+      const pl = el("polyline", {class:"run-line", stroke:runColor(i)});
+      const t = el("title", {}); t.textContent = `Run ${r.d}: ${r.s} pts`;
+      pl.appendChild(t);
+      runsLayer.appendChild(pl);
+      return pl;
+    });
+    ghostLines = TIERS.map(tier => {
+      const g = el("polyline", {class:"ghost-line", stroke:tier.color});
+      plotLayer.appendChild(g);
+      return g;
+    });
+    TIERS.forEach((tier, ti) => {
+      const line = el("polyline", {class:"quiet-line", fill:"none", stroke:tier.color, "stroke-width":1.5,
+        "stroke-linejoin":"round", "stroke-linecap":"round", "pointer-events":"none"});
+      plotLayer.appendChild(line);
+      lines[ti] = line;
+      const saw = el("polyline", {fill:"none", stroke:tier.color, "stroke-width":2.5,
+        "stroke-linejoin":"round", "stroke-linecap":"round", "pointer-events":"none"});
+      plotLayer.appendChild(saw);
+      sawLines[ti] = saw;
+      offDots[ti] = data.filter(r => isCheck(r[0])).map(() => {
+        const d = el("rect", {class:"official-dot", width:10, height:10, fill:tier.color,
+          stroke:getVar("--card"), "stroke-width":1.5});
+        d.appendChild(el("title", {}));
+        plotLayer.appendChild(d);
+        return d;
+      });
+    });
+    TIERS.forEach((tier, ti) => {
+      dots[ti] = data.map((row, ri) => {
+        const dot = el("circle", {class:"anchor-dot", r:5.5, fill:tier.color,
+          stroke:getVar("--card"), "stroke-width":1.5, "pointer-events":"none"});
+        dot.appendChild(el("title", {}));
+        plotLayer.appendChild(dot);
+        return dot;
+      });
+    });
+  }
+  // Dotted reference: the hand-drawn lines the curves were fitted to,
+  // drawn at the same scale as the slider so you can compare shapes.
+  let ghostLines = [];
+  function drawGhost(){
+    ghostLines.forEach((g, ti) => {
+      g.style.display = showGhost ? "" : "none";
+      g.setAttribute("points", ghost.map(r => `${xFor(r[0])},${yFor(r[ti + 1] * fitScale)}`).join(" "));
+    });
+  }
+  function drawChart(){
+    TIERS.forEach((tier, ti) => {
+      lines[ti].setAttribute("points", data.map(row => `${xFor(row[0])},${yFor(row[ti + 1])}`).join(" "));
+      // Sawtooth: up to the official value at a check visit, straight back
+      // down to the quiet value right after it.
+      sawLines[ti].setAttribute("points", data.map(row => `${xFor(row[0])},${yFor(need(row, ti + 1))}`).join(" "));
+      data.filter(r => isCheck(r[0])).forEach((row, k) => {
+        const d = offDots[ti][k], v = need(row, ti + 1);
+        d.setAttribute("x", xFor(row[0]) - 5); d.setAttribute("y", yFor(v) - 5);
+        d.setAttribute("transform", `rotate(45 ${xFor(row[0])} ${yFor(v)})`);
+        d.style.display = inView(row[0], v) ? "" : "none";
+        d.firstChild.textContent = `Visit ${row[0]} official check · ${tier.label}: ${v.toLocaleString()} Quarks (quiet ${row[ti + 1].toLocaleString()})`;
+      });
+      data.forEach((row, ri) => {
+        const dot = dots[ti][ri];
+        dot.setAttribute("cx", xFor(row[0]));
+        dot.setAttribute("cy", yFor(row[ti + 1]));
+        dot.style.display = inView(row[0], row[ti + 1]) ? "" : "none";
+        dot.firstChild.textContent = `Visit ${row[0]} · ${tier.label}: ${row[ti + 1].toLocaleString()} Quarks`;
+      });
+    });
+  }
+
+  // Dragging is handled by the whole chart, not each dot: pressing anywhere
+  // near a point grabs the closest one (generous ~22px reach, so a dot is
+  // easy to hit with a mouse or finger), and the pointer stays captured by
+  // the chart for the rest of the drag. The grabbed tier stays locked, but
+  // the visit follows the pointer left/right -- sweep across the chart to
+  // sketch a whole stretch of that curve in one stroke.
+  let drag = null;
+  function svgPoint(ev){
+    const rect = svg.getBoundingClientRect();
+    return { x:(ev.clientX - rect.left) * (VW / rect.width), y:(ev.clientY - rect.top) * (VH / rect.height) };
+  }
+  const visitFromX = x => Math.max(view.x0, Math.min(view.x1, Math.round(view.x0 + (x - PAD.l) / plotW * (view.x1 - view.x0))));
+  function applyDrag(ev){
+    const pt = svgPoint(ev);
+    const ri = visitFromX(pt.x) - 1, v = valFromY(pt.y);
+    // A fast sideways sweep can skip visits between two pointer events --
+    // fill those in along a straight line so the sketched curve has no gaps.
+    const from = drag.lastRi == null ? ri : drag.lastRi, fromV = drag.lastV == null ? v : drag.lastV;
+    const step = ri >= from ? 1 : -1;
+    for (let r = from; ; r += step){
+      const f = ri === from ? 1 : (r - from) / (ri - from);
+      data[r][drag.ti] = Math.round((fromV + (v - fromV) * f) / 5) * 5;
+      refreshRow(r);
+      if (r === ri) break;
+    }
+    drag.lastRi = ri; drag.lastV = v;
+    drawChart();
+    updateCode();
+  }
+  svg.addEventListener("pointerdown", ev => {
+    const pt = svgPoint(ev);
+    let best = null, bestD = 22;
+    TIERS.forEach((t, ti) => data.forEach((row, ri) => {
+      if (!inView(row[0], row[ti + 1])) return;
+      const d = Math.hypot(xFor(row[0]) - pt.x, yFor(row[ti + 1]) - pt.y);
+      if (d < bestD){ bestD = d; best = {ti: ti + 1, ri}; }
+    }));
+    if (!best) return;
+    drag = best;
+    svg.setPointerCapture(ev.pointerId);
+    svg.classList.add("dragging");
+    ev.preventDefault();
+  });
+  svg.addEventListener("pointermove", ev => {
+    if (drag){ applyDrag(ev); return; }
+    // Hover feedback: show the grab cursor only when a point is in reach.
+    const pt = svgPoint(ev);
+    const near = TIERS.some((t, ti) => data.some(row => inView(row[0], row[ti + 1]) &&
+      Math.hypot(xFor(row[0]) - pt.x, yFor(row[ti + 1]) - pt.y) < 22));
+    svg.style.cursor = near ? "grab" : "default";
+  });
+  function endDrag(ev){
+    if (!drag) return;
+    drag = null;
+    svg.classList.remove("dragging");
+    if (svg.hasPointerCapture(ev.pointerId)) svg.releasePointerCapture(ev.pointerId);
+  }
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+
+  function updateCode(){
+    const lines = data.map(([r, a, b, c, d]) =>
+      `  [${r},`.padEnd(8) + `${a},`.padEnd(7) + `${b},`.padEnd(7) + `${c},`.padEnd(7) + `${d}],`);
+    document.getElementById("codeOut").value = "const LOCKIN_ROUND_ANCHORS = [\n" +
+      "  // [visit, oneDieMin, twoDiceMin, threeDiceMin, emptyElementMin] -- one row per visit\n" +
+      lines.join("\n") + "\n];\n" +
+      "// Official board checks (every 3rd visit): breakpoints x (1 + this).\n" +
+      `const OFFICIAL_CHECK_BUMP = ${Math.round(bump * 100) / 100};`;
+  }
+
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    const ta = document.getElementById("codeOut");
+    try { await navigator.clipboard.writeText(ta.value); }
+    catch (e) { ta.removeAttribute("readonly"); ta.select(); document.execCommand("copy"); ta.setAttribute("readonly", ""); }
+    const msg = document.getElementById("copiedMsg");
+    msg.classList.add("show");
+    setTimeout(() => msg.classList.remove("show"), 1800);
+  });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    refit(ORIGINAL, 1);
+    fitScale = 1;
+    data = ORIGINAL.map(row => row.slice());
+    syncFitInputs(); showFitParams();
+    buildTable(); drawGhost(); drawChart(); updateCode();
+  });
+
+  function showFitParams(){
+    document.getElementById("fitParams").innerHTML = TIERS.map((t, i) => {
+      const p = fits[i];
+      return `<span><span class="tier-swatch" style="background:${t.color}"></span><b>${t.label}</b> levels off at ${Math.round(p.top * fitScale).toLocaleString()} &middot; halfway by visit ${p.mid.toFixed(1)} &middot; steepness ${p.n.toFixed(2)} &middot; fit within &plusmn;${Math.round(p.rmse * fitScale)}</span>`;
+    }).join("");
+  }
+  const fitRange = document.getElementById("fitRange"), fitPct = document.getElementById("fitPct");
+  function syncFitInputs(){
+    const pct = Math.round(fitScale * 100);
+    fitRange.value = pct;
+    if (document.activeElement !== fitPct) fitPct.value = pct;
+  }
+  function setScale(pct){
+    if (!isFinite(pct)) return;
+    fitScale = Math.max(30, Math.min(150, Math.round(pct))) / 100;
+    applyFit(); syncFitInputs(); showFitParams();
+    data.forEach((r, ri) => refreshRow(ri));
+    drawGhost(); drawChart(); updateCode();
+  }
+  fitRange.addEventListener("input", () => setScale(+fitRange.value));
+  fitPct.addEventListener("change", () => setScale(+fitPct.value));
+  document.getElementById("refitBtn").addEventListener("click", () => {
+    refit(data, fitScale); setScale(fitScale * 100);
+  });
+  const ghostChk = document.getElementById("ghostChk");
+  ghostChk.checked = showGhost;
+  ghostChk.addEventListener("change", () => {
+    showGhost = ghostChk.checked;
+    try { localStorage.setItem("qbt2-ghost", showGhost ? "1" : "0"); } catch(e){}
+    drawGhost();
+  });
+
+  // ---- zoom window -------------------------------------------------------
+  const zIn = {x0:document.getElementById("zx0"), x1:document.getElementById("zx1"),
+               y0:document.getElementById("zy0"), y1:document.getElementById("zy1")};
+  function syncZoomInputs(){ for (const k in zIn) if (document.activeElement !== zIn[k]) zIn[k].value = view[k]; }
+  function setView(v){
+    let x0 = Math.max(1, Math.min(39, Math.round(v.x0))), x1 = Math.min(40, Math.round(v.x1));
+    let y0 = Math.max(0, Math.round(v.y0)), y1 = Math.round(v.y1);
+    // Typing a "from" past the current "to" (or a "to" below the "from")
+    // slides the other end along to keep the same window width, rather
+    // than collapsing the view to a sliver.
+    if (x1 <= x0){
+      const span = Math.max(1, view.x1 - view.x0);
+      if (v.x0 !== view.x0){ x1 = Math.min(40, x0 + span); x0 = Math.max(1, Math.min(x0, x1 - 1)); }
+      else { x0 = Math.max(1, x1 - span); x1 = Math.max(x0 + 1, x1); }
+    }
+    if (y1 <= y0){
+      const span = Math.max(50, view.y1 - view.y0);
+      if (v.y0 !== view.y0) y1 = y0 + span; else y0 = Math.max(0, y1 - span);
+      if (y1 <= y0) y1 = y0 + 50;
+    }
+    view = {x0, x1, y0, y1};
+    saveView(); syncZoomInputs(); drawAxes(); drawRuns(); drawGhost(); drawChart();
+  }
+  // "Fit Quarks": tighten the Quark range to whatever's drawn in the current
+  // visit range (breakpoints plus any runs that are switched on).
+  function fitY(){
+    let lo = Infinity, hi = -Infinity;
+    data.forEach(row => { if (row[0] < view.x0 || row[0] > view.x1) return;
+      for (let k = 1; k <= 4; k++){ lo = Math.min(lo, row[k]); hi = Math.max(hi, need(row, k)); } });
+    RUNS.forEach((r, i) => { if (!runOn[i]) return;
+      r.v.forEach((v, k) => { if (k + 1 >= view.x0 && k + 1 <= view.x1){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }); });
+    const pad = Math.max(50, (hi - lo) * 0.06);
+    return {y0: Math.max(0, Math.floor((lo - pad) / 50) * 50), y1: Math.ceil((hi + pad) / 50) * 50};
+  }
+  Object.values(zIn).forEach(inp => inp.addEventListener("change", () => {
+    if (inp.value === "") { syncZoomInputs(); return; }
+    setView({x0:+zIn.x0.value, x1:+zIn.x1.value, y0:+zIn.y0.value, y1:+zIn.y1.value});
+  }));
+  document.querySelector(".zoom-presets").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-zoom]"); if (!b) return;
+    const z = b.dataset.zoom;
+    if (z === "full") setView(FULL_VIEW);
+    else if (z === "fit") setView({...view, ...fitY()});
+    else {
+      const [x0, x1] = z === "early" ? [1, 12] : z === "mid" ? [10, 25] : [20, 40];
+      view = {...view, x0, x1};
+      setView({...view, ...fitY()});
+    }
+  });
+
+  const bumpRange = document.getElementById("bumpRange"), bumpPct = document.getElementById("bumpPct");
+  function setBump(pct){
+    if (!isFinite(pct)) return;
+    bump = Math.max(0, Math.min(80, Math.round(pct))) / 100;
+    try { localStorage.setItem("qbt2-bump", String(bump)); } catch(e){}
+    bumpRange.value = Math.round(bump * 100);
+    if (document.activeElement !== bumpPct) bumpPct.value = Math.round(bump * 100);
+    data.forEach((r, ri) => refreshRow(ri)); drawChart(); updateCode();
+  }
+  bumpRange.addEventListener("input", () => setBump(+bumpRange.value));
+  bumpPct.addEventListener("change", () => setBump(+bumpPct.value));
+  bumpRange.value = bumpPct.value = Math.round(bump * 100);
+
+  // Start on the live table itself; the fitted curves only take over when
+  // the scale slider moves (or Refit is pressed).
+  refit(ORIGINAL, 1);
+  buildTable(); buildChart(); buildRunChips(); syncZoomInputs(); syncFitInputs(); showFitParams(); drawAxes(); drawRuns(); drawGhost(); drawChart(); updateCode();
+})();
+</script>
+</body>
+</html>
