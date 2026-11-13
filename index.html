@@ -566,12 +566,17 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Classic's full-width copy: flex:1 circles so all 8 always fit one row. */
 .market-classic-progress{position:relative; margin:0 0 2px; padding:2px 4px}
 .market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:6px}
-.market-classic-progress .market-progress-stations{width:100%; gap:6px}
+.market-classic-progress .market-progress-stations{width:100%; gap:5px; align-items:center}
+/* Circles hug the icon (same 19px icon, less ring padding) so the "?"
+   reward for visiting all 8 fits at the row's right end. */
 .market-classic-progress .market-progress-station{
   /* height:auto overrides the base 24px so the flexed width doesn't stretch
      the circle into an oval. */
-  flex:1 1 0; width:auto; height:auto; max-width:46px; aspect-ratio:1; font-size:19px;
+  flex:1 1 0; width:auto; height:auto; max-width:32px; aspect-ratio:1; font-size:19px;
 }
+.mps-reward{flex:none; margin-left:auto; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  width:30px; height:30px; font-size:18px; font-weight:900; color:var(--ok-bright)}
+.mrow-reward{cursor:pointer}
 /* BINGO card (Classic's Marketplace tray, see bingoCardHTML()). Parchment
    squares so it reads as a printed card, not dark UI. Squares stay full
    colour; the green border alone marks ownership, as soon as that item is
@@ -6551,7 +6556,7 @@ function marketRowsHTML(){
     const done = (state.bingoLinesCompleted || []).includes(r);
     return `<div class="mrow${done ? " done" : ""}">
       <div class="bingo-grid mrow-grid">${line.map(i => bingoCellHTML(card[i], i)).join("")}</div>
-      <span class="mrow-reward" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
+      <span class="mrow-reward" role="button" tabindex="0" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
     </div>`;
   }).join("");
   const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null, true)).join("");
@@ -9075,7 +9080,8 @@ function stationProgressCirclesHTML(){
 function marketStationProgressHTML(){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
-    <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
+    <div class="market-progress-stations">${stationProgressCirclesHTML()}<span class="mps-reward${state.allStationsPaid ? " done" : ""}" role="button" tabindex="0"
+      title="${state.allStationsPaid ? "All 8 visited -- \"?\" earned" : "Visit all 8 stations to earn a \"?\" element"}">${state.allStationsPaid ? "✓" : emptyElSquareHTML(26)}</span></div>`;
 }
 
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
@@ -9084,6 +9090,8 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   // The BINGO centre square's "Add Capstone" placeholder opens the capstone
   // overlay (openCapstoneOverlay()). Checked before the generic
   // [data-item-card] handling.
+  // A "?" reward icon (Market rows, all 8 stations): what a "?" is.
+  if (ev.target.closest(".mrow-reward, .mps-reward")){ showEmptyElTip(); return; }
   const addCapstoneBtn = ev.target.closest("[data-add-capstone]");
   if (addCapstoneBtn){ openCapstoneOverlay(); return; }
 
@@ -12211,6 +12219,7 @@ function showEmptyElTip(){
     <h2 id="emptyElTipTitle">Unknown Element!</h2>
     <p>An Unknown Element can become <b>any element</b> from the station you're at.</p>
     <p class="eet-where">Use it from the <span class="eet-convert">${em("__CONVERT__")}</span> <b>Convert</b> menu.</p>
+    <p class="eet-where">Earn one by finishing a 🛒 Market row, visiting all 8 stations, or reaching the top ⚛️ breakpoint.</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="emptyElTipOk">Got it</button></div>`;
   openOverlay("emptyElTip");
 }
