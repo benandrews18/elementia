@@ -333,6 +333,14 @@
     const offTier = ENTRIES.filter(e => e.tier !== TIER_BY_ICONS[Math.min(itemSuitCosts(e.name).length, 3)]).map(e => e.name);
     expect(!offTier.length, `tier should match element icons: ${offTier.join(", ")}`);
 
+    // Main menu "New Game" over a run in progress records it in History.
+    state.visits = Math.max(state.visits, 5); save();
+    const histBefore = history.length;
+    newRun(); await wait(150);
+    document.getElementById("confirmYes").click(); await wait(400);
+    expect(history.length === Math.min(histBefore + 1, HISTORY_MAX) && history[0].visits >= 5,
+      `New Game should save the replaced run to History (${histBefore} -> ${history.length})`);
+
     // An old, minimal save still loads, with new fields defaulted.
     localStorage.setItem(SAVE_KEY, JSON.stringify({items: ["Water"], elements: {H: 2}, visits: 5, mode: "classic"}));
     const isNew = loadAll();

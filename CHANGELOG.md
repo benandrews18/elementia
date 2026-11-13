@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Fix: runs went missing from History.** Starting a new game from the
+  main menu (Play > New Game) erased the old run without saving it to
+  History; only Run Complete's New Game and Settings > Reset did. All three
+  now save it. Smoke test covers it.
+
 - **Map: Home shows Shop.** On the map with no new station picked, the
   centre button is Shop (back into the station you're at) instead of Map.
   Its orange is darker so the cart stands out; Shop and Map labels are
