@@ -157,7 +157,12 @@ body[data-picking] #topbar{display:none}
 }
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
-.clockpill{padding:3px; border-radius:50%}
+.clockpill{padding:3px; border-radius:50%; cursor:pointer}
+.clockpill:active{transform:scale(.95)}
+.clock-info-box{max-width:360px; text-align:center}
+.clock-info-box p{margin:8px 0; line-height:1.45}
+.ci-clock{display:flex; justify-content:center; margin-bottom:6px}
+.ci-clock .clock-svg{width:96px; height:96px}
 .clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
@@ -3619,7 +3624,7 @@ html.low-motion #matListActions{transition:none}
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
-  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns">
+  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns" role="button" tabindex="0">
     <span class="pill-ic" id="turnClockFace"></span><span class="sr-only"><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
   </div>
   <div class="pill pill-gold" id="scorePill" title="Total score" aria-label="Total score">
@@ -3865,6 +3870,11 @@ html.low-motion #matListActions{transition:none}
 <!-- First "?" ever: what an Unknown Element is (maybeShowEmptyElTip()). -->
 <div class="overlay" id="emptyElTip" role="dialog" aria-modal="true" aria-labelledby="emptyElTipTitle">
   <div class="sheetbox empty-el-tip" id="emptyElTipBody"></div>
+</div>
+
+<!-- Tapping the turn clock: what rounds and board checks are (openClockInfo()). -->
+<div class="overlay" id="clockInfo" role="dialog" aria-modal="true" aria-labelledby="clockInfoTitle">
+  <div class="sheetbox clock-info-box" id="clockInfoBody"></div>
 </div>
 
 <!-- In-page confirm: window.confirm() is suppressed in sandboxed frames. -->
@@ -7199,6 +7209,25 @@ function turnClockSVG(visits){
     ${visits > N ? '<text x="50" y="50.5" text-anchor="middle" dominant-baseline="central" fill="#e2b25a" font-size="8" font-weight="900" font-family="system-ui, sans-serif">OT</text>' : ""}
   </svg>`;
 }
+/* Tapping the clock: what a round is, the board check every 3 rounds, and
+   the current round. */
+function openClockInfo(){
+  const v = state.visits, ot = v > RUN_COMPLETE_VISIT;
+  document.getElementById("clockInfoBody").innerHTML = `
+    <div class="ci-clock">${turnClockSVG(v)}</div>
+    <h2 id="clockInfoTitle">Round ${v} / ${RUN_COMPLETE_VISIT}${ot ? " (Overtime)" : ""}</h2>
+    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game. A new round starts whenever you move to a new location.</p>
+    <p>Every <b>${MAT_CHECK_EVERY} rounds</b> (the big numbers on the clock) your Display Mat is checked. Its Quark score sets your <b>bonus dice</b> until the next check!</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="clockInfoOk">Got it</button></div>`;
+  openOverlay("clockInfo");
+}
+document.getElementById("turnClock").addEventListener("click", openClockInfo);
+document.getElementById("turnClock").addEventListener("keydown", ev => {
+  if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openClockInfo(); }
+});
+document.getElementById("clockInfo").addEventListener("click", ev => {
+  if (ev.target.closest("#clockInfoOk")) closeOverlay("clockInfo");
+});
 function renderTurnClock(){
   document.getElementById("scorePill").hidden = true;
   const pill = document.getElementById("turnClock");
@@ -12552,14 +12581,14 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     restartRun();
   });
 });
-/* Full factory reset: unregisters the service worker, clears its caches,
-   and clears localStorage (the save, prefs, history, legacy keys)
-   -- including tutorialHintsSeen, so every tip plays again. On the reload,
-   loadAll() finds no save, so the welcome slide shows. clear() is fine: the
-   page owns the whole origin. */
-document.getElementById("resetCacheBtn").addEventListener("click", () => {
-  askConfirm("Reset the game completely? This clears your save, all settings, and every tutorial message, then reloads to a fresh Main Menu. This can't be undone.", async () => {
-    closeOverlay("settingsDev");
+/* Everything the game keeps on this device: localStorage (save, settings,
+   history, trophies, Stars, collections, tutorial tips seen) is cleared
+   right away; the service worker and its caches after, best-effort.
+   clear() is fine: the page owns the whole origin. Used by the Reset
+   button and by boot.js's one-time fresh start. */
+function clearAllGameData(){
+  try { localStorage.clear(); } catch(e){ /* private-browsing storage bans etc. */ }
+  return (async () => {
     try {
       if ("serviceWorker" in navigator){
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -12569,8 +12598,15 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
-    } catch(e){ /* best-effort -- still reload below even if this failed */ }
-    try { localStorage.clear(); } catch(e){ /* best-effort -- private-browsing storage bans etc. */ }
+    } catch(e){ /* best-effort */ }
+  })();
+}
+/* Full factory reset: on the reload, loadAll() finds no save, so the
+   welcome slide shows and every tip plays again. */
+document.getElementById("resetCacheBtn").addEventListener("click", () => {
+  askConfirm("Reset the game completely? This clears your save, all settings, and every tutorial message, then reloads to a fresh Main Menu. This can't be undone.", async () => {
+    closeOverlay("settingsDev");
+    await clearAllGameData();
     location.reload();
   });
 });
@@ -13255,6 +13291,16 @@ document.getElementById("screen").addEventListener("change", ev => {
    boot.js -- Boot: loads the save, shows the welcome slide when needed, first
    render(). Runs last -- every other file has loaded.
    ===================================================================== */
+/* One-time fresh start: a device that played a version from before
+   RESET_EPOCH is wiped (clearAllGameData()) and opens as a first-time
+   player, with today's default settings (mini-games off, auto card
+   inspection on, low motion off). Bump RESET_EPOCH to do it again. */
+const RESET_EPOCH_KEY = "elementia-reset-epoch", RESET_EPOCH = "2026-11-12";
+if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
+  clearAllGameData();
+  try { sessionStorage.clear(); } catch(e){}
+  lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
+}
 const bootedNewSession = loadAll();
 // sessionStorage survives an in-page reload but not the app/tab being
 // closed and reopened -- which is how we tell a real relaunch (show the
