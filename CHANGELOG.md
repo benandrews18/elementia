@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Trophies window:** a parchment window with a compact grid of trophy
+  icons (locked ones are silhouettes) and an X in the top-right corner.
+  Tap a trophy to see a larger window with its name, how to earn it and
+  when you earned it.
+- **Refresh opens the main menu:** reloading the page now always starts on
+  the main menu instead of jumping back into the map.
+
 - **Capstone complete shows the full card:** crafting a capstone opens its
   full inspection card under a "Capstone complete! (n of 8)" banner, with
   confetti, instead of the icon-only window. It stays until you close it.

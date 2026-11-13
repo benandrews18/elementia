@@ -12,17 +12,9 @@ if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
   try { sessionStorage.clear(); } catch(e){}
   lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
 }
-const bootedNewSession = loadAll();
-// sessionStorage survives an in-page reload but not the app/tab being
-// closed and reopened -- which is how we tell a real relaunch (show the
-// main menu) from a reload. bootedNewSession only catches having no save at
-// all.
-const SESSION_FLAG_KEY = "elementia-session-active";
-const reopenedFromClosed = !bootedNewSession && sessionStorage.getItem(SESSION_FLAG_KEY) !== "1";
-sessionStorage.setItem(SESSION_FLAG_KEY, "1");
-// A new session or a real relaunch gets the welcome slide; a mid-session
-// reload doesn't.
-if (bootedNewSession || reopenedFromClosed) showWelcomeSlide();
+loadAll();
+// Every load, a refresh included, opens on the main menu.
+showWelcomeSlide();
 render();
 document.getElementById("setVersion").textContent = "Elementia v" + (DATA.version || "dev");
 

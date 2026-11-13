@@ -60,6 +60,22 @@ function trophyTileHTML(t, earned){
     <span class="trophy-sub">${earned ? `Earned ${esc(earned.at)}` : esc(t.hint)}</span>
   </div>`;
 }
+/* The Trophies window: icons only, tap one for its detail. */
+function trophyMiniHTML(t, earned){
+  return `<button type="button" class="trophy-mini${earned ? " earned" : ""}" data-trophy="${esc(t.id)}" aria-label="${esc(earned ? t.name : "Locked trophy")}"><span class="tm-ic">${em(t.icon)}</span></button>`;
+}
+function openTrophyDetail(id){
+  const t = TROPHIES.find(x => x.id === id);
+  if (!t) return;
+  const earned = loadTrophies()[id];
+  document.getElementById("trophyDetailBody").innerHTML = `
+    <div class="trophy-detail-ic${earned ? "" : " locked"}"><span class="tm-ic">${em(t.icon)}</span></div>
+    <h2 id="trophyDetailName">${earned ? esc(t.name) : "Locked"}</h2>
+    <p>${esc(t.hint)}</p>
+    <p class="trophy-detail-at">${earned ? `Earned ${esc(earned.at)}` : "Not earned yet"}</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" data-trophy-ok>OK</button></div>`;
+  openOverlay("trophyDetail");
+}
 /* The end screen's "New trophies" strip (showEndGame()). */
 function newTrophiesHTML(list){
   if (!list.length) return "";
@@ -69,9 +85,9 @@ function newTrophiesHTML(list){
 function openTrophies(){
   const got = loadTrophies();
   document.getElementById("trophiesCount").textContent =
-    `${TROPHIES.filter(t => got[t.id]).length} of ${TROPHIES.length} earned. Complete a run (turn ${RUN_COMPLETE_VISIT}) to earn them.`;
+    `${TROPHIES.filter(t => got[t.id]).length} of ${TROPHIES.length} earned -- tap one to see how to earn it.`;
   document.getElementById("trophiesList").innerHTML =
-    `<div class="trophy-grid">${TROPHIES.map(t => trophyTileHTML(t, got[t.id])).join("")}</div>`;
+    `<div class="trophy-mini-grid">${TROPHIES.map(t => trophyMiniHTML(t, got[t.id])).join("")}</div>`;
   document.getElementById("tour").classList.add("behind-settings");
   openOverlay("trophies");
 }
@@ -79,4 +95,11 @@ document.getElementById("tourTrophiesBtn").addEventListener("click", openTrophie
 document.getElementById("trophiesClose").addEventListener("click", () => {
   closeOverlay("trophies");
   document.getElementById("tour").classList.remove("behind-settings");
+});
+document.getElementById("trophiesList").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-trophy]");
+  if (b) openTrophyDetail(b.dataset.trophy);
+});
+document.getElementById("trophyDetail").addEventListener("click", ev => {
+  if (ev.target.closest("[data-trophy-ok]")) closeOverlay("trophyDetail");
 });

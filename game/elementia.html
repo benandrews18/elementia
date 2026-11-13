@@ -584,12 +584,16 @@
 
 <!-- Trophies (js/trophies.js), opened from the home screen. -->
 <div class="overlay" id="trophies" role="dialog" aria-modal="true" aria-labelledby="trophiesTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="trophiesClose" aria-label="Close"></button>
     <h2 id="trophiesTitle">🎖️ Trophies</h2>
-    <p id="trophiesCount"></p>
+    <p id="trophiesCount" class="trophies-count"></p>
     <div id="trophiesList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="trophiesClose">Close</button></div>
   </div>
+</div>
+<!-- One trophy, tapped in the grid (openTrophyDetail()). -->
+<div class="overlay" id="trophyDetail" role="dialog" aria-modal="true" aria-labelledby="trophyDetailName">
+  <div class="sheetbox parch trophy-detail" id="trophyDetailBody"></div>
 </div>
 
 <!-- Combo info popup (openComboInfo()): the cards behind a tapped combo
