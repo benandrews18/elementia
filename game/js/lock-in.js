@@ -299,6 +299,7 @@ function playLockInSequence(reward, onDone = finishLockIn){
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(matScore(matOnMat()).total) });
+  state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked

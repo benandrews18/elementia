@@ -235,21 +235,24 @@ function renderMatTop(){
       <button type="button" class="mat-tab tab-elements ${matDrawerView === "elements" ? "active" : ""}" data-mat-view="elements">Elements</button>
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
-  // Clear/Layouts only on the Display Mat page, sharing the tab row (see
-  // .mat-zone-topbar).
-  const quickActionsHTML = matDrawerView === "mat" ? `<div class="mat-quick-actions">
-      <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear Mat</button>
-      <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
-    </div>` : "";
-  const topbarHTML = `<div class="mat-zone-topbar">${quickActionsHTML}${tabsHTML}</div>`;
+  const topbarHTML = `<div class="mat-zone-topbar">${tabsHTML}</div>`;
   // The page has a fixed height (the 2-row mat formula) so switching tabs
   // never resizes the tray; a long elements list scrolls inside. A different
   // parchment shade per tab.
   const pageHTML = `<div class="mat-zone-page zone-${matDrawerView}">${zoneHTML}</div>`;
 
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
+  // Last / Clear / Layouts sit in the mat's lower-right corner, left of "?".
+  // Last puts back the mat from the last board check (state.lastCheckedMat).
+  const last = state.lastCheckedMat || [];
+  const lastOff = !last.length || last.join() === state.mat.join();
   const rulesBtnHTML = matDrawerView === "mat"
-    ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
+    ? `<div class="mat-quick-actions">
+        <button type="button" class="mat-quick-btn text" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">Last</button>
+        <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
+        <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
+      </div>
+      <button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
   maybeShowCollectionFound();
   document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
@@ -492,6 +495,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
+  if (ev.target.closest("#matLastBtn")){ placeMatCards(state.lastCheckedMat || []); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){

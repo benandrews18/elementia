@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Display Mat buttons:** Clear (was "Clear Mat") and Save now sit in the
+  mat's lower-right corner beside "?". A new **Last** button puts back the
+  mat from your last board check (owned cards, as many as fit); it greys
+  out until there's been a check, and while the mat already matches it.
+
 - **Clock shows time passed:** the rounds already played are a darker
   slice of the dial, from 24 round to the hand.
 - **Map:** reachable stations no longer glow in their colour -- being lit

@@ -219,9 +219,8 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    renderMatTop()). Tabs and Clear/Layouts share one normal-flow row
    (.mat-zone-topbar) above it. */
 .mat-zone-wrap{position:relative}
-/* Quick actions left, tabs right (.mat-quick-actions takes margin-right:
-   auto), directly above the page with no gap so the tabs read as attached.
-   Bottom-aligned. */
+/* Tabs at the right, directly above the page with no gap so they read as
+   attached. Bottom-aligned. */
 .mat-zone-topbar{display:flex; align-items:flex-end; gap:8px}
 /* Fixed height (--mat-row-h, shared with .mat-grid) so switching tabs never
    resizes the tray; a long elements list scrolls inside. A different
@@ -245,9 +244,10 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 /* The inactive tab is dimmed and nudged down behind the active page. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
-/* Clear/Layouts on the left of .mat-zone-topbar, as normal flex children
-   (two absolutely positioned corners overlapped on narrow phones). */
-.mat-quick-actions{display:flex; gap:8px}
+/* Last / Clear / Layouts in the mat's lower-right corner, in one row just
+   left of the "?" (.mat-rules-btn), riding the mat's bottom edge. */
+.mat-quick-actions{position:absolute; right:32px; bottom:-8px; z-index:4; display:flex; gap:6px}
+.mat-quick-btn:disabled{filter:grayscale(1) brightness(.8); opacity:.7; cursor:default}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   border:2px solid var(--gold-line); background:var(--gold); color:#181614; font-size:15px;

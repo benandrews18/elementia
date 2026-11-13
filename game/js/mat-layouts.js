@@ -55,7 +55,12 @@ function saveMatLayout(){
 function loadMatLayout(i){
   const L = prefs.savedMatLayouts[i];
   if (!L) return;
-  const placeable = L.items.filter(n => MAT_CARD_BY_NAME[n] && (comboLabActive || owns(n)));
+  placeMatCards(L.items);
+  closeMatLayoutsOverlay();
+}
+// Also the mat's "Last" button.
+function placeMatCards(names){
+  const placeable = names.filter(n => MAT_CARD_BY_NAME[n] && (comboLabActive || owns(n)));
   const kept = [];
   for (const n of placeable){
     if (matFits([...kept, n].map(x => MAT_CARD_BY_NAME[x]))) kept.push(n);
@@ -63,7 +68,6 @@ function loadMatLayout(i){
   state.mat = kept;
   save();
   render();
-  closeMatLayoutsOverlay();
 }
 function deleteMatLayout(i){
   const L = prefs.savedMatLayouts[i];
