@@ -203,11 +203,12 @@
 /* Edge-to-edge (no side padding on the wrap above, no side radius here)
    so the item row below has the full screen width to lay every item out
    on one line instead of wrapping. */
+/* Parchment in a brass frame (panel_parchment.webp as a 9-slice); the
+   colour tokens come from the shared parchment rule in overlays.css. */
 .map-card{
-  background:var(--card); background-size:cover; background-position:center;
-  border:1px solid var(--line); border-left:none; border-right:none; border-top:12px solid var(--suit);
-  border-radius:0; padding:16px 17px 15px; text-align:left; width:100%;
-  display:flex; flex-direction:column; gap:11px;
+  border:22px solid transparent; border-image:url("../ui/panel_parchment.webp") 56 fill / 22px stretch;
+  padding:2px 0 0; text-align:left; width:100%;
+  display:flex; flex-direction:column; gap:11px; filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));
 }
 /* Extra side padding so the title never sits under the floating
    visits/score pills (see .pill/#topbar). */
@@ -280,7 +281,7 @@
    whole .station-items/.capline block, so it gets that block's own
    top border/spacing instead of just floating loose. */
 .cap-em{font-size:28.5px; line-height:1}
-.cap-name{color:#fff; font-weight:700}
+.cap-name{color:var(--ink); font-weight:700}
 .capline.done{color:var(--ok); font-weight:700}
 .capline.done .cap-name{color:var(--ok)}
 /* Informational only now -- confirming travel itself lives on the hub's

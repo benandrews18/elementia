@@ -76,7 +76,7 @@
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
-  <div class="sheetbox mat-rules-box">
+  <div class="sheetbox parch mat-rules-box">
     <!-- Page 1: the check itself; page 2: Quark combos (openMatRules()). -->
     <div class="mat-rules-page" id="matRulesPage1">
       <h2 id="matRulesTitle">⚛️ Display Mat Score</h2>
@@ -294,17 +294,17 @@
 
 <!-- First "?" ever: what an Unknown Element is (maybeShowEmptyElTip()). -->
 <div class="overlay" id="emptyElTip" role="dialog" aria-modal="true" aria-labelledby="emptyElTipTitle">
-  <div class="sheetbox empty-el-tip" id="emptyElTipBody"></div>
+  <div class="sheetbox parch empty-el-tip" id="emptyElTipBody"></div>
 </div>
 
 <!-- Tapping the turn clock: what rounds and board checks are (openClockInfo()). -->
 <div class="overlay" id="clockInfo" role="dialog" aria-modal="true" aria-labelledby="clockInfoTitle">
-  <div class="sheetbox clock-info-box" id="clockInfoBody"></div>
+  <div class="sheetbox parch clock-info-box" id="clockInfoBody"></div>
 </div>
 
 <!-- In-page confirm: window.confirm() is suppressed in sandboxed frames. -->
 <div class="overlay" id="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-  <div class="sheetbox" style="max-width:420px">
+  <div class="sheetbox parch" style="max-width:420px">
     <h2 id="confirmTitle">Are you sure?</h2>
     <p id="confirmMsg"></p>
     <div class="btnrow">
@@ -327,7 +327,7 @@
 </div>
 
 <div class="overlay" id="lockInRewardOverlay" role="dialog" aria-modal="true" aria-labelledby="lockInRewardTitle">
-  <div class="sheetbox lockin-reward-box" style="max-width:420px">
+  <div class="sheetbox parch lockin-reward-box" style="max-width:420px">
     <h2 id="lockInRewardTitle"></h2>
     <div class="lockin-reward-dice" id="lockInRewardDice"></div>
     <div class="lockin-reward-extra" id="lockInRewardExtra" hidden></div>
@@ -347,13 +347,13 @@
      station's elements and starts the run there (openCapstoneChoice()/
      confirmCapstoneChoice()). -->
 <div class="overlay" id="capChoice" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="capChoiceTitle">
-  <div class="sheetbox cap-choice-box" id="capChoiceBody"></div>
+  <div class="sheetbox parch cap-choice-box" id="capChoiceBody"></div>
 </div>
 <div class="overlay" id="capConfirm" role="dialog" aria-modal="true" aria-labelledby="capConfirmTitle">
-  <div class="sheetbox cap-confirm-box" id="capConfirmBody"></div>
+  <div class="sheetbox parch cap-confirm-box" id="capConfirmBody"></div>
 </div>
 <div class="overlay" id="pinTip" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
-  <div class="sheetbox pin-tip-box">
+  <div class="sheetbox parch pin-tip-box">
     <h2 id="pinTipTitle">Pin Items to your To-Do List</h2>
     <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
     <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
@@ -361,10 +361,10 @@
   </div>
 </div>
 <div class="overlay" id="emptyElPick" role="dialog" aria-modal="true" aria-labelledby="emptyElPickTitle">
-  <div class="sheetbox empty-el-pick-box" id="emptyElPickBody"></div>
+  <div class="sheetbox parch empty-el-pick-box" id="emptyElPickBody"></div>
 </div>
 <div class="overlay" id="capstoneOverlay" role="dialog" aria-modal="true" aria-labelledby="capstoneOverlayTitle">
-  <div class="sheetbox" id="capstoneOverlayBody"></div>
+  <div class="sheetbox parch" id="capstoneOverlayBody"></div>
 </div>
 
 <!-- Craft-from-BINGO: tapping an unowned square opens that item's real
@@ -377,7 +377,7 @@
 <!-- BINGO reward popup at the end of runBingoSequence(): one "?" element
      per completed line, plus the line bonus. -->
 <div class="overlay" id="bingoClearOverlay" role="dialog" aria-modal="true" aria-labelledby="bingoClearTitle">
-  <div class="sheetbox" id="bingoClearOverlayBody"></div>
+  <div class="sheetbox parch" id="bingoClearOverlayBody"></div>
 </div>
 
 <!-- settings -->
@@ -420,7 +420,7 @@
 
 <!-- Game Rules -->
 <div class="overlay" id="settingsRules" role="dialog" aria-modal="true" aria-labelledby="setRulesTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <h2 id="setRulesTitle">🎲 Game Rules</h2>
     <div class="setting-row">
       <span class="setting-ico">🎮</span>
@@ -468,7 +468,7 @@
 
 <!-- Dev Tools -->
 <div class="overlay" id="settingsDev" role="dialog" aria-modal="true" aria-labelledby="setDevTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <h2 id="setDevTitle">🛠️ Dev Tools</h2>
     <button type="button" class="setting-row warn" id="resetCacheBtn">
       <span class="setting-ico">🧹</span>
@@ -496,7 +496,7 @@
      progress (newRun()). .mode-stats shows the save's visits/points
      (refreshModePicker()). modeHistoryBtn copies Dev Tools' history row. -->
 <div class="overlay" id="modeOverlay" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <h2 id="modeTitle">Elementia</h2>
     <div class="mode-options">
       <div class="mode-card" data-mode="classic" id="classicModeCard">
@@ -524,7 +524,7 @@
 
 <!-- history -->
 <div class="overlay" id="history" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <div class="hist-header">
       <h2 id="historyTitle">🕓 History</h2>
       <button type="button" class="tbtn ghost histexport-btn" id="historyExport" title="Copy all run history as JSON">⧉ Export</button>
@@ -539,7 +539,7 @@
      same shell and clipboard-JSON export as #history, for
      prefs.savedMatLayouts. -->
 <div class="overlay" id="matLayoutsOverlay" role="dialog" aria-modal="true" aria-labelledby="matLayoutsTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <div class="hist-header">
       <h2 id="matLayoutsTitle">💾 Saved Layouts</h2>
       <button type="button" class="tbtn ghost histexport-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON">⧉ Export</button>
@@ -599,7 +599,7 @@
 <!-- Combo info popup (openComboInfo()): the cards behind a tapped combo
      chip, or the collections themselves for the star. -->
 <div class="overlay" id="comboInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="comboInfoTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <h2 id="comboInfoTitle"></h2>
     <div id="comboInfoBody"></div>
     <div class="btnrow"><button type="button" class="bigbtn sec" id="comboInfoClose">Close</button></div>
@@ -655,7 +655,7 @@
 <!-- shared element picker for both sides of the conversion screen --
      which list it shows depends on convertPickMode (see the JS). -->
 <div class="overlay" id="convertPicker" role="dialog" aria-modal="true" aria-labelledby="convertPickerKicker">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <div class="convert-picker-kicker" id="convertPickerKicker">Inventory</div>
     <p class="convert-picker-sub" id="convertPickerSub"></p>
     <div class="convert-picker-grid" id="convertPickerGrid"></div>
@@ -743,7 +743,7 @@
      coachmark walkthrough of the live UI. Separate from #tour (the welcome
      slide). -->
 <div class="overlay" id="tutIntro" role="dialog" aria-modal="true" aria-labelledby="tutIntroTitle">
-  <div class="sheetbox" style="max-width:440px; text-align:center">
+  <div class="sheetbox parch" style="max-width:440px; text-align:center">
     <div style="font-size:52px; line-height:1; margin-bottom:6px">🔬</div>
     <h2 id="tutIntroTitle">The Periodic Table</h2>
     <p class="setnote" style="font-size:15px; line-height:1.6; margin-top:10px">
@@ -757,7 +757,7 @@
 </div>
 
 <div class="overlay" id="tutElements" role="dialog" aria-modal="true" aria-labelledby="tutElementsTitle">
-  <div class="sheetbox" style="max-width:480px">
+  <div class="sheetbox parch" style="max-width:480px">
     <h2 id="tutElementsTitle">The 16 Elements</h2>
     <div class="tut-el-grid" id="tutElGrid"></div>
     <div class="btnrow">

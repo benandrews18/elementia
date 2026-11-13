@@ -10,6 +10,17 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **New look, phase 5 -- the rest of the windows:** Game Rules, Dev Tools,
+  History, Saved Layouts, the confirm box, the clock info, combo info,
+  Lock-In reward, BINGO reward, the capstone pick, the "?" picker and tips,
+  the Convert picker, the mode screen and the tutorial windows are all
+  parchment windows with a wooden title banner now. Settings-style rows
+  are wooden everywhere.
+- **Green pill buttons:** the main green buttons (Play, Next, OK, Got it,
+  Start...) use the gold-rimmed green pill.
+- **Main menu:** Play is the green pill; the other buttons are wooden.
+- **Map station preview:** a parchment card in a brass frame.
+
 - **Fixes from review:** pressing Map while a capstone's card is open no
   longer makes the Marketplace pop up later out of nowhere; with low motion
   on, the post-craft card is the static one again (no flying). Smoke test

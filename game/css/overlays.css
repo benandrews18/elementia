@@ -144,18 +144,22 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 /* Parchment window (game/ui/panel_parchment.webp as a 9-slice, so the brass
    corners keep their shape). The palette tokens are redefined inside it, so
    everything in the window that uses them turns dark-on-parchment. */
-.sheetbox.parch{
+.sheetbox.parch, .map-card{
   --ink:#3b2412; --ink2:#5e4026; --mute:#8a6a48;
   --line:#c9a571; --line2:#d8bb8a; --card:#f6e8c6; --bg-soft:#efdcb2; --sunken:#e6cf9f;
   --gold:#a8730f; --gold-soft:#f7e3a6; --gold-line:#c9a24f;
   --ok-soft:#d9ecd0; --ok-line:#6fb383; --bad-soft:#f6d6cc;
   --collection:#6a3fc0; --collection-soft:#e8def5; --collection-line:#a48bd6;
-  color:var(--ink); background:none; border-radius:0; box-shadow:none;
+  color:var(--ink);
+}
+.sheetbox.parch{
+  background:none; border-radius:0; box-shadow:none;
   border:30px solid transparent; border-image:url("../ui/panel_parchment.webp") 56 fill / 30px stretch;
   padding:10px 8px 6px; filter:drop-shadow(0 16px 30px rgba(0,0,0,.45));
 }
-/* Title on a wooden banner, overlapping the frame's top edge. */
-.sheetbox.parch h2{
+/* The window's own title on a wooden banner, overlapping the frame's top
+   edge (not headings inside cards, e.g. the capstone pick's station name). */
+.sheetbox.parch > h2, .sheetbox.parch > :is(.coll-head, .hist-header, .mat-rules-page) > h2{
   display:table; margin:-22px auto 12px; padding:6px 30px 7px; color:#fff7e0;
   font-size:21px; letter-spacing:0; text-align:center; text-shadow:0 2px 0 rgba(0,0,0,.55);
   border:0 solid transparent; border-image:url("../ui/banner_wood.webp") 64 96 fill / 13px 24px stretch;
@@ -217,6 +221,14 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .bigbtn:hover{filter:brightness(1.06)}
 .bigbtn:not(:disabled):active{box-shadow:0 1px 0 #24774a}
 .bigbtn.sec{background:var(--sunken); color:var(--ink); box-shadow:none; border:1.5px solid var(--line)}
+/* Primary buttons wear the green pill sprite (game/ui/pill_long.webp) as a
+   9-slice, so the gold rim keeps its shape at any width. */
+.bigbtn:not(.sec):not(.warn):not(:disabled){
+  background:none; border:0 solid transparent; box-shadow:none; color:#fff;
+  border-image:url("../ui/pill_long.webp") 46 fill / 14px stretch;
+  text-shadow:0 1px 2px rgba(0,0,0,.6); filter:drop-shadow(0 3px 2px rgba(0,0,0,.35));
+}
+.bigbtn:not(.sec):not(.warn):not(:disabled):active{filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)) brightness(.92)}
 .bigbtn.sec:not(:disabled):active{box-shadow:none}
 .bigbtn.warn{background:var(--bad); box-shadow:0 3px 0 #a8402c}
 .bigbtn.warn:not(:disabled):active{box-shadow:0 1px 0 #a8402c}

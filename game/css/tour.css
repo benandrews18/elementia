@@ -203,3 +203,11 @@ button.setting-row:not(:disabled):active, .mode-card:active{
 #convertPicker .bigbtn:not(:disabled):active, #convertPicker .tbtn:not(:disabled):active{
   transform:scale(.93); box-shadow:none;
 }
+
+/* Main menu buttons: Play is the green pill; the rest are wooden, like the
+   Settings rows. */
+.tour-welcome-actions .bigbtn.sec{
+  background:linear-gradient(180deg, #9a6534, #6b3f1c 62%); border:2px solid #3b2412; color:#fff7e0;
+  text-shadow:0 1px 0 rgba(0,0,0,.45); box-shadow:inset 0 1px 0 rgba(255,220,160,.35), 0 4px 0 #3b2412, 0 6px 10px rgba(0,0,0,.3);
+}
+.tour-welcome-actions .bigbtn.sec:not(:disabled):active{box-shadow:inset 0 1px 0 rgba(255,220,160,.2), 0 1px 0 #3b2412}
