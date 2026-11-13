@@ -85,11 +85,12 @@ function shopBodyHTML(shopEntries, idx, capHTML = ""){
 let stationCardOpen = null;
 function shopCardsHTML(entries, idx){
   const shown = entries.filter(e => !(craftedFolded() && owns(e.name) && e.tier !== "CAPSTONE"));
+  // Each card with the shop's Craft button underneath.
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
-    return matCardHTML(e.name, { cls: [t1 ? "small mini" : "small", e.tier === "CAPSTONE" ? "wide" : "",
+    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
-      e.name === stationCardOpen ? "selected" : ""].join(" ") });
+      e.name === stationCardOpen ? "selected" : ""].join(" ") })}${craftBtnHTML(e, idx(e))}</div>`;
   };
   // One grid, no tier headings, Tier 1 first. Tier 1 cards stack two to a
   // cell (as on the mat) and only with each other; dense packing lets later

@@ -127,29 +127,29 @@ const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
 const CHECK_ORDERS = {
   stationWeek: { kind: "request", name: "Station Week",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `Show 3 or more ${p} cards.`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)} 🃏`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
     ok: (mat, p) => matStationCount(mat, p) >= 3 },
   rainbow: { kind: "request", name: "Rainbow",
-    icon: () => "🌈", text: () => "Show all four element colours.",
+    icon: () => "🌈", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
     params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
     ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
   collector: { kind: "request", name: "Collector",
-    icon: () => "★", text: () => "Complete a named collection on your mat.",
+    icon: () => "★", text: () => "★ ✓",
     params: owned => matCompletedIn(owned).length ? [null] : [],
     ok: mat => matCompletedIn(mat).length > 0 },
   freshFaces: { kind: "restriction", name: "Fresh Faces",
-    icon: () => "🆕", text: () => "At most half your cards can be ones from the last board check.",
+    icon: () => "🆕", text: () => "↺ ≤ ½ 🃏",
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   drought: { kind: "restriction", name: "Drought",
-    icon: p => SUIT_ICON[p], text: p => `No cards with the ${ELEMENT_SUIT_LABEL[p]} icon.`,
+    icon: p => SUIT_ICON[p], text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
-    icon: () => "🪑", text: () => "Leave at least one slot empty.",
+    icon: () => "🪑", text: () => "⬜ 1+",
     params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
   trendShift: { kind: "restriction", name: "Trend Shift",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `No ${p} combo (3+ ${p} cards). It led your last board check.`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)} 🃏`,
     params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },
 };
 function drawOrder(round, avoid){
@@ -213,19 +213,18 @@ function openOrderInfo(){
   if (!o) return;
   const mat = matOnMat(), total = matScore(mat).total, ok = orderMet(o, mat, total);
   document.getElementById("comboInfoTitle").innerHTML = `<span class="ci-title-ic">${orderIconHTML(o)}</span> ${esc(orderName(o))}`;
+  // Icons, not sentences: the rule, then round / stake / your mat now.
+  const chip = (html, cls = "") => `<span class="ord-chip ${cls}">${html}</span>`;
   let html;
   if (o.id === "grand"){
-    html = `<p class="order-text">The final board check: reach <b>${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks</b>.</p>
-      <p class="order-status ${ok ? "ok" : ""}">Right now: ${Math.round(total).toLocaleString()} Quarks ${ok ? "✓" : ""}</p>`;
+    html = `<div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
+      <div class="ord-chips">${chip(`🕒 ${o.round}`)}${chip(`⚛️ ${Math.round(total).toLocaleString()}`, ok ? "ok" : "no")}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
-    html = `<p class="order-text">${esc(d.text(o.p))}</p>
-      <p>${req ? "Request" : "Restriction"} for the <b>round ${o.round}</b> board check: ${req
-        ? `do it and your Quark score is <b>×${ORDER_REQUEST_MULT}</b>.`
-        : `break it and your Quark score is <b>×${ORDER_RESTRICT_MULT}</b>.`} Only the board check counts.</p>
-      <p class="order-status ${ok ? "ok" : "no"}">Your mat right now: ${req ? (ok ? "✓ done" : "not yet") : (ok ? "✓ keeping to it" : "✗ breaking it")}</p>
-      <button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"}>Reroll for 1 ${emptyElSquareHTML(22)}</button>`;
+    html = `<div class="ord-rule">${d.text(o.p)}</div>
+      <div class="ord-chips">${chip(`🕒 ${o.round}`)}${chip(req ? `✓ ⚛️×${ORDER_REQUEST_MULT}` : `✗ ⚛️×${ORDER_RESTRICT_MULT}`, req ? "ok" : "no")}${chip(`🃏 ${ok ? "✓" : "✗"}`, ok ? "ok" : "no")}</div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element">↻ ${emptyElSquareHTML(22)}</button></div>`;
   }
   document.getElementById("comboInfoBody").innerHTML = html;
   openOverlay("comboInfoOverlay");
@@ -482,10 +481,7 @@ function finishLockIn(reward, opts = {}){
   // skipToast: for a caller that skips playLockInSequence() and travels
   // directly.
   if (opts.skipToast){ proceed(); return; }
-  const orderLine = !order ? "" : CHECK_ORDERS[order.id].kind === "request"
-    ? (orderOk ? `${CHECK_ORDERS[order.id].name} done: Quarks ×${ORDER_REQUEST_MULT}!` : "")
-    : (orderOk ? "" : `${CHECK_ORDERS[order.id].name} broken: Quarks ×${ORDER_RESTRICT_MULT}`);
-  showLockInRewardModal(delta, reward >= 4, proceed, orderLine);
+  showLockInRewardModal(delta, reward >= 4, proceed);
 }
 // Delay between each die's pop-in, via inline animation-delay (not a
 // setTimeout chain, which a re-render could interrupt).
@@ -511,7 +507,7 @@ function fadeThroughBlack(midpoint){
     setTimeout(() => c.classList.remove("on"), 40);
   }, FADE_MS);
 }
-function showLockInRewardModal(n, gotEmptyElement, onDone, orderLine = ""){
+function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
   // "Bonus Dice", a "+" and the dice; the corner "?" says why.
   const reduced = lowMotion();
@@ -529,11 +525,11 @@ function showLockInRewardModal(n, gotEmptyElement, onDone, orderLine = ""){
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
-  extra.hidden = !gotEmptyElement && !orderLine;
-  extra.innerHTML = (orderLine ? `<div class="lre-line lre-order">${esc(orderLine)}</div>` : "") + (gotEmptyElement ? `
+  extra.hidden = !gotEmptyElement;
+  extra.innerHTML = gotEmptyElement ? `
     <div class="lre-line"><span>+1 Unknown Element</span>
       <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
-    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "");
+    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }

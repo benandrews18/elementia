@@ -389,10 +389,16 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
    the container so the grid's cqw row height measures the shop's width. */
 .st-cards{container-type:inline-size}
 .st-cards .mat-results-grid{--mat-row-h:calc(((100cqw - 24px) / 4) * 1.4); margin-bottom:12px}
-.st-grid{grid-auto-flow:row dense}
-/* Two Tier 1 cards per cell, each half the row; a lone one keeps the top half. */
-.st-stack{display:flex; flex-direction:column; gap:2px; min-width:0}
-.st-grid .st-stack .mm-card{height:calc((var(--mat-row-h) - 2px) / 2); flex:none}
+/* Each cell: the card (mat-sized: full row, Tier 1 half), then a Craft
+   button under it. Rows size to their content, so a row of Tier 1 pairs
+   is a little taller; cells sit at the top of their row. */
+.st-cards .st-grid{grid-auto-flow:row dense; grid-auto-rows:auto; align-items:start}
+.st-cell{display:flex; flex-direction:column; gap:3px; min-width:0}
+.st-cell.wide{grid-column:span 2}
+.st-grid .st-cell .mm-card{flex:none; height:var(--mat-row-h)}
+.st-grid .st-cell .mm-card.mini{height:calc((var(--mat-row-h) - 2px) / 2)}
+.st-cell .craftbtn{flex:none; width:100%; height:26px; margin:0; padding:0 4px; font-size:12px}
+.st-stack{display:flex; flex-direction:column; gap:4px; min-width:0}
 .st-cards .mm-card.st-owned{filter:brightness(.7) saturate(.6)}
 .st-cards .mm-card.st-owned::after{
   content:"✓"; position:absolute; right:-5px; bottom:-5px; width:20px; height:20px; border-radius:50%;

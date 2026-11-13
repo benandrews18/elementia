@@ -101,7 +101,8 @@ function handleScreenClick(ev){
       const badge = cBtn.closest("[data-item-card]")?.querySelector(".isuit-costs");
       // stopPropagation, or this click would reach the balloon's outside-click
       // listener and close it immediately.
-      if (badge){ ev.stopPropagation(); openSuitSpendBalloon(entry, badge); }
+      // Card view has no badge row: the balloon points at the button.
+      ev.stopPropagation(); openSuitSpendBalloon(entry, badge || cBtn);
       return;
     }
     performSingleCraft(entry);

@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenge popup in icons, card Craft buttons.** The challenge popup is
+  now the rule in icons plus three chips (round, stake, your mat now) and
+  a ↻ swap button; it closes with a top-right ✕ (as does every combo
+  popup). The bonus dice screen no longer repeats the challenge result.
+  The station card view has the shop's Craft button under every card.
+
 - **Card view packing.** No tier headings in the station card view: one
   grid, Tier 1 first, Tier 1 cards stacked two to a cell (only with each
   other), and later cards fill any gap a two-wide capstone leaves.

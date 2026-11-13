@@ -60,6 +60,14 @@ function recipeHTML(entry, plain){
   return sortIngredientTokens(toks).map(r => tokenHTML(r, els, plain)).join('<span class="plus">+</span>');
 }
 
+// Craft button (shop rows and the station's card view). aria-disabled, not
+// disabled: a blocked craft still gets the tap for its "Missing ..." notice
+// (the [data-craft] handler).
+function craftBtnHTML(entry, idx){
+  if (owns(entry.name)) return '<span class="craftbtn done">✓ Owned</span>';
+  const can = canCraft(entry) && suitCostPayable(entry);
+  return `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" aria-disabled="${can ? "false" : "true"}">Craft</button>`;
+}
 function itemHTML(entry, idx){
   const done = owns(entry.name);
   const can = canCraft(entry) && suitCostPayable(entry);
@@ -83,12 +91,7 @@ function itemHTML(entry, idx){
   // other.
   const pinSlot = pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
       title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>`;
-  const btn = done
-    ? '<span class="craftbtn done">✓ Owned</span>'
-    // aria-disabled, not disabled: the button must still receive taps so a
-    // blocked craft can show the "Missing ..." notice (see the [data-craft]
-    // handler).
-    : `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" aria-disabled="${can ? "false" : "true"}">Craft</button>`;
+  const btn = craftBtnHTML(entry, idx);
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
     ${pinSlot}
     ${itemRowHTML(entry, can)}${btn}</div>`;
