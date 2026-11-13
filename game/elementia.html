@@ -542,17 +542,14 @@
      prefs.savedMatLayouts. -->
 <div class="overlay" id="matLayoutsOverlay" role="dialog" aria-modal="true" aria-labelledby="matLayoutsTitle">
   <div class="sheetbox parch">
-    <div class="hist-header">
-      <h2 id="matLayoutsTitle">💾 Saved Layouts</h2>
-      <button type="button" class="tbtn ghost histexport-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON">⧉ Export</button>
-    </div>
-    <p>Save the mat's current arrangement under a name, then load it back any time -- in a real run, only the cards you actually own get placed.</p>
-    <div class="btnrow">
-      <input type="text" id="matLayoutName" class="mat-fsearch" placeholder="Name this arrangement…" maxlength="40" style="flex:1; min-width:140px">
-      <button type="button" class="bigbtn sec" id="matLayoutSaveBtn">Save Current Arrangement</button>
+    <button type="button" class="cp-close-x coll-x" id="matLayoutsClose" aria-label="Close"></button>
+    <div class="coll-head"><h2 id="matLayoutsTitle">💾 Saved Layouts</h2></div>
+    <div class="ml-save-row">
+      <input type="text" id="matLayoutName" class="mat-fsearch" placeholder="Name this arrangement…" maxlength="40">
+      <button type="button" class="ml-icon-btn" id="matLayoutSaveBtn" title="Save the current arrangement" aria-label="Save the current arrangement">💾</button>
+      <button type="button" class="ml-icon-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON" aria-label="Copy all saved layouts as JSON">⧉</button>
     </div>
     <div id="matLayoutsList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="matLayoutsClose">Close</button></div>
   </div>
 </div>
 

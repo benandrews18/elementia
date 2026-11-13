@@ -314,7 +314,15 @@
 .histvisits{font-weight:800; font-size:13.5px; white-space:nowrap}
 /* Saved layout slot (renderMatLayoutsList()): combos + card icons under
    the name row; the chips are display only here, a tap loads the layout. */
-.ml-pts{margin-left:auto}
+/* Score pill left of the name; trash in a bubble on the card's corner. */
+.ml-slot{position:relative; overflow:visible}
+.ml-slot .histrow{padding-right:28px}
+.ml-slot .histvisits{overflow:hidden; text-overflow:ellipsis}
+.ml-del{
+  position:absolute; top:-9px; right:-8px; z-index:1; width:30px; height:30px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer;
+  border:2px solid var(--line); background:var(--card); box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
 .ml-body{display:flex; flex-direction:column; gap:3px; padding:0 10px 7px; cursor:pointer}
 /* One row each: chips and icons shrink to fit rather than wrap. */
 .ml-body .mat-combos{flex-wrap:nowrap; gap:0; overflow:hidden; padding-top:5px}
@@ -322,7 +330,7 @@
 .ml-body .mm-combo{pointer-events:none; flex:0 1 auto; min-width:0; padding:0 7px 0 0}
 .ml-body .mm-cico{width:22px; height:22px; font-size:13px}
 .ml-body .mm-cico :is(img,svg){width:14px; height:14px}
-.ml-body .mm-ccount{min-width:14px; height:14px; font-size:9px; top:-5px; right:-6px}
+.ml-body .mm-ccount{display:none}
 .ml-body .mm-combo b{font-size:12px}
 .ml-body .mmr-icons{display:flex; gap:1px}
 .ml-body .mmr-ic{flex:1 1 0; min-width:0; max-width:24px; height:22px; font-size:18px}

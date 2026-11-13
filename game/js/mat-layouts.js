@@ -19,13 +19,11 @@ function renderMatLayoutsList(){
     const s = matScore(mat);
     return `
     <div class="histentry ml-slot">
-      <div class="histrow-line">
-        <button type="button" class="histrow" data-mat-layout-load="${i}">
-          <span class="histvisits">${esc(L.name)}</span>
-          <span class="ms-pts ml-pts" title="${Math.round(s.total)} points">${Math.round(s.total)}</span>
-        </button>
-        <button type="button" class="histrow-export" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
-      </div>
+      <button type="button" class="histrow" data-mat-layout-load="${i}">
+        <span class="ms-pts ml-pts" title="${Math.round(s.total)} points">${Math.round(s.total)}</span>
+        <span class="histvisits">${esc(L.name)}</span>
+      </button>
+      <button type="button" class="ml-del" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
       <div class="ml-body" data-mat-layout-load="${i}">
         <div class="mat-combos">${matComboChipsHTML(s, false)}</div>
         <div class="mmr-icons">${mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("")}</div>
@@ -351,12 +349,12 @@ document.getElementById("matLayoutsExport").addEventListener("click", async () =
   const json = JSON.stringify(prefs.savedMatLayouts, null, 2);
   try {
     await navigator.clipboard.writeText(json);
-    btn.textContent = "✓ Copied!";
+    btn.textContent = "✓";
     btn.classList.add("done");
   } catch (e){
     window.prompt("Copy this text:", json);
   }
-  setTimeout(() => { btn.textContent = "⧉ Export"; btn.classList.remove("done"); }, 1800);
+  setTimeout(() => { btn.textContent = "⧉"; btn.classList.remove("done"); }, 1800);
 });
 
 /* Mat card taps are handled in #drawerTop's main click listener (the

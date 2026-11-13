@@ -247,12 +247,15 @@ function renderMatTop(){
 
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   // Last / Clear / Layouts sit in the mat's lower-right corner, left of "?".
-  // Last puts back the mat from the last board check (state.lastCheckedMat).
+  // Last puts back the mat from the last board check (state.lastCheckedMat),
+  // quick-saving the current one (state.quickSavedMat); while a quick save
+  // exists the arrow flips and a tap brings it back (matLastTap()).
   const last = state.lastCheckedMat || [];
-  const lastOff = !last.length || last.join() === state.mat.join();
+  const qs = !!state.quickSavedMat;
+  const lastOff = !qs && (!last.length || last.join() === state.mat.join());
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<div class="mat-quick-actions">
-        <button type="button" class="mat-quick-btn" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">↺</button>
+        <span class="mat-last-wrap">${qs ? `<span class="mat-qs-pill">Layout Quick Save</span>` : ""}<button type="button" class="mat-quick-btn${qs ? " qs" : ""}" id="matLastBtn" ${lastOff ? "disabled" : ""} title="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}" aria-label="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}">${qs ? "↻" : "↺"}</button></span>
         <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
         <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
       </div>
@@ -506,7 +509,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
-  if (ev.target.closest("#matLastBtn")){ placeMatCards(state.lastCheckedMat || []); return; }
+  if (ev.target.closest("#matLastBtn")){ matLastTap(); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
@@ -532,6 +535,18 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
 });
+function matLastTap(){
+  if (state.quickSavedMat){
+    const back = state.quickSavedMat;
+    state.quickSavedMat = null;
+    placeMatCards(back);
+    return;
+  }
+  askConfirm("Reset the Display Mat to your last locked-in layout? Your current mat is quick-saved -- tap ↻ to bring it back.", () => {
+    state.quickSavedMat = [...state.mat];
+    placeMatCards(state.lastCheckedMat || []);
+  });
+}
 /* Tapping a combo chip lists the mat cards that earn it
    (matCardsForCombo()) -- or, for the collections star, every discovered
    collection the mat completes, as Collections-menu cards

@@ -257,6 +257,13 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-quick-actions .mat-quick-btn{width:30px; height:30px; font-size:13px}
 .mat-quick-actions .mat-quick-btn.text{width:auto; padding:0 10px; font-size:12px}
 #matLastBtn{font-size:18px; font-weight:900; line-height:1}
+#matLastBtn.qs{background:#3f8fd0; border-color:#9fd0f5; color:#fff}
+.mat-last-wrap{position:relative; display:flex}
+.mat-qs-pill{
+  position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%); white-space:nowrap;
+  padding:2px 8px; border-radius:999px; background:#3f8fd0; color:#fff; font-size:10.5px; font-weight:900;
+  box-shadow:0 2px 4px rgba(0,0,0,.35); pointer-events:none;
+}
 .mat-quick-btn:disabled{filter:grayscale(1) brightness(.8); opacity:.7; cursor:default}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -281,14 +288,25 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 }
 /* Saved Layouts and Collections always fit the screen above the hub: the
    box is capped and its list scrolls inside. */
+/* Both are wide: a thin overlay margin and frame, so the cards get the room. */
+:is(#matLayoutsOverlay, #collectionsOverlay){padding-left:4px; padding-right:4px}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox{
-  display:flex; flex-direction:column; padding:18px 16px;
+  display:flex; flex-direction:column; padding:12px 2px 4px;
+  border-width:24px; border-image-width:24px;
   max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom));
 }
+:is(#matLayoutsOverlay, #collectionsOverlay) .cp-close-x.coll-x{top:-28px; right:-24px}
+/* The list scrolls; room at its top/right for the trash bubbles. */
+:is(#matLayoutsList, #collectionsList) .histrows{max-height:none; overflow:visible; padding:10px 8px 4px 0}
+.ml-save-row{display:flex; gap:6px; align-items:center; margin:0 8px 6px 0}
+.ml-icon-btn{
+  flex:none; width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  font-size:19px; border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); cursor:pointer; padding:0;
+}
+.ml-icon-btn.done{color:var(--ok)}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
 #matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
-#matLayoutsOverlay .btnrow{flex-wrap:wrap}
-#matLayoutsOverlay #matLayoutName{min-width:0 !important; flex:1 1 140px !important}
+#matLayoutsOverlay #matLayoutName{min-width:0; flex:1 1 auto; height:38px}
 /* Opens the same #collectionsOverlay as the welcome screen
    (openCollectionsOverlay()); a plain button sized to sit with the search
    bar. */
