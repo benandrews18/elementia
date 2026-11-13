@@ -844,7 +844,7 @@ body[data-screen="market"] #trackedPill{display:none}
   background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:9px 11px;
 }
 .mission-node.done > .mn-row .mn-head{border-color:var(--ok-line); background:var(--ok-soft)}
-.mn-arrow{color:var(--mute); font-size:11px; transition:transform .15s; flex:none}
+.mn-arrow{color:var(--ink); font-size:17px; font-weight:900; line-height:1; width:16px; text-align:center; transition:transform .15s; flex:none}
 .mn-head.open .mn-arrow{transform:rotate(90deg)}
 .mn-emoji{font-size:17px; flex:none}
 .mn-name{flex:1; min-width:0; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -957,9 +957,8 @@ body[data-screen="market"] #trackedPill{display:none}
   border:0 solid transparent; border-image:url("data:image/webp;base64,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") 52 fill / 13px stretch;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
-/* Reachable rings use each station's suit colour (--suit, set in
-   renderMap()); "here" stays green and "unreachable" greyscale. */
-.map-node.reachable{box-shadow:0 0 0 3px var(--suit, #ffce54), 0 0 14px 2px color-mix(in srgb, var(--suit, #ffce54) 60%, transparent)}
+/* "here" glows green; "unreachable" is greyscale. */
+/* Reachable: lit in colour with the brass rim, no extra glow. */
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
 .map-node.unreachable{filter:grayscale(1) brightness(.55)}
 /* Selected node: thick gold ring with its own pulse (on ::before, so it
@@ -3610,10 +3609,9 @@ html.low-motion #matListActions{transition:none}
 
 </style>
 <style>
-/* Phone frame on desktop: on a wide screen the game renders in a
-   phone-width column (--frame-w), full window height, so it can be viewed
-   and tested at portrait-phone proportions. Narrow screens (phones) are
-   untouched.
+/* Phone frame: on any screen wider than a phone the game renders in a
+   fixed phone-width column (--frame-w), full window height, so widening the
+   window never stretches it. Phones (430px or narrower) are untouched.
    Not a transform on <body> (the usual device-frame trick): that would make
    body the scroller, and the app relies on window scrolling (scrollTo/
    scrollIntoView). Instead body gets a max-width and each full-width
@@ -3621,7 +3619,7 @@ html.low-motion #matListActions{transition:none}
    --vw stands in for 1vw anywhere a size follows the screen width, so it
    follows the frame's width instead (1/100 of --frame-w here). */
 :root{--vw:1vw}
-@media (min-width:769px){
+@media (min-width:431px){
   :root{--frame-w:430px; --vw:4.3px; --frame-x:calc(50% - var(--frame-w) / 2)}
   body{max-width:var(--frame-w); margin:0 auto}
   /* Curtains over everything outside the frame, so trays that park just
@@ -3648,8 +3646,8 @@ html.low-motion #matListActions{transition:none}
   #matSortTray{left:var(--frame-x)}
   #matFilterTray{right:var(--frame-x)}
 }
-/* Phone layout: real phones, and the desktop phone frame above. */
-@media (max-width:640px), (min-width:769px){
+/* Phone layout: every screen (real phones and the phone frame above). */
+@media all{
   #topbar{flex-wrap:wrap; row-gap:8px; padding:10px 12px}
   #topbar .spacer{flex-basis:100%; height:0}
   main{padding:16px 12px calc(var(--hub-h, 67px) + 80px)}
@@ -6901,7 +6899,9 @@ function itemHTML(entry, idx){
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
-    if (jobTree.has(entry.name)){
+    // The tracked item itself keeps its pin button (so it can be unpinned);
+    // the badge is only for what feeds it.
+    if (jobTree.has(entry.name) && entry.name !== selectedJobItem){
       const selEntry = ENTRIES.find(e => e.name === selectedJobItem);
       if (selEntry) pinBadge = `<span class="item-pin-badge" role="button" tabindex="0" data-open-todo="${esc(entry.name)}" title="Needed for ${esc(selectedJobItem)} -- tap to see it on your To-Do List">${em(selEntry.emoji)}</span>`;
     }
@@ -7261,8 +7261,15 @@ function turnClockSVG(visits){
     return `${dot}<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#6b5a3a" stroke-width="2.5" stroke-linecap="round"/>`;
   }).join("");
   const [hx, hy] = at(cur, cur % MAT_CHECK_EVERY === 0 ? 25 : 34);
+  // Time already passed: a shaded slice from 24 o'clock round to the hand
+  // (the whole face once the 24th round is reached).
+  const [px, py] = at(cur, 46.5);
+  const pie = !cur ? "" : cur === N
+    ? '<circle cx="50" cy="50" r="46.5" fill="#c9b07a"/>'
+    : `<path d="M50 50 L50 3.5 A46.5 46.5 0 ${cur > N / 2 ? 1 : 0} 1 ${px} ${py} Z" fill="#c9b07a"/>`;
   return `<svg class="clock-svg" viewBox="0 0 100 100" aria-hidden="true">
     <circle cx="50" cy="50" r="48" fill="#f4ead2" stroke="#e2b25a" stroke-width="3.5"/>
+    ${pie}
     <g text-anchor="middle" dominant-baseline="central" fill="#2a2018" font-family="system-ui, sans-serif">${marks}</g>
     ${cur ? `<line x1="50" y1="50" x2="${hx}" y2="${hy}" stroke="#2a2018" stroke-width="4" stroke-linecap="round"/>` : ""}
     <circle cx="50" cy="50" r="${visits > N ? 9 : 4.5}" fill="#2a2018"/>
@@ -13279,6 +13286,7 @@ function handleScreenClick(ev){
     togglePin(name);
     const track = isPinned(name);
     if (track) selectedJobItem = name;
+    else if (selectedJobItem === name) selectedJobItem = null; // unpinning the tracked item stops tracking it
     render();
     if (track) flyItemToTracker(name, iconRect);
     return;
