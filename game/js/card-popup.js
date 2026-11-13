@@ -17,6 +17,7 @@ let cardPopBackStack = [];
    back stack is cleared. */
 function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   if (!keepBackStack) cardPopBackStack = [];
+  document.getElementById("cpCeleb").hidden = true;
   cardPopEntry = entry;
   // Capstones show as a double-wide (landscape) card with room for their
   // Display Mat rule.
@@ -203,16 +204,28 @@ function showElCardPop(sym){
 }
 document.getElementById("elCardPop").addEventListener("click", () => closeOverlay("elCardPop"));
 
+/* A capstone just crafted: its full inspection card under a "Capstone
+   complete" banner, with confetti. Closing it opens the Marketplace to pick
+   the next capstone to track (capstoneMarketPending, see closeOverlay()). */
+let capstoneMarketPending = false;
 function celebrate(entry){
   releaseBingoCraftHold();
   const n = CAPSTONES.filter(owns).length;
-  document.getElementById("celebEmoji").innerHTML = em(entry.emoji);
-  document.getElementById("celebName").textContent = entry.name;
-  document.getElementById("celebSub").textContent =
-    n === 8 ? "That's all eight — you've completed every capstone in Elementia!"
-            : `${n} of 8 capstones complete.`;
-  openOverlay("celebrate");
+  showCardPop(entry, false);
+  const banner = document.getElementById("cpCeleb");
+  banner.innerHTML = `🏆 Capstone complete!<small>${n === 8
+    ? "That's all eight -- every capstone in Elementia!" : `${n} of 8 capstones`}</small>`;
+  banner.hidden = false;
+  capstoneMarketPending = n < 8;
   fireConfetti();
+}
+// After the capstone card closes: the Marketplace, with a nudge to track
+// the next capstone. Skipped if something else is now on screen.
+function openNextCapstoneMarket(){
+  capstoneMarketPending = false;
+  if (document.querySelector(".overlay.open") || state.ended) return;
+  openJobSelectTray();
+  queueEventToast("market", "🏆", "Pick your next capstone", "Pin one in the Marketplace to track it");
 }
 
 /* The craft + reveal, called straight away (no suit cost) or once the
@@ -248,4 +261,3 @@ function bounceCardAppear(targetEl){
 }
 
 /* ------------------------------------------------------ overlays --- */
-document.getElementById("celebClose").addEventListener("click", () => closeOverlay("celebrate"));

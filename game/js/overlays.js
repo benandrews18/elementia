@@ -38,6 +38,8 @@ function closeOverlay(id){
   // The BINGO reward closes by its button, a backdrop tap or Escape; every
   // one must finish the sequence, or #jobSheet stays locked (frozen game).
   if (id === "bingoClearOverlay") finishBingoSequence();
+  // A tick later, so a card closed to open another (an element card) wins.
+  if (id === "cardPop" && capstoneMarketPending) setTimeout(openNextCapstoneMarket, 0);
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
   // carry it off-screen -- clear it here (every close path comes through).
   // Reset convertGoalEntry too: render() calls renderConvertGoalCard() every

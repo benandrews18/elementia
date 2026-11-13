@@ -223,15 +223,13 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 .bigbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none; cursor:not-allowed}
 .bigbtn:disabled:hover{filter:none}
 
-/* capstone celebration */
-#celebrate .sheetbox{text-align:center; max-width:460px; border:3px solid var(--gold)}
-
-.celeb-emoji{font-size:96px; line-height:1; margin:6px 0 10px;
-  animation:celebpop .6s cubic-bezier(.2,1.5,.4,1) both}
-.celeb-emoji .orca,.celeb-emoji .coral,.celeb-emoji .flour,.celeb-emoji .lighthouse,.celeb-emoji .rubbersq,.celeb-emoji .wheelicon,.celeb-emoji .furnaceicon,.celeb-emoji .ovenicon,.celeb-emoji .bananabreadicon,.celeb-emoji .turbineicon,.celeb-emoji .steelicon,.celeb-emoji .fossilicon,.celeb-emoji .concreteicon,.celeb-emoji .fiberglassicon,.celeb-emoji .logcabinicon,.celeb-emoji .microchip,.celeb-emoji .lifeicon,.celeb-emoji .ecosystemicon,.celeb-emoji .diamondicon,.celeb-emoji .noto-icon{width:1em;height:1em}
-@keyframes celebpop{0%{opacity:0;transform:scale(.3) rotate(-20deg)}100%{opacity:1;transform:none}}
-.celeb-kicker{font-size:12px; font-weight:800; letter-spacing:2.4px; color:var(--gold)}
-.celeb-name{font-size:32px; font-weight:800; letter-spacing:-.6px; margin:2px 0 8px}
+/* Capstone complete (celebrate()): a gold banner over the full card. */
+.cp-celeb{text-align:center; font-size:14px; font-weight:900; letter-spacing:2px; text-transform:uppercase;
+  color:#ffe08a; text-shadow:0 2px 0 rgba(0,0,0,.6); margin-bottom:10px;
+  animation:celebpop .5s cubic-bezier(.2,1.5,.4,1) both}
+.cp-celeb[hidden]{display:none}
+.cp-celeb small{display:block; font-size:12px; letter-spacing:.5px; color:#fff; text-transform:none; margin-top:2px}
+@keyframes celebpop{0%{opacity:0;transform:scale(.5)}100%{opacity:1;transform:none}}
 .confetti{position:fixed; inset:0; pointer-events:none; z-index:95; overflow:hidden}
 .cpiece{position:absolute; width:10px; height:14px; opacity:.95; will-change:transform}
 @keyframes fall{

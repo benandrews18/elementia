@@ -216,24 +216,13 @@
 <div id="introLogo" aria-hidden="true"><img src="banners/elementia-logo.webp" alt=""></div>
 
 <!-- capstone celebration -->
-<div class="overlay" id="celebrate" role="dialog" aria-modal="true" aria-labelledby="celebName">
-  <div class="sheetbox">
-    <div class="celeb-kicker">CAPSTONE COMPLETE</div>
-    <div class="celeb-emoji" id="celebEmoji"></div>
-    <div class="celeb-name" id="celebName"></div>
-    <p id="celebSub"></p>
-    <div class="btnrow" style="justify-content:center">
-      <button type="button" class="bigbtn" id="celebClose">Keep building</button>
-    </div>
-  </div>
-</div>
-
 <!-- crafted-card popup: shows the item's printed-card art, tap anywhere to dismiss -->
 <div class="overlay" id="cardPop" role="dialog" aria-modal="true" aria-labelledby="cpName">
   <!-- 2026-11-02: explicit dismiss; the tap falls through to #cardPop's own
        tap-anywhere-to-close listener. -->
   <button type="button" class="cp-close-x" id="cpCloseX" aria-label="Close">✕</button>
   <div class="pc-card-wrap">
+    <div class="cp-celeb" id="cpCeleb" hidden></div>
     <div class="pc-card" id="cpCard">
       <div class="pc-suitcosts" id="cpSuitCosts"></div>
       <div class="pc-station-badge" id="cpStationBadge"></div>

@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Capstone complete shows the full card:** crafting a capstone opens its
+  full inspection card under a "Capstone complete! (n of 8)" banner, with
+  confetti, instead of the icon-only window. It stays until you close it.
+- **Then: pick your next capstone.** Closing that card opens the
+  Marketplace with a "Pick your next capstone" toast, so there's a clear
+  next goal. Leaving the Marketplace is fine. Skipped once all 8 are done.
+
 - **All 8 stations pay a "?":** visiting the last of the 8 stations in a
   run gives one "?" element, with a toast.
 - **Display Mat corner:** the Elements / Display Mat tabs now hang under
