@@ -164,7 +164,6 @@ document.getElementById("settingsBtn").addEventListener("click", () => hubPanelC
 // Marketplace: the full BINGO/Capstones tray (openJobSelectTray()) from
 // anywhere. Shares #jobSheet with the To-Do List, so it toggles on the
 // variant, not hubPanelClick()'s panel name.
-document.getElementById("hubMarket").querySelector(".hi").innerHTML = em("__MARKETPLACE__");
 document.getElementById("hubMarket").addEventListener("click", () => {
   const open = openPanelName();
   if (open === "jobs" && jobSheetVariant === "full"){ closeJobBoard(); return; }

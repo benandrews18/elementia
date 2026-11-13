@@ -8,6 +8,13 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-12 (new look: hub)
+
+- **New UI art, phase 1 -- the bottom hub:** a wooden bar with a brass
+  edge, and wooden framed buttons with new icons (clipboard, backpack,
+  book, market stall). The open panel's button gets a gold frame. More of
+  the game follows in later phases.
+
 ## 2026-11-12 (board check scene change)
 
 - **Board checks get a scene change:** instead of a banner, two panels
