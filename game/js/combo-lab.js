@@ -53,7 +53,8 @@ document.getElementById("tourComboLabBtn").addEventListener("click", () => {
 document.getElementById("comboLabExitBtn").addEventListener("click", closeComboLab);
 document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
 scrim.addEventListener("click", closeDrawer);
-document.getElementById("drawerBody").addEventListener("click", ev => {
+document.getElementById("drawer").addEventListener("click", ev => {
+  if (!ev.target.closest("#drawerBody, #matSelPanel")) return;
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
   // Tier breakline (see MAT_TIER_BANDS/matTierCollapsed) -- collapses/

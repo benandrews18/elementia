@@ -10,6 +10,20 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **All 8 stations pay a "?":** visiting the last of the 8 stations in a
+  run gives one "?" element, with a toast.
+- **Display Mat corner:** the Elements / Display Mat tabs now hang under
+  the mat's lower-left corner; Last is a circular-arrow button; all the
+  corner buttons sit lower, on the gold line, so they no longer cover the
+  mat. Sized to fit a 360px phone.
+- **Selected item pinned under the mat:** its shop card now sits right
+  under the mat's buttons on the gold line, with the search bar and the
+  list scrolling below it.
+- **Sort and Filter buttons stay on top of their trays:** tap the button
+  again to close its tray.
+- **Saved layouts are one row each:** combos and cards shrink to fit a
+  single row.
+
 - **Crafting shows what was really spent:** first the elements you spent
   -- the recipe's and any element tax -- rise as element squares (like
   the gather window), stack and pop. Then the component items rise as

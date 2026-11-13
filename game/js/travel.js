@@ -22,6 +22,12 @@ function goStation(name){
   // .stationhead everywhere.
   rollAnimationInProgress = false;
   state.visitedStations[name] = true;
+  // Every station visited: one "?" element, once per run.
+  if (!state.allStationsPaid && DATA.stations.every(s => state.visitedStations[s.name])){
+    state.allStationsPaid = true;
+    state.emptyElements = (state.emptyElements || 0) + 1;
+    queueEventToast("stations", emptyElSquareHTML(30), "All 8 stations visited!", "+1 ? element");
+  }
 
   save(); render(true);
   // The mini-game launches immediately on arrival, covering the screen

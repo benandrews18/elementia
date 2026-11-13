@@ -235,7 +235,7 @@ function renderMatTop(){
       <button type="button" class="mat-tab tab-elements ${matDrawerView === "elements" ? "active" : ""}" data-mat-view="elements">Elements</button>
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
-  const topbarHTML = `<div class="mat-zone-topbar">${tabsHTML}</div>`;
+  const topbarHTML = tabsHTML; // lower-left of the mat (.mat-zone-tabs)
   // The page has a fixed height (the 2-row mat formula) so switching tabs
   // never resizes the tray; a long elements list scrolls inside. A different
   // parchment shade per tab.
@@ -248,7 +248,7 @@ function renderMatTop(){
   const lastOff = !last.length || last.join() === state.mat.join();
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<div class="mat-quick-actions">
-        <button type="button" class="mat-quick-btn text" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">Last</button>
+        <button type="button" class="mat-quick-btn" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">↺</button>
         <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
         <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
       </div>
@@ -321,11 +321,15 @@ function matResultsGridHTML(){
               matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
-  // The selected item's shop row docks at the top of the list, just under
-  // the mat (sticky), while its card or slim row is highlighted.
-  const panel = matListOpen && owns(matListOpen)
-    ? `<div class="shop mat-sel-panel">${matOpenRowHTML(matListOpen)}</div>` : "";
-  return panel + sections;
+  return sections;
+}
+/* The selected item's shop row, in #matSelPanel between the mat and the
+   scrolling list, while its card or slim row is highlighted below. */
+function syncMatSelPanel(){
+  const panel = document.getElementById("matSelPanel");
+  const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
+  panel.hidden = !show;
+  panel.innerHTML = show ? matOpenRowHTML(matListOpen) : "";
 }
 /* The selected item (matListOpen), in both views. List view: one slim line
    per item (icon, name, suit pips, home stations, points). Either view:
@@ -362,6 +366,7 @@ function toggleMatListRow(name){
    selected in the full tray (syncMatFloatBtns()). */
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
+  syncMatSelPanel();
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
   // Slides up from behind the hub (.show), and back down when hidden.
   bar.classList.toggle("show", show);
@@ -583,6 +588,8 @@ function closeMatSideTrays(){
   document.getElementById("matSortTray").classList.remove("open");
   document.getElementById("matFilterTray").classList.remove("open");
   document.getElementById("matSfScrim").hidden = true;
+  document.getElementById("matSortBtn").classList.remove("active");
+  document.getElementById("matFilterBtn").classList.remove("active");
 }
 function toggleMatSideTray(id){
   const tray = document.getElementById(id);
@@ -595,6 +602,7 @@ function toggleMatSideTray(id){
     tray.style.top = top + "px";
     document.getElementById("matSfScrim").style.top = top + "px";
     tray.classList.add("open"); document.getElementById("matSfScrim").hidden = false;
+    document.getElementById(id === "matSortTray" ? "matSortBtn" : "matFilterBtn").classList.add("active");
   }
 }
 document.querySelectorAll("#matSortTray [data-mat-sort]").forEach(x =>

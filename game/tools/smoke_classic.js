@@ -288,6 +288,14 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // Visiting the 8th station pays one "?", once per run.
+    state.visitedStations = Object.fromEntries(DATA.stations.slice(1).map(st => [st.name, true]));
+    state.allStationsPaid = false;
+    const q0 = state.emptyElements || 0;
+    goStation(DATA.stations[0].name); await wait(300);
+    goStation(DATA.stations[1].name); await wait(300);
+    expect(state.emptyElements === q0 + 1, `visiting all 8 stations should pay exactly one ? (got ${state.emptyElements - q0})`);
+
     // The Marketplace tray opens for the first square of EACH game (state, not prefs).
     expect(!freshState().sawMarketSquareTray, "a new game should open the Marketplace tray for its first square again");
 

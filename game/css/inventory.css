@@ -24,7 +24,7 @@
 #lockInQuarkTutorial{font-size:13px}
 /* Small "?" badge on the Display Mat page's bottom-right corner. */
 .mat-rules-btn{
-  position:absolute; right:-8px; bottom:-8px; z-index:4;
+  position:absolute; right:-8px; bottom:-24px; z-index:4;
   width:34px; height:34px; border-radius:50%; padding:0; border:none; cursor:pointer;
   background:url("../ui/btn_help.webp") center / contain no-repeat;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));
@@ -315,9 +315,18 @@
 /* Saved layout slot (renderMatLayoutsList()): combos + card icons under
    the name row; the chips are display only here, a tap loads the layout. */
 .ml-pts{margin-left:auto}
-.ml-body{display:flex; flex-direction:column; gap:4px; padding:0 10px 8px; cursor:pointer}
+.ml-body{display:flex; flex-direction:column; gap:3px; padding:0 10px 7px; cursor:pointer}
+/* One row each: chips and icons shrink to fit rather than wrap. */
+.ml-body .mat-combos{flex-wrap:nowrap; gap:0; overflow:hidden; padding-top:5px}
 .ml-body .mat-combos:empty{display:none}
-.ml-body .mm-combo{pointer-events:none; padding-top:4px}
+.ml-body .mm-combo{pointer-events:none; flex:0 1 auto; min-width:0; padding:0 7px 0 0}
+.ml-body .mm-cico{width:22px; height:22px; font-size:13px}
+.ml-body .mm-cico :is(img,svg){width:14px; height:14px}
+.ml-body .mm-ccount{min-width:14px; height:14px; font-size:9px; top:-5px; right:-6px}
+.ml-body .mm-combo b{font-size:12px}
+.ml-body .mmr-icons{display:flex; gap:1px}
+.ml-body .mmr-ic{flex:1 1 0; min-width:0; max-width:24px; height:22px; font-size:18px}
+.ml-body .mmr-ic :is(img,svg){width:100%; max-width:20px; height:auto}
 .histscore{font-weight:800; font-size:13.5px; color:var(--gold); white-space:nowrap}
 .histcaps{margin-left:auto; font-size:17px; display:flex; gap:2px}
 .histnone{font-size:13px; color:var(--mute); font-weight:700}

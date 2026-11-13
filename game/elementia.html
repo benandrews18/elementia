@@ -109,6 +109,8 @@
   <!-- Show/hide on the gold line between the mat and the list: collapses the
        mat to its minimized board (setMatCollapsed()). Full view only. -->
   <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
+  <!-- The selected item's shop row, pinned under the mat (syncMatSelPanel()). -->
+  <div class="shop mat-sel-panel" id="matSelPanel" hidden></div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
