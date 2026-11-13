@@ -5414,7 +5414,7 @@ const RUN_COMPLETE_VISIT = 24;
 function visitLimitLabel(){ return state && state.runComplete ? `${MAX_VISITS} OT` : String(RUN_COMPLETE_VISIT); }
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
-const BREAKPOINT_GATE_VISIT = 9;
+const BREAKPOINT_GATE_VISIT = 12;
 /* The Display Mat is checked only at checkpoints: on leaving every
    MAT_CHECK_EVERY-th turn (3, 6, 9, ...; the big numbers on the turn
    clock). Before the first check each roll is MAT_PRE_CHECK_DICE dice;
@@ -11132,16 +11132,16 @@ function diceDeltaForReward(reward){ return Math.min(reward, 3); }
 /* Set when a Lock-In commits: Home stays untappable until it becomes Roll
    at the station (cleared in goStation()), so the scoring can't run twice. */
 var lockInCommitted = false; // var: updateHub() can read it before this line runs
+// Does missing the first breakpoint end the run on this Lock-In? Only at a
+// checkpoint from BREAKPOINT_GATE_VISIT on; in Overtime, every Lock-In.
+const lockInGated = () => state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
 function confirmLockIn(){
   if (lockInCommitted) return;
   const s = matScore(matOnMat());
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    // Before Overtime the gate only applies at sunset from
-    // BREAKPOINT_GATE_VISIT on; in Overtime it applies to every Lock-In.
-    const gated = state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
-    if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
+    if (!lockInGated()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
     askConfirm(state.runComplete
       ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
       : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,
@@ -12660,7 +12660,7 @@ function classicTutSlides(){
     </div>
     <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(9)}</span><span class="ct-sub" style="margin:0">Checked every 3rd turn -- its dice last 3 turns. From turn 9, a miss ends the run</span></div>`;
+    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(BREAKPOINT_GATE_VISIT)}</span><span class="ct-sub" style="margin:0">Checked every 3rd turn -- its dice last 3 turns. From turn ${BREAKPOINT_GATE_VISIT}, a miss ends the run</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){
