@@ -546,13 +546,11 @@ function bingoCapstonePickerHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<h3 class="bingo-title" id="capstoneOverlayTitle">Choose Your Capstone</h3>
+  return `<button type="button" class="cp-close-x coll-x" id="capstoneOverlayClose" aria-label="Close"></button>
+    <h3 class="bingo-title" id="capstoneOverlayTitle">Choose Your Capstone</h3>
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
     <button type="button" class="bigbtn sec bingo-random-btn" data-capstone-pick="${BINGO_RANDOM_CAPSTONE}">🎲 Random</button>
-    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>
-    <div class="row" style="margin-top:14px">
-      <button type="button" class="bigbtn sec" id="capstoneOverlayClose">Cancel</button>
-    </div>`;
+    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>`;
 }
 
 
