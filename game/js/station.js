@@ -22,15 +22,12 @@ function renderStation(name){
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
   // The capstone sits at the top of the shop, under the compact crafted row.
-  const capHTML = capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
-        ${itemHTML(capEntry, idx(capEntry))}
-      </div>` : "";
+  // A normal shop row, plus .cap-item (dark face, gold border).
+  const capHTML = capRevealed ? itemHTML(capEntry, idx(capEntry)).replace('class="item ', 'class="item cap-item ') : "";
   // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
   const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
       title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
-  const shopBody = prefs.shopCardView
-    ? `<div class="shop-toggle-row">${viewBtn}</div>` + shopCardsHTML(all, idx, capHTML)
-    : shopBodyHTML(shopEntries, idx, capHTML, viewBtn);
+  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx, capHTML) : shopBodyHTML(shopEntries, idx, capHTML);
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
@@ -47,6 +44,7 @@ function renderStation(name){
       <div class="col-label elements-label">ELEMENTS FOUND HERE:</div>
       <div class="gather">${gather}</div>
       ${playBar}
+      ${shopHeadHTML(shopEntries, viewBtn)}
     </div>
     <div class="makewrap">
       ${shopBody}
@@ -54,30 +52,24 @@ function renderStation(name){
   </div>`;
 }
 
-/* Shop body: the "Crafted Items" toggle decides whether owned items render
-   as full cards or fold into the compact craftedIconsHTML() row (capstones
-   always keep their capbox). The toggle always renders first, just above
-   wherever crafted items currently show. */
-function shopBodyHTML(shopEntries, idx, capHTML = "", viewBtn = ""){
-  // "Crafted Items": owns() is "crafted", so an item made anywhere shows here
-  // at every station that sells it. No toggle until one item sold here is
-  // crafted.
-  const hasCraftedHere = shopEntries.some(e => owns(e.name));
-  if (!hasCraftedHere){
-    return `<div class="shop-toggle-row">${viewBtn}</div>` + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
-  }
-  const toggle = `<div class="shop-toggle-row">
-      <button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
-        <span class="collapse-chevron"></span>Crafted Items
-      </button>${viewBtn}
-    </div>`;
-  if (!state.collapseCraftedItems){
-    return toggle + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
-  }
+/* Under the element pool, in the dark header: the "Crafted Items" toggle,
+   the list/card switch, and (toggle on, list view) the compact row of
+   crafted items, which then leave the list. owns() is "crafted", so an item
+   made anywhere counts at every station that sells it; no toggle until one
+   sold here is crafted. */
+const craftedFolded = shopEntries => !prefs.shopCardView && state.collapseCraftedItems && shopEntries.some(e => owns(e.name));
+function shopHeadHTML(shopEntries, viewBtn){
   const owned = shopEntries.filter(e => owns(e.name));
-  const rest = shopEntries.filter(e => !owns(e.name));
-  const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
-  return toggle + row + capHTML + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  const toggle = owned.length && !prefs.shopCardView ? `<button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
+        <span class="collapse-chevron"></span>Crafted Items
+      </button>` : "";
+  const row = craftedFolded(shopEntries) ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
+  return `<div class="shop-toggle-row">${toggle}${row}${viewBtn}</div>`;
+}
+// The list: capstone first, then the rest (minus folded crafted items).
+function shopBodyHTML(shopEntries, idx, capHTML = ""){
+  const list = craftedFolded(shopEntries) ? shopEntries.filter(e => !owns(e.name)) : shopEntries;
+  return `<div class="shop">${capHTML}${list.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 /* Card view: the station's items as Inventory cards (matCardHTML()), 4 to a
@@ -86,7 +78,7 @@ function shopBodyHTML(shopEntries, idx, capHTML = "", viewBtn = ""){
 let stationCardOpen = null;
 function shopCardsHTML(entries, idx, capHTML){
   const open = entries.find(e => e.name === stationCardOpen);
-  const sel = !open ? "" : `<div class="st-card-sel">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
+  const sel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";

@@ -13,7 +13,7 @@
    here too so it travels with the header when frozen. */
 .stationhead{
   background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%);
-  padding-bottom:18px;
+  padding-bottom:12px;
   border-radius:0;
 }
 /* Centered, with extra side padding so the title clears the floating
@@ -188,7 +188,6 @@
 /* align-items:stretch so .ibody matches .iem's height: the name aligns
    with the icon box's top and the recipe with its bottom. */
 .item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:stretch; padding:5px 10px 5px 5px}
-.capbox .item .irow{padding:0}
 .item.can{background:var(--ok-soft); border-color:var(--ok-line)}
 /* Shop lists: a thin pale grey border on every row (other .item contexts
    keep the suit colour) so the list reads calm. "Ready to craft" is shown
@@ -372,21 +371,15 @@
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
 .craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
 
-.capbox{margin-bottom:9px; background:var(--cap-grad);
-  border:3px solid #d9a441; border-radius:14px; padding:12px 16px}
-.capbox.can{background:var(--cap-grad-can); box-shadow:0 0 10px rgba(63,180,108,.55)}
-.capbox .item{padding:0; background:none; border:none}
-/* The capstone item has no padding/border, so the highlight ring goes on
-   .capbox instead. */
-.capbox:has(.item.job-highlight){
-  box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
-}
-.capbox .item.job-highlight{box-shadow:none}
+/* Capstone: an ordinary shop row with a dark face and a gold border. */
+.shop .item.cap-item{border:2px solid #d9a441; background:var(--cap-grad)}
+.shop .item.cap-item.job-highlight{background:var(--cap-grad-can); box-shadow:0 0 10px rgba(63,180,108,.55)}
+.shop .item.cap-item .iname{color:#fff}
+.shop .item.cap-item :is(.recipe, .plus){color:#c9d3df}
 /* The station's dark header sits flush under the Quark meter bar. */
 body.has-qtop[data-screen="station"] main#screen{padding-top:var(--qtop-h, 52px)}
 body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 /* List/card view switch, right end of the shop's top row. */
-.shop-toggle-row:has(.shop-view-btn:only-child){justify-content:flex-end}
 .shop-view-btn{
   flex:none; margin-left:auto; width:36px; height:36px; border-radius:10px; padding:0;
   display:flex; align-items:center; justify-content:center; font-size:18px;
@@ -405,5 +398,14 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 }
 .st-cards .mm-card.st-can{outline:3px solid var(--ok); outline-offset:1px}
 .st-card-sel{position:relative; margin-bottom:12px}
-.st-card-sel > .item, .st-card-sel > .capbox{margin-bottom:0}
+.st-card-sel > .item{margin-bottom:0}
 .st-card-close{top:auto; right:auto; bottom:-12px; left:-8px; width:34px; height:34px}
+/* Inside the dark header, under the element pool: toggle, crafted icons
+   and the view switch on one compact row (wrapping if the icons need it). */
+.stationhead .shop-toggle-row{margin:10px 12px 0; flex-wrap:wrap; gap:6px}
+.stationhead .crafted-row{flex:1 1 0; min-width:0; margin:0; padding:4px 8px; gap:5px;
+  background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18)}
+.stationhead .crafted-row .station-item-icon{font-size:18px}
+.stationhead .shop-collapse-toggle{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); color:#e6eef6}
+.stationhead .shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+.stationhead .shop-view-btn{width:30px; height:30px; font-size:15px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25)}

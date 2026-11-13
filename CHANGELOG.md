@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Station header row.** The Crafted Items toggle, its compact icon row
+  and the list/card switch now sit on one row under the element pool, in
+  the dark header. The capstone is an ordinary shop row (same Craft and pin
+  positions) with a dark face and gold border.
+
 - **Station shop card view.** A 🃏/📋 button switches a station's shop
   between the list and Inventory-style cards: 4 to a row, Tier 1 half
   height, capstones two wide, grouped Tier 1 first. Tap a card for its full
