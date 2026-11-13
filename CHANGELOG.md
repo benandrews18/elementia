@@ -10,6 +10,19 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Clock shows time passed:** the rounds already played are a darker
+  slice of the dial, from 24 round to the hand.
+- **Map:** reachable stations no longer glow in their colour -- being lit
+  up in their brass rim is enough. "You are here" keeps its green pulse.
+- **To-Do List:** the expand arrows on breakdown items are bigger and
+  darker.
+- **Fixed width on every screen:** any window wider than a phone now shows
+  the game in the 430px phone column. Windows 641-768px wide used to
+  stretch the game, which broke the station preview.
+- **Shop pins:** the tracked item's own shop card shows its pin button
+  (gold), not its own icon as a badge, so it can be unpinned right there.
+  Unpinning it stops tracking it.
+
 - **Saved layouts show what they're worth (content 2026.11.13b):** each
   saved Display Mat slot shows its point total, its combo chips and its
   card icons, compact like the minimized board. Tap a slot to load it.

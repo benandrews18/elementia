@@ -72,7 +72,9 @@ function itemHTML(entry, idx){
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
-    if (jobTree.has(entry.name)){
+    // The tracked item itself keeps its pin button (so it can be unpinned);
+    // the badge is only for what feeds it.
+    if (jobTree.has(entry.name) && entry.name !== selectedJobItem){
       const selEntry = ENTRIES.find(e => e.name === selectedJobItem);
       if (selEntry) pinBadge = `<span class="item-pin-badge" role="button" tabindex="0" data-open-todo="${esc(entry.name)}" title="Needed for ${esc(selectedJobItem)} -- tap to see it on your To-Do List">${em(selEntry.emoji)}</span>`;
     }

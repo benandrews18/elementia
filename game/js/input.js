@@ -170,6 +170,7 @@ function handleScreenClick(ev){
     togglePin(name);
     const track = isPinned(name);
     if (track) selectedJobItem = name;
+    else if (selectedJobItem === name) selectedJobItem = null; // unpinning the tracked item stops tracking it
     render();
     if (track) flyItemToTracker(name, iconRect);
     return;

@@ -34,7 +34,7 @@
   background:var(--card); border:1.5px solid var(--line); border-radius:10px; padding:9px 11px;
 }
 .mission-node.done > .mn-row .mn-head{border-color:var(--ok-line); background:var(--ok-soft)}
-.mn-arrow{color:var(--mute); font-size:11px; transition:transform .15s; flex:none}
+.mn-arrow{color:var(--ink); font-size:17px; font-weight:900; line-height:1; width:16px; text-align:center; transition:transform .15s; flex:none}
 .mn-head.open .mn-arrow{transform:rotate(90deg)}
 .mn-emoji{font-size:17px; flex:none}
 .mn-name{flex:1; min-width:0; font-weight:700; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -147,9 +147,8 @@
   border:0 solid transparent; border-image:url("../ui/pill_short.webp") 52 fill / 13px stretch;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
-/* Reachable rings use each station's suit colour (--suit, set in
-   renderMap()); "here" stays green and "unreachable" greyscale. */
-.map-node.reachable{box-shadow:0 0 0 3px var(--suit, #ffce54), 0 0 14px 2px color-mix(in srgb, var(--suit, #ffce54) 60%, transparent)}
+/* "here" glows green; "unreachable" is greyscale. */
+/* Reachable: lit in colour with the brass rim, no extra glow. */
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
 .map-node.unreachable{filter:grayscale(1) brightness(.55)}
 /* Selected node: thick gold ring with its own pulse (on ::before, so it

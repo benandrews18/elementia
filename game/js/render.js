@@ -24,8 +24,15 @@ function turnClockSVG(visits){
     return `${dot}<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#6b5a3a" stroke-width="2.5" stroke-linecap="round"/>`;
   }).join("");
   const [hx, hy] = at(cur, cur % MAT_CHECK_EVERY === 0 ? 25 : 34);
+  // Time already passed: a shaded slice from 24 o'clock round to the hand
+  // (the whole face once the 24th round is reached).
+  const [px, py] = at(cur, 46.5);
+  const pie = !cur ? "" : cur === N
+    ? '<circle cx="50" cy="50" r="46.5" fill="#c9b07a"/>'
+    : `<path d="M50 50 L50 3.5 A46.5 46.5 0 ${cur > N / 2 ? 1 : 0} 1 ${px} ${py} Z" fill="#c9b07a"/>`;
   return `<svg class="clock-svg" viewBox="0 0 100 100" aria-hidden="true">
     <circle cx="50" cy="50" r="48" fill="#f4ead2" stroke="#e2b25a" stroke-width="3.5"/>
+    ${pie}
     <g text-anchor="middle" dominant-baseline="central" fill="#2a2018" font-family="system-ui, sans-serif">${marks}</g>
     ${cur ? `<line x1="50" y1="50" x2="${hx}" y2="${hy}" stroke="#2a2018" stroke-width="4" stroke-linecap="round"/>` : ""}
     <circle cx="50" cy="50" r="${visits > N ? 9 : 4.5}" fill="#2a2018"/>
