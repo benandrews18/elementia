@@ -32,6 +32,25 @@ function turnClockSVG(visits){
     ${visits > N ? '<text x="50" y="50.5" text-anchor="middle" dominant-baseline="central" fill="#e2b25a" font-size="8" font-weight="900" font-family="system-ui, sans-serif">OT</text>' : ""}
   </svg>`;
 }
+/* Tapping the clock: what a round is, the board check every 3 rounds, and
+   the current round. */
+function openClockInfo(){
+  const v = state.visits, ot = v > RUN_COMPLETE_VISIT;
+  document.getElementById("clockInfoBody").innerHTML = `
+    <div class="ci-clock">${turnClockSVG(v)}</div>
+    <h2 id="clockInfoTitle">Round ${v} / ${RUN_COMPLETE_VISIT}${ot ? " (Overtime)" : ""}</h2>
+    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game. A new round starts whenever you move to a new location.</p>
+    <p>Every <b>${MAT_CHECK_EVERY} rounds</b> (the big numbers on the clock) your Display Mat is checked. Its Quark score sets your <b>bonus dice</b> until the next check!</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="clockInfoOk">Got it</button></div>`;
+  openOverlay("clockInfo");
+}
+document.getElementById("turnClock").addEventListener("click", openClockInfo);
+document.getElementById("turnClock").addEventListener("keydown", ev => {
+  if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); openClockInfo(); }
+});
+document.getElementById("clockInfo").addEventListener("click", ev => {
+  if (ev.target.closest("#clockInfoOk")) closeOverlay("clockInfo");
+});
 function renderTurnClock(){
   document.getElementById("scorePill").hidden = true;
   const pill = document.getElementById("turnClock");

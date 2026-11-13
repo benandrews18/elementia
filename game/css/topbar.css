@@ -31,7 +31,12 @@ body[data-picking] #topbar{display:none}
 }
 .pill-ic{font-size:18px; line-height:1}
 .pill[hidden]{display:none}
-.clockpill{padding:3px; border-radius:50%}
+.clockpill{padding:3px; border-radius:50%; cursor:pointer}
+.clockpill:active{transform:scale(.95)}
+.clock-info-box{max-width:360px; text-align:center}
+.clock-info-box p{margin:8px 0; line-height:1.45}
+.ci-clock{display:flex; justify-content:center; margin-bottom:6px}
+.ci-clock .clock-svg{width:96px; height:96px}
 .clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}

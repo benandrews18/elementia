@@ -52,7 +52,7 @@
 <div id="backdrop" aria-hidden="true"></div>
 
 <header id="topbar">
-  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns">
+  <div class="pill clockpill" id="turnClock" title="Turns" aria-label="Turns" role="button" tabindex="0">
     <span class="pill-ic" id="turnClockFace"></span><span class="sr-only"><b id="visitCount">0</b>/<b id="visitMax">15</b></span>
   </div>
   <div class="pill pill-gold" id="scorePill" title="Total score" aria-label="Total score">
@@ -298,6 +298,11 @@
 <!-- First "?" ever: what an Unknown Element is (maybeShowEmptyElTip()). -->
 <div class="overlay" id="emptyElTip" role="dialog" aria-modal="true" aria-labelledby="emptyElTipTitle">
   <div class="sheetbox empty-el-tip" id="emptyElTipBody"></div>
+</div>
+
+<!-- Tapping the turn clock: what rounds and board checks are (openClockInfo()). -->
+<div class="overlay" id="clockInfo" role="dialog" aria-modal="true" aria-labelledby="clockInfoTitle">
+  <div class="sheetbox clock-info-box" id="clockInfoBody"></div>
 </div>
 
 <!-- In-page confirm: window.confirm() is suppressed in sandboxed frames. -->
