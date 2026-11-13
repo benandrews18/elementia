@@ -1931,6 +1931,23 @@ body[data-screen="market"] #trackedPill{display:none}
 .trophy-sub{font-size:10.5px; line-height:1.3; color:var(--ink2)}
 
 
+/* Trophies window: a compact grid of icons; tap one for its detail
+   (openTrophyDetail()). Locked ones are dark silhouettes. */
+.trophies-count{text-align:center; font-size:13px !important; margin-bottom:10px !important}
+.trophy-mini-grid{display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; max-height:55vh; overflow-y:auto; padding:4px}
+.trophy-mini{aspect-ratio:1; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-size:30px; line-height:1; background:var(--bg-soft); border:2px solid var(--line); cursor:pointer; padding:0}
+.trophy-mini :is(img,svg){width:30px; height:30px; object-fit:contain}
+.trophy-mini.earned{background:var(--gold-soft); border-color:var(--gold); box-shadow:0 2px 0 var(--gold-line)}
+.tm-ic{display:flex; align-items:center; justify-content:center}
+.trophy-mini:not(.earned) .tm-ic{filter:brightness(0) opacity(.4)}
+#trophyDetail{z-index:81}
+.trophy-detail{max-width:320px; text-align:center}
+.trophy-detail-ic{font-size:72px; line-height:1; margin:4px 0 8px}
+.trophy-detail-ic :is(img,svg){width:72px; height:72px}
+.trophy-detail-ic.locked .tm-ic{filter:brightness(0) opacity(.4)}
+.trophy-detail-at{font-weight:800; color:var(--gold) !important}
+
 </style>
 <style>
 /* ---------------------------------------------------------- guided tour --- */
@@ -4208,12 +4225,16 @@ html.low-motion #matListActions{transition:none}
 
 <!-- Trophies (js/trophies.js), opened from the home screen. -->
 <div class="overlay" id="trophies" role="dialog" aria-modal="true" aria-labelledby="trophiesTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="trophiesClose" aria-label="Close"></button>
     <h2 id="trophiesTitle">🎖️ Trophies</h2>
-    <p id="trophiesCount"></p>
+    <p id="trophiesCount" class="trophies-count"></p>
     <div id="trophiesList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="trophiesClose">Close</button></div>
   </div>
+</div>
+<!-- One trophy, tapped in the grid (openTrophyDetail()). -->
+<div class="overlay" id="trophyDetail" role="dialog" aria-modal="true" aria-labelledby="trophyDetailName">
+  <div class="sheetbox parch trophy-detail" id="trophyDetailBody"></div>
 </div>
 
 <!-- Combo info popup (openComboInfo()): the cards behind a tapped combo
@@ -12444,6 +12465,22 @@ function trophyTileHTML(t, earned){
     <span class="trophy-sub">${earned ? `Earned ${esc(earned.at)}` : esc(t.hint)}</span>
   </div>`;
 }
+/* The Trophies window: icons only, tap one for its detail. */
+function trophyMiniHTML(t, earned){
+  return `<button type="button" class="trophy-mini${earned ? " earned" : ""}" data-trophy="${esc(t.id)}" aria-label="${esc(earned ? t.name : "Locked trophy")}"><span class="tm-ic">${em(t.icon)}</span></button>`;
+}
+function openTrophyDetail(id){
+  const t = TROPHIES.find(x => x.id === id);
+  if (!t) return;
+  const earned = loadTrophies()[id];
+  document.getElementById("trophyDetailBody").innerHTML = `
+    <div class="trophy-detail-ic${earned ? "" : " locked"}"><span class="tm-ic">${em(t.icon)}</span></div>
+    <h2 id="trophyDetailName">${earned ? esc(t.name) : "Locked"}</h2>
+    <p>${esc(t.hint)}</p>
+    <p class="trophy-detail-at">${earned ? `Earned ${esc(earned.at)}` : "Not earned yet"}</p>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" data-trophy-ok>OK</button></div>`;
+  openOverlay("trophyDetail");
+}
 /* The end screen's "New trophies" strip (showEndGame()). */
 function newTrophiesHTML(list){
   if (!list.length) return "";
@@ -12453,9 +12490,9 @@ function newTrophiesHTML(list){
 function openTrophies(){
   const got = loadTrophies();
   document.getElementById("trophiesCount").textContent =
-    `${TROPHIES.filter(t => got[t.id]).length} of ${TROPHIES.length} earned. Complete a run (turn ${RUN_COMPLETE_VISIT}) to earn them.`;
+    `${TROPHIES.filter(t => got[t.id]).length} of ${TROPHIES.length} earned -- tap one to see how to earn it.`;
   document.getElementById("trophiesList").innerHTML =
-    `<div class="trophy-grid">${TROPHIES.map(t => trophyTileHTML(t, got[t.id])).join("")}</div>`;
+    `<div class="trophy-mini-grid">${TROPHIES.map(t => trophyMiniHTML(t, got[t.id])).join("")}</div>`;
   document.getElementById("tour").classList.add("behind-settings");
   openOverlay("trophies");
 }
@@ -12463,6 +12500,13 @@ document.getElementById("tourTrophiesBtn").addEventListener("click", openTrophie
 document.getElementById("trophiesClose").addEventListener("click", () => {
   closeOverlay("trophies");
   document.getElementById("tour").classList.remove("behind-settings");
+});
+document.getElementById("trophiesList").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-trophy]");
+  if (b) openTrophyDetail(b.dataset.trophy);
+});
+document.getElementById("trophyDetail").addEventListener("click", ev => {
+  if (ev.target.closest("[data-trophy-ok]")) closeOverlay("trophyDetail");
 });
 
 </script>
@@ -13432,17 +13476,9 @@ if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
   try { sessionStorage.clear(); } catch(e){}
   lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
 }
-const bootedNewSession = loadAll();
-// sessionStorage survives an in-page reload but not the app/tab being
-// closed and reopened -- which is how we tell a real relaunch (show the
-// main menu) from a reload. bootedNewSession only catches having no save at
-// all.
-const SESSION_FLAG_KEY = "elementia-session-active";
-const reopenedFromClosed = !bootedNewSession && sessionStorage.getItem(SESSION_FLAG_KEY) !== "1";
-sessionStorage.setItem(SESSION_FLAG_KEY, "1");
-// A new session or a real relaunch gets the welcome slide; a mid-session
-// reload doesn't.
-if (bootedNewSession || reopenedFromClosed) showWelcomeSlide();
+loadAll();
+// Every load, a refresh included, opens on the main menu.
+showWelcomeSlide();
 render();
 document.getElementById("setVersion").textContent = "Elementia v" + (DATA.version || "dev");
 
