@@ -113,15 +113,13 @@
 .map-node{
   position:absolute; width:19.5%; aspect-ratio:1; transform:translate(-50%,-50%);
   border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background:#122e3c; border:7px solid #4a5566; cursor:pointer; z-index:0;
-  transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s, border-color .12s, filter .12s;
+  /* Brass ring sprite (same as the clock) over a navy face. */
+  background:url("../ui/clock_rim.webp") center / 100% 100% no-repeat,
+    radial-gradient(circle closest-side, #122e3c 0 84%, transparent 85%);
+  border:none; cursor:pointer; z-index:0;
+  transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s, filter .12s;
   padding:0;
 }
-/* Medallion art (STATION_MEDALLION): the brass rim is part of the image,
-   so the state rings below become glows around it. */
-.map-node.medal{background:center / contain no-repeat; border:none; border-radius:50%}
-.map-node.medal.here{box-shadow:0 0 0 4px var(--ok), 0 0 18px 4px rgba(63,180,108,.55)}
-.map-node.medal.reachable{box-shadow:0 0 0 3px var(--suit, #ffce54), 0 0 14px 2px color-mix(in srgb, var(--suit, #ffce54) 60%, transparent)}
 /* Squishy press feedback on every map button; scale stacks on top of each
    state's translate(-50%,-50%) centring. */
 .map-node:active{transform:translate(-50%,-50%) scale(.88)}
@@ -134,7 +132,7 @@
   box-shadow:0 1px 4px rgba(0,0,0,.4); border:1.5px solid var(--card);
 }
 /* "here": animated pulse ring plus a floating label. */
-.map-node.here{border-color:var(--ok); box-shadow:0 0 0 4px var(--ok-soft); z-index:2}
+.map-node.here{box-shadow:0 0 0 4px var(--ok), 0 0 18px 4px rgba(63,180,108,.55); z-index:2}
 .map-node.here::after{
   content:""; position:absolute; inset:-8px; border-radius:50%;
   border:2.5px solid var(--ok); animation:here-pulse 1.8s ease-out infinite;
@@ -151,7 +149,7 @@
 }
 /* Reachable rings use each station's suit colour (--suit, set in
    renderMap()); "here" stays green and "unreachable" greyscale. */
-.map-node.reachable{border-color:var(--suit, #ffce54); box-shadow:0 0 0 3px color-mix(in srgb, var(--suit, #ffce54) 25%, transparent), 0 2px 10px var(--shadow)}
+.map-node.reachable{box-shadow:0 0 0 3px var(--suit, #ffce54), 0 0 14px 2px color-mix(in srgb, var(--suit, #ffce54) 60%, transparent)}
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
 .map-node.unreachable{filter:grayscale(1) brightness(.55)}
 /* Selected node: thick gold ring with its own pulse (on ::before, so it

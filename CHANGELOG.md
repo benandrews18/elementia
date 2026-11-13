@@ -22,6 +22,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   (reachable stations glow in their suit colour, your station glows
   green), "You are here" and the tracked-item pill are green pill
   sprites, and the 24-round clock sits in a brass rim.
+- **Map stations keep their own icons:** the station emoji are back,
+  each set in the same brass ring as the clock.
 
 ## 2026-11-12 (board check scene change)
 
