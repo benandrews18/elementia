@@ -10,6 +10,15 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Map: Home shows Shop.** On the map with no new station picked, the
+  centre button is Shop (back into the station you're at) instead of Map.
+  Its orange is darker so the cart stands out; Shop and Map labels are
+  white.
+- **Centre button wears the brass ring** (same as the clock and map
+  stations). It still coin-flips when its face changes.
+- **Station preview card:** just dark wood and a gold border -- the light
+  inner frame is gone.
+
 - **Capstone-unlocked items (content 2026.11.13d):** crafting a station's
   capstone adds new items to that station's shop. Some need items another
   capstone unlocks, so they stay out of reach for a while -- on purpose.

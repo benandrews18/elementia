@@ -281,7 +281,7 @@ function updateHub(){
   home.setAttribute("aria-disabled", face === "lockin" && lockInCommitted ? "true" : "false");
   home.title = face === "close" ? "Close"
     : face === "roll" ? "Roll the dice"
-    : face === "shop" ? `Re-enter ${selectedMapStation} (free)`
+    : face === "shop" ? `Re-enter ${selectedMapStation || state.lastStation} (free)`
     : face === "travel" ? `Travel to ${selectedMapStation}`
     : face === "lockin" ? "Lock in your Display Mat"
     : face === "final" ? "Lock in your mat for your final score"
@@ -334,6 +334,9 @@ function hubHomeFace(){
   // (canTravelTo() refuses the current station).
   if (screen === "map" && selectedMapStation && selectedMapStation === state.lastStation) return "shop";
   if (screen === "map" && selectedMapStation && canTravelTo(selectedMapStation)) return "travel";
+  // On the map with nothing new picked: back into the station you're at
+  // ("map" here would just repeat the screen you're on).
+  if (screen === "map" && !selectedMapStation && state.lastStation) return "shop";
   return "map";
 }
 
