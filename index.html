@@ -1518,11 +1518,14 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
   background:var(--ok); color:#fff; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center;
 }
 .st-cards .mm-card.st-can{outline:3px solid var(--ok); outline-offset:1px}
+/* Selected is gold; green means craftable. */
+.st-cards .mm-card.selected{outline:4px solid #d9a441; outline-offset:2px}
 /* Card view's selected item, pinned at the bottom of the dark header like
    the Inventory's #matSelPanel; same close button spot. */
-.stationhead .st-card-sel{position:relative; margin:12px 12px 14px}
+.st-card-sel{position:sticky; top:0; z-index:3; margin:0; padding:12px 12px 14px;
+  background:#122e3c; box-shadow:0 6px 10px -6px rgba(0,0,0,.5)}
 .st-card-sel > .item{margin-bottom:0}
-.st-card-sel .st-card-close{top:auto; right:8px; bottom:-10px; width:34px; height:34px}
+.st-card-sel .st-card-close{top:auto; right:20px; bottom:4px; width:34px; height:34px}
 /* Inside the dark header, under the element pool: toggle, crafted icons
    and the view switch on one compact row (wrapping if the icons need it). */
 .stationhead .shop-toggle-row{margin:4px 12px 0; gap:6px}
@@ -1538,6 +1541,8 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 .stationhead .shop-collapse-toggle.active .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
 .stationhead .shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
 .stationhead .shop-view-btn{width:30px; height:30px; font-size:15px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25)}
+/* "Top of the screen" is just under the Quark meter bar when it shows. */
+body.has-qtop .st-card-sel{top:var(--qtop-h, 52px)}
 
 </style>
 <style>
@@ -8389,7 +8394,8 @@ function renderStation(name){
   const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
       title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
   const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
-  // Card view: the tapped card's full shop row, pinned under the header.
+  // Card view: the tapped card's full shop row, right under the header; it
+  // scrolls with the shop but sticks at the top rather than leave the screen.
   const open = prefs.shopCardView && all.find(e => e.name === stationCardOpen);
   const selPanel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
@@ -8397,7 +8403,7 @@ function renderStation(name){
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
   // pool and dice never scroll away mid-roll; after that it scrolls normally.
-  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress || !!open;
+  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress;
   return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
@@ -8410,8 +8416,8 @@ function renderStation(name){
       <div class="gather">${gather}</div>
       ${playBar}
       ${shopHeadHTML(shopEntries, viewBtn)}
-      ${selPanel}
     </div>
+    ${selPanel}
     <div class="makewrap">
       ${shopBody}
     </div>
