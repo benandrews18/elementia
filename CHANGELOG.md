@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card view rows.** Card-view Craft buttons are the list view's size,
+  centred under each card. Tier 1 cards run in rows of 4 across the top
+  (no stacking), and the other items start on a fresh row below.
+
 - **Top-right ✕ everywhere.** Settings, Game Rules (closes without
   saving), Tutorial Messages and Dev Tools (back to Settings), History, the
   Convert element picker and the capstone pick now close with a ✕ in the

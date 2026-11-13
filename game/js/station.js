@@ -93,14 +93,13 @@ function shopCardsHTML(entries, idx){
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
       e.name === stationCardOpen ? "selected" : ""].join(" ") })}${craftBtnHTML(e, idx(e))}</div>`;
   };
-  // One grid, no tier headings, Tier 1 first. Tier 1 cards stack two to a
-  // cell (as on the mat) and only with each other; dense packing lets later
-  // cards fill the gap a 2-wide capstone leaves at a row's end.
+  // No tier headings. Tier 1 (half-height cards) in rows of 4 across the
+  // top, then everything else in its own grid, where dense packing lets a
+  // later card fill the gap a 2-wide capstone leaves at a row's end.
   const byTier = t => shown.filter(e => e.tier === t);
-  const t1 = byTier("MATERIAL"), stacks = [];
-  for (let i = 0; i < t1.length; i += 2) stacks.push(`<div class="st-stack">${t1.slice(i, i + 2).map(card).join("")}</div>`);
-  const rest = ["COMPONENT", "CREATION", "CAPSTONE"].flatMap(byTier).map(card);
-  return `<div class="st-cards"><div class="mat-results-grid st-grid">${stacks.join("")}${rest.join("")}</div></div>`;
+  const t1 = byTier("MATERIAL").map(card).join("");
+  const rest = ["COMPONENT", "CREATION", "CAPSTONE"].flatMap(byTier).map(card).join("");
+  return `<div class="st-cards">${t1 ? `<div class="mat-results-grid st-grid">${t1}</div>` : ""}${rest ? `<div class="mat-results-grid st-grid">${rest}</div>` : ""}</div>`;
 }
 
 /* Raw element boxes, shared by the legacy drawer and Classic's Elements
