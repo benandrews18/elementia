@@ -357,6 +357,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-results-grid .mm-card.wide{grid-column:span 2}
 /* Tier 1: half-height cells, the size they take stacked on the mat. */
 .mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
+.mat-results-grid.half .mm-card:not(.mini){grid-row:span 2}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
 .mat-shop-list{gap:6px}
@@ -370,6 +371,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   border-radius:10px; border:2px solid var(--line2); background:var(--card);
 }
 .mat-slim.on-mat{border-color:var(--gold); background:linear-gradient(90deg, var(--gold-soft), var(--card) 60%)}
+.mat-slim.selected{border-color:var(--ok); box-shadow:0 0 0 2px var(--ok)}
 .ms-icon{flex:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center;
   font-size:26px; line-height:1; border-radius:8px; background:var(--sunken)}
 .ms-icon :is(img,svg){width:26px; height:26px}
@@ -383,7 +385,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .item.open{position:relative}
 .mo-corner{position:absolute; top:6px; right:6px; z-index:2; display:flex; gap:3px; align-items:center}
 .item.open .irow{padding-right:72px}
-/* Card view: the selected card's shop row, docked under the mat. */
+/* The selected item's shop row, docked under the mat (both views). */
 .mat-sel-panel{position:sticky; top:0; z-index:3; margin:-8px -4px 12px; padding:8px 4px;
   background:var(--card); box-shadow:0 6px 10px -6px rgba(0,0,0,.5)}
 .mm-card.selected{outline:4px solid var(--ok); outline-offset:2px; filter:none}

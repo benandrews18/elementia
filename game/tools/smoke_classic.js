@@ -288,6 +288,13 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // Inventory sections follow the element-icon count (Banana: 1 icon = Tier 2).
+    state.items = ["Banana", "Soil"]; matFilt = { stations: new Set(), suits: new Set(), q: "", sort: "points" };
+    const tray = document.createElement("div"); tray.innerHTML = matResultsGridHTML();
+    const secOf = n => tray.querySelector(`[data-mat-card="${n}"]`)?.closest(".mat-tier-section")?.querySelector("[data-mat-tier]")?.dataset.matTier;
+    expect(prefs.itemsListView || (secOf("Banana") === "t2" && secOf("Soil") === "t1"),
+      `inventory tiers should follow element icons (Banana in ${secOf("Banana")}, Soil in ${secOf("Soil")})`);
+
     // An old, minimal save still loads, with new fields defaulted.
     localStorage.setItem(SAVE_KEY, JSON.stringify({items: ["Water"], elements: {H: 2}, visits: 5, mode: "classic"}));
     const isNew = loadAll();

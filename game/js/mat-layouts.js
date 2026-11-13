@@ -105,9 +105,13 @@ function renderCollectionsList(){
   // Classic-only toggle -- only makes sense where a Display Mat exists at
   // all (this overlay is also reachable from the welcome screen outside
   // any run, where state.mat doesn't exist yet).
+  // Re-rendered on every switch flip: keep the list's scroll position.
+  const scrollTop = list.querySelector(".histrows")?.scrollTop || 0;
   list.innerHTML = shown.length
     ? `<div class="histrows">${shown.map(c => prefs.everUnlockedMatCollections.includes(c.id) ? namedCollectionCardHTML(c, true) : leadHTML(c)).join("")}</div>`
     : '<p class="empty">None discovered yet -- Lock In a Display Mat containing a named collection, or open a clue.</p>';
+  const rows = list.querySelector(".histrows");
+  if (rows) rows.scrollTop = scrollTop;
 }
 /* A named collection's card, shared by the Collections menu and the combo
    star's popup (openComboInfo()). A green check once every member is owned.

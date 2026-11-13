@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-13
+
+- **Inventory tiers follow the element icons:** an item's section is set by
+  how many element icons it has -- none = Tier 1, one = Tier 2, two =
+  Tier 3, three = Capstones (e.g. Banana is now Tier 2, Soil Tier 1).
+- **Selected item docks under the mat in both views:** in the list view
+  too, the selected item's shop card now sits just under the Display Mat
+  instead of opening in place down the list.
+- **Collections list keeps its place:** switching a collection on or off
+  no longer jumps the list back to the top.
+
 ## 2026-11-12 (new look: hub)
 
 - **New UI art, phase 1 -- the bottom hub:** a wooden bar with a brass

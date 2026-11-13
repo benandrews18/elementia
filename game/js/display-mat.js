@@ -280,13 +280,14 @@ function matVisibleInventory(){
   };
   return list.sort(sorts[matFilt.sort] || sorts.points);
 }
-/* The tray's sections, by item tier (ITEM_TIER), which also sets card size
-   on the mat. Highest first. */
+/* The tray's sections, by how many element icons (suit costs) an item
+   has: none = Tier 1, one = Tier 2, two = Tier 3, three = Capstones.
+   Highest first. Card size still follows the item's mat footprint. */
 const MAT_TIER_BANDS = [
-  { key: "capstone", label: "Capstones", tier: "CAPSTONE" },
-  { key: "t3", label: "Tier 3", tier: "CREATION" },
-  { key: "t2", label: "Tier 2", tier: "COMPONENT" },
-  { key: "t1", label: "Tier 1", tier: "MATERIAL" },
+  { key: "capstone", label: "Capstones", icons: 3 },
+  { key: "t3", label: "Tier 3", icons: 2 },
+  { key: "t2", label: "Tier 2", icons: 1 },
+  { key: "t1", label: "Tier 1", icons: 0 },
 ];
 // Collapsed band keys: an in-memory Set (like matFilt), so collapsed
 // sections survive re-renders but not a reload.
@@ -304,7 +305,7 @@ function matResultsGridHTML(){
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
   const sections = MAT_TIER_BANDS.map(band => {
-    const items = inv.filter(c => c.tier === band.tier);
+    const items = inv.filter(c => Math.min(itemSuitCosts(c.name).length, 3) === band.icons);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
     return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
@@ -313,22 +314,22 @@ function matResultsGridHTML(){
         </button>
         ${prefs.itemsListView
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
-          // Tier 1 cards at half height, as they stack on the mat.
+          // Tier 1 cards at half height, as they stack on the mat; a
+          // full-size card in that section spans two half rows.
           : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
-              matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
+              matCardHTML(c.name, { tray: true, cls: (matIsTier1(c) ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
-  // Card view: the tapped card's shop row docks at the top of the list,
-  // just under the mat (sticky), while the card itself is highlighted.
-  const panel = !prefs.itemsListView && matListOpen && owns(matListOpen)
+  // The selected item's shop row docks at the top of the list, just under
+  // the mat (sticky), while its card or slim row is highlighted.
+  const panel = matListOpen && owns(matListOpen)
     ? `<div class="shop mat-sel-panel">${matOpenRowHTML(matListOpen)}</div>` : "";
   return panel + sections;
 }
 /* The selected item (matListOpen), in both views. List view: one slim line
-   per item (icon, name, suit pips, home stations, points); tapping one
-   expands it in place to its station shop row. Card view: tapping a card
-   highlights it and docks the same shop row under the mat. Either way
-   #matListActions offers Add/Remove above the hub. */
+   per item (icon, name, suit pips, home stations, points). Either view:
+   tapping an item highlights it and docks its station shop row under the
+   mat, and #matListActions offers Add/Remove above the hub. */
 let matListOpen = null;
 const matStationBadgesHTML = (c, cls) => c.stations.map(st =>
   `<span class="${cls}" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
@@ -345,9 +346,9 @@ function matOpenRowHTML(name){
 function matShopRowHTML(name){
   const c = MAT_CARD_BY_NAME[name];
   if (!c) return "";
-  if (name === matListOpen) return matOpenRowHTML(name);
   const pips = c.pips.map(s => `<span class="ms-pip" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
-  return `<div class="mat-slim${state.mat.includes(name) ? " on-mat" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="false">
+  const sel = name === matListOpen;
+  return `<div class="mat-slim${state.mat.includes(name) ? " on-mat" : ""}${sel ? " selected" : ""}" data-mat-row="${esc(name)}" role="button" tabindex="0" aria-expanded="${sel}">
     <span class="ms-icon">${em(c.emoji)}</span><span class="ms-name">${esc(name)}</span>
     <span class="ms-pips">${pips}</span><span class="ms-stations">${matStationBadgesHTML(c, "ms-station")}</span>
     <span class="ms-pts" title="${c.points} points">${c.points}</span></div>`;
@@ -355,7 +356,6 @@ function matShopRowHTML(name){
 function toggleMatListRow(name){
   matListOpen = matListOpen === name ? null : name;
   renderMatResultsGrid();
-  if (prefs.itemsListView) document.querySelector("#drawerBody .item.open")?.scrollIntoView({block: "nearest"});
 }
 /* Add/Remove for the selected item, above Home. Shown only while one is
    selected in the full tray (syncMatFloatBtns()). */
