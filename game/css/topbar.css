@@ -43,12 +43,11 @@ body[data-picking] #topbar{display:none}
 .clockpill.checkpoint{border-color:rgba(226,178,90,.8); box-shadow:0 0 0 3px rgba(226,178,90,.35), 0 3px 10px rgba(0,0,0,.28)}
 /* Settings cog: top right on every screen, under every tray/overlay. */
 #settingsBtn{
-  position:fixed; z-index:32; top:10px; right:14px; width:40px; height:40px; padding:0;
-  border-radius:50%; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center;
-  background:rgba(20,18,16,.58); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-  border:1.5px solid rgba(255,255,255,.14); box-shadow:0 3px 10px rgba(0,0,0,.28);
-  touch-action:manipulation;
+  position:fixed; z-index:32; top:10px; right:14px; width:46px; height:46px; padding:0;
+  border:none; border-radius:50%; background:url("../ui/btn_settings.webp") center / contain no-repeat;
+  filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); touch-action:manipulation;
 }
+#settingsBtn:active{transform:translateY(2px)}
 body.has-qtop #settingsBtn{top:calc(var(--qtop-h, 52px) + 10px)}
 body[data-picking] #settingsBtn, [data-combo-lab] #settingsBtn{display:none}
 /* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's

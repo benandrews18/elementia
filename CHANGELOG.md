@@ -14,6 +14,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   edge, and wooden framed buttons with new icons (clipboard, backpack,
   book, market stall). The open panel's button gets a gold frame. More of
   the game follows in later phases.
+- **Phase 2 -- round buttons:** Settings, the pinned-items magnifier,
+  Convert (the atom), Sort, Filter and the Display Mat's "?" are now brass
+  framed sprite buttons. An open panel's button glows green.
 
 ## 2026-11-12 (board check scene change)
 

@@ -2,22 +2,21 @@
 /* Circular overlay buttons, same "raised icon circle" language as
    #hubHome, sitting just above the hub on either side rather than
    crammed into the topbar. */
+/* The sprite (game/ui/btn_*.webp) is the whole button: brass rim, navy
+   face, icon. Open = a green glow ring. */
 .floatbtn{
   position:fixed; z-index:32; bottom:calc(var(--hub-h, 67px) + 14px);
-  width:56px; height:56px; border-radius:50%; padding:0;
-  background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--card) 70%);
-  border:3px solid var(--gold); color:var(--ink);
-  box-shadow:inset 0 2px 3px rgba(255,255,255,.18), inset 0 -3px 5px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.28);
+  width:58px; height:58px; border-radius:50%; padding:0; border:none;
+  background:center / contain no-repeat; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));
   display:flex; align-items:center; justify-content:center;
-  font-size:22px; transition:background .2s ease, color .2s ease, border-color .2s ease,
-    transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .1s cubic-bezier(.3,.8,.4,1);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1), box-shadow .15s ease;
 }
-.floatbtn:hover{background:radial-gradient(circle at 32% 26%, var(--bg-soft) 0%, var(--bg-soft) 70%)}
-.floatbtn.active{background:radial-gradient(circle at 32% 26%, var(--ok-soft) 0%, var(--ok-soft) 70%); border-color:var(--ok-line); color:var(--ok)}
-.floatbtn:not(:disabled):active{
-  transform:translateY(2px);
-  box-shadow:inset 0 2px 3px rgba(255,255,255,.12), inset 0 -1px 3px rgba(0,0,0,.1);
-}
+.floatbtn.active{box-shadow:0 0 0 3px var(--ok), 0 0 14px 2px var(--ok)}
+.floatbtn:not(:disabled):active{transform:translateY(2px); filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)) brightness(.92)}
+#pinsBtn{background-image:url("../ui/btn_search.webp")}
+#quickConvertBtn{background-image:url("../ui/btn_quark.webp")}
+#matSortBtn{background-image:url("../ui/btn_sort.webp")}
+#matFilterBtn{background-image:url("../ui/btn_filter.webp")}
 /* Pins button and tracked pill sit below #drawer (60) so they don't float
    over Inventory, above #pinsTray (33), and below #hub (72). */
 #pinsBtn{left:16px; z-index:59}
@@ -30,9 +29,6 @@
    overshoot. */
 #pinsBtn.offscreen{transform:translateX(-120px)}
 #quickConvertBtn.offscreen{transform:translateX(120px)}
-/* The atomic-nucleus convert icon (__CONVERT__, set from JS) explains
-   itself, so no extra decoration. */
-#quickConvertBtn .converticon{width:34px; height:34px}
 
 /* Pinned-items tray, resting just above the hub. z-index 33: above
    Convert's button (32), below #pinsBtn/#trackedPill (59/58) so Pins'

@@ -249,7 +249,7 @@ function renderMatTop(){
 
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   const rulesBtnHTML = matDrawerView === "mat"
-    ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules">?</button>` : "";
+    ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
   maybeShowCollectionFound();
   document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
@@ -577,8 +577,6 @@ document.getElementById("matFSearch").addEventListener("input", ev => {
 /* Sort/Filter trays (full inventory only). Only one open at a time:
    opening either closes the other, as does its button again or the shared
    scrim. */
-document.getElementById("matSortBtn").innerHTML = em("__SORT__");
-document.getElementById("matFilterBtn").innerHTML = em("__FILTER__");
 function closeMatSideTrays(){
   document.getElementById("matSortTray").classList.remove("open");
   document.getElementById("matFilterTray").classList.remove("open");

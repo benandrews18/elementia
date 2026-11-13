@@ -297,7 +297,6 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 #matSortBtn[hidden], #matFilterBtn[hidden]{display:none}
 .mat-sf-btn{left:16px; z-index:61}
 #matFilterBtn.mat-sf-btn{left:auto; right:16px}
-.mat-sf-btn .sorticon, .mat-sf-btn .filtericon{filter:invert(1); width:24px; height:24px}
 /* Scrim for the Sort/Filter trays (not #scrim, which would close the whole
    drawer). toggleMatSideTray() sets `top` inline to #matFilters' position,
    so it doesn't cover the mat above the search bar. */

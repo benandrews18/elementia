@@ -260,7 +260,6 @@ function updateHub(){
   const totalConvertible = totalConvertibleCount();
   const canConvert = totalConvertible > 0;
   setHubBadge("quickConvertBtn", canConvert ? String(totalConvertible) : null);
-  document.getElementById("quickConvertBtn").innerHTML = em("__CONVERT__");
   // Once revealed, Convert stays on screen for good (a persisted flag, since
   // holdings can drop again). Revealed as soon as the player holds any element
   // (right after the starting gift).

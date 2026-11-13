@@ -204,8 +204,7 @@ function playConvertAnimation(toSym){
   };
 }
 
-// The icon is set in updateHub() (__CONVERT__, or the current conversion
-// tool's icon), which runs on every render.
+// Its face is the btn_quark sprite (pins.css).
 document.getElementById("quickConvertBtn").addEventListener("click", () => {
   if (bingoCraftEntry){
     document.getElementById("convert").classList.contains("open") ? closeOverlay("convert") : openConvertScreen();
