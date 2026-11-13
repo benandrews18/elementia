@@ -17,6 +17,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **Phase 2 -- round buttons:** Settings, the pinned-items magnifier,
   Convert (the atom), Sort, Filter and the Display Mat's "?" are now brass
   framed sprite buttons. An open panel's button glows green.
+- **Phase 3 -- the map:** the hub's side buttons are bigger and rise over
+  the bar's brass edge. Each station on the map is now a brass medallion
+  (reachable stations glow in their suit colour, your station glows
+  green), "You are here" and the tracked-item pill are green pill
+  sprites, and the 24-round clock sits in a brass rim.
 
 ## 2026-11-12 (board check scene change)
 

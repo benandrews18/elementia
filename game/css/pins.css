@@ -56,9 +56,9 @@
   position:fixed; z-index:58; pointer-events:none;
   bottom:calc(var(--hub-h, 67px) + 14px);
   left:56px; height:34px; max-width:calc(var(--vw) * 100 - 140px);
-  display:flex; align-items:center; gap:6px; padding:0 13px 0 20px;
-  background:var(--card); border:2px solid var(--gold);
-  border-radius:17px; box-shadow:0 4px 14px rgba(0,0,0,.28);
+  display:flex; align-items:center; gap:6px; padding:0 14px 0 22px; color:#fff;
+  border:0 solid transparent; border-image:url("../ui/pill_long.webp") 56 fill / 17px stretch;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));
   transform:translateX(-100%); opacity:0;
   transition:transform .28s cubic-bezier(.3,.8,.4,1), opacity .18s ease;
 }
@@ -73,6 +73,6 @@
 .fly-item-circle img, .fly-item-circle svg{width:1em; height:1em}
 #trackedPill .tp-em img, #trackedPill .tp-em svg{width:1em; height:1em}
 #trackedPill .tp-name{
-  font-size:12px; font-weight:800; color:var(--ink);
+  font-size:12px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.55);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }

@@ -100,6 +100,14 @@ function mapCardHTML(name){
   </div>`;
 }
 
+/* Station medallion art (game/ui, tools/slice_ui.py). Full paths written
+   out so the build can find and embed each one. */
+const STATION_MEDALLION = {
+  "The Ocean": "ui/st_ocean.webp", "The Power Plant": "ui/st_powerplant.webp",
+  "Greenhouse": "ui/st_greenhouse.webp", "Deep Mine": "ui/st_deepmine.webp",
+  "Old Growth Forest": "ui/st_forest.webp", "The Bakery": "ui/st_bakery.webp",
+  "The City": "ui/st_city.webp", "The Observatory": "ui/st_observatory.webp",
+};
 function renderMap(){
   const over = state.ended;
   const here = state.lastStation;
@@ -129,8 +137,10 @@ function renderMap(){
       ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
       ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
-    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
-      <span class="mn-em">${em(s.emoji)}</span>
+    const medal = STATION_MEDALLION[name];
+    if (medal) cls.push("medal");
+    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}${medal ? `;background-image:url('${medal}')` : ""}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+      ${medal ? "" : `<span class="mn-em">${em(s.emoji)}</span>`}
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
   }).join("");

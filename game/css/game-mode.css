@@ -117,6 +117,11 @@
   transition:transform .1s cubic-bezier(.3,1.4,.4,1), box-shadow .12s, border-color .12s, filter .12s;
   padding:0;
 }
+/* Medallion art (STATION_MEDALLION): the brass rim is part of the image,
+   so the state rings below become glows around it. */
+.map-node.medal{background:center / contain no-repeat; border:none; border-radius:50%}
+.map-node.medal.here{box-shadow:0 0 0 4px var(--ok), 0 0 18px 4px rgba(63,180,108,.55)}
+.map-node.medal.reachable{box-shadow:0 0 0 3px var(--suit, #ffce54), 0 0 14px 2px color-mix(in srgb, var(--suit, #ffce54) 60%, transparent)}
 /* Squishy press feedback on every map button; scale stacks on top of each
    state's translate(-50%,-50%) centring. */
 .map-node:active{transform:translate(-50%,-50%) scale(.88)}
@@ -139,9 +144,10 @@
 }
 .map-node.here .mn-here-label{
   position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%);
-  font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
-  color:#fff; background:var(--ok); padding:3px 8px; border-radius:999px; white-space:nowrap;
-  box-shadow:0 2px 6px rgba(0,0,0,.3);
+  font-size:10.5px; font-weight:900; letter-spacing:.06em; text-transform:uppercase;
+  color:#fff; padding:4px 12px; white-space:nowrap; text-shadow:0 1px 0 rgba(0,0,0,.6);
+  border:0 solid transparent; border-image:url("../ui/pill_short.webp") 52 fill / 13px stretch;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
 /* Reachable rings use each station's suit colour (--suit, set in
    renderMap()); "here" stays green and "unreachable" greyscale. */
