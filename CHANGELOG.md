@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenge popup, take 3.** A round clock (ticks, round number) sits on
+  the window's top-left corner; the banner reads e.g. "The Ocean Request!"
+  or "Drought Restriction!"; one line of text with the multiplier, the rule
+  in icons, and a larger ↻ on the swap button. The status chips are gone.
+
 - **Fix: Convert tray over the hub in the Marketplace.** While crafting
   straight from the Marketplace, the closed Convert tray drew on top of
   the bottom button hub; it now stays behind it.
