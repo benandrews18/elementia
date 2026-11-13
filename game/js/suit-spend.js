@@ -11,7 +11,8 @@ let suitSpendEntry = null, suitSpendPicks = {}, suitSpendAnchor = null;
 // goes through (e.g. openBingoCraftOverlay()). null for the shop.
 let suitSpendOnCraft = null;
 function suitSpendPickedForSuit(suit){
-  return Object.keys(suitSpendPicks).filter(sym => ELEMENT_SUIT[sym] === suit)
+  // shortcut: "any" counts every pick -- right while Planet (the only "any" item) has no other tag; revisit if one ever mixes them.
+  return Object.keys(suitSpendPicks).filter(sym => suit === "any" || ELEMENT_SUIT[sym] === suit)
     .reduce((sum, sym) => sum + suitSpendPicks[sym], 0);
 }
 function closeSuitSpendBalloon(){
@@ -69,7 +70,7 @@ function renderSuitSpendBalloon(){
   const entry = suitSpendEntry;
   const need = suitCostNeed(entry);
   const {els: reserved} = needsOf(entry.reqs);
-  const SUIT_ORDER = Object.keys(ELEMENT_SUIT_LABEL);
+  const SUIT_ORDER = [...Object.keys(ELEMENT_SUIT_LABEL), "any"];
   document.getElementById("suitSpendRows").innerHTML = SUIT_ORDER.filter(s => need[s]).map(suit => {
     const row = SUIT_CORE_ELEMENTS[suit].map(sym => {
       const avail = Math.max(0, count(sym) - (reserved[sym] || 0));

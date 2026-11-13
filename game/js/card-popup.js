@@ -55,6 +55,8 @@ function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   // which stops propagation so the tap doesn't dismiss.
   // 6+ components (Fruit Cake): slightly smaller so they fit one line.
   document.getElementById("cpIngredients").classList.toggle("many", toks.length >= 6);
+  // 10+ (Planet's 16 elements): smaller chips, no "+", so they fit the card.
+  document.getElementById("cpIngredients").classList.toggle("lots", toks.length >= 10);
   document.getElementById("cpIngredients").innerHTML = toks.map((r, i) => {
     const body = r.kind === "element"
       ? `<span class="pc-ping elem" data-elem="${esc(r.name)}" title="${esc(r.name)}">${esc(r.name)}</span>`

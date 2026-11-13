@@ -57,7 +57,7 @@ function computeTodoHint(){
   let best = null;
   feeds.forEach((rootSet, name) => {
     const entry = ENTRIES.find(e => e.name === name && e.station === CORE_ITEM_STATION[name]) || ENTRIES.find(e => e.name === name);
-    if (!entry || !itemReqsMet(entry)) return;
+    if (!entry || !itemReqsMet(entry) || !itemOpen(name)) return;
     const {els} = needsOf(entry.reqs);
     const missingEls = Object.keys(els).filter(sym => count(sym) < els[sym]);
     const c = {

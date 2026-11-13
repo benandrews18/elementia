@@ -40,15 +40,15 @@ function goToRefItem(name){
 
 /* The recursive breakdown, rooted at this item's ingredients (the row
    itself is the root). */
-/* The suits an item's recipe uses (itemSuitCosts(), deduped), as a small
-   bare icon row. */
+/* An item's tags (itemSuitCosts(), one icon each -- two organic tags show
+   twice), as a small bare icon row. */
 function refSuitsHTML(name){
-  const suits = [...new Set(itemSuitCosts(name))];
+  const suits = itemSuitCosts(name);
   if (!suits.length) return "";
   // Tinted with CSS mask-image (.refsuit): the SUIT_ICON art is a black
   // glyph CSS colour can't reach.
   return `<div class="refsuits">${suits.map(s =>
-    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(data:image/png;base64,${SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
+    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(${s === "any" ? ANY_SUIT_SVG : "data:image/png;base64," + SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
 }
 
 function refExpandHTML(entry){
@@ -108,8 +108,9 @@ function renderCodex(){
   });
 
   // Every item -- Item Reference is where spoilers are allowed (the
-  // walkthrough promises "look up any item's recipe").
-  const rows = allRows;
+  // walkthrough promises "look up any item's recipe") -- except capstone
+  // unlock items, which stay hidden until their capstone is crafted.
+  const rows = allRows.filter(r => itemOpen(r.name));
 
   const REF_SORTERS = {
     az: (a, b) => a.name.localeCompare(b.name),

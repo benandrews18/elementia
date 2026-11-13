@@ -209,7 +209,7 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
 .setversion{margin-top:18px; font-size:11.5px; color:var(--mute); text-align:center}
 
 
-.orca,.coral,.flour,.lighthouse,.rubbersq,.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon,.microchip,.lifeicon,.ecosystemicon,.diamondicon,.noto-icon,.marketicon,.converticon{width:1em; height:1em; vertical-align:-.15em; display:inline-block}
+.orca,.coral,.flour,.lighthouse,.rubbersq,.wheelicon,.furnaceicon,.ovenicon,.bananabreadicon,.turbineicon,.steelicon,.fossilicon,.concreteicon,.fiberglassicon,.logcabinicon,.microchip,.lifeicon,.ecosystemicon,.diamondicon,.brassbar,.noto-icon,.marketicon,.converticon{width:1em; height:1em; vertical-align:-.15em; display:inline-block}
 /* Wide source art (six gems in a row): contain it rather than squash it
    into the square. */
 

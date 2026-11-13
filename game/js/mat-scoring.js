@@ -31,7 +31,7 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
     emoji: ITEM_EMOJI[name],
     station,
     stations,
-    pips: itemSuitCosts(name),
+    pips: itemSuitCosts(name).flatMap(s => s === "any" ? Object.keys(ELEMENT_SUIT_LABEL) : [s]),
     components: entry ? entry.reqs : [],
   };
 });
@@ -127,8 +127,8 @@ function matIsComplete(c, mat){
 /* Named collections: the 69 the player reviewed (originally
    archive/handoff/mat_collections_approved.csv), plus later additions
    below. Each was checked against MAT_CARD_BY_NAME/matOccupancy().
-   "Motorcycle"/"Sushi Restaurant" are collection themes made of existing
-   items, not item cards. Collections are discovered, not shown up front --
+   "Sushi Restaurant" is a collection theme made of existing items, not an
+   item card (Motorcycle became a capstone-unlocked item, 2026-11-13). Collections are discovered, not shown up front --
    see prefs.everUnlockedMatCollections and renderMatTop(). */
 const MAT_COLLECTIONS_RAW = [
   { id:"fruits",                  name:"Fruits",                  items:["Apple","Banana"] },
@@ -148,7 +148,6 @@ const MAT_COLLECTIONS_RAW = [
   { id:"hydrocarbons",            name:"Hydrocarbons",            items:["Sugar","Seaweed","Tree"] },
   { id:"lab-bench",               name:"Lab Bench",               items:["Microchip","Light Bulb","Engine"] },
   { id:"morning-bake",            name:"Morning Bake",            items:["Egg","Banana","Dough"] },
-  { id:"motorcycle",              name:"Motorcycle",              items:["Bicycle","Engine","Fiberglass"] },
   { id:"nautical-trio",           name:"Nautical Trio",           items:["Canoe","Orca","Salmon"] },
   { id:"off-grid-home",           name:"Off-Grid Home",           items:["Log Cabin","Oven","Light Bulb"] },
   { id:"full-circle",             name:"Full Circle",             items:["Clock","Compass","Wheel"] },
@@ -308,7 +307,7 @@ function drawRowCard(capstone){
   return rows.flat();
 }
 function bingoEligibleItems(){
-  return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS);
+  return [...CORE_ITEM_NAMES].filter(n => (ITEM_POINTS[n] || 0) >= BINGO_MIN_POINTS && !UNLOCKED_BY[n]);
 }
 // The 8 possible centre capstones (one per station). The opening capstone
 // choice shows these; ensureBingoCard()'s redraw path picks one at random.
@@ -354,7 +353,7 @@ function drawBingoCard(chosenCenter){
   const picks = [];
   BINGO_TIER_SPREAD.forEach(([tier, n]) => {
     const fromEligible = shuffle(eligible.filter(x => ITEM_TIER[x] === tier && !used.has(x)));
-    const fromCore = shuffle([...CORE_ITEM_NAMES].filter(x => ITEM_TIER[x] === tier && !used.has(x) && !fromEligible.includes(x)));
+    const fromCore = shuffle([...CORE_ITEM_NAMES].filter(x => ITEM_TIER[x] === tier && !used.has(x) && !UNLOCKED_BY[x] && !fromEligible.includes(x)));
     [...fromEligible, ...fromCore].slice(0, n).forEach(x => { used.add(x); picks.push(x); });
   });
   const need = BINGO_SIZE * BINGO_SIZE - 1;
@@ -599,4 +598,4 @@ function shuffle(arr){
   return arr;
 }
 
-const entriesAt = st => ENTRIES.filter(e => e.station === st);
+const entriesAt = st => ENTRIES.filter(e => e.station === st && itemOpen(e.name));

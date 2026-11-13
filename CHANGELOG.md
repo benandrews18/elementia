@@ -10,6 +10,29 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Capstone-unlocked items (content 2026.11.13d):** crafting a station's
+  capstone adds new items to that station's shop. Some need items another
+  capstone unlocks, so they stay out of reach for a while -- on purpose.
+  - Ocean (Coral Reef): Sailboat, Fabric
+  - Power Plant: Biofuel, Fireworks
+  - Greenhouse: Sunflower, Cow
+  - Deep Mine: Volcano, Brass
+  - Old Growth Forest: Plant Fiber, Dinosaur
+  - Bakery: Milk, Chocolate, Pretzel, Eclair
+  - City: Trumpet, Motorcycle, Book, Library
+  - Observatory: Planet, Solar System, University (new)
+  They stay hidden from the shops, map icons and Item Reference until
+  unlocked, and never appear on the Marketplace/BINGO card. The "every
+  item" ending still counts only the base items.
+- **Planet's tag counts as all four suits:** a four-colour tag, paid with
+  any element; on the Display Mat it counts toward every suit's combos.
+- **Other content:** Flour is 14 points; Museum is Building + Fossil +
+  Wheel + Canoe + Compass; the Motorcycle collection is gone (Motorcycle is
+  an item now).
+- **Item Reference shows every tag:** two-tag items (Apple Pie, Banana
+  Bread, Fish Cakes, Diamond, Orca, Telescope...) now show both icons.
+- **Long recipes fit the card:** 10+ ingredients use smaller chips.
+
 - **Recipes (content 2026.11.13c):** Lighthouse now also needs Water;
   Life no longer needs Bone.
 

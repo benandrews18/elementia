@@ -90,6 +90,9 @@
   font-size:14px; font-weight:800; padding:5px 9px;
 }
 .pc-plus{color:#5a5548; font-weight:700; font-size:14px}
+.pc-ingredients.lots{gap:4px}
+.pc-ingredients.lots .pc-plus{display:none}
+.pc-ingredients.lots .pc-ping.elem{font-size:12px; padding:3px 5px; min-width:0}
 
 /* session summary */
 .sumgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin:16px 0 4px}

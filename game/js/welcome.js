@@ -104,7 +104,7 @@ function classicTutSlides(){
 
   // 3 -- Display Mat, Quarks, dice, and the combos
   const matIcons = [st.capstone[1], ...CORE_ITEM_NAMES].filter((n, i, a) => ITEM_EMOJI[n] && a.indexOf(n) === i);
-  const sameSt = [...CORE_ITEM_NAMES].filter(n => CORE_ITEM_STATION[n] === st.name && ITEM_TIER[n] !== "CAPSTONE").slice(0, 3);
+  const sameSt = [...CORE_ITEM_NAMES].filter(n => CORE_ITEM_STATION[n] === st.name && ITEM_TIER[n] !== "CAPSTONE" && !UNLOCKED_BY[n]).slice(0, 3);
   const suit = Object.keys(SUIT_ICON)[0];
   // A component shared by several cards, and a card whose own recipe items
   // could all sit beside it (its "complete" 2x).

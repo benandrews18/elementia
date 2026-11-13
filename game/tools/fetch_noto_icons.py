@@ -52,7 +52,7 @@ def item_emoji():
     out = set()
     for s in read_game_data()["stations"]:
         out.add(s["emoji"])
-        for e, n, tag, rec, pt in s["shop"]:
+        for e, n, tag, rec, pt in s["shop"] + s.get("unlock", []):
             if not e.startswith("__"):
                 out.add(e)
         ce, cn, ct, cr, cpt = s["capstone"]

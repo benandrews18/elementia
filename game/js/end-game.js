@@ -67,7 +67,7 @@ function endGameFlavorHTML(){
    sequence have finished (the same idle test). */
 function checkCraftedEverything(){
   if (state.ended || state.craftedEverything) return;
-  if (![...CORE_ITEM_NAMES].every(owns)) return;
+  if (![...CORE_ITEM_NAMES].every(n => owns(n) || UNLOCKED_BY[n])) return;
   state.craftedEverything = true;
   save();
   scheduleCraftedEverythingEnd();

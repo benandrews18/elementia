@@ -288,6 +288,18 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // Capstone-unlocked items: out of their shop (and the Market pool) until
+    // the station's capstone is crafted.
+    const ul = "Sailboat", ulCap = UNLOCKED_BY[ul], ulSt = ENTRIES.find(e => e.name === ul).station;
+    const keepItems = [...state.items];
+    state.items = state.items.filter(n => n !== ulCap);
+    const hiddenBefore = !entriesAt(ulSt).some(e => e.name === ul);
+    state.items.push(ulCap);
+    const shownAfter = entriesAt(ulSt).some(e => e.name === ul);
+    state.items = keepItems;
+    expect(ulCap === "Coral Reef" && hiddenBefore && shownAfter && !bingoEligibleItems().includes(ul),
+      `unlock items should appear only after their capstone (hidden ${hiddenBefore}, shown ${shownAfter})`);
+
     // Missing the first breakpoint ends the run only from round 12 (not 9).
     const keepRC = state.runComplete, keepV = state.visits;
     state.runComplete = false;

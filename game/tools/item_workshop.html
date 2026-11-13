@@ -159,12 +159,13 @@ const ELEMENT_LIST = [...new Set(STATIONS.flatMap(s => s.dice))].sort((a, b) => 
 /* ---- base items: the game's own, then the retired ones (with suggested costs) */
 function baseItems(){
   const out = {};
-  STATIONS.forEach(st => [...st.shop, st.capstone].forEach(r => {
+  STATIONS.forEach(st => [...st.shop, ...(st.unlock || []), st.capstone].forEach(r => {
     if (out[r[1]]){ out[r[1]].stations.push(st.name); return; }
     out[r[1]] = {name: r[1], emoji: r[0], station: st.name, stations: [st.name], points: r[4], recipe: r[3],
       costs: [...itemSuitCosts(r[1])], isNew: false, cap: r[2] === "CAPSTONE"};
   }));
   RETIRED_ITEMS.forEach(r => {
+    if (out[r.name]) return; // already back in the game as an unlock row
     // Suggested start: cost count by points (as the current set runs), suit
     // from the recipe's most common element suit.
     const els = parseRecipe(r.recipe).filter(t => t.kind === "element").map(t => ELEMENT_SUIT[t.name]).filter(Boolean);

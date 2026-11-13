@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.13c",
+ "version": "2026.11.13d",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -148,6 +148,22 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock + __LIFE__ Life",
     34
+   ],
+   "unlock": [
+    [
+     "⛵",
+     "Sailboat",
+     "COMPONENT",
+     "🛶 Canoe + 🧵 Fabric",
+     21
+    ],
+    [
+     "🧵",
+     "Fabric",
+     "MATERIAL",
+     "🍂 Plant Fiber + 🛠️ Tools",
+     9
+    ]
    ]
   },
   {
@@ -240,6 +256,22 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "💻 Computer + ⚙️ Engine + 🧲 Magnet + 🦾 Aluminum Alloy + 💡 Light Bulb",
     34
+   ],
+   "unlock": [
+    [
+     "🧪",
+     "Biofuel",
+     "COMPONENT",
+     "🌾 Grain + 🌿 Seaweed + 🦴 Bone + ⚙️ Engine",
+     17
+    ],
+    [
+     "🎆",
+     "Fireworks",
+     "MATERIAL",
+     "C + S + K",
+     4
+    ]
    ]
   },
   {
@@ -332,6 +364,22 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "🚜 Tractor + 🐔 Chicken + 🥧 Apple Pie + __LOGCABIN__ Log Cabin + 🔆 Solar Panel",
     39
+   ],
+   "unlock": [
+    [
+     "🌻",
+     "Sunflower",
+     "CREATION",
+     "⭐ Star + 🌱 Soil + ♻️ Fertilizer",
+     20
+    ],
+    [
+     "🐄",
+     "Cow",
+     "COMPONENT",
+     "🧑‍🌾 Farm + 🌾 Grain + 🦴 Bone",
+     14
+    ]
    ]
   },
   {
@@ -424,6 +472,22 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "⚙️ Engine + 🪟 Glass + 🧲 Magnet + 🌉 Bridge + 🦾 Aluminum Alloy",
     34
+   ],
+   "unlock": [
+    [
+     "🌋",
+     "Volcano",
+     "CREATION",
+     "🌎 Planet + __FURNACE__ Furnace",
+     23
+    ],
+    [
+     "__BRASSBAR__",
+     "Brass",
+     "MATERIAL",
+     "Cu + Ni + __FURNACE__ Furnace",
+     9
+    ]
    ]
   },
   {
@@ -516,6 +580,22 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "🦌 Deer + 🐟 Salmon + 🌳 Tree + __ORCA__ Orca + 🌈 Rainbow",
     34
+   ],
+   "unlock": [
+    [
+     "🍂",
+     "Plant Fiber",
+     "MATERIAL",
+     "🌳 Tree + 🛠️ Tools",
+     7
+    ],
+    [
+     "🦖",
+     "Dinosaur",
+     "CREATION",
+     "__FOSSIL__ Fossil + __LIFE__ Life",
+     27
+    ]
    ]
   },
   {
@@ -564,7 +644,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "Flour",
      "COMPONENT",
      "🌾 Grain + 🛠️ Tools",
-     18
+     14
     ],
     [
      "🫓",
@@ -608,6 +688,36 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "🫓 Dough + 🍬 Sugar + 🥚 Egg + __OVEN__ Oven + 🍎 Apple + 🍌 Banana",
     36
+   ],
+   "unlock": [
+    [
+     "🥛",
+     "Milk",
+     "COMPONENT",
+     "🐄 Cow + 💧 Water",
+     14
+    ],
+    [
+     "🍫",
+     "Chocolate",
+     "COMPONENT",
+     "🍬 Sugar + __FURNACE__ Furnace",
+     10
+    ],
+    [
+     "🥨",
+     "Pretzel",
+     "CREATION",
+     "🫓 Dough + K + __OVEN__ Oven",
+     23
+    ],
+    [
+     "🍩",
+     "Éclair",
+     "CREATION",
+     "🫓 Dough + 🥚 Egg + 🥛 Milk + 🍫 Chocolate + __OVEN__ Oven",
+     25
+    ]
    ]
   },
   {
@@ -690,7 +800,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🏛️",
      "Museum",
      "CREATION",
-     "🏢 Building + 🔭 Telescope + __FOSSIL__ Fossil",
+     "🏢 Building + __FOSSIL__ Fossil + __WHEEL__ Wheel + 🛶 Canoe + 🧭 Compass",
      25
     ]
    ],
@@ -700,6 +810,36 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "🌉 Bridge + 🗼 Skyscraper + 🚲 Bicycle + 🚗 Car + 💡 Light Bulb",
     37
+   ],
+   "unlock": [
+    [
+     "🎺",
+     "Trumpet",
+     "COMPONENT",
+     "__BRASSBAR__ Brass + 🛠️ Tools",
+     16
+    ],
+    [
+     "🏍️",
+     "Motorcycle",
+     "CREATION",
+     "🚲 Bicycle + ⚙️ Engine + __FIBERGLASS__ Fiberglass",
+     25
+    ],
+    [
+     "📕",
+     "Book",
+     "COMPONENT",
+     "🍂 Plant Fiber + 💧 Water + 🛠️ Tools",
+     13
+    ],
+    [
+     "📚",
+     "Library",
+     "CREATION",
+     "🏢 Building + 📕 Book",
+     21
+    ]
    ]
   },
   {
@@ -792,6 +932,29 @@ const DATA = /*__GAME_DATA_START__*/{
     "CAPSTONE",
     "🚀 Rocket + 🍎 Apple + ⭐ Star + 📡 Satellite Dish + 🔆 Solar Panel",
     35
+   ],
+   "unlock": [
+    [
+     "🌎",
+     "Planet",
+     "COMPONENT",
+     "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
+     20
+    ],
+    [
+     "☀️",
+     "Solar System",
+     "CREATION",
+     "⭐ Star + 🌎 Planet + 🔭 Telescope",
+     29
+    ],
+    [
+     "🎓",
+     "University",
+     "CREATION",
+     "🏢 Building + 🔭 Telescope + 💻 Computer + __DIAMOND__ Diamond",
+     29
+    ]
    ]
   }
  ]
