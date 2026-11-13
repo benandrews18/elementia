@@ -143,8 +143,8 @@ function hideTipForever(id){
   prefs.hiddenTips = [...new Set([...(prefs.hiddenTips || []), id])];
   savePrefs();
 }
-function openClassicTutorial(onDone){
-  if (tipHidden("classicTut")){ if (onDone) onDone(); return; }
+function openClassicTutorial(onDone, force){
+  if (!force && tipHidden("classicTut")){ if (onDone) onDone(); return; }
   ctIdx = 0;
   ctOnDone = onDone;
   const el = document.getElementById("classicTut");

@@ -49,7 +49,7 @@
   display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;
   border:2px solid var(--line); background:var(--sunken); color:var(--mute); box-shadow:0 2px 4px rgba(0,0,0,.25);
 }
-.pin-tip-box #pinTipHide{position:absolute; left:-14px; bottom:-14px}
+.pin-tip-box .tip-hide-x{position:absolute; left:-14px; bottom:-14px}
 #mouseTipHide{position:absolute; left:-12px; bottom:-12px}
 .mouse-bubble:has(#mouseTipClose[hidden]) #mouseTipHide{display:none}
 .pin-tip-box h2{margin:0 0 6px}
@@ -110,6 +110,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 .order-status.no{color:var(--bad)}
 .order-reroll{display:inline-flex; align-items:center; gap:6px}
 .mat-rules-page[hidden]{display:none}
+.tut-list{display:flex; flex-direction:column; max-height:60vh; overflow-y:auto}
 .mct-line{margin:8px 0; line-height:1.45}
 .mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
 .empty-el-tip{max-width:360px; text-align:center}

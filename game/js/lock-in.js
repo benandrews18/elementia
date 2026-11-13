@@ -112,9 +112,6 @@ function quietCheck(){
   const quiet = diceDeltaForReward(emptyElementsForScore(total, state.visits));
   const floor = state.matBonusDice || 0;
   state.tripDice = Math.max(floor, quiet);
-  if (state.tripDice > 0) queueEventToast("dice", "🎲", `Display Mat: ${Math.round(total).toLocaleString()} Quarks`,
-    quiet > floor ? "Your score raised your dice!" : "Dice kept from your last board check",
-    `+${state.tripDice}`);
 }
 
 /* Check orders: each board check carries one, drawn a check ahead
@@ -573,7 +570,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  playShutter("Final Score!", () => { openDrawer(); updateHub(); }, orderShutterLine());
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); maybeShowOrderTip(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -621,14 +618,41 @@ function playShutter(line2, atClosed, line3 = ""){
 function announceMatCheck(){
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
+    orderTipAfterRules = true; // the challenge window follows the rules
     openMatRules();
+    return;
   }
+  maybeShowOrderTip();
 }
+/* Display Mat Challenges (check orders): explained the first time a run
+   reaches a board check that has one (state.sawOrderTip), unless hidden
+   with its corner ✕. */
+let orderTipAfterRules = false;
+function maybeShowOrderTip(){
+  const o = state.order;
+  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return;
+  state.sawOrderTip = true; save();
+  openOrderTip();
+}
+function openOrderTip(){
+  document.getElementById("orderTipBody").innerHTML = `
+    <p class="mct-line">⏰ Every board check comes with a <b>challenge</b>. You see the next one a check ahead, by your combos.</p>
+    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST}: <b>Requests</b>. Do it and that check's Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
+    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - MAT_CHECK_EVERY}: <b>Restrictions</b>. Break it and that check's Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
+    <p class="mct-line">🏛️ Round ${RUN_COMPLETE_VISIT}: the <b>Grand Exhibition</b>. Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks.</p>
+    <p class="mct-line">👆 Tap the challenge for details, or swap it for 1 "?".</p>`;
+  openOverlay("orderTip");
+}
+document.getElementById("orderTip").addEventListener("click", ev => {
+  if (ev.target.closest("#orderTipHide")) hideTipForever("orderTip");
+  else if (!ev.target.closest("#orderTipOk") && ev.target.id !== "orderTip") return;
+  closeOverlay("orderTip");
+});
 document.getElementById("matCheckTutorial").innerHTML = `
   <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
   <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
   <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
-  <p class="mct-line">📜 Each check has an <b>order</b> -- tap its chip by your combos to see it.</p>
+  <p class="mct-line">📜 Each check has a <b>challenge</b> -- tap its chip by your combos to see it.</p>
   <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.

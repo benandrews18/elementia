@@ -75,6 +75,15 @@
 <div id="scrim"></div>
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
+<!-- Display Mat Challenges, first time per run (maybeShowOrderTip()). -->
+<div class="overlay" id="orderTip" role="dialog" aria-modal="true" aria-labelledby="orderTipTitle">
+  <div class="sheetbox parch pin-tip-box">
+    <h2 id="orderTipTitle">📜 Display Mat Challenges</h2>
+    <div id="orderTipBody" style="text-align:left"></div>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="orderTipOk">Got it</button></div>
+    <button type="button" class="tip-hide-x" id="orderTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
+  </div>
+</div>
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
   <div class="sheetbox parch mat-rules-box">
     <!-- Page 1: the check itself; page 2: Quark combos (openMatRules()). -->
@@ -405,6 +414,13 @@
       </span>
       <span class="setbtn">Open</span>
     </button>
+    <button type="button" class="setting-row" id="settingsTutsBtn">
+      <span class="setting-ico">📖</span>
+      <span class="setting-body">
+        <span class="setting-label">Tutorial Messages</span>
+      </span>
+      <span class="setbtn">Open</span>
+    </button>
     <button type="button" class="setting-row" id="settingsDevBtn">
       <span class="setting-ico">🛠️</span>
       <span class="setting-body">
@@ -467,6 +483,15 @@
       <button type="button" class="bigbtn" id="setSave">Save</button>
       <button type="button" class="bigbtn sec" id="setRulesCancel">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- Tutorial Messages: every tip window, to read again (TUTORIAL_MESSAGES). -->
+<div class="overlay" id="settingsTuts" role="dialog" aria-modal="true" aria-labelledby="setTutsTitle">
+  <div class="sheetbox parch">
+    <h2 id="setTutsTitle">📖 Tutorial Messages</h2>
+    <div id="tutList" class="tut-list"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="setTutsBack">← Back</button></div>
   </div>
 </div>
 

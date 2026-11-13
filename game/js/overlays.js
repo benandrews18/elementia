@@ -16,7 +16,7 @@ function openOverlay(id){
 // The settings hub and its three sub-screens: exactly one is open at a
 // time, and anySettingsOpen()/openSettingsScreen() treat all four as one
 // "Settings is open" state while moving between them.
-const SETTINGS_OVERLAY_IDS = ["settings", "settingsRules", "settingsDev"];
+const SETTINGS_OVERLAY_IDS = ["settings", "settingsRules", "settingsDev", "settingsTuts"];
 function anySettingsOpen(){
   return SETTINGS_OVERLAY_IDS.some(id => document.getElementById(id).classList.contains("open"));
 }

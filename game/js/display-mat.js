@@ -134,7 +134,10 @@ document.getElementById("matRulesOverlay").addEventListener("click", ev => {
     document.getElementById("matRulesPage2").hidden = false;
     return;
   }
-  if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")) closeOverlay("matRulesOverlay");
+  if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")){
+    closeOverlay("matRulesOverlay");
+    if (orderTipAfterRules){ orderTipAfterRules = false; maybeShowOrderTip(); }
+  }
 });
 
 /* Rebuilds #drawerTop: the score card, the Elements/Display Mat page, its

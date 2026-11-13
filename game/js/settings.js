@@ -17,6 +17,27 @@ document.getElementById("setClose").addEventListener("click", () => closeOverlay
 
 document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
 
+/* Settings > Tutorial Messages: one row per tip window; a tap closes
+   Settings and shows that window as it appears in the game. */
+const TUTORIAL_MESSAGES = [
+  ["▶️", "How to play", () => openClassicTutorial(null, true)],
+  ["📌", "Pin items to your To-Do List", () => openOverlay("pinTip")],
+  ["🕒", "Display Mat board checks", () => openMatRules()],
+  ["📜", "Display Mat Challenges", () => openOrderTip()],
+  ["❓", "Unknown Elements", () => showEmptyElTip()],
+];
+document.getElementById("tutList").innerHTML = TUTORIAL_MESSAGES.map(([ico, title], i) =>
+  `<button type="button" class="setting-row" data-tut="${i}"><span class="setting-ico">${ico}</span>
+    <span class="setting-body"><span class="setting-label">${title}</span></span><span class="setbtn">View</span></button>`).join("");
+document.getElementById("settingsTutsBtn").addEventListener("click", () => openSettingsScreen("settingsTuts"));
+document.getElementById("setTutsBack").addEventListener("click", () => openSettingsScreen("settings"));
+document.getElementById("tutList").addEventListener("click", ev => {
+  const row = ev.target.closest("[data-tut]");
+  if (!row) return;
+  closeOverlay("settingsTuts");
+  TUTORIAL_MESSAGES[+row.dataset.tut][2]();
+});
+
 function openSettingsRules(){
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
   setGuidedTutorialBox.checked = prefs.guidedTutorialEnabled !== false;

@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenge intro + Tutorial Messages.** The dice toast between board
+  checks is gone. The first board check of a run with a Display Mat
+  Challenge opens a short window explaining when they happen and what's at
+  stake (hideable with its ✕). Settings > Tutorial Messages lists every tip
+  window by title; tap one to see it as it appears in the game.
+
 - **Station header row.** The Crafted Items toggle, its compact icon row
   and the list/card switch now sit on one row under the element pool, in
   the dark header. The capstone is an ordinary shop row (same Craft and pin

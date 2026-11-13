@@ -48,6 +48,9 @@ function maybeShowEmptyElTip(){
     return;
   }
   prefs.sawEmptyElTip = true; savePrefs();
+  showEmptyElTip();
+}
+function showEmptyElTip(){
   document.getElementById("emptyElTipBody").innerHTML = `
     <div class="eet-icon">${emptyElSquareHTML(56)}</div>
     <h2 id="emptyElTipTitle">Unknown Element!</h2>
