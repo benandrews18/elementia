@@ -1126,7 +1126,7 @@ body[data-screen="market"] #trackedPill{display:none}
    here too so it travels with the header when frozen. */
 .stationhead{
   background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%);
-  padding-bottom:18px;
+  padding-bottom:12px;
   border-radius:0;
 }
 /* Centered, with extra side padding so the title clears the floating
@@ -1301,7 +1301,6 @@ body[data-screen="market"] #trackedPill{display:none}
 /* align-items:stretch so .ibody matches .iem's height: the name aligns
    with the icon box's top and the recipe with its bottom. */
 .item .irow{flex:1; min-width:0; display:flex; gap:15px; align-items:stretch; padding:5px 10px 5px 5px}
-.capbox .item .irow{padding:0}
 .item.can{background:var(--ok-soft); border-color:var(--ok-line)}
 /* Shop lists: a thin pale grey border on every row (other .item contexts
    keep the suit colour) so the list reads calm. "Ready to craft" is shown
@@ -1485,21 +1484,15 @@ body[data-screen="market"] #trackedPill{display:none}
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
 .craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
 
-.capbox{margin-bottom:9px; background:var(--cap-grad);
-  border:3px solid #d9a441; border-radius:14px; padding:12px 16px}
-.capbox.can{background:var(--cap-grad-can); box-shadow:0 0 10px rgba(63,180,108,.55)}
-.capbox .item{padding:0; background:none; border:none}
-/* The capstone item has no padding/border, so the highlight ring goes on
-   .capbox instead. */
-.capbox:has(.item.job-highlight){
-  box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
-}
-.capbox .item.job-highlight{box-shadow:none}
+/* Capstone: an ordinary shop row with a dark face and a gold border. */
+.shop .item.cap-item{border:2px solid #d9a441; background:var(--cap-grad)}
+.shop .item.cap-item.job-highlight{background:var(--cap-grad-can); box-shadow:0 0 10px rgba(63,180,108,.55)}
+.shop .item.cap-item .iname{color:#fff}
+.shop .item.cap-item :is(.recipe, .plus){color:#c9d3df}
 /* The station's dark header sits flush under the Quark meter bar. */
 body.has-qtop[data-screen="station"] main#screen{padding-top:var(--qtop-h, 52px)}
 body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 /* List/card view switch, right end of the shop's top row. */
-.shop-toggle-row:has(.shop-view-btn:only-child){justify-content:flex-end}
 .shop-view-btn{
   flex:none; margin-left:auto; width:36px; height:36px; border-radius:10px; padding:0;
   display:flex; align-items:center; justify-content:center; font-size:18px;
@@ -1518,8 +1511,17 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 }
 .st-cards .mm-card.st-can{outline:3px solid var(--ok); outline-offset:1px}
 .st-card-sel{position:relative; margin-bottom:12px}
-.st-card-sel > .item, .st-card-sel > .capbox{margin-bottom:0}
+.st-card-sel > .item{margin-bottom:0}
 .st-card-close{top:auto; right:auto; bottom:-12px; left:-8px; width:34px; height:34px}
+/* Inside the dark header, under the element pool: toggle, crafted icons
+   and the view switch on one compact row (wrapping if the icons need it). */
+.stationhead .shop-toggle-row{margin:10px 12px 0; flex-wrap:wrap; gap:6px}
+.stationhead .crafted-row{flex:1 1 0; min-width:0; margin:0; padding:4px 8px; gap:5px;
+  background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18)}
+.stationhead .crafted-row .station-item-icon{font-size:18px}
+.stationhead .shop-collapse-toggle{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); color:#e6eef6}
+.stationhead .shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
+.stationhead .shop-view-btn{width:30px; height:30px; font-size:15px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25)}
 
 </style>
 <style>
@@ -8330,15 +8332,12 @@ function renderStation(name){
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
   // The capstone sits at the top of the shop, under the compact crafted row.
-  const capHTML = capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
-        ${itemHTML(capEntry, idx(capEntry))}
-      </div>` : "";
+  // A normal shop row, plus .cap-item (dark face, gold border).
+  const capHTML = capRevealed ? itemHTML(capEntry, idx(capEntry)).replace('class="item ', 'class="item cap-item ') : "";
   // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
   const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
       title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
-  const shopBody = prefs.shopCardView
-    ? `<div class="shop-toggle-row">${viewBtn}</div>` + shopCardsHTML(all, idx, capHTML)
-    : shopBodyHTML(shopEntries, idx, capHTML, viewBtn);
+  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx, capHTML) : shopBodyHTML(shopEntries, idx, capHTML);
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
@@ -8355,6 +8354,7 @@ function renderStation(name){
       <div class="col-label elements-label">ELEMENTS FOUND HERE:</div>
       <div class="gather">${gather}</div>
       ${playBar}
+      ${shopHeadHTML(shopEntries, viewBtn)}
     </div>
     <div class="makewrap">
       ${shopBody}
@@ -8362,30 +8362,24 @@ function renderStation(name){
   </div>`;
 }
 
-/* Shop body: the "Crafted Items" toggle decides whether owned items render
-   as full cards or fold into the compact craftedIconsHTML() row (capstones
-   always keep their capbox). The toggle always renders first, just above
-   wherever crafted items currently show. */
-function shopBodyHTML(shopEntries, idx, capHTML = "", viewBtn = ""){
-  // "Crafted Items": owns() is "crafted", so an item made anywhere shows here
-  // at every station that sells it. No toggle until one item sold here is
-  // crafted.
-  const hasCraftedHere = shopEntries.some(e => owns(e.name));
-  if (!hasCraftedHere){
-    return `<div class="shop-toggle-row">${viewBtn}</div>` + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
-  }
-  const toggle = `<div class="shop-toggle-row">
-      <button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
-        <span class="collapse-chevron"></span>Crafted Items
-      </button>${viewBtn}
-    </div>`;
-  if (!state.collapseCraftedItems){
-    return toggle + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
-  }
+/* Under the element pool, in the dark header: the "Crafted Items" toggle,
+   the list/card switch, and (toggle on, list view) the compact row of
+   crafted items, which then leave the list. owns() is "crafted", so an item
+   made anywhere counts at every station that sells it; no toggle until one
+   sold here is crafted. */
+const craftedFolded = shopEntries => !prefs.shopCardView && state.collapseCraftedItems && shopEntries.some(e => owns(e.name));
+function shopHeadHTML(shopEntries, viewBtn){
   const owned = shopEntries.filter(e => owns(e.name));
-  const rest = shopEntries.filter(e => !owns(e.name));
-  const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
-  return toggle + row + capHTML + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  const toggle = owned.length && !prefs.shopCardView ? `<button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
+        <span class="collapse-chevron"></span>Crafted Items
+      </button>` : "";
+  const row = craftedFolded(shopEntries) ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
+  return `<div class="shop-toggle-row">${toggle}${row}${viewBtn}</div>`;
+}
+// The list: capstone first, then the rest (minus folded crafted items).
+function shopBodyHTML(shopEntries, idx, capHTML = ""){
+  const list = craftedFolded(shopEntries) ? shopEntries.filter(e => !owns(e.name)) : shopEntries;
+  return `<div class="shop">${capHTML}${list.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 /* Card view: the station's items as Inventory cards (matCardHTML()), 4 to a
@@ -8394,7 +8388,7 @@ function shopBodyHTML(shopEntries, idx, capHTML = "", viewBtn = ""){
 let stationCardOpen = null;
 function shopCardsHTML(entries, idx, capHTML){
   const open = entries.find(e => e.name === stationCardOpen);
-  const sel = !open ? "" : `<div class="st-card-sel">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
+  const sel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
