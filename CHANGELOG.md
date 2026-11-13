@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Board checks are 25% harder:** the official check every 3rd round uses
+  the Quark breakpoints +25% (OFFICIAL_CHECK_BUMP). Quiet per-trip checks
+  and check orders are still to come.
+
 - **Combo Lab hides undiscovered unlock items:** a capstone-unlocked item
   only shows up in Combo Lab once you've crafted its capstone in some run
   (remembered across runs; past runs in History count too).

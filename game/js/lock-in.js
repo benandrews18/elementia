@@ -67,7 +67,16 @@ const LOCKIN_ROUND_ANCHORS = [
   [39,  4735,  5175,  5430,  5770],
   [40,  4895,  5270,  5470,  5800],
 ];
+// Official board checks (every MAT_CHECK_EVERY-th round): breakpoints x
+// (1 + this), tuned in tools/quark_breakpoint_tuner.html.
+const OFFICIAL_CHECK_BUMP = 0.25;
 function lockInTiersForRound(round){
+  const t = baseTiersForRound(round);
+  if (round % MAT_CHECK_EVERY !== 0) return t;
+  const up = v => Math.round(v * (1 + OFFICIAL_CHECK_BUMP) / 5) * 5;
+  return { one: up(t.one), two: up(t.two), three: up(t.three), four: up(t.four) };
+}
+function baseTiersForRound(round){
   const a = LOCKIN_ROUND_ANCHORS;
   if (round <= a[0][0]) return { one: a[0][1], two: a[0][2], three: a[0][3], four: a[0][4] };
   if (round >= a[a.length - 1][0]){

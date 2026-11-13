@@ -309,6 +309,10 @@
     prefs.capstonesEverCrafted = keepCaps; history = keepHist; state.items = keepRunItems;
     expect(labHidden && labShown, `Combo Lab should offer Sailboat only after Coral Reef (hidden ${labHidden}, shown ${labShown})`);
 
+    // Official checks (every 3rd round) use breakpoints +25%.
+    expect(lockInTiersForRound(12).one === Math.round(baseTiersForRound(12).one * 1.25 / 5) * 5
+      && lockInTiersForRound(11).one === baseTiersForRound(11).one, "check-round breakpoints should be +25%");
+
     // Missing the first breakpoint ends the run only from round 12 (not 9).
     const keepRC = state.runComplete, keepV = state.visits;
     state.runComplete = false;
