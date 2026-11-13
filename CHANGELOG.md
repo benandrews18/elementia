@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **"?" in the Marketplace.** Tapping a "?" reward icon in the Market opens
+  the Unknown Element window, which now also says how to earn one. The
+  stations-visited row ends with a "?" (✓ once earned) for visiting all 8;
+  the station rings are smaller to fit it, icons the same size.
+
 - **Challenge popup, take 3.** A round clock (ticks, round number) sits on
   the window's top-left corner; the banner reads e.g. "The Ocean Request!"
   or "Drought Restriction!"; one line of text with the multiplier, the rule

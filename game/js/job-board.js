@@ -296,7 +296,8 @@ function stationProgressCirclesHTML(){
 function marketStationProgressHTML(){
   const visitedCount = DATA.stations.filter(s => state.visitedStations[s.name]).length;
   return `<div class="market-station-progress-label">${visitedCount}/${DATA.stations.length} Stations Visited</div>
-    <div class="market-progress-stations">${stationProgressCirclesHTML()}</div>`;
+    <div class="market-progress-stations">${stationProgressCirclesHTML()}<span class="mps-reward${state.allStationsPaid ? " done" : ""}" role="button" tabindex="0"
+      title="${state.allStationsPaid ? "All 8 visited -- \"?\" earned" : "Visit all 8 stations to earn a \"?\" element"}">${state.allStationsPaid ? "✓" : emptyElSquareHTML(26)}</span></div>`;
 }
 
 document.getElementById("jobSheetClose").addEventListener("click", closeJobBoard);
@@ -305,6 +306,8 @@ document.getElementById("jobSheetBody").addEventListener("click", ev => {
   // The BINGO centre square's "Add Capstone" placeholder opens the capstone
   // overlay (openCapstoneOverlay()). Checked before the generic
   // [data-item-card] handling.
+  // A "?" reward icon (Market rows, all 8 stations): what a "?" is.
+  if (ev.target.closest(".mrow-reward, .mps-reward")){ showEmptyElTip(); return; }
   const addCapstoneBtn = ev.target.closest("[data-add-capstone]");
   if (addCapstoneBtn){ openCapstoneOverlay(); return; }
 

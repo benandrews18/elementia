@@ -56,6 +56,7 @@ function showEmptyElTip(){
     <h2 id="emptyElTipTitle">Unknown Element!</h2>
     <p>An Unknown Element can become <b>any element</b> from the station you're at.</p>
     <p class="eet-where">Use it from the <span class="eet-convert">${em("__CONVERT__")}</span> <b>Convert</b> menu.</p>
+    <p class="eet-where">Earn one by finishing a 🛒 Market row, visiting all 8 stations, or reaching the top ⚛️ breakpoint.</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="emptyElTipOk">Got it</button></div>`;
   openOverlay("emptyElTip");
 }

@@ -490,7 +490,7 @@ function marketRowsHTML(){
     const done = (state.bingoLinesCompleted || []).includes(r);
     return `<div class="mrow${done ? " done" : ""}">
       <div class="bingo-grid mrow-grid">${line.map(i => bingoCellHTML(card[i], i)).join("")}</div>
-      <span class="mrow-reward" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
+      <span class="mrow-reward" role="button" tabindex="0" title="${done ? "Row complete -- \"?\" earned" : "Finish this row to earn a \"?\" element"}">${done ? "✓" : emptyElSquareHTML(26)}</span>
     </div>`;
   }).join("");
   const caps = bingoCapstoneChoices().map(n => bingoCellHTML(n, null, true)).join("");

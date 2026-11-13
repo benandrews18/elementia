@@ -54,12 +54,17 @@
 /* Classic's full-width copy: flex:1 circles so all 8 always fit one row. */
 .market-classic-progress{position:relative; margin:0 0 2px; padding:2px 4px}
 .market-classic-progress .market-station-progress-label{text-align:left; margin-bottom:6px}
-.market-classic-progress .market-progress-stations{width:100%; gap:6px}
+.market-classic-progress .market-progress-stations{width:100%; gap:5px; align-items:center}
+/* Circles hug the icon (same 19px icon, less ring padding) so the "?"
+   reward for visiting all 8 fits at the row's right end. */
 .market-classic-progress .market-progress-station{
   /* height:auto overrides the base 24px so the flexed width doesn't stretch
      the circle into an oval. */
-  flex:1 1 0; width:auto; height:auto; max-width:46px; aspect-ratio:1; font-size:19px;
+  flex:1 1 0; width:auto; height:auto; max-width:32px; aspect-ratio:1; font-size:19px;
 }
+.mps-reward{flex:none; margin-left:auto; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  width:30px; height:30px; font-size:18px; font-weight:900; color:var(--ok-bright)}
+.mrow-reward{cursor:pointer}
 /* BINGO card (Classic's Marketplace tray, see bingoCardHTML()). Parchment
    squares so it reads as a printed card, not dark UI. Squares stay full
    colour; the green border alone marks ownership, as soon as that item is
