@@ -3449,9 +3449,12 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    #drawerTop, not a descendant; the value matches since both have the same
    content width. Gives 2-wide capstone cells the same row height as the
    Display Mat. */
+/* The container is #drawerBody, not the grid: cqw used on a container's
+   own properties measures the window instead (wrong in the desktop frame). */
+#drawerBody{container-type:inline-size}
 .mat-results-grid{
   display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;
-  container-type:inline-size; --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4);
+  --mat-row-h:calc(((100cqw - 24px) / 4) * 1.4);
   grid-auto-rows:var(--mat-row-h);
 }
 .mat-results-grid .mm-card{width:100%; height:100%}
