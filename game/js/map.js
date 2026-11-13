@@ -16,10 +16,8 @@ function stationItemIconsHTML(stationName){
       if (jobTree && jobTree.has(e.name)) cls.push("job-highlight");
       return `<span class="${cls.join(" ")}" title="${esc(e.name)}" data-item-card="${ENTRIES.indexOf(e)}">${em(e.emoji)}</span>`;
     });
-  // A flex-basis:100% spacer forces a new row every 10 icons (see
-  // .station-items-break).
-  return icons.reduce((html, icon, i) =>
-    html + (i > 0 && i % 10 === 0 ? '<span class="station-items-break"></span>' : "") + icon, "");
+  // One row: the icons shrink to fit (.station-items).
+  return icons.join("");
 }
 
 /* Map path lines, drawn from MAP_EDGES/MAP_NODE_POS (the art has none).

@@ -33,7 +33,7 @@ function tokenHTML(r, groupedEls, plain){
     // badge), hinting that Convert could cover this.
     const totalConvertible = ok ? 0 : totalConvertibleCount();
     const convertBadge = totalConvertible > 0
-      ? `<span class="tok-convert-badge" title="${totalConvertible} conversion${totalConvertible === 1 ? "" : "s"} available right now">${em("__CONVERT__")}</span>` : "";
+      ? `<span class="tok-convert-badge" title="${totalConvertible} conversion${totalConvertible === 1 ? "" : "s"} available right now"></span>` : "";
     const checkBadge = ok ? '<span class="tok-check">✓</span>' : "";
     return `<button type="button" class="tok el ${ok ? "have" : "need"}" style="--suit:${suit}" data-elem="${esc(r.name)}" title="You have ${have}, need ${need} — tap for its card">` +
       `${esc(r.name)}${checkBadge}${convertBadge}` +

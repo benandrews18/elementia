@@ -144,7 +144,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 /* Parchment window (game/ui/panel_parchment.webp as a 9-slice, so the brass
    corners keep their shape). The palette tokens are redefined inside it, so
    everything in the window that uses them turns dark-on-parchment. */
-.sheetbox.parch, .map-card{
+.sheetbox.parch{
   --ink:#3b2412; --ink2:#5e4026; --mute:#8a6a48;
   --line:#c9a571; --line2:#d8bb8a; --card:#f6e8c6; --bg-soft:#efdcb2; --sunken:#e6cf9f;
   --gold:#a8730f; --gold-soft:#f7e3a6; --gold-line:#c9a24f;
@@ -178,6 +178,10 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 /* Per-die animation-delay (set in showLockInRewardModal()) staggers the
    pops; opacity:0 hides each die until its turn. */
 .lockin-reward-die{font-size:36px; line-height:1; opacity:0; animation:bounceIn .4s cubic-bezier(.25,1,.4,1) both}
+.lre-plus{font-family:var(--display, inherit); font-size:36px; font-weight:900; color:var(--ink); line-height:1}
+.lre-none{font-size:15px; font-weight:800; color:var(--ink2)}
+/* The "?" in the window's lower-right corner (the mat's help sprite). */
+.lockin-reward-box .lre-why-btn{right:-14px; bottom:-14px}
 html.low-motion .lockin-reward-die{animation:none; opacity:1}
 
 /* Home/Reset/Close: 3-across on one line even on a narrow phone -- tighter

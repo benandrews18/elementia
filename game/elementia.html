@@ -328,12 +328,14 @@
 
 <div class="overlay" id="lockInRewardOverlay" role="dialog" aria-modal="true" aria-labelledby="lockInRewardTitle">
   <div class="sheetbox parch lockin-reward-box" style="max-width:420px">
-    <h2 id="lockInRewardTitle"></h2>
+    <h2 id="lockInRewardTitle">Bonus Dice</h2>
     <div class="lockin-reward-dice" id="lockInRewardDice"></div>
+    <p class="lre-hint" id="lockInRewardWhy" hidden></p>
     <div class="lockin-reward-extra" id="lockInRewardExtra" hidden></div>
     <div class="btnrow">
       <button type="button" class="bigbtn" id="lockInRewardNice">Nice</button>
     </div>
+    <button type="button" class="mat-rules-btn lre-why-btn" id="lockInRewardWhyBtn" aria-label="Why these bonus dice?" aria-expanded="false"></button>
   </div>
 </div>
 
@@ -354,7 +356,7 @@
 </div>
 <div class="overlay" id="pinTip" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
   <div class="sheetbox parch pin-tip-box">
-    <h2 id="pinTipTitle">Pin Items to your To-Do List</h2>
+    <h2 id="pinTipTitle">Pin Items to your<br>To-Do List</h2>
     <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
     <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>

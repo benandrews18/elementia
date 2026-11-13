@@ -5,8 +5,8 @@
 /* First craft of an item this run, in two beats:
    1. Every element spent (recipe and any suit-cost "element tax") rises as
       a gather-style square, stacks centre-screen and pops in a firework.
-   2. The item components (kept, not spent) rise as mini cards, stack, then
-      fly back into the Inventory.
+   2. The item components (kept, not spent) peek up from behind the hub
+      and slide back down into it.
    Then the new item's card shows (autoCardPop()/celebrate()). */
 function miniItemCardHTML(name, emoji){
   const ing = ENTRIES.find(e => e.name === name);
@@ -77,23 +77,34 @@ function flyIngredientsAndReveal(entry, taxPicks = {}){
 
   const itemsBeat = () => {
     if (!items.length){ reveal(); return; }
-    // 2. Components rise and stack, then fly home to the Inventory.
-    const st = riseIntoStack(items.map(it => miniItemCardHTML(it.name, it.emoji)), 480, 160);
-    setTimeout(() => {
-      const r = document.getElementById("hubInv").getBoundingClientRect();
-      st.cards.forEach((card, i) => {
-        card.style.transform = st.finals[i]; // WAAPI fill never writes the end pose back
-        const cr = card.getBoundingClientRect();
-        const dx = r.left + r.width / 2 - (cr.left + cr.width / 2), dy = r.top + r.height / 2 - (cr.top + cr.height / 2);
-        card.animate([
-          { transform: st.finals[i], opacity: 1 },
-          { transform: `${st.finals[i]} translate(${dx}px, ${dy}px) scale(.15)`, opacity: .4 },
-        ], { duration: 420, delay: i * 70, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" }).onfinish = () => card.remove();
-      });
-      setTimeout(punchInventory, 420 + (st.cards.length - 1) * 70);
-      setTimeout(() => st.cards.forEach(c => c.remove()), 1200 + st.cards.length * 70); // insurance
-      setTimeout(reveal, 260);
-    }, st.landsAt + 180);
+    // 2. Components (kept, not spent) peek up from behind the hub, 75% of
+    //    each card showing, then slide back down into it.
+    const hubTop = document.getElementById("hub").getBoundingClientRect().top;
+    const n = items.length, step = Math.min(96, (innerWidth - 150) / Math.max(1, n - 1));
+    const cards = items.map((it, i) => {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = miniItemCardHTML(it.name, it.emoji);
+      const card = wrap.firstElementChild;
+      Object.assign(card.style, { position: "fixed", zIndex: "71", pointerEvents: "none", // just under #hub (72)
+        left: (innerWidth / 2 + (i - (n - 1) / 2) * step) + "px", top: hubTop + "px", transform: "translate(-50%, 0)" });
+      document.body.appendChild(card);
+      return card;
+    });
+    const h = cards[0].offsetHeight, up = -0.75 * h;
+    const RISE = 380, HOLD = 650, STAGGER = 70;
+    cards.forEach((card, i) => {
+      const rot = (i - (n - 1) / 2) * 4;
+      card.animate([
+        { transform: "translate(-50%, 0) rotate(0deg)", offset: 0 },
+        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: RISE / (RISE * 2 + HOLD), easing: "cubic-bezier(.3,1.3,.5,1)" },
+        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: (RISE + HOLD) / (RISE * 2 + HOLD), easing: "cubic-bezier(.5,0,.75,.4)" },
+        { transform: "translate(-50%, 0) rotate(0deg)", offset: 1 },
+      ], { duration: RISE * 2 + HOLD, delay: i * STAGGER, fill: "forwards" }).onfinish = () => card.remove();
+    });
+    const total = RISE * 2 + HOLD + (n - 1) * STAGGER;
+    setTimeout(punchInventory, total);
+    setTimeout(() => cards.forEach(c => c.remove()), total + 600); // insurance
+    setTimeout(reveal, RISE + HOLD);
   };
 
   if (!spent.length){ itemsBeat(); return; }

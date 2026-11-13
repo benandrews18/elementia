@@ -353,13 +353,19 @@ function fadeThroughBlack(midpoint){
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
-  // The title says it all: how many dice, for how long.
-  document.getElementById("lockInRewardTitle").textContent = n === 0
-    ? "No bonus dice this time"
-    : `+${n} ${n === 1 ? "die" : "dice"} on your rolls for the next 3 turns`;
+  // "Bonus Dice", a "+" and the dice; the corner "?" says why.
   const reduced = lowMotion();
-  document.getElementById("lockInRewardDice").innerHTML = Array.from({length: n}, (_, i) =>
-    `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
+  document.getElementById("lockInRewardDice").innerHTML = n === 0
+    ? '<span class="lre-none">No bonus dice this time</span>'
+    : '<span class="lre-plus">+</span>' + Array.from({length: n}, (_, i) =>
+      `<span class="lockin-reward-die"${reduced ? "" : ` style="animation-delay:${i * LOCKIN_DICE_POP_STAGGER_MS}ms"`}>🎲</span>`).join("");
+  const quarks = Math.round(matScore(matOnMat()).total).toLocaleString();
+  const why = document.getElementById("lockInRewardWhy");
+  why.hidden = true;
+  document.getElementById("lockInRewardWhyBtn").setAttribute("aria-expanded", "false");
+  why.textContent = n === 0
+    ? `Your Display Mat scored ${quarks} Quarks -- below the first breakpoint, so no bonus dice. Raise its Quark score before the next board check.`
+    : `Your Display Mat scored ${quarks} Quarks, so you roll +${n} ${n === 1 ? "die" : "dice"} at every station for the next ${MAT_CHECK_EVERY} rounds. A higher Quark score earns more.`;
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
@@ -382,6 +388,12 @@ document.getElementById("lockInRewardNice").addEventListener("click", dismissLoc
 // "?" square toggles its hint.
 document.getElementById("lockInRewardOverlay").addEventListener("click", ev => {
   if (ev.target === ev.currentTarget){ dismissLockInRewardModal(); return; }
+  if (ev.target.closest("#lockInRewardWhyBtn")){
+    const why = document.getElementById("lockInRewardWhy");
+    why.hidden = !why.hidden;
+    ev.target.closest("#lockInRewardWhyBtn").setAttribute("aria-expanded", String(!why.hidden));
+    return;
+  }
   const q = ev.target.closest("#lockInRewardQ");
   if (q){
     const hint = document.getElementById("lockInRewardHint");

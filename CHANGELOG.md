@@ -10,6 +10,19 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Crafting:** the component items now peek up from behind the bottom hub
+  (about three-quarters of each card) and slide back down, instead of
+  flying across the screen.
+- **Bonus Dice window:** titled "Bonus Dice", with a "+" before the dice.
+  A "?" in its bottom-right corner explains the dice came from your Quark
+  score and last the next 3 rounds.
+- **Map station preview:** dark wood with brass corners instead of
+  parchment. A station's item icons always fit one row (the opening
+  station pick included).
+- **Convert hint:** the atom badge on element tokens in the shops is now
+  the Convert button's own blue sprite.
+- **Pin tip:** its title breaks after "Pin Items to your".
+
 - **The first-breakpoint rule now starts at round 12** (was round 9): a
   board check below the first Quark breakpoint only ends the run from
   round 12 on. Smoke test covers it.

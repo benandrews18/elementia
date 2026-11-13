@@ -350,11 +350,12 @@
    just the convert-arrows glyph itself sitting in the token's corner as a
    quiet "tap Convert" hint. */
 /* Sized to match .tok-check's footprint (~19-20px). */
+/* The Convert button's own sprite (blue face, brass rim), so the hint
+   reads as "that button". */
 .tok-convert-badge{
-  position:absolute; top:-9px; right:-9px; width:20px; height:20px;
-  display:flex; align-items:center; justify-content:center; z-index:2;
+  position:absolute; top:-10px; right:-10px; width:22px; height:22px;
+  background:url("../ui/btn_quark.webp") center / contain no-repeat; z-index:2;
 }
-.tok-convert-badge .converticon{width:20px; height:20px}
 /* Tapping a not-yet-craftable Craft button -- see bounceMissingItems(). */
 .missing-items-note{
   position:fixed; z-index:80; pointer-events:none; white-space:nowrap;
