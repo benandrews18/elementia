@@ -113,7 +113,9 @@ function stillNeededClosure(name){
 }
 
 
-function performSingleCraft(entry){
+// taxPicks: the suit-cost elements already spent ({sym: n}), shown in the
+// craft animation (see the suit-spend balloon).
+function performSingleCraft(entry, taxPicks = {}){
   // First-ever crafts get the fly-and-stack reveal; check before craft()
   // changes owns().
   const wasOwnedBefore = owns(entry.name);
@@ -127,7 +129,7 @@ function performSingleCraft(entry){
     // no waiting either way).
     const firstCraftReveal = !wasOwnedBefore &&
       !lowMotion();
-    if (firstCraftReveal) flyIngredientsAndReveal(entry);
+    if (firstCraftReveal) flyIngredientsAndReveal(entry, taxPicks);
 
     // Bounce the old card closed, then (after render()) bounce its new compact
     // icon in, independent of whichever big reveal follows.

@@ -115,9 +115,9 @@ document.getElementById("suitSpendRows").addEventListener("click", ev => {
   save();
   // Captured before closeSuitSpendBalloon() clears it -- see
   // suitSpendOnCraft's own comment above.
-  const onCraft = suitSpendOnCraft;
+  const onCraft = suitSpendOnCraft, taxPicks = {...suitSpendPicks};
   closeSuitSpendBalloon();
-  performSingleCraft(entry);
+  performSingleCraft(entry, taxPicks);
   if (onCraft) onCraft();
 });
 // Any click outside the balloon cancels it with no state change. Its own

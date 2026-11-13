@@ -10,6 +10,16 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Crafting shows what was really spent:** first the elements you spent
+  -- the recipe's and any element tax -- rise as element squares (like
+  the gather window), stack and pop. Then the component items rise as
+  cards and fly back into your Inventory, since they're kept.
+- **Lighter card after crafting:** the new item shows as a small card with
+  no dimmed background, then flies into the Inventory. Tap it before it
+  goes to open the full inspection, which stays until you close it.
+- **Marketplace tray opens once per game:** the first Marketplace square
+  of each game opens the tray (it used to be only the first ever).
+
 - **Display Mat buttons:** Clear (was "Clear Mat") and Save now sit in the
   mat's lower-right corner beside "?". A new **Last** button puts back the
   mat from your last board check (owned cards, as many as fit); it greys

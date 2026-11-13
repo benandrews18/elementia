@@ -2,40 +2,27 @@
    craft-animations.js -- Craft animations: the first-craft ingredient fly-in and burst, and the
    "can't craft" bounces.
    ===================================================================== */
-/* First-ever craft of an item: inspection-style mini cards for each
-   ingredient rise one at a time, fan into a stack centre-screen, burst like
-   a firework, and the new item's card is left standing. Re-crafts stay
-   instant. */
-/* An item's home-station suit colour (miniIngredientCardHTML()). */
+/* First craft of an item this run, in two beats:
+   1. Every element spent (recipe and any suit-cost "element tax") rises as
+      a gather-style square, stacks centre-screen and pops in a firework.
+   2. The item components (kept, not spent) rise as mini cards, stack, then
+      fly back into the Inventory.
+   Then the new item's card shows (autoCardPop()/celebrate()). */
+/* An item's home-station suit colour (miniItemCardHTML()). */
 function itemSuitColor(name){
   const ing = ENTRIES.find(e => e.name === name);
   return ing ? DATA.suits[STATION_BY_NAME[ing.station].suit].color : "#4a4f5c";
 }
-function miniIngredientCardHTML(req){
-  if (req.kind === "element"){
-    // Same layout as the element card popup (showElCardPop()) at mini-card
-    // scale.
-    const suit = ELEMENT_SUIT[req.name];
-    const color = ELEMENT_COLOR[req.name] || "#4a4f5c";
-    const num = ATOMIC_NUMBER[req.name] || "";
-    const icon = SUIT_ICON[suit] || "";
-    const big = suit === "metal" ? " big" : "";
-    return `<div class="fc-card fc-el" style="--suit:${color}">
-      <span class="fc-el-bubble tl">${esc(num)}</span>
-      <span class="fc-el-bubble br">${esc(num)}</span>
-      <span class="fc-el-bubble tr${big}">${icon}</span>
-      <span class="fc-el-bubble bl${big}">${icon}</span>
-      <div class="fc-sym">${esc(req.name)}</div>
-      <div class="fc-name">${esc(ELEMENT_NAMES[req.name] || req.name)}</div>
-      <div class="fc-el-pill">${esc(ELEMENT_SUIT_LABEL[suit] || "")}</div>
-    </div>`;
-  }
-  const ing = ENTRIES.find(e => e.name === req.name);
-  const suit = itemSuitColor(req.name);
-  return `<div class="fc-card fc-item" style="--suit:${suit}">
-    <div class="fc-icon">${em(req.emoji || (ing && ing.emoji) || "")}</div>
-    <div class="fc-name">${esc(req.name)}</div>
+function miniItemCardHTML(name, emoji){
+  const ing = ENTRIES.find(e => e.name === name);
+  return `<div class="fc-card fc-item" style="--suit:${itemSuitColor(name)}">
+    <div class="fc-icon">${em(emoji || (ing && ing.emoji) || "")}</div>
+    <div class="fc-name">${esc(name)}</div>
   </div>`;
+}
+/* An element square like the gather window's (.gchip). */
+function miniElementSquareHTML(sym){
+  return `<div class="fc-elsq" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym] || ""}</span><span class="fc-elsq-sym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</div>`;
 }
 /* Radial spark burst from one point (the firework). Throwaway WAAPI nodes,
    like fireConfetti(). */
@@ -57,85 +44,79 @@ function fireworkBurst(x, y){
     anim.onfinish = () => p.remove();
   }
 }
-function flyIngredientsAndReveal(entry){
-  const seen = new Set();
-  // Elements first, then items by points -- sets both the launch stagger and
-  // the stack order.
-  const reqs = sortIngredientTokens(entry.reqs.filter(r => {
-    const k = r.kind + ":" + r.name;
-    if (seen.has(k)) return false;
-    seen.add(k); return true;
-  }));
-
-  const tx = innerWidth / 2, ty = innerHeight / 2;
-  const RISE_MS = 560, RISE_STAGGER_MS = 220, FAN_STEP_PX = 7, FAN_STEP_DEG = 5;
-  // fill:"forwards" never writes the end transform back to the element, so
-  // each card's resting transform is tracked here for the fade-out to start
-  // from.
-  const finalTransforms = [];
-  const cards = reqs.map((r, i) => {
-    const el = document.createElement("div");
-    el.innerHTML = miniIngredientCardHTML(r);
-    const card = el.firstElementChild;
-    card.style.position = "fixed";
-    // Stack by recipe position, so each card lands on the one before it (two
-    // fixed layers made cards appear out of order).
-    card.style.zIndex = String(500 + i);
-    card.style.pointerEvents = "none";
-    // Start just below the bottom edge, spread across the width so a
-    // multi-ingredient recipe doesn't launch every card from one spot.
-    const startX = innerWidth / 2 + (i - (reqs.length - 1) / 2) * 70;
-    const startY = innerHeight + 90;
-    card.style.left = startX + "px";
-    card.style.top = startY + "px";
-    card.style.transform = "translate(-50%,-50%)";
+/* Launches html cards from below the screen into a fanned stack at the
+   centre. Returns the cards, their resting transforms and when the last
+   one lands (ms). */
+function riseIntoStack(htmls, riseMs, staggerMs){
+  const tx = innerWidth / 2, ty = innerHeight / 2, n = htmls.length;
+  const finals = [];
+  const cards = htmls.map((html, i) => {
+    const wrap = document.createElement("div");
+    wrap.innerHTML = html;
+    const card = wrap.firstElementChild;
+    const startX = tx + (i - (n - 1) / 2) * 70, startY = innerHeight + 90;
+    Object.assign(card.style, { position: "fixed", zIndex: String(500 + i), pointerEvents: "none",
+      left: startX + "px", top: startY + "px", transform: "translate(-50%,-50%)" });
     document.body.appendChild(card);
+    // Fanned, not a dead-on overlap, so it reads as a pile of cards.
+    const off = i - (n - 1) / 2;
+    const final = `translate(-50%,-50%) translate(${tx + off * 7 - startX}px, ${ty + off * 7 - startY}px) rotate(${off * 5}deg)`;
+    finals.push(final);
+    card.animate([
+      { transform: "translate(-50%,-50%) scale(.9)", opacity: 0, offset: 0 },
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 1, offset: .12 },
+      { transform: final, opacity: 1, offset: 1 },
+    ], { duration: riseMs, delay: i * staggerMs, easing: "cubic-bezier(.25,.7,.3,1.1)", fill: "forwards" });
     return card;
   });
+  return { cards, finals, landsAt: (n - 1) * staggerMs + riseMs };
+}
+function flyIngredientsAndReveal(entry, taxPicks = {}){
+  // 1. Elements actually spent: the recipe's (catalysts aren't spent) plus
+  //    the element tax, one square each.
+  const spent = [];
+  entry.reqs.forEach(r => { if (r.kind === "element" && !r.catalyst) spent.push(r.name); });
+  Object.entries(taxPicks).forEach(([sym, k]) => { for (let i = 0; i < k; i++) spent.push(sym); });
+  const items = needsOf(entry.reqs).items;
+  const reveal = () => { if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry); };
 
-  const lastIdx = cards.length - 1;
-  const lastArrivesAt = lastIdx * RISE_STAGGER_MS + RISE_MS;
-
-  cards.forEach((card, i) => {
-    // Fanned resting spot in the stack, not a dead-on overlap -- reads as
-    // a pile of distinct cards, matching how a hand of real cards fans.
-    const fanX = tx + (i - (reqs.length - 1) / 2) * FAN_STEP_PX;
-    const fanY = ty + (i - (reqs.length - 1) / 2) * FAN_STEP_PX;
-    const fanRot = (i - (reqs.length - 1) / 2) * FAN_STEP_DEG;
-    const startX = innerWidth / 2 + (i - (reqs.length - 1) / 2) * 70;
-    const startY = innerHeight + 90;
-    const dx = fanX - startX, dy = fanY - startY;
-    const finalTransform = `translate(-50%,-50%) translate(${dx}px, ${dy}px) rotate(${fanRot}deg) scale(1)`;
-    finalTransforms.push(finalTransform);
-    card.animate([
-      { transform: "translate(-50%,-50%) translate(0,0) rotate(0deg) scale(.9)", opacity: 0, offset: 0 },
-      { transform: "translate(-50%,-50%) translate(0,0) rotate(0deg) scale(1)", opacity: 1, offset: .12 },
-      { transform: finalTransform, opacity: 1, offset: 1 },
-    ], { duration: RISE_MS, delay: i * RISE_STAGGER_MS, easing: "cubic-bezier(.25,.7,.3,1.1)", fill: "forwards" });
-  });
-
-  // A short beat once assembled, then the burst. setTimeout, not onfinish:
-  // only the last staggered animation matters, and a timer on the total
-  // duration is simpler.
-  setTimeout(() => {
-    fireworkBurst(tx, ty);
-    cards.forEach((card, i) => {
-      card.style.transform = finalTransforms[i]; // lock in the resting pose WAAPI never wrote back
-      card.animate([
-        { transform: finalTransforms[i].replace(/scale\([^)]*\)/, "scale(1)"), opacity: 1 },
-        { transform: finalTransforms[i].replace(/scale\([^)]*\)/, "scale(.2)"), opacity: 0 },
-      ], { duration: 260, easing: "ease-in", fill: "forwards" }).onfinish = () => card.remove();
-    });
-    // Same belt-and-suspenders as the reveal itself below -- onfinish is
-    // the real cleanup, this is just insurance against a dropped frame
-    // leaving stray cards stuck in the DOM forever.
-    setTimeout(() => cards.forEach(c => { if (c.parentNode) c.remove(); }), 400);
-    // No render() here: performSingleCraft() renders on its own via
-    // bounceCardClosed(), independently of this animation.
+  const itemsBeat = () => {
+    if (!items.length){ reveal(); return; }
+    // 2. Components rise and stack, then fly home to the Inventory.
+    const st = riseIntoStack(items.map(it => miniItemCardHTML(it.name, it.emoji)), 480, 160);
     setTimeout(() => {
-      if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry);
-    }, 260);
-  }, lastArrivesAt + 220);
+      const r = document.getElementById("hubInv").getBoundingClientRect();
+      st.cards.forEach((card, i) => {
+        card.style.transform = st.finals[i]; // WAAPI fill never writes the end pose back
+        const cr = card.getBoundingClientRect();
+        const dx = r.left + r.width / 2 - (cr.left + cr.width / 2), dy = r.top + r.height / 2 - (cr.top + cr.height / 2);
+        card.animate([
+          { transform: st.finals[i], opacity: 1 },
+          { transform: `${st.finals[i]} translate(${dx}px, ${dy}px) scale(.15)`, opacity: .4 },
+        ], { duration: 420, delay: i * 70, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" }).onfinish = () => card.remove();
+      });
+      setTimeout(punchInventory, 420 + (st.cards.length - 1) * 70);
+      setTimeout(() => st.cards.forEach(c => c.remove()), 1200 + st.cards.length * 70); // insurance
+      setTimeout(reveal, 260);
+    }, st.landsAt + 180);
+  };
+
+  if (!spent.length){ itemsBeat(); return; }
+  const st = riseIntoStack(spent.map(miniElementSquareHTML), 420, 80);
+  setTimeout(() => {
+    fireworkBurst(innerWidth / 2, innerHeight / 2);
+    st.cards.forEach((card, i) => {
+      card.style.transform = st.finals[i];
+      card.animate([
+        { transform: `${st.finals[i]} scale(1)`, opacity: 1 },
+        { transform: `${st.finals[i]} scale(1.25)`, opacity: 1, offset: .3 },
+        { transform: `${st.finals[i]} scale(.2)`, opacity: 0 },
+      ], { duration: 280, easing: "ease-in", fill: "forwards" }).onfinish = () => card.remove();
+    });
+    setTimeout(() => st.cards.forEach(c => { if (c.parentNode) c.remove(); }), 500); // insurance
+    // No render() here: performSingleCraft() renders on its own.
+    setTimeout(itemsBeat, 200);
+  }, st.landsAt + 160);
 }
 function punchInventory(){
   document.getElementById("hubInv").animate([

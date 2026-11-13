@@ -88,7 +88,40 @@ function updateCardPopBackBtn(){
    the feedback. */
 function autoCardPop(entry){
   releaseBingoCraftHold();
-  if (prefs.autoCardInspection !== false) showCardPop(entry);
+  if (prefs.autoCardInspection === false) return;
+  // A small card, no backdrop. After a short look it flies into the
+  // Inventory; tapping it first opens the full inspection, which then stays
+  // until dismissed.
+  const wrap = document.createElement("div");
+  wrap.innerHTML = miniItemCardHTML(entry.name, entry.emoji);
+  const card = wrap.firstElementChild;
+  card.classList.add("craft-peek");
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `${entry.name} -- tap to inspect`);
+  document.body.appendChild(card);
+  const pop = card.animate([
+    { transform: "translate(-50%,-50%) scale(.6)", opacity: 0 },
+    { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+  ], { duration: 220, easing: "cubic-bezier(.3,1.4,.4,1)", fill: "forwards" });
+  let fly = null;
+  const timer = setTimeout(() => {
+    const r = document.getElementById("hubInv").getBoundingClientRect(), cr = card.getBoundingClientRect();
+    const dx = r.left + r.width / 2 - (cr.left + cr.width / 2), dy = r.top + r.height / 2 - (cr.top + cr.height / 2);
+    card.style.pointerEvents = "none";
+    fly = card.animate([
+      { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+      { transform: `translate(-50%,-50%) translate(${dx}px, ${dy}px) scale(.15)`, opacity: .4 },
+    ], { duration: 450, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
+    fly.onfinish = () => { card.remove(); punchInventory(); };
+  }, 220 + 300);
+  card.addEventListener("click", ev => {
+    ev.stopPropagation();
+    clearTimeout(timer);
+    if (fly) return;
+    pop.cancel();
+    card.remove();
+    showCardPop(entry, false);
+  });
 }
 document.getElementById("cardPop").addEventListener("click", () => {
   clearTimeout(cardPopTimer);

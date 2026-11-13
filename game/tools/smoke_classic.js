@@ -288,6 +288,9 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // The Marketplace tray opens for the first square of EACH game (state, not prefs).
+    expect(!freshState().sawMarketSquareTray, "a new game should open the Marketplace tray for its first square again");
+
     // An item's tier is its element-icon count: none = I, one = II, two = III, three = capstone.
     const TIER_BY_ICONS = ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"];
     const offTier = ENTRIES.filter(e => e.tier !== TIER_BY_ICONS[Math.min(itemSuitCosts(e.name).length, 3)]).map(e => e.name);

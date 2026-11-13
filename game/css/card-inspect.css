@@ -18,9 +18,8 @@
 }
 .pc-back-icon img{width:70%; height:70%; object-fit:contain}
 /* First-craft fly-in mini cards (flyIngredientsAndReveal()): .fc-item
-   mirrors .pc-card (white face, black frame), .fc-el mirrors .el-pop-card
-   (see miniIngredientCardHTML()). 120px so they read mid-flight; JS sets
-   position and size per card. */
+   mirrors .pc-card (white face, black frame). 120px so they read
+   mid-flight; JS sets position per card. */
 .fc-card{
   width:120px; aspect-ratio:5/7; display:flex; flex-direction:column;
   align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.45);
@@ -32,35 +31,17 @@
 /* 80px art so it reads mid-flight. */
 .fc-item .fc-icon{font-size:80px; line-height:1}
 .fc-item .fc-name{font-size:11.5px; font-weight:800; color:#181614; line-height:1.2}
-.fc-el{
-  background:#fff; border-radius:14px; border:8px solid var(--suit, #4a4f5c);
-  position:relative;
+/* Spent element, like the gather window's square (.gchip). */
+.fc-elsq{
+  width:66px; height:66px; box-sizing:border-box; background:#fff; color:#221f1a; font-weight:800;
+  border-radius:11px; border:6px solid var(--suit); display:flex; align-items:center; justify-content:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.45);
 }
-.fc-el .fc-sym{font-size:36px; font-weight:800; color:#1f1c17; line-height:1; letter-spacing:-.01em}
-.fc-el .fc-name{font-size:8.5px; font-weight:700; color:#5a5548; line-height:1.2}
-/* Four corner bubbles like .el-pop-bubble (atomic number top-left and
-   bottom-right, suit glyph in the other two), scaled to a 120px card. */
-.fc-el-bubble{
-  position:absolute; width:22px; height:22px; border-radius:50%;
-  background:#fff; border:3px solid var(--suit, #4a4f5c);
-  display:flex; align-items:center; justify-content:center;
-  font-size:10px; font-weight:800; color:#2b2822; line-height:1;
-}
-.fc-el-bubble.tl{top:-7px; left:-7px}
-.fc-el-bubble.tr{top:-7px; right:-7px}
-.fc-el-bubble.bl{bottom:-7px; left:-7px}
-.fc-el-bubble.br{bottom:-7px; right:-7px}
-.fc-el-bubble img{width:58%; height:58%; object-fit:contain}
-/* Metal's own suit glyph, same as the full popup's own suit-icon-big --
-   reads small against the other three suits at the shared bubble scale. */
-.fc-el-bubble.big img{width:87%; height:87%}
-/* Suit pill pinned to the bottom (margin-top:auto), like .el-pop-pill. */
-.fc-el-pill{
-  margin-top:auto; font-size:6.5px; font-weight:800; letter-spacing:.05em;
-  text-transform:uppercase; color:#fff; background:var(--suit, #4a4f5c);
-  padding:2px 6px; border-radius:999px; white-space:nowrap;
-}
-
+.fc-elsq-sym{font-size:28px; line-height:1}
+.fc-elsq .el-suit-badge{width:18px; height:18px; top:-7px; right:-7px}
+/* The post-craft card peek (autoCardPop()): small, no backdrop; flies to
+   the Inventory unless tapped. */
+.craft-peek{position:fixed; left:50%; top:45%; z-index:600; cursor:pointer; padding:10px 8px 8px; border:4px solid #000}
 
 /* Element card popup, matching the printed cards (white face, thick suit
    border, corner number bubbles, suit pill at the bottom). --suit set
