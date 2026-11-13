@@ -7156,6 +7156,7 @@ function hideMouseTip(){
    afterward. */
 function cancelPendingFullscreenEvents(){
   clearTimeout(cardPopTimer);
+  capstoneMarketPending = false; // closed without closeOverlay(): don't open the Market later
   document.getElementById("cardPop").classList.remove("open");
   // Clear the queue BEFORE hideMouseTip(), which flushes the next tip on its
   // way out.
@@ -8851,6 +8852,7 @@ function updateCardPopBackBtn(){
 function autoCardPop(entry){
   releaseBingoCraftHold();
   if (prefs.autoCardInspection === false) return;
+  if (lowMotion()){ showCardPop(entry); return; } // static card, closes itself
   // A small card, no backdrop. After a short look it flies into the
   // Inventory; tapping it first opens the full inspection, which then stays
   // until dismissed.
@@ -9035,14 +9037,9 @@ function bounceCardAppear(targetEl){
    2. The item components (kept, not spent) rise as mini cards, stack, then
       fly back into the Inventory.
    Then the new item's card shows (autoCardPop()/celebrate()). */
-/* An item's home-station suit colour (miniItemCardHTML()). */
-function itemSuitColor(name){
-  const ing = ENTRIES.find(e => e.name === name);
-  return ing ? DATA.suits[STATION_BY_NAME[ing.station].suit].color : "#4a4f5c";
-}
 function miniItemCardHTML(name, emoji){
   const ing = ENTRIES.find(e => e.name === name);
-  return `<div class="fc-card fc-item" style="--suit:${itemSuitColor(name)}">
+  return `<div class="fc-card fc-item">
     <div class="fc-icon">${em(emoji || (ing && ing.emoji) || "")}</div>
     <div class="fc-name">${esc(name)}</div>
   </div>`;
