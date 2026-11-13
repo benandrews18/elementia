@@ -180,7 +180,7 @@ html.low-motion .ct-slide > *{animation:none}
    :where() matters: it gives this rule zero specificity, so a class rule's
    own translate-based :active (e.g. a translateX(-50%) button) still wins
    instead of being clobbered. */
-:where(button):not(:disabled):active{transform:scale(.93)}
+:where(button:not(:disabled):active){transform:scale(.93)}
 button{transition:transform .12s cubic-bezier(.3,.8,.4,1)}
 /* Real "chrome" buttons (filled or bordered faces, not bare icons/chips)
    get an offset ledge shadow and sink into it on press. Convert's buttons
