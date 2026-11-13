@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Fix: Convert tray over the hub in the Marketplace.** While crafting
+  straight from the Marketplace, the closed Convert tray drew on top of
+  the bottom button hub; it now stays behind it.
+
 - **Card view rows.** Card-view Craft buttons are the list view's size,
   centred under each card. Tier 1 cards run in rows of 4 across the top
   (no stacking), and the other items start on a fresh row below.

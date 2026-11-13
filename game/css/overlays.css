@@ -70,7 +70,9 @@
 /* Over the BINGO craft card, Convert (tray, scrim, button) comes up above it
    so the player can convert without leaving the Marketplace. */
 body:has(#bingoCraftOverlay.open) #convertScrim{z-index:71}
-body:has(#bingoCraftOverlay.open) #convert{z-index:72}
+/* 71, below the hub (72): the closed tray parks behind the hub. Same layer
+   as the scrim but later in the DOM, so it still paints over it. */
+body:has(#bingoCraftOverlay.open) #convert{z-index:71}
 body:has(#bingoCraftOverlay.open) #quickConvertBtn{z-index:73}
 body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #bingoClearOverlay{z-index:70}
