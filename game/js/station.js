@@ -28,7 +28,8 @@ function renderStation(name){
   const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
       title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
   const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
-  // Card view: the tapped card's full shop row, pinned under the header.
+  // Card view: the tapped card's full shop row, right under the header; it
+  // scrolls with the shop but sticks at the top rather than leave the screen.
   const open = prefs.shopCardView && all.find(e => e.name === stationCardOpen);
   const selPanel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
@@ -36,7 +37,7 @@ function renderStation(name){
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
   // pool and dice never scroll away mid-roll; after that it scrolls normally.
-  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress || !!open;
+  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress;
   return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
@@ -49,8 +50,8 @@ function renderStation(name){
       <div class="gather">${gather}</div>
       ${playBar}
       ${shopHeadHTML(shopEntries, viewBtn)}
-      ${selPanel}
     </div>
+    ${selPanel}
     <div class="makewrap">
       ${shopBody}
     </div>

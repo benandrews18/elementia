@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card view selection scrolls.** The station header always scrolls with
+  the shop; the selected item's row sits under it and only sticks once it
+  reaches the top (under the Quark meter). Selected cards are outlined in
+  gold; green stays for craftable.
+
 - **Challenge popup in icons, card Craft buttons.** The challenge popup is
   now the rule in icons plus three chips (round, stake, your mat now) and
   a ↻ swap button; it closes with a top-right ✕ (as does every combo
