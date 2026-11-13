@@ -257,7 +257,27 @@
     { const v = state.visits;
       const checks = [2, 3, 4, 5, 6, 7, 9].filter(n => { state.visits = n; return isMatCheckVisit(); });
       expect(checks.join() === "3,6,9", `mat checks should be on turns 3, 6, 9 only, got ${checks.join()}`);
-      state.visits = 4; expect(matCheckRound() === 6, "the Quark meter between checks should show the next checkpoint's breakpoints");
+      state.visits = 4; expect(nextCheckRound() === 6, "the next board check after turn 4 should be turn 6");
+      const mc = state.matChecked, fb = state.matBonusDice, td = state.tripDice, o = state.order, m = state.mat;
+      state.matChecked = true;
+      expect(matCheckRound() === 4, "between checks the meter should show this trip's (quiet check) breakpoints");
+      state.matBonusDice = 2; quietCheck();
+      expect(state.tripDice >= 2, "a quiet check should never give fewer dice than the last board check");
+      // Check orders: only the board check itself uses the multiplier.
+      const card = MAT_CARDS.find(c => c.pips.length && !matIsCapstone(c));
+      state.mat = [card.name];
+      state.visits = 6; state.order = { id: "drought", p: card.pips[0], round: 6 };
+      expect(orderMultFor(matOnMat()) === ORDER_RESTRICT_MULT, "a broken restriction should multiply the check by " + ORDER_RESTRICT_MULT);
+      state.order = { id: "shortTable", p: null, round: 6 };
+      expect(orderMultFor(matOnMat()) === 1, "a kept restriction should not change the score");
+      state.order = { id: "stationWeek", p: card.station, round: 6 }; state.mat = [];
+      expect(orderMultFor(matOnMat()) === 1, "an unmet request should not change the score");
+      state.visits = 7; state.order = { id: "drought", p: card.pips[0], round: 6 }; state.mat = [card.name];
+      expect(orderMultFor(matOnMat()) === 1, "orders must not apply to quiet checks");
+      expect(drawOrder(24).id === "grand" && drawOrder(27) === null, "round 24 should be the Grand Exhibition, Overtime has no orders");
+      const r15 = drawOrder(15);
+      expect(!r15 || CHECK_ORDERS[r15.id].kind === "restriction", "orders after round 12 should be restrictions");
+      state.matChecked = mc; state.matBonusDice = fb; state.tripDice = td; state.order = o; state.mat = m;
       state.visits = v; }
 
     // Turn 24 completes the run: the end screen offers Keep playing, and in

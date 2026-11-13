@@ -9,6 +9,7 @@ function sessionStatsGridHTML(extraCells){
   return `
     <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">SCORE (TOP QUARKS)</div></div>
     <div class="sumstat"><div class="n">${score()}</div><div class="l">ITEM SCORE</div></div>
+    ${state.grandExhibition ? `<div class="sumstat"><div class="n" style="color:var(--gold)">🏛️</div><div class="l">GRAND EXHIBITION</div></div>` : ""}
     <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
     <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
     ${extraCells || ""}`;

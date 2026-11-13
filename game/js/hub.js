@@ -108,13 +108,13 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (isClassicFirstPick()){ playStartingGift(selectedMapStation); return; }
     // The mat is only checked when leaving a checkpoint turn (every 3rd,
     // isMatCheckVisit()); other trips travel straight away.
-    if (!isMatCheckVisit()){ goStation(selectedMapStation); return; }
+    if (!isMatCheckVisit()){ quietCheck(); goStation(selectedMapStation); return; }
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
       // The shutter scene change, then the full inventory; the first check
       // ever also explains it (announceMatCheck()).
-      playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); });
+      playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); }, orderShutterLine());
       return;
     }
     goStation(selectedMapStation);

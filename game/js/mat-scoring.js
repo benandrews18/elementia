@@ -269,7 +269,10 @@ function matScore(mat){
   if (has("Metropolis")) sigs.push({ name: "Metropolis", label: "+2", on: true });
   if (has("Space Station")) sigs.push({ name: "Space Station", label: "×2", on: !!dest && mat.some(c => c.stations.includes(dest)) });
   const pre = (base + colBonus) * mult;
-  return { base, combos, completeNames, cols, colBonus, mult, sigs, layered, total: layered ? pre * 2 : pre };
+  // A board check's order (orderMultFor(), lock-in.js), only during that check.
+  const orderMult = typeof orderMultFor === "function" ? orderMultFor(mat) : 1;
+  return { base, combos, completeNames, cols, colBonus, mult, sigs, layered, orderMult,
+    total: Math.round((layered ? pre * 2 : pre) * orderMult) };
 }
 
 /* BINGO card (Classic's Marketplace tray, see bingoCardHTML()). Eligible

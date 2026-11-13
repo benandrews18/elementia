@@ -10,6 +10,17 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Dice between board checks + check orders.** Every trip that isn't a
+  board check is now a quiet check: the mat's current Quark score (against
+  that round's normal breakpoints) sets the trip's bonus dice, never below
+  the last board check's. Each board check carries an order, shown a check
+  ahead as a chip in the combo row (tap it for the rule, or reroll it for
+  one "?") and on the shutter. Requests at rounds 3-12 (Station Week,
+  Rainbow, Collector) give x1.5 Quarks when met; restrictions at rounds
+  15-21 (Fresh Faces, Drought, Short Table, Trend Shift) give x0.75 when
+  broken. Orders only affect the board check itself. Round 24 is the Grand
+  Exhibition: reach 3,865 Quarks (shown on the end screen).
+
 - **Board checks are 25% harder:** the official check every 3rd round uses
   the Quark breakpoints +25% (OFFICIAL_CHECK_BUMP). Quiet per-trip checks
   and check orders are still to come.

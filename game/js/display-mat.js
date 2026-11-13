@@ -73,7 +73,7 @@ function matComboChipHTML(g, kind){
 // (hidden if none were known), and playLockInSequence() reveals it and
 // bumps the count per collection.
 const COLLECTIONS_CHIP = "__collections__";
-function matComboChipsHTML(s, revealAll){
+function matComboChipsHTML(s, revealAll, withOrder){
   const known = s.cols.filter(c => prefs.everUnlockedMatCollections.includes(c.id));
   const showStar = revealAll ? s.cols.length > 0 : known.length > 0;
   const star = !showStar ? "" :
@@ -85,7 +85,7 @@ function matComboChipsHTML(s, revealAll){
   // Each capstone's signature, with what it's adding right now (dim when
   // its condition isn't met); tap for the rule.
   const sigs = (s.sigs || []).map(g => `<button type="button" class="mm-combo sig${g.on ? "" : " off"}" data-sig="${esc(g.name)}" title="${esc(CAPSTONE_SIGNATURES[g.name])}"><span class="mm-cico sig-ic">${em(ITEM_EMOJI[g.name])}</span><b>${esc(g.label)}</b></button>`).join("");
-  return sigs + s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
+  return (withOrder ? orderChipHTML(s) : "") + sigs + s.combos.station.map(g => matComboChipHTML(g, "station")).join("") +
     s.combos.suit.map(g => matComboChipHTML(g, "suit")).join("") +
     s.combos.component.map(g => matComboChipHTML(g, "component")).join("") + star + hidden;
 }
@@ -182,11 +182,15 @@ function quarkMeterLineHTML(s){
       <span class="qm-total" aria-label="${s.total.toLocaleString()} Quarks">${s.total.toLocaleString()}</span>
     </div>`;
 }
-/* Which visit's breakpoints the meter shows: the next checkpoint's (the
-   one the next Lock-In scores against), never earlier than the first check
-   on visit 3. */
-function matCheckRound(){
+/* The next board check's round, never earlier than the first on visit 3. */
+function nextCheckRound(){
   return Math.max(MAT_CHECK_EVERY, Math.ceil(state.visits / MAT_CHECK_EVERY) * MAT_CHECK_EVERY);
+}
+/* Which visit's breakpoints the meter shows: the ones that apply on leaving
+   now. After the first check, leaving a non-check round is a quiet check
+   against that round's own (unbumped) breakpoints (quietCheck()). */
+function matCheckRound(){
+  return state.matChecked && !isSunsetVisit() ? state.visits : nextCheckRound();
 }
 /* Classic, after the first mat check: the Quark Meter rides along the top
    of every screen (just above #topbar's pills, below every tray/overlay),
@@ -212,7 +216,7 @@ function renderMatTop(){
 
   // Named collections are discovered: revealAll=false omits any not yet in
   // prefs.everUnlockedMatCollections; other combo kinds always show.
-  const chips = matComboChipsHTML(s, false);
+  const chips = matComboChipsHTML(s, false, true);
   // The score card shows on both the Display Mat and Elements tabs -- it's a
   // live readout of the mat regardless of which page is open.
   const scoreRowHTML = `<div class="mat-score-card">
@@ -495,6 +499,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   if (ev.target.closest("#matMiniRow")){ setMatCollapsed(false); return; }
   const sigChip = ev.target.closest("[data-sig]");
   if (sigChip){ showMatToast(CAPSTONE_SIGNATURES[sigChip.dataset.sig]); return; }
+  if (ev.target.closest("[data-order]")){ openOrderInfo(); return; }
   if (ev.target.closest("[data-hidden-col]")){
     showMatToast("You have a hidden collection on your mat! Lock in your board to discover it.");
     return;

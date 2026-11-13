@@ -102,6 +102,147 @@ function emptyElementsForScore(total, round){
 // Tier -> bonus dice for the trip: +0/+1/+2/+3 for tiers 0-3 (no penalty
 // for tier 0). Tier 4 adds a "?" element on top of +3 (see finishLockIn()).
 function diceDeltaForReward(reward){ return Math.min(reward, 3); }
+/* Quiet check: every trip that isn't a board check. The mat's score now
+   sets this trip's dice (state.tripDice), never below the last board
+   check's (state.matBonusDice, the floor). No shutter, no "?", never ends
+   the run, and check orders don't apply. */
+function quietCheck(){
+  if (!state.matChecked) return;
+  const total = matScore(matOnMat()).total;
+  const quiet = diceDeltaForReward(emptyElementsForScore(total, state.visits));
+  const floor = state.matBonusDice || 0;
+  state.tripDice = Math.max(floor, quiet);
+  if (state.tripDice > 0) queueEventToast("dice", "🎲", `Display Mat: ${Math.round(total).toLocaleString()} Quarks`,
+    quiet > floor ? "Your score raised your dice!" : "Dice kept from your last board check",
+    `+${state.tripDice}`);
+}
+
+/* Check orders: each board check carries one, drawn a check ahead
+   (state.order = {id, p, round}). Requests (checks up to ORDER_LAST_REQUEST)
+   multiply that check's Quarks by ORDER_REQUEST_MULT when met; restrictions
+   (later checks) by ORDER_RESTRICT_MULT when broken. Round
+   RUN_COMPLETE_VISIT's final check is the Grand Exhibition: a high target
+   (GRAND_EXHIBITION_TARGET), nothing else. Only orders the player's owned
+   cards can satisfy are drawn. Quiet checks never use them. */
+const ORDER_REQUEST_MULT = 1.5, ORDER_RESTRICT_MULT = 0.75, ORDER_LAST_REQUEST = 12;
+const GRAND_EXHIBITION_TARGET = Math.round(lockInTiersForRound(RUN_COMPLETE_VISIT).two);
+const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
+const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
+const CHECK_ORDERS = {
+  stationWeek: { kind: "request", name: "Station Week",
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `Show 3 or more ${p} cards.`,
+    params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
+    ok: (mat, p) => matStationCount(mat, p) >= 3 },
+  rainbow: { kind: "request", name: "Rainbow",
+    icon: () => "🌈", text: () => "Show all four element colours.",
+    params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
+    ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
+  collector: { kind: "request", name: "Collector",
+    icon: () => "★", text: () => "Complete a named collection on your mat.",
+    params: owned => matCompletedIn(owned).length ? [null] : [],
+    ok: mat => matCompletedIn(mat).length > 0 },
+  freshFaces: { kind: "restriction", name: "Fresh Faces",
+    icon: () => "🆕", text: () => "At most half your cards can be ones from the last board check.",
+    params: () => (state.lastCheckedMat || []).length ? [null] : [],
+    ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
+  drought: { kind: "restriction", name: "Drought",
+    icon: p => SUIT_ICON[p], text: p => `No cards with the ${ELEMENT_SUIT_LABEL[p]} icon.`,
+    params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
+  shortTable: { kind: "restriction", name: "Short Table",
+    icon: () => "🪑", text: () => "Leave at least one slot empty.",
+    params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
+  trendShift: { kind: "restriction", name: "Trend Shift",
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `No ${p} combo (3+ ${p} cards). It led your last board check.`,
+    params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },
+};
+function drawOrder(round, avoid){
+  if (round > RUN_COMPLETE_VISIT) return null;
+  if (round === RUN_COMPLETE_VISIT) return { id: "grand", p: null, round };
+  const kind = round <= ORDER_LAST_REQUEST ? "request" : "restriction";
+  const owned = state.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+  const pool = Object.keys(CHECK_ORDERS).filter(id => CHECK_ORDERS[id].kind === kind)
+    .flatMap(id => CHECK_ORDERS[id].params(owned).map(p => ({ id, p, round })))
+    .filter(o => !avoid || o.id !== avoid.id || o.p !== avoid.p);
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+// The next board check's order, drawn when first needed (null until one is
+// possible -- early on the player may not own enough cards).
+function currentOrder(){
+  if (typeof comboLabActive !== "undefined" && comboLabActive) return null;
+  // Once this round's check is done, the order shown is the next one's.
+  const done = isSunsetVisit() && (state.checkLog || []).some(e => e.v === state.visits);
+  const round = nextCheckRound() + (done ? MAT_CHECK_EVERY : 0);
+  if (!state.order || state.order.round !== round) state.order = drawOrder(round);
+  return state.order;
+}
+// Is the mat meeting the order (requests), keeping to it (restrictions), or
+// reaching the target (Grand Exhibition)?
+function orderMet(o, mat, total){
+  return o.id === "grand" ? total >= GRAND_EXHIBITION_TARGET : CHECK_ORDERS[o.id].ok(mat, o.p);
+}
+// The order's multiplier on matScore(), only while its board check is the
+// one underway (never on quiet checks or saved-layout previews elsewhere).
+function orderMultFor(mat){
+  const o = state.order;
+  if (!o || o.id === "grand" || o.round !== state.visits || !isSunsetVisit()) return 1;
+  const ok = CHECK_ORDERS[o.id].ok(mat, o.p);
+  return CHECK_ORDERS[o.id].kind === "request" ? (ok ? ORDER_REQUEST_MULT : 1) : (ok ? 1 : ORDER_RESTRICT_MULT);
+}
+function orderMultLabel(o){
+  return o.id === "grand" ? GRAND_EXHIBITION_TARGET.toLocaleString()
+    : CHECK_ORDERS[o.id].kind === "request" ? `×${ORDER_REQUEST_MULT}` : `×${ORDER_RESTRICT_MULT}`;
+}
+function orderIconHTML(o){ return o.id === "grand" ? "🏛️" : CHECK_ORDERS[o.id].icon(o.p); }
+function orderName(o){ return o.id === "grand" ? "Grand Exhibition" : CHECK_ORDERS[o.id].name; }
+// Combo-row chip (matComboChipsHTML(..., true)): lit when met; a broken
+// restriction shows red. Tap: openOrderInfo().
+function orderChipHTML(s){
+  const o = currentOrder();
+  if (!o) return "";
+  const ok = orderMet(o, matOnMat(), s.total);
+  const restr = o.id !== "grand" && CHECK_ORDERS[o.id].kind === "restriction";
+  const cls = restr ? (ok ? "off" : "bad") : (ok ? "on" : "off");
+  return `<button type="button" class="mm-combo order ${cls}" data-order title="${esc(orderName(o))} (round ${o.round} board check)"><span class="mm-cico order-ic">${orderIconHTML(o)}</span><b>${orderMultLabel(o)}</b></button>`;
+}
+function orderShutterLine(){
+  const o = currentOrder();
+  if (!o) return "";
+  if (o.id === "grand") return `🏛️ Grand Exhibition: reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks!`;
+  const d = CHECK_ORDERS[o.id];
+  return `${d.kind === "request" ? "Request" : "Restriction"}: ${d.name} (${orderMultLabel(o)})`;
+}
+function openOrderInfo(){
+  const o = currentOrder();
+  if (!o) return;
+  const mat = matOnMat(), total = matScore(mat).total, ok = orderMet(o, mat, total);
+  document.getElementById("comboInfoTitle").innerHTML = `<span class="ci-title-ic">${orderIconHTML(o)}</span> ${esc(orderName(o))}`;
+  let html;
+  if (o.id === "grand"){
+    html = `<p class="order-text">The final board check: reach <b>${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks</b>.</p>
+      <p class="order-status ${ok ? "ok" : ""}">Right now: ${Math.round(total).toLocaleString()} Quarks ${ok ? "✓" : ""}</p>`;
+  } else {
+    const d = CHECK_ORDERS[o.id], req = d.kind === "request";
+    const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
+    html = `<p class="order-text">${esc(d.text(o.p))}</p>
+      <p>${req ? "Request" : "Restriction"} for the <b>round ${o.round}</b> board check: ${req
+        ? `do it and your Quark score is <b>×${ORDER_REQUEST_MULT}</b>.`
+        : `break it and your Quark score is <b>×${ORDER_RESTRICT_MULT}</b>.`} Only the board check counts.</p>
+      <p class="order-status ${ok ? "ok" : "no"}">Your mat right now: ${req ? (ok ? "✓ done" : "not yet") : (ok ? "✓ keeping to it" : "✗ breaking it")}</p>
+      <button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"}>Reroll for 1 ${emptyElSquareHTML(22)}</button>`;
+  }
+  document.getElementById("comboInfoBody").innerHTML = html;
+  openOverlay("comboInfoOverlay");
+}
+document.getElementById("comboInfoOverlay").addEventListener("click", ev => {
+  if (!ev.target.closest("#orderReroll:not(:disabled)")) return;
+  const o = currentOrder(), next = o && drawOrder(o.round, o);
+  if (!next || !(state.emptyElements > 0)) return;
+  state.emptyElements -= 1;
+  state.order = next;
+  save(); render();
+  if (drawer.classList.contains("open")) renderMatTop();
+  openOrderInfo();
+});
 /* Scores the mat as it stands now (not matLastScore, which could be stale).
    A zero reward only ends the run at sunset from BREAKPOINT_GATE_VISIT on,
    via askConfirm(); Cancel leaves the mat and drawer as they were so the
@@ -249,7 +390,7 @@ function playLockInSequence(reward, onDone = finishLockIn){
   // the row with revealAll=true (first-timers hidden until their beat).
   const combosEl = document.querySelector("#drawerTop .mat-combos");
   if (combosEl){
-    combosEl.innerHTML = matComboChipsHTML(s, true) ||
+    combosEl.innerHTML = matComboChipsHTML(s, true, true) ||
       `<span class="mm-combo-none">Three cards alike start a combo</span>`;
   }
 
@@ -297,6 +438,7 @@ function playLockInSequence(reward, onDone = finishLockIn){
     setMatScoreNumbers(s.base + s.colBonus, s.mult, s.total);
     setQuarkMeterProgress(s.total);
     bouncePulse(document.querySelector("#drawerTop .qm-total"));
+    bouncePulse(document.querySelector("#drawerTop .mm-combo.order"));
   }, afterBeats);
   const afterQuarks = afterBeats + LOCKIN_BOUNCE_DURATION_MS + 300;
   setTimeout(() => onDone(reward), afterQuarks);
@@ -307,14 +449,23 @@ function playLockInSequence(reward, onDone = finishLockIn){
 // (showLockInRewardModal()) always shows, even for +0, and travel happens
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
-  (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(matScore(matOnMat()).total) });
+  const order = state.order && state.order.round === state.visits ? state.order : null;
+  const orderOk = order ? orderMet(order, matOnMat(), 0) : null;
+  const logEntry = { v: state.visits, q: Math.round(matScore(matOnMat()).total) };
+  if (order){ logEntry.o = order.id; logEntry.ok = orderOk; }
+  (state.checkLog || (state.checkLog = [])).push(logEntry);
+  // Trend Shift's station: the biggest station combo on this mat.
+  const st = Object.entries(matGroupsOf(matOnMat()).st).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
+  state.lastTopStation = st ? st[0] : null;
   state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
+  state.order = drawOrder(state.visits + MAT_CHECK_EVERY); // shown a check ahead
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;
-  state.matBonusDice = delta;
+  state.matBonusDice = delta; // the floor until the next board check
+  state.tripDice = delta;
   // Tier 4 (the top breakpoint) also banks one "?" element.
   if (reward >= 4) state.emptyElements = (state.emptyElements || 0) + 1;
   save();
@@ -334,7 +485,10 @@ function finishLockIn(reward, opts = {}){
   // skipToast: for a caller that skips playLockInSequence() and travels
   // directly.
   if (opts.skipToast){ proceed(); return; }
-  showLockInRewardModal(delta, reward >= 4, proceed);
+  const orderLine = !order ? "" : CHECK_ORDERS[order.id].kind === "request"
+    ? (orderOk ? `${CHECK_ORDERS[order.id].name} done: Quarks ×${ORDER_REQUEST_MULT}!` : "")
+    : (orderOk ? "" : `${CHECK_ORDERS[order.id].name} broken: Quarks ×${ORDER_RESTRICT_MULT}`);
+  showLockInRewardModal(delta, reward >= 4, proceed, orderLine);
 }
 // Delay between each die's pop-in, via inline animation-delay (not a
 // setTimeout chain, which a re-render could interrupt).
@@ -360,7 +514,7 @@ function fadeThroughBlack(midpoint){
     setTimeout(() => c.classList.remove("on"), 40);
   }, FADE_MS);
 }
-function showLockInRewardModal(n, gotEmptyElement, onDone){
+function showLockInRewardModal(n, gotEmptyElement, onDone, orderLine = ""){
   document.body.classList.remove("lockin-playing");
   // "Bonus Dice", a "+" and the dice; the corner "?" says why.
   const reduced = lowMotion();
@@ -374,15 +528,15 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.getElementById("lockInRewardWhyBtn").setAttribute("aria-expanded", "false");
   why.textContent = n === 0
     ? `Your Display Mat scored ${quarks} Quarks -- below the first breakpoint, so no bonus dice. Raise its Quark score before the next board check.`
-    : `Your Display Mat scored ${quarks} Quarks, so you roll +${n} ${n === 1 ? "die" : "dice"} at every station for the next ${MAT_CHECK_EVERY} rounds. A higher Quark score earns more.`;
+    : `Your Display Mat scored ${quarks} Quarks, so you roll at least +${n} ${n === 1 ? "die" : "dice"} at every station until the next board check. Raise your Quark score between checks to roll even more.`;
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
-  extra.hidden = !gotEmptyElement;
-  extra.innerHTML = gotEmptyElement ? `
+  extra.hidden = !gotEmptyElement && !orderLine;
+  extra.innerHTML = (orderLine ? `<div class="lre-line lre-order">${esc(orderLine)}</div>` : "") + (gotEmptyElement ? `
     <div class="lre-line"><span>+1 Unknown Element</span>
       <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
-    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
+    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "");
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -419,7 +573,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  playShutter("Final Score!", () => { openDrawer(); updateHub(); });
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -432,6 +586,7 @@ function confirmFinalLockIn(){
 function finishFinalCheck(total){
   document.body.classList.remove("lockin-playing");
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
+  state.grandExhibition = total >= GRAND_EXHIBITION_TARGET;
   state.finalCheckPending = false;
   lockInCommitted = false;
   closeDrawer();
@@ -446,11 +601,13 @@ function finishFinalCheck(total){
    atClosed runs while the screen is covered (open the mat there). Low
    motion: atClosed straight away. Input is blocked while it plays. */
 const SHUTTER_CLOSE_MS = 480, SHUTTER_HOLD_MS = 1100;
-function playShutter(line2, atClosed){
+function playShutter(line2, atClosed, line3 = ""){
   if (lowMotion()){ atClosed(); return; }
   const el = document.getElementById("shutter");
   el.querySelector(".sh-l1").textContent = `Round ${state.visits} / ${RUN_COMPLETE_VISIT}`;
   el.querySelector(".sh-l2").textContent = line2;
+  el.querySelector(".sh-l3").textContent = line3;
+  el.querySelector(".sh-l3").hidden = !line3;
   el.classList.add("on");
   el.offsetHeight; // start from open, so the panels slide in
   el.classList.add("closed");
@@ -470,6 +627,8 @@ function announceMatCheck(){
 document.getElementById("matCheckTutorial").innerHTML = `
   <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
   <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
+  <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
+  <p class="mct-line">📜 Each check has an <b>order</b> -- tap its chip by your combos to see it.</p>
   <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.

@@ -133,6 +133,13 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mm-cico.sig-ic{background:#f2e6cc; border:2px solid var(--gold)}
 .mm-combo.sig b{font-size:13px}
 .mm-combo.sig.off{opacity:.45}
+/* Check order chip (orderChipHTML()): lit when met, red when a restriction is broken. */
+.mm-cico.order-ic{background:#fff3c4; border:2px dashed var(--gold)}
+.mm-combo.order b{font-size:13px}
+.mm-combo.order.off{opacity:.55}
+.mm-combo.order.on .mm-cico{border-style:solid; box-shadow:0 0 8px rgba(226,178,90,.8)}
+.mm-combo.order.bad .mm-cico{border:2px solid var(--bad); background:var(--bad-soft)}
+.mm-combo.order.bad b{color:var(--bad)}
 .mm-cico.hidden-ic{background:var(--bad); color:#fff; font-size:18px; font-weight:900; border:2px solid #fff;
   animation:hiddenColPulse 1.6s ease-in-out infinite}
 @keyframes hiddenColPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,103,76,.6)} 50%{box-shadow:0 0 0 6px rgba(240,103,76,0)}}

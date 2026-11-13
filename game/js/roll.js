@@ -7,9 +7,11 @@ function doRoll(rollCount){
   const s = STATION_BY_NAME[current], out = [];
   const dice = sortedDice(s);
   const base = rollCount == null ? TAKE : rollCount;
-  // Classic: MAT_PRE_CHECK_DICE (4) until the first mat check, then base + the latest
-  // check's bonus (see MAT_CHECK_EVERY).
-  const n = state.matChecked ? base + (state.matBonusDice || 0) : Math.max(MAT_PRE_CHECK_DICE, base);
+  // Classic: MAT_PRE_CHECK_DICE (4) until the first mat check, then base +
+  // this trip's bonus (state.tripDice, set by finishLockIn()/quietCheck();
+  // older saves fall back to the latest check's).
+  const bonus = state.tripDice != null ? state.tripDice : (state.matBonusDice || 0);
+  const n = state.matChecked ? base + bonus : Math.max(MAT_PRE_CHECK_DICE, base);
   for (let i = 0; i < n; i++){
     const sym = dice[Math.floor(Math.random() * 6)];
     const face = dice.indexOf(sym) + 1;

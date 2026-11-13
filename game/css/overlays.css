@@ -91,6 +91,15 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 .sh-l1{font-size:18px; font-weight:900; letter-spacing:1px; color:#fff; text-transform:uppercase;
   padding:4px 14px; border-radius:999px; background:rgba(0,0,0,.35)}
 .sh-l2{font-size:32px; font-weight:900; color:var(--gold); text-shadow:0 3px 0 #000, 0 0 18px rgba(226,178,90,.5); line-height:1.1; padding:0 16px}
+.sh-l3{font-size:17px; font-weight:900; color:#fff; padding:6px 14px; margin:4px 16px 0; border-radius:12px;
+  background:rgba(0,0,0,.45); border:2px solid var(--gold); max-width:340px}
+.sh-l3[hidden]{display:none}
+.lre-order{font-size:15px; margin-bottom:8px}
+.order-text{font-size:17px; font-weight:900}
+.order-status{font-weight:900}
+.order-status.ok{color:var(--good, #2f8a4a)}
+.order-status.no{color:var(--bad)}
+.order-reroll{display:inline-flex; align-items:center; gap:6px}
 .mat-rules-page[hidden]{display:none}
 .mct-line{margin:8px 0; line-height:1.45}
 .mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
