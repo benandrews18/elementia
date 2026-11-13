@@ -397,9 +397,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  openDrawer();
-  queueEventToast("check", "🏁", `Turn ${RUN_COMPLETE_VISIT} / ${RUN_COMPLETE_VISIT}`, "Final Score -- lock in your best mat");
-  updateHub();
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); });
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -421,11 +419,27 @@ function finishFinalCheck(total){
   fireConfetti();
   showEndGame();
 }
-/* A board check opening (hub's Travel on a checkpoint turn): a banner
-   drops in with the turn and bounces away; the very first check ever also
-   opens the Display Mat rules (prefs.sawMatCheckTutorial). */
+/* Scene change into a board check: two panels slide in from the top and
+   bottom, meet in the middle with the round and line2, and part again.
+   atClosed runs while the screen is covered (open the mat there). Low
+   motion: atClosed straight away. Input is blocked while it plays. */
+const SHUTTER_CLOSE_MS = 480, SHUTTER_HOLD_MS = 1100;
+function playShutter(line2, atClosed){
+  if (lowMotion()){ atClosed(); return; }
+  const el = document.getElementById("shutter");
+  el.querySelector(".sh-l1").textContent = `Round ${state.visits} / ${RUN_COMPLETE_VISIT}`;
+  el.querySelector(".sh-l2").textContent = line2;
+  el.classList.add("on");
+  el.offsetHeight; // start from open, so the panels slide in
+  el.classList.add("closed");
+  setTimeout(atClosed, SHUTTER_CLOSE_MS);
+  setTimeout(() => el.classList.remove("closed"), SHUTTER_CLOSE_MS + SHUTTER_HOLD_MS);
+  setTimeout(() => el.classList.remove("on"), SHUTTER_CLOSE_MS * 2 + SHUTTER_HOLD_MS);
+}
+/* A board check opening (hub's Travel on a checkpoint turn): the shutter
+   scene change, with the mat opening behind it; the very first check ever
+   also opens the Display Mat rules (prefs.sawMatCheckTutorial). */
 function announceMatCheck(){
-  queueEventToast("check", "⚛️", `Turn ${state.visits} / ${RUN_COMPLETE_VISIT}`, "Display Mat Score");
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
     openMatRules();

@@ -112,10 +112,9 @@ document.getElementById("hubHome").addEventListener("click", ev => {
     if (travelPromptFor !== selectedMapStation){
       travelPromptFor = selectedMapStation;
       matDrawerView = "mat";
-      // Straight to the full inventory; a banner names the check, and the
-      // first check ever explains it (announceMatCheck()).
-      openDrawer();
-      announceMatCheck();
+      // The shutter scene change, then the full inventory; the first check
+      // ever also explains it (announceMatCheck()).
+      playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); });
       return;
     }
     goStation(selectedMapStation);

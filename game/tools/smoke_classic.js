@@ -108,7 +108,7 @@
     state.visits = 3; goMap(); await wait(300);
     const dest = Object.keys(MAP_NODE_POS).find(n => n !== state.lastStation && canTravelTo(n));
     selectedMapStation = dest; render(); await wait(100);
-    document.getElementById("hubHome").click(); await wait(400);
+    document.getElementById("hubHome").click(); await wait(SHUTTER_CLOSE_MS * 2 + SHUTTER_HOLD_MS + 300);
     log.lockinFace = hubHomeFace();
     confirmLockIn(); await wait(6000);
     const nice = document.getElementById("lockInRewardNice"); if (nice) nice.click();
@@ -266,7 +266,7 @@
     // Turn 24 ends with a final mat score first (Home's Final Score face).
     state.visits = RUN_COMPLETE_VISIT; state.runComplete = false; state.ended = false; state.bestMatScore = 0;
     state.mat = state.items.filter(n => MAT_CARD_BY_NAME[n]).slice(0, 4); lockInCommitted = false;
-    goMap(); await wait(400);
+    goMap(); await wait(SHUTTER_CLOSE_MS * 2 + SHUTTER_HOLD_MS + 300); // the shutter scene change
     expect(state.finalCheckPending && hubHomeFace() === "final" && drawer.classList.contains("open") && !state.runComplete,
       "back on the map after turn 24 should open the mat for the final score");
     const finalQ = Math.round(matScore(matOnMat()).total);

@@ -8,6 +8,15 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-12 (board check scene change)
+
+- **Board checks get a scene change:** instead of a banner, two panels
+  slide in from the top and bottom and meet in the middle -- "Round 6 / 24
+  -- Display Board Check!" -- then part to reveal your inventory and
+  Display Mat, ready to arrange and lock in. The final score after round 24
+  uses it too ("Final Score!"). With Low motion on, it goes straight to the
+  mat.
+
 ## 2026-11-12 (fresh start, clock info)
 
 - **Everyone starts fresh:** the first time a device opens this version,
