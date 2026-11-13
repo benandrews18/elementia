@@ -89,7 +89,9 @@ function updateCardPopBackBtn(){
    inspection" setting is read in one place. Capstones use celebrate()
    instead. With inspection off, performSingleCraft()'s bounce sequence is
    the feedback. */
-function autoCardPop(entry){
+// holdMs: how long the card waits before flying to the Inventory (the
+// craft animation stretches it to cover its element pop).
+function autoCardPop(entry, holdMs = 300){
   releaseBingoCraftHold();
   if (prefs.autoCardInspection === false) return;
   if (lowMotion()){ showCardPop(entry); return; } // static card, closes itself
@@ -117,7 +119,7 @@ function autoCardPop(entry){
       { transform: `translate(-50%,-50%) translate(${dx}px, ${dy}px) scale(.15)`, opacity: .4 },
     ], { duration: 450, easing: "cubic-bezier(.5,0,.75,.4)", fill: "forwards" });
     fly.onfinish = () => { card.remove(); punchInventory(); };
-  }, 220 + 300);
+  }, 220 + holdMs);
   card.addEventListener("click", ev => {
     ev.stopPropagation();
     clearTimeout(timer);

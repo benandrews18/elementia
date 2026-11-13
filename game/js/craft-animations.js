@@ -2,12 +2,12 @@
    craft-animations.js -- Craft animations: the first-craft ingredient fly-in and burst, and the
    "can't craft" bounces.
    ===================================================================== */
-/* First craft of an item this run, in two beats:
-   1. Every element spent (recipe and any suit-cost "element tax") rises as
-      a gather-style square, stacks centre-screen and pops in a firework.
-   2. The item components (kept, not spent) peek up from behind the hub
-      and slide back down into it.
-   Then the new item's card shows (autoCardPop()/celebrate()). */
+/* First craft of an item this run, all at once: the new item's card shows
+   right away (autoCardPop()/celebrate()); every element spent (recipe and
+   any suit-cost "element tax") rises onto it as a gather-style square,
+   stacks and pops in a firework; the item components (kept, not spent) peek
+   up from behind the hub and slide back down. Then the card flies to the
+   Inventory. */
 function miniItemCardHTML(name, emoji){
   const ing = ENTRIES.find(e => e.name === name);
   return `<div class="fc-card fc-item">
@@ -43,14 +43,14 @@ function fireworkBurst(x, y){
    centre. Returns the cards, their resting transforms and when the last
    one lands (ms). */
 function riseIntoStack(htmls, riseMs, staggerMs){
-  const tx = innerWidth / 2, ty = innerHeight / 2, n = htmls.length;
+  const tx = innerWidth / 2, ty = innerHeight * .45, n = htmls.length; // the new card's centre (.craft-peek)
   const finals = [];
   const cards = htmls.map((html, i) => {
     const wrap = document.createElement("div");
     wrap.innerHTML = html;
     const card = wrap.firstElementChild;
     const startX = tx + (i - (n - 1) / 2) * 70, startY = innerHeight + 90;
-    Object.assign(card.style, { position: "fixed", zIndex: String(500 + i), pointerEvents: "none",
+    Object.assign(card.style, { position: "fixed", zIndex: String(610 + i), pointerEvents: "none", // over .craft-peek (600)
       left: startX + "px", top: startY + "px", transform: "translate(-50%,-50%)" });
     document.body.appendChild(card);
     // Fanned, not a dead-on overlap, so it reads as a pile of cards.
@@ -67,18 +67,24 @@ function riseIntoStack(htmls, riseMs, staggerMs){
   return { cards, finals, landsAt: (n - 1) * staggerMs + riseMs };
 }
 function flyIngredientsAndReveal(entry, taxPicks = {}){
-  // 1. Elements actually spent: the recipe's (catalysts aren't spent) plus
-  //    the element tax, one square each.
+  // Elements actually spent: the recipe's (catalysts aren't spent) plus the
+  // element tax, one square each.
   const spent = [];
   entry.reqs.forEach(r => { if (r.kind === "element" && !r.catalyst) spent.push(r.name); });
   Object.entries(taxPicks).forEach(([sym, k]) => { for (let i = 0; i < k; i++) spent.push(sym); });
   const items = needsOf(entry.reqs).items;
-  const reveal = () => { if (entry.tier === "CAPSTONE") celebrate(entry); else autoCardPop(entry); };
+  const RISE = 420, STAGGER = 80, POP = 280;
+  const popAt = spent.length ? (spent.length - 1) * STAGGER + RISE + 160 : 0;
 
-  const itemsBeat = () => {
-    if (!items.length){ reveal(); return; }
-    // 2. Components (kept, not spent) peek up from behind the hub, 75% of
-    //    each card showing, then slide back down into it.
+  // All at once: the new card shows right away and waits for the elements
+  // to pop on top of it before flying to the Inventory (a capstone gets its
+  // full card instead); the kept components peek up from the hub meanwhile.
+  if (entry.tier === "CAPSTONE") celebrate(entry);
+  else autoCardPop(entry, Math.max(300, popAt + POP));
+
+  if (items.length){
+    // Components (kept, not spent): 75% of each card peeks up from behind
+    // the hub, then slides back down into it.
     const hubTop = document.getElementById("hub").getBoundingClientRect().top;
     const n = items.length, step = Math.min(96, (innerWidth - 150) / Math.max(1, n - 1));
     const cards = items.map((it, i) => {
@@ -91,38 +97,36 @@ function flyIngredientsAndReveal(entry, taxPicks = {}){
       return card;
     });
     const h = cards[0].offsetHeight, up = -0.75 * h;
-    const RISE = 380, HOLD = 650, STAGGER = 70;
+    const UP = 380, HOLD = Math.max(650, popAt), PEEK_STAGGER = 70;
     cards.forEach((card, i) => {
       const rot = (i - (n - 1) / 2) * 4;
       card.animate([
         { transform: "translate(-50%, 0) rotate(0deg)", offset: 0 },
-        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: RISE / (RISE * 2 + HOLD), easing: "cubic-bezier(.3,1.3,.5,1)" },
-        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: (RISE + HOLD) / (RISE * 2 + HOLD), easing: "cubic-bezier(.5,0,.75,.4)" },
+        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: UP / (UP * 2 + HOLD), easing: "cubic-bezier(.3,1.3,.5,1)" },
+        { transform: `translate(-50%, ${up}px) rotate(${rot}deg)`, offset: (UP + HOLD) / (UP * 2 + HOLD), easing: "cubic-bezier(.5,0,.75,.4)" },
         { transform: "translate(-50%, 0) rotate(0deg)", offset: 1 },
-      ], { duration: RISE * 2 + HOLD, delay: i * STAGGER, fill: "forwards" }).onfinish = () => card.remove();
+      ], { duration: UP * 2 + HOLD, delay: i * PEEK_STAGGER, fill: "forwards" }).onfinish = () => card.remove();
     });
-    const total = RISE * 2 + HOLD + (n - 1) * STAGGER;
+    const total = UP * 2 + HOLD + (n - 1) * PEEK_STAGGER;
     setTimeout(punchInventory, total);
     setTimeout(() => cards.forEach(c => c.remove()), total + 600); // insurance
-    setTimeout(reveal, RISE + HOLD);
-  };
+  }
 
-  if (!spent.length){ itemsBeat(); return; }
-  const st = riseIntoStack(spent.map(miniElementSquareHTML), 420, 80);
+  if (!spent.length) return;
+  // Elements rise onto the new card, stack, then pop with the firework.
+  const st = riseIntoStack(spent.map(miniElementSquareHTML), RISE, STAGGER);
   setTimeout(() => {
-    fireworkBurst(innerWidth / 2, innerHeight / 2);
+    fireworkBurst(innerWidth / 2, innerHeight * .45);
     st.cards.forEach((card, i) => {
       card.style.transform = st.finals[i];
       card.animate([
         { transform: `${st.finals[i]} scale(1)`, opacity: 1 },
         { transform: `${st.finals[i]} scale(1.25)`, opacity: 1, offset: .3 },
         { transform: `${st.finals[i]} scale(.2)`, opacity: 0 },
-      ], { duration: 280, easing: "ease-in", fill: "forwards" }).onfinish = () => card.remove();
+      ], { duration: POP, easing: "ease-in", fill: "forwards" }).onfinish = () => card.remove();
     });
-    setTimeout(() => st.cards.forEach(c => { if (c.parentNode) c.remove(); }), 500); // insurance
-    // No render() here: performSingleCraft() renders on its own.
-    setTimeout(itemsBeat, 200);
-  }, st.landsAt + 160);
+    setTimeout(() => st.cards.forEach(c => { if (c.parentNode) c.remove(); }), POP + 220); // insurance
+  }, popAt);
 }
 function punchInventory(){
   document.getElementById("hubInv").animate([

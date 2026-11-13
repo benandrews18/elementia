@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Crafting animation, all at once:** the new card appears as soon as you
+  tap Craft; the spent elements (now bigger) rise onto it, stack and pop,
+  while the kept components peek up from the hub at the same time. Then
+  the card flies into the Inventory.
+
 - **Fix: runs went missing from History.** Starting a new game from the
   main menu (Play > New Game) erased the old run without saving it to
   History; only Run Complete's New Game and Settings > Reset did. All three
