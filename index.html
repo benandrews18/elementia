@@ -1827,7 +1827,15 @@ body[data-screen="market"] #trackedPill{display:none}
 .histvisits{font-weight:800; font-size:13.5px; white-space:nowrap}
 /* Saved layout slot (renderMatLayoutsList()): combos + card icons under
    the name row; the chips are display only here, a tap loads the layout. */
-.ml-pts{margin-left:auto}
+/* Score pill left of the name; trash in a bubble on the card's corner. */
+.ml-slot{position:relative; overflow:visible}
+.ml-slot .histrow{padding-right:28px}
+.ml-slot .histvisits{overflow:hidden; text-overflow:ellipsis}
+.ml-del{
+  position:absolute; top:-9px; right:-8px; z-index:1; width:30px; height:30px; padding:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer;
+  border:2px solid var(--line); background:var(--card); box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
 .ml-body{display:flex; flex-direction:column; gap:3px; padding:0 10px 7px; cursor:pointer}
 /* One row each: chips and icons shrink to fit rather than wrap. */
 .ml-body .mat-combos{flex-wrap:nowrap; gap:0; overflow:hidden; padding-top:5px}
@@ -1835,7 +1843,7 @@ body[data-screen="market"] #trackedPill{display:none}
 .ml-body .mm-combo{pointer-events:none; flex:0 1 auto; min-width:0; padding:0 7px 0 0}
 .ml-body .mm-cico{width:22px; height:22px; font-size:13px}
 .ml-body .mm-cico :is(img,svg){width:14px; height:14px}
-.ml-body .mm-ccount{min-width:14px; height:14px; font-size:9px; top:-5px; right:-6px}
+.ml-body .mm-ccount{display:none}
 .ml-body .mm-combo b{font-size:12px}
 .ml-body .mmr-icons{display:flex; gap:1px}
 .ml-body .mmr-ic{flex:1 1 0; min-width:0; max-width:24px; height:22px; font-size:18px}
@@ -2221,6 +2229,15 @@ button.setting-row:not(:disabled):active, .mode-card:active{
    with a light scrim so the list above it stays readable. */
 #pinTip{z-index:72; align-items:flex-end; background:rgba(10,14,20,.3)}
 .pin-tip-box{max-width:420px; text-align:center}
+/* "Don't show this again": a small ✕ in a tip window's bottom-left corner. */
+.tip-hide-x{
+  flex:none; width:30px; height:30px; padding:0; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;
+  border:2px solid var(--line); background:var(--sunken); color:var(--mute); box-shadow:0 2px 4px rgba(0,0,0,.25);
+}
+.pin-tip-box #pinTipHide{position:absolute; left:-14px; bottom:-14px}
+#mouseTipHide{position:absolute; left:-12px; bottom:-12px}
+.mouse-bubble:has(#mouseTipClose[hidden]) #mouseTipHide{display:none}
 .pin-tip-box h2{margin:0 0 6px}
 .pin-tip-box p{margin:0 0 6px; color:var(--ink2); font-size:14px; line-height:1.4}
 /* The "?" element picker (#emptyElPick) -- the station's own element pool
@@ -3413,6 +3430,13 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-quick-actions .mat-quick-btn{width:30px; height:30px; font-size:13px}
 .mat-quick-actions .mat-quick-btn.text{width:auto; padding:0 10px; font-size:12px}
 #matLastBtn{font-size:18px; font-weight:900; line-height:1}
+#matLastBtn.qs{background:#3f8fd0; border-color:#9fd0f5; color:#fff}
+.mat-last-wrap{position:relative; display:flex}
+.mat-qs-pill{
+  position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%); white-space:nowrap;
+  padding:2px 8px; border-radius:999px; background:#3f8fd0; color:#fff; font-size:10.5px; font-weight:900;
+  box-shadow:0 2px 4px rgba(0,0,0,.35); pointer-events:none;
+}
 .mat-quick-btn:disabled{filter:grayscale(1) brightness(.8); opacity:.7; cursor:default}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -3437,14 +3461,25 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 }
 /* Saved Layouts and Collections always fit the screen above the hub: the
    box is capped and its list scrolls inside. */
+/* Both are wide: a thin overlay margin and frame, so the cards get the room. */
+:is(#matLayoutsOverlay, #collectionsOverlay){padding-left:4px; padding-right:4px}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox{
-  display:flex; flex-direction:column; padding:18px 16px;
+  display:flex; flex-direction:column; padding:12px 2px 4px;
+  border-width:24px; border-image-width:24px;
   max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom));
 }
+:is(#matLayoutsOverlay, #collectionsOverlay) .cp-close-x.coll-x{top:-28px; right:-24px}
+/* The list scrolls; room at its top/right for the trash bubbles. */
+:is(#matLayoutsList, #collectionsList) .histrows{max-height:none; overflow:visible; padding:10px 8px 4px 0}
+.ml-save-row{display:flex; gap:6px; align-items:center; margin:0 8px 6px 0}
+.ml-icon-btn{
+  flex:none; width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  font-size:19px; border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); cursor:pointer; padding:0;
+}
+.ml-icon-btn.done{color:var(--ok)}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
 #matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
-#matLayoutsOverlay .btnrow{flex-wrap:wrap}
-#matLayoutsOverlay #matLayoutName{min-width:0 !important; flex:1 1 140px !important}
+#matLayoutsOverlay #matLayoutName{min-width:0; flex:1 1 auto; height:38px}
 /* Opens the same #collectionsOverlay as the welcome screen
    (openCollectionsOverlay()); a plain button sized to sit with the search
    bar. */
@@ -3896,6 +3931,7 @@ html.low-motion #matListActions{transition:none}
   <div class="mouse-bubble">
     <button type="button" class="mouse-tip-close" id="mouseTipClose" aria-label="Dismiss">✕</button>
     <p id="mouseTipText"></p>
+    <button type="button" class="tip-hide-x" id="mouseTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
     <!-- Walkthrough controls, shown only during "How to Play"
          (tutCoachSteps()/renderTutCoach()). -->
     <div class="mouse-tip-tour" id="mouseTipTour" hidden>
@@ -4058,6 +4094,7 @@ html.low-motion #matListActions{transition:none}
     <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
     <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>
+    <button type="button" class="tip-hide-x" id="pinTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
   </div>
 </div>
 <div class="overlay" id="emptyElPick" role="dialog" aria-modal="true" aria-labelledby="emptyElPickTitle">
@@ -4240,17 +4277,14 @@ html.low-motion #matListActions{transition:none}
      prefs.savedMatLayouts. -->
 <div class="overlay" id="matLayoutsOverlay" role="dialog" aria-modal="true" aria-labelledby="matLayoutsTitle">
   <div class="sheetbox parch">
-    <div class="hist-header">
-      <h2 id="matLayoutsTitle">💾 Saved Layouts</h2>
-      <button type="button" class="tbtn ghost histexport-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON">⧉ Export</button>
-    </div>
-    <p>Save the mat's current arrangement under a name, then load it back any time -- in a real run, only the cards you actually own get placed.</p>
-    <div class="btnrow">
-      <input type="text" id="matLayoutName" class="mat-fsearch" placeholder="Name this arrangement…" maxlength="40" style="flex:1; min-width:140px">
-      <button type="button" class="bigbtn sec" id="matLayoutSaveBtn">Save Current Arrangement</button>
+    <button type="button" class="cp-close-x coll-x" id="matLayoutsClose" aria-label="Close"></button>
+    <div class="coll-head"><h2 id="matLayoutsTitle">💾 Saved Layouts</h2></div>
+    <div class="ml-save-row">
+      <input type="text" id="matLayoutName" class="mat-fsearch" placeholder="Name this arrangement…" maxlength="40">
+      <button type="button" class="ml-icon-btn" id="matLayoutSaveBtn" title="Save the current arrangement" aria-label="Save the current arrangement">💾</button>
+      <button type="button" class="ml-icon-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON" aria-label="Copy all saved layouts as JSON">⧉</button>
     </div>
     <div id="matLayoutsList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="matLayoutsClose">Close</button></div>
   </div>
 </div>
 
@@ -4413,6 +4447,7 @@ html.low-motion #matListActions{transition:none}
   <div class="ct-box">
     <div class="ct-slide" id="ctSlide"></div>
     <div class="ct-foot">
+      <button type="button" class="tip-hide-x" id="ctHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
       <div class="ct-dots" id="ctDots"></div>
       <button type="button" class="bigbtn" id="ctNext">Next</button>
     </div>
@@ -6723,6 +6758,7 @@ let prefs = {pinnedItems:[], minigamesEnabled:false,
   // capstone-unlocked items these have revealed (openComboLab()).
   capstonesEverCrafted:[],
   guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
+  hiddenTips:[], // tip windows hidden with their corner ✕ (hideTipForever()); cleared by turning Tips back on
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).
   autoCardInspection:true,
@@ -6787,7 +6823,8 @@ function freshState(){
     // breakpoint and from Market rows; spent via openEmptyElPicker().
     emptyElements: 0,
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
-    matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
+    matBonusDice: 0,
+    quickSavedMat: null, // the mat ↺ replaced, until ↻ puts it back (matLastTap()).   // Classic: bonus dice from the latest check, added to the rolls after it.
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.
@@ -7505,6 +7542,12 @@ function maybeShowWalkthroughTip(){
     tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
+  if (ev.target.closest("#mouseTipHide")){
+    prefs.guidedTutorialEnabled = false; savePrefs();
+    pendingMouseTips.length = 0;
+    hideMouseTip();
+    return;
+  }
   if (ev.target.closest(".mouse-tip-close")) hideMouseTip();
 });
 // The next tap anywhere also dismisses the tip (capture phase, without
@@ -10260,12 +10303,15 @@ function renderMatTop(){
 
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
   // Last / Clear / Layouts sit in the mat's lower-right corner, left of "?".
-  // Last puts back the mat from the last board check (state.lastCheckedMat).
+  // Last puts back the mat from the last board check (state.lastCheckedMat),
+  // quick-saving the current one (state.quickSavedMat); while a quick save
+  // exists the arrow flips and a tap brings it back (matLastTap()).
   const last = state.lastCheckedMat || [];
-  const lastOff = !last.length || last.join() === state.mat.join();
+  const qs = !!state.quickSavedMat;
+  const lastOff = !qs && (!last.length || last.join() === state.mat.join());
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<div class="mat-quick-actions">
-        <button type="button" class="mat-quick-btn" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">↺</button>
+        <span class="mat-last-wrap">${qs ? `<span class="mat-qs-pill">Layout Quick Save</span>` : ""}<button type="button" class="mat-quick-btn${qs ? " qs" : ""}" id="matLastBtn" ${lastOff ? "disabled" : ""} title="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}" aria-label="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}">${qs ? "↻" : "↺"}</button></span>
         <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
         <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
       </div>
@@ -10519,7 +10565,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
-  if (ev.target.closest("#matLastBtn")){ placeMatCards(state.lastCheckedMat || []); return; }
+  if (ev.target.closest("#matLastBtn")){ matLastTap(); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
@@ -10545,6 +10591,18 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
 });
+function matLastTap(){
+  if (state.quickSavedMat){
+    const back = state.quickSavedMat;
+    state.quickSavedMat = null;
+    placeMatCards(back);
+    return;
+  }
+  askConfirm("Reset the Display Mat to your last locked-in layout? Your current mat is quick-saved -- tap ↻ to bring it back.", () => {
+    state.quickSavedMat = [...state.mat];
+    placeMatCards(state.lastCheckedMat || []);
+  });
+}
 /* Tapping a combo chip lists the mat cards that earn it
    (matCardsForCombo()) -- or, for the collections star, every discovered
    collection the mat completes, as Collections-menu cards
@@ -10661,13 +10719,11 @@ function renderMatLayoutsList(){
     const s = matScore(mat);
     return `
     <div class="histentry ml-slot">
-      <div class="histrow-line">
-        <button type="button" class="histrow" data-mat-layout-load="${i}">
-          <span class="histvisits">${esc(L.name)}</span>
-          <span class="ms-pts ml-pts" title="${Math.round(s.total)} points">${Math.round(s.total)}</span>
-        </button>
-        <button type="button" class="histrow-export" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
-      </div>
+      <button type="button" class="histrow" data-mat-layout-load="${i}">
+        <span class="ms-pts ml-pts" title="${Math.round(s.total)} points">${Math.round(s.total)}</span>
+        <span class="histvisits">${esc(L.name)}</span>
+      </button>
+      <button type="button" class="ml-del" data-mat-layout-delete="${i}" title="Delete this layout" aria-label="Delete ${esc(L.name)}">🗑</button>
       <div class="ml-body" data-mat-layout-load="${i}">
         <div class="mat-combos">${matComboChipsHTML(s, false)}</div>
         <div class="mmr-icons">${mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("")}</div>
@@ -10993,12 +11049,12 @@ document.getElementById("matLayoutsExport").addEventListener("click", async () =
   const json = JSON.stringify(prefs.savedMatLayouts, null, 2);
   try {
     await navigator.clipboard.writeText(json);
-    btn.textContent = "✓ Copied!";
+    btn.textContent = "✓";
     btn.classList.add("done");
   } catch (e){
     window.prompt("Copy this text:", json);
   }
-  setTimeout(() => { btn.textContent = "⧉ Export"; btn.classList.remove("done"); }, 1800);
+  setTimeout(() => { btn.textContent = "⧉"; btn.classList.remove("done"); }, 1800);
 });
 
 /* Mat card taps are handled in #drawerTop's main click listener (the
@@ -12197,7 +12253,8 @@ function confirmCapstoneChoice(name){
     openJobBoard();
     setTimeout(() => {
       capStartPending = {stationName, dice};
-      openOverlay("pinTip");
+      if (tipHidden("pinTip")) finishPinTip();
+      else openOverlay("pinTip");
     }, reduced ? 0 : 450);
   }, beat2At);
 }
@@ -12205,7 +12262,11 @@ function confirmCapstoneChoice(name){
 // the chosen station's shop.
 let capStartPending = null;
 document.getElementById("pinTip").addEventListener("click", ev => {
-  if (!ev.target.closest("#pinTipOk")) return;
+  if (ev.target.closest("#pinTipHide")) hideTipForever("pinTip");
+  else if (!ev.target.closest("#pinTipOk")) return;
+  finishPinTip();
+});
+function finishPinTip(){
   closeOverlay("pinTip");
   const pending = capStartPending;
   capStartPending = null;
@@ -12221,7 +12282,7 @@ document.getElementById("pinTip").addEventListener("click", ev => {
     }
     save(); updateHub();
   }), lowMotion() ? 0 : 350);
-});
+}
 /* The tracked-item badge on a shop card opens the To-Do List with the
    tracked item's breakdown unfolded down to THIS item, outlined in gold.
    Tree paths follow jobNodeHTML(): "ref/<root>/<child>/...". */
@@ -13131,7 +13192,13 @@ function renderClassicTut(){
   document.getElementById("ctDots").innerHTML = slides.map((_, i) => `<span class="${i === ctIdx ? "on" : ""}"></span>`).join("");
   document.getElementById("ctNext").textContent = ctIdx === slides.length - 1 ? "Let's play" : "Next";
 }
+const tipHidden = id => (prefs.hiddenTips || []).includes(id);
+function hideTipForever(id){
+  prefs.hiddenTips = [...new Set([...(prefs.hiddenTips || []), id])];
+  savePrefs();
+}
 function openClassicTutorial(onDone){
+  if (tipHidden("classicTut")){ if (onDone) onDone(); return; }
   ctIdx = 0;
   ctOnDone = onDone;
   const el = document.getElementById("classicTut");
@@ -13140,8 +13207,8 @@ function openClassicTutorial(onDone){
   renderClassicTut();
   document.getElementById("ctNext").focus({preventScroll: true});
 }
-function classicTutNext(){
-  if (ctIdx < classicTutSlides().length - 1){ ctIdx++; renderClassicTut(); return; }
+function classicTutNext(skipRest){
+  if (!skipRest && ctIdx < classicTutSlides().length - 1){ ctIdx++; renderClassicTut(); return; }
   const el = document.getElementById("classicTut");
   el.classList.remove("open");
   el.setAttribute("aria-hidden", "true");
@@ -13149,8 +13216,13 @@ function classicTutNext(){
   ctOnDone = null;
   if (done) done();
 }
-document.getElementById("ctNext").addEventListener("click", classicTutNext);
-document.getElementById("ctSlide").addEventListener("click", classicTutNext);
+document.getElementById("ctNext").addEventListener("click", () => classicTutNext());
+document.getElementById("ctHide").addEventListener("click", ev => {
+  ev.stopPropagation();
+  hideTipForever("classicTut");
+  classicTutNext(true);
+});
+document.getElementById("ctSlide").addEventListener("click", () => classicTutNext());
 document.getElementById("modeOverlay").addEventListener("click", ev => {
   const newBtn = ev.target.closest("[data-mode-newgame]");
   if (newBtn){ newRun(); return; }
@@ -13201,6 +13273,8 @@ document.getElementById("setSave").addEventListener("click", () => {
   // showTutorialHintOnce() itself checks this live, so toggling it off
   // stops any further tips immediately, mid-run included -- no separate
   // state to unwind.
+  // Turning tips on also brings back every tip window hidden with its ✕.
+  if (setGuidedTutorialBox.checked && prefs.guidedTutorialEnabled === false) prefs.hiddenTips = [];
   prefs.guidedTutorialEnabled = setGuidedTutorialBox.checked;
   prefs.autoCardInspection = setAutoCardInspectionBox.checked;
   prefs.lowMotion = setLowMotionBox.checked;
