@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **The first-breakpoint rule now starts at round 12** (was round 9): a
+  board check below the first Quark breakpoint only ends the run from
+  round 12 on. Smoke test covers it.
+- **Tool: Item Workshop** (`game/tools/item_workshop.html`) for tuning the
+  61 retired items as capstone-unlocked items -- icons, stations, points,
+  element icons and components, with checks and an export.
+
 - **New look, phase 5 -- the rest of the windows:** Game Rules, Dev Tools,
   History, Saved Layouts, the confirm box, the clock info, combo info,
   Lock-In reward, BINGO reward, the capstone pick, the "?" picker and tips,

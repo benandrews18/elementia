@@ -100,16 +100,16 @@ function diceDeltaForReward(reward){ return Math.min(reward, 3); }
 /* Set when a Lock-In commits: Home stays untappable until it becomes Roll
    at the station (cleared in goStation()), so the scoring can't run twice. */
 var lockInCommitted = false; // var: updateHub() can read it before this line runs
+// Does missing the first breakpoint end the run on this Lock-In? Only at a
+// checkpoint from BREAKPOINT_GATE_VISIT on; in Overtime, every Lock-In.
+const lockInGated = () => state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
 function confirmLockIn(){
   if (lockInCommitted) return;
   const s = matScore(matOnMat());
   state.bestMatScore = Math.max(state.bestMatScore || 0, s.total);
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
-    // Before Overtime the gate only applies at sunset from
-    // BREAKPOINT_GATE_VISIT on; in Overtime it applies to every Lock-In.
-    const gated = state.runComplete || (state.visits >= BREAKPOINT_GATE_VISIT && isSunsetVisit());
-    if (!gated){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
+    if (!lockInGated()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
     askConfirm(state.runComplete
       ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
       : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,

@@ -288,6 +288,14 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // Missing the first breakpoint ends the run only from round 12 (not 9).
+    const keepRC = state.runComplete, keepV = state.visits;
+    state.runComplete = false;
+    state.visits = 9;  const at9 = lockInGated();
+    state.visits = 12; const at12 = lockInGated();
+    state.runComplete = keepRC; state.visits = keepV;
+    expect(!at9 && at12, `the breakpoint gate should start at round 12 (round 9: ${at9}, round 12: ${at12})`);
+
     // Pressing Map over a capstone card clears the "open the Market" flag,
     // so a later card close doesn't pop the Marketplace.
     celebrate(ENTRIES.find(e => e.tier === "CAPSTONE")); await wait(100);

@@ -20,7 +20,7 @@ const RUN_COMPLETE_VISIT = 24;
 function visitLimitLabel(){ return state && state.runComplete ? `${MAX_VISITS} OT` : String(RUN_COMPLETE_VISIT); }
 /* Classic: from this visit on, missing the first Quark breakpoint at a
    sunset check ends the run (see confirmLockIn()). */
-const BREAKPOINT_GATE_VISIT = 9;
+const BREAKPOINT_GATE_VISIT = 12;
 /* The Display Mat is checked only at checkpoints: on leaving every
    MAT_CHECK_EVERY-th turn (3, 6, 9, ...; the big numbers on the turn
    clock). Before the first check each roll is MAT_PRE_CHECK_DICE dice;
