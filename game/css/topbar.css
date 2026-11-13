@@ -99,48 +99,28 @@ body[data-intro-sequence] .map-node{pointer-events:none}
 /* flex:1 on group and buttons: the side buttons share whatever width
    #hubHome's 76px leaves, so the bar fills edge to edge at any width. */
 .hub-side{display:flex; align-items:flex-end; gap:0; flex:1; min-width:0}
-.hub-side .hubbtn{flex:1; width:auto; max-width:none; padding:6px 4px}
-/* Sprite frames (game/ui/hub_frame*.webp) as a 9-slice: the brass corners
-   keep their shape and only the wood stretches. Gold frame = active. */
+/* Side buttons: the sprite frame (game/ui/hub_frame*.webp) as a 9-slice,
+   so the brass corners keep their shape and only the wood stretches. Gold
+   frame = active. */
 .hub-side .hubbtn{
-  margin:0 2px; border:0 solid transparent; border-radius:0; background:none; box-shadow:none;
+  flex:1; width:auto; max-width:none; padding:6px 4px; margin:0 2px;
+  border:0 solid transparent; border-radius:0;
   border-image:url("../ui/hub_frame.webp") 58 fill / 16px stretch;
   filter:drop-shadow(0 3px 2px rgba(0,0,0,.35));
 }
-.hub-side .hubbtn:hover, .hub-side .hubbtn:disabled:hover{background:none}
-.hub-side .hubbtn.active{border-image-source:url("../ui/hub_frame_active.webp"); background:none}
-.hub-side .hubbtn:not(:disabled):active{background:none; box-shadow:none; transform:translateY(2px); filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)) brightness(.92)}
-.hub-side .hubbtn:disabled{filter:grayscale(1) brightness(.85)}
+.hub-side .hubbtn.active{border-image-source:url("../ui/hub_frame_active.webp")}
+.hub-side .hubbtn:active{transform:translateY(2px); filter:drop-shadow(0 1px 1px rgba(0,0,0,.35)) brightness(.92)}
 .hub-ic{height:34px; width:auto; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
 .hub-side .hubbtn .hl{text-shadow:0 1px 0 #000, 0 0 3px rgba(0,0,0,.8)}
 .hub-side .hubbtn.active .hl{color:#ffe08a}
 /* No tap delay or grey tap flash on any hub/floating button. */
 .hubbtn, .floatbtn{ touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
-/* Icon + label sit directly on the bar colour, no card behind them
-   (images/game ui reference 0903.png). */
-/* Pale border on every button so each has a defined edge. */
-/* Slightly lighter than the bar, with an inset bevel and small drop shadow
-   so it reads raised. Hover/press states layer a second background-image on
-   top of this gradient rather than replacing it. */
+/* Layout and text shared by every hub button; each kind paints its own
+   face (the side frames above, #hubHome's faces below). */
 .hubbtn{
   flex:1; max-width:100px; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; gap:2px;
-  padding:6px 4px; margin-top:calc(-1 * var(--hub-overhang)); border-radius:15px;
-  background:linear-gradient(180deg, #2a5a72, #1c4257);
-  box-shadow:inset 0 1px 2px rgba(255,255,255,.28), inset 0 -3px 5px rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.25);
-  border:1.5px solid rgba(255,255,255,.22); color:#fff; position:relative;
-  transition:background .1s ease, filter .12s ease;
-}
-.hubbtn:hover{background:linear-gradient(rgba(255,255,255,.08), rgba(255,255,255,.08)), linear-gradient(180deg, #2a5a72, #1c4257)}
-.hubbtn:disabled{opacity:.35; cursor:not-allowed}
-.hubbtn:disabled:hover{background:linear-gradient(180deg, #2a5a72, #1c4257)}
-/* Sinks INTO its own bevel (the inset highlight/shadow above flips
-   direction) rather than collapsing to nothing, plus the same small
-   press-down travel every other hub control uses. */
-.hubbtn:not(:disabled):active{
-  transform:translateY(2px);
-  background:linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)), linear-gradient(180deg, #2a5a72, #1c4257);
-  box-shadow:inset 0 2px 4px rgba(0,0,0,.35), inset 0 -1px 2px rgba(255,255,255,.12);
+  justify-content:center; gap:2px; padding:6px 4px; margin-top:calc(-1 * var(--hub-overhang));
+  border:none; background:none; color:#fff; position:relative;
 }
 /* No fixed size: the glyph scales with the flex slot. */
 .hubbtn .hi{
@@ -149,9 +129,7 @@ body[data-intro-sequence] .map-node{pointer-events:none}
   font-size:32px; line-height:1;
 }
 .hubbtn .hl{font-size:9.5px; font-weight:800; letter-spacing:.2px; color:#fff}
-.hubbtn.active{background:linear-gradient(rgba(63,180,108,.28), rgba(63,180,108,.28)), linear-gradient(180deg, #2a5a72, #1c4257)}
 .hubbtn.active .hl{color:var(--ok)}
-.hubbtn:disabled .hi{filter:grayscale(.5) brightness(.85)}
 
 #hubHome[aria-disabled="true"]{pointer-events:none}
 #hubHome{
