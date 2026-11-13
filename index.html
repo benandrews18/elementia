@@ -3543,6 +3543,8 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 #matSelPanel{flex:none; padding:14px 14px 8px; background:var(--card); border-top:2px solid var(--gold);
   box-shadow:0 6px 10px -6px rgba(0,0,0,.5); position:relative; z-index:2}
 #matSelPanel[hidden]{display:none}
+/* Bottom-right dismiss (the brass close sprite, as on every window). */
+#matSelPanel .mat-sel-close{top:auto; right:8px; bottom:8px; width:34px; height:34px}
 #drawer:has(#matSelPanel:not([hidden])) .dbody{border-top:none}
 .mm-card.selected{outline:4px solid var(--ok); outline-offset:2px; filter:none}
 /* Minimized board: only while the mat is collapsed. */
@@ -10313,7 +10315,8 @@ function syncMatSelPanel(){
   const panel = document.getElementById("matSelPanel");
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
   panel.hidden = !show;
-  panel.innerHTML = show ? matOpenRowHTML(matListOpen) : "";
+  panel.innerHTML = show ? matOpenRowHTML(matListOpen) +
+    '<button type="button" class="cp-close-x mat-sel-close" data-mat-sel-close aria-label="Close this item"></button>' : "";
 }
 /* The selected item (matListOpen), in both views. List view: one slim line
    per item (icon, name, suit pips, home stations, points). Either view:
@@ -11028,6 +11031,7 @@ document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
 scrim.addEventListener("click", closeDrawer);
 document.getElementById("drawer").addEventListener("click", ev => {
   if (!ev.target.closest("#drawerBody, #matSelPanel")) return;
+  if (ev.target.closest("[data-mat-sel-close]")){ matListOpen = null; renderMatResultsGrid(); return; }
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
   if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
   // Tier breakline (see MAT_TIER_BANDS/matTierCollapsed) -- collapses/
