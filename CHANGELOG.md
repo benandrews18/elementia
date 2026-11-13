@@ -10,9 +10,16 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
-- **Inventory tiers follow the element icons:** an item's section is set by
-  how many element icons it has -- none = Tier 1, one = Tier 2, two =
-  Tier 3, three = Capstones (e.g. Banana is now Tier 2, Soil Tier 1).
+- **Item tiers now match their element icons (content 2026.11.13):** no
+  icons = Tier 1, one = Tier 2, two = Tier 3, three = Capstone, everywhere
+  (Inventory, mat stacking, Maglev's Freight bonus, Marketplace and BINGO
+  mixes, tier badges). 23 rows changed. To Tier 1 (they now stack two to a
+  slot): Soil, Tree, Furnace, Rubber, Stainless Steel, Aluminum Alloy,
+  Yeast, Glass, Concrete. To Tier 2: Banana, Apple, Farm, Chicken, Deer,
+  Log Cabin, Salmon, Bridge, Building. To Tier 3: Turbine Blade, Computer,
+  Diamond, Satellite Dish. The smoke test now checks every item's tier
+  against its icons.
+
 - **Selected item docks under the mat in both views:** in the list view
   too, the selected item's shop card now sits just under the Display Mat
   instead of opening in place down the list.

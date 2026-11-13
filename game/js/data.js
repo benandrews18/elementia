@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.11",
+ "version": "2026.11.13",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -109,7 +109,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🍌",
      "Banana",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water + K",
      11
     ],
@@ -215,14 +215,14 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__TURBINEBLADE__",
      "Turbine Blade",
-     "COMPONENT",
+     "CREATION",
      "__WHEEL__ Wheel + __FIBERGLASS__ Fiberglass",
      21
     ],
     [
      "💻",
      "Computer",
-     "COMPONENT",
+     "CREATION",
      "🔋 Battery + 🥤 Plastic + 🔌 Wire + __MICROCHIP__ Microchip",
      20
     ],
@@ -279,21 +279,21 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌱",
      "Soil",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + ⏳ Sand",
      6
     ],
     [
      "🍎",
      "Apple",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water",
      11
     ],
     [
      "🧑‍🌾",
      "Farm",
-     "CREATION",
+     "COMPONENT",
      "🌱 Soil + 🛠️ Tools + 💧 Water",
      10
     ],
@@ -314,7 +314,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🐔",
      "Chicken",
-     "CREATION",
+     "COMPONENT",
      "🧑‍🌾 Farm + 🥚 Egg",
      14
     ],
@@ -378,35 +378,35 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__FURNACE__",
      "Furnace",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + C",
      4
     ],
     [
      "__RUBBER__",
      "Rubber",
-     "COMPONENT",
+     "MATERIAL",
      "🛢️ Natural Gas + S",
      5
     ],
     [
      "🔩",
      "Stainless Steel",
-     "COMPONENT",
+     "MATERIAL",
      "__STEEL__ Steel + Ni + __FURNACE__ Furnace",
      8
     ],
     [
      "🦾",
      "Aluminum Alloy",
-     "COMPONENT",
+     "MATERIAL",
      "Al + Mg + __FURNACE__ Furnace",
      7
     ],
     [
      "__DIAMOND__",
      "Diamond",
-     "COMPONENT",
+     "CREATION",
      "C + __FURNACE__ Furnace + 🕐 Clock",
      20
     ],
@@ -463,14 +463,14 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌱",
      "Soil",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + ⏳ Sand",
      6
     ],
     [
      "🌳",
      "Tree",
-     "COMPONENT",
+     "MATERIAL",
      "🌱 Soil + 💧 Water + C + O",
      9
     ],
@@ -484,21 +484,21 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🦌",
      "Deer",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water + 🦴 Bone",
      12
     ],
     [
      "__LOGCABIN__",
      "Log Cabin",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 🛠️ Tools + __FURNACE__ Furnace",
      12
     ],
     [
      "🐟",
      "Salmon",
-     "CREATION",
+     "COMPONENT",
      "🌿 Seaweed + 💧 Water + 🥚 Egg",
      15
     ],
@@ -548,7 +548,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🦠",
      "Yeast",
-     "COMPONENT",
+     "MATERIAL",
      "🍬 Sugar + 💧 Water",
      6
     ],
@@ -647,28 +647,28 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🪟",
      "Glass",
-     "COMPONENT",
+     "MATERIAL",
      "⏳ Sand + 🪨 Limestone",
      4
     ],
     [
      "__CONCRETE__",
      "Concrete",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + 🪨 Limestone",
      4
     ],
     [
      "🌉",
      "Bridge",
-     "CREATION",
+     "COMPONENT",
      "🔩 Stainless Steel + 🛠️ Tools + 🌳 Tree + 💧 Water",
      12
     ],
     [
      "🏢",
      "Building",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + __STEEL__ Steel + 🪟 Glass + __CONCRETE__ Concrete",
      13
     ],
@@ -753,7 +753,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "📡",
      "Satellite Dish",
-     "COMPONENT",
+     "CREATION",
      "🦾 Aluminum Alloy + 🔌 Wire",
      20
     ],

@@ -280,14 +280,13 @@ function matVisibleInventory(){
   };
   return list.sort(sorts[matFilt.sort] || sorts.points);
 }
-/* The tray's sections, by how many element icons (suit costs) an item
-   has: none = Tier 1, one = Tier 2, two = Tier 3, three = Capstones.
-   Highest first. Card size still follows the item's mat footprint. */
+/* The tray's sections, by item tier (ITEM_TIER), which also sets card size
+   on the mat. Highest first. */
 const MAT_TIER_BANDS = [
-  { key: "capstone", label: "Capstones", icons: 3 },
-  { key: "t3", label: "Tier 3", icons: 2 },
-  { key: "t2", label: "Tier 2", icons: 1 },
-  { key: "t1", label: "Tier 1", icons: 0 },
+  { key: "capstone", label: "Capstones", tier: "CAPSTONE" },
+  { key: "t3", label: "Tier 3", tier: "CREATION" },
+  { key: "t2", label: "Tier 2", tier: "COMPONENT" },
+  { key: "t1", label: "Tier 1", tier: "MATERIAL" },
 ];
 // Collapsed band keys: an in-memory Set (like matFilt), so collapsed
 // sections survive re-renders but not a reload.
@@ -305,7 +304,7 @@ function matResultsGridHTML(){
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
   const sections = MAT_TIER_BANDS.map(band => {
-    const items = inv.filter(c => Math.min(itemSuitCosts(c.name).length, 3) === band.icons);
+    const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
     return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
@@ -314,10 +313,9 @@ function matResultsGridHTML(){
         </button>
         ${prefs.itemsListView
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
-          // Tier 1 cards at half height, as they stack on the mat; a
-          // full-size card in that section spans two half rows.
+          // Tier 1 cards at half height, as they stack on the mat.
           : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
-              matCardHTML(c.name, { tray: true, cls: (matIsTier1(c) ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
+              matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
   // The selected item's shop row docks at the top of the list, just under

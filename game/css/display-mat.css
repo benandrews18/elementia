@@ -357,7 +357,6 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-results-grid .mm-card.wide{grid-column:span 2}
 /* Tier 1: half-height cells, the size they take stacked on the mat. */
 .mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
-.mat-results-grid.half .mm-card:not(.mini){grid-row:span 2}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
 .mat-shop-list{gap:6px}
