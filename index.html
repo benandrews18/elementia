@@ -3322,9 +3322,8 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    renderMatTop()). Tabs and Clear/Layouts share one normal-flow row
    (.mat-zone-topbar) above it. */
 .mat-zone-wrap{position:relative}
-/* Quick actions left, tabs right (.mat-quick-actions takes margin-right:
-   auto), directly above the page with no gap so the tabs read as attached.
-   Bottom-aligned. */
+/* Tabs at the right, directly above the page with no gap so they read as
+   attached. Bottom-aligned. */
 .mat-zone-topbar{display:flex; align-items:flex-end; gap:8px}
 /* Fixed height (--mat-row-h, shared with .mat-grid) so switching tabs never
    resizes the tray; a long elements list scrolls inside. A different
@@ -3348,9 +3347,10 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 /* The inactive tab is dimmed and nudged down behind the active page. */
 .mat-tab:not(.active){filter:brightness(.72); transform:translateY(4px)}
 .mat-tab.active{box-shadow:0 3px 6px rgba(0,0,0,.35)}
-/* Clear/Layouts on the left of .mat-zone-topbar, as normal flex children
-   (two absolutely positioned corners overlapped on narrow phones). */
-.mat-quick-actions{display:flex; gap:8px}
+/* Last / Clear / Layouts in the mat's lower-right corner, in one row just
+   left of the "?" (.mat-rules-btn), riding the mat's bottom edge. */
+.mat-quick-actions{position:absolute; right:32px; bottom:-8px; z-index:4; display:flex; gap:6px}
+.mat-quick-btn:disabled{filter:grayscale(1) brightness(.8); opacity:.7; cursor:default}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   border:2px solid var(--gold-line); background:var(--gold); color:#181614; font-size:15px;
@@ -9917,21 +9917,24 @@ function renderMatTop(){
       <button type="button" class="mat-tab tab-elements ${matDrawerView === "elements" ? "active" : ""}" data-mat-view="elements">Elements</button>
       <button type="button" class="mat-tab tab-mat ${matDrawerView === "mat" ? "active" : ""}" data-mat-view="mat">Display Mat</button>
     </div>`;
-  // Clear/Layouts only on the Display Mat page, sharing the tab row (see
-  // .mat-zone-topbar).
-  const quickActionsHTML = matDrawerView === "mat" ? `<div class="mat-quick-actions">
-      <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear Mat</button>
-      <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
-    </div>` : "";
-  const topbarHTML = `<div class="mat-zone-topbar">${quickActionsHTML}${tabsHTML}</div>`;
+  const topbarHTML = `<div class="mat-zone-topbar">${tabsHTML}</div>`;
   // The page has a fixed height (the 2-row mat formula) so switching tabs
   // never resizes the tray; a long elements list scrolls inside. A different
   // parchment shade per tab.
   const pageHTML = `<div class="mat-zone-page zone-${matDrawerView}">${zoneHTML}</div>`;
 
   // No in-tray Lock In button: Home becomes the "lockin" face (hubHomeFace()).
+  // Last / Clear / Layouts sit in the mat's lower-right corner, left of "?".
+  // Last puts back the mat from the last board check (state.lastCheckedMat).
+  const last = state.lastCheckedMat || [];
+  const lastOff = !last.length || last.join() === state.mat.join();
   const rulesBtnHTML = matDrawerView === "mat"
-    ? `<button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
+    ? `<div class="mat-quick-actions">
+        <button type="button" class="mat-quick-btn text" id="matLastBtn" ${lastOff ? "disabled" : ""} title="Put back the mat from your last board check" aria-label="Put back the mat from your last board check">Last</button>
+        <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
+        <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
+      </div>
+      <button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
   maybeShowCollectionFound();
   document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
@@ -10174,6 +10177,7 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
   }
   if (ev.target.closest("#matLayoutsBtn")){ openMatLayoutsOverlay(); return; }
   if (ev.target.closest("#matClearBtn")){ clearMatDisplay(); return; }
+  if (ev.target.closest("#matLastBtn")){ placeMatCards(state.lastCheckedMat || []); return; }
   if (ev.target.closest("#matRulesBtn")){ openMatRules(); return; }
   const comboChip = ev.target.closest(".mm-combo[data-combo-kind]");
   if (comboChip && !comboChip.classList.contains("discovering")){
@@ -10348,7 +10352,12 @@ function saveMatLayout(){
 function loadMatLayout(i){
   const L = prefs.savedMatLayouts[i];
   if (!L) return;
-  const placeable = L.items.filter(n => MAT_CARD_BY_NAME[n] && (comboLabActive || owns(n)));
+  placeMatCards(L.items);
+  closeMatLayoutsOverlay();
+}
+// Also the mat's "Last" button.
+function placeMatCards(names){
+  const placeable = names.filter(n => MAT_CARD_BY_NAME[n] && (comboLabActive || owns(n)));
   const kept = [];
   for (const n of placeable){
     if (matFits([...kept, n].map(x => MAT_CARD_BY_NAME[x]))) kept.push(n);
@@ -10356,7 +10365,6 @@ function loadMatLayout(i){
   state.mat = kept;
   save();
   render();
-  closeMatLayoutsOverlay();
 }
 function deleteMatLayout(i){
   const L = prefs.savedMatLayouts[i];
@@ -11252,6 +11260,7 @@ function playLockInSequence(reward, onDone = finishLockIn){
 // when it's dismissed. dest is captured up front.
 function finishLockIn(reward, opts = {}){
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(matScore(matOnMat()).total) });
+  state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
