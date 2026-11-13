@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Crafted Items bar + card view selection.** Tip windows' hide button
+  reads "✕ Hide". At stations, "CRAFTED ITEMS:" heads an always-visible bar
+  (round > fold button, crafted icons, view switch). Folded crafted items
+  leave the card view too. Tapping a card pins its shop row under the
+  station header, with the close button in the lower-right corner as in
+  the Inventory (both nudged down a little).
+
 - **Challenge intro + Tutorial Messages.** The dice toast between board
   checks is gone. The first board check of a run with a Display Mat
   Challenge opens a short window explaining when they happen and what's at

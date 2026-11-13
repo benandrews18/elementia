@@ -397,15 +397,23 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
   background:var(--ok); color:#fff; font-size:12px; font-weight:900; display:flex; align-items:center; justify-content:center;
 }
 .st-cards .mm-card.st-can{outline:3px solid var(--ok); outline-offset:1px}
-.st-card-sel{position:relative; margin-bottom:12px}
+/* Card view's selected item, pinned at the bottom of the dark header like
+   the Inventory's #matSelPanel; same close button spot. */
+.stationhead .st-card-sel{position:relative; margin:12px 12px 14px}
 .st-card-sel > .item{margin-bottom:0}
-.st-card-close{top:auto; right:auto; bottom:-12px; left:-8px; width:34px; height:34px}
+.st-card-sel .st-card-close{top:auto; right:8px; bottom:-10px; width:34px; height:34px}
 /* Inside the dark header, under the element pool: toggle, crafted icons
    and the view switch on one compact row (wrapping if the icons need it). */
-.stationhead .shop-toggle-row{margin:10px 12px 0; flex-wrap:wrap; gap:6px}
-.stationhead .crafted-row{flex:1 1 0; min-width:0; margin:0; padding:4px 8px; gap:5px;
+.stationhead .shop-toggle-row{margin:4px 12px 0; gap:6px}
+.stationhead .crafted-label{margin-top:10px; margin-left:16px}
+.stationhead .crafted-row{flex:1 1 0; min-width:0; min-height:34px; margin:0; padding:4px 8px; gap:5px;
   background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.18)}
 .stationhead .crafted-row .station-item-icon{font-size:18px}
-.stationhead .shop-collapse-toggle{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); color:#e6eef6}
+/* Round fold button: > when crafted items are folded into the bar, v when
+   they're shown in the list. */
+.stationhead .shop-collapse-toggle{width:30px; height:30px; padding:0; justify-content:center; border-radius:50%;
+  background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25); color:#e6eef6}
+.stationhead .shop-collapse-toggle .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
+.stationhead .shop-collapse-toggle.active .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
 .stationhead .shop-collapse-toggle.active{background:var(--ok-soft); border-color:var(--ok-line); color:var(--ok)}
 .stationhead .shop-view-btn{width:30px; height:30px; font-size:15px; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.25)}

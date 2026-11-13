@@ -27,12 +27,16 @@ function renderStation(name){
   // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
   const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
       title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
-  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx, capHTML) : shopBodyHTML(shopEntries, idx, capHTML);
+  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
+  // Card view: the tapped card's full shop row, pinned under the header.
+  const open = prefs.shopCardView && all.find(e => e.name === stationCardOpen);
+  const selPanel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
+      <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
   // pool and dice never scroll away mid-roll; after that it scrolls normally.
-  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress;
+  const stationheadFrozen = !state.rolledHere || rollAnimationInProgress || !!open;
   return `<div class="sheet" style="--suit:${su.color};--suit-soft:${su.soft}">
     <div class="stationhead${stationheadFrozen ? " frozen" : ""}">
       <div class="sheet-head">
@@ -45,6 +49,7 @@ function renderStation(name){
       <div class="gather">${gather}</div>
       ${playBar}
       ${shopHeadHTML(shopEntries, viewBtn)}
+      ${selPanel}
     </div>
     <div class="makewrap">
       ${shopBody}
@@ -52,42 +57,42 @@ function renderStation(name){
   </div>`;
 }
 
-/* Under the element pool, in the dark header: the "Crafted Items" toggle,
-   the list/card switch, and (toggle on, list view) the compact row of
-   crafted items, which then leave the list. owns() is "crafted", so an item
-   made anywhere counts at every station that sells it; no toggle until one
-   sold here is crafted. */
-const craftedFolded = shopEntries => !prefs.shopCardView && state.collapseCraftedItems && shopEntries.some(e => owns(e.name));
+/* Under the element pool, in the dark header: "Crafted Items", then a bar
+   with the fold button (>), the crafted icons and the list/card switch. The
+   bar always shows; folded (state.collapseCraftedItems), crafted items sit
+   in it and leave the list or cards. owns() is "crafted", so an item made
+   anywhere counts at every station that sells it. */
+const craftedFolded = () => !!state.collapseCraftedItems;
 function shopHeadHTML(shopEntries, viewBtn){
   const owned = shopEntries.filter(e => owns(e.name));
-  const toggle = owned.length && !prefs.shopCardView ? `<button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
-        <span class="collapse-chevron"></span>Crafted Items
-      </button>` : "";
-  const row = craftedFolded(shopEntries) ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
-  return `<div class="shop-toggle-row">${toggle}${row}${viewBtn}</div>`;
+  const fold = state.collapseCraftedItems;
+  const toggle = `<button type="button" class="shop-collapse-toggle ${fold ? "active" : ""}" id="collapseCraftedBtn"
+      title="${fold ? "Show crafted items in the list" : "Fold crafted items into this bar"}" aria-label="${fold ? "Show crafted items in the list" : "Fold crafted items into this bar"}"><span class="collapse-chevron"></span></button>`;
+  const icons = fold && owned.length ? craftedIconsHTML(owned) : "";
+  return `<div class="col-label elements-label crafted-label">CRAFTED ITEMS:</div>
+    <div class="shop-toggle-row">${toggle}<div class="crafted-row">${icons}</div>${viewBtn}</div>`;
 }
 // The list: capstone first, then the rest (minus folded crafted items).
 function shopBodyHTML(shopEntries, idx, capHTML = ""){
-  const list = craftedFolded(shopEntries) ? shopEntries.filter(e => !owns(e.name)) : shopEntries;
+  const list = craftedFolded() ? shopEntries.filter(e => !owns(e.name)) : shopEntries;
   return `<div class="shop">${capHTML}${list.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 /* Card view: the station's items as Inventory cards (matCardHTML()), 4 to a
-   row, Tier 1 half height and capstones 2 wide, Tier 1 first. Tapping a card
-   shows its full shop row (craft, pin) above the cards (stationCardOpen). */
+   row, Tier 1 half height and capstones 2 wide, Tier 1 first; folded crafted
+   items leave it as in the list. Tapping a card pins its full shop row
+   (craft, pin) under the header (stationCardOpen, renderStation()). */
 let stationCardOpen = null;
-function shopCardsHTML(entries, idx, capHTML){
-  const open = entries.find(e => e.name === stationCardOpen);
-  const sel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
-      <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
+function shopCardsHTML(entries, idx){
+  const shown = entries.filter(e => !(craftedFolded() && owns(e.name) && e.tier !== "CAPSTONE"));
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
     return matCardHTML(e.name, { cls: [t1 ? "small mini" : "small", e.tier === "CAPSTONE" ? "wide" : "",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
       e.name === stationCardOpen ? "selected" : ""].join(" ") });
   };
-  return sel + `<div class="st-cards">${[...MAT_TIER_BANDS].reverse().map(b => {
-    const items = entries.filter(e => e.tier === b.tier);
+  return `<div class="st-cards">${[...MAT_TIER_BANDS].reverse().map(b => {
+    const items = shown.filter(e => e.tier === b.tier);
     return !items.length ? "" : `<div class="mat-tier-heading"><span class="mat-tier-line"></span>${esc(b.label)}<span class="mat-tier-line"></span></div>
       <div class="mat-results-grid ${b.key === "t1" ? "half" : ""}">${items.map(card).join("")}</div>`;
   }).join("")}</div>`;

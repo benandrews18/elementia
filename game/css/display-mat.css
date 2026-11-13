@@ -422,7 +422,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   box-shadow:0 6px 10px -6px rgba(0,0,0,.5); position:relative; z-index:2}
 #matSelPanel[hidden]{display:none}
 /* Bottom-right dismiss (the brass close sprite, as on every window). */
-#matSelPanel .mat-sel-close{top:auto; right:8px; bottom:8px; width:34px; height:34px}
+#matSelPanel .mat-sel-close{top:auto; right:8px; bottom:-2px; width:34px; height:34px}
 #drawer:has(#matSelPanel:not([hidden])) .dbody{border-top:none}
 .mm-card.selected{outline:4px solid var(--ok); outline-offset:2px; filter:none}
 /* Minimized board: only while the mat is collapsed. */
