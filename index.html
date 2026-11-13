@@ -3455,7 +3455,6 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-results-grid .mm-card.wide{grid-column:span 2}
 /* Tier 1: half-height cells, the size they take stacked on the mat. */
 .mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
-.mat-results-grid.half .mm-card:not(.mini){grid-row:span 2}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
    row is owned. Gold edge = on the mat. */
 .mat-shop-list{gap:6px}
@@ -4559,7 +4558,7 @@ const NOTO_ICONS = {"⏳": NOTO_23f3, "☁️": NOTO_2601_fe0f, "♻️": NOTO_2
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.11",
+ "version": "2026.11.13",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -4654,7 +4653,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🍌",
      "Banana",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water + K",
      11
     ],
@@ -4760,14 +4759,14 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__TURBINEBLADE__",
      "Turbine Blade",
-     "COMPONENT",
+     "CREATION",
      "__WHEEL__ Wheel + __FIBERGLASS__ Fiberglass",
      21
     ],
     [
      "💻",
      "Computer",
-     "COMPONENT",
+     "CREATION",
      "🔋 Battery + 🥤 Plastic + 🔌 Wire + __MICROCHIP__ Microchip",
      20
     ],
@@ -4824,21 +4823,21 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌱",
      "Soil",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + ⏳ Sand",
      6
     ],
     [
      "🍎",
      "Apple",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water",
      11
     ],
     [
      "🧑‍🌾",
      "Farm",
-     "CREATION",
+     "COMPONENT",
      "🌱 Soil + 🛠️ Tools + 💧 Water",
      10
     ],
@@ -4859,7 +4858,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🐔",
      "Chicken",
-     "CREATION",
+     "COMPONENT",
      "🧑‍🌾 Farm + 🥚 Egg",
      14
     ],
@@ -4923,35 +4922,35 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "__FURNACE__",
      "Furnace",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + C",
      4
     ],
     [
      "__RUBBER__",
      "Rubber",
-     "COMPONENT",
+     "MATERIAL",
      "🛢️ Natural Gas + S",
      5
     ],
     [
      "🔩",
      "Stainless Steel",
-     "COMPONENT",
+     "MATERIAL",
      "__STEEL__ Steel + Ni + __FURNACE__ Furnace",
      8
     ],
     [
      "🦾",
      "Aluminum Alloy",
-     "COMPONENT",
+     "MATERIAL",
      "Al + Mg + __FURNACE__ Furnace",
      7
     ],
     [
      "__DIAMOND__",
      "Diamond",
-     "COMPONENT",
+     "CREATION",
      "C + __FURNACE__ Furnace + 🕐 Clock",
      20
     ],
@@ -5008,14 +5007,14 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌱",
      "Soil",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + ⏳ Sand",
      6
     ],
     [
      "🌳",
      "Tree",
-     "COMPONENT",
+     "MATERIAL",
      "🌱 Soil + 💧 Water + C + O",
      9
     ],
@@ -5029,21 +5028,21 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🦌",
      "Deer",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 💧 Water + 🦴 Bone",
      12
     ],
     [
      "__LOGCABIN__",
      "Log Cabin",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + 🛠️ Tools + __FURNACE__ Furnace",
      12
     ],
     [
      "🐟",
      "Salmon",
-     "CREATION",
+     "COMPONENT",
      "🌿 Seaweed + 💧 Water + 🥚 Egg",
      15
     ],
@@ -5093,7 +5092,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🦠",
      "Yeast",
-     "COMPONENT",
+     "MATERIAL",
      "🍬 Sugar + 💧 Water",
      6
     ],
@@ -5192,28 +5191,28 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🪟",
      "Glass",
-     "COMPONENT",
+     "MATERIAL",
      "⏳ Sand + 🪨 Limestone",
      4
     ],
     [
      "__CONCRETE__",
      "Concrete",
-     "COMPONENT",
+     "MATERIAL",
      "🏺 Clay + 🪨 Limestone",
      4
     ],
     [
      "🌉",
      "Bridge",
-     "CREATION",
+     "COMPONENT",
      "🔩 Stainless Steel + 🛠️ Tools + 🌳 Tree + 💧 Water",
      12
     ],
     [
      "🏢",
      "Building",
-     "CREATION",
+     "COMPONENT",
      "🌳 Tree + __STEEL__ Steel + 🪟 Glass + __CONCRETE__ Concrete",
      13
     ],
@@ -5298,7 +5297,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "📡",
      "Satellite Dish",
-     "COMPONENT",
+     "CREATION",
      "🦾 Aluminum Alloy + 🔌 Wire",
      20
     ],
@@ -9947,14 +9946,13 @@ function matVisibleInventory(){
   };
   return list.sort(sorts[matFilt.sort] || sorts.points);
 }
-/* The tray's sections, by how many element icons (suit costs) an item
-   has: none = Tier 1, one = Tier 2, two = Tier 3, three = Capstones.
-   Highest first. Card size still follows the item's mat footprint. */
+/* The tray's sections, by item tier (ITEM_TIER), which also sets card size
+   on the mat. Highest first. */
 const MAT_TIER_BANDS = [
-  { key: "capstone", label: "Capstones", icons: 3 },
-  { key: "t3", label: "Tier 3", icons: 2 },
-  { key: "t2", label: "Tier 2", icons: 1 },
-  { key: "t1", label: "Tier 1", icons: 0 },
+  { key: "capstone", label: "Capstones", tier: "CAPSTONE" },
+  { key: "t3", label: "Tier 3", tier: "CREATION" },
+  { key: "t2", label: "Tier 2", tier: "COMPONENT" },
+  { key: "t1", label: "Tier 1", tier: "MATERIAL" },
 ];
 // Collapsed band keys: an in-memory Set (like matFilt), so collapsed
 // sections survive re-renders but not a reload.
@@ -9972,7 +9970,7 @@ function matResultsGridHTML(){
       : "Nothing crafted yet — items you craft show up here."}</p>`;
   }
   const sections = MAT_TIER_BANDS.map(band => {
-    const items = inv.filter(c => Math.min(itemSuitCosts(c.name).length, 3) === band.icons);
+    const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
     const collapsed = matTierCollapsed.has(band.key);
     return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
@@ -9981,10 +9979,9 @@ function matResultsGridHTML(){
         </button>
         ${prefs.itemsListView
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
-          // Tier 1 cards at half height, as they stack on the mat; a
-          // full-size card in that section spans two half rows.
+          // Tier 1 cards at half height, as they stack on the mat.
           : `<div class="mat-results-grid ${band.key === "t1" ? "half" : ""}">${items.map(c =>
-              matCardHTML(c.name, { tray: true, cls: (matIsTier1(c) ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
+              matCardHTML(c.name, { tray: true, cls: (band.key === "t1" ? "small mini" : "small") + (c.name === matListOpen ? " selected" : "") })).join("")}</div>`}
       </div>`;
   }).join("");
   // The selected item's shop row docks at the top of the list, just under
