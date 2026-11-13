@@ -2249,7 +2249,7 @@ button.setting-row:not(:disabled):active, .mode-card:active{
   display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; line-height:1;
   border:2px solid var(--line); background:var(--sunken); color:var(--mute); box-shadow:0 2px 4px rgba(0,0,0,.25);
 }
-.pin-tip-box #pinTipHide{position:absolute; left:-14px; bottom:-14px}
+.pin-tip-box .tip-hide-x{position:absolute; left:-14px; bottom:-14px}
 #mouseTipHide{position:absolute; left:-12px; bottom:-12px}
 .mouse-bubble:has(#mouseTipClose[hidden]) #mouseTipHide{display:none}
 .pin-tip-box h2{margin:0 0 6px}
@@ -2310,6 +2310,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 .order-status.no{color:var(--bad)}
 .order-reroll{display:inline-flex; align-items:center; gap:6px}
 .mat-rules-page[hidden]{display:none}
+.tut-list{display:flex; flex-direction:column; max-height:60vh; overflow-y:auto}
 .mct-line{margin:8px 0; line-height:1.45}
 .mct-warn{padding:8px 10px; border-radius:10px; background:var(--bad-soft); border:1.5px solid var(--bad)}
 .empty-el-tip{max-width:360px; text-align:center}
@@ -3822,6 +3823,15 @@ html.low-motion #matListActions{transition:none}
 <div id="scrim"></div>
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
+<!-- Display Mat Challenges, first time per run (maybeShowOrderTip()). -->
+<div class="overlay" id="orderTip" role="dialog" aria-modal="true" aria-labelledby="orderTipTitle">
+  <div class="sheetbox parch pin-tip-box">
+    <h2 id="orderTipTitle">📜 Display Mat Challenges</h2>
+    <div id="orderTipBody" style="text-align:left"></div>
+    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="orderTipOk">Got it</button></div>
+    <button type="button" class="tip-hide-x" id="orderTipHide" title="Don't show this again" aria-label="Don't show this again">✕</button>
+  </div>
+</div>
 <div class="overlay" id="matRulesOverlay" role="dialog" aria-modal="true" aria-labelledby="matRulesTitle">
   <div class="sheetbox parch mat-rules-box">
     <!-- Page 1: the check itself; page 2: Quark combos (openMatRules()). -->
@@ -4152,6 +4162,13 @@ html.low-motion #matListActions{transition:none}
       </span>
       <span class="setbtn">Open</span>
     </button>
+    <button type="button" class="setting-row" id="settingsTutsBtn">
+      <span class="setting-ico">📖</span>
+      <span class="setting-body">
+        <span class="setting-label">Tutorial Messages</span>
+      </span>
+      <span class="setbtn">Open</span>
+    </button>
     <button type="button" class="setting-row" id="settingsDevBtn">
       <span class="setting-ico">🛠️</span>
       <span class="setting-body">
@@ -4214,6 +4231,15 @@ html.low-motion #matListActions{transition:none}
       <button type="button" class="bigbtn" id="setSave">Save</button>
       <button type="button" class="bigbtn sec" id="setRulesCancel">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- Tutorial Messages: every tip window, to read again (TUTORIAL_MESSAGES). -->
+<div class="overlay" id="settingsTuts" role="dialog" aria-modal="true" aria-labelledby="setTutsTitle">
+  <div class="sheetbox parch">
+    <h2 id="setTutsTitle">📖 Tutorial Messages</h2>
+    <div id="tutList" class="tut-list"></div>
+    <div class="btnrow"><button type="button" class="bigbtn sec" id="setTutsBack">← Back</button></div>
   </div>
 </div>
 
@@ -7289,7 +7315,7 @@ function openOverlay(id){
 // The settings hub and its three sub-screens: exactly one is open at a
 // time, and anySettingsOpen()/openSettingsScreen() treat all four as one
 // "Settings is open" state while moving between them.
-const SETTINGS_OVERLAY_IDS = ["settings", "settingsRules", "settingsDev"];
+const SETTINGS_OVERLAY_IDS = ["settings", "settingsRules", "settingsDev", "settingsTuts"];
 function anySettingsOpen(){
   return SETTINGS_OVERLAY_IDS.some(id => document.getElementById(id).classList.contains("open"));
 }
@@ -10220,7 +10246,10 @@ document.getElementById("matRulesOverlay").addEventListener("click", ev => {
     document.getElementById("matRulesPage2").hidden = false;
     return;
   }
-  if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")) closeOverlay("matRulesOverlay");
+  if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")){
+    closeOverlay("matRulesOverlay");
+    if (orderTipAfterRules){ orderTipAfterRules = false; maybeShowOrderTip(); }
+  }
 });
 
 /* Rebuilds #drawerTop: the score card, the Elements/Display Mat page, its
@@ -11510,9 +11539,6 @@ function quietCheck(){
   const quiet = diceDeltaForReward(emptyElementsForScore(total, state.visits));
   const floor = state.matBonusDice || 0;
   state.tripDice = Math.max(floor, quiet);
-  if (state.tripDice > 0) queueEventToast("dice", "🎲", `Display Mat: ${Math.round(total).toLocaleString()} Quarks`,
-    quiet > floor ? "Your score raised your dice!" : "Dice kept from your last board check",
-    `+${state.tripDice}`);
 }
 
 /* Check orders: each board check carries one, drawn a check ahead
@@ -11971,7 +11997,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  playShutter("Final Score!", () => { openDrawer(); updateHub(); }, orderShutterLine());
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); maybeShowOrderTip(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -12019,14 +12045,41 @@ function playShutter(line2, atClosed, line3 = ""){
 function announceMatCheck(){
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
+    orderTipAfterRules = true; // the challenge window follows the rules
     openMatRules();
+    return;
   }
+  maybeShowOrderTip();
 }
+/* Display Mat Challenges (check orders): explained the first time a run
+   reaches a board check that has one (state.sawOrderTip), unless hidden
+   with its corner ✕. */
+let orderTipAfterRules = false;
+function maybeShowOrderTip(){
+  const o = state.order;
+  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return;
+  state.sawOrderTip = true; save();
+  openOrderTip();
+}
+function openOrderTip(){
+  document.getElementById("orderTipBody").innerHTML = `
+    <p class="mct-line">⏰ Every board check comes with a <b>challenge</b>. You see the next one a check ahead, by your combos.</p>
+    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST}: <b>Requests</b>. Do it and that check's Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
+    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - MAT_CHECK_EVERY}: <b>Restrictions</b>. Break it and that check's Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
+    <p class="mct-line">🏛️ Round ${RUN_COMPLETE_VISIT}: the <b>Grand Exhibition</b>. Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks.</p>
+    <p class="mct-line">👆 Tap the challenge for details, or swap it for 1 "?".</p>`;
+  openOverlay("orderTip");
+}
+document.getElementById("orderTip").addEventListener("click", ev => {
+  if (ev.target.closest("#orderTipHide")) hideTipForever("orderTip");
+  else if (!ev.target.closest("#orderTipOk") && ev.target.id !== "orderTip") return;
+  closeOverlay("orderTip");
+});
 document.getElementById("matCheckTutorial").innerHTML = `
   <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
   <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
   <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
-  <p class="mct-line">📜 Each check has an <b>order</b> -- tap its chip by your combos to see it.</p>
+  <p class="mct-line">📜 Each check has a <b>challenge</b> -- tap its chip by your combos to see it.</p>
   <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
@@ -12101,6 +12154,9 @@ function maybeShowEmptyElTip(){
     return;
   }
   prefs.sawEmptyElTip = true; savePrefs();
+  showEmptyElTip();
+}
+function showEmptyElTip(){
   document.getElementById("emptyElTipBody").innerHTML = `
     <div class="eet-icon">${emptyElSquareHTML(56)}</div>
     <h2 id="emptyElTipTitle">Unknown Element!</h2>
@@ -13227,8 +13283,8 @@ function hideTipForever(id){
   prefs.hiddenTips = [...new Set([...(prefs.hiddenTips || []), id])];
   savePrefs();
 }
-function openClassicTutorial(onDone){
-  if (tipHidden("classicTut")){ if (onDone) onDone(); return; }
+function openClassicTutorial(onDone, force){
+  if (!force && tipHidden("classicTut")){ if (onDone) onDone(); return; }
   ctIdx = 0;
   ctOnDone = onDone;
   const el = document.getElementById("classicTut");
@@ -13287,6 +13343,27 @@ document.getElementById("setDevBack").addEventListener("click", () => openSettin
 document.getElementById("setClose").addEventListener("click", () => closeOverlay("settings"));
 
 document.getElementById("settingsDevBtn").addEventListener("click", () => openSettingsScreen("settingsDev"));
+
+/* Settings > Tutorial Messages: one row per tip window; a tap closes
+   Settings and shows that window as it appears in the game. */
+const TUTORIAL_MESSAGES = [
+  ["▶️", "How to play", () => openClassicTutorial(null, true)],
+  ["📌", "Pin items to your To-Do List", () => openOverlay("pinTip")],
+  ["🕒", "Display Mat board checks", () => openMatRules()],
+  ["📜", "Display Mat Challenges", () => openOrderTip()],
+  ["❓", "Unknown Elements", () => showEmptyElTip()],
+];
+document.getElementById("tutList").innerHTML = TUTORIAL_MESSAGES.map(([ico, title], i) =>
+  `<button type="button" class="setting-row" data-tut="${i}"><span class="setting-ico">${ico}</span>
+    <span class="setting-body"><span class="setting-label">${title}</span></span><span class="setbtn">View</span></button>`).join("");
+document.getElementById("settingsTutsBtn").addEventListener("click", () => openSettingsScreen("settingsTuts"));
+document.getElementById("setTutsBack").addEventListener("click", () => openSettingsScreen("settings"));
+document.getElementById("tutList").addEventListener("click", ev => {
+  const row = ev.target.closest("[data-tut]");
+  if (!row) return;
+  closeOverlay("settingsTuts");
+  TUTORIAL_MESSAGES[+row.dataset.tut][2]();
+});
 
 function openSettingsRules(){
   setMinigamesBox.checked = prefs.minigamesEnabled !== false;
