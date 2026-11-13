@@ -48,14 +48,6 @@ function handleScreenClick(ev){
     return;
   }
 
-  const arrangeLaunchBtn = ev.target.closest("[data-arrange-bg]");
-  if (arrangeLaunchBtn){
-    state.arrangement.bg = arrangeLaunchBtn.dataset.arrangeBg;
-    save();
-    openArrangeScreen();
-    return;
-  }
-
   const nodeBtn = ev.target.closest("[data-map-node]");
   if (nodeBtn){
     if (startingGiftInProgress) return; // the preview card is mid-gift

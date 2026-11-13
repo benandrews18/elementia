@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Compact station shop.** No coloured ribbon: the dark header sits flush
+  under the Quark meter. Tighter title spacing, no dice faces under the
+  element pool, no "Item Shop" label. The capstone moves to the top of the
+  list (below the compact crafted row) with a gold border. The paintbrush
+  (Arrange Items) button is gone.
+
 - **Saved Layouts, Last button, tips.** Saved Layouts is a wider window
   with a corner ✕, a 💾 button by the name field, the score pill left of
   each name, a trash bubble on each card's corner and no combo counts;

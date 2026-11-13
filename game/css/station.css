@@ -14,13 +14,12 @@
 .stationhead{
   background:linear-gradient(180deg,#193b4c 0%,#122e3c 100%);
   padding-bottom:18px;
-  border-radius:17px 17px 0 0;
-  border-top:16px solid var(--suit);
+  border-radius:0;
 }
 /* Centered, with extra side padding so the title clears the floating
    visits/score pills that float over this same top band on every screen
    -- see .pill/#topbar. */
-.sheet-head{display:flex; align-items:center; gap:16px; padding:20px 26px 14px}
+.sheet-head{display:flex; align-items:center; gap:16px; padding:14px 26px 6px}
 .sheet-head .em{font-size:44px; line-height:1}
 /* inline-flex so the row spans just the title plus .empty-el-badge, with
    the badge centred on the title and the same 16px gap as .sheet-head. */
@@ -138,13 +137,10 @@
 .rolled{display:flex; gap:10px; flex-wrap:nowrap; justify-content:center; width:100%}
 
 /* make here */
-.makewrap{padding:20px 8px 24px}
+.makewrap{padding:12px 8px 24px}
 .col-label{font-size:12px; font-weight:800; letter-spacing:1.5px; color:#fff;
   text-shadow:0 1px 2px rgba(0,0,0,.55), 0 1px 8px rgba(0,0,0,.25);
   padding-bottom:8px; border-bottom:2px solid var(--line2); margin-bottom:14px}
-/* "ITEM SHOP": its own larger centred line; the Crafted Items toggle
-   renders separately above the crafted list (see shopBodyHTML()). */
-.col-label.shop-label{text-align:center; font-size:16px; letter-spacing:.8px}
 /* Same border-drawn chevron as .job-board-heading::before, in currentColor,
    so every collapse control matches. */
 .shop-collapse-toggle{
@@ -160,17 +156,8 @@
   transform:rotate(-45deg) translate(-1px,-1px); transition:transform .18s ease;
 }
 .shop-collapse-toggle.active .collapse-chevron{transform:rotate(45deg) translate(-2px,-1px)}
-/* Paintbrush shortcut to the Arrange screen, beside the Crafted Items
-   toggle (same gating). Opens with this station's suit colour as the
-   background (see [data-arrange-bg]). */
 .shop-toggle-row{display:flex; align-items:center; gap:8px; margin-bottom:9px}
 .shop-toggle-row .shop-collapse-toggle{margin-bottom:0}
-.arrange-launch-btn{
-  flex:none; display:flex; align-items:center; justify-content:center;
-  width:30px; height:30px; border-radius:50%;
-  background:var(--sunken); border:1.5px solid var(--line2); font-size:14px;
-}
-.arrange-launch-btn:hover{background:var(--bg-soft)}
 /* Collapsed crafted-items row: same icons as the map preview strip, but
    wrapping. */
 .crafted-row{
@@ -182,7 +169,7 @@
 /* Sits in the dark .stationhead card above the dice, not .makewrap --
    own spacing/no divider line rather than inheriting .col-label's
    light-section border, but identical text treatment. */
-.col-label.elements-label{margin:14px 26px 0; padding-bottom:0; border-bottom:none}
+.col-label.elements-label{margin:4px 26px 0; padding-bottom:0; border-bottom:none}
 .shop{display:flex; flex-direction:column; gap:9px}
 /* The Craft button fills the card's right edge top to bottom
    (align-self:stretch), so .item has no padding (it's on .irow). No
@@ -385,9 +372,9 @@
 .craftbtn:disabled{background:var(--sunken); color:var(--mute); box-shadow:none}
 .craftbtn.done{background:var(--ok-soft); color:var(--ok); animation:none; box-shadow:none}
 
-.capbox{margin-top:16px; background:var(--cap-grad);
-  border:2px solid var(--gold-line); border-radius:14px; padding:12px 16px}
-.capbox.can{border-color:var(--ok); background:var(--cap-grad-can)}
+.capbox{margin-bottom:9px; background:var(--cap-grad);
+  border:3px solid #d9a441; border-radius:14px; padding:12px 16px}
+.capbox.can{background:var(--cap-grad-can); box-shadow:0 0 10px rgba(63,180,108,.55)}
 .capbox .item{padding:0; background:none; border:none}
 /* The capstone item has no padding/border, so the highlight ring goes on
    .capbox instead. */
@@ -395,3 +382,6 @@
   box-shadow:inset 0 0 0 4px var(--ok), 0 0 12px rgba(63,180,108,.45);
 }
 .capbox .item.job-highlight{box-shadow:none}
+/* The station's dark header sits flush under the Quark meter bar. */
+body.has-qtop[data-screen="station"] main#screen{padding-top:var(--qtop-h, 52px)}
+body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}

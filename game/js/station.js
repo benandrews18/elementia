@@ -14,14 +14,18 @@ function renderStation(name){
   // Sorted by atomic number -- face N (the die-face pip count shown) is
   // this sorted position, matching doRoll()'s own use of sortedDice().
   const gather = sortedDice(s).map((sym, i) =>
-    `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span>${dieFace(i + 1)}</div>`).join("");
+    `<div class="gcol"><button type="button" class="gchip" data-elem="${esc(sym)}" title="${esc(sym)} — tap for its card" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span></div>`).join("");
 
   // Empty placeholder for the rolled-dice row (rolling is Home's Roll face,
   // triggerRoll()); playRollAnimation() tweens its height. Omitted once this
   // visit's roll is spent.
   const playBar = state.rolledHere ? "" : `<div class="playbar" id="playBar"></div>`;
 
-  const shopBody = shopBodyHTML(shopEntries, idx);
+  // The capstone sits at the top of the shop, under the compact crafted row.
+  const capHTML = capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
+        ${itemHTML(capEntry, idx(capEntry))}
+      </div>` : "";
+  const shopBody = shopBodyHTML(shopEntries, idx, capHTML);
 
   // The header is frozen to the top (.stationhead.frozen) until this visit's
   // roll has happened and finished animating (rollAnimationInProgress), so the
@@ -40,11 +44,7 @@ function renderStation(name){
       ${playBar}
     </div>
     <div class="makewrap">
-      <div class="col-label shop-label">ITEM SHOP</div>
       ${shopBody}
-      ${capRevealed ? `<div class="capbox ${!owns(capEntry.name) && canCraft(capEntry) ? "can" : ""}">
-        ${itemHTML(capEntry, idx(capEntry))}
-      </div>` : ""}
     </div>
   </div>`;
 }
@@ -53,28 +53,26 @@ function renderStation(name){
    as full cards or fold into the compact craftedIconsHTML() row (capstones
    always keep their capbox). The toggle always renders first, just above
    wherever crafted items currently show. */
-function shopBodyHTML(shopEntries, idx){
+function shopBodyHTML(shopEntries, idx, capHTML = ""){
   // "Crafted Items": owns() is "crafted", so an item made anywhere shows here
   // at every station that sells it. No toggle until one item sold here is
   // crafted.
   const hasCraftedHere = shopEntries.some(e => owns(e.name));
   if (!hasCraftedHere){
-    return `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+    return capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
-  const stationSuit = STATION_BY_NAME[current] && DATA.suits[STATION_BY_NAME[current].suit];
   const toggle = `<div class="shop-toggle-row">
       <button type="button" class="shop-collapse-toggle ${state.collapseCraftedItems ? "active" : ""}" id="collapseCraftedBtn">
         <span class="collapse-chevron"></span>Crafted Items
       </button>
-      ${stationSuit ? `<button type="button" class="arrange-launch-btn" data-arrange-bg="${esc(stationSuit.color)}" title="Arrange your items" aria-label="Arrange your items">🖌️</button>` : ""}
     </div>`;
   if (!state.collapseCraftedItems){
-    return toggle + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+    return toggle + capHTML + `<div class="shop">${shopEntries.map(e => itemHTML(e, idx(e))).join("")}</div>`;
   }
   const owned = shopEntries.filter(e => owns(e.name));
   const rest = shopEntries.filter(e => !owns(e.name));
   const row = owned.length ? `<div class="crafted-row">${craftedIconsHTML(owned)}</div>` : "";
-  return toggle + row + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
+  return toggle + row + capHTML + `<div class="shop">${rest.map(e => itemHTML(e, idx(e))).join("")}</div>`;
 }
 
 /* Raw element boxes, shared by the legacy drawer and Classic's Elements
