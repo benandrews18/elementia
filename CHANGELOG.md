@@ -24,6 +24,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
   sprites, and the 24-round clock sits in a brass rim.
 - **Map stations keep their own icons:** the station emoji are back,
   each set in the same brass ring as the clock.
+- **Phase 4 -- windows:** Settings, Collections, the clue gift boxes,
+  "collection found" and Run Complete are now parchment windows in a brass
+  frame, with the title on a wooden banner. Settings' rows are wooden
+  buttons. Every close X is now a round brass button.
 
 ## 2026-11-12 (board check scene change)
 

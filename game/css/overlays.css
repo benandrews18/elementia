@@ -120,9 +120,9 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #cardPop{z-index:71}
 .cp-close-x{
   position:absolute; top:calc(env(safe-area-inset-top, 0px) + 12px); right:12px; z-index:5;
-  width:42px; height:42px; border-radius:50%; padding:0;
-  background:rgba(20,24,32,.85); color:#fff; border:2px solid var(--gold);
-  font-size:20px; font-weight:800; line-height:1; cursor:pointer;
+  width:42px; height:42px; border-radius:50%; padding:0; border:none; font-size:0;
+  background:url("../ui/btn_close.webp") center / contain no-repeat;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
 }
 /* Gold border on every dialog, matching the map's reachable rings and the
@@ -141,6 +141,26 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
   background:transparent; border:none; box-shadow:none; padding:0; max-width:480px;
 }
 .sheetbox h2{font-size:24px; font-weight:800; letter-spacing:-.5px; margin-bottom:6px}
+/* Parchment window (game/ui/panel_parchment.webp as a 9-slice, so the brass
+   corners keep their shape). The palette tokens are redefined inside it, so
+   everything in the window that uses them turns dark-on-parchment. */
+.sheetbox.parch{
+  --ink:#3b2412; --ink2:#5e4026; --mute:#8a6a48;
+  --line:#c9a571; --line2:#d8bb8a; --card:#f6e8c6; --bg-soft:#efdcb2; --sunken:#e6cf9f;
+  --gold:#a8730f; --gold-soft:#f7e3a6; --gold-line:#c9a24f;
+  --ok-soft:#d9ecd0; --ok-line:#6fb383; --bad-soft:#f6d6cc;
+  --collection:#6a3fc0; --collection-soft:#e8def5; --collection-line:#a48bd6;
+  color:var(--ink); background:none; border-radius:0; box-shadow:none;
+  border:30px solid transparent; border-image:url("../ui/panel_parchment.webp") 56 fill / 30px stretch;
+  padding:10px 8px 6px; filter:drop-shadow(0 16px 30px rgba(0,0,0,.45));
+}
+/* Title on a wooden banner, overlapping the frame's top edge. */
+.sheetbox.parch h2{
+  display:table; margin:-22px auto 12px; padding:6px 30px 7px; color:#fff7e0;
+  font-size:21px; letter-spacing:0; text-align:center; text-shadow:0 2px 0 rgba(0,0,0,.55);
+  border:0 solid transparent; border-image:url("../ui/banner_wood.webp") 64 96 fill / 13px 24px stretch;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.35));
+}
 .sheetbox p{color:var(--ink2); font-size:15px; margin-bottom:14px; line-height:1.5}
 .sheetbox .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px}
 /* Lock In's "you won dice" celebration (see showLockInRewardModal()) --

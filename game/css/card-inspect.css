@@ -120,9 +120,9 @@
   border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
 /* End screen: one phone screen tall -- the stats scroll inside .end-body
    if they must, the buttons stay at the bottom. */
-#endGame .end-box{display:flex; flex-direction:column; padding:16px 16px 14px;
+#endGame .end-box{display:flex; flex-direction:column; padding:12px 8px 6px;
   max-height:calc(100dvh - 40px - var(--hub-h, 67px) - env(safe-area-inset-bottom))}
-#endGame #endTitle{margin:0 0 4px; text-align:center}
+#endGame #endTitle{margin:-28px auto 8px}
 #endGame .end-body{flex:1; min-height:0; overflow-y:auto}
 #endGame #endSub{margin:0 0 4px; font-size:13px}
 #endGame .sumgrid{grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 2px}

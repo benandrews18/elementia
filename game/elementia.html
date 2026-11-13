@@ -283,7 +283,7 @@
 <div class="overlay" id="endGame" role="dialog" aria-modal="true" aria-labelledby="endTitle">
   <!-- Fits one phone screen: the stats scroll inside .end-body if they must,
        the buttons stay pinned at the bottom (.end-foot). -->
-  <div class="sheetbox end-box">
+  <div class="sheetbox parch end-box">
     <h2 id="endTitle">🏁 Game Over</h2>
     <div class="end-body">
       <p id="endSub"></p>
@@ -394,7 +394,7 @@
      openSettingsScreen() keeps exactly one of the four open; Close here is
      the only way back to the game. -->
 <div class="overlay" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
-  <div class="sheetbox">
+  <div class="sheetbox parch">
     <h2 id="setTitle">⚙️ Settings</h2>
     <button type="button" class="setting-row" id="tourBtn" aria-label="How to play">
       <span class="setting-ico">▶️</span>
@@ -568,8 +568,8 @@
      collections never render -- just the remaining count
      (renderCollectionsList()). -->
 <div class="overlay" id="collectionsOverlay" role="dialog" aria-modal="true" aria-labelledby="collectionsTitle">
-  <div class="sheetbox">
-    <button type="button" class="cp-close-x coll-x" id="collectionsClose" aria-label="Close">✕</button>
+  <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="collectionsClose" aria-label="Close"></button>
     <div class="coll-head">
       <h2 id="collectionsTitle">🏆 Collections</h2>
       <span class="coll-star-bubble" id="collectionsStars" hidden></span>
@@ -583,12 +583,12 @@
 
 <!-- A collection just completed on the mat (maybeShowCollectionFound()). -->
 <div class="overlay" id="collectionFound" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="collectionFoundName">
-  <div class="sheetbox clue-open-box" id="collectionFoundBody"></div>
+  <div class="sheetbox parch clue-open-box" id="collectionFoundBody"></div>
 </div>
 
 <!-- Collection clue gift boxes (openClueBoxes()), over Collections. -->
 <div class="overlay" id="clueOpen" data-no-dismiss role="dialog" aria-modal="true" aria-label="Open your clues">
-  <div class="sheetbox clue-open-box" id="clueOpenBody"></div>
+  <div class="sheetbox parch clue-open-box" id="clueOpenBody"></div>
 </div>
 
 <!-- Trophies (js/trophies.js), opened from the home screen. -->

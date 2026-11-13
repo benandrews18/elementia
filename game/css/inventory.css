@@ -343,12 +343,12 @@
 .end-stars{margin:8px 0 0; font-weight:800; color:var(--gold); text-align:center; font-size:13px}
 /* Collections header: title, Stars bubble (Main Menu), X top-right; the
    clue buttons sit under the count. */
-.coll-head{display:flex; align-items:center; gap:10px; padding-right:44px}
-.coll-head h2{margin:0}
+.coll-head{display:flex; align-items:center; justify-content:center; gap:10px}
+.coll-head h2{margin:-22px 0 12px}
 .coll-star-bubble{flex:none; padding:4px 10px; border-radius:999px; background:var(--gold-soft); border:2px solid var(--gold);
   color:var(--gold); font-weight:900; font-size:15px; line-height:1.2}
 .coll-star-bubble[hidden]{display:none}
-.coll-x{top:12px; right:12px; width:36px; height:36px; font-size:17px}
+.cp-close-x.coll-x{top:-30px; right:-30px; width:44px; height:44px}
 .clue-shop-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 10px}
 .clue-shop-btns[hidden]{display:none}
 .clue-shop-btns .bigbtn{width:100%; padding-left:6px; padding-right:6px; font-size:14px}
