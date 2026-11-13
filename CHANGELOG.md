@@ -10,6 +10,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Recipes (content 2026.11.13c):** Lighthouse now also needs Water;
+  Life no longer needs Bone.
+
 - **Crafting:** the component items now peek up from behind the bottom hub
   (about three-quarters of each card) and slide back down, instead of
   flying across the screen.

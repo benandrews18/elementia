@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.13b",
+ "version": "2026.11.13c",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -117,7 +117,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__LIGHTHOUSE__",
      "Lighthouse",
      "CREATION",
-     "💡 Light Bulb + __CONCRETE__ Concrete + 🪟 Glass",
+     "💡 Light Bulb + __CONCRETE__ Concrete + 🪟 Glass + 💧 Water",
      20
     ],
     [
@@ -131,7 +131,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__LIFE__",
      "Life",
      "CREATION",
-     "🦴 Bone + 🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",
+     "🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",
      23
     ],
     [
