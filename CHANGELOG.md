@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Fixes from review:** pressing Map while a capstone's card is open no
+  longer makes the Marketplace pop up later out of nowhere; with low motion
+  on, the post-craft card is the static one again (no flying). Smoke test
+  covers the first.
+
 - **Trophies window:** a parchment window with a compact grid of trophy
   icons (locked ones are silhouettes) and an X in the top-right corner.
   Tap a trophy to see a larger window with its name, how to earn it and

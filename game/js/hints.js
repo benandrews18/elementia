@@ -110,6 +110,7 @@ function hideMouseTip(){
    afterward. */
 function cancelPendingFullscreenEvents(){
   clearTimeout(cardPopTimer);
+  capstoneMarketPending = false; // closed without closeOverlay(): don't open the Market later
   document.getElementById("cardPop").classList.remove("open");
   // Clear the queue BEFORE hideMouseTip(), which flushes the next tip on its
   // way out.

@@ -8,14 +8,9 @@
    2. The item components (kept, not spent) rise as mini cards, stack, then
       fly back into the Inventory.
    Then the new item's card shows (autoCardPop()/celebrate()). */
-/* An item's home-station suit colour (miniItemCardHTML()). */
-function itemSuitColor(name){
-  const ing = ENTRIES.find(e => e.name === name);
-  return ing ? DATA.suits[STATION_BY_NAME[ing.station].suit].color : "#4a4f5c";
-}
 function miniItemCardHTML(name, emoji){
   const ing = ENTRIES.find(e => e.name === name);
-  return `<div class="fc-card fc-item" style="--suit:${itemSuitColor(name)}">
+  return `<div class="fc-card fc-item">
     <div class="fc-icon">${em(emoji || (ing && ing.emoji) || "")}</div>
     <div class="fc-name">${esc(name)}</div>
   </div>`;

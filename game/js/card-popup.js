@@ -90,6 +90,7 @@ function updateCardPopBackBtn(){
 function autoCardPop(entry){
   releaseBingoCraftHold();
   if (prefs.autoCardInspection === false) return;
+  if (lowMotion()){ showCardPop(entry); return; } // static card, closes itself
   // A small card, no backdrop. After a short look it flies into the
   // Inventory; tapping it first opens the full inspection, which then stays
   // until dismissed.

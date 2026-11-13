@@ -288,6 +288,15 @@
     document.getElementById("confirmNo").click(); await wait(200);
     expect(!state.ended, "cancelling the Overtime prompt should keep the run going");
 
+    // Pressing Map over a capstone card clears the "open the Market" flag,
+    // so a later card close doesn't pop the Marketplace.
+    celebrate(ENTRIES.find(e => e.tier === "CAPSTONE")); await wait(100);
+    cancelPendingFullscreenEvents();
+    expect(capstoneMarketPending === false, "Map over the capstone card should clear capstoneMarketPending");
+    showCardPop(ENTRIES[0], false); await wait(100); closeOverlay("cardPop"); await wait(100);
+    expect(!(jobSheet.classList.contains("open") && jobSheetVariant === "full"), "closing a later card should not open the Marketplace");
+    document.querySelectorAll(".confetti").forEach(c => c.remove());
+
     // Visiting the 8th station pays one "?", once per run.
     state.visitedStations = Object.fromEntries(DATA.stations.slice(1).map(st => [st.name, true]));
     state.allStationsPaid = false;
