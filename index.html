@@ -1502,10 +1502,16 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
    the container so the grid's cqw row height measures the shop's width. */
 .st-cards{container-type:inline-size}
 .st-cards .mat-results-grid{--mat-row-h:calc(((100cqw - 24px) / 4) * 1.4); margin-bottom:12px}
-.st-grid{grid-auto-flow:row dense}
-/* Two Tier 1 cards per cell, each half the row; a lone one keeps the top half. */
-.st-stack{display:flex; flex-direction:column; gap:2px; min-width:0}
-.st-grid .st-stack .mm-card{height:calc((var(--mat-row-h) - 2px) / 2); flex:none}
+/* Each cell: the card (mat-sized: full row, Tier 1 half), then a Craft
+   button under it. Rows size to their content, so a row of Tier 1 pairs
+   is a little taller; cells sit at the top of their row. */
+.st-cards .st-grid{grid-auto-flow:row dense; grid-auto-rows:auto; align-items:start}
+.st-cell{display:flex; flex-direction:column; gap:3px; min-width:0}
+.st-cell.wide{grid-column:span 2}
+.st-grid .st-cell .mm-card{flex:none; height:var(--mat-row-h)}
+.st-grid .st-cell .mm-card.mini{height:calc((var(--mat-row-h) - 2px) / 2)}
+.st-cell .craftbtn{flex:none; width:100%; height:26px; margin:0; padding:0 4px; font-size:12px}
+.st-stack{display:flex; flex-direction:column; gap:4px; min-width:0}
 .st-cards .mm-card.st-owned{filter:brightness(.7) saturate(.6)}
 .st-cards .mm-card.st-owned::after{
   content:"✓"; position:absolute; right:-5px; bottom:-5px; width:20px; height:20px; border-radius:50%;
@@ -2314,12 +2320,17 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 .sh-l3{font-size:17px; font-weight:900; color:#fff; padding:6px 14px; margin:4px 16px 0; border-radius:12px;
   background:rgba(0,0,0,.45); border:2px solid var(--gold); max-width:340px}
 .sh-l3[hidden]{display:none}
-.lre-order{font-size:15px; margin-bottom:8px}
-.order-text{font-size:17px; font-weight:900}
-.order-status{font-weight:900}
-.order-status.ok{color:var(--good, #2f8a4a)}
-.order-status.no{color:var(--bad)}
-.order-reroll{display:inline-flex; align-items:center; gap:6px}
+/* Challenge popup (openOrderInfo()): the rule in icons, then chips. */
+.ord-rule{display:flex; align-items:center; justify-content:center; gap:8px; font-size:30px; font-weight:900; margin:4px 0 12px}
+.ord-rule img{width:34px; height:34px}
+.ord-suit{display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:50%;
+  background:var(--suit); color:#fff; font-size:20px}
+.ord-suit :is(img, svg){width:24px; height:24px}
+.ord-chips{display:flex; justify-content:center; gap:8px; flex-wrap:wrap}
+.ord-chip{padding:5px 11px; border-radius:999px; font-size:16px; font-weight:900; background:var(--sunken); border:2px solid var(--line)}
+.ord-chip.ok{border-color:var(--ok-line); background:var(--ok-soft)}
+.ord-chip.no{border-color:var(--bad); background:var(--bad-soft)}
+.order-reroll{display:inline-flex; align-items:center; gap:6px; font-size:18px}
 .mat-rules-page[hidden]{display:none}
 .tut-list{display:flex; flex-direction:column; max-height:60vh; overflow-y:auto}
 .mct-line{margin:8px 0; line-height:1.45}
@@ -4385,9 +4396,9 @@ html.low-motion #matListActions{transition:none}
      chip, or the collections themselves for the star. -->
 <div class="overlay" id="comboInfoOverlay" role="dialog" aria-modal="true" aria-labelledby="comboInfoTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="comboInfoClose" aria-label="Close"></button>
     <h2 id="comboInfoTitle"></h2>
     <div id="comboInfoBody"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="comboInfoClose">Close</button></div>
   </div>
 </div>
 
@@ -7254,6 +7265,14 @@ function recipeHTML(entry, plain){
   return sortIngredientTokens(toks).map(r => tokenHTML(r, els, plain)).join('<span class="plus">+</span>');
 }
 
+// Craft button (shop rows and the station's card view). aria-disabled, not
+// disabled: a blocked craft still gets the tap for its "Missing ..." notice
+// (the [data-craft] handler).
+function craftBtnHTML(entry, idx){
+  if (owns(entry.name)) return '<span class="craftbtn done">✓ Owned</span>';
+  const can = canCraft(entry) && suitCostPayable(entry);
+  return `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" aria-disabled="${can ? "false" : "true"}">Craft</button>`;
+}
 function itemHTML(entry, idx){
   const done = owns(entry.name);
   const can = canCraft(entry) && suitCostPayable(entry);
@@ -7277,12 +7296,7 @@ function itemHTML(entry, idx){
   // other.
   const pinSlot = pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
       title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>`;
-  const btn = done
-    ? '<span class="craftbtn done">✓ Owned</span>'
-    // aria-disabled, not disabled: the button must still receive taps so a
-    // blocked craft can show the "Missing ..." notice (see the [data-craft]
-    // handler).
-    : `<button type="button" class="craftbtn ${can ? "go" : ""}" data-craft="${idx}" aria-disabled="${can ? "false" : "true"}">Craft</button>`;
+  const btn = craftBtnHTML(entry, idx);
   return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
     ${pinSlot}
     ${itemRowHTML(entry, can)}${btn}</div>`;
@@ -8432,11 +8446,12 @@ function shopBodyHTML(shopEntries, idx, capHTML = ""){
 let stationCardOpen = null;
 function shopCardsHTML(entries, idx){
   const shown = entries.filter(e => !(craftedFolded() && owns(e.name) && e.tier !== "CAPSTONE"));
+  // Each card with the shop's Craft button underneath.
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
-    return matCardHTML(e.name, { cls: [t1 ? "small mini" : "small", e.tier === "CAPSTONE" ? "wide" : "",
+    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
-      e.name === stationCardOpen ? "selected" : ""].join(" ") });
+      e.name === stationCardOpen ? "selected" : ""].join(" ") })}${craftBtnHTML(e, idx(e))}</div>`;
   };
   // One grid, no tier headings, Tier 1 first. Tier 1 cards stack two to a
   // cell (as on the mat) and only with each other; dense packing lets later
@@ -11573,29 +11588,29 @@ const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
 const CHECK_ORDERS = {
   stationWeek: { kind: "request", name: "Station Week",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `Show 3 or more ${p} cards.`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)} 🃏`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
     ok: (mat, p) => matStationCount(mat, p) >= 3 },
   rainbow: { kind: "request", name: "Rainbow",
-    icon: () => "🌈", text: () => "Show all four element colours.",
+    icon: () => "🌈", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
     params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
     ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
   collector: { kind: "request", name: "Collector",
-    icon: () => "★", text: () => "Complete a named collection on your mat.",
+    icon: () => "★", text: () => "★ ✓",
     params: owned => matCompletedIn(owned).length ? [null] : [],
     ok: mat => matCompletedIn(mat).length > 0 },
   freshFaces: { kind: "restriction", name: "Fresh Faces",
-    icon: () => "🆕", text: () => "At most half your cards can be ones from the last board check.",
+    icon: () => "🆕", text: () => "↺ ≤ ½ 🃏",
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   drought: { kind: "restriction", name: "Drought",
-    icon: p => SUIT_ICON[p], text: p => `No cards with the ${ELEMENT_SUIT_LABEL[p]} icon.`,
+    icon: p => SUIT_ICON[p], text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
-    icon: () => "🪑", text: () => "Leave at least one slot empty.",
+    icon: () => "🪑", text: () => "⬜ 1+",
     params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
   trendShift: { kind: "restriction", name: "Trend Shift",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `No ${p} combo (3+ ${p} cards). It led your last board check.`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)} 🃏`,
     params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },
 };
 function drawOrder(round, avoid){
@@ -11659,19 +11674,18 @@ function openOrderInfo(){
   if (!o) return;
   const mat = matOnMat(), total = matScore(mat).total, ok = orderMet(o, mat, total);
   document.getElementById("comboInfoTitle").innerHTML = `<span class="ci-title-ic">${orderIconHTML(o)}</span> ${esc(orderName(o))}`;
+  // Icons, not sentences: the rule, then round / stake / your mat now.
+  const chip = (html, cls = "") => `<span class="ord-chip ${cls}">${html}</span>`;
   let html;
   if (o.id === "grand"){
-    html = `<p class="order-text">The final board check: reach <b>${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks</b>.</p>
-      <p class="order-status ${ok ? "ok" : ""}">Right now: ${Math.round(total).toLocaleString()} Quarks ${ok ? "✓" : ""}</p>`;
+    html = `<div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
+      <div class="ord-chips">${chip(`🕒 ${o.round}`)}${chip(`⚛️ ${Math.round(total).toLocaleString()}`, ok ? "ok" : "no")}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
-    html = `<p class="order-text">${esc(d.text(o.p))}</p>
-      <p>${req ? "Request" : "Restriction"} for the <b>round ${o.round}</b> board check: ${req
-        ? `do it and your Quark score is <b>×${ORDER_REQUEST_MULT}</b>.`
-        : `break it and your Quark score is <b>×${ORDER_RESTRICT_MULT}</b>.`} Only the board check counts.</p>
-      <p class="order-status ${ok ? "ok" : "no"}">Your mat right now: ${req ? (ok ? "✓ done" : "not yet") : (ok ? "✓ keeping to it" : "✗ breaking it")}</p>
-      <button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"}>Reroll for 1 ${emptyElSquareHTML(22)}</button>`;
+    html = `<div class="ord-rule">${d.text(o.p)}</div>
+      <div class="ord-chips">${chip(`🕒 ${o.round}`)}${chip(req ? `✓ ⚛️×${ORDER_REQUEST_MULT}` : `✗ ⚛️×${ORDER_RESTRICT_MULT}`, req ? "ok" : "no")}${chip(`🃏 ${ok ? "✓" : "✗"}`, ok ? "ok" : "no")}</div>
+      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element">↻ ${emptyElSquareHTML(22)}</button></div>`;
   }
   document.getElementById("comboInfoBody").innerHTML = html;
   openOverlay("comboInfoOverlay");
@@ -11928,10 +11942,7 @@ function finishLockIn(reward, opts = {}){
   // skipToast: for a caller that skips playLockInSequence() and travels
   // directly.
   if (opts.skipToast){ proceed(); return; }
-  const orderLine = !order ? "" : CHECK_ORDERS[order.id].kind === "request"
-    ? (orderOk ? `${CHECK_ORDERS[order.id].name} done: Quarks ×${ORDER_REQUEST_MULT}!` : "")
-    : (orderOk ? "" : `${CHECK_ORDERS[order.id].name} broken: Quarks ×${ORDER_RESTRICT_MULT}`);
-  showLockInRewardModal(delta, reward >= 4, proceed, orderLine);
+  showLockInRewardModal(delta, reward >= 4, proceed);
 }
 // Delay between each die's pop-in, via inline animation-delay (not a
 // setTimeout chain, which a re-render could interrupt).
@@ -11957,7 +11968,7 @@ function fadeThroughBlack(midpoint){
     setTimeout(() => c.classList.remove("on"), 40);
   }, FADE_MS);
 }
-function showLockInRewardModal(n, gotEmptyElement, onDone, orderLine = ""){
+function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
   // "Bonus Dice", a "+" and the dice; the corner "?" says why.
   const reduced = lowMotion();
@@ -11975,11 +11986,11 @@ function showLockInRewardModal(n, gotEmptyElement, onDone, orderLine = ""){
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
-  extra.hidden = !gotEmptyElement && !orderLine;
-  extra.innerHTML = (orderLine ? `<div class="lre-line lre-order">${esc(orderLine)}</div>` : "") + (gotEmptyElement ? `
+  extra.hidden = !gotEmptyElement;
+  extra.innerHTML = gotEmptyElement ? `
     <div class="lre-line"><span>+1 Unknown Element</span>
       <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
-    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "");
+    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -13985,7 +13996,8 @@ function handleScreenClick(ev){
       const badge = cBtn.closest("[data-item-card]")?.querySelector(".isuit-costs");
       // stopPropagation, or this click would reach the balloon's outside-click
       // listener and close it immediately.
-      if (badge){ ev.stopPropagation(); openSuitSpendBalloon(entry, badge); }
+      // Card view has no badge row: the balloon points at the button.
+      ev.stopPropagation(); openSuitSpendBalloon(entry, badge || cBtn);
       return;
     }
     performSingleCraft(entry);
