@@ -56,6 +56,9 @@ function craft(entry, opts={}){
   }
   // A pin's whole point is tracking progress toward something not owned
   // yet -- once it's actually crafted there's nothing left to track.
+  if (entry.tier === "CAPSTONE" && !prefs.capstonesEverCrafted.includes(entry.name)){
+    prefs.capstonesEverCrafted.push(entry.name); savePrefs();
+  }
   if (isPinned(entry.name)) togglePin(entry.name);
   // Crafting the tracked item clears tracking too; otherwise the Pins
   // button's "!" nudge (updateHub()'s hasUnselectedPin) never shows again.

@@ -94,6 +94,9 @@ let prefs = {pinnedItems:[], minigamesEnabled:false,
   // collection on the mat that has never been locked in shows no chip
   // (renderMatTop()).
   everUnlockedMatCollections:[],
+  // Every capstone ever crafted (any run): Combo Lab only offers the
+  // capstone-unlocked items these have revealed (openComboLab()).
+  capstonesEverCrafted:[],
   guidedTutorialEnabled:true, tutorialHintsSeen:[], arcadeHighScores:{},
   // On: full inspection popup after a craft. Off: just settle the item into
   // the shop (showCardPop()/autoCardPop()).

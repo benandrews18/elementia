@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Combo Lab hides undiscovered unlock items:** a capstone-unlocked item
+  only shows up in Combo Lab once you've crafted its capstone in some run
+  (remembered across runs; past runs in History count too).
+
 - **Inventory:** the selected item's card under the mat has a round X in
   its bottom-right corner to dismiss it.
 

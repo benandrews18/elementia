@@ -12,7 +12,11 @@ function openComboLab(){
   realGameState = state; realScreen = screen; realCurrent = current; realSelectedMapStation = selectedMapStation;
   const lab = freshState();
   lab.mode = "classic"; // required for renderDrawer()/showCardPop() etc. to treat this as Classic at all
-  lab.items = [...CORE_ITEM_NAMES]; // every Classic item "owned" -- the whole point of the lab
+  // Every item "owned" -- the whole point of the lab -- except capstone-
+  // unlocked items whose capstone this player has never crafted (this run,
+  // past runs in History, or any run since capstonesEverCrafted existed).
+  const seenCaps = new Set([...prefs.capstonesEverCrafted, ...realGameState.items, ...history.flatMap(h => h.capstones || [])]);
+  lab.items = [...CORE_ITEM_NAMES].filter(n => !UNLOCKED_BY[n] || seenCaps.has(UNLOCKED_BY[n]));
   lab.bingoCenterChosen = true; // sidesteps the BINGO opening sequence's own checks, never shown here anyway
   // Visit 20 so the Quark Meter thresholds (lockInTiersForRound()) have
   // real headroom to experiment against.

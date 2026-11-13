@@ -300,6 +300,15 @@
     expect(ulCap === "Coral Reef" && hiddenBefore && shownAfter && !bingoEligibleItems().includes(ul),
       `unlock items should appear only after their capstone (hidden ${hiddenBefore}, shown ${shownAfter})`);
 
+    // Combo Lab hides unlock items until their capstone has been crafted.
+    const keepCaps = prefs.capstonesEverCrafted, keepHist = history, keepRunItems = [...state.items];
+    prefs.capstonesEverCrafted = []; history = []; state.items = state.items.filter(n => n !== "Coral Reef");
+    openComboLab(); const labHidden = !state.items.includes("Sailboat"); closeComboLab();
+    prefs.capstonesEverCrafted = ["Coral Reef"];
+    openComboLab(); const labShown = state.items.includes("Sailboat"); closeComboLab();
+    prefs.capstonesEverCrafted = keepCaps; history = keepHist; state.items = keepRunItems;
+    expect(labHidden && labShown, `Combo Lab should offer Sailboat only after Coral Reef (hidden ${labHidden}, shown ${labShown})`);
+
     // Missing the first breakpoint ends the run only from round 12 (not 9).
     const keepRC = state.runComplete, keepV = state.visits;
     state.runComplete = false;
