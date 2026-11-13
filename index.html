@@ -4174,6 +4174,7 @@ html.low-motion #matListActions{transition:none}
      the only way back to the game. -->
 <div class="overlay" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="setClose" aria-label="Close"></button>
     <h2 id="setTitle">⚙️ Settings</h2>
     <button type="button" class="setting-row" id="tourBtn" aria-label="How to play">
       <span class="setting-ico">▶️</span>
@@ -4207,7 +4208,6 @@ html.low-motion #matListActions{transition:none}
     <div class="btnrow">
       <button type="button" class="bigbtn sec" id="mainMenuBtn">🏠 Home</button>
       <button type="button" class="bigbtn warn" id="resetBtn">↺ Reset</button>
-      <button type="button" class="bigbtn sec" id="setClose">Close</button>
     </div>
     <p class="setversion" id="setVersion"></p>
   </div>
@@ -4216,6 +4216,7 @@ html.low-motion #matListActions{transition:none}
 <!-- Game Rules -->
 <div class="overlay" id="settingsRules" role="dialog" aria-modal="true" aria-labelledby="setRulesTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="setRulesCancel" aria-label="Close without saving"></button>
     <h2 id="setRulesTitle">🎲 Game Rules</h2>
     <div class="setting-row">
       <span class="setting-ico">🎮</span>
@@ -4256,7 +4257,6 @@ html.low-motion #matListActions{transition:none}
 
     <div class="btnrow">
       <button type="button" class="bigbtn" id="setSave">Save</button>
-      <button type="button" class="bigbtn sec" id="setRulesCancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -4264,15 +4264,16 @@ html.low-motion #matListActions{transition:none}
 <!-- Tutorial Messages: every tip window, to read again (TUTORIAL_MESSAGES). -->
 <div class="overlay" id="settingsTuts" role="dialog" aria-modal="true" aria-labelledby="setTutsTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="setTutsBack" aria-label="Back to Settings"></button>
     <h2 id="setTutsTitle">📖 Tutorial Messages</h2>
     <div id="tutList" class="tut-list"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="setTutsBack">← Back</button></div>
   </div>
 </div>
 
 <!-- Dev Tools -->
 <div class="overlay" id="settingsDev" role="dialog" aria-modal="true" aria-labelledby="setDevTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="setDevBack" aria-label="Back to Settings"></button>
     <h2 id="setDevTitle">🛠️ Dev Tools</h2>
     <button type="button" class="setting-row warn" id="resetCacheBtn">
       <span class="setting-ico">🧹</span>
@@ -4289,9 +4290,6 @@ html.low-motion #matListActions{transition:none}
       <span class="setbtn">View</span>
     </button>
 
-    <div class="btnrow">
-      <button type="button" class="bigbtn sec" id="setDevBack">← Back</button>
-    </div>
   </div>
 </div>
 
@@ -4329,13 +4327,13 @@ html.low-motion #matListActions{transition:none}
 <!-- history -->
 <div class="overlay" id="history" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="historyClose" aria-label="Close"></button>
     <div class="hist-header">
       <h2 id="historyTitle">🕓 History</h2>
       <button type="button" class="tbtn ghost histexport-btn" id="historyExport" title="Copy all run history as JSON">⧉ Export</button>
     </div>
     <p>Past runs on this device, most recent first. Tap a run to see its turn-by-turn log.</p>
     <div id="historyList"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="historyClose">Close</button></div>
   </div>
 </div>
 
@@ -4457,10 +4455,10 @@ html.low-motion #matListActions{transition:none}
      which list it shows depends on convertPickMode (see the JS). -->
 <div class="overlay" id="convertPicker" role="dialog" aria-modal="true" aria-labelledby="convertPickerKicker">
   <div class="sheetbox parch">
+    <button type="button" class="cp-close-x coll-x" id="convertPickerClose" aria-label="Close"></button>
     <div class="convert-picker-kicker" id="convertPickerKicker">Inventory</div>
     <p class="convert-picker-sub" id="convertPickerSub"></p>
     <div class="convert-picker-grid" id="convertPickerGrid"></div>
-    <div class="btnrow"><button type="button" class="bigbtn sec" id="convertPickerClose">Cancel</button></div>
   </div>
 </div>
 
@@ -6605,13 +6603,11 @@ function bingoCapstonePickerHTML(){
       <span class="bc-name">${esc(name)}</span>
     </div>`;
   }).join("");
-  return `<h3 class="bingo-title" id="capstoneOverlayTitle">Choose Your Capstone</h3>
+  return `<button type="button" class="cp-close-x coll-x" id="capstoneOverlayClose" aria-label="Close"></button>
+    <h3 class="bingo-title" id="capstoneOverlayTitle">Choose Your Capstone</h3>
     <div class="bingo-wrap"><div class="bingo-grid bingo-pick-grid">${cells}</div></div>
     <button type="button" class="bigbtn sec bingo-random-btn" data-capstone-pick="${BINGO_RANDOM_CAPSTONE}">🎲 Random</button>
-    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>
-    <div class="row" style="margin-top:14px">
-      <button type="button" class="bigbtn sec" id="capstoneOverlayClose">Cancel</button>
-    </div>`;
+    <p class="bingo-hint"><span class="bingo-hint-line">🏆 Pick one to anchor the center of your BINGO card.</span></p>`;
 }
 
 
