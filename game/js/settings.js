@@ -68,14 +68,14 @@ document.getElementById("resetBtn").addEventListener("click", () => {
     restartRun();
   });
 });
-/* Full factory reset: unregisters the service worker, clears its caches,
-   and clears localStorage (the save, prefs, history, legacy keys)
-   -- including tutorialHintsSeen, so every tip plays again. On the reload,
-   loadAll() finds no save, so the welcome slide shows. clear() is fine: the
-   page owns the whole origin. */
-document.getElementById("resetCacheBtn").addEventListener("click", () => {
-  askConfirm("Reset the game completely? This clears your save, all settings, and every tutorial message, then reloads to a fresh Main Menu. This can't be undone.", async () => {
-    closeOverlay("settingsDev");
+/* Everything the game keeps on this device: localStorage (save, settings,
+   history, trophies, Stars, collections, tutorial tips seen) is cleared
+   right away; the service worker and its caches after, best-effort.
+   clear() is fine: the page owns the whole origin. Used by the Reset
+   button and by boot.js's one-time fresh start. */
+function clearAllGameData(){
+  try { localStorage.clear(); } catch(e){ /* private-browsing storage bans etc. */ }
+  return (async () => {
     try {
       if ("serviceWorker" in navigator){
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -85,8 +85,15 @@ document.getElementById("resetCacheBtn").addEventListener("click", () => {
         const keys = await caches.keys();
         await Promise.all(keys.map(k => caches.delete(k)));
       }
-    } catch(e){ /* best-effort -- still reload below even if this failed */ }
-    try { localStorage.clear(); } catch(e){ /* best-effort -- private-browsing storage bans etc. */ }
+    } catch(e){ /* best-effort */ }
+  })();
+}
+/* Full factory reset: on the reload, loadAll() finds no save, so the
+   welcome slide shows and every tip plays again. */
+document.getElementById("resetCacheBtn").addEventListener("click", () => {
+  askConfirm("Reset the game completely? This clears your save, all settings, and every tutorial message, then reloads to a fresh Main Menu. This can't be undone.", async () => {
+    closeOverlay("settingsDev");
+    await clearAllGameData();
     location.reload();
   });
 });

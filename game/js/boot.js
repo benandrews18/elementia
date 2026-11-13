@@ -2,6 +2,16 @@
    boot.js -- Boot: loads the save, shows the welcome slide when needed, first
    render(). Runs last -- every other file has loaded.
    ===================================================================== */
+/* One-time fresh start: a device that played a version from before
+   RESET_EPOCH is wiped (clearAllGameData()) and opens as a first-time
+   player, with today's default settings (mini-games off, auto card
+   inspection on, low motion off). Bump RESET_EPOCH to do it again. */
+const RESET_EPOCH_KEY = "elementia-reset-epoch", RESET_EPOCH = "2026-11-12";
+if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
+  clearAllGameData();
+  try { sessionStorage.clear(); } catch(e){}
+  lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
+}
 const bootedNewSession = loadAll();
 // sessionStorage survives an in-page reload but not the app/tab being
 // closed and reopened -- which is how we tell a real relaunch (show the

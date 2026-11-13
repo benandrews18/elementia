@@ -8,6 +8,17 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-12 (fresh start, clock info)
+
+- **Everyone starts fresh:** the first time a device opens this version,
+  everything the game had stored there is cleared (save, settings,
+  history, trophies, Stars, collections, tutorial tips) and it opens as a
+  first visit, with the default settings: mini-games off, auto card
+  inspection on, low motion off. It happens once per device.
+- **Tap the turn clock** for a short explanation: 24 rounds, a new round
+  each time you move to a new location, the Display Mat checked every 3
+  rounds to set your bonus dice -- and your current round.
+
 ## 2026-11-12 (final score)
 
 - **Final score at the end of turn 24:** back on the map after turn 24's
