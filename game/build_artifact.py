@@ -75,7 +75,7 @@ def strip_document_wrapper(text):
 # or anywhere else one might show up later. General on purpose: adding a new
 # tutorial slide, station backdrop, or mini-game sprite shouldn't require
 # touching this script too.
-LOCAL_IMG_RE = re.compile(r'"((?:tutorial|backdrops|banners|minigames|mouse)/[\w.\-]+\.webp)"')
+LOCAL_IMG_RE = re.compile(r'"((?:tutorial|backdrops|banners|minigames|mouse|ui)/[\w.\-]+\.webp)"')
 
 
 def inline_local_images(text):
