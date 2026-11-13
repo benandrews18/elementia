@@ -19,6 +19,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 - **Fixed width on every screen:** any window wider than a phone now shows
   the game in the 430px phone column. Windows 641-768px wide used to
   stretch the game, which broke the station preview.
+- **Inventory cards on desktop:** cards no longer stretch tall when the
+  window is wider than a phone. Their height was measured from the window,
+  not the tray.
 - **Shop pins:** the tracked item's own shop card shows its pin button
   (gold), not its own icon as a badge, so it can be unpinned right there.
   Unpinning it stops tracking it.
