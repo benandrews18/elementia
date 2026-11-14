@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14d",
+ "version": "2026.11.14e",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -309,11 +309,11 @@ const DATA = /*__GAME_DATA_START__*/{
      3
     ],
     [
-     "🌱",
-     "Soil",
+     "🛢️",
+     "Natural Gas",
      "MATERIAL",
-     "🏺 Clay + ⏳ Sand",
-     6
+     "C + H",
+     1
     ],
     [
      "🍎",
@@ -661,13 +661,6 @@ const DATA = /*__GAME_DATA_START__*/{
      4
     ],
     [
-     "🍫",
-     "Chocolate",
-     "COMPONENT",
-     "🍬 Sugar + __FURNACE__ Furnace",
-     10
-    ],
-    [
      "🍥",
      "Fish Cakes",
      "CREATION",
@@ -685,7 +678,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__BANANABREAD__",
      "Banana Bread",
      "CREATION",
-     "🫓 Dough + 🍫 Chocolate + __FURNACE__ Furnace + 🍌 Banana",
+     "🫓 Dough + __FURNACE__ Furnace + 🍌 Banana",
      24
     ]
    ],
@@ -703,6 +696,13 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "🐄 Cow + 💧 Water",
      14
+    ],
+    [
+     "🍫",
+     "Chocolate",
+     "COMPONENT",
+     "🍬 Sugar + __FURNACE__ Furnace",
+     10
     ],
     [
      "🥨",

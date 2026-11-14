@@ -122,7 +122,8 @@
   // Auto-place: crafts keep landing on the mat until they'd overflow it --
   // tier 1 cards stack two per slot, so that's more than 8 crafts.
   { const saved = state; state = freshState(); state.visits = 24; // full-size mat
-    const t1 = ENTRIES.filter(e => e.tier === "MATERIAL" && e.reqs.every(r => r.kind === "element")).slice(0, 10);
+    const t1 = ENTRIES.filter((e, i, all) => e.tier === "MATERIAL" && e.reqs.every(r => r.kind === "element")
+      && all.findIndex(x => x.name === e.name) === i).slice(0, 10); // one per item (some sell at 2 stations)
     t1.forEach(e => { e.reqs.forEach(r => state.elements[r.name] = 99); craft(e); });
     expect(t1.length < 10 || state.mat.length === 10, `10 tier 1 crafts should all auto-place, got ${state.mat.length}`);
     state = saved; }
