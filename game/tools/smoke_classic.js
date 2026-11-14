@@ -392,6 +392,32 @@
       `an overfull mat should be trimmed to fit on load (kept ${state.mat.length})`);
     render();
   });
+  // Hidden intro tips (their ✕): the run still starts -- capstone choice
+  // straight after the slides, the station straight after the pin tip.
+  await step("hidden tips", async () => {
+    const isOpen = id => document.getElementById(id).classList.contains("open");
+    const keep = prefs.hiddenTips;
+    document.querySelectorAll(".overlay.open").forEach(o => o.classList.remove("open"));
+    document.getElementById("classicTut").classList.remove("open");
+    prefs.hiddenTips = ["classicTut", "pinTip"];
+    startNewRun(); await wait(2200);
+    if (isOpen("classicTut") || !isOpen("capChoice")) errs.push("hidden tips: the rules slides should skip to the capstone choice");
+    openCapstoneConfirm("Fruit Cake"); await wait(150);
+    document.getElementById("capConfirmGo").click();
+    for (let i = 0; i < 80 && screen !== "station"; i++) await wait(100);
+    if (screen !== "station" || isOpen("pinTip")) errs.push("hidden tips: the run should reach its first station without the pin tip");
+    prefs.hiddenTips = keep;
+    // A board check can't be skipped: closing the mat and tapping Travel
+    // again reopens it instead of travelling.
+    closeDrawer();
+    state.visits = 6; state.matChecked = true; screen = "map"; current = null;
+    const dest = DATA.stations.find(s => canTravelTo(s.name));
+    selectedMapStation = dest && dest.name; travelPromptFor = selectedMapStation; render();
+    const v = state.visits;
+    document.getElementById("hubHome").click(); await wait(300);
+    if (state.visits !== v || !drawer.classList.contains("open")) errs.push("board check: Travel after closing the mat should reopen it, not travel");
+    closeDrawer(); travelPromptFor = null;
+  });
   log.errs = errs;
   window.__smoke = log;
 })();

@@ -99,9 +99,8 @@ document.getElementById("hubHome").addEventListener("click", ev => {
   if (face === "shop"){ current = state.lastStation; screen = "station"; render(); return; }
   // The first tap on a newly selected travel target opens the Display Mat
   // (Home becomes "lockin"); locking in then travels on its own
-  // (finishLockIn()). This branch handles backing out of the mat and tapping
-  // Travel again -- travelPromptFor still matches, so it goes straight to
-  // goStation().
+  // (finishLockIn()). Backing out of the mat and tapping Travel again just
+  // reopens it: a board check can't be skipped.
   if (face === "travel"){
     // Nothing owned yet: skip the Lock-In doorway (an empty mat would look
     // broken) and travel straight away.
@@ -117,7 +116,8 @@ document.getElementById("hubHome").addEventListener("click", ev => {
       playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); }, orderShutterLine());
       return;
     }
-    goStation(selectedMapStation);
+    matDrawerView = "mat";
+    openDrawer();
     return;
   }
   // The mat is already open when this face shows -- just score it
