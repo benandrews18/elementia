@@ -4,12 +4,19 @@
    matScore, ...) with the screen-only parts (animations, windows,
    rendering) switched off.
 
-   The player is goal-directed, guided by real play (window.SIM_GUIDE):
-   - layouts: saved Display Mat layouts. Each run picks one as its plan,
-     starts at its capstone's station, and chases the plan's items and
-     their components; a finished plan gives way to the next.
-   - runs: History exports. How often players crafted each item (crafting
-     outside the plan) and where they went next (station choice).
+   The player plays like a person who knows the game:
+   - Capstone first: the run pins a capstone (its start station's, as the
+     game's opening does) and chases its whole recipe tree, holding back
+     elements for it. Once it's made, the next goal is the capstone whose
+     tree it already owns most of.
+   - Route planning: stations up to a few moves away are scored by what
+     can be made there next, discounted by distance; it walks toward the best.
+   - Guided by real play (window.SIM_GUIDE): History exports (runs) give an
+     opening book -- a run starting where one of yours did follows your
+     first turns' route -- plus how often you craft each item and where you
+     go next. Saved layouts (layouts) give a secondary plan for the mat.
+   - Side crafts only when they serve something: a part of some capstone,
+     a card worth having on the mat, or something you usually make.
    Things a player can do by hand that the rules code doesn't (convert 3:1,
    spend a "?", pay suit costs, collect a Market row's "?") are done here
    with the game's own rates and helpers.
@@ -62,6 +69,10 @@
     const tot = Object.values(row).reduce((s, x) => s + x, 0);
     return (row[b] || 0) / tot;
   };
+  // Opening book: start station -> your routes (station per turn).
+  const OPENING_TURNS = 6;
+  const openings = {};
+  G.runs.forEach(r => { const st = r.visitLog[0] && r.visitLog[0].station; if (st) (openings[st] || (openings[st] = [])).push(r.visitLog.map(t => t.station)); });
   const layouts = G.layouts.filter(l => l.items.every(n => MAT_CARD_BY_NAME[n]));
   const layoutValue = l => +(l.name.match(/^\d+/) || [1500])[0];
 
@@ -74,8 +85,9 @@
   let T = null;
   const tally = (o, k, n = 1) => { o[k] = (o[k] || 0) + n; };
 
-  // ---- the plan: a layout's items and everything under them
-  let plan = null, want = {};
+  // ---- goals: the capstone being chased (goal) and a saved layout for the
+  // mat (plan); want[item] = how much it matters.
+  let plan = null, goal = null, want = {}, openingRoute = null;
   function closureOf(names){
     const out = new Set();
     const walk = n => { if (out.has(n)) return; out.add(n); const e = entryAt(n); if (e) needsOf(e.reqs).items.forEach(i => walk(i.name)); };
@@ -87,11 +99,33 @@
     if (!open.length){ plan = null; want = {}; return; }
     setPlan(pickWeighted(open.map(l => [l, (l.items.filter(owns).length / l.items.length + 0.25) * layoutValue(l)])));
   }
-  function setPlan(l){
-    plan = l;
+  function setPlan(l){ plan = l; setWants(); }
+  // Capstone tree: the capstone 8, its direct parts 5, deeper parts 3. The
+  // layout's items and their parts add 1-1.5 on top.
+  function setWants(){
     want = {};
-    closureOf(plan.items).forEach(n => { want[n] = 2; });
-    plan.items.forEach(n => { want[n] = ITEM_TIER[n] === "CAPSTONE" ? 6 : 3; });
+    if (plan){
+      closureOf(plan.items).forEach(n => { want[n] = 1; });
+      plan.items.forEach(n => { want[n] = 1.5; });
+    }
+    if (goal){
+      const depth = { [goal]: 0 }, queue = [goal];
+      while (queue.length){
+        const n = queue.shift(), e = entryAt(n);
+        if (e) needsOf(e.reqs).items.forEach(i => { if (!(i.name in depth)){ depth[i.name] = depth[n] + 1; queue.push(i.name); } });
+      }
+      Object.entries(depth).forEach(([n, d]) => { want[n] = (want[n] || 0) + (d === 0 ? 8 : d === 1 ? 5 : 3); });
+    }
+  }
+  const capTree = {};
+  CAPSTONES.forEach(c => capTree[c] = closureOf([c]));
+  const inSomeCapTree = n => CAPSTONES.some(c => !owns(c) && capTree[c].has(n));
+  // Next capstone: the one whose tree is most owned already.
+  function chooseGoal(){
+    const open = CAPSTONES.filter(c => !owns(c));
+    goal = open.length ? open.map(c => [c, [...capTree[c]].filter(owns).length / capTree[c].size])
+      .sort((a, b) => b[1] - a[1])[0][0] : null;
+    setWants();
   }
   const weightOf = n => (want[n] || 0) + (itemFreq[n] || 0);
 
@@ -102,7 +136,7 @@
   function reserve(){
     const r = {};
     Object.keys(want).filter(n => !owns(n) && itemOpen(n)).map(n => entryAt(n)).filter(e => e && itemReqsMet(e))
-      .sort((a, b) => weightOf(b.name) - weightOf(a.name)).slice(0, 3)
+      .sort((a, b) => weightOf(b.name) - weightOf(a.name)).slice(0, 4)
       .forEach(e => Object.entries(needsOf(e.reqs).els).forEach(([s, k]) => r[s] = (r[s] || 0) + k));
     return r;
   }
@@ -136,6 +170,7 @@
     const lines = state.pendingBingoClears || [];
     state.emptyElements = (state.emptyElements || 0) + lines.length;
     state.pendingBingoClears = [];
+    if (goal && owns(goal)) chooseGoal();
     if (plan && plan.items.every(owns)) choosePlan();
     return true;
   }
@@ -172,22 +207,29 @@
   }
   // One station visit's shopping.
   function shop(){
+    // Hedge: a mat under 1.5x the next check's first breakpoint (from turn 9,
+    // when a miss starts to matter) makes any mat card worth crafting.
+    const atRisk = state.visits >= 9 && matScore(matOnMat()).total < 1.5 * lockInTiersForRound(nextCheckRound()).one;
     for (let guard = 0; guard < 40; guard++){
       const items = shopAt(current).filter(itemReqsMet);
       const ready = items.filter(e => canCraft(e) && suitCostPayable(e));
       const wanted = ready.filter(e => want[e.name]).sort((a, b) => weightOf(b.name) - weightOf(a.name));
       if (wanted.length){ payAndCraft(wanted[0]); continue; }
-      // A wanted item a convert or "?" away.
-      const near = items.filter(e => want[e.name] && !canCraft(e) || want[e.name] && !suitCostPayable(e))
-        .sort((a, b) => weightOf(b.name) - weightOf(a.name));
+      // A wanted item a convert or "?" away (on the last turn, anything --
+      // a "?" left over is wasted).
+      const last = state.visits >= RUN_COMPLETE_VISIT;
+      const near = items.filter(e => (want[e.name] || last) && (!canCraft(e) || !suitCostPayable(e)))
+        .sort((a, b) => weightOf(b.name) - weightOf(a.name) || ITEM_POINTS[b.name] - ITEM_POINTS[a.name]);
       if (near.some(e => enable(e) && payAndCraft(e))) continue;
-      // Anything else players tend to make, if it spares the reserve.
+      // Side crafts that serve something, if they spare the reserve.
       const keep = reserve();
       const extra = ready.filter(e => {
         const { els } = needsOf(e.reqs);
-        return Object.entries(els).every(([s, k]) => count(s) - k >= (keep[s] || 0))
-          && rnd() < 0.35 + 0.65 * (itemFreq[e.name] || 0);
-      });
+        // At risk, the mat comes before the held-back elements.
+        return (atRisk && MAT_CARD_BY_NAME[e.name] || Object.entries(els).every(([s, k]) => count(s) - k >= (keep[s] || 0)))
+          && (inSomeCapTree(e.name) || ITEM_POINTS[e.name] >= 8 || (itemFreq[e.name] || 0) >= 0.4 || last
+            || ((atRisk || isMatCheckVisit()) && MAT_CARD_BY_NAME[e.name])); // anything for the mat
+      }).sort((a, b) => ITEM_POINTS[b.name] - ITEM_POINTS[a.name]);
       if (extra.length){ payAndCraft(extra[0]); continue; }
       break;
     }
@@ -201,31 +243,51 @@
   }
 
   // ---- where next
+  // Moves between stations (Helicopter: everywhere is one move).
+  const DIST = {};
+  DATA.stations.forEach(({ name: from }) => {
+    const d = { [from]: 0 }, queue = [from];
+    while (queue.length){ const n = queue.shift(); (MAP_ADJ[n] || []).forEach(m => { if (!(m in d)){ d[m] = d[n] + 1; queue.push(m); } }); }
+    DIST[from] = d;
+  });
+  const moves = (a, b) => a === b ? 0 : owns("Helicopter") ? 1 : DIST[a][b];
+  // What a visit to station n is worth now: wanted items it sells whose
+  // parts are owned (or made there too), by how close the elements are.
+  function stationValue(n, dice){
+    const have = { ...state.elements };
+    STATION_BY_NAME[n].dice.forEach(s => have[s] = (have[s] || 0) + dice / 6);
+    let v = 0;
+    shopAt(n).forEach(e => {
+      const w = want[e.name] ? weightOf(e.name) : 0.25 * (itemFreq[e.name] || 0);
+      if (!w) return;
+      const missingItems = needsOf(e.reqs).items.filter(i => !owns(i.name));
+      if (missingItems.length && !missingItems.every(i => stationsSelling(i.name).includes(n))) return;
+      const d = shortfall(e, have).total + (missingItems.length ? 1.5 : 0);
+      v += w / Math.pow(1 + d, 1.5);
+    });
+    return v;
+  }
+  const ROUTE_DECAY = 0.55;
   function chooseNext(){
     const here = state.lastStation;
     const opts = DATA.stations.map(s => s.name).filter(n => n !== here && canReachStation(here, n));
+    // Opening book: your route, while it's still a legal move.
+    const book = openingRoute, t = state.visits; // the next visit is turn t+1
+    if (book && t < OPENING_TURNS && book[t] && opts.includes(book[t])) return book[t];
     const dice = TAKE + (state.matChecked ? (state.tripDice != null ? state.tripDice : state.matBonusDice || 0) : 1);
+    const val = {};
+    DATA.stations.forEach(({ name }) => { val[name] = name === here ? 0 : stationValue(name, dice); });
     const scored = opts.map(n => {
-      const faces = STATION_BY_NAME[n].dice, have = { ...state.elements };
-      faces.forEach(s => have[s] = (have[s] || 0) + dice / 6);
-      let v = 0;
-      shopAt(n).forEach(e => {
-        const w = want[e.name] ? weightOf(e.name) : 0.25 * (itemFreq[e.name] || 0);
-        if (!w) return;
-        const missingItems = needsOf(e.reqs).items.filter(i => !owns(i.name));
-        // Parts sold at the same station can be made on the same visit.
-        const partsHere = missingItems.every(i => stationsSelling(i.name).includes(n));
-        if (missingItems.length && !partsHere) return;
-        const d = shortfall(e, have).total + (missingItems.length ? 1.5 : 0);
-        v += w / Math.pow(1 + d, 1.5);
-      });
+      // This stop, plus the best station it's on the way to.
+      const ahead = Math.max(0, ...DATA.stations.map(({ name: s }) => s === n || s === here ? 0 : val[s] * Math.pow(ROUTE_DECAY, moves(n, s))));
+      let v = val[n] + ahead;
       if (!state.visitedStations[n]) v += 0.6;
       v += 0.8 * transP(here, n);
       return [n, v];
     });
     // Mostly the best; sometimes the runner-up, like a person would.
     scored.sort((a, b) => b[1] - a[1]);
-    return rnd() < 0.8 || scored.length < 2 ? scored[0][0] : scored[1][0];
+    return rnd() < 0.85 || scored.length < 2 ? scored[0][0] : scored[1][0];
   }
 
   // ---- the Display Mat: best arrangement of owned cards right now (this
@@ -271,36 +333,34 @@
   function playRun(opts){
     state = freshState(); state.mode = "classic";
     prefs.pinnedItems = []; selectedJobItem = null; travelPromptFor = null; lockInCommitted = false;
-    plan = null; want = {};
+    plan = null; goal = null; want = {};
     T = { q: [], mats: [], dice: [], short: {}, suitShort: {}, stuck: {}, convFrom: {}, convTo: {}, qSpent: 0 };
-    // The opening: a capstone (the plan's, if it has one) and its station's
-    // six elements, then that station is turn 1.
-    let start;
-    // --start capstone: run i chases capstone i % 8 alone (reachability).
-    if (opts.start === "capstone"){
-      const cap = CAPSTONES[opts.index % CAPSTONES.length];
-      setPlan({ name: "Capstone: " + cap, items: [cap] });
-      start = capstoneStationOf(cap);
-    }
-    else if (opts.start === "random" || !layouts.length) start = DATA.stations[Math.floor(rnd() * DATA.stations.length)].name;
-    else {
-      choosePlan();
-      const cap = plan.items.find(n => ITEM_TIER[n] === "CAPSTONE");
-      start = cap ? capstoneStationOf(cap) : stationsSelling(plan.items[0])[0];
-    }
-    if (!plan) choosePlan();
+    // The opening: the start station's capstone is pinned and chased; its
+    // six elements are the gift, then that station is turn 1.
+    //   guided: most runs start where one of yours did (and follow your
+    //     opening); the rest anywhere.
+    //   capstone: run i starts at capstone i % 8's station (reachability).
+    //   random: anywhere, no opening book.
+    const stations = DATA.stations.map(st => st.name), yours = Object.keys(openings);
+    const start = opts.start === "capstone" ? capstoneStationOf(CAPSTONES[opts.index % CAPSTONES.length])
+      : opts.start !== "random" && yours.length && rnd() < 0.6 ? yours[Math.floor(rnd() * yours.length)]
+      : stations[Math.floor(rnd() * stations.length)];
+    const book = opts.start === "random" ? null : openings[start];
+    openingRoute = book ? book[Math.floor(rnd() * book.length)] : null;
+    goal = STATION_BY_NAME[start].capstone[1];
+    if (layouts.length) choosePlan(); else setWants();
     const capName = STATION_BY_NAME[start].capstone[1];
     setBingoCenter(capName);
     const gift = sortedDice(STATION_BY_NAME[start]);
     gift.forEach(give);
     goStation(start);
     gift.forEach(s => { const t = state.visitLog[0].elements; t[s] = (t[s] || 0) + 1; }); // as playStartingGift() logs it
-    const plans = [plan && plan.name];
+    const plans = [goal, plan && plan.name];
     for (let guard = 0; guard < 60 && !state.ended && !state.runComplete; guard++){
       doRoll();
       T.dice.push(state.lastRoll ? state.lastRoll.length : 0);
       shop();
-      if (plan && !plans.includes(plan.name)) plans.push(plan.name);
+      [goal, plan && plan.name].forEach(p => { if (p && !plans.includes(p)) plans.push(p); });
       goMap();
       if (state.finalCheckPending){
         bestMat(); T.q.push(matScore(matOnMat()).total);
