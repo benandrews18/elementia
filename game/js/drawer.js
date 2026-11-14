@@ -9,12 +9,20 @@ let realGameState = null, realScreen = null, realCurrent = null, realSelectedMap
 // "Peeked" (half view) is opt-in via opts.peeked; every other opener lands
 // on the full list. Set here directly, since render() runs in the
 // background and may have left .expanded either way.
+/* Every write to the item list goes through here: when the markup is the
+   same as what's showing (reopening, a re-render that changed nothing), the
+   ~100 cards are left alone instead of being rebuilt and laid out again. */
+let drawerBodyHTML = null;
+function setDrawerBody(html){
+  if (html === drawerBodyHTML) return;
+  document.getElementById("drawerBody").innerHTML = drawerBodyHTML = html;
+}
 const openDrawer = (opts = {}) => {
   setMatCollapsed(false);
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
   // render() skips the inventory while it's closed, so build it now.
-  document.getElementById("drawerBody").innerHTML = renderDrawer();
+  setDrawerBody(renderDrawer());
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   syncMatFloatBtns();

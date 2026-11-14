@@ -10,6 +10,15 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Smoother Inventory and Lock-In.** Opening the Inventory no longer
+  forces three full-page layouts (the Quark bar, top bar and hub heights
+  are now kept current by ResizeObservers) and no longer rebuilds the ~100
+  item cards when nothing changed (about 2.5x faster on reopening). The
+  Lock-In count: the check-round clock pulse only animates transform and
+  opacity (no per-frame repaint), background pulses pause during the count,
+  the count's GPU layers are kept until the reward window has popped in,
+  and that window's shadow is lighter to draw.
+
 - **Quick Save pill fades.** The "Layout Quick Save" pill above ↻ shows
   for about two seconds after the quick save, then fades away; the blue ↻
   still marks that a quick save is waiting.

@@ -409,6 +409,7 @@ function setQuarkMeterProgress(total){
    The timing is fixed; bouncePulse() itself handles reduced motion. */
 function playLockInSequence(reward, onDone = finishLockIn){
   document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
+  document.body.classList.add("lockin-layers"); // kept until that modal has popped in (endLockInLayers())
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
@@ -489,6 +490,7 @@ function finishLockIn(reward, opts = {}){
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
+  endLockInLayers();
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;
   state.matBonusDice = delta; // the floor until the next board check
@@ -537,6 +539,12 @@ function fadeThroughBlack(midpoint){
     // could leave the screen stuck on black).
     setTimeout(() => c.classList.remove("on"), 40);
   }, FADE_MS);
+}
+// The count's GPU layers (will-change) and paused background pulses stay
+// until the reward window has finished popping in: dropping them at the
+// same moment it opens repainted the whole drawer and hitched the hand-off.
+function endLockInLayers(){
+  setTimeout(() => document.body.classList.remove("lockin-layers"), 900);
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
@@ -608,7 +616,7 @@ function confirmFinalLockIn(){
   playLockInSequence(0, () => finishFinalCheck(s.total));
 }
 function finishFinalCheck(total){
-  document.body.classList.remove("lockin-playing");
+  document.body.classList.remove("lockin-playing"); endLockInLayers();
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
   state.grandExhibition = total >= GRAND_EXHIBITION_TARGET;
   state.finalCheckPending = false;

@@ -197,14 +197,17 @@ function matCheckRound(){
 /* Classic, after the first mat check: the Quark Meter rides along the top
    of every screen (just above #topbar's pills, below every tray/overlay),
    reading the current mat. Tapping it opens the Display Mat. */
+// Rewritten only when its markup changes; its height (--qtop-h) comes from
+// a ResizeObserver (measureLive()), so drawing it never forces a layout.
+let quarkTopBarHTML = null;
 function renderQuarkTopBar(){
   const el = document.getElementById("quarkTopBar");
   const show = !!state.matChecked && !state.ended && !comboLabActive;
   document.body.classList.toggle("has-qtop", show);
-  if (!show){ el.innerHTML = ""; return; }
-  el.innerHTML = `<div class="mat-score-card qtop-card">${quarkMeterLineHTML(matScore(matOnMat()))}</div>`;
-  document.documentElement.style.setProperty("--qtop-h", el.offsetHeight + "px");
+  const html = show ? `<div class="mat-score-card qtop-card">${quarkMeterLineHTML(matScore(matOnMat()))}</div>` : "";
+  if (html !== quarkTopBarHTML) el.innerHTML = quarkTopBarHTML = html;
 }
+measureLive("quarkTopBar", "--qtop-h");
 document.getElementById("quarkTopBar").addEventListener("click", () => {
   if (anyOverlayOpen() || startingGiftInProgress) return;
   matDrawerView = "mat";
@@ -409,7 +412,7 @@ function syncMatViewBtn(){
   b.setAttribute("aria-pressed", String(on));
 }
 function renderMatResultsGrid(){
-  document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
+  setDrawerBody(matResultsGridHTML());
   syncMatListActions();
 }
 

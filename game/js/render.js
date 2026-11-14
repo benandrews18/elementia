@@ -71,6 +71,8 @@ function renderTurnClock(){
   pill.title = `Turn ${state.visits} of ${RUN_COMPLETE_VISIT}${note}`;
   pill.setAttribute("aria-label", pill.title);
 }
+measureLive("topbar", "--topbar-h");
+measureLive("hub", "--hub-h");
 function render(resetScroll){
   applyLowMotion();
   document.body.dataset.screen = screen;
@@ -89,7 +91,7 @@ function render(resetScroll){
   document.getElementById("drawerScoreCount").textContent = score();
   // The inventory's contents only while it's open; openDrawer() builds them
   // on opening.
-  if (drawer.classList.contains("open")) document.getElementById("drawerBody").innerHTML = renderDrawer();
+  if (drawer.classList.contains("open")) setDrawerBody(renderDrawer());
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
@@ -103,12 +105,6 @@ function render(resetScroll){
   hideHint();
   if (screen === "map") syncMapPaths();
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
-  // Measured live (not a constant) so the fixed map card sits right under the
-  // topbar at any font size or zoom.
-  document.documentElement.style.setProperty("--topbar-h", document.getElementById("topbar").offsetHeight + "px");
-  // The hub's height is measured live too, and everything that must clear it
-  // (job sheet, pins tray, drawer, overlay padding) reads --hub-h.
-  document.documentElement.style.setProperty("--hub-h", document.getElementById("hub").offsetHeight + "px");
   maybeShowWalkthroughTip();
 }
 

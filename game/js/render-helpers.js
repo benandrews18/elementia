@@ -10,6 +10,18 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const ATOM_SVG = '<svg class="converticon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="none" stroke="#7fd6ff" stroke-width="2.6"><ellipse cx="32" cy="32" rx="28" ry="10.5"/><ellipse cx="32" cy="32" rx="28" ry="10.5" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="28" ry="10.5" transform="rotate(120 32 32)"/></g><g stroke="#1b1b24" stroke-width="1"><circle cx="27.5" cy="29" r="5.2" fill="#4d7cf2"/><circle cx="36.5" cy="29" r="5.2" fill="#f0674c"/><circle cx="32" cy="25" r="5.2" fill="#f0674c"/><circle cx="25.5" cy="35" r="5.2" fill="#f0674c"/><circle cx="38.5" cy="35" r="5.2" fill="#4d7cf2"/><circle cx="32" cy="38.5" r="5.2" fill="#4d7cf2"/><circle cx="32" cy="32" r="5.2" fill="#f0674c"/></g><g fill="#fff" opacity=".55"><circle cx="30.4" cy="30.4" r="1.6"/><circle cx="30.4" cy="23.4" r="1.6"/><circle cx="34.9" cy="27.4" r="1.6"/><circle cx="23.9" cy="33.4" r="1.6"/></g></svg>';
 const CUSTOM_ICONS = {...NOTO_ICONS, "__WHEEL__": WHEEL_IMG, "__FURNACE__": FURNACE_IMG, "__OVEN__": OVEN_IMG, "__BANANABREAD__": BANANABREAD_IMG, "__TURBINEBLADE__": TURBINEBLADE_IMG, "__STEEL__": STEEL_IMG, "__FOSSIL__": FOSSIL_IMG, "__CONCRETE__": CONCRETE_IMG, "__FIBERGLASS__": FIBERGLASS_IMG, "__LOGCABIN__": LOGCABIN_IMG, "__ORCA__": ORCA_SVG, "__CORAL__": CORAL_SVG, "__FLOUR__": FLOUR_SVG, "__LIGHTHOUSE__": LIGHTHOUSE_SVG, "__RUBBER__": RUBBER_SVG, "__MICROCHIP__": MICROCHIP_IMG, "__LIFE__": LIFE_IMG, "__ECOSYSTEM__": ECOSYSTEM_IMG, "__DIAMOND__": DIAMOND_IMG, "__BRASSBAR__": BRASS_BAR_SVG, "__MARKETPLACE__": MARKETPLACE_IMG, "__CONVERT__": ATOM_SVG};
 const em = e => CUSTOM_ICONS[e] || esc(e);
+/* Keeps a CSS variable equal to an element's live height via a
+   ResizeObserver: it updates after layout, so nothing has to force one
+   (reading offsetHeight mid-render did, on every render). The map card
+   sits under the topbar (--topbar-h); trays, the drawer and overlay padding
+   clear the hub (--hub-h); screens clear the Quark bar (--qtop-h). */
+function measureLive(id, cssVar){
+  const el = document.getElementById(id);
+  if (!el) return;
+  const set = () => document.documentElement.style.setProperty(cssVar, el.offsetHeight + "px");
+  set(); // once now; the observer keeps it current
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(set).observe(el);
+}
 // Items whose art reads small on the card popup; same set as
 // build_cards_classic.py's ENLARGED_ICONS (see showCardPop()).
 const PDF_ENLARGED_ICONS = new Set(["Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"]);

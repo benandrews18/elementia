@@ -207,6 +207,9 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
    centered title, one Nice button, both sharing this box's own bounceIn
    pop-in with the rest of .sheetbox. */
 .lockin-reward-box{text-align:center}
+/* A tighter shadow than other windows (a 30px blur is costly to draw on a
+   phone, and this one opens straight out of the Lock-In count). */
+.sheetbox.parch.lockin-reward-box{filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 .lockin-reward-box h2{margin-bottom:18px}
 .lockin-reward-box .btnrow{justify-content:center; margin-top:4px}
 /* One die per span in a row; each pops in on its own delay. */

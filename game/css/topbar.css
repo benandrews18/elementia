@@ -44,16 +44,22 @@ body[data-picking] #topbar{display:none}
 .clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
-/* Check round: the clock pulses (a gold glow and a slight swell). */
-.clockpill.checkpoint{animation:clockPulse 1.4s ease-in-out infinite}
-@keyframes clockPulse{
-  0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(226,178,90,0), 0 0 0 0 rgba(226,178,90,0)}
-  50%{transform:scale(1.07); box-shadow:0 0 0 4px rgba(226,178,90,.8), 0 0 20px 6px rgba(226,178,90,.6)}
+/* Check round: the clock pulses -- a slight swell, and a gold glow ring
+   (::after) fading in and out. Only transform and opacity animate, so the
+   phone's compositor runs it without repainting every frame (an animated
+   box-shadow repainted the whole clock, which janked the Lock-In count). */
+.clockpill.checkpoint{position:relative; animation:clockSwell 1.4s ease-in-out infinite}
+.clockpill.checkpoint::after{
+  content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  box-shadow:0 0 0 4px rgba(226,178,90,.8), 0 0 20px 6px rgba(226,178,90,.6);
+  animation:clockGlow 1.4s ease-in-out infinite;
 }
-/* Low motion (setting or OS): the still glow instead. */
-html.low-motion .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+@keyframes clockSwell{0%,100%{transform:scale(1)} 50%{transform:scale(1.07)}}
+@keyframes clockGlow{0%,100%{opacity:0} 50%{opacity:1}}
+/* Low motion (setting or OS): a still glow instead. */
+html.low-motion .clockpill.checkpoint, html.low-motion .clockpill.checkpoint::after{animation:none; opacity:1}
 @media (prefers-reduced-motion:reduce){
-  .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+  .clockpill.checkpoint, .clockpill.checkpoint::after{animation:none; opacity:1}
 }
 /* Settings cog: top right on every screen, under every tray/overlay. */
 #settingsBtn{
