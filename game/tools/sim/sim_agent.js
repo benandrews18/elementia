@@ -272,7 +272,7 @@
     state = freshState(); state.mode = "classic";
     prefs.pinnedItems = []; selectedJobItem = null; travelPromptFor = null; lockInCommitted = false;
     plan = null; want = {};
-    T = { q: [], dice: [], short: {}, suitShort: {}, stuck: {}, convFrom: {}, convTo: {}, qSpent: 0 };
+    T = { q: [], mats: [], dice: [], short: {}, suitShort: {}, stuck: {}, convFrom: {}, convTo: {}, qSpent: 0 };
     // The opening: a capstone (the plan's, if it has one) and its station's
     // six elements, then that station is turn 1.
     let start;
@@ -302,7 +302,11 @@
       shop();
       if (plan && !plans.includes(plan.name)) plans.push(plan.name);
       goMap();
-      if (state.finalCheckPending){ bestMat(); T.q.push(matScore(matOnMat()).total); confirmFinalLockIn(); break; }
+      if (state.finalCheckPending){
+        bestMat(); T.q.push(matScore(matOnMat()).total);
+        T.mats.push({ v: state.visits, q: Math.round(T.q[T.q.length - 1]), o: "grand", items: [...state.mat] });
+        confirmFinalLockIn(); break;
+      }
       const dest = chooseNext();
       screen = "map"; selectedMapStation = dest;
       if (isMatCheckVisit()){
@@ -310,6 +314,7 @@
         startCheckOrder();
         bestMat();
         T.q.push(matScore(matOnMat()).total);
+        T.mats.push({ v: state.visits, q: Math.round(T.q[T.q.length - 1]), o: state.order && state.order.id, items: [...state.mat] });
         confirmLockIn(); // scores, then travels (finishLockIn() -> goStation()) or ends the run
       } else {
         bestMat(300);
@@ -331,7 +336,7 @@
       // q[i]: the mat's score leaving turn i+1 (checks and quiet checks);
       // dice[i]: dice rolled on turn i+1.
       sim: { plans: plans.filter(Boolean), gameOver: !!state.finalGameOver, finalMat: [...state.mat],
-        q: T.q.map(Math.round), dice: T.dice, short: T.short, suitShort: T.suitShort, stuck: T.stuck,
+        q: T.q.map(Math.round), mats: T.mats, dice: T.dice, short: T.short, suitShort: T.suitShort, stuck: T.stuck,
         convFrom: T.convFrom, convTo: T.convTo, qSpent: T.qSpent, qLeft: state.emptyElements || 0,
         leftover: { ...state.elements } },
     };

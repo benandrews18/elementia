@@ -14,7 +14,8 @@ export const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // fn(evalJS, errs) runs with the game booted; returns fn's result. errs
 // collects uncaught page exceptions.
-export async function withGame(fn, { http = 8791, cdp = 9339 } = {}) {
+// page: which page under game/ to open (default the game itself).
+export async function withGame(fn, { http = 8791, cdp = 9339, page = "elementia.html" } = {}) {
   const profile = mkdtempSync(join(tmpdir(), "elementia-headless-"));
   const server = spawn("python", ["-m", "http.server", String(http)], { cwd: GAME, stdio: "ignore" });
   const chrome = spawn(CHROME, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${cdp}`,
@@ -37,7 +38,7 @@ export async function withGame(fn, { http = 8791, cdp = 9339 } = {}) {
       return res.result.value;
     };
     await send("Runtime.enable");
-    await send("Page.navigate", { url: `http://127.0.0.1:${http}/elementia.html` });
+    await send("Page.navigate", { url: `http://127.0.0.1:${http}/${page}` });
     await wait(3000);
     await evalJS("localStorage.clear(); sessionStorage.clear(); location.reload()");
     // Wait for boot, not a fixed time.
