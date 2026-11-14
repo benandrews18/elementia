@@ -254,10 +254,13 @@ function renderMatTop(){
   // exists the arrow flips and a tap brings it back (matLastTap()).
   const last = state.lastCheckedMat || [];
   const qs = !!state.quickSavedMat;
+  // The "Layout Quick Save" pill shows for QS_PILL_MS after the quick save,
+  // then fades (a negative delay keeps a re-render mid-way in step).
+  const qsPillLeft = qs ? qsPillUntil - Date.now() : 0;
   const lastOff = !qs && (!last.length || last.join() === state.mat.join());
   const rulesBtnHTML = matDrawerView === "mat"
     ? `<div class="mat-quick-actions">
-        <span class="mat-last-wrap">${qs ? `<span class="mat-qs-pill">Layout Quick Save</span>` : ""}<button type="button" class="mat-quick-btn${qs ? " qs" : ""}" id="matLastBtn" ${lastOff ? "disabled" : ""} title="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}" aria-label="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}">${qs ? "↻" : "↺"}</button></span>
+        <span class="mat-last-wrap">${qsPillLeft > 0 ? `<span class="mat-qs-pill" style="animation-delay:${qsPillLeft - QS_PILL_MS}ms">Layout Quick Save</span>` : ""}<button type="button" class="mat-quick-btn${qs ? " qs" : ""}" id="matLastBtn" ${lastOff ? "disabled" : ""} title="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}" aria-label="${qs ? "Bring back your quick-saved mat" : "Put back the mat from your last board check"}">${qs ? "↻" : "↺"}</button></span>
         <button type="button" class="mat-quick-btn text" id="matClearBtn" title="Clear the Display Mat" aria-label="Clear the Display Mat">Clear</button>
         <button type="button" class="mat-quick-btn" id="matLayoutsBtn" title="Saved Display Mat layouts" aria-label="Saved Display Mat layouts">💾</button>
       </div>
@@ -537,6 +540,8 @@ document.getElementById("drawerTop").addEventListener("click", ev => {
     return;
   }
 });
+const QS_PILL_MS = 2200;
+let qsPillUntil = 0;
 function matLastTap(){
   if (state.quickSavedMat){
     const back = state.quickSavedMat;
@@ -546,6 +551,8 @@ function matLastTap(){
   }
   askConfirm("Reset the Display Mat to your last locked-in layout? Your current mat is quick-saved -- tap ↻ to bring it back.", () => {
     state.quickSavedMat = [...state.mat];
+    qsPillUntil = Date.now() + QS_PILL_MS;
+    setTimeout(() => { if (drawer.classList.contains("open")) renderMatTop(); }, QS_PILL_MS);
     placeMatCards(state.lastCheckedMat || []);
   });
 }

@@ -264,6 +264,9 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   padding:2px 8px; border-radius:999px; background:#3f8fd0; color:#fff; font-size:10.5px; font-weight:900;
   box-shadow:0 2px 4px rgba(0,0,0,.35); pointer-events:none;
 }
+.mat-qs-pill{animation:qsPillFade 2.2s ease forwards}
+@keyframes qsPillFade{0%{opacity:0} 8%{opacity:1} 75%{opacity:1} 100%{opacity:0}}
+html.low-motion .mat-qs-pill{animation:none}
 .mat-quick-btn:disabled{filter:grayscale(1) brightness(.8); opacity:.7; cursor:default}
 .mat-quick-btn{
   width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;

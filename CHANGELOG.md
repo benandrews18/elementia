@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Quick Save pill fades.** The "Layout Quick Save" pill above ↻ shows
+  for about two seconds after the quick save, then fades away; the blue ↻
+  still marks that a quick save is waiting.
+
 - **Map badge notes.** Tapping a station's tracked-item badge pops up
   "You're tracking [icon] X"; tapping a magnifier pops up "Items for
   [icon] X found here!". Pop-up notes now stay inside the screen edges.
