@@ -19,3 +19,6 @@ __pycache__/
 # Large design mockups for archived experiments -- kept locally, not tracked
 archive/landscape/mockups/
 archive/boardgame/reference-images/
+
+# Simulator output (game/tools/sim/run_sim.mjs) -- regenerated
+game/tools/sim/out/

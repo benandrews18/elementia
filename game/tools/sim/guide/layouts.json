@@ -1,0 +1,16 @@
+[
+  {"name": "1980 - Rainbow and computer", "items": ["Rainbow","Star","Computer","Diamond","Clock","Cloud","Furnace","Tools","Battery"]},
+  {"name": "3180 - homestead with sugar", "items": ["Homestead","Fish Cakes","Flour","Egg","Salmon","Water","Seaweed","DNA","Sugar"]},
+  {"name": "1700 - Star and Diamond", "items": ["Star","Clock","Furnace","Diamond","Plastic","Stainless Steel","Aluminum Alloy","Rubber"]},
+  {"name": "2800 - Deep Time", "items": ["Star","Clock","Diamond","Fossil","Furnace","Log Cabin","Canoe","Clay","Bone"]},
+  {"name": "3400 - Robot and Motorcycle", "items": ["Robot","Bicycle","Turbine Blade","Computer","Engine","Satellite Dish","Fiberglass"]},
+  {"name": "4842 - Robotics Lab with City", "items": ["Metropolis","Robot","Speedboat","Car","Bicycle","Canoe","Turbine Blade","Computer"]},
+  {"name": "Water cycle", "items": ["Clay","Limestone","Concrete","Furnace","Steel","Aluminum Alloy","Battery","Sand","Soil","Bone","Water","Seaweed","Cloud","Tree"]},
+  {"name": "Metro, Robo, Moto", "items": ["Metropolis","Robot","Motorcycle","Car","Bicycle","Turbine Blade","Wheel","Computer"]},
+  {"name": "Freight", "items": ["Steel","Aluminum Alloy","Stainless Steel","Clay","Sand","Limestone","Furnace","Tools","Maglev Train","Soil","Cloud","Tree","Water","Bone","Brass"]},
+  {"name": "Mid Game Observatory", "items": ["Satellite Dish","Telescope","Microchip","Compass","Magnet","Wire","Aluminum Alloy","Glass"]},
+  {"name": "Early Old Growth", "items": ["Deer","Log Cabin","Canoe","Tree","Soil","Water","Furnace","Tools"]},
+  {"name": "Half way to Homestead", "items": ["Log Cabin","Canoe","Tree","Soil","Water","Furnace","Tools","Grain","Farm","Seaweed","Fertilizer"]},
+  {"name": "Homestead and Orca", "items": ["Orca","Salmon","Soil","Bone","Water","Seaweed","Dough","Homestead","Flour"]},
+  {"name": "Just ecosystem", "items": ["Ecosystem","Salmon","Canoe","Tree","Orca","Rainbow","Deer"]}
+]
