@@ -393,8 +393,9 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 .st-grid .st-cell .mm-card.mini{height:calc((var(--mat-row-h) - 2px) / 2)}
 /* Under each card: the pin toggle (or the tracked item's badge, as in the
    list) and the list view's Craft button, nudged right to make room. */
-.st-acts{display:flex; align-items:center; justify-content:center; gap:4px}
-.st-acts :is(.shop-pin, .item-pin-badge){position:static; flex:none; width:26px; height:26px; font-size:14px; border-width:2px}
+/* Pin: square, the Craft button's height; same 3px gap as card to buttons. */
+.st-acts{display:flex; align-items:stretch; justify-content:center; gap:3px}
+.st-acts :is(.shop-pin, .item-pin-badge){position:static; flex:none; width:35px; height:35px; border-radius:10px; font-size:17px; border-width:2px}
 .st-acts :is(.shop-pin, .item-pin-badge) :is(img, svg){width:1em; height:1em}
 .st-acts .craftbtn{margin:0; flex:0 1 60px; min-width:0}
 .st-cards .mm-card.st-owned{filter:brightness(.7) saturate(.6)}

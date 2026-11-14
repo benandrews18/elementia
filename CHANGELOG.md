@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card view pins: square.** The card-view pin (and tracked-item badge) is
+  a square button the Craft button's height, 3px from it -- the same gap as
+  between the card and its buttons.
+
 - **Card view pins.** Each card in the station card view has the pin toggle
   left of its Craft button, replaced by the tracked item's icon when the
   tracked item still needs that card, as in the list view.
