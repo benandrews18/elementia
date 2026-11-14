@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Fixes.** Closing the Display Mat at a board check and tapping Travel
+  again used to skip the check (and its game-over rule); it now reopens the
+  mat. In card view, a Craft blocked by an unpaid suit cost opens the
+  element picker. The unreachable Arrange Items screen is removed.
+
 - **"?" in the Marketplace.** Tapping a "?" reward icon in the Market opens
   the Unknown Element window, which now also says how to earn one. The
   stations-visited row ends with a "?" (✓ once earned) for visiting all 8;
