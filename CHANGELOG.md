@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Dark Saved Layouts and Collections; usable collections first.** Both
+  windows now use the game's soft dark blues inside the brass frame instead
+  of bright parchment. In a run, the Collections list puts the collections
+  you can use right now (on the mat, or ready to place) at the top.
+
 - **Saved Layouts: search, sort, filters.** The Saved Layouts window has a
   search bar (layout names, card and component names), a Points ↓/↑ sort,
   and the Inventory's station and element filter icons.

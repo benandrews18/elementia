@@ -145,7 +145,12 @@ function renderCollectionsList(){
   // One list, in collection order: discovered ones, and ones you have clues
   // for (their unknown items as "?").
   const clues = prefs.collectionClues || {};
-  const shown = MAT_COLLECTIONS.filter(c => prefs.everUnlockedMatCollections.includes(c.id) || clues[c.id]);
+  // In a run: collections whose switch works right now (on the mat, or
+  // placeable) first; the rest keep collection order (sort is stable).
+  const usable = c => !collectionsFromMenu && prefs.everUnlockedMatCollections.includes(c.id)
+    && (c.items.every(n => state.mat.includes(n)) || collectionAddFits(c));
+  const shown = MAT_COLLECTIONS.filter(c => prefs.everUnlockedMatCollections.includes(c.id) || clues[c.id])
+    .sort((a, b) => usable(b) - usable(a));
   const leadHTML = c => `
     <div class="histentry collection-card clue-lead"><div class="collection-row"><div class="cr-main">
       <div class="cr-line1"><span class="cr-name">${esc(c.name)}</span><span class="cr-bonus">+${c.bonus}</span><span class="cr-clue">🔎 clue</span></div>

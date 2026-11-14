@@ -565,3 +565,15 @@ html.low-motion #matListActions{transition:none}
   background:var(--bad); color:#fff; font-size:12.5px; font-weight:800; padding:8px 14px; border-radius:16px;
   box-shadow:0 4px 14px rgba(0,0,0,.4); width:max-content; max-width:calc(100vw - 48px); text-align:center;
 }
+/* Saved Layouts and Collections on the game's soft dark blues instead of
+   bright parchment: the brass frame without its parchment fill, and the
+   root palette back. */
+:is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox.parch{
+  --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
+  --line:#2a5a72; --line2:#1c4257; --card:#163544; --bg-soft:#122e3c; --sunken:#1c4257;
+  --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
+  --ok-soft:#16301f; --ok-line:#2c5c3c; --bad-soft:#371913;
+  --collection:#a98af0; --collection-soft:#241c3a; --collection-line:#4a3a75;
+  border-image:url("../ui/panel_parchment.webp") 56 / 24px stretch;
+  background:linear-gradient(180deg, #193b4c, #122e3c) padding-box;
+}
