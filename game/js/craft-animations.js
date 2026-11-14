@@ -145,7 +145,8 @@ function bounceCantCraft(anchor, entry, ev){
   const missingItems = !entry || !itemReqsMet(entry);
   bounceMissingItems(anchor, missingItems ? "Missing Items!" : "Missing Elements!");
   if (missingItems || suitCostPayable(entry)) return;
-  const badge = anchor.closest("[data-item-card]")?.querySelector(".isuit-costs") || anchor.closest(".isuit-costs");
+  // Card view has no cost badges: the balloon points at the button.
+  const badge = anchor.closest("[data-item-card]")?.querySelector(".isuit-costs") || anchor.closest(".isuit-costs") || anchor;
   if (badge){ if (ev) ev.stopPropagation(); openSuitSpendBalloon(entry, badge); }
 }
 function bounceMissingItems(cBtn, text = "Missing Items!"){
