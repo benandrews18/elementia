@@ -75,12 +75,6 @@
   background-position:20% 20%, 80% 20%, 50% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
 .die-6{background-image:radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%), radial-gradient(var(--pip) 45%, transparent 46%);
   background-position:20% 20%, 80% 20%, 20% 50%, 80% 50%, 20% 80%, 80% 80%; background-size:30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%, 30% 30%}
-/* Legend die under each chip, showing which face lands on that element.
-   Needs its own border. */
-.gcol > .die{
-  width:min(24px, 60cqw); height:min(24px, 60cqw); margin:0 auto;
-  background-color:var(--card); border:2px solid var(--line); border-radius:6px;
-}
 @keyframes tumble{
   0%{transform:rotate(0) scale(1)} 25%{transform:rotate(-18deg) scale(1.12)}
   50%{transform:rotate(14deg) scale(.94)} 75%{transform:rotate(-8deg) scale(1.06)}

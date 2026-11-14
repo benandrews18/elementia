@@ -71,15 +71,20 @@ function openEmptyElPicker(){
   if (!s || !((state.emptyElements || 0) > 0)) return;
   const pool = sortedDice(s);
   const row = pool.map((sym, i) =>
-    `<div class="gcol"><button type="button" class="gchip" data-pick-elem="${esc(sym)}" title="${esc(ELEMENT_NAMES[sym] || sym)}" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span>${dieFace(i + 1)}</div>`).join("");
+    `<div class="gcol"><button type="button" class="gchip" data-pick-elem="${esc(sym)}" title="${esc(ELEMENT_NAMES[sym] || sym)}" style="--suit:${ELEMENT_COLOR[sym] || "#8a94a6"}"><span class="gnum">${ATOMIC_NUMBER[sym]}</span><span class="gsym">${esc(sym)}</span>${elSuitBadgeHTML(sym)}</button><span class="gname">${esc(ELEMENT_NAMES[sym] || sym)}</span></div>`).join("");
+  // ✕ top-right; the station above its pool; "?" bottom-right opens the
+  // Unknown Element hint (showEmptyElTip()).
   document.getElementById("emptyElPickBody").innerHTML = `
+    <button type="button" class="cp-close-x coll-x" id="emptyElPickCancel" aria-label="Close"></button>
     <h2 id="emptyElPickTitle">${emptyElSquareHTML(34)} Pick an element</h2>
+    <div class="eep-station"><span class="eep-em">${em(s.emoji)}</span>${esc(s.name)}</div>
     <div class="gather">${row}</div>
-    <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec" id="emptyElPickCancel">Cancel</button></div>`;
+    <button type="button" class="eep-help" id="emptyElPickHelp" aria-label="What's an Unknown Element?"></button>`;
   openOverlay("emptyElPick");
 }
 document.getElementById("emptyElPick").addEventListener("click", ev => {
   if (ev.target === ev.currentTarget || ev.target.closest("#emptyElPickCancel")){ closeOverlay("emptyElPick"); return; }
+  if (ev.target.closest("#emptyElPickHelp")){ showEmptyElTip(); return; }
   const chip = ev.target.closest("[data-pick-elem]");
   if (!chip || !((state.emptyElements || 0) > 0)) return;
   const sym = chip.dataset.pickElem;

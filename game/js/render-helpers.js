@@ -14,12 +14,6 @@ const em = e => CUSTOM_ICONS[e] || esc(e);
 // build_cards_classic.py's ENLARGED_ICONS (see showCardPop()).
 const PDF_ENLARGED_ICONS = new Set(["Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"]);
 
-/* Dots are CSS gradients on the .die element (see .die-1..6), keyed off
-   PIPS -- no child nodes. */
-function dieFace(v){
-  return `<div class="die die-${v}"></div>`;
-}
-
 // plain: inventory list (already crafted), so no have/need colouring and no
 // convert count -- also skips totalConvertibleCount() per token.
 function tokenHTML(r, groupedEls, plain){

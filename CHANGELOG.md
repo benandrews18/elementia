@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Unknown Element picker.** A top-right ✕ replaces Cancel, the station's
+  icon and name sit above its element pool, the dice faces are gone, and a
+  "?" in the bottom-right corner opens the Unknown Element window.
+
 - **Clock window icons.** The clock window shows 🥾 by "move", all 8
   station icons under the first paragraph, and the bag, ⚛️ and 🎲 icons in
   "Every 3 rounds your Display Mat is checked. Its Quark Score sets your
