@@ -381,6 +381,13 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Cross-hide: Convert's button hides while Pins is open, and vice versa
    (see updateHub()). ID selectors so this beats .floatbtn's display:flex. */
 #pinsBtn.cross-hide, #quickConvertBtn.cross-hide, #trackedPill.cross-hide{display:none}
+/* Intro beat 1 (introInvLit): the Inventory button is spotlighted above
+   the dimmed screen. The hub rises over the overlay's dim; its own wood and
+   other buttons are dimmed to match (#hub is its own stacking context, so
+   the button can't rise alone). */
+body.intro-inv-lit #hub{z-index:73; box-shadow:inset 0 0 0 999px rgba(10,14,20,.72); border-top-color:#3d3220}
+body.intro-inv-lit #hub .hubbtn:not(#hubInv){filter:brightness(.28)}
+body.intro-inv-lit #hubInv{filter:drop-shadow(0 0 10px rgba(255,214,120,.95)) drop-shadow(0 0 4px rgba(255,214,120,.9))}
 
 </style>
 <style>
@@ -7954,6 +7961,7 @@ function updateHub(){
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
   home.classList.toggle("active", screen === "map" && !anyOpen && !introInvLit);
+  document.body.classList.toggle("intro-inv-lit", introInvLit);
 
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   // Lit for the full inventory only; the half-height Lock-In view doesn't
@@ -12263,19 +12271,18 @@ function confirmCapstoneChoice(name){
   const beat2At = chips.length ? (chips.length - 1) * STAGGER_MS + FLY_MS + 150 : 0;
 
   // Beat 2 -- the To-Do List opens with the capstone on it (breakdown
-  // expanded), and a tip about pinning pops up over it.
+  // expanded), and a tip about pinning pops up over it. With that tip
+  // hidden (its ✕), straight to the station instead (finishPinTip()).
   setTimeout(() => {
     dice.forEach(d => { state.elements[d] = count(d) + 1; });
     save();
     introInvLit = false;
     closeOverlay("capConfirm");
     closeOverlay("capChoice");
+    capStartPending = {stationName, dice};
+    if (tipHidden("pinTip")){ finishPinTip(); return; }
     openJobBoard();
-    setTimeout(() => {
-      capStartPending = {stationName, dice};
-      if (tipHidden("pinTip")) finishPinTip();
-      else openOverlay("pinTip");
-    }, reduced ? 0 : 450);
+    setTimeout(() => openOverlay("pinTip"), reduced ? 0 : 450);
   }, beat2At);
 }
 // Beat 3 -- the tip is dismissed: the list closes and the run starts in
