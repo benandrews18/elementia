@@ -225,7 +225,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mat-results-grid .mm-card.mini{justify-content:flex-start; padding-top:3px}
 .mat-results-grid .mm-card.mini .mm-icon{font-size:26px}
 .mat-results-grid .mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
-.mat-results-grid .mm-card.mini .mm-name{display:-webkit-box; -webkit-line-clamp:1; font-size:9px; padding:1px 14px 0}
+.mat-results-grid .mm-card.mini .mm-name{display:-webkit-box; -webkit-line-clamp:1; font-size:10.5px; padding:1px 14px 0} /* = tier 2's .mm-name */
 .mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
 .mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}
 .mm-card.mini .mm-pip :is(img,svg){width:11px; height:11px}
@@ -408,6 +408,9 @@ html.low-motion .mat-qs-pill{animation:none}
 /* Capstones span 2 columns, as on the mat (matCardHTML()'s "wide" class,
    tray only). */
 .mat-results-grid .mm-card.wide{grid-column:span 2}
+/* Capstone art 1.5x the usual .mm-icon in the shop/inventory card views. */
+.mat-results-grid :is(.mm-card.wide, .st-cell.wide .mm-card) .mm-icon{font-size:66px; margin-top:-19px} /* up into the free top-centre, so the name clears the badges */
+.mat-results-grid :is(.mm-card.wide, .st-cell.wide .mm-card) .mm-icon :is(img,svg){width:66px; height:66px}
 /* Tier 1: half-height cells, the size they take stacked on the mat. */
 .mat-results-grid.half{grid-auto-rows:calc((var(--mat-row-h) - 2px) / 2)}
 /* List view (matShopRowHTML()): shop rows; ✓ badges dropped since every
