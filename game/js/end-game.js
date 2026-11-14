@@ -14,8 +14,7 @@ function sessionStatsGridHTML(){
   return stat("⚛️", "Quarks", Math.round(state.bestMatScore || 0).toLocaleString()) +
     stat("💯", "Item Score", score()) +
     stat("🛠️", "Items", state.items.length) +
-    stat("🏆", "Capstones", `${caps.length}<small>/8</small>`) +
-    (state.grandExhibition ? stat("🏛️", "Exhibition", "✓") : "");
+    stat("🏆", "Capstones", `${caps.length}<small>/8</small>`);
 }
 const endIconHTML = n => `<span class="end-ic" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`;
 function capstonesSectionHTML(){

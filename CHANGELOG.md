@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Grand Exhibition: 4,000.** The round-24 Grand Exhibition target is now
+  4,000 Quarks, and the Run Complete window no longer shows whether it was
+  reached.
+
 - **Dark Saved Layouts and Collections; usable collections first.** Both
   windows now use the game's soft dark blues inside the brass frame instead
   of bright parchment. In a run, the Collections list puts the collections

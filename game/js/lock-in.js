@@ -124,7 +124,7 @@ function quietCheck(){
    (GRAND_EXHIBITION_TARGET), nothing else. Only orders the player's owned
    cards can satisfy are drawn, and none repeats. */
 const ORDER_REQUEST_MULT = 1.5, ORDER_RESTRICT_MULT = 0.75, ORDER_LAST_REQUEST = 12;
-const GRAND_EXHIBITION_TARGET = Math.round(lockInTiersForRound(RUN_COMPLETE_VISIT).two);
+const GRAND_EXHIBITION_TARGET = 4000;
 const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
 const CHECK_ORDERS = {
@@ -621,7 +621,6 @@ function confirmFinalLockIn(){
 function finishFinalCheck(total){
   document.body.classList.remove("lockin-playing"); endLockInLayers();
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
-  state.grandExhibition = total >= GRAND_EXHIBITION_TARGET;
   state.finalCheckPending = false;
   lockInCommitted = false;
   closeDrawer();
