@@ -170,7 +170,17 @@ body[data-picking] #topbar{display:none}
 .clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
-.clockpill.checkpoint{box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+/* Check round: the clock pulses (a gold glow and a slight swell). */
+.clockpill.checkpoint{animation:clockPulse 1.4s ease-in-out infinite}
+@keyframes clockPulse{
+  0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(226,178,90,0), 0 0 0 0 rgba(226,178,90,0)}
+  50%{transform:scale(1.07); box-shadow:0 0 0 4px rgba(226,178,90,.8), 0 0 20px 6px rgba(226,178,90,.6)}
+}
+/* Low motion (setting or OS): the still glow instead. */
+html.low-motion .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+@media (prefers-reduced-motion:reduce){
+  .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+}
 /* Settings cog: top right on every screen, under every tray/overlay. */
 #settingsBtn{
   position:fixed; z-index:32; top:10px; right:14px; width:46px; height:46px; padding:0;
