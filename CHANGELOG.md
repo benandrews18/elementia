@@ -9,7 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
-- Star is Furnace + H + Fe (data 2026.11.14b). The City rolls Ca C O Fe Si Al: it keeps Al and drops Mg instead (nothing it sells uses Mg now).
+- Star is Furnace + H + Fe (data 2026.11.14c). The City rolls Ca C O Fe Si Mg (Fe in place of Al). Briefly tried dropping Mg instead: it starved Clay, which needs Mg.
 - Recipe rebalance (data 2026.11.14a): Star is now a tier 2 item (Furnace + H, 10 points, reactive tag only). Life and Coral Reef no longer need a Clock, so Ecosystem and Coral Reef no longer need the Power Plant. Clock is Battery + Tools + Wire. Solar Panel drops Battery; Light Bulb and Car now need one. Apple Pie and Banana Bread cost organic + reactive. The City rolls Fe instead of Al and sells Sand instead of Clay (City Complete now asks for Sand).
 - Shop and Inventory card views: tier 1 card names are the same size as tier 2's, and capstone art is 1.5x bigger.
 - The Display Mat now grows at the turn 6/12 check even when no challenge could be drawn (before, it waited until the next station and skipped its Expansion screen).
