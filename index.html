@@ -1513,8 +1513,12 @@ body[data-screen="station"] .sheet{border-top:none; border-radius:0 0 18px 18px}
 .st-cell.wide{grid-column:span 2}
 .st-grid .st-cell .mm-card{flex:none; height:var(--mat-row-h)}
 .st-grid .st-cell .mm-card.mini{height:calc((var(--mat-row-h) - 2px) / 2)}
-/* The list view's Craft button, same size, centred under the card. */
-.st-cell .craftbtn{align-self:center; margin:0}
+/* Under each card: the pin toggle (or the tracked item's badge, as in the
+   list) and the list view's Craft button, nudged right to make room. */
+.st-acts{display:flex; align-items:center; justify-content:center; gap:4px}
+.st-acts :is(.shop-pin, .item-pin-badge){position:static; flex:none; width:26px; height:26px; font-size:14px; border-width:2px}
+.st-acts :is(.shop-pin, .item-pin-badge) :is(img, svg){width:1em; height:1em}
+.st-acts .craftbtn{margin:0; flex:0 1 60px; min-width:0}
 .st-cards .mm-card.st-owned{filter:brightness(.7) saturate(.6)}
 .st-cards .mm-card.st-owned::after{
   content:"✓"; position:absolute; right:-5px; bottom:-5px; width:20px; height:20px; border-radius:50%;
@@ -7167,6 +7171,16 @@ function itemHTML(entry, idx){
   // TRACKED item's icon). stillNeededClosure() so finished intermediates stop
   // flagging their ingredients unless a sibling branch still needs them.
   if (can && !done) cls.push("job-highlight");
+  const pinSlot = pinSlotHTML(entry);
+  const btn = craftBtnHTML(entry, idx);
+  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
+    ${pinSlot}
+    ${itemRowHTML(entry, can)}${btn}</div>`;
+}
+// The pin toggle, or -- for an item the tracked item still needs -- the
+// tracked item's icon in its place (opens the To-Do List there). Shared by
+// the shop rows and the station's card view.
+function pinSlotHTML(entry){
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
@@ -7179,12 +7193,8 @@ function itemHTML(entry, idx){
   }
   // The badge takes the pin button's corner -- a card shows one or the
   // other.
-  const pinSlot = pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
+  return pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
       title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>`;
-  const btn = craftBtnHTML(entry, idx);
-  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
-    ${pinSlot}
-    ${itemRowHTML(entry, can)}${btn}</div>`;
 }
 // The icon/name/suit costs/recipe row, shared by the shop and the
 // Inventory's list view (matShopRowHTML()).
@@ -8343,7 +8353,7 @@ function shopCardsHTML(entries, idx){
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
     return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
-      e.name === stationCardOpen ? "selected" : ""].join(" ") })}${craftBtnHTML(e, idx(e))}</div>`;
+      e.name === stationCardOpen ? "selected" : ""].join(" ") })}<div class="st-acts">${pinSlotHTML(e)}${craftBtnHTML(e, idx(e))}</div></div>`;
   };
   // No tier headings. Tier 1 (half-height cards) in rows of 4 across the
   // top, then everything else in its own grid, where dense packing lets a
