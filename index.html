@@ -2701,6 +2701,21 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
   font-size:18px; background:#122e3c; border:2px solid var(--st)}
 .ci-st :is(img, svg){width:20px; height:20px}
 .ci-inline-ic{width:22px; height:22px; vertical-align:-5px}
+/* "New Items Unlocked!" (maybeShowUnlockReveal()): a heavily dimmed screen
+   (over the hub too) so the new cards pop in full colour. */
+#unlockReveal{z-index:75; background:rgba(4,6,10,.9); align-items:center; cursor:pointer}
+.ur-box{margin:auto; width:100%; max-width:420px; text-align:center}
+.ur-title{font-size:30px; font-weight:900; color:#ffe08a; text-shadow:0 3px 0 #000, 0 0 22px rgba(226,178,90,.6);
+  margin:0 0 6px; animation:bounceIn .45s cubic-bezier(.25,1,.4,1) both}
+.ur-sub{color:#fff; font-weight:800; font-size:15px; margin:0 0 20px; display:flex; align-items:center; justify-content:center; gap:6px}
+.ur-sub :is(img, svg){width:22px; height:22px}
+.ur-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:14px}
+.ur-card{width:104px; height:146px; opacity:0; animation:urPop .5s cubic-bezier(.25,1.4,.4,1) both;
+  filter:drop-shadow(0 0 14px rgba(226,178,90,.55))}
+.ur-card .mm-card{pointer-events:none}
+@keyframes urPop{0%{opacity:0; transform:scale(.4) rotate(-6deg)} 60%{opacity:1; transform:scale(1.12) rotate(2deg)} 100%{opacity:1; transform:none}}
+.ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px}
+html.low-motion .ur-card{animation:none; opacity:1}
 
 </style>
 <style>
@@ -3808,6 +3823,10 @@ html.low-motion #matListActions{transition:none}
 <div id="scrim"></div>
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
+<!-- New items a capstone unlocks (maybeShowUnlockReveal()). -->
+<div class="overlay" id="unlockReveal" role="dialog" aria-modal="true" aria-label="New Items Unlocked">
+  <div class="ur-box" id="unlockRevealBody"></div>
+</div>
 <!-- Display Mat Challenges, first time per run (maybeShowOrderTip()). -->
 <div class="overlay" id="orderTip" role="dialog" aria-modal="true" aria-labelledby="orderTipTitle">
   <div class="sheetbox parch pin-tip-box">
@@ -9335,8 +9354,10 @@ function showElCardPop(sym){
 document.getElementById("elCardPop").addEventListener("click", () => closeOverlay("elCardPop"));
 
 /* A capstone just crafted: its full inspection card under a "Capstone
-   complete" banner, with confetti. Closing it opens the Marketplace to pick
-   the next capstone to track (capstoneMarketPending, see closeOverlay()). */
+   complete" banner, with confetti. Closing it (capstoneMarketPending, see
+   closeOverlay()) nudges the player to track the next capstone, opening the
+   Marketplace only for the run's first capstone. Then the items that
+   capstone unlocks get their own reveal (queueUnlockReveal()). */
 let capstoneMarketPending = false;
 function celebrate(entry){
   releaseBingoCraftHold();
@@ -9347,16 +9368,58 @@ function celebrate(entry){
     ? "That's all eight -- every capstone in Elementia!" : `${n} of 8 capstones`}</small>`;
   banner.hidden = false;
   capstoneMarketPending = n < 8;
+  queueUnlockReveal(entry.name);
   fireConfetti();
 }
-// After the capstone card closes: the Marketplace, with a nudge to track
-// the next capstone. Skipped if something else is now on screen.
+// After the capstone card closes: a nudge to track the next capstone. The
+// Marketplace itself opens only after the run's first capstone
+// (state.sawCapstoneMarket); later ones open it only through a completed
+// Market row (the BINGO sequence).
 function openNextCapstoneMarket(){
   capstoneMarketPending = false;
-  if (document.querySelector(".overlay.open") || state.ended) return;
-  openJobSelectTray();
+  if (state.ended) return;
+  if (!state.sawCapstoneMarket && !document.querySelector(".overlay.open")){
+    state.sawCapstoneMarket = true; save();
+    openJobSelectTray();
+  }
   queueEventToast("market", "🏆", "Pick your next capstone", "Pin one in the Marketplace to track it");
 }
+
+/* "New Items Unlocked!": a capstone's unlock items (data.js "unlock" rows,
+   UNLOCKED_BY) pop onto a dimmed screen in full colour, once the screen is
+   clear -- the capstone card closed and any Marketplace tray dismissed.
+   Tap to dismiss. */
+let unlockRevealQueue = [], unlockRevealTimer = null;
+function queueUnlockReveal(capName){
+  const names = [...new Set(ENTRIES.filter(e => UNLOCKED_BY[e.name] === capName).map(e => e.name))];
+  if (!names.length) return;
+  unlockRevealQueue.push({ capName, names });
+  maybeShowUnlockReveal();
+}
+function maybeShowUnlockReveal(){
+  if (!unlockRevealQueue.length || unlockRevealTimer) return;
+  const busy = anyOverlayOpen() || !!openPanelName() || capstoneMarketPending || bingoClearInProgress
+    || document.body.classList.contains("lockin-playing") || comboLabActive;
+  if (busy){
+    unlockRevealTimer = setTimeout(() => { unlockRevealTimer = null; maybeShowUnlockReveal(); }, 400);
+    return;
+  }
+  const { capName, names } = unlockRevealQueue.shift();
+  const cap = ENTRIES.find(e => e.name === capName);
+  const step = lowMotion() ? 0 : 140;
+  document.getElementById("unlockRevealBody").innerHTML = `
+    <h2 class="ur-title">New Items Unlocked!</h2>
+    <p class="ur-sub">${cap ? em(cap.emoji) : ""} ${esc(capName)} opened up ${names.length === 1 ? "a new item" : `${names.length} new items`}</p>
+    <div class="ur-grid">${names.map((n, i) =>
+      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n)}</div>`).join("")}</div>
+    <p class="ur-tap">Tap to continue</p>`;
+  openOverlay("unlockReveal");
+}
+// Any tap closes it; the next queued reveal (if any) follows.
+document.getElementById("unlockReveal").addEventListener("click", () => {
+  closeOverlay("unlockReveal");
+  setTimeout(maybeShowUnlockReveal, 300);
+});
 
 /* The craft + reveal, called straight away (no suit cost) or once the
    suit-spend balloon confirms. The suit cost must already be paid; craft()
