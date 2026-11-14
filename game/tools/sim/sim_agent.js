@@ -114,6 +114,7 @@
   }
   // Pay e's suit cost (largest surplus first, sparing the reserve), then craft.
   function payAndCraft(e){
+    if (!canCraft(e) || !suitCostPayable(e)) return false;
     const { els } = needsOf(e.reqs), keep = reserve();
     for (const [su, k] of Object.entries(suitCostNeed(e))){
       for (let i = 0; i < k; i++){
@@ -152,6 +153,10 @@
       spare[from] -= CONVERT_RATE;
       plan_.push([from, target]);
     }
+    // Try it on a copy first: a conversion can eat what the suit cost needed.
+    const after = { ...state.elements };
+    plan_.forEach(([from, to]) => { if (from !== "?") after[from] -= CONVERT_RATE; after[to] = (after[to] || 0) + 1; });
+    if (shortfall(e, after).total) return false;
     plan_.forEach(([from, to]) => {
       if (from === "?") state.emptyElements -= 1; else take(from, CONVERT_RATE);
       give(to);
