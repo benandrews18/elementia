@@ -25,12 +25,12 @@ function matCardHTML(name, opts = {}){
   const onMat = state.mat.includes(name);
   const pts = opts.complete ? c.points * 2 : c.points;
   const pipsHTML = c.pips.map(s =>
-    `<span class="mm-pip${matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
+    `<span class="mm-pip${!opts.plain && matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
   // One badge per home station (see MAT_CARDS); each lights independently.
   const stationsHTML = c.stations.map(stName => {
     const stMeta = STATION_BY_NAME[stName];
     const stColor = DATA.suits[stMeta.suit].color;
-    const stLit = matLive.station.has(stName) ? " lit" : "";
+    const stLit = !opts.plain && matLive.station.has(stName) ? " lit" : "";
     return `<span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(stName)}">${em(stMeta.emoji)}</span>`;
   }).join("");
   // "wide" (tray only -- the mat grid uses .mm-slot.wide) so a capstone spans

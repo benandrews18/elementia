@@ -219,6 +219,12 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mm-card.mini .mm-icon{font-size:32px; margin:0}
 .mm-card.mini .mm-icon :is(img,svg){width:32px; height:32px}
 .mm-card.mini .mm-name{display:none}
+/* In the Inventory and station card grids (not on the mat itself), Tier 1
+   cards keep their name: the picture moves up to make room. */
+.mat-results-grid .mm-card.mini{justify-content:flex-start; padding-top:3px}
+.mat-results-grid .mm-card.mini .mm-icon{font-size:26px}
+.mat-results-grid .mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
+.mat-results-grid .mm-card.mini .mm-name{display:-webkit-box; -webkit-line-clamp:1; font-size:9px; padding:1px 14px 0}
 .mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
 .mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}
 .mm-card.mini .mm-pip :is(img,svg){width:11px; height:11px}

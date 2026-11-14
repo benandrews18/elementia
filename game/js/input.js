@@ -73,7 +73,7 @@ function handleScreenClick(ev){
   }
 
   if (ev.target.closest("#shopViewBtn")){
-    prefs.shopCardView = !prefs.shopCardView; savePrefs();
+    prefs.shopListView = !prefs.shopListView; savePrefs();
     stationCardOpen = null;
     render();
     return;
@@ -98,7 +98,16 @@ function handleScreenClick(ev){
     // Not craftable: the button still receives taps (aria-disabled, see
     // itemHTML()) so it can show the "Missing ..." notice.
     if (cBtn.getAttribute("aria-disabled") === "true"){
-      bounceCantCraft(cBtn, ENTRIES[+cBtn.dataset.craft], ev);
+      const entry = ENTRIES[+cBtn.dataset.craft];
+      // Station card view: select the item instead, so its full shop row
+      // (recipe, suit costs) shows what's missing under the header.
+      if (cBtn.closest(".st-cell") && entry){
+        bounceMissingItems(cBtn, itemReqsMet(entry) ? "Missing Elements!" : "Missing Items!");
+        stationCardOpen = entry.name;
+        render();
+        return;
+      }
+      bounceCantCraft(cBtn, entry, ev);
       return;
     }
     const entry = ENTRIES[+cBtn.dataset.craft];

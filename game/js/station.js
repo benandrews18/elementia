@@ -24,13 +24,13 @@ function renderStation(name){
   // The capstone sits at the top of the shop, under the compact crafted row.
   // A normal shop row, plus .cap-item (dark face, gold border).
   const capHTML = capRevealed ? itemHTML(capEntry, idx(capEntry)).replace('class="item ', 'class="item cap-item ') : "";
-  // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
-  const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
-      title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
-  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
+  // List (shop rows) or card view (cards unless prefs.shopListView).
+  const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!prefs.shopListView}"
+      title="${!prefs.shopListView ? "Show as a list" : "Show as cards"}" aria-label="${!prefs.shopListView ? "Show as a list" : "Show as cards"}">${!prefs.shopListView ? "📋" : "🃏"}</button>`;
+  const shopBody = !prefs.shopListView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
   // Card view: the tapped card's full shop row, right under the header; it
   // scrolls with the shop but sticks at the top rather than leave the screen.
-  const open = prefs.shopCardView && all.find(e => e.name === stationCardOpen);
+  const open = !prefs.shopListView && all.find(e => e.name === stationCardOpen);
   const selPanel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
 
@@ -89,7 +89,7 @@ function shopCardsHTML(entries, idx){
   // Each card with the shop's Craft button underneath.
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
-    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
+    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { plain: true, cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
       e.name === stationCardOpen ? "selected" : ""].join(" ") })}<div class="st-acts">${pinSlotHTML(e)}${craftBtnHTML(e, idx(e))}</div></div>`;
   };

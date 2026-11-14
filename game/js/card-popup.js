@@ -268,7 +268,7 @@ function maybeShowUnlockReveal(){
     <h2 class="ur-title">New Items Unlocked!</h2>
     <p class="ur-sub">${cap ? em(cap.emoji) : ""} ${esc(capName)} opened up ${names.length === 1 ? "a new item" : `${names.length} new items`}</p>
     <div class="ur-grid">${names.map((n, i) =>
-      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n)}</div>`).join("")}</div>
+      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n, { plain: true })}</div>`).join("")}</div>
     <p class="ur-tap">Tap to continue</p>`;
   openOverlay("unlockReveal");
 }

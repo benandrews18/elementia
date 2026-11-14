@@ -10,6 +10,14 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card views: defaults and polish.** Card view is now the default for
+  station shops (and stays the Inventory's default). Station cards no
+  longer light up their station/element icons for the Display Mat's combos
+  (that stays in the Inventory, where it means something). Tier 1 cards in
+  the Inventory and station grids show their name, with the picture moved
+  up. In a station's card view, tapping Craft on an item that isn't ready
+  selects it, so its full row shows what's missing.
+
 - **Intro spotlight; hidden pin tip skips the list.** While the first
   station's elements fly in, the Inventory button is spotlighted (bright,
   glowing) above the dimmed screen and the rest of the hub dims with it. If
