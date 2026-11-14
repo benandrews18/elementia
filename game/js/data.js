@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14e",
+ "version": "2026.11.14f",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -175,7 +175,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Al",
     "Ni",
     "Cu",
-    "Fe",
+    "S",
     "K"
    ],
    "shop": [
@@ -190,15 +190,15 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔋",
      "Battery",
      "MATERIAL",
-     "Ni + Fe + K",
+     "Ni + K",
      2
     ],
     [
-     "⚙️",
-     "Engine",
-     "COMPONENT",
-     "🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel",
-     10
+     "__RUBBER__",
+     "Rubber",
+     "MATERIAL",
+     "🛢️ Natural Gas + S",
+     5
     ],
     [
      "💡",
@@ -390,7 +390,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Al",
     "Fe",
     "C",
-    "S",
+    "H",
     "Mg",
     "Ti"
    ],
@@ -431,11 +431,11 @@ const DATA = /*__GAME_DATA_START__*/{
      4
     ],
     [
-     "__RUBBER__",
-     "Rubber",
-     "MATERIAL",
-     "🛢️ Natural Gas + S",
-     5
+     "⚙️",
+     "Engine",
+     "COMPONENT",
+     "🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel",
+     10
     ],
     [
      "🔩",
