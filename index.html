@@ -170,16 +170,22 @@ body[data-picking] #topbar{display:none}
 .clock-svg{width:82px; height:82px; display:block}
 .ct-row .clock-svg{width:52px; height:52px}
 .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
-/* Check round: the clock pulses (a gold glow and a slight swell). */
-.clockpill.checkpoint{animation:clockPulse 1.4s ease-in-out infinite}
-@keyframes clockPulse{
-  0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(226,178,90,0), 0 0 0 0 rgba(226,178,90,0)}
-  50%{transform:scale(1.07); box-shadow:0 0 0 4px rgba(226,178,90,.8), 0 0 20px 6px rgba(226,178,90,.6)}
+/* Check round: the clock pulses -- a slight swell, and a gold glow ring
+   (::after) fading in and out. Only transform and opacity animate, so the
+   phone's compositor runs it without repainting every frame (an animated
+   box-shadow repainted the whole clock, which janked the Lock-In count). */
+.clockpill.checkpoint{position:relative; animation:clockSwell 1.4s ease-in-out infinite}
+.clockpill.checkpoint::after{
+  content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+  box-shadow:0 0 0 4px rgba(226,178,90,.8), 0 0 20px 6px rgba(226,178,90,.6);
+  animation:clockGlow 1.4s ease-in-out infinite;
 }
-/* Low motion (setting or OS): the still glow instead. */
-html.low-motion .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+@keyframes clockSwell{0%,100%{transform:scale(1)} 50%{transform:scale(1.07)}}
+@keyframes clockGlow{0%,100%{opacity:0} 50%{opacity:1}}
+/* Low motion (setting or OS): a still glow instead. */
+html.low-motion .clockpill.checkpoint, html.low-motion .clockpill.checkpoint::after{animation:none; opacity:1}
 @media (prefers-reduced-motion:reduce){
-  .clockpill.checkpoint{animation:none; box-shadow:0 0 0 4px rgba(226,178,90,.75), 0 0 18px 4px rgba(226,178,90,.55)}
+  .clockpill.checkpoint, .clockpill.checkpoint::after{animation:none; opacity:1}
 }
 /* Settings cog: top right on every screen, under every tray/overlay. */
 #settingsBtn{
@@ -2453,6 +2459,9 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
    centered title, one Nice button, both sharing this box's own bounceIn
    pop-in with the rest of .sheetbox. */
 .lockin-reward-box{text-align:center}
+/* A tighter shadow than other windows (a 30px blur is costly to draw on a
+   phone, and this one opens straight out of the Lock-In count). */
+.sheetbox.parch.lockin-reward-box{filter:drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 .lockin-reward-box h2{margin-bottom:18px}
 .lockin-reward-box .btnrow{justify-content:center; margin-top:4px}
 /* One die per span in a row; each pops in on its own delay. */
@@ -3230,7 +3239,11 @@ button.setting-row:hover .setbtn{border-color:var(--mute)}
    without it every frame re-rasterises the cards' icon outlines (eight
    drop-shadows each, --icon-outline). And nothing can be tapped until the
    reward modal appears. */
-body.lockin-playing #drawerTop :is(.mm-card, .mm-combo, .qm-total, .qm-seg-fill){will-change:transform}
+body.lockin-layers #drawerTop :is(.mm-card, .mm-combo, .qm-total, .qm-seg-fill){will-change:transform}
+/* Background pulses (map rings, the clock, the hidden-collection "!") hold
+   still while the count plays, so every frame goes to the count itself. */
+body.lockin-layers :is(.map-node, .clockpill)::before, body.lockin-layers :is(.map-node, .clockpill)::after,
+body.lockin-layers :is(.clockpill, .mm-cico.hidden-ic){animation-play-state:paused}
 body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .qm-seg.lit .qm-seg-fill{
   opacity:1; box-shadow:0 0 8px rgba(226,178,90,.7);
@@ -7131,6 +7144,18 @@ const esc = s => String(s).replace(/[&<>"']/g, c =>
 const ATOM_SVG = '<svg class="converticon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g fill="none" stroke="#7fd6ff" stroke-width="2.6"><ellipse cx="32" cy="32" rx="28" ry="10.5"/><ellipse cx="32" cy="32" rx="28" ry="10.5" transform="rotate(60 32 32)"/><ellipse cx="32" cy="32" rx="28" ry="10.5" transform="rotate(120 32 32)"/></g><g stroke="#1b1b24" stroke-width="1"><circle cx="27.5" cy="29" r="5.2" fill="#4d7cf2"/><circle cx="36.5" cy="29" r="5.2" fill="#f0674c"/><circle cx="32" cy="25" r="5.2" fill="#f0674c"/><circle cx="25.5" cy="35" r="5.2" fill="#f0674c"/><circle cx="38.5" cy="35" r="5.2" fill="#4d7cf2"/><circle cx="32" cy="38.5" r="5.2" fill="#4d7cf2"/><circle cx="32" cy="32" r="5.2" fill="#f0674c"/></g><g fill="#fff" opacity=".55"><circle cx="30.4" cy="30.4" r="1.6"/><circle cx="30.4" cy="23.4" r="1.6"/><circle cx="34.9" cy="27.4" r="1.6"/><circle cx="23.9" cy="33.4" r="1.6"/></g></svg>';
 const CUSTOM_ICONS = {...NOTO_ICONS, "__WHEEL__": WHEEL_IMG, "__FURNACE__": FURNACE_IMG, "__OVEN__": OVEN_IMG, "__BANANABREAD__": BANANABREAD_IMG, "__TURBINEBLADE__": TURBINEBLADE_IMG, "__STEEL__": STEEL_IMG, "__FOSSIL__": FOSSIL_IMG, "__CONCRETE__": CONCRETE_IMG, "__FIBERGLASS__": FIBERGLASS_IMG, "__LOGCABIN__": LOGCABIN_IMG, "__ORCA__": ORCA_SVG, "__CORAL__": CORAL_SVG, "__FLOUR__": FLOUR_SVG, "__LIGHTHOUSE__": LIGHTHOUSE_SVG, "__RUBBER__": RUBBER_SVG, "__MICROCHIP__": MICROCHIP_IMG, "__LIFE__": LIFE_IMG, "__ECOSYSTEM__": ECOSYSTEM_IMG, "__DIAMOND__": DIAMOND_IMG, "__BRASSBAR__": BRASS_BAR_SVG, "__MARKETPLACE__": MARKETPLACE_IMG, "__CONVERT__": ATOM_SVG};
 const em = e => CUSTOM_ICONS[e] || esc(e);
+/* Keeps a CSS variable equal to an element's live height via a
+   ResizeObserver: it updates after layout, so nothing has to force one
+   (reading offsetHeight mid-render did, on every render). The map card
+   sits under the topbar (--topbar-h); trays, the drawer and overlay padding
+   clear the hub (--hub-h); screens clear the Quark bar (--qtop-h). */
+function measureLive(id, cssVar){
+  const el = document.getElementById(id);
+  if (!el) return;
+  const set = () => document.documentElement.style.setProperty(cssVar, el.offsetHeight + "px");
+  set(); // once now; the observer keeps it current
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(set).observe(el);
+}
 // Items whose art reads small on the card popup; same set as
 // build_cards_classic.py's ENLARGED_ICONS (see showCardPop()).
 const PDF_ENLARGED_ICONS = new Set(["Ecosystem", "Fruit Cake", "Coral Reef", "Banana Bread", "Concrete", "Fiberglass"]);
@@ -7618,6 +7643,8 @@ function renderTurnClock(){
   pill.title = `Turn ${state.visits} of ${RUN_COMPLETE_VISIT}${note}`;
   pill.setAttribute("aria-label", pill.title);
 }
+measureLive("topbar", "--topbar-h");
+measureLive("hub", "--hub-h");
 function render(resetScroll){
   applyLowMotion();
   document.body.dataset.screen = screen;
@@ -7636,7 +7663,7 @@ function render(resetScroll){
   document.getElementById("drawerScoreCount").textContent = score();
   // The inventory's contents only while it's open; openDrawer() builds them
   // on opening.
-  if (drawer.classList.contains("open")) document.getElementById("drawerBody").innerHTML = renderDrawer();
+  if (drawer.classList.contains("open")) setDrawerBody(renderDrawer());
   renderPinsTray();
   renderTrackedPill();
   renderConvertGoalCard();
@@ -7650,12 +7677,6 @@ function render(resetScroll){
   hideHint();
   if (screen === "map") syncMapPaths();
   if (resetScroll) window.scrollTo({top:0, behavior:"instant"});
-  // Measured live (not a constant) so the fixed map card sits right under the
-  // topbar at any font size or zoom.
-  document.documentElement.style.setProperty("--topbar-h", document.getElementById("topbar").offsetHeight + "px");
-  // The hub's height is measured live too, and everything that must clear it
-  // (job sheet, pins tray, drawer, overlay padding) reads --hub-h.
-  document.documentElement.style.setProperty("--hub-h", document.getElementById("hub").offsetHeight + "px");
   maybeShowWalkthroughTip();
 }
 
@@ -8046,12 +8067,20 @@ let realGameState = null, realScreen = null, realCurrent = null, realSelectedMap
 // "Peeked" (half view) is opt-in via opts.peeked; every other opener lands
 // on the full list. Set here directly, since render() runs in the
 // background and may have left .expanded either way.
+/* Every write to the item list goes through here: when the markup is the
+   same as what's showing (reopening, a re-render that changed nothing), the
+   ~100 cards are left alone instead of being rebuilt and laid out again. */
+let drawerBodyHTML = null;
+function setDrawerBody(html){
+  if (html === drawerBodyHTML) return;
+  document.getElementById("drawerBody").innerHTML = drawerBodyHTML = html;
+}
 const openDrawer = (opts = {}) => {
   setMatCollapsed(false);
   matTrayExpanded = !opts.peeked;
   drawer.classList.toggle("expanded", !opts.peeked);
   // render() skips the inventory while it's closed, so build it now.
-  document.getElementById("drawerBody").innerHTML = renderDrawer();
+  setDrawerBody(renderDrawer());
   drawer.classList.add("open"); scrim.classList.add("open");
   drawer.setAttribute("aria-hidden", "false");
   syncMatFloatBtns();
@@ -10282,14 +10311,17 @@ function matCheckRound(){
 /* Classic, after the first mat check: the Quark Meter rides along the top
    of every screen (just above #topbar's pills, below every tray/overlay),
    reading the current mat. Tapping it opens the Display Mat. */
+// Rewritten only when its markup changes; its height (--qtop-h) comes from
+// a ResizeObserver (measureLive()), so drawing it never forces a layout.
+let quarkTopBarHTML = null;
 function renderQuarkTopBar(){
   const el = document.getElementById("quarkTopBar");
   const show = !!state.matChecked && !state.ended && !comboLabActive;
   document.body.classList.toggle("has-qtop", show);
-  if (!show){ el.innerHTML = ""; return; }
-  el.innerHTML = `<div class="mat-score-card qtop-card">${quarkMeterLineHTML(matScore(matOnMat()))}</div>`;
-  document.documentElement.style.setProperty("--qtop-h", el.offsetHeight + "px");
+  const html = show ? `<div class="mat-score-card qtop-card">${quarkMeterLineHTML(matScore(matOnMat()))}</div>` : "";
+  if (html !== quarkTopBarHTML) el.innerHTML = quarkTopBarHTML = html;
 }
+measureLive("quarkTopBar", "--qtop-h");
 document.getElementById("quarkTopBar").addEventListener("click", () => {
   if (anyOverlayOpen() || startingGiftInProgress) return;
   matDrawerView = "mat";
@@ -10494,7 +10526,7 @@ function syncMatViewBtn(){
   b.setAttribute("aria-pressed", String(on));
 }
 function renderMatResultsGrid(){
-  document.getElementById("drawerBody").innerHTML = matResultsGridHTML();
+  setDrawerBody(matResultsGridHTML());
   syncMatListActions();
 }
 
@@ -11607,6 +11639,7 @@ function setQuarkMeterProgress(total){
    The timing is fixed; bouncePulse() itself handles reduced motion. */
 function playLockInSequence(reward, onDone = finishLockIn){
   document.body.classList.add("lockin-playing"); // cleared when the reward modal opens
+  document.body.classList.add("lockin-layers"); // kept until that modal has popped in (endLockInLayers())
   const mat = matOnMat();
   const s = matLastScore || matScore(mat);
   const beats = lockInScoreBeats(mat, s);
@@ -11687,6 +11720,7 @@ function finishLockIn(reward, opts = {}){
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
+  endLockInLayers();
   const delta = diceDeltaForReward(reward);
   state.matChecked = true;
   state.matBonusDice = delta; // the floor until the next board check
@@ -11735,6 +11769,12 @@ function fadeThroughBlack(midpoint){
     // could leave the screen stuck on black).
     setTimeout(() => c.classList.remove("on"), 40);
   }, FADE_MS);
+}
+// The count's GPU layers (will-change) and paused background pulses stay
+// until the reward window has finished popping in: dropping them at the
+// same moment it opens repainted the whole drawer and hitched the hand-off.
+function endLockInLayers(){
+  setTimeout(() => document.body.classList.remove("lockin-layers"), 900);
 }
 function showLockInRewardModal(n, gotEmptyElement, onDone){
   document.body.classList.remove("lockin-playing");
@@ -11806,7 +11846,7 @@ function confirmFinalLockIn(){
   playLockInSequence(0, () => finishFinalCheck(s.total));
 }
 function finishFinalCheck(total){
-  document.body.classList.remove("lockin-playing");
+  document.body.classList.remove("lockin-playing"); endLockInLayers();
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
   state.grandExhibition = total >= GRAND_EXHIBITION_TARGET;
   state.finalCheckPending = false;
