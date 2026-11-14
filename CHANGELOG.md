@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Tip text revisions (from the Tip Workshop).** Shorter lines with line
+  breaks and icons across the How to Play slides, Pin Items, Display Mat
+  rules (12.5px), the challenge intro and popups ("3 The Ocean cards:
+  ×1.5⚛️"), Unknown Element (13px), the clock, the Bonus Dice window and
+  Professor Mouse's tips (each at its tuned size).
+
 - **Item Shop title.** "ITEM SHOP – TAP TO CRAFT" sits above a station's
   items, in both the card and list views.
 
