@@ -12,7 +12,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const runs = JSON.parse(readFileSync(arg("in", join(HERE, "out", "sim_runs.json")), "utf8"));
 const ORDER = { stationWeek: "Station Week", collector: "Collector", rainbow: "Rainbow", drought: "Drought",
-  shortTable: "Short Table", trendShift: "Trend Shift", freshFaces: "Fresh Faces", grand: "Grand Exhibition" };
+  shortTable: "Short Table", trendShift: "Trend Shift", freshFaces: "Fresh Faces", grand: "Grand Exhibition",
+  fullRecipe: "Full Recipe", suitSet: "Suit Set", commonThread: "Common Thread", closedStation: "Closed Station", thinStock: "Thin Stock",
+  doubleDrought: "Double Drought", spreadOut: "Spread Out" };
 
 // Every board check of every run: {run, v, q, o, items}.
 const all = runs.flatMap((r, i) => (r.sim.mats || []).map(m => ({ ...m, run: i + 1, caps: r.capstones })));

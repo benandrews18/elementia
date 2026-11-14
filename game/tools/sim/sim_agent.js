@@ -290,40 +290,61 @@
     return rnd() < 0.85 || scored.length < 2 ? scored[0][0] : scored[1][0];
   }
 
-  // ---- the Display Mat: best arrangement of owned cards right now (this
-  // check's order and destination included, via matScore()).
+  // ---- the Display Mat: the arrangement of owned cards a player would lock
+  // in now. What counts at a check is the breakpoint cleared (dice, "?"),
+  // so that comes first and Quarks break ties; the final check is pure
+  // Quarks. A restriction gets a second search among mats that keep it --
+  // breaking it at x0.75 can score more yet clear a lower breakpoint.
   function bestMat(budget = 500){
     const owned = state.items.filter(n => MAT_CARD_BY_NAME[n]);
-    const val = names => {
+    const o = currentOrder();
+    const restr = o && o.id !== "grand" && CHECK_ORDERS[o.id] && CHECK_ORDERS[o.id].kind === "restriction";
+    const keeps = names => !restr || CHECK_ORDERS[o.id].ok(names.map(n => MAT_CARD_BY_NAME[n]), o.p);
+    const val = (names, mustKeep) => {
       const cards = names.map(n => MAT_CARD_BY_NAME[n]);
-      return matFits(cards) ? matScore(cards).total : -1;
+      if (!matFits(cards) || (mustKeep && !keeps(names))) return -1;
+      const total = matScore(cards).total;
+      return state.finalCheckPending ? total : emptyElementsForScore(total, matCheckRound()) * 1e7 + total;
     };
-    const seeds = [state.mat.filter(owns),
-      ...layouts.map(l => l.items.filter(owns)),
-      [...owned].sort((a, b) => ITEM_POINTS[b] - ITEM_POINTS[a])];
-    let best = [], bestV = val([]);
-    seeds.forEach(s => {
-      const cur = [];
-      s.forEach(n => { if (!cur.includes(n) && matFits([...cur, n].map(x => MAT_CARD_BY_NAME[x]))) cur.push(n); });
-      const v = val(cur);
-      if (v > bestV){ best = cur; bestV = v; }
-    });
+    const fill = s => { const cur = []; s.forEach(n => { if (!cur.includes(n) && matFits([...cur, n].map(x => MAT_CARD_BY_NAME[x]))) cur.push(n); }); return cur; };
+    const seeds = [state.mat.filter(owns), ...layouts.map(l => l.items.filter(owns)),
+      [...owned].sort((a, b) => ITEM_POINTS[b] - ITEM_POINTS[a])].map(fill);
     // First-improvement local search: add, drop or swap one card.
-    let evals = 0, improved = true;
-    while (improved && evals < budget){
-      improved = false;
-      const moves = [];
-      owned.filter(n => !best.includes(n)).forEach(n => {
-        moves.push([...best, n]);
-        best.forEach((m, i) => moves.push(best.map((x, j) => j === i ? n : x)));
-      });
-      best.forEach((m, i) => moves.push(best.filter((x, j) => j !== i)));
-      for (let i = moves.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; }
-      for (const m of moves){
-        if (++evals > budget) break;
-        const v = val(m);
-        if (v > bestV){ best = m; bestV = v; improved = true; break; }
+    function climb(starts, mustKeep, evalBudget){
+      let best = [], bestV = val([], mustKeep);
+      starts.forEach(c => { const v = val(c, mustKeep); if (v > bestV){ best = c; bestV = v; } });
+      let evals = 0, improved = true;
+      while (improved && evals < evalBudget){
+        improved = false;
+        const moves = [];
+        owned.filter(n => !best.includes(n)).forEach(n => {
+          moves.push([...best, n]);
+          best.forEach((m, i) => moves.push(best.map((x, j) => j === i ? n : x)));
+        });
+        best.forEach((m, i) => moves.push(best.filter((x, j) => j !== i)));
+        for (let i = moves.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [moves[i], moves[j]] = [moves[j], moves[i]]; }
+        for (const m of moves){
+          if (++evals > evalBudget) break;
+          const v = val(m, mustKeep);
+          if (v > bestV){ best = m; bestV = v; improved = true; break; }
+        }
       }
+      return [best, bestV];
+    }
+    let [best, bestV] = climb(seeds, false, budget);
+    if (restr && !keeps(best)){
+      // Make each seed keep the rule by dropping cards (the drop that
+      // scores best each time), then search only rule-keeping mats.
+      const comply = start => {
+        let cur = [...start];
+        while (cur.length && !keeps(cur)){
+          const opts = cur.map((x, i) => cur.filter((y, j) => j !== i));
+          cur = opts.find(keeps) || opts.sort((a, b) => val(b) - val(a))[0];
+        }
+        return cur;
+      };
+      const [kept, keptV] = climb([best, ...seeds].map(comply), true, budget);
+      if (keptV >= bestV){ best = kept; bestV = keptV; }
     }
     state.mat = best;
     return bestV;
