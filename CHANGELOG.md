@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Map badge notes.** Tapping a station's tracked-item badge pops up
+  "You're tracking [icon] X"; tapping a magnifier pops up "Items for
+  [icon] X found here!". Pop-up notes now stay inside the screen edges.
+
 - **Preview card tracked pill.** The magnifier moved out of the station
   preview card's tracked-item pill to a circle (the magnifier button's art)
   overlapping its left end, like the bottom-left button and pill.

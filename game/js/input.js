@@ -48,6 +48,14 @@ function handleScreenClick(ev){
     return;
   }
 
+  // A map node's corner badge: a quick note on what it means.
+  const mapBadge = ev.target.closest("[data-map-badge]");
+  if (mapBadge){
+    const t = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
+    if (t) floatNote(mapBadge, mapBadge.dataset.mapBadge === "tracked"
+      ? `You're tracking ${em(t.emoji)} ${esc(t.name)}` : `Items for ${em(t.emoji)} ${esc(t.name)} found here!`, "info-note");
+    return;
+  }
   const nodeBtn = ev.target.closest("[data-map-node]");
   if (nodeBtn){
     if (startingGiftInProgress) return; // the preview card is mid-gift

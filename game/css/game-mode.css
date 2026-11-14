@@ -175,7 +175,7 @@
    gold, a small magnifier (the #pinsBtn sprite) on the top-right of
    stations selling one of its components. */
 .map-node-tracked-badge, .map-node-comp-badge{
-  position:absolute; transform:translate(-50%, -50%); margin-top:-6.6%; z-index:4; pointer-events:none;
+  position:absolute; transform:translate(-50%, -50%); margin-top:-6.6%; z-index:4; cursor:pointer;
   border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,.35);
 }
 .map-node-tracked-badge{

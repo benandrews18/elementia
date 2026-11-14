@@ -149,14 +149,20 @@ function bounceCantCraft(anchor, entry, ev){
   const badge = anchor.closest("[data-item-card]")?.querySelector(".isuit-costs") || anchor.closest(".isuit-costs") || anchor;
   if (badge){ if (ev) ev.stopPropagation(); openSuitSpendBalloon(entry, badge); }
 }
-function bounceMissingItems(cBtn, text = "Missing Items!"){
-  const rect = cBtn.getBoundingClientRect();
+function bounceMissingItems(cBtn, text = "Missing Items!"){ floatNote(cBtn, esc(text)); }
+// A short note that pops up out of anchor, holds, and drops back. html is
+// trusted markup (icons); cls adds a colour variant.
+function floatNote(anchor, html, cls = ""){
+  const rect = anchor.getBoundingClientRect();
   const note = document.createElement("div");
-  note.className = "missing-items-note";
-  note.textContent = text;
+  note.className = "missing-items-note " + cls;
+  note.innerHTML = html;
   note.style.left = (rect.left + rect.width / 2) + "px";
   note.style.top = rect.top + "px";
   document.body.appendChild(note);
+  // Keep it on screen (centred on the anchor, but not past either edge).
+  const half = note.offsetWidth / 2;
+  note.style.left = Math.min(Math.max(rect.left + rect.width / 2, half + 8), innerWidth - half - 8) + "px";
   // Per-keyframe easing: a top-level easing's overshoot pushed progress past 1
   // during the hold and jumped to the end early. Per-segment easing keeps the
   // hold static.

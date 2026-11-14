@@ -125,9 +125,9 @@ function renderMap(){
     const capstoneBadge = state.lastStation === null && !classicIntroHideCapstones
       ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
-      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Tracking ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
+      ? `<span class="map-node-tracked-badge" data-map-badge="tracked" role="button" style="left:${x}%;top:${topStyle}" title="Tracking ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     const compBadge = compStations.has(name) && !capstoneBadge
-      ? `<span class="map-node-comp-badge" style="left:${x}%;top:${topStyle}" title="Sells a component of ${esc(selectedJobItem)}"></span>` : "";
+      ? `<span class="map-node-comp-badge" data-map-badge="comp" role="button" style="left:${x}%;top:${topStyle}" title="Sells a component of ${esc(selectedJobItem)}"></span>` : "";
     return `${trackedBadge}${compBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}

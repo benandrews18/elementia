@@ -343,6 +343,9 @@
   padding:6px 11px; border-radius:8px;
   box-shadow:0 3px 10px rgba(0,0,0,.35);
 }
+/* floatNote()'s informational variant (map badges): green, inline icons. */
+.missing-items-note.info-note{background:#1f6b3f; font-size:13px; display:flex; align-items:center; gap:4px}
+.missing-items-note.info-note :is(img, svg){width:18px; height:18px}
 .craftbtn{
   flex:none; align-self:center; width:60px; margin:0 10px 0 2px;
   display:flex; align-items:center; justify-content:center; text-align:center;
