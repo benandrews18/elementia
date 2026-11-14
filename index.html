@@ -4763,7 +4763,7 @@ const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http:/
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14e",
+ "version": "2026.11.14f",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -4924,7 +4924,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Al",
     "Ni",
     "Cu",
-    "Fe",
+    "S",
     "K"
    ],
    "shop": [
@@ -4939,15 +4939,15 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔋",
      "Battery",
      "MATERIAL",
-     "Ni + Fe + K",
+     "Ni + K",
      2
     ],
     [
-     "⚙️",
-     "Engine",
-     "COMPONENT",
-     "🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel",
-     10
+     "__RUBBER__",
+     "Rubber",
+     "MATERIAL",
+     "🛢️ Natural Gas + S",
+     5
     ],
     [
      "💡",
@@ -5139,7 +5139,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Al",
     "Fe",
     "C",
-    "S",
+    "H",
     "Mg",
     "Ti"
    ],
@@ -5180,11 +5180,11 @@ const DATA = /*__GAME_DATA_START__*/{
      4
     ],
     [
-     "__RUBBER__",
-     "Rubber",
-     "MATERIAL",
-     "🛢️ Natural Gas + S",
-     5
+     "⚙️",
+     "Engine",
+     "COMPONENT",
+     "🛠️ Tools + 🛢️ Natural Gas + __STEEL__ Steel",
+     10
     ],
     [
      "🔩",
@@ -6260,7 +6260,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"cabin-life",              name:"Cabin Life",              items:["Log Cabin","Tree","Deer","Fossil"] },
   { id:"concrete-jungle",         name:"Concrete Jungle",         items:["Concrete","Building","Skyscraper","Museum"] },
   { id:"confectionery",           name:"Confectionery",           items:["Sugar","Banana","Apple","Banana Bread"] },
-  { id:"deep-freight",            name:"Deep Freight",            items:["Natural Gas","Steel","Rubber","Maglev Train"] },
+  { id:"deep-freight",            name:"Deep Freight",            items:["Natural Gas","Steel","Engine","Maglev Train"] },
   { id:"fauna",                   name:"Fauna",                   items:["Deer","Chicken","Salmon","Orca"] },
   { id:"heavy-metal",             name:"Heavy Metal",             items:["Engine","Turbine Blade","Satellite Dish","Bridge"] },
   { id:"im-looking-through-you",  name:"I'm Looking Through You", items:["Glass","Light Bulb","Compass","Telescope"] },
@@ -6280,7 +6280,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"observatory-complete",    name:"Observatory Complete",    items:["Microchip","Magnet","Compass","Satellite Dish","Telescope","Star","Rocket"] },
   { id:"ocean-complete",          name:"Ocean Complete",          items:["Water","Limestone","Sand","Seaweed","Banana","Cloud","Orca"] },
   { id:"old-growth-complete",     name:"Old Growth Complete",     items:["Sand","Bone","Soil","Salmon","Tree","Canoe","Deer"] },
-  { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Engine","Light Bulb","Computer","Turbine Blade"] },
+  { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Rubber","Light Bulb","Computer","Turbine Blade"] },
   { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Natural Gas","Farm","Chicken","Apple","Grain"] },
   { id:"world-tour",              name:"World Tour",              items:["Cloud","Tree","Diamond","Grain","Light Bulb","Dough","Building","Telescope"] },
   // Discoverable sub-groups (2026-11-03): tight 3-4 item clusters found
