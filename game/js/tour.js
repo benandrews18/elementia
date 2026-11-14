@@ -92,7 +92,7 @@ function renderTutElementsGrid(){
 // A function so the step list is built fresh each time.
 function tutCoachSteps(){
   return [
-    { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "Home rolls dice and confirms travel." },
+    { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: `<span style="font-size:15px">The home button keeps the game going!<br>Collect elements,<br>and travel the map.</span>` },
     { sel: "#hubJobs", pose: 2, anchor: "bottom-left",
       text: "To-Do List: the items you're tracking." },
     { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },

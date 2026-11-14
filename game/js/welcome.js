@@ -86,7 +86,7 @@ function classicTutSlides(){
       <span class="ct-cap-st">${em(st.emoji)}</span><span class="ct-cap-em">${em(st.capstone[0])}</span></div>`).join("");
   const s1 = `<div class="ct-kicker">The goal</div>
     <div class="ct-cap-grid">${caps}</div>
-    <p class="ct-line">Discover and craft the 8 <b>Capstones</b> -- one at each station</p>`;
+    <p class="ct-line"><span class="ct-st-row">${DATA.stations.map(st => em(st.emoji)).join("")}</span><br>Discover and craft the 8 <b>Capstones</b></p>`;
 
   // 2 -- gather, spend, keep
   const st = STATION_BY_NAME["The Ocean"] || DATA.stations[0];
@@ -101,7 +101,7 @@ function classicTutSlides(){
       <span class="ct-arrow">➜</span>
       <div class="ct-col"><span class="ct-item">${em(ex.emoji)}</span><span class="ct-tag">♾️ kept</span></div>
     </div>
-    <p class="ct-line">Spend elements like currency -- <b>items are yours forever</b></p>`;
+    <p class="ct-line">Spend elements like currency.<br><b>Item cards are yours forever!</b></p>`;
 
   // 3 -- Display Mat, Quarks, dice, and the combos
   const matIcons = [st.capstone[1], ...CORE_ITEM_NAMES].filter((n, i, a) => ITEM_EMOJI[n] && a.indexOf(n) === i);
@@ -127,9 +127,9 @@ function classicTutSlides(){
       <span class="ct-arrow">➜</span><span class="ct-quark">⚛️</span>
       <span class="ct-arrow">➜</span><span class="ct-dice">🎲🎲🎲</span>
     </div>
-    <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
+    <p class="ct-line">Arrange a <b>Display Mat</b> to earn <b>Quark Points</b></p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(BREAKPOINT_GATE_VISIT)}</span><span class="ct-sub" style="margin:0">Checked every 3rd turn -- its dice last 3 turns. From turn ${BREAKPOINT_GATE_VISIT}, a miss ends the run</span></div>`;
+    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(BREAKPOINT_GATE_VISIT)}</span><span class="ct-sub" style="margin:0"><b>${RUN_COMPLETE_VISIT} Turns</b> in a game!</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){

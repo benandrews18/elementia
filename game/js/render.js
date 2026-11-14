@@ -46,9 +46,9 @@ function openClockInfo(){
   document.getElementById("clockInfoBody").innerHTML = `
     <div class="ci-clock">${turnClockSVG(v)}</div>
     <h2 id="clockInfoTitle">Round ${v} / ${RUN_COMPLETE_VISIT}${ot ? " (Overtime)" : ""}</h2>
-    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game. A new round starts whenever you 🥾 move to a new location.</p>
+    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game<br>🥾 Moving to a station<br>starts a round!</p>
     <div class="ci-stations">${Object.keys(MAP_NODE_POS).map(n => `<span class="ci-st" style="--st:${DATA.suits[STATION_BY_NAME[n].suit].color}" title="${esc(n)}">${em(STATION_BY_NAME[n].emoji)}</span>`).join("")}</div>
-    <p>Every <b>${MAT_CHECK_EVERY} rounds</b> your <img class="ci-inline-ic" src="ui/icon_inventory.webp" alt=""> <b>Display Mat</b> is checked. Its ⚛️ <b>Quark Score</b> sets your 🎲 <b>bonus dice</b> at the next station!</p>
+    <p><b>Display Mat challenge</b> every ${MAT_CHECK_EVERY} rounds<br>⚛️ <b>Quark Score</b> rewards you<br>🎲 <b>bonus dice!</b></p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="clockInfoOk">Got it</button></div>`;
   openOverlay("clockInfo");
 }

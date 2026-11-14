@@ -464,3 +464,9 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 @keyframes urPop{0%{opacity:0; transform:scale(.4) rotate(-6deg)} 60%{opacity:1; transform:scale(1.12) rotate(2deg)} 100%{opacity:1; transform:none}}
 .ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px}
 html.low-motion .ur-card{animation:none; opacity:1}
+/* Tuned in the Tip Workshop: Display Mat rules 12.5px, Unknown Element 13px. */
+#matRulesOverlay :is(.mct-line, p){font-size:12.5px}
+#emptyElTip p{font-size:13px}
+/* How to Play slide 1: the 8 stations in a row above the goal. */
+.ct-st-row{display:inline-flex; gap:4px; font-size:22px; margin-bottom:4px}
+.ct-st-row :is(img, svg){width:24px; height:24px}

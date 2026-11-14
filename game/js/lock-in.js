@@ -129,26 +129,26 @@ const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
 const CHECK_ORDERS = {
   stationWeek: { kind: "request", name: "Station Week",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `Show 3+ ${p} cards`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `3 ${p} cards`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
     ok: (mat, p) => matStationCount(mat, p) >= 3 },
   rainbow: { kind: "request", name: "Rainbow",
-    icon: () => "🌈", desc: () => "Show all 4 element colours", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
+    icon: () => "🌈", desc: () => "All 4 element colours", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
     params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
     ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
   collector: { kind: "request", name: "Collector",
-    icon: () => "★", text: () => "★ ✓", desc: () => "Complete a named collection",
+    icon: () => "★", text: () => "★ ✓", desc: () => "1 Named collection",
     params: owned => matCompletedIn(owned).length ? [null] : [],
     ok: mat => matCompletedIn(mat).length > 0 },
   freshFaces: { kind: "restriction", name: "Fresh Faces",
-    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Max half your cards from the last check",
+    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Half your cards or fewer from the last check",
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   drought: { kind: "restriction", name: "Drought",
     icon: p => SUIT_ICON[p], desc: p => `No ${ELEMENT_SUIT_LABEL[p]} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
-    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "Leave at least one slot empty",
+    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
     params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
   trendShift: { kind: "restriction", name: "Trend Shift",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} combo`,
@@ -247,14 +247,14 @@ function openOrderInfo(){
   let title, html;
   if (o.id === "grand"){
     title = "Grand Exhibition!";
-    html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks at the final check</p>
+    html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} ⚛️ at the final check</p>
       <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
       <div class="btnrow ord-btns">${okBtn}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     title = `${o.id === "stationWeek" ? o.p : d.name} ${req ? "Request" : "Restriction"}!`;
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
-    html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}${req ? `: ⚛️ ×${ORDER_REQUEST_MULT}` : `, or ⚛️ ×${ORDER_RESTRICT_MULT}`}</p>
+    html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}: ×${req ? ORDER_REQUEST_MULT : ORDER_RESTRICT_MULT}⚛️${req ? "" : " if broken"}</p>
       <div class="ord-rule">${d.text(o.p)}</div>
       <div class="btnrow ord-btns"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button>${okBtn}</div>`;
   }
@@ -560,9 +560,9 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   const why = document.getElementById("lockInRewardWhy");
   why.hidden = true;
   document.getElementById("lockInRewardWhyBtn").setAttribute("aria-expanded", "false");
-  why.textContent = n === 0
-    ? `Your Display Mat scored ${quarks} Quarks -- below the first breakpoint, so no bonus dice. Raise its Quark score before the next board check.`
-    : `Your Display Mat scored ${quarks} Quarks, so you roll at least +${n} ${n === 1 ? "die" : "dice"} at every station until the next board check. Raise your Quark score between checks to roll even more.`;
+  why.innerHTML = n === 0
+    ? `⚛️ ${quarks}: below the first breakpoint<br>No bonus dice this time`
+    : `⚛️ ${quarks} → 🎲 +${n} at every station<br>until the next board check`;
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
@@ -570,7 +570,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   extra.innerHTML = gotEmptyElement ? `
     <div class="lre-line"><span>+1 Unknown Element</span>
       <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
-    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
+    <p class="lre-hint" id="lockInRewardHint" hidden>Becomes any element at your station<br>Use it from the Convert menu</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -686,11 +686,8 @@ function maybeShowOrderTip(){
 }
 function openOrderTip(){
   document.getElementById("orderTipBody").innerHTML = `
-    <p class="mct-line">⏰ Every board check starts a new <b>challenge</b>. It counts for that check and every trip until the next one.</p>
-    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST + MAT_CHECK_EVERY - 1}: <b>Requests</b>. Do it and your Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
-    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - 1}: <b>Restrictions</b>. Break it and your Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
-    <p class="mct-line">🏛️ Round ${RUN_COMPLETE_VISIT}: the <b>Grand Exhibition</b>. Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks.</p>
-    <p class="mct-line">👆 Tap the challenge for details, or swap it for 1 "?".</p>`;
+    <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b></p>
+    <p class="mct-line">✅ <b>Requests</b>: ×${ORDER_REQUEST_MULT} ⚛️<br>⛔ <b>Restrictions</b>: ×${ORDER_RESTRICT_MULT} ⚛️</p>`;
   openOverlay("orderTip");
 }
 document.getElementById("orderTip").addEventListener("click", ev => {
@@ -699,11 +696,9 @@ document.getElementById("orderTip").addEventListener("click", ev => {
   closeOverlay("orderTip");
 });
 document.getElementById("matCheckTutorial").innerHTML = `
-  <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
-  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
-  <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
-  <p class="mct-line">📜 Each check starts a <b>challenge</b> for the next 3 rounds -- tap its chip by your combos to see it.</p>
-  <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
+  <p class="mct-line">🕒 Display Mat <b>challenge</b> every 3 turns</p>
+  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b></p>
+  <p class="mct-line mct-warn">⚠️ A score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
 document.getElementById("lockInBannerSub").innerHTML =

@@ -172,24 +172,24 @@ function maybeShowWalkthroughTip(){
   if (screen !== "station" || !current) return;
   if (!state.rolledHere){
     if (state.pendingRoll != null)
-      tryWalkthroughTip("firstroll", 3, "Tap <b>Roll</b> to roll this station's dice!", "bottom-left", "#hubHome");
+      tryWalkthroughTip("firstroll", 3, `<span style="font-size:14.5px">Tap <b>Roll</b> to get elements!</span>`, "bottom-left", "#hubHome");
     return;
   }
   const craftable = document.querySelector("#screen .craftbtn.go");
   if (craftable){
-    tryWalkthroughTip("firstcraft", 7, "You have what you need. Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
+    tryWalkthroughTip("firstcraft", 7, "Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
     return;
   }
   if (totalConvertibleCount() > 0 && tryWalkthroughTip("firstconvert", 5,
-      "Convert Elements! Trade 3 of one element for 1 of another.", "center", "#quickConvertBtn")){
+      "Convert Elements! <b>3:1</b>", "center", "#quickConvertBtn")){
     queueTutorialHintOnce("converttapmissing", 7,
-      "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
+      `<span style="font-size:12.5px">Tap to craft missing elements</span>`, "bottom-left", ".tok.el.need");
     return;
   }
-  if (tryWalkthroughTip("gomap", 12, "All done here? Tap the <b>Map</b> button to head back.", "bottom-left", "#hubHome")) return;
+  if (tryWalkthroughTip("gomap", 12, `<span style="font-size:15.5px">Onto the next station!<br>Tap the <b>Map</b>.</span>`, "bottom-left", "#hubHome")) return;
   // After the basics: the tracked item's badge on shop cards (itemHTML()).
   if (document.querySelector("#screen .item-pin-badge"))
-    tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
+    tryWalkthroughTip("pintrackshop", 7, "Your tracked item needs this one!", "bottom-right", "#screen .item-pin-badge");
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
   if (ev.target.closest("#mouseTipHide")){

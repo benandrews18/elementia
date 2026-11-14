@@ -58,6 +58,6 @@ function goMap(){
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at the hub's Market button.
   if (state.visits >= 1 && !state.marketVisited){
-    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubMarket");
+    tryWalkthroughTip("checkmarket", 1, `<span style="font-size:16px">Check out the Market!</span>`, "bottom-right", "#hubMarket");
   }
 }

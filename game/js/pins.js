@@ -96,7 +96,7 @@ function openPinsTray(){
     // No spotlight -- the chips fill the tray, and cutting out one would draw
     // attention away from the others.
     showTutorialHintOnce("pinselect", 10,
-      "Tap a pin to start tracking!",
+      `<span style="font-size:17.5px">Tap to start tracking!</span>`,
       "bottom-left");
   }
 }
