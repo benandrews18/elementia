@@ -117,51 +117,81 @@ function quietCheck(){
 /* Check orders ("challenges"): each board check STARTS one, revealed on its
    shutter (startCheckOrder()), and it lasts MAT_CHECK_EVERY rounds: that
    check plus the quiet checks until the next one (state.order = {id, p,
-   round}, round = the check that started it). Requests (from checks up to
-   ORDER_LAST_REQUEST) multiply the Quarks by ORDER_REQUEST_MULT when met;
-   restrictions (later) by ORDER_RESTRICT_MULT when broken. Round
+   round}, round = the check that started it). Requests (checks up to
+   ORDER_LAST_REQUEST) multiply the Quarks by ORDER_REQUEST_MULT when met --
+   each teaches one way the mat scores; restrictions (later) by
+   ORDER_RESTRICT_MULT when broken: "easy" ones until ORDER_HARD_FROM,
+   "hard" ones from then. Round
    RUN_COMPLETE_VISIT's final check is the Grand Exhibition: a high target
    (GRAND_EXHIBITION_TARGET), nothing else. Only orders the player's owned
    cards can satisfy are drawn, and none repeats. */
-const ORDER_REQUEST_MULT = 1.5, ORDER_RESTRICT_MULT = 0.75, ORDER_LAST_REQUEST = 12;
+const ORDER_REQUEST_MULT = 1.5, ORDER_RESTRICT_MULT = 0.75, ORDER_LAST_REQUEST = 9, ORDER_HARD_FROM = 18;
 const GRAND_EXHIBITION_TARGET = 4000;
 const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
+const suitCards = (mat, su) => mat.filter(c => c.pips.includes(su)).length;
+const suitWord = su => ELEMENT_SUIT_LABEL[su][0] + ELEMENT_SUIT_LABEL[su].slice(1).toLowerCase();
 const CHECK_ORDERS = {
   stationWeek: { kind: "request", name: "Station Week",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `3 ${p} cards`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
     ok: (mat, p) => matStationCount(mat, p) >= 3 },
-  rainbow: { kind: "request", name: "Rainbow",
-    icon: () => "🌈", desc: () => "All 4 element colours", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
-    params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
-    ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
   collector: { kind: "request", name: "Collector",
     icon: () => "★", text: () => "★ ✓", desc: () => "1 Named collection",
     params: owned => matCompletedIn(owned).length ? [null] : [],
     ok: mat => matCompletedIn(mat).length > 0 },
-  freshFaces: { kind: "restriction", name: "Fresh Faces",
+  // A card whose whole recipe is on the mat too (the x2 rule).
+  fullRecipe: { kind: "request", name: "Full Recipe",
+    icon: () => "🧩", text: () => "🧩 ×2", desc: () => "A card with its whole recipe",
+    params: owned => owned.some(c => matIsComplete(c, owned)) ? [null] : [],
+    ok: mat => mat.some(c => matIsComplete(c, mat)) },
+  suitSet: { kind: "request", name: "Suit Set",
+    icon: p => SUIT_ICON[p], text: p => `3+ <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`, desc: p => `3 ${suitWord(p)} cards`,
+    params: owned => ORDER_SUITS.filter(su => suitCards(owned, su) >= 3), ok: (mat, p) => suitCards(mat, p) >= 3 },
+  // Three cards sharing a component (a component combo).
+  commonThread: { kind: "request", name: "Common Thread",
+    icon: () => "🧵", text: () => "🧵 3+", desc: () => "3 cards sharing a component",
+    params: owned => Object.values(matGroupsOf(owned).cp).some(n => n >= 3) ? [null] : [],
+    ok: mat => Object.values(matGroupsOf(mat).cp).some(n => n >= 3) },
+  // ---- restrictions, easy (rounds 12-17)
+  drought: { kind: "restriction", level: "easy", name: "Drought",
+    icon: p => SUIT_ICON[p], desc: p => `No ${suitWord(p)} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
+    params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
+  closedStation: { kind: "restriction", level: "easy", name: "Closed Station",
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} cards`,
+    params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 1), ok: (mat, p) => matStationCount(mat, p) === 0 },
+  thinStock: { kind: "restriction", level: "easy", name: "Thin Stock",
+    icon: () => "📦", text: () => "Ⅰ ≤ 2", desc: () => "At most 2 tier 1 cards",
+    params: () => [null], ok: mat => mat.filter(matIsTier1).length <= 2 },
+  // ---- restrictions, hard (rounds 18-23)
+  shortTable: { kind: "restriction", level: "hard", name: "Short Table",
+    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
+    params: () => [null], ok: mat => matHasEmptySlot(mat) },
+  freshFaces: { kind: "restriction", level: "hard", name: "Fresh Faces",
     icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Half your cards or fewer from the last check",
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
-  drought: { kind: "restriction", name: "Drought",
-    icon: p => SUIT_ICON[p], desc: p => `No ${ELEMENT_SUIT_LABEL[p][0]}${ELEMENT_SUIT_LABEL[p].slice(1).toLowerCase()} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
-    params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
-  shortTable: { kind: "restriction", name: "Short Table",
-    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
-    params: () => [null], ok: mat => matHasEmptySlot(mat) },
-  trendShift: { kind: "restriction", name: "Trend Shift",
+  trendShift: { kind: "restriction", level: "hard", name: "Trend Shift",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} combo`,
     params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },
+  doubleDrought: { kind: "restriction", level: "hard", name: "Double Drought",
+    icon: p => p.split("|").map(su => SUIT_ICON[su]).join(""), desc: p => `No ${p.split("|").map(suitWord).join(" or ")} cards`,
+    text: p => "🚫 " + p.split("|").map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
+    params: () => ORDER_SUITS.flatMap((a, i) => ORDER_SUITS.slice(i + 1).map(b => a + "|" + b)),
+    ok: (mat, p) => !mat.some(c => p.split("|").some(su => c.pips.includes(su))) },
+  spreadOut: { kind: "restriction", level: "hard", name: "Spread Out",
+    icon: () => "↔️", text: () => "🚫 3+ 🏠", desc: () => "No 3 cards from one station",
+    params: () => [null], ok: mat => Object.values(matGroupsOf(mat).st).every(n => n < 3) },
 };
 function drawOrder(round, avoid){
   if (round > RUN_COMPLETE_VISIT) return null;
   if (round === RUN_COMPLETE_VISIT) return { id: "grand", p: null, round };
   const kind = round <= ORDER_LAST_REQUEST ? "request" : "restriction";
+  const level = kind === "request" ? undefined : round >= ORDER_HARD_FROM ? "hard" : "easy";
   const owned = state.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
   // Never avoid itself; and no exact repeat of any order this run
   // (state.usedOrders) while a fresh one is possible.
-  const all = Object.keys(CHECK_ORDERS).filter(id => CHECK_ORDERS[id].kind === kind)
+  const all = Object.keys(CHECK_ORDERS).filter(id => CHECK_ORDERS[id].kind === kind && CHECK_ORDERS[id].level === level)
     .flatMap(id => CHECK_ORDERS[id].params(owned).map(p => ({ id, p, round })))
     .filter(o => !avoid || orderKey(o) !== orderKey(avoid));
   const used = new Set(state.usedOrders || []);

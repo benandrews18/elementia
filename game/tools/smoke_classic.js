@@ -292,13 +292,14 @@
       state.visits = 9;
       expect(orderMultFor(matOnMat()) === 1, "a challenge should end at the next check's shutter");
       expect(drawOrder(24).id === "grand" && drawOrder(27) === null, "round 24 should be the Grand Exhibition, Overtime has no orders");
-      // No exact repeat: four request checks in a row are all different.
+      // No exact repeat, and the schedule: requests at 3-9, easy restrictions
+      // at 12-15, hard ones from 18.
       { const its = state.items, uo = state.usedOrders; state.items = [...CORE_ITEM_NAMES]; state.usedOrders = [];
-        let prev = null; const keys = [3, 6, 9, 12].map(r => { setOrder(drawOrder(r, prev)); prev = state.order; return orderKey(state.order); });
-        expect(new Set(keys).size === 4, "check orders should not repeat: " + keys.join(", "));
+        let prev = null; const os = [3, 6, 9, 12, 15, 18, 21].map(r => { setOrder(drawOrder(r, prev)); prev = state.order; return state.order; });
+        expect(new Set(os.map(orderKey)).size === os.length, "check orders should not repeat: " + os.map(orderKey).join(", "));
+        const kinds = os.map(o => CHECK_ORDERS[o.id].level || CHECK_ORDERS[o.id].kind).join(",");
+        expect(kinds === "request,request,request,easy,easy,hard,hard", "challenge schedule should be requests, easy, hard: " + kinds);
         state.items = its; state.usedOrders = uo; }
-      const r15 = drawOrder(15);
-      expect(!r15 || CHECK_ORDERS[r15.id].kind === "restriction", "orders after round 12 should be restrictions");
       state.matChecked = mc; state.matBonusDice = fb; state.tripDice = td; state.order = o; state.mat = m;
       // A tip window hidden with its ✕ is skipped straight to what follows it.
       { const h = prefs.hiddenTips; let ran = 0; prefs.hiddenTips = ["classicTut"];
