@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Fix: map magnifiers missed deeper components.** The map's component
+  magnifier only looked at the tracked item's own recipe, so e.g. tracking
+  Maglev Train left Old Growth Forest (Tree, inside Bridge) unmarked. It
+  now uses everything the tracked item still needs at any depth -- the same
+  list as the shop's tracked badges.
+
 - **Hub order.** Market and Items swapped places: the hub now reads To-Do
   List, Inventory, Home, Market, Items.
 
