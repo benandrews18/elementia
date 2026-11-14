@@ -11469,7 +11469,7 @@ const CHECK_ORDERS = {
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   drought: { kind: "restriction", name: "Drought",
-    icon: p => SUIT_ICON[p], desc: p => `No ${ELEMENT_SUIT_LABEL[p]} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
+    icon: p => SUIT_ICON[p], desc: p => `No ${ELEMENT_SUIT_LABEL[p][0]}${ELEMENT_SUIT_LABEL[p].slice(1).toLowerCase()} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
     icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
