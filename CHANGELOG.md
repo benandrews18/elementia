@@ -10,6 +10,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **"End" button.** The centre hub button's final-score face (🏁) now reads
+  "End" instead of "Final Score".
+
 - **Challenges start at a board check.** Each board check's shutter now
   reveals a new challenge that counts for that check and every trip until
   the next check (rounds 3-5, 6-8, ...), so the mat matters between checks
