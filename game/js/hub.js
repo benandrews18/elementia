@@ -228,6 +228,7 @@ function updateHub(){
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
   home.classList.toggle("active", screen === "map" && !anyOpen && !introInvLit);
+  document.body.classList.toggle("intro-inv-lit", introInvLit);
 
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   // Lit for the full inventory only; the half-height Lock-In view doesn't

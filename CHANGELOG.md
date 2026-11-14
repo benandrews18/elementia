@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Intro spotlight; hidden pin tip skips the list.** While the first
+  station's elements fly in, the Inventory button is spotlighted (bright,
+  glowing) above the dimmed screen and the rest of the hub dims with it. If
+  the Pin Items tip is hidden, the To-Do List no longer opens: the run goes
+  straight to the station.
+
 - **Compact results window.** The end screen's scores sit in one row of
   small titles over numbers (no boxed cards); then titled sections, each
   an icon + title with the result underneath: Capstones Completed, Biggest

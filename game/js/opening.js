@@ -102,19 +102,18 @@ function confirmCapstoneChoice(name){
   const beat2At = chips.length ? (chips.length - 1) * STAGGER_MS + FLY_MS + 150 : 0;
 
   // Beat 2 -- the To-Do List opens with the capstone on it (breakdown
-  // expanded), and a tip about pinning pops up over it.
+  // expanded), and a tip about pinning pops up over it. With that tip
+  // hidden (its ✕), straight to the station instead (finishPinTip()).
   setTimeout(() => {
     dice.forEach(d => { state.elements[d] = count(d) + 1; });
     save();
     introInvLit = false;
     closeOverlay("capConfirm");
     closeOverlay("capChoice");
+    capStartPending = {stationName, dice};
+    if (tipHidden("pinTip")){ finishPinTip(); return; }
     openJobBoard();
-    setTimeout(() => {
-      capStartPending = {stationName, dice};
-      if (tipHidden("pinTip")) finishPinTip();
-      else openOverlay("pinTip");
-    }, reduced ? 0 : 450);
+    setTimeout(() => openOverlay("pinTip"), reduced ? 0 : 450);
   }, beat2At);
 }
 // Beat 3 -- the tip is dismissed: the list closes and the run starts in

@@ -255,3 +255,10 @@ body[data-screen="market"] #trackedPill{display:none}
 /* Cross-hide: Convert's button hides while Pins is open, and vice versa
    (see updateHub()). ID selectors so this beats .floatbtn's display:flex. */
 #pinsBtn.cross-hide, #quickConvertBtn.cross-hide, #trackedPill.cross-hide{display:none}
+/* Intro beat 1 (introInvLit): the Inventory button is spotlighted above
+   the dimmed screen. The hub rises over the overlay's dim; its own wood and
+   other buttons are dimmed to match (#hub is its own stacking context, so
+   the button can't rise alone). */
+body.intro-inv-lit #hub{z-index:73; box-shadow:inset 0 0 0 999px rgba(10,14,20,.72); border-top-color:#3d3220}
+body.intro-inv-lit #hub .hubbtn:not(#hubInv){filter:brightness(.28)}
+body.intro-inv-lit #hubInv{filter:drop-shadow(0 0 10px rgba(255,214,120,.95)) drop-shadow(0 0 4px rgba(255,214,120,.9))}
