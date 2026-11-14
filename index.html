@@ -4763,7 +4763,7 @@ const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http:/
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.13d",
+ "version": "2026.11.14a",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -4880,7 +4880,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__LIFE__",
      "Life",
      "CREATION",
-     "🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",
+     "🧬 DNA + 💧 Water + ⭐ Star",
      23
     ],
     [
@@ -4895,7 +4895,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "__CORAL__",
     "Coral Reef",
     "CAPSTONE",
-    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock + __LIFE__ Life",
+    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + __LIFE__ Life",
     34
    ],
    "unlock": [
@@ -4953,14 +4953,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "💡",
      "Light Bulb",
      "COMPONENT",
-     "🪟 Glass + 🔌 Wire",
+     "🪟 Glass + 🔌 Wire + 🔋 Battery",
      10
     ],
     [
      "🕐",
      "Clock",
      "COMPONENT",
-     "🔋 Battery + 🛠️ Tools",
+     "🔋 Battery + 🛠️ Tools + 🔌 Wire",
      10
     ],
     [
@@ -4995,7 +4995,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚗",
      "Car",
      "CREATION",
-     "⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel",
+     "⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel + 🔋 Battery",
      22
     ]
    ],
@@ -5089,7 +5089,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔆",
      "Solar Panel",
      "COMPONENT",
-     "Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",
+     "Si + 🔌 Wire + 🪟 Glass",
      11
     ],
     [
@@ -5477,7 +5477,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Ca",
     "C",
     "O",
-    "Al",
+    "Fe",
     "Si",
     "Mg"
    ],
@@ -5497,10 +5497,10 @@ const DATA = /*__GAME_DATA_START__*/{
      1
     ],
     [
-     "🏺",
-     "Clay",
+     "⏳",
+     "Sand",
      "MATERIAL",
-     "Al + Si + Mg",
+     "Si + O",
      1
     ],
     [
@@ -5656,9 +5656,9 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "⭐",
      "Star",
-     "CREATION",
-     "__FURNACE__ Furnace + H + 🕐 Clock",
-     20
+     "COMPONENT",
+     "__FURNACE__ Furnace + H",
+     10
     ],
     [
      "🌈",
@@ -5851,12 +5851,12 @@ const ITEM_SUIT_COST_TABLE = {
 
   Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
   Diamond: ["earth", "earth"], Orca: ["organic", "organic"],
-  Lighthouse: ["earth", "reactive"], Star: ["organic", "reactive"],
+  Lighthouse: ["earth", "reactive"], Star: ["reactive"],
   Rainbow: ["organic", "reactive"], Speedboat: ["metal", "metal"], Computer: ["metal", "reactive"],
   Tractor: ["metal", "earth"], Bicycle: ["metal", "earth"], Skyscraper: ["earth", "metal"], "Turbine Blade": ["metal", "reactive"],
-  Life: ["organic", "earth"], Car: ["metal", "reactive"], "Banana Bread": ["organic", "organic"],
+  Life: ["organic", "earth"], Car: ["metal", "reactive"], "Banana Bread": ["organic", "reactive"],
   Museum: ["earth", "metal"], Helicopter: ["metal", "metal"], Rocket: ["metal", "reactive"],
-  "Fish Cakes": ["organic", "organic"], "Apple Pie": ["organic", "organic"],
+  "Fish Cakes": ["organic", "organic"], "Apple Pie": ["organic", "reactive"],
 
   "Maglev Train": ["metal", "earth", "reactive"], Homestead: ["organic", "earth", "metal"],
   "Coral Reef": ["organic", "organic", "organic"], Robot: ["metal", "metal", "reactive"],
@@ -6275,7 +6275,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"precious-earth",          name:"Precious Earth",          items:["Soil","Limestone","Diamond","Natural Gas","Rubber"] },
   { id:"around-the-world",        name:"Around the World",        items:["Bicycle","Canoe","Speedboat","Car","Tractor","Helicopter","Maglev Train"] },
   { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Oven"] },
-  { id:"city-complete",           name:"City Complete",           items:["Clay","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
+  { id:"city-complete",           name:"City Complete",           items:["Sand","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
   { id:"deep-mine-complete",      name:"Deep Mine Complete",      items:["Clay","Natural Gas","Steel","Tools","Furnace","Aluminum Alloy","Diamond"] },
   { id:"observatory-complete",    name:"Observatory Complete",    items:["Microchip","Magnet","Compass","Satellite Dish","Telescope","Star","Rocket"] },
   { id:"ocean-complete",          name:"Ocean Complete",          items:["Water","Limestone","Sand","Seaweed","Banana","Cloud","Orca"] },
