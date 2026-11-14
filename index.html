@@ -3525,6 +3525,13 @@ html.low-motion .mat-qs-pill{animation:none}
   font-size:19px; border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); cursor:pointer; padding:0;
 }
 .ml-icon-btn.done{color:var(--ok)}
+#matLayoutsOverlay #mlSearch{flex:1 1 auto; min-width:0; height:38px}
+.ml-sort-btn{flex:none; height:38px; padding:0 12px; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer;
+  border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); white-space:nowrap}
+/* The Inventory's station + element filter chips, one row of 12. */
+.ml-filters{display:grid; grid-template-columns:repeat(12, 1fr); gap:3px; margin:0 8px 6px 0}
+.ml-filters .mat-fbtn{border-radius:8px; font-size:15px}
+.ml-filters .mat-fbtn :is(img, svg){width:17px; height:17px}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
 #matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
 #matLayoutsOverlay #matLayoutName{min-width:0; flex:1 1 auto; height:38px}
@@ -4359,6 +4366,11 @@ html.low-motion #matListActions{transition:none}
       <button type="button" class="ml-icon-btn" id="matLayoutSaveBtn" title="Save the current arrangement" aria-label="Save the current arrangement">💾</button>
       <button type="button" class="ml-icon-btn" id="matLayoutsExport" title="Copy all saved layouts as JSON" aria-label="Copy all saved layouts as JSON">⧉</button>
     </div>
+    <div class="ml-save-row">
+      <input type="search" id="mlSearch" class="mat-fsearch" placeholder="🔍 Search layouts or items…">
+      <button type="button" class="ml-sort-btn" id="mlSort" title="Sort by points">Points ↓</button>
+    </div>
+    <div class="ml-filters" id="mlFilters"></div>
     <div id="matLayoutsList"></div>
   </div>
 </div>
@@ -10907,11 +10919,24 @@ function renderMatLayoutsList(){
     list.innerHTML = '<p class="empty">No saved layouts yet -- arrange the mat, then save it above.</p>';
     return;
   }
+  // Search (layout name, card or component names) and station/element
+  // filters (ORed within a group, ANDed across, like the Inventory's), then
+  // sorted by points (mlFilt). Indexes stay the saved ones for load/delete.
+  const q = mlFilt.q.toLowerCase();
+  const rows = layouts.map((L, i) => {
+    const mat = L.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+    return { L, i, mat, s: matScore(mat) };
+  }).filter(({ L, mat }) =>
+    (!q || L.name.toLowerCase().includes(q) || mat.some(c => c.name.toLowerCase().includes(q)
+      || c.components.some(r => r.name.toLowerCase().includes(q))))
+    && (!mlFilt.stations.size || mat.some(c => c.stations.some(st => mlFilt.stations.has(st))))
+    && (!mlFilt.suits.size || mat.some(c => c.pips.some(p => mlFilt.suits.has(p)))))
+    .sort((a, b) => mlFilt.asc ? a.s.total - b.s.total : b.s.total - a.s.total);
+  syncMatLayoutTools();
+  if (!rows.length){ list.innerHTML = '<p class="empty">No layouts match.</p>'; return; }
   // Each slot: name and the layout's point total, then its combos and
   // cards like the minimized board (matMiniRowHTML()). Tap anywhere to load.
-  list.innerHTML = `<div class="histrows">${layouts.map((L, i) => {
-    const mat = L.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
-    const s = matScore(mat);
+  list.innerHTML = `<div class="histrows">${rows.map(({ L, i, mat, s }) => {
     return `
     <div class="histentry ml-slot">
       <button type="button" class="histrow" data-mat-layout-load="${i}">
@@ -10926,6 +10951,31 @@ function renderMatLayoutsList(){
     </div>`;
   }).join("")}</div>`;
 }
+// Saved Layouts' search / sort / filters (view state, not saved).
+const mlFilt = { q: "", asc: false, stations: new Set(), suits: new Set() };
+let mlFiltersBuilt = false;
+function syncMatLayoutTools(){
+  if (!mlFiltersBuilt){
+    mlFiltersBuilt = true;
+    document.getElementById("mlFilters").innerHTML = STATION_TRACKER_ORDER.map(s => {
+      const m = STATION_BY_NAME[s];
+      return `<button type="button" class="mat-fbtn" data-ml-fstation="${esc(s)}" title="${esc(s)}" style="--st:${DATA.suits[m.suit].color}">${em(m.emoji)}</button>`;
+    }).join("") + Object.keys(ELEMENT_SUIT_LABEL).map(s =>
+      `<button type="button" class="mat-fbtn" data-ml-fsuit="${s}" title="${ELEMENT_SUIT_LABEL[s]}" style="--suit:${SUIT_COLOR[s]}">${SUIT_ICON[s]}</button>`).join("");
+  }
+  document.querySelectorAll("[data-ml-fstation]").forEach(b => b.classList.toggle("on", mlFilt.stations.has(b.dataset.mlFstation)));
+  document.querySelectorAll("[data-ml-fsuit]").forEach(b => b.classList.toggle("on", mlFilt.suits.has(b.dataset.mlFsuit)));
+  document.getElementById("mlSort").textContent = mlFilt.asc ? "Points ↑" : "Points ↓";
+}
+document.getElementById("mlSearch").addEventListener("input", ev => { mlFilt.q = ev.target.value.trim(); renderMatLayoutsList(); });
+document.getElementById("mlSort").addEventListener("click", () => { mlFilt.asc = !mlFilt.asc; renderMatLayoutsList(); });
+document.getElementById("mlFilters").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-ml-fstation], [data-ml-fsuit]");
+  if (!b) return;
+  const [set, key] = b.dataset.mlFstation ? [mlFilt.stations, b.dataset.mlFstation] : [mlFilt.suits, b.dataset.mlFsuit];
+  set.has(key) ? set.delete(key) : set.add(key);
+  renderMatLayoutsList();
+});
 function openMatLayoutsOverlay(){
   renderMatLayoutsList();
   openOverlay("matLayoutsOverlay");
