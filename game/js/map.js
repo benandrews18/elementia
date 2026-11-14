@@ -72,7 +72,7 @@ function mapCardHTML(name){
   // labels them.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
   const trackedPill = trackedEntry
-    ? `<span class="mc-tracked" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-glass">🔍</span><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span>`
+    ? `<span class="mc-tracked-wrap" title="Tracking ${esc(trackedEntry.name)}"><span class="mct-glass" aria-hidden="true"></span><span class="mc-tracked"><span class="mct-em">${em(trackedEntry.emoji)}</span><span class="mct-name">${esc(trackedEntry.name)}</span></span></span>`
     : "";
   const itemsHTML = `<div class="station-items">${stationItemIconsHTML(name)}</div>
     <div class="capline ${done ? "done" : ""}" data-item-card="${ENTRIES.findIndex(e => e.name === capName)}" title="${esc(capName)}">

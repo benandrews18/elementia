@@ -222,12 +222,16 @@
 .map-card h2{font-size:19px; font-weight:800; letter-spacing:-.3px; flex:1}
 /* Same gold ring colour and 3px weight as .station-item-icon.job-highlight
    in the item row below -- this pill names what those rings are marking. */
+/* The magnifier button's circle (#pinsBtn sprite) on the pill's left end,
+   overlapping it -- the same pair as the bottom-left corner. */
+.mc-tracked-wrap{flex:none; max-width:50%; min-width:0; display:inline-flex; align-items:center}
+.mct-glass{flex:none; width:34px; height:34px; position:relative; z-index:1;
+  background:url("../ui/btn_search.webp") center / contain no-repeat; filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 .mc-tracked{
-  flex:none; max-width:45%; display:inline-flex; align-items:center; gap:6px;
-  padding:3px 10px; border-radius:999px; border:3px solid var(--gold);
+  min-width:0; margin-left:-12px; display:inline-flex; align-items:center; gap:6px;
+  padding:3px 10px 3px 16px; border-radius:999px; border:3px solid var(--gold);
   background:var(--gold-soft); font-size:12.5px; font-weight:800; color:var(--ink);
 }
-.mct-glass{font-size:13px; line-height:1; flex:none}
 .mct-em{font-size:15px; line-height:1; flex:none}
 .mct-em img, .mct-em svg{width:1em; height:1em}
 .mct-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}

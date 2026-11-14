@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Preview card tracked pill.** The magnifier moved out of the station
+  preview card's tracked-item pill to a circle (the magnifier button's art)
+  overlapping its left end, like the bottom-left button and pill.
+
 - **Fix: map magnifiers missed deeper components.** The map's component
   magnifier only looked at the tracked item's own recipe, so e.g. tracking
   Maglev Train left Old Growth Forest (Tree, inside Bridge) unmarked. It
