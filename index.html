@@ -3415,6 +3415,12 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
 .mm-card.mini .mm-icon{font-size:32px; margin:0}
 .mm-card.mini .mm-icon :is(img,svg){width:32px; height:32px}
 .mm-card.mini .mm-name{display:none}
+/* In the Inventory and station card grids (not on the mat itself), Tier 1
+   cards keep their name: the picture moves up to make room. */
+.mat-results-grid .mm-card.mini{justify-content:flex-start; padding-top:3px}
+.mat-results-grid .mm-card.mini .mm-icon{font-size:26px}
+.mat-results-grid .mm-card.mini .mm-icon :is(img,svg){width:26px; height:26px}
+.mat-results-grid .mm-card.mini .mm-name{display:-webkit-box; -webkit-line-clamp:1; font-size:9px; padding:1px 14px 0}
 .mm-card.mini .mm-pts{min-width:22px; height:22px; font-size:11px; top:-5px; left:-5px}
 .mm-card.mini .mm-pip{width:18px; height:18px; font-size:10px}
 .mm-card.mini .mm-pip :is(img,svg){width:11px; height:11px}
@@ -6771,7 +6777,7 @@ let codexReturnDrawerPeeked = null;
    (guidedTutorialEnabled), mini-games off, low motion off. */
 let prefs = {pinnedItems:[], minigamesEnabled:false,
   // Inventory item list: shop-style rows instead of cards (setItemsListView()).
-  itemsListView:false, shopCardView:false,
+  itemsListView:false, shopListView:false, // false = card view (the default for the Inventory and station shops)
   // Saved Display Mat layouts {name, items}, account-level, so a combo from
   // Combo Lab or a run can be recalled later (openMatLayoutsOverlay()).
   savedMatLayouts:[],
@@ -8372,13 +8378,13 @@ function renderStation(name){
   // The capstone sits at the top of the shop, under the compact crafted row.
   // A normal shop row, plus .cap-item (dark face, gold border).
   const capHTML = capRevealed ? itemHTML(capEntry, idx(capEntry)).replace('class="item ', 'class="item cap-item ') : "";
-  // List (shop rows) or card view (prefs.shopCardView: inventory-style cards).
-  const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!!prefs.shopCardView}"
-      title="${prefs.shopCardView ? "Show as a list" : "Show as cards"}" aria-label="${prefs.shopCardView ? "Show as a list" : "Show as cards"}">${prefs.shopCardView ? "📋" : "🃏"}</button>`;
-  const shopBody = prefs.shopCardView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
+  // List (shop rows) or card view (cards unless prefs.shopListView).
+  const viewBtn = `<button type="button" class="shop-view-btn" id="shopViewBtn" aria-pressed="${!prefs.shopListView}"
+      title="${!prefs.shopListView ? "Show as a list" : "Show as cards"}" aria-label="${!prefs.shopListView ? "Show as a list" : "Show as cards"}">${!prefs.shopListView ? "📋" : "🃏"}</button>`;
+  const shopBody = !prefs.shopListView ? shopCardsHTML(all, idx) : shopBodyHTML(shopEntries, idx, capHTML);
   // Card view: the tapped card's full shop row, right under the header; it
   // scrolls with the shop but sticks at the top rather than leave the screen.
-  const open = prefs.shopCardView && all.find(e => e.name === stationCardOpen);
+  const open = !prefs.shopListView && all.find(e => e.name === stationCardOpen);
   const selPanel = !open ? "" : `<div class="st-card-sel shop">${open.tier === "CAPSTONE" ? capHTML : itemHTML(open, idx(open))}
       <button type="button" class="cp-close-x st-card-close" data-st-card-close aria-label="Close this item"></button></div>`;
 
@@ -8437,7 +8443,7 @@ function shopCardsHTML(entries, idx){
   // Each card with the shop's Craft button underneath.
   const card = e => {
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
-    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
+    return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { plain: true, cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
       e.name === stationCardOpen ? "selected" : ""].join(" ") })}<div class="st-acts">${pinSlotHTML(e)}${craftBtnHTML(e, idx(e))}</div></div>`;
   };
@@ -9428,7 +9434,7 @@ function maybeShowUnlockReveal(){
     <h2 class="ur-title">New Items Unlocked!</h2>
     <p class="ur-sub">${cap ? em(cap.emoji) : ""} ${esc(capName)} opened up ${names.length === 1 ? "a new item" : `${names.length} new items`}</p>
     <div class="ur-grid">${names.map((n, i) =>
-      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n)}</div>`).join("")}</div>
+      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n, { plain: true })}</div>`).join("")}</div>
     <p class="ur-tap">Tap to continue</p>`;
   openOverlay("unlockReveal");
 }
@@ -10219,12 +10225,12 @@ function matCardHTML(name, opts = {}){
   const onMat = state.mat.includes(name);
   const pts = opts.complete ? c.points * 2 : c.points;
   const pipsHTML = c.pips.map(s =>
-    `<span class="mm-pip${matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
+    `<span class="mm-pip${!opts.plain && matLive.suit.has(s) ? " lit" : ""}" style="--suit:${SUIT_COLOR[s]}" title="${ELEMENT_SUIT_LABEL[s]}">${SUIT_ICON[s]}</span>`).join("");
   // One badge per home station (see MAT_CARDS); each lights independently.
   const stationsHTML = c.stations.map(stName => {
     const stMeta = STATION_BY_NAME[stName];
     const stColor = DATA.suits[stMeta.suit].color;
-    const stLit = matLive.station.has(stName) ? " lit" : "";
+    const stLit = !opts.plain && matLive.station.has(stName) ? " lit" : "";
     return `<span class="mm-station${stLit}" style="--st:${stColor}" title="${esc(stName)}">${em(stMeta.emoji)}</span>`;
   }).join("");
   // "wide" (tray only -- the mat grid uses .mm-slot.wide) so a capstone spans
@@ -13879,7 +13885,7 @@ function handleScreenClick(ev){
   }
 
   if (ev.target.closest("#shopViewBtn")){
-    prefs.shopCardView = !prefs.shopCardView; savePrefs();
+    prefs.shopListView = !prefs.shopListView; savePrefs();
     stationCardOpen = null;
     render();
     return;
@@ -13904,7 +13910,16 @@ function handleScreenClick(ev){
     // Not craftable: the button still receives taps (aria-disabled, see
     // itemHTML()) so it can show the "Missing ..." notice.
     if (cBtn.getAttribute("aria-disabled") === "true"){
-      bounceCantCraft(cBtn, ENTRIES[+cBtn.dataset.craft], ev);
+      const entry = ENTRIES[+cBtn.dataset.craft];
+      // Station card view: select the item instead, so its full shop row
+      // (recipe, suit costs) shows what's missing under the header.
+      if (cBtn.closest(".st-cell") && entry){
+        bounceMissingItems(cBtn, itemReqsMet(entry) ? "Missing Elements!" : "Missing Items!");
+        stationCardOpen = entry.name;
+        render();
+        return;
+      }
+      bounceCantCraft(cBtn, entry, ev);
       return;
     }
     const entry = ENTRIES[+cBtn.dataset.craft];
