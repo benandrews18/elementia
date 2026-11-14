@@ -70,6 +70,10 @@
   const shopAt = st => ENTRIES.filter(e => e.station === st && itemOpen(e.name) && !owns(e.name));
   const stationsSelling = name => [...new Set(ENTRIES.filter(e => e.name === name).map(e => e.station))];
 
+  // ---- per-run tallies for the report (reset by playRun())
+  let T = null;
+  const tally = (o, k, n = 1) => { o[k] = (o[k] || 0) + n; };
+
   // ---- the plan: a layout's items and everything under them
   let plan = null, want = {};
   function closureOf(names){
@@ -81,7 +85,10 @@
   function choosePlan(){
     const open = layouts.filter(l => !l.items.every(owns) && l !== plan);
     if (!open.length){ plan = null; want = {}; return; }
-    plan = pickWeighted(open.map(l => [l, (l.items.filter(owns).length / l.items.length + 0.25) * layoutValue(l)]));
+    setPlan(pickWeighted(open.map(l => [l, (l.items.filter(owns).length / l.items.length + 0.25) * layoutValue(l)])));
+  }
+  function setPlan(l){
+    plan = l;
     want = {};
     closureOf(plan.items).forEach(n => { want[n] = 2; });
     plan.items.forEach(n => { want[n] = ITEM_TIER[n] === "CAPSTONE" ? 6 : 3; });
@@ -158,7 +165,7 @@
     plan_.forEach(([from, to]) => { if (from !== "?") after[from] -= CONVERT_RATE; after[to] = (after[to] || 0) + 1; });
     if (shortfall(e, after).total) return false;
     plan_.forEach(([from, to]) => {
-      if (from === "?") state.emptyElements -= 1; else take(from, CONVERT_RATE);
+      if (from === "?"){ state.emptyElements -= 1; T.qSpent++; } else { take(from, CONVERT_RATE); tally(T.convFrom, from); tally(T.convTo, to); }
       give(to);
     });
     return true;
@@ -184,6 +191,13 @@
       if (extra.length){ payAndCraft(extra[0]); continue; }
       break;
     }
+    // What held back the wanted items here (parts owned, elements short).
+    shopAt(current).filter(e => want[e.name] && itemReqsMet(e)).forEach(e => {
+      const { miss, suitMiss } = shortfall(e);
+      Object.entries(miss).forEach(([s, k]) => tally(T.short, s, k));
+      Object.entries(suitMiss).forEach(([su, k]) => tally(T.suitShort, su, k));
+      tally(T.stuck, e.name);
+    });
   }
 
   // ---- where next
@@ -258,10 +272,17 @@
     state = freshState(); state.mode = "classic";
     prefs.pinnedItems = []; selectedJobItem = null; travelPromptFor = null; lockInCommitted = false;
     plan = null; want = {};
+    T = { q: [], dice: [], short: {}, suitShort: {}, stuck: {}, convFrom: {}, convTo: {}, qSpent: 0 };
     // The opening: a capstone (the plan's, if it has one) and its station's
     // six elements, then that station is turn 1.
     let start;
-    if (opts.start === "random" || !layouts.length) start = DATA.stations[Math.floor(rnd() * DATA.stations.length)].name;
+    // --start capstone: run i chases capstone i % 8 alone (reachability).
+    if (opts.start === "capstone"){
+      const cap = CAPSTONES[opts.index % CAPSTONES.length];
+      setPlan({ name: "Capstone: " + cap, items: [cap] });
+      start = capstoneStationOf(cap);
+    }
+    else if (opts.start === "random" || !layouts.length) start = DATA.stations[Math.floor(rnd() * DATA.stations.length)].name;
     else {
       choosePlan();
       const cap = plan.items.find(n => ITEM_TIER[n] === "CAPSTONE");
@@ -277,19 +298,22 @@
     const plans = [plan && plan.name];
     for (let guard = 0; guard < 60 && !state.ended && !state.runComplete; guard++){
       doRoll();
+      T.dice.push(state.lastRoll ? state.lastRoll.length : 0);
       shop();
       if (plan && !plans.includes(plan.name)) plans.push(plan.name);
       goMap();
-      if (state.finalCheckPending){ bestMat(); confirmFinalLockIn(); break; }
+      if (state.finalCheckPending){ bestMat(); T.q.push(matScore(matOnMat()).total); confirmFinalLockIn(); break; }
       const dest = chooseNext();
       screen = "map"; selectedMapStation = dest;
       if (isMatCheckVisit()){
         travelPromptFor = dest;
         startCheckOrder();
         bestMat();
+        T.q.push(matScore(matOnMat()).total);
         confirmLockIn(); // scores, then travels (finishLockIn() -> goStation()) or ends the run
       } else {
         bestMat(300);
+        T.q.push(matScore(matOnMat()).total);
         quietCheck();
         goStation(dest);
       }
@@ -304,14 +328,19 @@
       visitLog: JSON.parse(JSON.stringify(state.visitLog || [])),
       bingoCard: state.bingoCard ? [...state.bingoCard] : null,
       bingoLinesCompleted: [...(state.bingoLinesCompleted || [])],
-      sim: { plans: plans.filter(Boolean), gameOver: !!state.finalGameOver, finalMat: [...state.mat] },
+      // q[i]: the mat's score leaving turn i+1 (checks and quiet checks);
+      // dice[i]: dice rolled on turn i+1.
+      sim: { plans: plans.filter(Boolean), gameOver: !!state.finalGameOver, finalMat: [...state.mat],
+        q: T.q.map(Math.round), dice: T.dice, short: T.short, suitShort: T.suitShort, stuck: T.stuck,
+        convFrom: T.convFrom, convTo: T.convTo, qSpent: T.qSpent, qLeft: state.emptyElements || 0,
+        leftover: { ...state.elements } },
     };
   }
 
   window.simPlay = (n, opts = {}) => {
     seed = opts.seed || 1;
     const out = [];
-    for (let i = 0; i < n; i++) out.push(playRun(opts));
+    for (let i = 0; i < n; i++) out.push(playRun({ ...opts, index: (opts.index || 0) + i }));
     return out;
   };
   // Breakpoints per round, for the report.

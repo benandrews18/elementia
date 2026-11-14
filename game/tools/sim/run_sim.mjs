@@ -1,24 +1,32 @@
 // Plays whole Elementia runs with the real game code (headless Chrome) and
 // a goal-directed player guided by real play (tools/sim/guide/), then
 // compares them with the real runs.
-//   node game/tools/sim/run_sim.mjs [--runs 100] [--seed 1] [--start guided|random] [--out file.json]
-// guide/runs.json: History exports (an array; add more runs to it).
-// guide/layouts.json: Saved Layouts exports.
+//   node game/tools/sim/run_sim.mjs [--runs 100] [--seed 1] [--start guided|random|capstone] [--out file.json]
+// guide/: every runs*.json (History exports: ⧉ Export or one run's ⧉) and
+// layouts*.json (Saved Layouts ⧉). Each file holds one export as copied --
+// a list or a single run -- and repeats across files are dropped.
 // Writes every simulated run (History export format, plus `sim`) to --out
-// (default tools/sim/out/sim_runs.json) and prints the comparison.
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+// (default tools/sim/out/sim_runs.json), the Breakpoint Tuner's data
+// (out/tuner_data.js, and build/breakpoint_tuner.html with it built in), and
+// prints the comparison.
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { withGame } from "../headless_game.mjs";
+import { withGame, GAME } from "../headless_game.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
 const RUNS = +arg("runs", 100), SEED = +arg("seed", 1), START = arg("start", "guided");
 const OUT = arg("out", join(HERE, "out", "sim_runs.json"));
+const readGuide = prefix => readdirSync(join(HERE, "guide")).filter(f => f.startsWith(prefix) && f.endsWith(".json"))
+  .flatMap(f => [JSON.parse(readFileSync(join(HERE, "guide", f), "utf8"))].flat());
+const uniq = (list, key) => [...new Map(list.map(x => [key(x), x])).values()];
 const guide = {
-  runs: JSON.parse(readFileSync(join(HERE, "guide", "runs.json"), "utf8")),
-  layouts: JSON.parse(readFileSync(join(HERE, "guide", "layouts.json"), "utf8")),
+  // Only runs with board-check scores (History from 2026-11-12 on).
+  runs: uniq(readGuide("runs").filter(r => Array.isArray(r.checks) && r.checks.some(c => c.q != null) && Array.isArray(r.visitLog)), r => r.date),
+  layouts: uniq(readGuide("layouts").filter(l => l && Array.isArray(l.items)), l => l.name + "|" + l.items.join(",")),
 };
+console.log(`guide: ${guide.runs.length} of your runs, ${guide.layouts.length} saved layouts`);
 
 const BATCH = 10;
 const t0 = Date.now();
@@ -28,7 +36,7 @@ const { sims, tiers, errs } = await withGame(async (evalJS, errs) => {
   const sims = [];
   for (let i = 0; i < RUNS; i += BATCH) {
     const n = Math.min(BATCH, RUNS - i);
-    sims.push(...await evalJS(`simPlay(${n}, ${JSON.stringify({ seed: SEED * 100003 + i, start: START })})`));
+    sims.push(...await evalJS(`simPlay(${n}, ${JSON.stringify({ seed: SEED * 100003 + i, start: START, index: i })})`));
     process.stderr.write(`\r${sims.length}/${RUNS} runs`);
   }
   process.stderr.write("\n");
@@ -37,6 +45,23 @@ const { sims, tiers, errs } = await withGame(async (evalJS, errs) => {
 
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify(sims, null, 1));
+// Breakpoint Tuner data (normal guided runs only): every sim run's mat score
+// leaving each turn (sorted, per turn) and your runs' board checks.
+if (START === "guided"){
+  const tunerData = {
+    made: new Date().toISOString().slice(0, 16).replace("T", " "), simRuns: sims.length,
+    sim: Array.from({ length: 24 }, (_, i) => sims.map(r => r.sim.q[i]).filter(q => q != null).sort((a, b) => a - b)),
+    you: guide.runs.map(r => ({ d: r.date.slice(0, 16).replace("T", " "), s: r.score, caps: r.capstones.length,
+      checks: r.checks.filter(c => c.q != null).map(c => [c.v, c.q]) })),
+  };
+  const dataJS = `window.TUNER_DATA = ${JSON.stringify(tunerData)};`;
+  writeFileSync(join(HERE, "out", "tuner_data.js"), dataJS);
+  const tuner = readFileSync(join(GAME, "tools", "quark_breakpoint_tuner.html"), "utf8");
+  const tag = '<script src="sim/out/tuner_data.js"></script>';
+  if (!tuner.includes(tag)) throw new Error("tuner data tag missing");
+  mkdirSync(join(GAME, "build"), { recursive: true });
+  writeFileSync(join(GAME, "build", "breakpoint_tuner.html"), tuner.replace(tag, () => "<script>" + dataJS + "</script>"));
+}
 
 // ---- report
 const pct = (a, p) => { if (!a.length) return "-"; const s = [...a].sort((x, y) => x - y); return Math.round(s[Math.min(s.length - 1, Math.floor(p * s.length))]); };

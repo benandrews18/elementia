@@ -9,7 +9,7 @@
   --bg:#0f2733; --bg-soft:#122e3c; --card:#163544; --sunken:#1c4257; --line:#2a5a72; --line2:#1c4257;
   --ink:#e8edf4; --ink2:#b3becd; --mute:#7d8899;
   --gold:#e2b25a; --gold-soft:#3a2e14; --gold-line:#5c4a20;
-  --t1:#3aa9a0; --t2:#4d7cf2; --t3:#e0793c; --t4:#e2b25a;
+  --t1:#3aa9a0; --t2:#4d7cf2; --t3:#e0793c; --t4:#e2b25a; --sim:#c38cf0;
   --shadow:rgba(0,0,0,.4);
 }
 @media (prefers-color-scheme: light){
@@ -127,6 +127,17 @@ textarea{
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
 .quiet-line{opacity:.5}
+.sim-band{fill:var(--sim); opacity:.24; pointer-events:none}
+.sim-mid{fill:none; stroke:var(--sim); stroke-width:3; pointer-events:none}
+.sim-edge{fill:none; stroke:var(--sim); stroke-width:1.2; stroke-dasharray:3 4; opacity:.7; pointer-events:none}
+.you-line{fill:none; stroke-width:2; stroke-dasharray:7 5; stroke-linejoin:round; opacity:.9; pointer-events:none}
+.you-line.hot{stroke-width:3.5}
+.src-row{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin:0 0 10px}
+.src-row label.chk{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--ink2); cursor:pointer}
+.src-row .swatch{width:22px; height:10px; border-radius:3px; background:var(--sim); opacity:.6}
+td.reach{font-size:11.5px; color:var(--mute); white-space:nowrap; text-align:left}
+td.reach b{color:var(--ink2); font-weight:700}
+tr.check-row td.reach b{color:var(--ink)}
 .official-dot{pointer-events:none}
 td .off{display:block; font-size:11px; font-weight:800; color:var(--gold); text-align:right; padding-right:4px; line-height:1.2}
 tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
@@ -136,7 +147,7 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
 <div class="wrap">
   <div>
     <h1>Quark Breakpoint Tuner</h1>
-    <p class="sub">Two kinds of Display Mat check. A <b>quiet check</b> happens every time a player travels: the mat's Quark score sets that trip's bonus dice (thin smooth lines, the table below). Every 3rd visit is an <b>official check</b> (shutter, Lock-In, orders): its breakpoints are the quiet ones <b>plus the bump</b>, so the thick line &mdash; what a player actually has to beat at each visit &mdash; jumps up at visits 3, 6, 9&hellip; and drops back after. The official result is also a dice floor for the next 3 visits. Drag the dots (quiet values) or use the sliders, then copy the code back into chat.</p>
+    <p class="sub">Two kinds of Display Mat check. A <b>quiet check</b> happens every time a player travels: the mat's Quark score sets that trip's bonus dice (thin smooth lines, the table below). Every 3rd visit is an <b>official check</b> (shutter, Lock-In, orders): its breakpoints are the quiet ones <b>plus the bump</b>, so the thick line &mdash; what a player actually has to beat at each visit &mdash; jumps up at visits 3, 6, 9&hellip; and drops back after. The official result is also a dice floor for the next 3 visits. Drag the dots (quiet values) or use the sliders, then copy the code back into chat. The purple band is <b>simulated runs</b> (middle half shaded, median solid, 10th/90th percentile dashed); coloured lines are <b>your runs</b>' board checks. The table's last column says, live, what share of simulated runs clear each breakpoint at that visit.</p>
   </div>
 
   <div class="panel">
@@ -148,10 +159,10 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
       <label>Visits <input type="number" id="zx0" min="1" max="39" step="1"> – <input type="number" id="zx1" min="2" max="40" step="1"></label>
       <label>Quarks <input type="number" id="zy0" min="0" step="100"> – <input type="number" id="zy1" min="100" step="100"></label>
       <div class="zoom-presets">
-        <button type="button" data-zoom="full">Full view</button>
+        <button type="button" data-zoom="full">Visits 1–24</button>
         <button type="button" data-zoom="early">Visits 1–12</button>
-        <button type="button" data-zoom="mid">Visits 10–25</button>
-        <button type="button" data-zoom="late">Visits 20–40</button>
+        <button type="button" data-zoom="mid">Visits 10–24</button>
+        <button type="button" data-zoom="all">All 40</button>
         <button type="button" data-zoom="fit">Fit Quarks</button>
       </div>
     </div>
@@ -164,13 +175,16 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
       <div class="fit-params" id="fitParams"></div>
     </div>
     <div class="chart-box"><svg id="chart" viewBox="0 0 900 460" role="img" aria-label="Breakpoint curves by visit"></svg></div>
+    <div class="src-row" id="srcRow">
+      <label class="chk"><input type="checkbox" id="simChk" checked> <span class="swatch"></span> <span id="simLabel">Simulated runs</span></label>
+    </div>
     <div class="runs-head">
-      <h3>Your past runs <span style="font-weight:500;color:var(--mute)">(read-only)</span></h3>
+      <h3>Your runs <span style="font-weight:500;color:var(--mute)">(board checks, read-only)</span></h3>
       <div class="runs-btns"><button type="button" id="runsAll">Show all</button><button type="button" id="runsNone">Hide all</button></div>
     </div>
-    <p class="runs-note">Dashed lines: for each run you exported, the best Display Mat score the items you'd crafted <b>by that visit</b> could have made, scored with today's rules (a search, so treat it as close to — not exactly — the ceiling). Runs before Sept 14 ended at visit 20. The Oct 31 and Nov 1 runs were played with the starting gift; Nov 1 is the only one with the 6-dice first day and mat checks every trip. Tap a run to toggle it; hover to highlight.</p>
+    <p class="runs-note" id="runsNote">Each line joins one run's board-check scores (turns 3, 6 … 24) as played. The simulated runs are the mat's score leaving every turn, arranged as well as the simulator could with the cards it owned; runs that hit a game over drop out after it. Data from <code>node game/tools/sim/run_sim.mjs</code>. Tap a run to toggle it; hover to highlight.</p>
     <div class="run-chips" id="runChips"></div>
-    <p class="hint">Press near any dot and drag up or down to set it; keep dragging sideways to sketch the same tier across neighbouring visits (snaps to 5; values can go up to 9,995 even if the chart is zoomed in). Each tier should stay at or above the one below it — a cell gets a red border if it doesn't. Red text means the value is above the 4,784 maximum and can never be reached (dashed red line on the chart). <b>Smooth &amp; scale</b>: each line is a best-fit S-curve through your hand-drawn table (dotted lines); the slider scales all four together. Dragging a dot still works, but moving the slider redraws every line from the curves &mdash; press <i>Refit to table</i> first to keep your edits.</p>
+    <p class="hint">Press near any dot and drag up or down to set it; keep dragging sideways to sketch the same tier across neighbouring visits (snaps to 5; values can go up to 9,995 even if the chart is zoomed in). Each tier should stay at or above the one below it — a cell gets a red border if it doesn't. Red text means the value is above the best mat the simulator ever reached (dashed red line on the chart), so practically nobody clears it. <b>Smooth &amp; scale</b>: each line is a best-fit S-curve through your hand-drawn table (dotted lines); the slider scales all four together. Dragging a dot still works, but moving the slider redraws every line from the curves &mdash; press <i>Refit to table</i> first to keep your edits.</p>
   </div>
 
   <div class="panel">
@@ -184,6 +198,7 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   </div>
 </div>
 
+<script src="sim/out/tuner_data.js"></script>
 <script>
 (function(){
   "use strict";
@@ -246,7 +261,7 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   // Applied after the S-curve fit, so smoothing never flattens the jumps.
   const CHECK_EVERY = 3;
   let bump = 0.25;
-  try { const b = localStorage.getItem("qbt2-bump"); if (b !== null && isFinite(+b)) bump = +b; } catch(e){}
+  try { const b = localStorage.getItem("qbt3-bump"); if (b !== null && isFinite(+b)) bump = +b; } catch(e){}
   const isCheck = v => v % CHECK_EVERY === 0;
   const official = v => Math.round(v * (1 + bump) / 5) * 5;
   // What a player has to beat at visit r, per tier: official at checks.
@@ -299,14 +314,20 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   // records it (MAT_ABSOLUTE_CEILING in js/lock-in.js, from 2026-11-02;
   // tier and capstone changes since may have moved it). A breakpoint above
   // this line can't be reached.
-  const CEILING = 4784;
-  const FULL_VIEW = {x0:1, x1:40, y0:0, y1:5600};
+  // From the simulator's data (tuner_data.js) when there is any: the best
+  // mat score any simulated run reached.
+  const D = window.TUNER_DATA || null;
+  const CEILING = D ? Math.max(...D.sim.map(a => a.length ? a[a.length - 1] : 0)) : 4784;
+  // Tall enough for the simulator's 90th percentile (the odd outlier mat
+  // would squash everything else).
+  const P90_MAX = D ? Math.max(...D.sim.map(a => a.length ? a[Math.floor(.9 * a.length)] : 0)) : CEILING;
+  const FULL_VIEW = {x0:1, x1:24, y0:0, y1:Math.ceil(P90_MAX * 1.15 / 500) * 500};
   let view = {...FULL_VIEW};
   try {
-    const v = JSON.parse(localStorage.getItem("qbt2-view") || "null");
+    const v = JSON.parse(localStorage.getItem("qbt3-view") || "null");
     if (v && v.x1 > v.x0 && v.y1 > v.y0) view = v;
   } catch(e){}
-  const saveView = () => { try { localStorage.setItem("qbt2-view", JSON.stringify(view)); } catch(e){} };
+  const saveView = () => { try { localStorage.setItem("qbt3-view", JSON.stringify(view)); } catch(e){} };
   const PAD = {l:64, r:20, t:16, b:40};
   const VW = 900, VH = 460;
   const plotW = VW - PAD.l - PAD.r, plotH = VH - PAD.t - PAD.b;
@@ -341,15 +362,15 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
     const table = document.getElementById("dataTable");
     const head = "<thead><tr><th class=\"round-col\">Visit</th>" +
       TIERS.map(t => `<th><span class="tier-swatch" style="background:${t.color}"></span>${t.label}</th>`).join("") +
-      "</tr></thead>";
+      (D ? "<th>Sim runs clearing it</th>" : "") + "</tr></thead>";
     const body = "<tbody>" + data.map((row, ri) =>
       `<tr data-row="${ri}" class="${rowEdited(ri) ? "edited" : ""}${isCheck(row[0]) ? " check-row" : ""}"><td class="round-col">${row[0]}</td>` +
       TIERS.map((t, ti) =>
         `<td><input type="number" min="0" max="9995" step="5" data-row="${ri}" data-tier="${ti + 1}" value="${row[ti + 1]}" aria-label="Visit ${row[0]} ${t.label}" class="${outOfOrder(ri, ti + 1) ? "bad" : ""}${row[ti + 1] > CEILING ? " unreachable" : ""}">${isCheck(row[0]) ? `<span class="off" data-off="${ri}-${ti + 1}"></span>` : ""}</td>`
-      ).join("") + `</tr>`
+      ).join("") + (D ? `<td class="reach" data-reach="${ri}"></td>` : "") + `</tr>`
     ).join("") + "</tbody>";
     table.innerHTML = head + body;
-    data.forEach((r, ri) => { if (isCheck(r[0])) setTimeout(() => refreshRow(ri)); });
+    data.forEach((r, ri) => { if (D || isCheck(r[0])) setTimeout(() => refreshRow(ri)); });
     table.querySelectorAll("input").forEach(inp => {
       const commit = () => {
         if (inp.value === "") return; // mid-edit: wait for a real number
@@ -373,6 +394,10 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
       inp.classList.toggle("bad", outOfOrder(ri, ti));
       inp.classList.toggle("unreachable", data[ri][ti] > CEILING);
     });
+    const rc = tr.querySelector("[data-reach]"), qs = D && D.sim[data[ri][0] - 1];
+    if (rc) rc.innerHTML = qs && qs.length
+      ? [1, 2, 3, 4].map(ti => `<b>${shareAtLeast(qs, need(data[ri], ti))}</b>`).join(" · ") + "%"
+      : "—";
     tr.querySelectorAll("[data-off]").forEach(sp => {
       const ti = +sp.dataset.off.split("-")[1], v = official(data[ri][ti]);
       sp.textContent = "check " + v.toLocaleString();
@@ -384,33 +409,54 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   // attributes in place), so a drag never loses the element it grabbed
   // and table edits redraw the chart instantly.
   const lines = [], dots = [], sawLines = [], offDots = [];
-  // Exported runs (History > Export, pasted into chat Sept 3-14, plus Oct 31 and Nov 1), reduced
-  // to one number per visit: the best Display Mat score reachable from
-  // what had been crafted by then. Display only -- never editable, never
-  // part of the copied array.
-  const RUNS = [{"d":"2026-09-03 03:11","s":414,"c":3,"v":[1,1,2,3,120,252,510,710,710,710,970,1122,2926,2926,2926,3586,3633,3633,3633,3768]},{"d":"2026-09-04 04:22","s":644,"c":4,"v":[0,1,69,165,266,282,660,1116,1116,1221,1221,1508,3289,3289,3289,3717,3717,3717,3717,3717]},{"d":"2026-09-04 04:39","s":679,"c":3,"v":[0,1,72,128,140,423,423,650,650,650,1356,2856,2856,2880,2880,3211,3576,3576,3576,3717]},{"d":"2026-09-04 14:31","s":57,"c":0,"v":[0,28,28,30,34,60,60,704,704,704,704,704,704,704,704,704,704,704,704,704]},{"d":"2026-09-04 18:08","s":34,"c":0,"v":[0,0,0,0,0,0,0,0,2,2,2,66,69,69,215,215,215,215,490,490]},{"d":"2026-09-05 20:48","s":313,"c":2,"v":[1,2,522,522,540,540,680,882,882,1104,1176,1246,1605,1908,2736,3003,3003,3003,3003,3150]},{"d":"2026-09-05 21:12","s":409,"c":1,"v":[0,1,12,21,530,1131,1131,1131,1131,1680,1680,1818,1818,2204,2520,2520,2520,2520,2720,2720]},{"d":"2026-09-06 03:55","s":346,"c":1,"v":[1,28,30,32,105,126,376,726,1200,2024,2024,2024,2323,2337,2337,2448,2448,2856,2856,2856]},{"d":"2026-09-06 05:13","s":278,"c":1,"v":[1,2,39,125,192,385,385,408,1530,2436,2436,2436,2436,2436,2436,2436,2948,3108,3108,3108]},{"d":"2026-09-08 04:16","s":86,"c":0,"v":[0,2,32,186,186,256,256,360,477,477,513,576,576,576,712,712,1030,1030,1030,1030]},{"d":"2026-09-08 05:20","s":454,"c":2,"v":[0,0,0,48,54,150,150,198,217,1200,1632,1632,1632,2220,2220,3276,3276,3276,3276,3276]},{"d":"2026-09-09 05:17","s":358,"c":0,"v":[0,1,6,24,154,490,996,1664,1664,1674,1887,1887,1887,2970,2970,2992,2992,3440,3440,3680]},{"d":"2026-09-09 05:31","s":323,"c":1,"v":[0,28,45,156,352,513,513,690,924,924,1152,1152,1152,1372,1372,2599,3280,3280,3280,3280]},{"d":"2026-09-10 05:22","s":311,"c":2,"v":[1,3,8,384,468,710,710,710,828,962,962,1526,1526,1904,2016,2016,2016,2016,2156,3258]},{"d":"2026-09-11 15:55","s":418,"c":2,"v":[1,2,8,208,208,650,902,902,1032,1980,1980,1980,2960,2960,2960,2960,2960,2960,2960,3276]},{"d":"2026-09-11 17:58","s":378,"c":2,"v":[0,1,24,531,531,770,770,891,1200,1703,1703,1703,1716,1716,1716,2720,2720,2720,3289,3289]},{"d":"2026-09-14 03:08","s":1408,"c":8,"v":[0,1,2,4,175,259,312,312,540,747,747,950,950,1287,1440,1440,1440,1476,2304,2304,2322,2322,3013,3211,3576,3576,3576,3576,3576,3576,3576,3580,3580,3580,3580,3580,3580,3580,3580,3580,3726]},{"d":"2026-10-31 07:33","s":1408,"c":8,"v":[3,3,4,5,5,36,120,120,164,612,612,1144,1515,1515,1564,2185,2185,2185,2185,2185,2286,2286,2698,2698,3102,3168,3168,3168,3168,3168,3168,3168,3806,3806,3806,3895,3895,4284,4473,4473]},{"d":"2026-11-01 20:50","s":1408,"c":8,"v":[28,38,42,240,513,513,513,984,984,2040,2394,2394,2394,2394,2398,2720,2720,2720,3135,3982,4334,4334,4473,4473,4473,4473]},{"d":"2026-11-02 06:04","s":1408,"c":8,"v":[28,28,45,48,266,996,1664,2312,2312,2312,2312,2394,2790,2900,3680,3680,3680,4784,4784,4784,4784,4784,4784,4784]},{"d":"2026-11-03 05:37","s":1408,"c":8,"v":[28,30,30,57,80,174,343,343,1200,2304,2304,2304,2520,2790,2790,3480,3480,3480,3480,3480,4040,4439,4683,4683,4683,4738,4784,4784,4784,4784]}];
-  const runColor = i => `hsl(${(i * 360 / RUNS.length + 200) % 360} 55% 68%)`;
+  // Share (whole %) of sorted scores qs at or above v.
+  function shareAtLeast(qs, v){
+    let lo = 0, hi = qs.length;
+    while (lo < hi){ const m = (lo + hi) >> 1; if (qs[m] < v) lo = m + 1; else hi = m; }
+    return Math.round(100 * (qs.length - lo) / qs.length);
+  }
+  const pctOf = (qs, p) => qs[Math.min(qs.length - 1, Math.floor(p * qs.length))];
+  // Your runs (History exports in tools/sim/guide/): board-check scores.
+  const RUNS = D ? D.you : [];
+  const runColor = i => `hsl(${(i * 360 / Math.max(1, RUNS.length) + 20) % 360} 70% 62%)`;
   let runOn = RUNS.map(() => true);
-  try { const saved = JSON.parse(localStorage.getItem("qbt-runs-on") || "null"); if (Array.isArray(saved) && saved.length === RUNS.length) runOn = saved; } catch(e){}
-  const saveRunOn = () => { try { localStorage.setItem("qbt-runs-on", JSON.stringify(runOn)); } catch(e){} };
-  let runsLayer = null, runLines = [];
+  try { const saved = JSON.parse(localStorage.getItem("qbt3-runs-on") || "null"); if (Array.isArray(saved) && saved.length === RUNS.length) runOn = saved; } catch(e){}
+  const saveRunOn = () => { try { localStorage.setItem("qbt3-runs-on", JSON.stringify(runOn)); } catch(e){} };
+  let simOn = true;
+  try { simOn = localStorage.getItem("qbt3-sim") !== "0"; } catch(e){}
+  let runsLayer = null, runLines = [], simLayer = null;
   function buildRunChips(){
     const box = document.getElementById("runChips");
-    box.innerHTML = RUNS.map((r, i) =>
-      `<button type="button" class="run-chip" data-run="${i}" aria-pressed="${runOn[i]}" style="--run:${runColor(i)}" title="${r.v.length} visits · ${r.s} score · ${r.c}/8 capstones · best mat ${r.v[r.v.length - 1].toLocaleString()} Quarks"><i></i>${r.d.slice(5, 10).replace("-", "/")} <b>${r.s}</b> pts</button>`).join("");
+    box.innerHTML = RUNS.length ? RUNS.map((r, i) =>
+      `<button type="button" class="run-chip" data-run="${i}" aria-pressed="${runOn[i]}" style="--run:${runColor(i)}" title="${r.caps} capstone${r.caps === 1 ? "" : "s"} · final ${r.s.toLocaleString()} Quarks"><i style="border-top-style:solid"></i>${r.d.slice(5, 10).replace("-", "/")} ${r.d.slice(11)} <b>${r.s.toLocaleString()}</b></button>`).join("")
+      : '<span class="runs-note">No runs yet: add History exports to tools/sim/guide/ and run the simulator.</span>';
     box.querySelectorAll(".run-chip").forEach(b => {
       const i = +b.dataset.run;
       b.addEventListener("click", () => { runOn[i] = !runOn[i]; b.setAttribute("aria-pressed", runOn[i]); saveRunOn(); drawRuns(); });
       b.addEventListener("mouseenter", () => runLines[i] && runLines[i].classList.add("hot"));
       b.addEventListener("mouseleave", () => runLines[i] && runLines[i].classList.remove("hot"));
     });
+    const chk = document.getElementById("simChk");
+    chk.checked = simOn; chk.disabled = !D;
+    document.getElementById("simLabel").textContent = D ? `Simulated runs (${D.simRuns}, made ${D.made})` : "Simulated runs (no data -- run the simulator)";
+    chk.addEventListener("change", () => { simOn = chk.checked; try { localStorage.setItem("qbt3-sim", simOn ? "1" : "0"); } catch(e){} drawRuns(); });
   }
   function drawRuns(){
     RUNS.forEach((r, i) => {
-      const pl = runLines[i];
-      pl.style.display = runOn[i] ? "" : "none";
-      pl.setAttribute("points", r.v.slice(0, 40).map((v, k) => `${xFor(k + 1)},${yFor(v)}`).join(" "));
+      const g = runLines[i];
+      g.style.display = runOn[i] ? "" : "none";
+      g.querySelector("polyline").setAttribute("points", r.checks.map(([v, q]) => `${xFor(v)},${yFor(q)}`).join(" "));
+      g.querySelectorAll("circle").forEach((c, k) => { c.setAttribute("cx", xFor(r.checks[k][0])); c.setAttribute("cy", yFor(r.checks[k][1])); });
     });
+    if (!simLayer) return;
+    simLayer.style.display = simOn ? "" : "none";
+    const vs = D.sim.map((qs, i) => [i + 1, qs]).filter(([, qs]) => qs.length);
+    const pts = p => vs.map(([v, qs]) => `${xFor(v)},${yFor(pctOf(qs, p))}`);
+    const [band, mid, lo, hi] = simLayer.children;
+    band.setAttribute("points", [...pts(.25), ...pts(.75).reverse()].join(" "));
+    mid.setAttribute("points", pts(.5).join(" "));
+    lo.setAttribute("points", pts(.1).join(" "));
+    hi.setAttribute("points", pts(.9).join(" "));
   }
   function setAllRuns(on){
     runOn = RUNS.map(() => on); saveRunOn();
@@ -432,7 +478,7 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
       const y = yFor(CEILING);
       axesLayer.appendChild(el("line", {class:"ceiling-line", x1:PAD.l, x2:VW - PAD.r, y1:y, y2:y}));
       const t = el("text", {class:"ceiling-label", x:VW - PAD.r - 4, y:y - 6, "text-anchor":"end"});
-      t.textContent = "Max possible mat: " + CEILING.toLocaleString();
+      t.textContent = (D ? "Best mat in the simulator: " : "Max possible mat: ") + CEILING.toLocaleString();
       axesLayer.appendChild(t);
     }
     const ys = niceStep(view.y1 - view.y0, 6);
@@ -465,14 +511,23 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
     svg.appendChild(axesLayer);
     plotLayer = el("g", {"clip-path":"url(#plotClip)"});
     svg.appendChild(plotLayer);
+    if (D){
+      simLayer = el("g", {"pointer-events":"none"});
+      ["sim-band", "sim-mid", "sim-edge", "sim-edge"].forEach(c => simLayer.appendChild(el(c === "sim-band" ? "polygon" : "polyline", {class:c})));
+      plotLayer.appendChild(simLayer);
+    }
     runsLayer = el("g", {"pointer-events":"none"});
     plotLayer.appendChild(runsLayer);
     runLines = RUNS.map((r, i) => {
-      const pl = el("polyline", {class:"run-line", stroke:runColor(i)});
-      const t = el("title", {}); t.textContent = `Run ${r.d}: ${r.s} pts`;
-      pl.appendChild(t);
-      runsLayer.appendChild(pl);
-      return pl;
+      const g = el("g", {});
+      g.appendChild(el("polyline", {class:"you-line", stroke:runColor(i)}));
+      r.checks.forEach(([v, q]) => {
+        const c = el("circle", {r:3.5, fill:runColor(i)});
+        const t = el("title", {}); t.textContent = `${r.d} · turn ${v}: ${q.toLocaleString()} Quarks`;
+        c.appendChild(t); g.appendChild(c);
+      });
+      runsLayer.appendChild(g);
+      return g;
     });
     ghostLines = TIERS.map(tier => {
       const g = el("polyline", {class:"ghost-line", stroke:tier.color});
@@ -686,7 +741,8 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
     data.forEach(row => { if (row[0] < view.x0 || row[0] > view.x1) return;
       for (let k = 1; k <= 4; k++){ lo = Math.min(lo, row[k]); hi = Math.max(hi, need(row, k)); } });
     RUNS.forEach((r, i) => { if (!runOn[i]) return;
-      r.v.forEach((v, k) => { if (k + 1 >= view.x0 && k + 1 <= view.x1){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }); });
+      r.checks.forEach(([v, q]) => { if (v >= view.x0 && v <= view.x1){ lo = Math.min(lo, q); hi = Math.max(hi, q); } }); });
+    if (D && simOn) D.sim.forEach((qs, i) => { if (qs.length && i + 1 >= view.x0 && i + 1 <= view.x1){ lo = Math.min(lo, pctOf(qs, .1)); hi = Math.max(hi, pctOf(qs, .9)); } });
     const pad = Math.max(50, (hi - lo) * 0.06);
     return {y0: Math.max(0, Math.floor((lo - pad) / 50) * 50), y1: Math.ceil((hi + pad) / 50) * 50};
   }
@@ -697,10 +753,10 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   document.querySelector(".zoom-presets").addEventListener("click", ev => {
     const b = ev.target.closest("[data-zoom]"); if (!b) return;
     const z = b.dataset.zoom;
-    if (z === "full") setView(FULL_VIEW);
+    if (z === "full"){ view = {...view, x0:1, x1:24}; setView({...view, ...fitY()}); }
     else if (z === "fit") setView({...view, ...fitY()});
     else {
-      const [x0, x1] = z === "early" ? [1, 12] : z === "mid" ? [10, 25] : [20, 40];
+      const [x0, x1] = z === "early" ? [1, 12] : z === "mid" ? [10, 24] : [1, 40];
       view = {...view, x0, x1};
       setView({...view, ...fitY()});
     }
@@ -710,7 +766,7 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
   function setBump(pct){
     if (!isFinite(pct)) return;
     bump = Math.max(0, Math.min(80, Math.round(pct))) / 100;
-    try { localStorage.setItem("qbt2-bump", String(bump)); } catch(e){}
+    try { localStorage.setItem("qbt3-bump", String(bump)); } catch(e){}
     bumpRange.value = Math.round(bump * 100);
     if (document.activeElement !== bumpPct) bumpPct.value = Math.round(bump * 100);
     data.forEach((r, ri) => refreshRow(ri)); drawChart(); updateCode();
