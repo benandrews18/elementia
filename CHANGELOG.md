@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Shop and Inventory card views: tier 1 card names are the same size as tier 2's, and capstone art is 1.5x bigger.
 - The Display Mat now grows at the turn 6/12 check even when no challenge could be drawn (before, it waited until the next station and skipped its Expansion screen).
 - The Display Mat now grows at the board check on turns 6, 12 and 18 (not when you arrive): the screen darkens around the new slots with "Display Mat Expansion!" before the challenge window. The old "mat grew" banner is gone.
 - "New Items Unlocked" and "Display Mat Expansion" ignore taps for their first 2 seconds; "Tap to continue" fades in when they're ready.
