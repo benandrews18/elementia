@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Card view pins.** Each card in the station card view has the pin toggle
+  left of its Craft button, replaced by the tracked item's icon when the
+  tracked item still needs that card, as in the list view.
+
 - **Challenge on the shutter.** The board-check shutter reads "Display Mat
   Challenge!" in white (the gold clashed with the panels' gold seam), and
   the round's challenge window is already open when the panels part (after

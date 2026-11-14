@@ -71,6 +71,16 @@ function itemHTML(entry, idx){
   // TRACKED item's icon). stillNeededClosure() so finished intermediates stop
   // flagging their ingredients unless a sibling branch still needs them.
   if (can && !done) cls.push("job-highlight");
+  const pinSlot = pinSlotHTML(entry);
+  const btn = craftBtnHTML(entry, idx);
+  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
+    ${pinSlot}
+    ${itemRowHTML(entry, can)}${btn}</div>`;
+}
+// The pin toggle, or -- for an item the tracked item still needs -- the
+// tracked item's icon in its place (opens the To-Do List there). Shared by
+// the shop rows and the station's card view.
+function pinSlotHTML(entry){
   let pinBadge = "";
   if (selectedJobItem){
     const jobTree = new Set([selectedJobItem, ...stillNeededClosure(selectedJobItem)]);
@@ -83,12 +93,8 @@ function itemHTML(entry, idx){
   }
   // The badge takes the pin button's corner -- a card shows one or the
   // other.
-  const pinSlot = pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
+  return pinBadge || `<button type="button" class="refpin shop-pin ${isPinned(entry.name) ? "active" : ""}" data-shop-pin="${esc(entry.name)}"
       title="${isPinned(entry.name) ? "Unpin" : "Pin to top"}" aria-label="${isPinned(entry.name) ? "Unpin " : "Pin "}${esc(entry.name)}${isPinned(entry.name) ? "" : " to top"}" aria-pressed="${isPinned(entry.name)}">📌</button>`;
-  const btn = craftBtnHTML(entry, idx);
-  return `<div class="item ${cls.join(" ")}" data-item-card="${idx}">
-    ${pinSlot}
-    ${itemRowHTML(entry, can)}${btn}</div>`;
 }
 // The icon/name/suit costs/recipe row, shared by the shop and the
 // Inventory's list view (matShopRowHTML()).

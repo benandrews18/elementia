@@ -91,7 +91,7 @@ function shopCardsHTML(entries, idx){
     const owned = owns(e.name), t1 = e.tier === "MATERIAL";
     return `<div class="st-cell${e.tier === "CAPSTONE" ? " wide" : ""}" data-item-card="${idx(e)}">${matCardHTML(e.name, { cls: [t1 ? "small mini" : "small",
       owned ? "st-owned" : (canCraft(e) && suitCostPayable(e) ? "st-can" : ""),
-      e.name === stationCardOpen ? "selected" : ""].join(" ") })}${craftBtnHTML(e, idx(e))}</div>`;
+      e.name === stationCardOpen ? "selected" : ""].join(" ") })}<div class="st-acts">${pinSlotHTML(e)}${craftBtnHTML(e, idx(e))}</div></div>`;
   };
   // No tier headings. Tier 1 (half-height cards) in rows of 4 across the
   // top, then everything else in its own grid, where dense packing lets a
