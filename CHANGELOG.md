@@ -10,6 +10,14 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Growing Display Mat.** The mat now grows during a run: 3 slots in one
+  row to start, a 4th slot at turn 6, a half-height strip of 4 tier-1-only
+  places along the bottom at turn 12, and the full 4x2 mat at turn 18
+  (Metropolis's extra column grows with it). Slots not yet open show a lock
+  and the turn they open; "Your Display Mat grew!" pops up at each step.
+  Bigger cards are placed first and tier 1 cards fill the bottom strip
+  before taking whole slots, so card order never wastes room.
+
 - **Tip text revisions (from the Tip Workshop).** Shorter lines with line
   breaks and icons across the How to Play slides, Pin Items, Display Mat
   rules (12.5px), the challenge intro and popups ("3 The Ocean cards:

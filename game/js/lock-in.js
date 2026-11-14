@@ -149,7 +149,7 @@ const CHECK_ORDERS = {
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
     icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
-    params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
+    params: () => [null], ok: mat => matHasEmptySlot(mat) },
   trendShift: { kind: "restriction", name: "Trend Shift",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} combo`,
     params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },

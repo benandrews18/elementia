@@ -121,7 +121,7 @@
   const expect = (ok, msg) => { if (!ok) errs.push("rule: " + msg); };
   // Auto-place: crafts keep landing on the mat until they'd overflow it --
   // tier 1 cards stack two per slot, so that's more than 8 crafts.
-  { const saved = state; state = freshState();
+  { const saved = state; state = freshState(); state.visits = 24; // full-size mat
     const t1 = ENTRIES.filter(e => e.tier === "MATERIAL" && e.reqs.every(r => r.kind === "element")).slice(0, 10);
     t1.forEach(e => { e.reqs.forEach(r => state.elements[r.name] = 99); craft(e); });
     expect(t1.length < 10 || state.mat.length === 10, `10 tier 1 crafts should all auto-place, got ${state.mat.length}`);
@@ -222,9 +222,19 @@
       // Robot: +5 per card on the mat (itself included).
       { const a = sc([C("Robot"), ...two]), b0 = [C("Robot"), ...two].reduce((n, c) => n + c.points, 0);
         expect(a.base === b0 + 15, `Robot should add +5 per card (base ${a.base}, plain ${b0})`); }
-      // Metropolis: 10 slots, 5 columns.
-      { const L = matLayout([C("Metropolis")]); expect(L.slots === 10 && L.cols === 5, "Metropolis should give 10 slots");
-        expect(matFits([C("Metropolis"), ...plain.slice(0, 8)]) && !matFits([C("Metropolis"), ...plain.slice(0, 9)]), "Metropolis mat should hold its 2 + 8 more"); }
+      // Metropolis: 10 slots, 5 columns (full-size mat).
+      { const v = state.visits; state.visits = 24;
+        const L = matLayout([C("Metropolis")]); expect(L.slots === 10 && L.cols === 5, "Metropolis should give 10 slots");
+        expect(matFits([C("Metropolis"), ...plain.slice(0, 8)]) && !matFits([C("Metropolis"), ...plain.slice(0, 9)]), "Metropolis mat should hold its 2 + 8 more");
+        // The mat grows: 3 slots, then 4 (turn 6), + a tier-1 strip (12), then 4x2 (18).
+        const t1s = MAT_CARDS.filter(matIsTier1);
+        const fits = (round, cards) => { state.visits = round; return matFits(cards); };
+        expect(fits(1, plain.slice(0, 3)) && !fits(5, plain.slice(0, 4)), "the mat should start at 3 slots");
+        expect(fits(6, plain.slice(0, 4)) && !fits(11, [...plain.slice(0, 4), t1s[0]]), "turn 6 should open a 4th slot");
+        expect(fits(12, [...plain.slice(0, 4), ...t1s.slice(0, 4)]) && !fits(17, [...plain.slice(0, 4), ...t1s.slice(0, 5)])
+          && !fits(17, plain.slice(0, 5)), "turn 12 should open 4 tier-1-only places along the bottom");
+        expect(fits(18, plain.slice(0, 8)), "turn 18 should give the full 4x2 mat");
+        state.visits = v; }
       // Maglev Train: tier 1 stacks 3 to a slot, +2 each.
       { expect(matOccupancy([C("Maglev Train"), ...t1.slice(0, 3)]) === 3, "Maglev Train: 3 tier 1 cards should share one slot");
         const base = sc([C("Maglev Train"), t1[0]]).base; expect(base === C("Maglev Train").points + t1[0].points + 2, "Maglev Train: tier 1 +2"); }
@@ -393,7 +403,7 @@
       "old save did not load cleanly");
     // A mat that overflows after a tier change is trimmed on load.
     const nonT1 = MAT_CARDS.filter(c => !matIsTier1(c) && !matIsCapstone(c)).slice(0, 10).map(c => c.name);
-    localStorage.setItem(SAVE_KEY, JSON.stringify({items: nonT1, mat: nonT1, visits: 5, mode: "classic"}));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({items: nonT1, mat: nonT1, visits: 20, mode: "classic"}));
     loadAll();
     expect(state.mat.length === MAT_SLOTS_TOTAL && matFits(matOnMat()) && nonT1.every(owns),
       `an overfull mat should be trimmed to fit on load (kept ${state.mat.length})`);

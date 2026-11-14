@@ -95,19 +95,19 @@ function matComboChipsHTML(s, revealAll, withOrder){
    opens its inspection view (#drawerTop's click listener). */
 function renderMatGridCells(s){
   const mat = matOnMat();
-  const L = matLayout(mat);
-  const cells = matPackCells(mat);
+  const { L, slot } = matPack(mat);
   const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
-  const html = cells.map(cell => cell.stack
+  // Slots not open yet: a lock and the turn they open.
+  const lock = i => `<span class="mm-lock">🔒 ${L.opensAt[i]}</span>`;
+  const html = slot.map((sl, i) => sl.cover ? ""
+    : sl.card ? `<div class="mm-slot filled ${sl.w > 1 ? "wide" : ""}" data-idx="${sl.idx}">${card(sl.card)}</div>`
     // Tier 1 squares, stacked; an open half shows as a small dashed square.
-    ? `<div class="mm-slot filled stack">${cell.stack.map(t => card(t.card, "mini")).join("")}${
-        cell.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
-    : cell.card
-    ? `<div class="mm-slot filled ${cell.w > 1 ? "wide" : ""}" data-idx="${cell.idx}">${card(cell.card)}</div>`
+    : sl.kind === "full" && sl.stack ? `<div class="mm-slot filled stack">${sl.stack.map(t => card(t.card, "mini")).join("")}${
+        sl.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
+    // Bottom strip (turns 12-17): one tier 1 place over a locked half.
+    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}<span class="mm-mini-locked">${lock(i)}</span></div>`
+    : sl.kind === "locked" ? `<div class="mm-slot locked">${lock(i)}</div>`
     : `<div class="mm-slot empty"></div>`);
-  for (let n = cells.reduce((a, c) => a + c.w, 0); n < L.slots; n++){
-    html.push(`<div class="mm-slot empty"></div>`);
-  }
   document.getElementById("matGrid").innerHTML = html.join("");
 }
 
@@ -458,7 +458,7 @@ function matMiniRowHTML(mat){
   const icons = mat.map(c => `<span class="mmr-ic" title="${esc(c.name)}">${em(c.emoji)}</span>`).join("");
   return `<button type="button" class="mat-mini-row" id="matMiniRow" title="Show the Display Mat">
     <span class="mmr-icons">${icons || '<span class="mmr-empty">Nothing on the mat yet</span>'}</span>
-    <span class="mmr-room">${used}/${L.slots * L.perSlot}</span></button>`;
+    <span class="mmr-room">${used}/${L.cap}</span></button>`;
 }
 function renderClassicDrawer(){
   document.getElementById("matFilters").hidden = false;

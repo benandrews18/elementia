@@ -22,6 +22,8 @@ function goStation(name){
   // .stationhead everywhere.
   rollAnimationInProgress = false;
   state.visitedStations[name] = true;
+  if (MAT_GROW_ROUNDS.includes(state.visits))
+    queueEventToast("stations", "🖼️", "Your Display Mat grew!", state.visits === MAT_GROW_ROUNDS[2] ? "It's full size now" : "More room for cards");
   // Every station visited: one "?" element, once per run.
   if (!state.allStationsPaid && DATA.stations.every(s => state.visitedStations[s.name])){
     state.allStationsPaid = true;

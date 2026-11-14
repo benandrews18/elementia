@@ -40,11 +40,30 @@ MAT_CARDS.forEach(c => { MAT_CARD_BY_NAME[c.name] = c; });
 
 const matIsCapstone = c => c.tier === "CAPSTONE";
 const matHas = (cards, name) => cards.some(c => c.name === name);
-/* The mat's shape for these cards: Metropolis (Expansion) adds a column
-   (10 slots); Maglev Train (Freight) stacks tier 1 three to a slot. */
+/* The mat grows during a run (MAT_GROW_ROUNDS): 3 slots in one row, then
+   the 4th slot (turn 6), then a half-height bottom strip of tier-1-only
+   places (turn 12), then the full second row (turn 18) -- today's 4x2. Not
+   a run (no state yet, e.g. building collections at load) = full size. */
+const MAT_GROW_ROUNDS = [6, 12, 18];
+const matStage = () => typeof state === "undefined" || !state ? MAT_GROW_ROUNDS.length
+  : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) >= r).length;
+/* The mat's shape for these cards: every slot of the cols x 2 grid is
+   "full" (open), "top" (only its top half: one tier 1 card) or "locked"
+   (with the turn it opens). Metropolis (Expansion) adds a column, growing
+   with the rest; Maglev Train (Freight) stacks tier 1 three to a slot. */
 function matLayout(cards){
-  const cols = matHas(cards, "Metropolis") ? MAT_SLOTS_COLS + 1 : MAT_SLOTS_COLS;
-  return { cols, slots: cols * MAT_SLOTS_ROWS, perSlot: matHas(cards, "Maglev Train") ? 3 : MAT_TIER1_PER_SLOT };
+  const extra = matHas(cards, "Metropolis") ? 1 : 0, cols = MAT_SLOTS_COLS + extra, st = matStage();
+  const kinds = [], opensAt = [];
+  for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++){
+    const k = r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")
+      : st >= 3 ? "full" : st === 2 ? "top" : "locked";
+    kinds.push(k);
+    opensAt.push(r === 0 ? MAT_GROW_ROUNDS[0] : st < 2 ? MAT_GROW_ROUNDS[1] : MAT_GROW_ROUNDS[2]);
+  }
+  const perSlot = matHas(cards, "Maglev Train") ? 3 : MAT_TIER1_PER_SLOT;
+  return { cols, kinds, opensAt, perSlot, slots: kinds.filter(k => k === "full").length,
+    // Room in tier 1 cards (the collapsed mat's "x/y").
+    cap: kinds.reduce((n, k) => n + (k === "full" ? perSlot : k === "top" ? 1 : 0), 0) };
 }
 const matSlotsOf = c => matIsCapstone(c) ? MAT_CAPSTONE_SLOTS : 1;
 const matComboTier = k => {
@@ -58,34 +77,39 @@ const matComboTier = k => {
    reads the card list, not the slots). */
 const MAT_TIER1_PER_SLOT = 2;
 const matIsTier1 = c => c.tier === "MATERIAL";
-/* Mat order -> slot units: {card, idx, w} for a normal card, {stack:
-   [{card, idx}], w:1} for tier 1 squares. A tier 1 card joins the first
-   stack with room, else starts a new one where it sits in mat order. */
-function matUnits(cards){
-  const units = [], perSlot = matLayout(cards).perSlot;
-  cards.forEach((c, i) => {
-    if (!matIsTier1(c)){ units.push({card:c, idx:i, w:matSlotsOf(c)}); return; }
-    const open = units.find(u => u.stack && u.stack.length < perSlot);
-    if (open) open.stack.push({card:c, idx:i});
-    else units.push({stack:[{card:c, idx:i}], w:1});
+/* Cards -> slots, in two passes so the order cards were added never wastes
+   room: bigger cards first (mat order) into open slots -- a capstone needs
+   two side by side in one row -- then tier 1 cards: an open stack, else a
+   tier-1-only "top" place, else a fresh slot. slot[i] = {kind, card, idx,
+   w} | {kind, stack:[{card, idx}]} | {kind, cover} (a capstone's 2nd half)
+   | {kind} (empty). overflow = cards that didn't fit. */
+function matPack(cards){
+  const L = matLayout(cards), cols = L.cols;
+  const slot = L.kinds.map(kind => ({ kind }));
+  const free = s => s && s.kind === "full" && !s.card && !s.stack && !s.cover;
+  const overflow = [];
+  cards.forEach((c, idx) => {
+    if (matIsTier1(c)) return;
+    const w = matSlotsOf(c);
+    const at = slot.findIndex((s, i) => i % cols + w <= cols && slot.slice(i, i + w).every(free));
+    if (at < 0){ overflow.push(c); return; }
+    Object.assign(slot[at], { card: c, idx, w });
+    for (let k = 1; k < w; k++) slot[at + k].cover = true;
   });
-  return units;
-}
-/* Left-to-right packing: a 2-wide capstone never straddles a row break, so a
-   lone last column pads out -- and the pad still costs a slot. Occupancy
-   comes from the packing, not a sum of widths. */
-function matPackCells(cards){
-  const cells = [], cols = matLayout(cards).cols;
-  let col = 0;
-  matUnits(cards).forEach(u => {
-    if (col + u.w > cols){ while (col < cols){ cells.push({w:1}); col++; } col = 0; }
-    cells.push(u);
-    col = (col + u.w) % cols;
+  cards.forEach((c, idx) => {
+    if (!matIsTier1(c)) return;
+    const s = slot.find(s => s.stack && s.stack.length < (s.kind === "top" ? 1 : L.perSlot))
+      || slot.find(s => s.kind === "top" && !s.stack) || slot.find(free);
+    if (!s){ overflow.push(c); return; }
+    (s.stack || (s.stack = [])).push({ card: c, idx });
   });
-  return cells;
+  return { L, slot, overflow };
 }
-const matOccupancy = cards => matPackCells(cards).reduce((n, c) => n + c.w, 0);
-const matFits = cards => matOccupancy(cards) <= matLayout(cards).slots;
+const matFits = cards => !matPack(cards).overflow.length;
+// Slots in use (a capstone counts 2); collections and tests size by this.
+const matOccupancy = cards => matPack(cards).slot.filter(s => s.card || s.stack || s.cover).length;
+// An open slot or place left (Short Table).
+const matHasEmptySlot = cards => matPack(cards).slot.some(s => s.kind !== "locked" && !s.card && !s.stack && !s.cover);
 
 /* A card's DIRECT recipe items only; cards "share a component" when the same
    name appears on both. */
