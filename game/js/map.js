@@ -66,14 +66,8 @@ function mapCardHTML(name){
   const su = DATA.suits[s.suit];
   const capName = s.capstone[1], done = owns(capName);
   const over = state.ended;
-  const here = name === state.lastStation;
-  const connected = canReachStation(state.lastStation, name);
-  // Travel happens via the hub's Travel face (hubHomeFace()/canTravelTo());
-  // the card only explains why a node can't be travelled to.
-  const statusNote = here ? "You are here"
-    : over ? "Session complete"
-    : !connected ? "Not connected to your location"
-    : "";
+  // Travel happens via the hub's Travel face (hubHomeFace()/canTravelTo()).
+  const statusNote = over ? "Session complete" : "";
   // Tracked item, top-right, ringed like the highlighted icons below so it
   // labels them.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);

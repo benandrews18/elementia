@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Clock window icons.** The clock window shows 🥾 by "move", all 8
+  station icons under the first paragraph, and the bag, ⚛️ and 🎲 icons in
+  "Every 3 rounds your Display Mat is checked. Its Quark Score sets your
+  bonus dice at the next station!" Station preview cards no longer say
+  "You are here" or "Not connected to your location".
+
 - **Tracking cues.** Tapping the tracked pill opens the item's card with
   the magnifier circle and a green "You are tracking this item!" pill above
   it. On the map, the tracked item's badge sits on its station's top-left
