@@ -449,3 +449,18 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
   font-size:18px; background:#122e3c; border:2px solid var(--st)}
 .ci-st :is(img, svg){width:20px; height:20px}
 .ci-inline-ic{width:22px; height:22px; vertical-align:-5px}
+/* "New Items Unlocked!" (maybeShowUnlockReveal()): a heavily dimmed screen
+   (over the hub too) so the new cards pop in full colour. */
+#unlockReveal{z-index:75; background:rgba(4,6,10,.9); align-items:center; cursor:pointer}
+.ur-box{margin:auto; width:100%; max-width:420px; text-align:center}
+.ur-title{font-size:30px; font-weight:900; color:#ffe08a; text-shadow:0 3px 0 #000, 0 0 22px rgba(226,178,90,.6);
+  margin:0 0 6px; animation:bounceIn .45s cubic-bezier(.25,1,.4,1) both}
+.ur-sub{color:#fff; font-weight:800; font-size:15px; margin:0 0 20px; display:flex; align-items:center; justify-content:center; gap:6px}
+.ur-sub :is(img, svg){width:22px; height:22px}
+.ur-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:14px}
+.ur-card{width:104px; height:146px; opacity:0; animation:urPop .5s cubic-bezier(.25,1.4,.4,1) both;
+  filter:drop-shadow(0 0 14px rgba(226,178,90,.55))}
+.ur-card .mm-card{pointer-events:none}
+@keyframes urPop{0%{opacity:0; transform:scale(.4) rotate(-6deg)} 60%{opacity:1; transform:scale(1.12) rotate(2deg)} 100%{opacity:1; transform:none}}
+.ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px}
+html.low-motion .ur-card{animation:none; opacity:1}

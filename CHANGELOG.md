@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **"New Items Unlocked!" reveal.** After a capstone is crafted and the
+  screen is clear (its card closed, any Marketplace tray dismissed), the
+  screen dims and the items it unlocks pop in in full colour under "New
+  Items Unlocked!"; tap to dismiss. The Marketplace now opens after a
+  capstone only the first time in each game (later ones only via a
+  completed Market row); the "Pick your next capstone" toast always shows.
+
 - **Smoother Inventory and Lock-In.** Opening the Inventory no longer
   forces three full-page layouts (the Quark bar, top bar and hub heights
   are now kept current by ResizeObservers) and no longer rebuilds the ~100

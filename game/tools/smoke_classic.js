@@ -423,6 +423,14 @@
     if (state.visits !== v || !drawer.classList.contains("open")) errs.push("board check: Travel after closing the mat should reopen it, not travel");
     closeDrawer(); travelPromptFor = null;
   });
+  // After a capstone: the Marketplace opens only for the run's first one.
+  await step("capstone market once", async () => {
+    document.querySelectorAll(".overlay.open").forEach(o => o.classList.remove("open"));
+    if (jobSheet.classList.contains("open")) closeJobBoard();
+    state.sawCapstoneMarket = true; openNextCapstoneMarket();
+    if (jobSheet.classList.contains("open")) errs.push("capstone: the Marketplace should open only after the run's first capstone");
+    if (!ENTRIES.some(e => UNLOCKED_BY[e.name] === "Coral Reef")) errs.push("capstone: Coral Reef should unlock items to reveal");
+  });
   log.errs = errs;
   window.__smoke = log;
 })();

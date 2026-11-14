@@ -211,8 +211,10 @@ function showElCardPop(sym){
 document.getElementById("elCardPop").addEventListener("click", () => closeOverlay("elCardPop"));
 
 /* A capstone just crafted: its full inspection card under a "Capstone
-   complete" banner, with confetti. Closing it opens the Marketplace to pick
-   the next capstone to track (capstoneMarketPending, see closeOverlay()). */
+   complete" banner, with confetti. Closing it (capstoneMarketPending, see
+   closeOverlay()) nudges the player to track the next capstone, opening the
+   Marketplace only for the run's first capstone. Then the items that
+   capstone unlocks get their own reveal (queueUnlockReveal()). */
 let capstoneMarketPending = false;
 function celebrate(entry){
   releaseBingoCraftHold();
@@ -223,16 +225,58 @@ function celebrate(entry){
     ? "That's all eight -- every capstone in Elementia!" : `${n} of 8 capstones`}</small>`;
   banner.hidden = false;
   capstoneMarketPending = n < 8;
+  queueUnlockReveal(entry.name);
   fireConfetti();
 }
-// After the capstone card closes: the Marketplace, with a nudge to track
-// the next capstone. Skipped if something else is now on screen.
+// After the capstone card closes: a nudge to track the next capstone. The
+// Marketplace itself opens only after the run's first capstone
+// (state.sawCapstoneMarket); later ones open it only through a completed
+// Market row (the BINGO sequence).
 function openNextCapstoneMarket(){
   capstoneMarketPending = false;
-  if (document.querySelector(".overlay.open") || state.ended) return;
-  openJobSelectTray();
+  if (state.ended) return;
+  if (!state.sawCapstoneMarket && !document.querySelector(".overlay.open")){
+    state.sawCapstoneMarket = true; save();
+    openJobSelectTray();
+  }
   queueEventToast("market", "🏆", "Pick your next capstone", "Pin one in the Marketplace to track it");
 }
+
+/* "New Items Unlocked!": a capstone's unlock items (data.js "unlock" rows,
+   UNLOCKED_BY) pop onto a dimmed screen in full colour, once the screen is
+   clear -- the capstone card closed and any Marketplace tray dismissed.
+   Tap to dismiss. */
+let unlockRevealQueue = [], unlockRevealTimer = null;
+function queueUnlockReveal(capName){
+  const names = [...new Set(ENTRIES.filter(e => UNLOCKED_BY[e.name] === capName).map(e => e.name))];
+  if (!names.length) return;
+  unlockRevealQueue.push({ capName, names });
+  maybeShowUnlockReveal();
+}
+function maybeShowUnlockReveal(){
+  if (!unlockRevealQueue.length || unlockRevealTimer) return;
+  const busy = anyOverlayOpen() || !!openPanelName() || capstoneMarketPending || bingoClearInProgress
+    || document.body.classList.contains("lockin-playing") || comboLabActive;
+  if (busy){
+    unlockRevealTimer = setTimeout(() => { unlockRevealTimer = null; maybeShowUnlockReveal(); }, 400);
+    return;
+  }
+  const { capName, names } = unlockRevealQueue.shift();
+  const cap = ENTRIES.find(e => e.name === capName);
+  const step = lowMotion() ? 0 : 140;
+  document.getElementById("unlockRevealBody").innerHTML = `
+    <h2 class="ur-title">New Items Unlocked!</h2>
+    <p class="ur-sub">${cap ? em(cap.emoji) : ""} ${esc(capName)} opened up ${names.length === 1 ? "a new item" : `${names.length} new items`}</p>
+    <div class="ur-grid">${names.map((n, i) =>
+      `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n)}</div>`).join("")}</div>
+    <p class="ur-tap">Tap to continue</p>`;
+  openOverlay("unlockReveal");
+}
+// Any tap closes it; the next queued reveal (if any) follows.
+document.getElementById("unlockReveal").addEventListener("click", () => {
+  closeOverlay("unlockReveal");
+  setTimeout(maybeShowUnlockReveal, 300);
+});
 
 /* The craft + reveal, called straight away (no suit cost) or once the
    suit-spend balloon confirms. The suit cost must already be paid; craft()
