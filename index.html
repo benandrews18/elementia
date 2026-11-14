@@ -1942,7 +1942,6 @@ body.has-qtop .st-card-sel{top:var(--qtop-h, 52px)}
 .cr-unknown{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px;
   border:2px dashed var(--line); color:var(--mute); font-weight:900}
 .coll-stars{margin-left:6px; color:var(--gold); font-weight:900}
-.end-stars{margin:8px 0 0; font-weight:800; color:var(--gold); text-align:center; font-size:13px}
 /* Collections header: title, Stars bubble (Main Menu), X top-right; the
    clue buttons sit under the count. */
 .coll-head{display:flex; align-items:center; justify-content:center; gap:10px}
@@ -2817,13 +2816,6 @@ html.low-motion .ur-card{animation:none; opacity:1}
 .pc-ingredients.lots .pc-ping.elem{font-size:12px; padding:3px 5px; min-width:0}
 
 /* session summary */
-.sumgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin:16px 0 4px}
-.sumstat{background:var(--bg-soft); border:1.5px solid var(--line2); border-radius:13px; padding:13px 14px}
-.sumstat .n{font-size:27px; font-weight:800; letter-spacing:-1px; line-height:1.1}
-.sumstat .l{font-size:11px; font-weight:800; letter-spacing:.6px; color:var(--mute); margin-top:2px}
-.sumcaps{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
-.sumcap{background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
-  border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
 /* End screen: one phone screen tall -- the stats scroll inside .end-body
    if they must, the buttons stay at the bottom. */
 #endGame .end-box{display:flex; flex-direction:column; padding:12px 8px 6px;
@@ -2831,18 +2823,34 @@ html.low-motion .ur-card{animation:none; opacity:1}
 #endGame #endTitle{margin:-28px auto 8px}
 #endGame .end-body{flex:1; min-height:0; overflow-y:auto}
 #endGame #endSub{margin:0 0 4px; font-size:13px}
-#endGame .sumgrid{grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 2px}
-#endGame .sumstat{padding:7px 8px; border-radius:10px}
-#endGame .sumstat .n{font-size:20px; letter-spacing:-.5px}
-#endGame .sumstat .l{font-size:9px; letter-spacing:.3px}
-#endGame .sumstat-wide{grid-column:span 2}
-#endGame .sum-station{display:flex; align-items:center; gap:6px; font-size:16px; letter-spacing:0}
-#endGame .sum-st-ic{flex:none; display:flex; font-size:22px}
-#endGame .sum-st-ic :is(img,svg){width:24px; height:24px}
-#endGame .sec-label{margin:10px 0 4px !important}
-#endGame .sumcaps{gap:5px; margin-top:4px}
-#endGame .sumcap{padding:3px 7px; font-size:12px}
-#endGame .trophy-grid{max-height:none; gap:6px; padding:0}
+/* Scores: one row, small title over each number, no boxes. */
+#endGame .sumgrid{display:flex; justify-content:space-around; gap:4px; margin:4px 0 2px; text-align:center}
+.end-stat-h{font-size:10px; font-weight:800; letter-spacing:.3px; color:var(--mute); white-space:nowrap}
+.end-stat-n{font-size:21px; font-weight:900; letter-spacing:-.5px; color:var(--ink); line-height:1.15}
+.end-stat-n small{font-size:13px; color:var(--mute)}
+/* Sections: icon + title on a hairline, results underneath. */
+.end-sec{margin-top:10px}
+.end-sec-h{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:900; letter-spacing:.6px;
+  text-transform:uppercase; color:var(--ink2); padding-bottom:4px; margin-bottom:6px; border-bottom:1.5px solid var(--line2)}
+.end-sec-ic{font-size:15px; line-height:1}
+.end-star-pill{margin-left:auto; padding:2px 9px; border-radius:999px; background:var(--gold-soft); border:1.5px solid var(--gold);
+  color:var(--gold); font-size:13px; letter-spacing:0; text-transform:none}
+.end-items{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.end-cap{display:inline-flex; align-items:center; gap:5px; padding:3px 9px 3px 4px; border-radius:999px;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); font-size:12.5px; color:var(--ink)}
+.end-cap :is(img, svg){width:26px; height:26px}
+.end-ic{display:inline-flex; font-size:26px; line-height:1}
+.end-ic :is(img, svg){width:28px; height:28px}
+.end-line{display:flex; align-items:center; gap:7px; font-size:15px; margin-bottom:4px}
+.end-right{margin-left:auto; font-weight:900; color:var(--gold)}
+.end-none{font-size:13px; margin:0 !important}
+/* New trophies: a bit smaller, no "earned" line. */
+#endGame .trophy-grid{max-height:none; gap:6px; padding:0; grid-template-columns:repeat(4, 1fr)}
+#endGame .trophy{padding:6px 4px; gap:2px}
+#endGame .trophy-ic{font-size:26px}
+#endGame .trophy-ic :is(img, svg){width:26px; height:26px}
+#endGame .trophy-name{font-size:10.5px}
+#endGame .trophy-sub{display:none}
 #endGame .end-foot{flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
 #endGame .end-foot .bigbtn{width:100%; padding-left:8px; padding-right:8px}
 #endGame .end-foot .bigbtn:first-child:not([hidden]){grid-column:1 / -1}
@@ -4042,8 +4050,8 @@ html.low-motion #matListActions{transition:none}
       <p id="endSub"></p>
       <div class="sumgrid" id="endGrid"></div>
       <div id="endCapsWrap"></div>
-      <div id="endTrophiesWrap"></div>
       <div id="endFlavorWrap"></div>
+      <div id="endTrophiesWrap"></div>
     </div>
     <div class="end-foot">
       <button type="button" class="bigbtn" id="endContinue" hidden>Continue in Overtime</button>
@@ -12799,26 +12807,27 @@ function checkBingoLines(){
    end-game.js -- End of run: the end screen and its stats, the "crafted everything"
    ending, and confetti.
    ===================================================================== */
-/* Stats grid for showEndGame(). extraCells (raw .sumstat HTML) lets the
-   caller append its own tiles. */
-function sessionStatsGridHTML(extraCells){
+/* End screen sections (showEndGame()): an icon + title, the result under
+   it -- no card boxes, so the window stays short. */
+const endSecHTML = (icon, title, body, extra = "") =>
+  `<div class="end-sec"><div class="end-sec-h"><span class="end-sec-ic">${icon}</span>${esc(title)}${extra}</div>${body}</div>`;
+// Top row: the scores, small titles over the numbers.
+function sessionStatsGridHTML(){
   const caps = CAPSTONES.filter(owns);
-  return `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">SCORE (TOP QUARKS)</div></div>
-    <div class="sumstat"><div class="n">${score()}</div><div class="l">ITEM SCORE</div></div>
-    ${state.grandExhibition ? `<div class="sumstat"><div class="n" style="color:var(--gold)">🏛️</div><div class="l">GRAND EXHIBITION</div></div>` : ""}
-    <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
-    ${extraCells || ""}`;
+  const stat = (icon, title, value) =>
+    `<div class="end-stat"><div class="end-stat-h">${icon} ${esc(title)}</div><div class="end-stat-n">${value}</div></div>`;
+  return stat("⚛️", "Quarks", Math.round(state.bestMatScore || 0).toLocaleString()) +
+    stat("💯", "Item Score", score()) +
+    stat("🛠️", "Items", state.items.length) +
+    stat("🏆", "Capstones", `${caps.length}<small>/8</small>`) +
+    (state.grandExhibition ? stat("🏛️", "Exhibition", "✓") : "");
 }
+const endIconHTML = n => `<span class="end-ic" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`;
 function capstonesSectionHTML(){
   const caps = CAPSTONES.filter(owns);
-  return caps.length
-    ? `<div class="sec-label" style="margin-top:16px">CAPSTONES COMPLETED</div>
-       <div class="sumcaps">${caps.map(n =>
-         `<span class="sumcap">${em(ITEM_EMOJI[n])} ${esc(n)}</span>`).join("")}</div>`
-    : `<p class="empty" style="margin-top:14px">No capstones this time — they need
-       materials from several stations, so plan your route next run!</p>`;
+  return endSecHTML("🏆", "Capstones Completed", caps.length
+    ? `<div class="end-items">${caps.map(n => `<span class="end-cap">${em(ITEM_EMOJI[n])}<b>${esc(n)}</b></span>`).join("")}</div>`
+    : `<p class="end-none">None this time -- plan a route through several stations next run!</p>`);
 }
 // Show the last station's backdrop behind the end screen (it can open from
 // the map or Settings, where updateBackdrop() wouldn't). closeOverlay()
@@ -12849,12 +12858,16 @@ function biggestTurn(){
   });
   return best;
 }
+// Biggest Turn, then Station Most Visited.
 function endGameFlavorHTML(){
-  const turn = biggestTurn();
-  if (!turn) return "";
-  return `<div class="sec-label" style="margin-top:16px">BIGGEST TURN -- ${esc(turn.station)} (+${turn.points.toLocaleString()} pts)</div>
-    <div class="sumcaps">${turn.items.map(n =>
-      `<span class="sumcap" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>`;
+  const turn = biggestTurn(), top = topVisitedStation();
+  const stLine = (name, right) => {
+    const st = STATION_BY_NAME[name];
+    return `<div class="end-line">${st ? `<span class="end-ic">${em(st.emoji)}</span>` : ""}<b>${esc(name)}</b><span class="end-right">${right}</span></div>`;
+  };
+  return (turn ? endSecHTML("💥", "Biggest Turn", stLine(turn.station, `+${turn.points.toLocaleString()} pts`) +
+      `<div class="end-items">${turn.items.map(endIconHTML).join("")}</div>`) : "") +
+    (top ? endSecHTML("🧭", "Station Most Visited", stLine(top.name, `${top.count}×`)) : "");
 }
 
 /* The end of a run: reached MAX_VISITS (goMap()), missed a breakpoint at
@@ -12906,17 +12919,17 @@ function showEndGame(){
   document.getElementById("endContinue").hidden = !completing;
   document.getElementById("endReview").hidden = completing;
 
-  const top = topVisitedStation();
-  const topStation = top && STATION_BY_NAME[top.name];
-  const extraCells = `${
-      top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
-
-  document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
+  document.getElementById("endGrid").innerHTML = sessionStatsGridHTML();
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
-  // Trophies are earned when a run completes (awardTrophies()).
-  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies()) +
-    (completing && state.starsEarned ? `<p class="end-stars">⭐ +${state.starsEarned} Stars this run -- open collection clues from the Main Menu</p>` : "");
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
+  // Trophies are earned when a run completes (awardTrophies()); the run's
+  // Stars ride beside their title as a pill.
+  const won = awardTrophies(), stars = completing ? state.starsEarned || 0 : 0;
+  const starPill = stars ? `<span class="end-star-pill">+${stars} ⭐</span>` : "";
+  document.getElementById("endTrophiesWrap").innerHTML = won.length
+    ? endSecHTML("🎖️", won.length === 1 ? "New Trophy" : "New Trophies",
+        `<div class="trophy-grid">${won.map(t => trophyTileHTML(t, {})).join("")}</div>`, starPill)
+    : stars ? endSecHTML("⭐", "Stars Earned", "", starPill) : "";
   showSessionEndBackdrop();
   openOverlay("endGame");
 }
@@ -13035,11 +13048,6 @@ function openTrophyDetail(id){
   openOverlay("trophyDetail");
 }
 /* The end screen's "New trophies" strip (showEndGame()). */
-function newTrophiesHTML(list){
-  if (!list.length) return "";
-  return `<div class="sec-label" style="margin-top:16px">🎖️ NEW ${list.length === 1 ? "TROPHY" : "TROPHIES"}</div>
-    <div class="trophy-grid">${list.map(t => trophyTileHTML(t, {at: "today"})).join("")}</div>`;
-}
 function openTrophies(){
   const got = loadTrophies();
   document.getElementById("trophiesCount").textContent =
