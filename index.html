@@ -2332,7 +2332,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
 #shutter.closed .sh-label{opacity:1; transform:translateY(-50%) scale(1); transition-delay:.38s}
 .sh-l1{font-size:18px; font-weight:900; letter-spacing:1px; color:#fff; text-transform:uppercase;
   padding:4px 14px; border-radius:999px; background:rgba(0,0,0,.35)}
-.sh-l2{font-size:32px; font-weight:900; color:var(--gold); text-shadow:0 3px 0 #000, 0 0 18px rgba(226,178,90,.5); line-height:1.1; padding:0 16px}
+.sh-l2{font-size:32px; font-weight:900; color:#fff; text-shadow:0 3px 0 #000, 0 0 14px rgba(0,0,0,.8); line-height:1.1; padding:0 16px}
 .sh-l3{font-size:17px; font-weight:900; color:#fff; padding:6px 14px; margin:4px 16px 0; border-radius:12px;
   background:rgba(0,0,0,.45); border:2px solid var(--gold); max-width:340px}
 .sh-l3[hidden]{display:none}
@@ -2347,6 +2347,7 @@ body:has(#bingoCraftOverlay.open) #convertPicker{z-index:74}
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
 .ord-clock svg{width:100%; height:100%; display:block}
 .ord-desc{text-align:center; font-weight:800; margin:0 0 6px !important}
+.ord-btns{justify-content:center; align-items:center}
 .order-reroll{display:inline-flex; align-items:center; gap:8px; font-size:18px}
 .ord-reroll-ic{font-size:32px; line-height:1; font-weight:900}
 .mat-rules-page[hidden]{display:none}
@@ -7246,6 +7247,10 @@ function closeOverlay(id){
   // The BINGO reward closes by its button, a backdrop tap or Escape; every
   // one must finish the sequence, or #jobSheet stays locked (frozen game).
   if (id === "bingoClearOverlay") finishBingoSequence();
+  // A board check's opening windows chain (rules -> challenge intro ->
+  // challenge), however each one is closed (button, backdrop, Escape).
+  if (id === "matRulesOverlay" && orderTipAfterRules){ orderTipAfterRules = false; continueCheckIntro(); }
+  if (id === "orderTip") continueCheckIntro();
   // A tick later, so a card closed to open another (an element card) wins.
   if (id === "cardPop" && capstoneMarketPending) setTimeout(openNextCapstoneMarket, 0);
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
@@ -7755,7 +7760,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
       matDrawerView = "mat";
       // The shutter scene change, then the full inventory; the first check
       // ever also explains it (announceMatCheck()).
-      playShutter("Display Board Check!", () => { openDrawer(); announceMatCheck(); }, orderShutterLine());
+      playShutter("Display Mat Challenge!", () => { openDrawer(); announceMatCheck(); }, orderShutterLine());
       return;
     }
     matDrawerView = "mat";
@@ -10179,7 +10184,6 @@ document.getElementById("matRulesOverlay").addEventListener("click", ev => {
   }
   if (ev.target.id === "matRulesOverlay" || ev.target.closest("#matRulesOk")){
     closeOverlay("matRulesOverlay");
-    if (orderTipAfterRules){ orderTipAfterRules = false; maybeShowOrderTip(); }
   }
 });
 
@@ -11390,24 +11394,27 @@ function openOrderInfo(){
   // Round clock in the top-left corner, a short title on the banner, one
   // line of text, the rule in icons, and the swap button.
   const clock = `<div class="ord-clock" title="Board check on round ${o.round}">${roundClockSVG(o.round)}</div>`;
+  const okBtn = `<button type="button" class="bigbtn" id="orderInfoOk">OK</button>`;
   let title, html;
   if (o.id === "grand"){
     title = "Grand Exhibition!";
     html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks at the final check</p>
-      <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>`;
+      <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
+      <div class="btnrow ord-btns">${okBtn}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     title = `${o.id === "stationWeek" ? o.p : d.name} ${req ? "Request" : "Restriction"}!`;
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
     html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}${req ? `: ⚛️ ×${ORDER_REQUEST_MULT}` : `, or ⚛️ ×${ORDER_RESTRICT_MULT}`}</p>
       <div class="ord-rule">${d.text(o.p)}</div>
-      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button></div>`;
+      <div class="btnrow ord-btns"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button>${okBtn}</div>`;
   }
   document.getElementById("comboInfoTitle").textContent = title;
   document.getElementById("comboInfoBody").innerHTML = html;
   openOverlay("comboInfoOverlay");
 }
 document.getElementById("comboInfoOverlay").addEventListener("click", ev => {
+  if (ev.target.closest("#orderInfoOk")){ closeOverlay("comboInfoOverlay"); return; }
   if (!ev.target.closest("#orderReroll:not(:disabled)")) return;
   const o = currentOrder(), next = o && drawOrder(o.round, o);
   if (!next || !(state.emptyElements > 0)) return;
@@ -11744,7 +11751,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  playShutter("Final Score!", () => { openDrawer(); updateHub(); maybeShowOrderTip(); }, orderShutterLine());
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); orderInfoPending = true; continueCheckIntro(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -11790,13 +11797,24 @@ function playShutter(line2, atClosed, line3 = ""){
    scene change, with the mat opening behind it; the very first check ever
    also opens the Display Mat rules (prefs.sawMatCheckTutorial). */
 function announceMatCheck(){
+  orderInfoPending = true;
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
-    orderTipAfterRules = true; // the challenge window follows the rules
+    orderTipAfterRules = true; // the challenge windows follow the rules
     openMatRules();
     return;
   }
-  maybeShowOrderTip();
+  continueCheckIntro();
+}
+// Next window of a board check's opening: the challenge intro (once per
+// run), then this check's challenge (openOrderInfo()).
+let orderInfoPending = false;
+function continueCheckIntro(){
+  if (maybeShowOrderTip()) return;
+  if (!orderInfoPending) return;
+  orderInfoPending = false;
+  const o = currentOrder();
+  if (o && o.round === state.visits) openOrderInfo();
 }
 /* Display Mat Challenges (check orders): explained the first time a run
    reaches a board check that has one (state.sawOrderTip), unless hidden
@@ -11804,9 +11822,10 @@ function announceMatCheck(){
 let orderTipAfterRules = false;
 function maybeShowOrderTip(){
   const o = state.order;
-  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return;
+  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return false;
   state.sawOrderTip = true; save();
   openOrderTip();
+  return true;
 }
 function openOrderTip(){
   document.getElementById("orderTipBody").innerHTML = `
