@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Intro: Inventory lights up.** When the first station is chosen and its
+  elements fly into the Inventory, the Inventory button (and only it)
+  lights up until the To-Do List opens.
+
 - **Challenges never repeat.** The next challenge was drawn from the whole
   list, so the same one (e.g. a Deep Mine request) could come straight back
   at the next check; now no exact challenge repeats in a run while a fresh

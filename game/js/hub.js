@@ -226,13 +226,13 @@ function updateHub(){
 
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
-  home.classList.toggle("active", screen === "map" && !anyOpen);
+  home.classList.toggle("active", screen === "map" && !anyOpen && !introInvLit);
 
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   // Lit for the full inventory only; the half-height Lock-In view doesn't
   // count.
-  document.getElementById("hubInv").classList.toggle("active",
-    drawer.classList.contains("open") && drawer.classList.contains("expanded"));
+  document.getElementById("hubInv").classList.toggle("active", introInvLit ||
+    (drawer.classList.contains("open") && drawer.classList.contains("expanded")));
   // Only the "compact" variant is the To-Do List (openJobBoard()); #jobSheet
   // is also the Marketplace/BINGO tray ("full"), which shouldn't light this
   // button.

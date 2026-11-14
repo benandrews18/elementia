@@ -64,6 +64,8 @@ let selectedMapStation = null; // ephemeral: which node's card is showing on the
 // click handler). Compared against selectedMapStation, so picking a
 // different station shows the mat again.
 let travelPromptFor = null;
+// Intro beat 1 (confirmCapstoneChoice()): only the Inventory button is lit.
+let introInvLit = false;
 // The capstone the initial station-pick preview auto-tracked
 // (syncInitialPickCapstoneTracking()), so exactly that one can be undone.
 // Ephemeral, like selectedMapStation.

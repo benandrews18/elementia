@@ -81,7 +81,9 @@ function confirmCapstoneChoice(name){
   const dice = sortedDice(STATION_BY_NAME[stationName]);
   const box = document.getElementById("capConfirmBody");
 
-  // Beat 1 -- the station's elements into the inventory.
+  // Beat 1 -- the station's elements into the inventory, which lights up
+  // (and nothing else does) until the To-Do List opens.
+  introInvLit = true; updateHub();
   const chips = reduced ? [] : [...box.querySelectorAll(".map-card .pchip")];
   const hub = document.getElementById("hubInv").getBoundingClientRect();
   const FLY_MS = 560, STAGGER_MS = 80;
@@ -104,6 +106,7 @@ function confirmCapstoneChoice(name){
   setTimeout(() => {
     dice.forEach(d => { state.elements[d] = count(d) + 1; });
     save();
+    introInvLit = false;
     closeOverlay("capConfirm");
     closeOverlay("capChoice");
     openJobBoard();
