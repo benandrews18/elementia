@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenges never repeat.** The next challenge was drawn from the whole
+  list, so the same one (e.g. a Deep Mine request) could come straight back
+  at the next check; now no exact challenge repeats in a run while a fresh
+  one is possible, and never twice in a row. The challenge chip is dim with
+  its round number until its own board check, the only round its
+  multiplier counts.
+
 - **Fixes.** Closing the Display Mat at a board check and tapping Travel
   again used to skip the check (and its game-over rule); it now reopens the
   mat. In card view, a Craft blocked by an unpaid suit cost opens the

@@ -162,8 +162,8 @@ function freshState(){
     // breakpoint and from Market rows; spent via openEmptyElPicker().
     emptyElements: 0,
     matChecked: false, // Classic: has a Display Mat check (Lock-In) happened yet this run? See MAT_CHECK_EVERY.
-    matBonusDice: 0,
-    quickSavedMat: null, // the mat ↺ replaced, until ↻ puts it back (matLastTap()).   // Classic: bonus dice from the latest check, added to the rolls after it.
+    matBonusDice: 0,   // Classic: bonus dice from the latest check, added to the rolls after it.
+    quickSavedMat: null, // the mat ↺ replaced, until ↻ puts it back (matLastTap()).
     bingoCenterChosen: false, // Whether the BINGO centre has been chosen (setBingoCenter()); false
                               // shows "Add Capstone". See the migration after freshState() for older
                               // saves.

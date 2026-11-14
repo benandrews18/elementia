@@ -275,6 +275,11 @@
       state.visits = 7; state.order = { id: "drought", p: card.pips[0], round: 6 }; state.mat = [card.name];
       expect(orderMultFor(matOnMat()) === 1, "orders must not apply to quiet checks");
       expect(drawOrder(24).id === "grand" && drawOrder(27) === null, "round 24 should be the Grand Exhibition, Overtime has no orders");
+      // No exact repeat: four request checks in a row are all different.
+      { const its = state.items, uo = state.usedOrders; state.items = [...CORE_ITEM_NAMES]; state.usedOrders = [];
+        let prev = null; const keys = [3, 6, 9, 12].map(r => { setOrder(drawOrder(r, prev)); prev = state.order; return orderKey(state.order); });
+        expect(new Set(keys).size === 4, "check orders should not repeat: " + keys.join(", "));
+        state.items = its; state.usedOrders = uo; }
       const r15 = drawOrder(15);
       expect(!r15 || CHECK_ORDERS[r15.id].kind === "restriction", "orders after round 12 should be restrictions");
       state.matChecked = mc; state.matBonusDice = fb; state.tripDice = td; state.order = o; state.mat = m;

@@ -157,10 +157,21 @@ function drawOrder(round, avoid){
   if (round === RUN_COMPLETE_VISIT) return { id: "grand", p: null, round };
   const kind = round <= ORDER_LAST_REQUEST ? "request" : "restriction";
   const owned = state.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
-  const pool = Object.keys(CHECK_ORDERS).filter(id => CHECK_ORDERS[id].kind === kind)
+  // Never avoid itself; and no exact repeat of any order this run
+  // (state.usedOrders) while a fresh one is possible.
+  const all = Object.keys(CHECK_ORDERS).filter(id => CHECK_ORDERS[id].kind === kind)
     .flatMap(id => CHECK_ORDERS[id].params(owned).map(p => ({ id, p, round })))
-    .filter(o => !avoid || o.id !== avoid.id || o.p !== avoid.p);
+    .filter(o => !avoid || orderKey(o) !== orderKey(avoid));
+  const used = new Set(state.usedOrders || []);
+  const fresh = all.filter(o => !used.has(orderKey(o)));
+  const pool = fresh.length ? fresh : all;
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+const orderKey = o => o.id + ":" + o.p;
+// Sets the upcoming order and remembers it so it isn't drawn again.
+function setOrder(o){
+  state.order = o;
+  if (o) (state.usedOrders || (state.usedOrders = [])).push(orderKey(o));
 }
 // The next board check's order, drawn when first needed (null until one is
 // possible -- early on the player may not own enough cards).
@@ -169,7 +180,7 @@ function currentOrder(){
   // Once this round's check is done, the order shown is the next one's.
   const done = isSunsetVisit() && (state.checkLog || []).some(e => e.v === state.visits);
   const round = nextCheckRound() + (done ? MAT_CHECK_EVERY : 0);
-  if (!state.order || state.order.round !== round) state.order = drawOrder(round);
+  if (!state.order || state.order.round !== round) setOrder(drawOrder(round));
   return state.order;
 }
 // Is the mat meeting the order (requests), keeping to it (restrictions), or
@@ -191,15 +202,18 @@ function orderMultLabel(o){
 }
 function orderIconHTML(o){ return o.id === "grand" ? "🏛️" : CHECK_ORDERS[o.id].icon(o.p); }
 function orderName(o){ return o.id === "grand" ? "Grand Exhibition" : CHECK_ORDERS[o.id].name; }
-// Combo-row chip (matComboChipsHTML(..., true)): lit when met; a broken
-// restriction shows red. Tap: openOrderInfo().
+// Combo-row chip (matComboChipsHTML(..., true)). Its multiplier only counts
+// at its own board check: before that round it's "upcoming" (dim, the round
+// number in the corner); on the round it lights when met, red when a
+// restriction is broken. Tap: openOrderInfo().
 function orderChipHTML(s){
   const o = currentOrder();
   if (!o) return "";
+  const now = o.round === state.visits && isSunsetVisit();
   const ok = orderMet(o, matOnMat(), s.total);
   const restr = o.id !== "grand" && CHECK_ORDERS[o.id].kind === "restriction";
-  const cls = restr ? (ok ? "off" : "bad") : (ok ? "on" : "off");
-  return `<button type="button" class="mm-combo order ${cls}" data-order title="${esc(orderName(o))} (round ${o.round} board check)"><span class="mm-cico order-ic">${orderIconHTML(o)}</span><b>${orderMultLabel(o)}</b></button>`;
+  const cls = !now ? "off upcoming" : restr ? (ok ? "off" : "bad") : (ok ? "on" : "off");
+  return `<button type="button" class="mm-combo order ${cls}" data-order title="${esc(orderName(o))} (round ${o.round} board check)"><span class="mm-cico order-ic">${orderIconHTML(o)}${now ? "" : `<span class="mm-ccount">${o.round}</span>`}</span><b>${orderMultLabel(o)}</b></button>`;
 }
 function orderShutterLine(){
   const o = currentOrder();
@@ -248,7 +262,7 @@ document.getElementById("comboInfoOverlay").addEventListener("click", ev => {
   const o = currentOrder(), next = o && drawOrder(o.round, o);
   if (!next || !(state.emptyElements > 0)) return;
   state.emptyElements -= 1;
-  state.order = next;
+  setOrder(next);
   save(); render();
   if (drawer.classList.contains("open")) renderMatTop();
   openOrderInfo();
@@ -468,7 +482,7 @@ function finishLockIn(reward, opts = {}){
   const st = Object.entries(matGroupsOf(matOnMat()).st).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
   state.lastTopStation = st ? st[0] : null;
   state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
-  state.order = drawOrder(state.visits + MAT_CHECK_EVERY); // shown a check ahead
+  setOrder(drawOrder(state.visits + MAT_CHECK_EVERY, order)); // shown a check ahead, never the same one again
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
