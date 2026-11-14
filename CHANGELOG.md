@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Clock pulses on check rounds.** On a board-check round the turn clock
+  pulses (gold glow and a slight swell) instead of a still glow; with low
+  motion it keeps the still glow.
+
 - **Card view pins: square.** The card-view pin (and tracked-item badge) is
   a square button the Craft button's height, 3px from it -- the same gap as
   between the card and its buttons.
