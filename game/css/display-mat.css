@@ -322,6 +322,13 @@ html.low-motion .mat-qs-pill{animation:none}
   font-size:19px; border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); cursor:pointer; padding:0;
 }
 .ml-icon-btn.done{color:var(--ok)}
+#matLayoutsOverlay #mlSearch{flex:1 1 auto; min-width:0; height:38px}
+.ml-sort-btn{flex:none; height:38px; padding:0 12px; border-radius:10px; font-weight:800; font-size:13px; cursor:pointer;
+  border:2px solid var(--gold-line); background:var(--gold-soft); color:var(--ink); white-space:nowrap}
+/* The Inventory's station + element filter chips, one row of 12. */
+.ml-filters{display:grid; grid-template-columns:repeat(12, 1fr); gap:3px; margin:0 8px 6px 0}
+.ml-filters .mat-fbtn{border-radius:8px; font-size:15px}
+.ml-filters .mat-fbtn :is(img, svg){width:17px; height:17px}
 :is(#matLayoutsOverlay, #collectionsOverlay) .sheetbox > *{flex:none}
 #matLayoutsList, #collectionsList{flex:1 1 auto !important; min-height:0; overflow-y:auto; overscroll-behavior:contain}
 #matLayoutsOverlay #matLayoutName{min-width:0; flex:1 1 auto; height:38px}

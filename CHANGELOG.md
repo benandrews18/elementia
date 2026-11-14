@@ -10,6 +10,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Saved Layouts: search, sort, filters.** The Saved Layouts window has a
+  search bar (layout names, card and component names), a Points ↓/↑ sort,
+  and the Inventory's station and element filter icons.
+
 - **Growing Display Mat.** The mat now grows during a run: 3 slots in one
   row to start, a 4th slot at turn 6, a half-height strip of 4 tier-1-only
   places along the bottom at turn 12, and the full 4x2 mat at turn 18

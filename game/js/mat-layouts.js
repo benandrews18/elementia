@@ -12,11 +12,24 @@ function renderMatLayoutsList(){
     list.innerHTML = '<p class="empty">No saved layouts yet -- arrange the mat, then save it above.</p>';
     return;
   }
+  // Search (layout name, card or component names) and station/element
+  // filters (ORed within a group, ANDed across, like the Inventory's), then
+  // sorted by points (mlFilt). Indexes stay the saved ones for load/delete.
+  const q = mlFilt.q.toLowerCase();
+  const rows = layouts.map((L, i) => {
+    const mat = L.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
+    return { L, i, mat, s: matScore(mat) };
+  }).filter(({ L, mat }) =>
+    (!q || L.name.toLowerCase().includes(q) || mat.some(c => c.name.toLowerCase().includes(q)
+      || c.components.some(r => r.name.toLowerCase().includes(q))))
+    && (!mlFilt.stations.size || mat.some(c => c.stations.some(st => mlFilt.stations.has(st))))
+    && (!mlFilt.suits.size || mat.some(c => c.pips.some(p => mlFilt.suits.has(p)))))
+    .sort((a, b) => mlFilt.asc ? a.s.total - b.s.total : b.s.total - a.s.total);
+  syncMatLayoutTools();
+  if (!rows.length){ list.innerHTML = '<p class="empty">No layouts match.</p>'; return; }
   // Each slot: name and the layout's point total, then its combos and
   // cards like the minimized board (matMiniRowHTML()). Tap anywhere to load.
-  list.innerHTML = `<div class="histrows">${layouts.map((L, i) => {
-    const mat = L.items.map(n => MAT_CARD_BY_NAME[n]).filter(Boolean);
-    const s = matScore(mat);
+  list.innerHTML = `<div class="histrows">${rows.map(({ L, i, mat, s }) => {
     return `
     <div class="histentry ml-slot">
       <button type="button" class="histrow" data-mat-layout-load="${i}">
@@ -31,6 +44,31 @@ function renderMatLayoutsList(){
     </div>`;
   }).join("")}</div>`;
 }
+// Saved Layouts' search / sort / filters (view state, not saved).
+const mlFilt = { q: "", asc: false, stations: new Set(), suits: new Set() };
+let mlFiltersBuilt = false;
+function syncMatLayoutTools(){
+  if (!mlFiltersBuilt){
+    mlFiltersBuilt = true;
+    document.getElementById("mlFilters").innerHTML = STATION_TRACKER_ORDER.map(s => {
+      const m = STATION_BY_NAME[s];
+      return `<button type="button" class="mat-fbtn" data-ml-fstation="${esc(s)}" title="${esc(s)}" style="--st:${DATA.suits[m.suit].color}">${em(m.emoji)}</button>`;
+    }).join("") + Object.keys(ELEMENT_SUIT_LABEL).map(s =>
+      `<button type="button" class="mat-fbtn" data-ml-fsuit="${s}" title="${ELEMENT_SUIT_LABEL[s]}" style="--suit:${SUIT_COLOR[s]}">${SUIT_ICON[s]}</button>`).join("");
+  }
+  document.querySelectorAll("[data-ml-fstation]").forEach(b => b.classList.toggle("on", mlFilt.stations.has(b.dataset.mlFstation)));
+  document.querySelectorAll("[data-ml-fsuit]").forEach(b => b.classList.toggle("on", mlFilt.suits.has(b.dataset.mlFsuit)));
+  document.getElementById("mlSort").textContent = mlFilt.asc ? "Points ↑" : "Points ↓";
+}
+document.getElementById("mlSearch").addEventListener("input", ev => { mlFilt.q = ev.target.value.trim(); renderMatLayoutsList(); });
+document.getElementById("mlSort").addEventListener("click", () => { mlFilt.asc = !mlFilt.asc; renderMatLayoutsList(); });
+document.getElementById("mlFilters").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-ml-fstation], [data-ml-fsuit]");
+  if (!b) return;
+  const [set, key] = b.dataset.mlFstation ? [mlFilt.stations, b.dataset.mlFstation] : [mlFilt.suits, b.dataset.mlFsuit];
+  set.has(key) ? set.delete(key) : set.add(key);
+  renderMatLayoutsList();
+});
 function openMatLayoutsOverlay(){
   renderMatLayoutsList();
   openOverlay("matLayoutsOverlay");
