@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14b",
+ "version": "2026.11.14c",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -730,7 +730,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "O",
     "Fe",
     "Si",
-    "Al"
+    "Mg"
    ],
    "shop": [
     [
