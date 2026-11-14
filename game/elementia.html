@@ -35,7 +35,6 @@
 <link rel="stylesheet" href="css/overlays.css">
 <link rel="stylesheet" href="css/card-inspect.css">
 <link rel="stylesheet" href="css/reference.css">
-<link rel="stylesheet" href="css/arrange.css">
 <link rel="stylesheet" href="css/display-mat.css">
 <link rel="stylesheet" href="css/desktop-frame.css">
 </head>
@@ -697,37 +696,6 @@
   <div id="suitSpendRows"></div>
 </div>
 
-<!-- Arrange Items: freeform scene builder opened from the inventory
-     drawer. See the CSS block above (search "Arrange Items") for the
-     layout rationale. -->
-<div id="arrangeScreen" role="dialog" aria-modal="true" aria-label="Arrange Items">
-  <div class="arr-head">
-    <h2>🎨 Arrange Items</h2>
-    <button type="button" class="tbtn ghost" id="arrangeClose" aria-label="Close Arrange Items">✕</button>
-  </div>
-  <div class="arr-body">
-    <div class="arr-canvas" id="arrCanvas"></div>
-    <div class="arr-tray-panel" id="arrTrayPanel">
-      <button type="button" class="arr-tray-handle" id="arrTrayHandle" aria-expanded="true" aria-label="Collapse item tray">
-        <span class="arr-tray-chevron"></span>
-      </button>
-      <div class="arr-toolbar" id="arrToolbar">
-        <button type="button" class="arr-tool-btn" id="arrRotL" title="Rotate left">↺</button>
-        <button type="button" class="arr-tool-btn" id="arrSmaller" title="Smaller">－</button>
-        <button type="button" class="arr-tool-btn" id="arrBigger" title="Bigger">＋</button>
-        <button type="button" class="arr-tool-btn" id="arrRotR" title="Rotate right">↻</button>
-        <button type="button" class="arr-tool-btn danger" id="arrDelete" title="Remove">🗑️</button>
-      </div>
-      <div class="arr-bgpicker" id="arrBgPicker"></div>
-      <div class="arr-tray-tabs" id="arrTrayTabs">
-        <button type="button" class="arr-tray-tab active" data-tab="items">Items</button>
-        <button type="button" class="arr-tray-tab" data-tab="elements">Elements</button>
-      </div>
-      <div class="arr-tray" id="arrTray"></div>
-    </div>
-  </div>
-</div>
-
 <!-- guided tour: an image slideshow of the designer's own annotated
      screenshots (see css/tour.css) -->
 <!-- Classic quick how-to-play: three tap-through screens built from the
@@ -864,7 +832,6 @@
 <script src="js/display-mat.js"></script>
 <script src="js/mat-layouts.js"></script>
 <script src="js/combo-lab.js"></script>
-<script src="js/arrange.js"></script>
 <script src="js/lock-in.js"></script>
 <script src="js/empty-elements.js"></script>
 <script src="js/opening.js"></script>

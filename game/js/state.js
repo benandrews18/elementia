@@ -147,7 +147,6 @@ function freshState(){
     ecoStreak: 0, // Old Growth: board checks in a row with Ecosystem on the mat (finishLockIn()).
     starsEarned: 0, // Stars earned this run (grantStars()), shown on the end screen.
     marketUnseen: false, // a Market square was finished without the tray opening; "!" on the Market button.
-    arrangement: { bg: null, stickers: [] }, // Arrange Items scene -- see openArrangeScreen()
     mat: [], // Display Mat (Classic): item names in display order (matScore()).
              // Collection discovery lives in prefs.everUnlockedMatCollections,
              // which survives resets.

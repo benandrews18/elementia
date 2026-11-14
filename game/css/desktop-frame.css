@@ -22,7 +22,7 @@
   html::before{left:0; box-shadow:1px 0 0 rgba(255,255,255,.06), 30px 0 60px rgba(0,0,0,.5)}
   html::after{right:0; box-shadow:-1px 0 0 rgba(255,255,255,.06), -30px 0 60px rgba(0,0,0,.5)}
   #backdrop, #topbar, #hub, #pinsTray, #convert, #convertScrim, #jobScrim, #scrim,
-  #tour, #arcade, .overlay, #mgOverlay, #arrangeScreen, #drawer, .confetti, #comboLabExitBtn,
+  #tour, #arcade, .overlay, #mgOverlay, #drawer, .confetti, #comboLabExitBtn,
   #jobSheet.top-tray, #eventToast, #quarkTopBar{
     left:var(--frame-x); right:auto; width:var(--frame-w);
   }

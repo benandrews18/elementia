@@ -61,7 +61,6 @@ document.getElementById("drawer").addEventListener("click", ev => {
   if (!ev.target.closest("#drawerBody, #matSelPanel")) return;
   if (ev.target.closest("[data-mat-sel-close]")){ matListOpen = null; renderMatResultsGrid(); return; }
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
-  if (ev.target.closest("#openArrangeBtn")){ closeDrawer(); openArrangeScreen(); return; }
   // Tier breakline (see MAT_TIER_BANDS/matTierCollapsed) -- collapses/
   // expands just that one section's own grid.
   const tierHeading = ev.target.closest("[data-mat-tier]");
