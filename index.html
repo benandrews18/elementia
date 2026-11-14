@@ -6656,6 +6656,8 @@ let selectedMapStation = null; // ephemeral: which node's card is showing on the
 // click handler). Compared against selectedMapStation, so picking a
 // different station shows the mat again.
 let travelPromptFor = null;
+// Intro beat 1 (confirmCapstoneChoice()): only the Inventory button is lit.
+let introInvLit = false;
 // The capstone the initial station-pick preview auto-tracked
 // (syncInitialPickCapstoneTracking()), so exactly that one can be undone.
 // Ephemeral, like selectedMapStation.
@@ -7852,13 +7854,13 @@ function updateHub(){
 
   const home = document.getElementById("hubHome");
   const anyOpen = !!openPanelName();
-  home.classList.toggle("active", screen === "map" && !anyOpen);
+  home.classList.toggle("active", screen === "map" && !anyOpen && !introInvLit);
 
   document.getElementById("hubCodex").classList.toggle("active", screen === "codex");
   // Lit for the full inventory only; the half-height Lock-In view doesn't
   // count.
-  document.getElementById("hubInv").classList.toggle("active",
-    drawer.classList.contains("open") && drawer.classList.contains("expanded"));
+  document.getElementById("hubInv").classList.toggle("active", introInvLit ||
+    (drawer.classList.contains("open") && drawer.classList.contains("expanded")));
   // Only the "compact" variant is the To-Do List (openJobBoard()); #jobSheet
   // is also the Marketplace/BINGO tray ("full"), which shouldn't light this
   // button.
@@ -12035,7 +12037,9 @@ function confirmCapstoneChoice(name){
   const dice = sortedDice(STATION_BY_NAME[stationName]);
   const box = document.getElementById("capConfirmBody");
 
-  // Beat 1 -- the station's elements into the inventory.
+  // Beat 1 -- the station's elements into the inventory, which lights up
+  // (and nothing else does) until the To-Do List opens.
+  introInvLit = true; updateHub();
   const chips = reduced ? [] : [...box.querySelectorAll(".map-card .pchip")];
   const hub = document.getElementById("hubInv").getBoundingClientRect();
   const FLY_MS = 560, STAGGER_MS = 80;
@@ -12058,6 +12062,7 @@ function confirmCapstoneChoice(name){
   setTimeout(() => {
     dice.forEach(d => { state.elements[d] = count(d) + 1; });
     save();
+    introInvLit = false;
     closeOverlay("capConfirm");
     closeOverlay("capChoice");
     openJobBoard();
