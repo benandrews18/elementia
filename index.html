@@ -2723,6 +2723,12 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 @keyframes urPop{0%{opacity:0; transform:scale(.4) rotate(-6deg)} 60%{opacity:1; transform:scale(1.12) rotate(2deg)} 100%{opacity:1; transform:none}}
 .ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px}
 html.low-motion .ur-card{animation:none; opacity:1}
+/* Tuned in the Tip Workshop: Display Mat rules 12.5px, Unknown Element 13px. */
+#matRulesOverlay :is(.mct-line, p){font-size:12.5px}
+#emptyElTip p{font-size:13px}
+/* How to Play slide 1: the 8 stations in a row above the goal. */
+.ct-st-row{display:inline-flex; gap:4px; font-size:22px; margin-bottom:4px}
+.ct-st-row :is(img, svg){width:24px; height:24px}
 
 </style>
 <style>
@@ -4140,9 +4146,9 @@ html.low-motion #matListActions{transition:none}
 </div>
 <div class="overlay" id="pinTip" data-no-dismiss role="dialog" aria-modal="true" aria-labelledby="pinTipTitle">
   <div class="sheetbox parch pin-tip-box">
-    <h2 id="pinTipTitle">Pin Items to your<br>To-Do List</h2>
-    <p>You can focus on one item at a time from your 📌 list by tracking it with the 🔍.</p>
-    <p><b>HINT:</b> Try pinning and tracking smaller components of larger items!</p>
+    <h2 id="pinTipTitle">Pinned Items<br>&amp;<br>To-Do List</h2>
+    <p>Pin items you want to find 📌<br>Track down a single item with 🔍</p>
+    <p><b>HINT:</b> Try tracking smaller components of larger items</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="pinTipOk">Got it</button></div>
     <button type="button" class="tip-hide-x" id="pinTipHide" title="Don't show this again" aria-label="Don't show this again">✕<span>Hide</span></button>
   </div>
@@ -7573,24 +7579,24 @@ function maybeShowWalkthroughTip(){
   if (screen !== "station" || !current) return;
   if (!state.rolledHere){
     if (state.pendingRoll != null)
-      tryWalkthroughTip("firstroll", 3, "Tap <b>Roll</b> to roll this station's dice!", "bottom-left", "#hubHome");
+      tryWalkthroughTip("firstroll", 3, `<span style="font-size:14.5px">Tap <b>Roll</b> to get elements!</span>`, "bottom-left", "#hubHome");
     return;
   }
   const craftable = document.querySelector("#screen .craftbtn.go");
   if (craftable){
-    tryWalkthroughTip("firstcraft", 7, "You have what you need. Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
+    tryWalkthroughTip("firstcraft", 7, "Tap <b>Craft</b>!", "top-left", "#screen .craftbtn.go");
     return;
   }
   if (totalConvertibleCount() > 0 && tryWalkthroughTip("firstconvert", 5,
-      "Convert Elements! Trade 3 of one element for 1 of another.", "center", "#quickConvertBtn")){
+      "Convert Elements! <b>3:1</b>", "center", "#quickConvertBtn")){
     queueTutorialHintOnce("converttapmissing", 7,
-      "Tap on a missing element to create it!", "bottom-left", ".tok.el.need");
+      `<span style="font-size:12.5px">Tap to craft missing elements</span>`, "bottom-left", ".tok.el.need");
     return;
   }
-  if (tryWalkthroughTip("gomap", 12, "All done here? Tap the <b>Map</b> button to head back.", "bottom-left", "#hubHome")) return;
+  if (tryWalkthroughTip("gomap", 12, `<span style="font-size:15.5px">Onto the next station!<br>Tap the <b>Map</b>.</span>`, "bottom-left", "#hubHome")) return;
   // After the basics: the tracked item's badge on shop cards (itemHTML()).
   if (document.querySelector("#screen .item-pin-badge"))
-    tryWalkthroughTip("pintrackshop", 7, "This badge marks what it feeds!", "bottom-right", "#screen .item-pin-badge");
+    tryWalkthroughTip("pintrackshop", 7, "Your tracked item needs this one!", "bottom-right", "#screen .item-pin-badge");
 }
 document.getElementById("mouseTip").addEventListener("click", ev => {
   if (ev.target.closest("#mouseTipHide")){
@@ -7659,9 +7665,9 @@ function openClockInfo(){
   document.getElementById("clockInfoBody").innerHTML = `
     <div class="ci-clock">${turnClockSVG(v)}</div>
     <h2 id="clockInfoTitle">Round ${v} / ${RUN_COMPLETE_VISIT}${ot ? " (Overtime)" : ""}</h2>
-    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game. A new round starts whenever you 🥾 move to a new location.</p>
+    <p>There are <b>${RUN_COMPLETE_VISIT} rounds</b> in a game<br>🥾 Moving to a station<br>starts a round!</p>
     <div class="ci-stations">${Object.keys(MAP_NODE_POS).map(n => `<span class="ci-st" style="--st:${DATA.suits[STATION_BY_NAME[n].suit].color}" title="${esc(n)}">${em(STATION_BY_NAME[n].emoji)}</span>`).join("")}</div>
-    <p>Every <b>${MAT_CHECK_EVERY} rounds</b> your <img class="ci-inline-ic" src="data:image/webp;base64,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" alt=""> <b>Display Mat</b> is checked. Its ⚛️ <b>Quark Score</b> sets your 🎲 <b>bonus dice</b> at the next station!</p>
+    <p><b>Display Mat challenge</b> every ${MAT_CHECK_EVERY} rounds<br>⚛️ <b>Quark Score</b> rewards you<br>🎲 <b>bonus dice!</b></p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="clockInfoOk">Got it</button></div>`;
   openOverlay("clockInfo");
 }
@@ -8758,7 +8764,7 @@ function openPinsTray(){
     // No spotlight -- the chips fill the tray, and cutting out one would draw
     // attention away from the others.
     showTutorialHintOnce("pinselect", 10,
-      "Tap a pin to start tracking!",
+      `<span style="font-size:17.5px">Tap to start tracking!</span>`,
       "bottom-left");
   }
 }
@@ -9871,7 +9877,7 @@ function goMap(){
   // One-time tip: back on the map after the first visit without ever opening
   // the Marketplace, point at the hub's Market button.
   if (state.visits >= 1 && !state.marketVisited){
-    tryWalkthroughTip("checkmarket", 1, "Check out the Market from here!", "bottom-right", "#hubMarket");
+    tryWalkthroughTip("checkmarket", 1, `<span style="font-size:16px">Check out the Market!</span>`, "bottom-right", "#hubMarket");
   }
 }
 
@@ -11447,26 +11453,26 @@ const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
 const matStationCount = (mat, st) => matGroupsOf(mat).st[st] || 0;
 const CHECK_ORDERS = {
   stationWeek: { kind: "request", name: "Station Week",
-    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `Show 3+ ${p} cards`,
+    icon: p => em(STATION_BY_NAME[p].emoji), text: p => `3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `3 ${p} cards`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 3),
     ok: (mat, p) => matStationCount(mat, p) >= 3 },
   rainbow: { kind: "request", name: "Rainbow",
-    icon: () => "🌈", desc: () => "Show all 4 element colours", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
+    icon: () => "🌈", desc: () => "All 4 element colours", text: () => ORDER_SUITS.map(su => `<span class="ord-suit" style="--suit:${SUIT_COLOR[su]}">${SUIT_ICON[su]}</span>`).join(""),
     params: owned => ORDER_SUITS.every(su => owned.some(c => c.pips.includes(su))) ? [null] : [],
     ok: mat => ORDER_SUITS.every(su => mat.some(c => c.pips.includes(su))) },
   collector: { kind: "request", name: "Collector",
-    icon: () => "★", text: () => "★ ✓", desc: () => "Complete a named collection",
+    icon: () => "★", text: () => "★ ✓", desc: () => "1 Named collection",
     params: owned => matCompletedIn(owned).length ? [null] : [],
     ok: mat => matCompletedIn(mat).length > 0 },
   freshFaces: { kind: "restriction", name: "Fresh Faces",
-    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Max half your cards from the last check",
+    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Half your cards or fewer from the last check",
     params: () => (state.lastCheckedMat || []).length ? [null] : [],
     ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   drought: { kind: "restriction", name: "Drought",
     icon: p => SUIT_ICON[p], desc: p => `No ${ELEMENT_SUIT_LABEL[p]} cards`, text: p => `🚫 <span class="ord-suit" style="--suit:${SUIT_COLOR[p]}">${SUIT_ICON[p]}</span>`,
     params: () => ORDER_SUITS, ok: (mat, p) => !mat.some(c => c.pips.includes(p)) },
   shortTable: { kind: "restriction", name: "Short Table",
-    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "Leave at least one slot empty",
+    icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
     params: () => [null], ok: mat => matOccupancy(mat) < matLayout(mat).slots },
   trendShift: { kind: "restriction", name: "Trend Shift",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} combo`,
@@ -11565,14 +11571,14 @@ function openOrderInfo(){
   let title, html;
   if (o.id === "grand"){
     title = "Grand Exhibition!";
-    html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks at the final check</p>
+    html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} ⚛️ at the final check</p>
       <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
       <div class="btnrow ord-btns">${okBtn}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     title = `${o.id === "stationWeek" ? o.p : d.name} ${req ? "Request" : "Restriction"}!`;
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
-    html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}${req ? `: ⚛️ ×${ORDER_REQUEST_MULT}` : `, or ⚛️ ×${ORDER_RESTRICT_MULT}`}</p>
+    html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}: ×${req ? ORDER_REQUEST_MULT : ORDER_RESTRICT_MULT}⚛️${req ? "" : " if broken"}</p>
       <div class="ord-rule">${d.text(o.p)}</div>
       <div class="btnrow ord-btns"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button>${okBtn}</div>`;
   }
@@ -11878,9 +11884,9 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   const why = document.getElementById("lockInRewardWhy");
   why.hidden = true;
   document.getElementById("lockInRewardWhyBtn").setAttribute("aria-expanded", "false");
-  why.textContent = n === 0
-    ? `Your Display Mat scored ${quarks} Quarks -- below the first breakpoint, so no bonus dice. Raise its Quark score before the next board check.`
-    : `Your Display Mat scored ${quarks} Quarks, so you roll at least +${n} ${n === 1 ? "die" : "dice"} at every station until the next board check. Raise your Quark score between checks to roll even more.`;
+  why.innerHTML = n === 0
+    ? `⚛️ ${quarks}: below the first breakpoint<br>No bonus dice this time`
+    : `⚛️ ${quarks} → 🎲 +${n} at every station<br>until the next board check`;
   // Top breakpoint's "?" (see finishLockIn()): its own line; tap the
   // square for what it does.
   const extra = document.getElementById("lockInRewardExtra");
@@ -11888,7 +11894,7 @@ function showLockInRewardModal(n, gotEmptyElement, onDone){
   extra.innerHTML = gotEmptyElement ? `
     <div class="lre-line"><span>+1 Unknown Element</span>
       <button type="button" class="lre-q" id="lockInRewardQ" aria-label="What's an Unknown Element?" aria-expanded="false">${emptyElSquareHTML(34)}</button></div>
-    <p class="lre-hint" id="lockInRewardHint" hidden>Use it to gather any element from the station you're at -- open it from the Convert menu.</p>` : "";
+    <p class="lre-hint" id="lockInRewardHint" hidden>Becomes any element at your station<br>Use it from the Convert menu</p>` : "";
   lockInRewardOnDone = onDone;
   openOverlay("lockInRewardOverlay");
 }
@@ -12004,11 +12010,8 @@ function maybeShowOrderTip(){
 }
 function openOrderTip(){
   document.getElementById("orderTipBody").innerHTML = `
-    <p class="mct-line">⏰ Every board check starts a new <b>challenge</b>. It counts for that check and every trip until the next one.</p>
-    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST + MAT_CHECK_EVERY - 1}: <b>Requests</b>. Do it and your Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
-    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - 1}: <b>Restrictions</b>. Break it and your Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
-    <p class="mct-line">🏛️ Round ${RUN_COMPLETE_VISIT}: the <b>Grand Exhibition</b>. Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks.</p>
-    <p class="mct-line">👆 Tap the challenge for details, or swap it for 1 "?".</p>`;
+    <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b></p>
+    <p class="mct-line">✅ <b>Requests</b>: ×${ORDER_REQUEST_MULT} ⚛️<br>⛔ <b>Restrictions</b>: ×${ORDER_RESTRICT_MULT} ⚛️</p>`;
   openOverlay("orderTip");
 }
 document.getElementById("orderTip").addEventListener("click", ev => {
@@ -12017,11 +12020,9 @@ document.getElementById("orderTip").addEventListener("click", ev => {
   closeOverlay("orderTip");
 });
 document.getElementById("matCheckTutorial").innerHTML = `
-  <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
-  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
-  <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
-  <p class="mct-line">📜 Each check starts a <b>challenge</b> for the next 3 rounds -- tap its chip by your combos to see it.</p>
-  <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
+  <p class="mct-line">🕒 Display Mat <b>challenge</b> every 3 turns</p>
+  <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b></p>
+  <p class="mct-line mct-warn">⚠️ A score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
 document.getElementById("lockInBannerSub").innerHTML =
@@ -12103,7 +12104,7 @@ function showEmptyElTip(){
     <h2 id="emptyElTipTitle">Unknown Element!</h2>
     <p>An Unknown Element can become <b>any element</b> from the station you're at.</p>
     <p class="eet-where">Use it from the <span class="eet-convert">${em("__CONVERT__")}</span> <b>Convert</b> menu.</p>
-    <p class="eet-where">Earn one by finishing a 🛒 Market row, visiting all 8 stations, or reaching the top ⚛️ breakpoint.</p>
+    <p class="eet-where">Finish market rows 🛒<br>Visit all 8 stations</p>
     <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn" id="emptyElTipOk">Got it</button></div>`;
   openOverlay("emptyElTip");
 }
@@ -13175,7 +13176,7 @@ function classicTutSlides(){
       <span class="ct-cap-st">${em(st.emoji)}</span><span class="ct-cap-em">${em(st.capstone[0])}</span></div>`).join("");
   const s1 = `<div class="ct-kicker">The goal</div>
     <div class="ct-cap-grid">${caps}</div>
-    <p class="ct-line">Discover and craft the 8 <b>Capstones</b> -- one at each station</p>`;
+    <p class="ct-line"><span class="ct-st-row">${DATA.stations.map(st => em(st.emoji)).join("")}</span><br>Discover and craft the 8 <b>Capstones</b></p>`;
 
   // 2 -- gather, spend, keep
   const st = STATION_BY_NAME["The Ocean"] || DATA.stations[0];
@@ -13190,7 +13191,7 @@ function classicTutSlides(){
       <span class="ct-arrow">➜</span>
       <div class="ct-col"><span class="ct-item">${em(ex.emoji)}</span><span class="ct-tag">♾️ kept</span></div>
     </div>
-    <p class="ct-line">Spend elements like currency -- <b>items are yours forever</b></p>`;
+    <p class="ct-line">Spend elements like currency.<br><b>Item cards are yours forever!</b></p>`;
 
   // 3 -- Display Mat, Quarks, dice, and the combos
   const matIcons = [st.capstone[1], ...CORE_ITEM_NAMES].filter((n, i, a) => ITEM_EMOJI[n] && a.indexOf(n) === i);
@@ -13216,9 +13217,9 @@ function classicTutSlides(){
       <span class="ct-arrow">➜</span><span class="ct-quark">⚛️</span>
       <span class="ct-arrow">➜</span><span class="ct-dice">🎲🎲🎲</span>
     </div>
-    <p class="ct-line">Arrange items to earn <b>Quark Points</b> -- Quarks gather more elements</p>
+    <p class="ct-line">Arrange a <b>Display Mat</b> to earn <b>Quark Points</b></p>
     <div class="ct-combos">${combos}</div>
-    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(BREAKPOINT_GATE_VISIT)}</span><span class="ct-sub" style="margin:0">Checked every 3rd turn -- its dice last 3 turns. From turn ${BREAKPOINT_GATE_VISIT}, a miss ends the run</span></div>`;
+    <div class="ct-row"><span style="width:52px; height:52px; flex:none">${turnClockSVG(BREAKPOINT_GATE_VISIT)}</span><span class="ct-sub" style="margin:0"><b>${RUN_COMPLETE_VISIT} Turns</b> in a game!</span></div>`;
   return [s1, s2, s3];
 }
 function renderClassicTut(){
@@ -13719,7 +13720,7 @@ function renderTutElementsGrid(){
 // A function so the step list is built fresh each time.
 function tutCoachSteps(){
   return [
-    { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: "Home rolls dice and confirms travel." },
+    { sel: "#hubHome", pose: 10, anchor: "bottom-left", text: `<span style="font-size:15px">The home button keeps the game going!<br>Collect elements,<br>and travel the map.</span>` },
     { sel: "#hubJobs", pose: 2, anchor: "bottom-left",
       text: "To-Do List: the items you're tracking." },
     { sel: "#hubInv", pose: 12, anchor: "bottom-left", text: "Inventory: all you've collected." },
