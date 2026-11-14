@@ -8210,11 +8210,11 @@ function renderMap(){
   // This map badge marks only the station where the tracked item itself is
   // crafted -- one breadcrumb, not every station selling a component.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
-  // Stations selling a component of the tracked item not crafted yet: a
-  // small magnifier on their top-right corner.
-  const compStations = new Set(trackedEntry ? trackedEntry.reqs
-    .filter(r => r.kind === "item" && !owns(r.name))
-    .flatMap(r => ENTRIES.filter(e => e.name === r.name).map(e => e.station)) : []);
+  // Stations selling anything the tracked item still needs, at any depth of
+  // its recipe (stillNeededClosure(), the same list as the shop's tracked
+  // badges): a small magnifier on their top-right corner.
+  const compStations = new Set(trackedEntry ? [...stillNeededClosure(selectedJobItem)]
+    .flatMap(n => ENTRIES.filter(e => e.name === n).map(e => e.station)) : []);
 
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
     const [x] = MAP_NODE_POS[name];
