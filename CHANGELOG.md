@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Growing mat: no hidden slots, full width.** Slots that aren't open yet
+  are no longer shown. The mat always spans the full width: 3 big cards to
+  start, 4 from turn 6, a half-height strip under them from turn 12, two
+  full rows from turn 18 -- cards shrink as it grows, and the mat's height
+  follows its rows.
+
 - **Settings from the start.** The Settings cog was hidden until the player
   first left a station (so through the rules slides, capstone pick and the
   whole first station). It now shows from the start, sits above the intro

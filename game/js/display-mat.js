@@ -97,16 +97,14 @@ function renderMatGridCells(s){
   const mat = matOnMat();
   const { L, slot } = matPack(mat);
   const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
-  // Slots not open yet: a lock and the turn they open.
-  const lock = i => `<span class="mm-lock">🔒 ${L.opensAt[i]}</span>`;
-  const html = slot.map((sl, i) => sl.cover ? ""
+  // Only open slots are drawn (locked ones aren't there yet).
+  const html = slot.map(sl => sl.cover || sl.kind === "locked" ? ""
     : sl.card ? `<div class="mm-slot filled ${sl.w > 1 ? "wide" : ""}" data-idx="${sl.idx}">${card(sl.card)}</div>`
     // Tier 1 squares, stacked; an open half shows as a small dashed square.
     : sl.kind === "full" && sl.stack ? `<div class="mm-slot filled stack">${sl.stack.map(t => card(t.card, "mini")).join("")}${
         sl.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
-    // Bottom strip (turns 12-17): one tier 1 place over a locked half.
-    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}<span class="mm-mini-locked">${lock(i)}</span></div>`
-    : sl.kind === "locked" ? `<div class="mm-slot locked">${lock(i)}</div>`
+    // Bottom strip (turns 12-17): a half-height row, one tier 1 card each.
+    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}</div>`
     : `<div class="mm-slot empty"></div>`);
   document.getElementById("matGrid").innerHTML = html.join("");
 }
@@ -269,7 +267,16 @@ function renderMatTop(){
       </div>
       <button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
   maybeShowCollectionFound();
-  document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
+  // The mat always spans the full width: its open columns share it (so cards
+  // shrink as it grows), and its height is its open rows -- one, one and a
+  // half-height strip, or two (--mat-rows / --mat-h, see .mat-grid).
+  const ML = matLayout(mat), top = document.getElementById("drawerTop");
+  top.style.setProperty("--mat-cols", ML.openCols);
+  const [rows, h] = ML.stage < 2 ? ["var(--mat-row-h)", "var(--mat-row-h)"]
+    : ML.stage === 2 ? ["var(--mat-row-h) calc((var(--mat-row-h) - 2px) / 2)", "(var(--mat-row-h) * 1.5 + 4px)"]
+    : ["var(--mat-row-h) var(--mat-row-h)", "(var(--mat-row-h) * 2 + 5px)"];
+  top.style.setProperty("--mat-rows", rows);
+  top.style.setProperty("--mat-h", h);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   syncMatFloatBtns();

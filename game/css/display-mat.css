@@ -197,7 +197,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    tabs never resizes the tray. */
 .mat-grid{
   display:grid; grid-template-columns:repeat(var(--mat-cols, 4), 1fr);
-  grid-auto-rows:var(--mat-row-h);
+  grid-template-rows:var(--mat-rows, var(--mat-row-h) var(--mat-row-h)); grid-auto-rows:var(--mat-row-h);
   gap:5px;
 }
 .mm-slot{position:relative}
@@ -215,11 +215,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   flex:1 1 0; min-height:0; width:auto; height:auto;
 }
 .mm-mini-empty{border:2px dashed var(--line); border-radius:10px}
-/* Not open yet (matLayout()): a whole slot, or the bottom half of a strip place. */
-.mm-slot.locked, .mm-mini-locked{display:flex; align-items:center; justify-content:center;
-  border:2px dashed rgba(0,0,0,.18); border-radius:10px; background:rgba(0,0,0,.06)}
-.mm-mini-locked{flex:1 1 0; min-height:0}
-.mm-lock{font-size:12px; font-weight:900; color:rgba(0,0,0,.4); white-space:nowrap}
+
 .mm-card.mini{padding:2px; border-width:3px; border-radius:10px}
 .mm-card.mini .mm-icon{font-size:32px; margin:0}
 .mm-card.mini .mm-icon :is(img,svg){width:32px; height:32px}
@@ -244,8 +240,8 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    resizes the tray; a long elements list scrolls inside. A different
    parchment shade per page. */
 .mat-zone-page{
-  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 5px + 14px);
-  max-height:calc(var(--mat-row-h) * 2 + 5px + 14px); overflow-y:auto;
+  box-sizing:border-box; min-height:calc(var(--mat-h, var(--mat-row-h) * 2 + 5px) + 14px);
+  max-height:calc(var(--mat-h, var(--mat-row-h) * 2 + 5px) + 14px); overflow-y:auto;
   border-radius:14px 14px 14px 4px; border:2px solid; padding:5px;
 }
 .mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}

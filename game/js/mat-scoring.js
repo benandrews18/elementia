@@ -49,19 +49,18 @@ const matStage = () => typeof state === "undefined" || !state ? MAT_GROW_ROUNDS.
   : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) >= r).length;
 /* The mat's shape for these cards: every slot of the cols x 2 grid is
    "full" (open), "top" (only its top half: one tier 1 card) or "locked"
-   (with the turn it opens). Metropolis (Expansion) adds a column, growing
-   with the rest; Maglev Train (Freight) stacks tier 1 three to a slot. */
+   (not there yet -- never shown). Metropolis (Expansion) adds a column,
+   growing with the rest; Maglev Train (Freight) stacks tier 1 three to a
+   slot. openCols / stage: what renderMatTop() draws. */
 function matLayout(cards){
   const extra = matHas(cards, "Metropolis") ? 1 : 0, cols = MAT_SLOTS_COLS + extra, st = matStage();
-  const kinds = [], opensAt = [];
-  for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++){
-    const k = r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")
-      : st >= 3 ? "full" : st === 2 ? "top" : "locked";
-    kinds.push(k);
-    opensAt.push(r === 0 ? MAT_GROW_ROUNDS[0] : st < 2 ? MAT_GROW_ROUNDS[1] : MAT_GROW_ROUNDS[2]);
-  }
+  const kinds = [];
+  for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++)
+    kinds.push(r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")
+      : st >= 3 ? "full" : st === 2 ? "top" : "locked");
   const perSlot = matHas(cards, "Maglev Train") ? 3 : MAT_TIER1_PER_SLOT;
-  return { cols, kinds, opensAt, perSlot, slots: kinds.filter(k => k === "full").length,
+  return { cols, kinds, perSlot, stage: st, openCols: kinds.slice(0, cols).filter(k => k !== "locked").length,
+    slots: kinds.filter(k => k === "full").length,
     // Room in tier 1 cards (the collapsed mat's "x/y").
     cap: kinds.reduce((n, k) => n + (k === "full" ? perSlot : k === "top" ? 1 : 0), 0) };
 }
