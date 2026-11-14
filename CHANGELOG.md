@@ -9,6 +9,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- The Display Mat now grows at the board check on turns 6, 12 and 18 (not when you arrive): the screen darkens around the new slots with "Display Mat Expansion!" before the challenge window. The old "mat grew" banner is gone.
+- "New Items Unlocked" and "Display Mat Expansion" ignore taps for their first 2 seconds; "Tap to continue" fades in when they're ready.
+- Top banners (e.g. "All 8 stations visited!") have a solid background instead of see-through text.
+- The first station pick no longer shows capstone bubbles over the stations.
 
 - **Growing mat: no hidden slots, full width.** Slots that aren't open yet
   are no longer shown. The mat always spans the full width: 3 big cards to
