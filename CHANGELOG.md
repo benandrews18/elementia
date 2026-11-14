@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenge on the shutter.** The board-check shutter reads "Display Mat
+  Challenge!" in white (the gold clashed with the panels' gold seam), and
+  the round's challenge window is already open when the panels part (after
+  the rules and challenge intro the first time). The window has an OK
+  button beside the swap button, both centred.
+
 - **Unknown Element picker.** A top-right ✕ replaces Cancel, the station's
   icon and name sit above its element pool, the dice faces are gone, and a
   "?" in the bottom-right corner opens the Unknown Element window.

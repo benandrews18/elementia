@@ -240,24 +240,27 @@ function openOrderInfo(){
   // Round clock in the top-left corner, a short title on the banner, one
   // line of text, the rule in icons, and the swap button.
   const clock = `<div class="ord-clock" title="Board check on round ${o.round}">${roundClockSVG(o.round)}</div>`;
+  const okBtn = `<button type="button" class="bigbtn" id="orderInfoOk">OK</button>`;
   let title, html;
   if (o.id === "grand"){
     title = "Grand Exhibition!";
     html = `${clock}<p class="ord-desc">Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks at the final check</p>
-      <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>`;
+      <div class="ord-rule">⚛️ ${GRAND_EXHIBITION_TARGET.toLocaleString()}</div>
+      <div class="btnrow ord-btns">${okBtn}</div>`;
   } else {
     const d = CHECK_ORDERS[o.id], req = d.kind === "request";
     title = `${o.id === "stationWeek" ? o.p : d.name} ${req ? "Request" : "Restriction"}!`;
     const canReroll = (state.emptyElements || 0) > 0 && !lockInCommitted && !!drawOrder(o.round, o);
     html = `${clock}<p class="ord-desc">${esc(d.desc(o.p))}${req ? `: ⚛️ ×${ORDER_REQUEST_MULT}` : `, or ⚛️ ×${ORDER_RESTRICT_MULT}`}</p>
       <div class="ord-rule">${d.text(o.p)}</div>
-      <div class="btnrow" style="justify-content:center"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button></div>`;
+      <div class="btnrow ord-btns"><button type="button" class="bigbtn sec order-reroll" id="orderReroll" ${canReroll ? "" : "disabled"} title="Swap for another challenge" aria-label="Swap for another challenge, costs 1 Unknown Element"><span class="ord-reroll-ic">↻</span>${emptyElSquareHTML(22)}</button>${okBtn}</div>`;
   }
   document.getElementById("comboInfoTitle").textContent = title;
   document.getElementById("comboInfoBody").innerHTML = html;
   openOverlay("comboInfoOverlay");
 }
 document.getElementById("comboInfoOverlay").addEventListener("click", ev => {
+  if (ev.target.closest("#orderInfoOk")){ closeOverlay("comboInfoOverlay"); return; }
   if (!ev.target.closest("#orderReroll:not(:disabled)")) return;
   const o = currentOrder(), next = o && drawOrder(o.round, o);
   if (!next || !(state.emptyElements > 0)) return;
@@ -594,7 +597,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
-  playShutter("Final Score!", () => { openDrawer(); updateHub(); maybeShowOrderTip(); }, orderShutterLine());
+  playShutter("Final Score!", () => { openDrawer(); updateHub(); orderInfoPending = true; continueCheckIntro(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
   if (lockInCommitted) return;
@@ -640,13 +643,24 @@ function playShutter(line2, atClosed, line3 = ""){
    scene change, with the mat opening behind it; the very first check ever
    also opens the Display Mat rules (prefs.sawMatCheckTutorial). */
 function announceMatCheck(){
+  orderInfoPending = true;
   if (!prefs.sawMatCheckTutorial){
     prefs.sawMatCheckTutorial = true; savePrefs();
-    orderTipAfterRules = true; // the challenge window follows the rules
+    orderTipAfterRules = true; // the challenge windows follow the rules
     openMatRules();
     return;
   }
-  maybeShowOrderTip();
+  continueCheckIntro();
+}
+// Next window of a board check's opening: the challenge intro (once per
+// run), then this check's challenge (openOrderInfo()).
+let orderInfoPending = false;
+function continueCheckIntro(){
+  if (maybeShowOrderTip()) return;
+  if (!orderInfoPending) return;
+  orderInfoPending = false;
+  const o = currentOrder();
+  if (o && o.round === state.visits) openOrderInfo();
 }
 /* Display Mat Challenges (check orders): explained the first time a run
    reaches a board check that has one (state.sawOrderTip), unless hidden
@@ -654,9 +668,10 @@ function announceMatCheck(){
 let orderTipAfterRules = false;
 function maybeShowOrderTip(){
   const o = state.order;
-  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return;
+  if (!o || o.round !== state.visits || state.sawOrderTip || tipHidden("orderTip")) return false;
   state.sawOrderTip = true; save();
   openOrderTip();
+  return true;
 }
 function openOrderTip(){
   document.getElementById("orderTipBody").innerHTML = `

@@ -38,6 +38,10 @@ function closeOverlay(id){
   // The BINGO reward closes by its button, a backdrop tap or Escape; every
   // one must finish the sequence, or #jobSheet stays locked (frozen game).
   if (id === "bingoClearOverlay") finishBingoSequence();
+  // A board check's opening windows chain (rules -> challenge intro ->
+  // challenge), however each one is closed (button, backdrop, Escape).
+  if (id === "matRulesOverlay" && orderTipAfterRules){ orderTipAfterRules = false; continueCheckIntro(); }
+  if (id === "orderTip") continueCheckIntro();
   // A tick later, so a card closed to open another (an element card) wins.
   if (id === "cardPop" && capstoneMarketPending) setTimeout(openNextCapstoneMarket, 0);
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
