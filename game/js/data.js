@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14c",
+ "version": "2026.11.14d",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -103,7 +103,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "☁️",
      "Cloud",
      "COMPONENT",
-     "__FURNACE__ Furnace + 💧 Water",
+     "__FURNACE__ Furnace + 💧 Water + N",
      10
     ],
     [
@@ -391,7 +391,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Fe",
     "C",
     "S",
-    "H",
+    "Mg",
     "Ti"
    ],
    "shop": [
@@ -413,7 +413,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🏺",
      "Clay",
      "MATERIAL",
-     "Al + Si + Mg",
+     "Al + Mg",
      1
     ],
     [
@@ -514,7 +514,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🏺",
      "Clay",
      "MATERIAL",
-     "Al + Si + Mg",
+     "Al + Mg",
      1
     ],
     [
@@ -650,15 +650,22 @@ const DATA = /*__GAME_DATA_START__*/{
      "🫓",
      "Dough",
      "COMPONENT",
-     "__FLOUR__ Flour + 💧 Water",
+     "__FLOUR__ Flour + 💧 Water + 🦠 Yeast",
      19
     ],
     [
-     "__OVEN__",
-     "Oven",
-     "CREATION",
-     "__FURNACE__ Furnace + 🕐 Clock",
-     20
+     "__FURNACE__",
+     "Furnace",
+     "MATERIAL",
+     "🏺 Clay + C",
+     4
+    ],
+    [
+     "🍫",
+     "Chocolate",
+     "COMPONENT",
+     "🍬 Sugar + __FURNACE__ Furnace",
+     10
     ],
     [
      "🍥",
@@ -671,14 +678,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "🥧",
      "Apple Pie",
      "CREATION",
-     "🫓 Dough + 🍎 Apple + __OVEN__ Oven",
+     "🫓 Dough + 🍎 Apple + __FURNACE__ Furnace",
      24
     ],
     [
      "__BANANABREAD__",
      "Banana Bread",
      "CREATION",
-     "🫓 Dough + 🦠 Yeast + __OVEN__ Oven + 🍌 Banana",
+     "🫓 Dough + 🍫 Chocolate + __FURNACE__ Furnace + 🍌 Banana",
      24
     ]
    ],
@@ -686,7 +693,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "🎂",
     "Fruit Cake",
     "CAPSTONE",
-    "🫓 Dough + 🍬 Sugar + 🥚 Egg + __OVEN__ Oven + 🍎 Apple + 🍌 Banana",
+    "🫓 Dough + 🍬 Sugar + 🥚 Egg + __FURNACE__ Furnace + 🍎 Apple + 🍌 Banana",
     36
    ],
    "unlock": [
@@ -698,24 +705,17 @@ const DATA = /*__GAME_DATA_START__*/{
      14
     ],
     [
-     "🍫",
-     "Chocolate",
-     "COMPONENT",
-     "🍬 Sugar + __FURNACE__ Furnace",
-     10
-    ],
-    [
      "🥨",
      "Pretzel",
      "CREATION",
-     "🫓 Dough + K + __OVEN__ Oven",
+     "🫓 Dough + K + __FURNACE__ Furnace",
      23
     ],
     [
      "🍩",
      "Éclair",
      "CREATION",
-     "🫓 Dough + 🥚 Egg + 🥛 Milk + 🍫 Chocolate + __OVEN__ Oven",
+     "🫓 Dough + 🥚 Egg + 🥛 Milk + 🍫 Chocolate + __FURNACE__ Furnace",
      25
     ]
    ]

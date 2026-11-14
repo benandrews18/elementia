@@ -123,7 +123,7 @@ const ITEM_SUIT_COST_TABLE = {
   Wheel: ["earth"], Fiberglass: ["reactive"], Chicken: ["organic"], Fossil: ["earth"],
   Salmon: ["organic"], Tree: ["organic"],
 
-  Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
+  "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
   Diamond: ["earth", "earth"], Orca: ["organic", "organic"],
   Lighthouse: ["earth", "reactive"], Star: ["reactive"],
   Rainbow: ["organic", "reactive"], Speedboat: ["metal", "metal"], Computer: ["metal", "reactive"],

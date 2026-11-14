@@ -40,6 +40,11 @@ function loadAll(){
   // Saves from before bingoCenterChosen existed: a drawn card means a centre
   // was already chosen.
   if (state.bingoCard && !state.bingoCenterChosen) state.bingoCenterChosen = true;
+  // Items cut from the game (e.g. Oven, 2026-11-14) leave the save.
+  state.items = state.items.filter(n => CORE_ITEM_NAMES.has(n));
+  state.mat = state.mat.filter(n => CORE_ITEM_NAMES.has(n));
+  // ...and so does a challenge that no longer exists (e.g. Rainbow).
+  if (state.order && state.order.id !== "grand" && !CHECK_ORDERS[state.order.id]) state.order = null;
   // A tier change (tier 1 -> 2) can make an old mat overfull.
   trimMatToFit();
   // Saves from before the 3x4 layout keep their 5x5 card.
