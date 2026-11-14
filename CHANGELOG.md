@@ -9,6 +9,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Data 2026.11.14d. Clay is Al + Mg. The Deep Mine rolls Mg instead of H, so Clay, Furnace and Aluminum Alloy can all be made from its own dice. Oven is gone: Furnace takes its place in Apple Pie, Banana Bread, Fruit Cake, Pretzel and Éclair, and the Bakery now sells Furnace and Chocolate. Dough is Flour + Water + Yeast; Banana Bread is Dough + Chocolate + Furnace + Banana. Cloud adds N. Collections that named Oven now use Furnace (Off-Grid Home) or Chocolate (Confectionery, Bakery Complete). Saves holding an Oven drop it.
+- Challenges: requests at the turn 3, 6 and 9 checks (new: Full Recipe, Suit Set, Common Thread; Rainbow is gone); easy restrictions at 12 and 15 (Drought, and new Closed Station and Thin Stock); hard restrictions at 18 and 21 (Short Table, Fresh Faces, Trend Shift, and new Double Drought and Spread Out).
 - Star is Furnace + H + Fe (data 2026.11.14c). The City rolls Ca C O Fe Si Mg (Fe in place of Al). Briefly tried dropping Mg instead: it starved Clay, which needs Mg.
 - Recipe rebalance (data 2026.11.14a): Star is now a tier 2 item (Furnace + H, 10 points, reactive tag only). Life and Coral Reef no longer need a Clock, so Ecosystem and Coral Reef no longer need the Power Plant. Clock is Battery + Tools + Wire. Solar Panel drops Battery; Light Bulb and Car now need one. Apple Pie and Banana Bread cost organic + reactive. The City rolls Fe instead of Al and sells Sand instead of Clay (City Complete now asks for Sand).
 - Shop and Inventory card views: tier 1 card names are the same size as tier 2's, and capstone art is 1.5x bigger.
