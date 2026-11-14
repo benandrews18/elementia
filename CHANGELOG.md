@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Data 2026.11.14f. Engine moves to the Deep Mine and Rubber to the Power Plant. Battery is Ni + K. The Power Plant rolls S instead of Fe; the Deep Mine rolls H instead of S (Natural Gas is local there again). Collections: Power Plant Complete uses Rubber, Deep Freight uses Engine.
 - Data 2026.11.14e. Chocolate is back among the Bakery's unlock items (every station keeps 10 items + a capstone). Banana Bread is Dough + Furnace + Banana (Dough already has the Yeast). The Greenhouse sells Natural Gas instead of Soil (Soil is at Old Growth Forest). Collections: Confectionery uses Banana Bread, Bakery Complete uses Furnace, Greenhouse Complete uses Natural Gas.
 - Challenges regrouped: Fresh Faces is an easy restriction; Thin Stock is hard and allows 3 tier 1 cards; Spread Out allows up to 3 cards from one station.
 - Data 2026.11.14d. Clay is Al + Mg. The Deep Mine rolls Mg instead of H, so Clay, Furnace and Aluminum Alloy can all be made from its own dice. Oven is gone: Furnace takes its place in Apple Pie, Banana Bread, Fruit Cake, Pretzel and Éclair, and the Bakery now sells Furnace and Chocolate. Dough is Flour + Water + Yeast; Banana Bread is Dough + Chocolate + Furnace + Banana. Cloud adds N. Collections that named Oven now use Furnace (Off-Grid Home) or Chocolate (Confectionery, Bakery Complete). Saves holding an Oven drop it.
