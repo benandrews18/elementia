@@ -77,11 +77,6 @@ function openTrophyDetail(id){
   openOverlay("trophyDetail");
 }
 /* The end screen's "New trophies" strip (showEndGame()). */
-function newTrophiesHTML(list){
-  if (!list.length) return "";
-  return `<div class="sec-label" style="margin-top:16px">🎖️ NEW ${list.length === 1 ? "TROPHY" : "TROPHIES"}</div>
-    <div class="trophy-grid">${list.map(t => trophyTileHTML(t, {at: "today"})).join("")}</div>`;
-}
 function openTrophies(){
   const got = loadTrophies();
   document.getElementById("trophiesCount").textContent =

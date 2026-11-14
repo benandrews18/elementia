@@ -2,26 +2,27 @@
    end-game.js -- End of run: the end screen and its stats, the "crafted everything"
    ending, and confetti.
    ===================================================================== */
-/* Stats grid for showEndGame(). extraCells (raw .sumstat HTML) lets the
-   caller append its own tiles. */
-function sessionStatsGridHTML(extraCells){
+/* End screen sections (showEndGame()): an icon + title, the result under
+   it -- no card boxes, so the window stays short. */
+const endSecHTML = (icon, title, body, extra = "") =>
+  `<div class="end-sec"><div class="end-sec-h"><span class="end-sec-ic">${icon}</span>${esc(title)}${extra}</div>${body}</div>`;
+// Top row: the scores, small titles over the numbers.
+function sessionStatsGridHTML(){
   const caps = CAPSTONES.filter(owns);
-  return `
-    <div class="sumstat"><div class="n" style="color:var(--gold)">⚛️ ${Math.round(state.bestMatScore || 0).toLocaleString()}</div><div class="l">SCORE (TOP QUARKS)</div></div>
-    <div class="sumstat"><div class="n">${score()}</div><div class="l">ITEM SCORE</div></div>
-    ${state.grandExhibition ? `<div class="sumstat"><div class="n" style="color:var(--gold)">🏛️</div><div class="l">GRAND EXHIBITION</div></div>` : ""}
-    <div class="sumstat"><div class="n">${state.items.length}</div><div class="l">ITEMS BUILT</div></div>
-    <div class="sumstat"><div class="n" style="color:var(--gold)">${caps.length}<span style="font-size:16px;color:var(--mute)">/8</span></div><div class="l">CAPSTONES</div></div>
-    ${extraCells || ""}`;
+  const stat = (icon, title, value) =>
+    `<div class="end-stat"><div class="end-stat-h">${icon} ${esc(title)}</div><div class="end-stat-n">${value}</div></div>`;
+  return stat("⚛️", "Quarks", Math.round(state.bestMatScore || 0).toLocaleString()) +
+    stat("💯", "Item Score", score()) +
+    stat("🛠️", "Items", state.items.length) +
+    stat("🏆", "Capstones", `${caps.length}<small>/8</small>`) +
+    (state.grandExhibition ? stat("🏛️", "Exhibition", "✓") : "");
 }
+const endIconHTML = n => `<span class="end-ic" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`;
 function capstonesSectionHTML(){
   const caps = CAPSTONES.filter(owns);
-  return caps.length
-    ? `<div class="sec-label" style="margin-top:16px">CAPSTONES COMPLETED</div>
-       <div class="sumcaps">${caps.map(n =>
-         `<span class="sumcap">${em(ITEM_EMOJI[n])} ${esc(n)}</span>`).join("")}</div>`
-    : `<p class="empty" style="margin-top:14px">No capstones this time — they need
-       materials from several stations, so plan your route next run!</p>`;
+  return endSecHTML("🏆", "Capstones Completed", caps.length
+    ? `<div class="end-items">${caps.map(n => `<span class="end-cap">${em(ITEM_EMOJI[n])}<b>${esc(n)}</b></span>`).join("")}</div>`
+    : `<p class="end-none">None this time -- plan a route through several stations next run!</p>`);
 }
 // Show the last station's backdrop behind the end screen (it can open from
 // the map or Settings, where updateBackdrop() wouldn't). closeOverlay()
@@ -52,12 +53,16 @@ function biggestTurn(){
   });
   return best;
 }
+// Biggest Turn, then Station Most Visited.
 function endGameFlavorHTML(){
-  const turn = biggestTurn();
-  if (!turn) return "";
-  return `<div class="sec-label" style="margin-top:16px">BIGGEST TURN -- ${esc(turn.station)} (+${turn.points.toLocaleString()} pts)</div>
-    <div class="sumcaps">${turn.items.map(n =>
-      `<span class="sumcap" title="${esc(n)}">${em(ITEM_EMOJI[n])}</span>`).join("")}</div>`;
+  const turn = biggestTurn(), top = topVisitedStation();
+  const stLine = (name, right) => {
+    const st = STATION_BY_NAME[name];
+    return `<div class="end-line">${st ? `<span class="end-ic">${em(st.emoji)}</span>` : ""}<b>${esc(name)}</b><span class="end-right">${right}</span></div>`;
+  };
+  return (turn ? endSecHTML("💥", "Biggest Turn", stLine(turn.station, `+${turn.points.toLocaleString()} pts`) +
+      `<div class="end-items">${turn.items.map(endIconHTML).join("")}</div>`) : "") +
+    (top ? endSecHTML("🧭", "Station Most Visited", stLine(top.name, `${top.count}×`)) : "");
 }
 
 /* The end of a run: reached MAX_VISITS (goMap()), missed a breakpoint at
@@ -109,17 +114,17 @@ function showEndGame(){
   document.getElementById("endContinue").hidden = !completing;
   document.getElementById("endReview").hidden = completing;
 
-  const top = topVisitedStation();
-  const topStation = top && STATION_BY_NAME[top.name];
-  const extraCells = `${
-      top ? `<div class="sumstat sumstat-wide"><div class="n sum-station">${topStation ? `<span class="sum-st-ic">${em(topStation.emoji)}</span>` : ""}${esc(top.name)}</div><div class="l">STATION MOST VISITED (${top.count}×)</div></div>` : ""}`;
-
-  document.getElementById("endGrid").innerHTML = sessionStatsGridHTML(extraCells);
+  document.getElementById("endGrid").innerHTML = sessionStatsGridHTML();
   document.getElementById("endCapsWrap").innerHTML = capstonesSectionHTML();
-  // Trophies are earned when a run completes (awardTrophies()).
-  document.getElementById("endTrophiesWrap").innerHTML = newTrophiesHTML(awardTrophies()) +
-    (completing && state.starsEarned ? `<p class="end-stars">⭐ +${state.starsEarned} Stars this run -- open collection clues from the Main Menu</p>` : "");
   document.getElementById("endFlavorWrap").innerHTML = endGameFlavorHTML();
+  // Trophies are earned when a run completes (awardTrophies()); the run's
+  // Stars ride beside their title as a pill.
+  const won = awardTrophies(), stars = completing ? state.starsEarned || 0 : 0;
+  const starPill = stars ? `<span class="end-star-pill">+${stars} ⭐</span>` : "";
+  document.getElementById("endTrophiesWrap").innerHTML = won.length
+    ? endSecHTML("🎖️", won.length === 1 ? "New Trophy" : "New Trophies",
+        `<div class="trophy-grid">${won.map(t => trophyTileHTML(t, {})).join("")}</div>`, starPill)
+    : stars ? endSecHTML("⭐", "Stars Earned", "", starPill) : "";
   showSessionEndBackdrop();
   openOverlay("endGame");
 }

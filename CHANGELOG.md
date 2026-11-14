@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Compact results window.** The end screen's scores sit in one row of
+  small titles over numbers (no boxed cards); then titled sections, each
+  an icon + title with the result underneath: Capstones Completed, Biggest
+  Turn, Station Most Visited, New Trophies (smaller tiles, no "earned"
+  line, the run's Stars as a "+X ⭐" pill by the title). Item and capstone
+  icons are larger; the Stars/collections text is gone.
+
 - **"End" button.** The centre hub button's final-score face (🏁) now reads
   "End" instead of "Final Score".
 

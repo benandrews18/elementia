@@ -363,7 +363,6 @@
 .cr-unknown{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px;
   border:2px dashed var(--line); color:var(--mute); font-weight:900}
 .coll-stars{margin-left:6px; color:var(--gold); font-weight:900}
-.end-stars{margin:8px 0 0; font-weight:800; color:var(--gold); text-align:center; font-size:13px}
 /* Collections header: title, Stars bubble (Main Menu), X top-right; the
    clue buttons sit under the count. */
 .coll-head{display:flex; align-items:center; justify-content:center; gap:10px}

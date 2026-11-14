@@ -96,13 +96,6 @@
 .pc-ingredients.lots .pc-ping.elem{font-size:12px; padding:3px 5px; min-width:0}
 
 /* session summary */
-.sumgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin:16px 0 4px}
-.sumstat{background:var(--bg-soft); border:1.5px solid var(--line2); border-radius:13px; padding:13px 14px}
-.sumstat .n{font-size:27px; font-weight:800; letter-spacing:-1px; line-height:1.1}
-.sumstat .l{font-size:11px; font-weight:800; letter-spacing:.6px; color:var(--mute); margin-top:2px}
-.sumcaps{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px}
-.sumcap{background:var(--gold-soft); color:var(--gold); border:1.5px solid var(--gold-line);
-  border-radius:9px; padding:5px 10px; font-weight:800; font-size:13.5px}
 /* End screen: one phone screen tall -- the stats scroll inside .end-body
    if they must, the buttons stay at the bottom. */
 #endGame .end-box{display:flex; flex-direction:column; padding:12px 8px 6px;
@@ -110,18 +103,34 @@
 #endGame #endTitle{margin:-28px auto 8px}
 #endGame .end-body{flex:1; min-height:0; overflow-y:auto}
 #endGame #endSub{margin:0 0 4px; font-size:13px}
-#endGame .sumgrid{grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0 2px}
-#endGame .sumstat{padding:7px 8px; border-radius:10px}
-#endGame .sumstat .n{font-size:20px; letter-spacing:-.5px}
-#endGame .sumstat .l{font-size:9px; letter-spacing:.3px}
-#endGame .sumstat-wide{grid-column:span 2}
-#endGame .sum-station{display:flex; align-items:center; gap:6px; font-size:16px; letter-spacing:0}
-#endGame .sum-st-ic{flex:none; display:flex; font-size:22px}
-#endGame .sum-st-ic :is(img,svg){width:24px; height:24px}
-#endGame .sec-label{margin:10px 0 4px !important}
-#endGame .sumcaps{gap:5px; margin-top:4px}
-#endGame .sumcap{padding:3px 7px; font-size:12px}
-#endGame .trophy-grid{max-height:none; gap:6px; padding:0}
+/* Scores: one row, small title over each number, no boxes. */
+#endGame .sumgrid{display:flex; justify-content:space-around; gap:4px; margin:4px 0 2px; text-align:center}
+.end-stat-h{font-size:10px; font-weight:800; letter-spacing:.3px; color:var(--mute); white-space:nowrap}
+.end-stat-n{font-size:21px; font-weight:900; letter-spacing:-.5px; color:var(--ink); line-height:1.15}
+.end-stat-n small{font-size:13px; color:var(--mute)}
+/* Sections: icon + title on a hairline, results underneath. */
+.end-sec{margin-top:10px}
+.end-sec-h{display:flex; align-items:center; gap:6px; font-size:12px; font-weight:900; letter-spacing:.6px;
+  text-transform:uppercase; color:var(--ink2); padding-bottom:4px; margin-bottom:6px; border-bottom:1.5px solid var(--line2)}
+.end-sec-ic{font-size:15px; line-height:1}
+.end-star-pill{margin-left:auto; padding:2px 9px; border-radius:999px; background:var(--gold-soft); border:1.5px solid var(--gold);
+  color:var(--gold); font-size:13px; letter-spacing:0; text-transform:none}
+.end-items{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.end-cap{display:inline-flex; align-items:center; gap:5px; padding:3px 9px 3px 4px; border-radius:999px;
+  background:var(--gold-soft); border:1.5px solid var(--gold-line); font-size:12.5px; color:var(--ink)}
+.end-cap :is(img, svg){width:26px; height:26px}
+.end-ic{display:inline-flex; font-size:26px; line-height:1}
+.end-ic :is(img, svg){width:28px; height:28px}
+.end-line{display:flex; align-items:center; gap:7px; font-size:15px; margin-bottom:4px}
+.end-right{margin-left:auto; font-weight:900; color:var(--gold)}
+.end-none{font-size:13px; margin:0 !important}
+/* New trophies: a bit smaller, no "earned" line. */
+#endGame .trophy-grid{max-height:none; gap:6px; padding:0; grid-template-columns:repeat(4, 1fr)}
+#endGame .trophy{padding:6px 4px; gap:2px}
+#endGame .trophy-ic{font-size:26px}
+#endGame .trophy-ic :is(img, svg){width:26px; height:26px}
+#endGame .trophy-name{font-size:10.5px}
+#endGame .trophy-sub{display:none}
 #endGame .end-foot{flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px}
 #endGame .end-foot .bigbtn{width:100%; padding-left:8px; padding-right:8px}
 #endGame .end-foot .bigbtn:first-child:not([hidden]){grid-column:1 / -1}
