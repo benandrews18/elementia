@@ -10,6 +10,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Settings from the start.** The Settings cog was hidden until the player
+  first left a station (so through the rules slides, capstone pick and the
+  whole first station). It now shows from the start, sits above the intro
+  windows while they're open, and Settings opens above them.
+
 - **Grand Exhibition: 4,000.** The round-24 Grand Exhibition target is now
   4,000 Quarks, and the Run Complete window no longer shows whether it was
   reached.

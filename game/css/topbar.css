@@ -69,7 +69,12 @@ html.low-motion .clockpill.checkpoint, html.low-motion .clockpill.checkpoint::af
 }
 #settingsBtn:active{transform:translateY(2px)}
 body.has-qtop #settingsBtn{top:calc(var(--qtop-h, 52px) + 10px)}
-body[data-picking] #settingsBtn, [data-combo-lab] #settingsBtn{display:none}
+[data-combo-lab] #settingsBtn{display:none}
+/* Reachable from the very start: over the intro's windows (rules slides,
+   capstone pick, pin tip) while one is open, and Settings opens above them.
+   Only then -- elsewhere a window's own corner ✕ sits where the cog is. */
+body:has(#classicTut.open, #capChoice.open, #capConfirm.open, #pinTip.open) #settingsBtn{z-index:195}
+body:has(#classicTut.open, #capChoice.open, #capConfirm.open, #pinTip.open) :is(#settings, #settingsRules, #settingsTuts, #settingsDev, #confirmBox){z-index:200}
 /* Always-on Quark Meter (see renderQuarkTopBar()). Sits above #topbar's
    pills (30) but under every tray, drawer and overlay (33+). */
 #quarkTopBar{
