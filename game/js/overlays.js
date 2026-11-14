@@ -42,6 +42,7 @@ function closeOverlay(id){
   // challenge), however each one is closed (button, backdrop, Escape).
   if (id === "matRulesOverlay" && orderTipAfterRules){ orderTipAfterRules = false; continueCheckIntro(); }
   if (id === "orderTip") continueCheckIntro();
+  if (id === "matExpand") announceMatCheck();
   // A tick later, so a card closed to open another (an element card) wins.
   if (id === "cardPop" && capstoneMarketPending) setTimeout(openNextCapstoneMarket, 0);
   // #convertGoalCard sits above #convert's box, so the closing slide doesn't
@@ -62,6 +63,13 @@ function closeOverlay(id){
   flushPendingMouseTip();
 }
 const anyOverlayOpen = () => !!document.querySelector(".overlay.open");
+// Big reveal screens (New Items Unlocked, Display Mat Expansion) ignore taps
+// for their first 2s -- too easy to skip by accident; "Tap to continue"
+// fades in when they're ready (.ur-tap).
+const REVEAL_LOCK_MS = 2000;
+let revealOpenedAt = 0;
+function openReveal(id){ revealOpenedAt = Date.now(); openOverlay(id); }
+const revealLocked = () => Date.now() - revealOpenedAt < REVEAL_LOCK_MS;
 
 /* One FIFO queue for event toasts (see #eventToast). kind picks the
    .et-<kind> class; icon is raw HTML; bonus is optional. */

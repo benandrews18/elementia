@@ -47,12 +47,9 @@ function newRun(){
   askConfirm("Start a new run? Your current save will be erased.", restartRun);
 }
 
-// True while the intro logo shows (playClassicIntro()): hides the map's
-// capstone-preview badges. data-intro-sequence covers the whole opening.
-let classicIntroHideCapstones = false;
 // How long the Classic intro logo shows before the rules slides.
 const CLASSIC_INTRO_LOGO_MS = 1000;
-/* Classic's opening: the bare map renders (capstone badges hidden), the
+/* Classic's opening: the bare map renders, the
    Elementia logo bounces in (#introLogo) for CLASSIC_INTRO_LOGO_MS, then the
    rules slides open, followed by the capstone choice (openCapstoneChoice()).
    body[data-intro-sequence] keeps the hub and map nodes untappable
@@ -61,12 +58,10 @@ const CLASSIC_INTRO_LOGO_MS = 1000;
 function playClassicIntro(){
   screen = "map"; current = null; selectedMapStation = null;
   document.body.setAttribute("data-intro-sequence", "");
-  classicIntroHideCapstones = true;
   render(true);
   document.getElementById("introLogo").classList.add("show");
   setTimeout(() => {
     document.getElementById("introLogo").classList.remove("show");
-    classicIntroHideCapstones = false;
     openClassicTutorial(openCapstoneChoice);
   }, CLASSIC_INTRO_LOGO_MS);
 }

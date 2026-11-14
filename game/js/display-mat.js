@@ -98,14 +98,14 @@ function renderMatGridCells(s){
   const { L, slot } = matPack(mat);
   const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
   // Only open slots are drawn (locked ones aren't there yet).
-  const html = slot.map(sl => sl.cover || sl.kind === "locked" ? ""
-    : sl.card ? `<div class="mm-slot filled ${sl.w > 1 ? "wide" : ""}" data-idx="${sl.idx}">${card(sl.card)}</div>`
+  const html = slot.map((sl, i) => sl.cover || sl.kind === "locked" ? ""
+    : sl.card ? `<div class="mm-slot filled ${sl.w > 1 ? "wide" : ""}" data-idx="${sl.idx}" data-slot="${i}">${card(sl.card)}</div>`
     // Tier 1 squares, stacked; an open half shows as a small dashed square.
-    : sl.kind === "full" && sl.stack ? `<div class="mm-slot filled stack">${sl.stack.map(t => card(t.card, "mini")).join("")}${
+    : sl.kind === "full" && sl.stack ? `<div class="mm-slot filled stack" data-slot="${i}">${sl.stack.map(t => card(t.card, "mini")).join("")}${
         sl.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
     // Bottom strip (turns 12-17): a half-height row, one tier 1 card each.
-    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}</div>`
-    : `<div class="mm-slot empty"></div>`);
+    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}" data-slot="${i}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}</div>`
+    : `<div class="mm-slot empty" data-slot="${i}"></div>`);
   document.getElementById("matGrid").innerHTML = html.join("");
 }
 

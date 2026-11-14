@@ -75,7 +75,11 @@
 <!-- Display Mat rules, opened from the "?" in the mat page's bottom-right
      corner (see renderMatTop()). -->
 <!-- New items a capstone unlocks (maybeShowUnlockReveal()). -->
-<div class="overlay" id="unlockReveal" role="dialog" aria-modal="true" aria-label="New Items Unlocked">
+<div class="overlay" id="matExpand" data-no-dismiss role="dialog" aria-modal="true" aria-label="Display Mat Expansion">
+  <div class="mx-hole" id="matExpandHole"></div>
+  <div class="mx-text" id="matExpandText"><h2 class="ur-title">Display Mat Expansion!</h2><p class="ur-tap">Tap to continue</p></div>
+</div>
+<div class="overlay" id="unlockReveal" data-no-dismiss role="dialog" aria-modal="true" aria-label="New Items Unlocked">
   <div class="ur-box" id="unlockRevealBody"></div>
 </div>
 <!-- Display Mat Challenges, first time per run (maybeShowOrderTip()). -->

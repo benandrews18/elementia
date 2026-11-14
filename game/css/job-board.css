@@ -219,6 +219,7 @@
 #eventToast{
   position:fixed; top:0; left:0; right:0; z-index:90;
   display:flex; align-items:center; gap:14px; padding:16px 20px;
+  background:var(--card); color:var(--ink); /* solid: kinds without their own colour (stations) were see-through */
   border-bottom:3px solid var(--gold);
   box-shadow:0 10px 26px rgba(0,0,0,.4);
   transform:translateY(-100%); transition:transform .35s cubic-bezier(.34,1.56,.64,1);
@@ -231,7 +232,7 @@
   background:rgba(255,255,255,.2); box-shadow:inset 0 0 0 2px rgba(255,255,255,.3);
 }
 #eventToast .ct-body{flex:1; min-width:0}
-#eventToast .ct-title{font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase}
+#eventToast .ct-title{font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--gold)}
 #eventToast .ct-name{font-size:16.5px; font-weight:800; color:var(--ink)}
 #eventToast .ct-bonus{flex:none; font-size:14px; font-weight:800}
 #eventToast.et-warn{background:var(--bad-soft); border-bottom-color:var(--bad)}

@@ -462,7 +462,16 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
   filter:drop-shadow(0 0 14px rgba(226,178,90,.55))}
 .ur-card .mm-card{pointer-events:none}
 @keyframes urPop{0%{opacity:0; transform:scale(.4) rotate(-6deg)} 60%{opacity:1; transform:scale(1.12) rotate(2deg)} 100%{opacity:1; transform:none}}
-.ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px}
+.ur-tap{color:rgba(255,255,255,.65); font-size:13px; font-weight:700; margin-top:22px;
+  opacity:0; animation:urTapIn .3s 2s forwards} /* REVEAL_LOCK_MS: taps count from then */
+@keyframes urTapIn{to{opacity:1}}
+/* Display Mat Expansion (maybeShowMatExpansion()): a hole cut in the dark
+   around the new slots; JS places it and the title under it. */
+#matExpand{z-index:75; background:transparent; padding:0; cursor:pointer}
+.mx-hole{position:fixed; border-radius:14px; pointer-events:none;
+  box-shadow:0 0 0 200vmax rgba(4,6,10,.9), 0 0 0 3px #ffe08a, 0 0 26px 8px rgba(255,224,138,.6)}
+.mx-text{position:fixed; left:16px; right:16px; text-align:center; pointer-events:none}
+.mx-text .ur-title{margin:0}
 html.low-motion .ur-card{animation:none; opacity:1}
 /* Tuned in the Tip Workshop: Display Mat rules 12.5px, Unknown Element 13px. */
 #matRulesOverlay :is(.mct-line, p){font-size:12.5px}

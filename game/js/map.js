@@ -117,18 +117,15 @@ function renderMap(){
     // capstones count here -- when the tracked item IS a capstone, this is the
     // only pointer to its station.
     const hasTracked = trackedEntry && trackedEntry.station === name;
-    // Initial station pick (lastStation === null): each node shows its capstone
-    // in the tracked badge's slot (syncInitialPickCapstoneTracking() tracks the
-    // open card's one); it wins over the tracked badge. Both badges are
+    // No badges on the initial station pick (lastStation === null). Badges are
     // SIBLINGS of the node button so z-index can put them behind its circle (a
     // negative-z child can't go behind its parent's own fill).
-    const capstoneBadge = state.lastStation === null && !classicIntroHideCapstones
-      ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
-    const trackedBadge = (hasTracked && !capstoneBadge)
+    const initialPick = state.lastStation === null;
+    const trackedBadge = (hasTracked && !initialPick)
       ? `<span class="map-node-tracked-badge" data-map-badge="tracked" role="button" style="left:${x}%;top:${topStyle}" title="Tracking ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
-    const compBadge = compStations.has(name) && !capstoneBadge
+    const compBadge = compStations.has(name) && !initialPick
       ? `<span class="map-node-comp-badge" data-map-badge="comp" role="button" style="left:${x}%;top:${topStyle}" title="Sells a component of ${esc(selectedJobItem)}"></span>` : "";
-    return `${trackedBadge}${compBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+    return `${trackedBadge}${compBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;

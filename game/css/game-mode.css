@@ -186,15 +186,6 @@
 .map-node-comp-badge{
   margin-left:6.6%; width:28px; height:28px; background:url("../ui/btn_search.webp") center / contain no-repeat;
 }
-/* Capstone badge on the initial station-pick map (see renderMap()): same
-   slot as the tracked badge (never both on one node), gold instead of
-   green. Kept in lockstep with that badge's size/position/stacking. */
-.map-node-capstone-badge{
-  position:absolute; transform:translate(-50%, calc(-50% - 60px));
-  width:56px; height:56px; border-radius:50%; background:var(--card); border:2px solid var(--gold);
-  display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1;
-  box-shadow:0 1px 4px rgba(0,0,0,.3); z-index:-1;
-}
 /* The station card floats over the map, pinned near the top, so it's
    always reachable. */
 /* position:fixed, not sticky: sticky still takes flow space, so content

@@ -228,13 +228,15 @@
         expect(matFits([C("Metropolis"), ...plain.slice(0, 8)]) && !matFits([C("Metropolis"), ...plain.slice(0, 9)]), "Metropolis mat should hold its 2 + 8 more");
         // The mat grows: 3 slots, then 4 (turn 6), + a tier-1 strip (12), then 4x2 (18).
         const t1s = MAT_CARDS.filter(matIsTier1);
-        const fits = (round, cards) => { state.visits = round; return matFits(cards); };
-        expect(fits(1, plain.slice(0, 3)) && !fits(5, plain.slice(0, 4)), "the mat should start at 3 slots");
-        expect(fits(6, plain.slice(0, 4)) && !fits(11, [...plain.slice(0, 4), t1s[0]]), "turn 6 should open a 4th slot");
-        expect(fits(12, [...plain.slice(0, 4), ...t1s.slice(0, 4)]) && !fits(17, [...plain.slice(0, 4), ...t1s.slice(0, 5)])
-          && !fits(17, plain.slice(0, 5)), "turn 12 should open 4 tier-1-only places along the bottom");
-        expect(fits(18, plain.slice(0, 8)), "turn 18 should give the full 4x2 mat");
-        state.visits = v; }
+        // It grows at that turn's board check (its challenge drawn), not on arrival.
+        const o = state.order;
+        const fits = (round, cards, checked) => { state.visits = round; state.order = checked ? { id: "drought", round } : null; return matFits(cards); };
+        expect(fits(1, plain.slice(0, 3)) && !fits(5, plain.slice(0, 4)) && !fits(6, plain.slice(0, 4)), "the mat should start at 3 slots, until turn 6's check");
+        expect(fits(6, plain.slice(0, 4), true) && !fits(11, [...plain.slice(0, 4), t1s[0]]), "turn 6's check should open a 4th slot");
+        expect(fits(12, [...plain.slice(0, 4), ...t1s.slice(0, 4)], true) && !fits(17, [...plain.slice(0, 4), ...t1s.slice(0, 5)])
+          && !fits(17, plain.slice(0, 5)), "turn 12's check should open 4 tier-1-only places along the bottom");
+        expect(fits(18, plain.slice(0, 8), true) && !fits(18, plain.slice(0, 5)), "turn 18's check should give the full 4x2 mat");
+        state.visits = v; state.order = o; }
       // Maglev Train: tier 1 stacks 3 to a slot, +2 each.
       { expect(matOccupancy([C("Maglev Train"), ...t1.slice(0, 3)]) === 3, "Maglev Train: 3 tier 1 cards should share one slot");
         const base = sc([C("Maglev Train"), t1[0]]).base; expect(base === C("Maglev Train").points + t1[0].points + 2, "Maglev Train: tier 1 +2"); }

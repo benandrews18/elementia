@@ -245,7 +245,7 @@ function openNextCapstoneMarket(){
 /* "New Items Unlocked!": a capstone's unlock items (data.js "unlock" rows,
    UNLOCKED_BY) pop onto a dimmed screen in full colour, once the screen is
    clear -- the capstone card closed and any Marketplace tray dismissed.
-   Tap to dismiss. */
+   Tap to dismiss (after REVEAL_LOCK_MS). */
 let unlockRevealQueue = [], unlockRevealTimer = null;
 function queueUnlockReveal(capName){
   const names = [...new Set(ENTRIES.filter(e => UNLOCKED_BY[e.name] === capName).map(e => e.name))];
@@ -270,10 +270,11 @@ function maybeShowUnlockReveal(){
     <div class="ur-grid">${names.map((n, i) =>
       `<div class="ur-card" style="animation-delay:${300 + i * step}ms">${matCardHTML(n, { plain: true })}</div>`).join("")}</div>
     <p class="ur-tap">Tap to continue</p>`;
-  openOverlay("unlockReveal");
+  openReveal("unlockReveal");
 }
-// Any tap closes it; the next queued reveal (if any) follows.
+// Any tap after the first 2s closes it; the next queued reveal (if any) follows.
 document.getElementById("unlockReveal").addEventListener("click", () => {
+  if (revealLocked()) return;
   closeOverlay("unlockReveal");
   setTimeout(maybeShowUnlockReveal, 300);
 });

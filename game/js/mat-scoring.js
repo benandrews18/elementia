@@ -45,15 +45,17 @@ const matHas = (cards, name) => cards.some(c => c.name === name);
    places (turn 12), then the full second row (turn 18) -- today's 4x2. Not
    a run (no state yet, e.g. building collections at load) = full size. */
 const MAT_GROW_ROUNDS = [6, 12, 18];
+// It grows at that turn's board check (its challenge drawn: state.order.round).
 const matStage = () => typeof state === "undefined" || !state ? MAT_GROW_ROUNDS.length
-  : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) >= r).length;
+  : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) > r
+    || (state.visits === r && state.order && state.order.round === r)).length;
 /* The mat's shape for these cards: every slot of the cols x 2 grid is
    "full" (open), "top" (only its top half: one tier 1 card) or "locked"
    (not there yet -- never shown). Metropolis (Expansion) adds a column,
    growing with the rest; Maglev Train (Freight) stacks tier 1 three to a
    slot. openCols / stage: what renderMatTop() draws. */
-function matLayout(cards){
-  const extra = matHas(cards, "Metropolis") ? 1 : 0, cols = MAT_SLOTS_COLS + extra, st = matStage();
+function matLayout(cards, st = matStage()){
+  const extra = matHas(cards, "Metropolis") ? 1 : 0, cols = MAT_SLOTS_COLS + extra;
   const kinds = [];
   for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++)
     kinds.push(r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")

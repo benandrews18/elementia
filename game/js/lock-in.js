@@ -649,6 +649,37 @@ function playShutter(line2, atClosed, line3 = ""){
   setTimeout(() => el.classList.remove("closed"), SHUTTER_CLOSE_MS + SHUTTER_HOLD_MS);
   setTimeout(() => el.classList.remove("on"), SHUTTER_CLOSE_MS * 2 + SHUTTER_HOLD_MS);
 }
+/* "Display Mat Expansion!": on a growth turn's check (MAT_GROW_ROUNDS) the
+   screen darkens around the mat's new slots, once per growth
+   (state.matExpandSeen), before the check's windows (announceMatCheck(),
+   chained from closeOverlay()). Shown once the shutter has parted; the hole
+   follows the slots each frame while the drawer settles. */
+function maybeShowMatExpansion(){
+  const st = matStage();
+  if (!st || MAT_GROW_ROUNDS[st - 1] !== state.visits || (state.matExpandSeen || 0) >= st) return false;
+  state.matExpandSeen = st; save();
+  const mat = matOnMat(), now = matLayout(mat).kinds, before = matLayout(mat, st - 1).kinds;
+  const fresh = now.map((k, i) => k !== before[i] ? i : -1).filter(i => i >= 0);
+  setTimeout(() => {
+    const ov = document.getElementById("matExpand"), hole = document.getElementById("matExpandHole");
+    const text = document.getElementById("matExpandText");
+    openReveal("matExpand");
+    const follow = () => {
+      if (!ov.classList.contains("open")) return;
+      const rs = fresh.map(i => document.querySelector(`#matGrid [data-slot="${i}"]`)).filter(Boolean).map(el => el.getBoundingClientRect());
+      if (rs.length){
+        const l = Math.min(...rs.map(r => r.left)), t = Math.min(...rs.map(r => r.top));
+        const r = Math.max(...rs.map(r => r.right)), b = Math.max(...rs.map(r => r.bottom));
+        Object.assign(hole.style, { left: l - 6 + "px", top: t - 6 + "px", width: r - l + 12 + "px", height: b - t + 12 + "px" });
+        text.style.top = b + 24 + "px";
+      }
+      requestAnimationFrame(follow);
+    };
+    follow();
+  }, lowMotion() ? 0 : SHUTTER_HOLD_MS + SHUTTER_CLOSE_MS);
+  return true;
+}
+document.getElementById("matExpand").addEventListener("click", () => { if (!revealLocked()) closeOverlay("matExpand"); });
 /* A board check opening (hub's Travel on a checkpoint turn): the shutter
    scene change, with the mat opening behind it; the very first check ever
    also opens the Display Mat rules (prefs.sawMatCheckTutorial). */
