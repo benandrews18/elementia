@@ -53,6 +53,7 @@ function renderStation(name){
     </div>
     ${selPanel}
     <div class="makewrap">
+      <div class="col-label shop-label">ITEM SHOP – TAP TO CRAFT</div>
       ${shopBody}
     </div>
   </div>`;

@@ -10,6 +10,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Item Shop title.** "ITEM SHOP – TAP TO CRAFT" sits above a station's
+  items, in both the card and list views.
+
 - **Card views: defaults and polish.** Card view is now the default for
   station shops (and stays the Inventory's default). Station cards no
   longer light up their station/element icons for the Display Mat's combos
