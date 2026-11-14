@@ -3405,7 +3405,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    tabs never resizes the tray. */
 .mat-grid{
   display:grid; grid-template-columns:repeat(var(--mat-cols, 4), 1fr);
-  grid-auto-rows:var(--mat-row-h);
+  grid-template-rows:var(--mat-rows, var(--mat-row-h) var(--mat-row-h)); grid-auto-rows:var(--mat-row-h);
   gap:5px;
 }
 .mm-slot{position:relative}
@@ -3423,11 +3423,7 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
   flex:1 1 0; min-height:0; width:auto; height:auto;
 }
 .mm-mini-empty{border:2px dashed var(--line); border-radius:10px}
-/* Not open yet (matLayout()): a whole slot, or the bottom half of a strip place. */
-.mm-slot.locked, .mm-mini-locked{display:flex; align-items:center; justify-content:center;
-  border:2px dashed rgba(0,0,0,.18); border-radius:10px; background:rgba(0,0,0,.06)}
-.mm-mini-locked{flex:1 1 0; min-height:0}
-.mm-lock{font-size:12px; font-weight:900; color:rgba(0,0,0,.4); white-space:nowrap}
+
 .mm-card.mini{padding:2px; border-width:3px; border-radius:10px}
 .mm-card.mini .mm-icon{font-size:32px; margin:0}
 .mm-card.mini .mm-icon :is(img,svg){width:32px; height:32px}
@@ -3452,8 +3448,8 @@ body.lockin-playing::after{content:""; position:fixed; inset:0; z-index:10000}
    resizes the tray; a long elements list scrolls inside. A different
    parchment shade per page. */
 .mat-zone-page{
-  box-sizing:border-box; min-height:calc(var(--mat-row-h) * 2 + 5px + 14px);
-  max-height:calc(var(--mat-row-h) * 2 + 5px + 14px); overflow-y:auto;
+  box-sizing:border-box; min-height:calc(var(--mat-h, var(--mat-row-h) * 2 + 5px) + 14px);
+  max-height:calc(var(--mat-h, var(--mat-row-h) * 2 + 5px) + 14px); overflow-y:auto;
   border-radius:14px 14px 14px 4px; border:2px solid; padding:5px;
 }
 .mat-zone-page.zone-mat{background:#cda874; border-color:#a67c4a}
@@ -6114,19 +6110,18 @@ const matStage = () => typeof state === "undefined" || !state ? MAT_GROW_ROUNDS.
   : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) >= r).length;
 /* The mat's shape for these cards: every slot of the cols x 2 grid is
    "full" (open), "top" (only its top half: one tier 1 card) or "locked"
-   (with the turn it opens). Metropolis (Expansion) adds a column, growing
-   with the rest; Maglev Train (Freight) stacks tier 1 three to a slot. */
+   (not there yet -- never shown). Metropolis (Expansion) adds a column,
+   growing with the rest; Maglev Train (Freight) stacks tier 1 three to a
+   slot. openCols / stage: what renderMatTop() draws. */
 function matLayout(cards){
   const extra = matHas(cards, "Metropolis") ? 1 : 0, cols = MAT_SLOTS_COLS + extra, st = matStage();
-  const kinds = [], opensAt = [];
-  for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++){
-    const k = r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")
-      : st >= 3 ? "full" : st === 2 ? "top" : "locked";
-    kinds.push(k);
-    opensAt.push(r === 0 ? MAT_GROW_ROUNDS[0] : st < 2 ? MAT_GROW_ROUNDS[1] : MAT_GROW_ROUNDS[2]);
-  }
+  const kinds = [];
+  for (let r = 0; r < MAT_SLOTS_ROWS; r++) for (let c = 0; c < cols; c++)
+    kinds.push(r === 0 ? (st === 0 && c >= 3 + extra ? "locked" : "full")
+      : st >= 3 ? "full" : st === 2 ? "top" : "locked");
   const perSlot = matHas(cards, "Maglev Train") ? 3 : MAT_TIER1_PER_SLOT;
-  return { cols, kinds, opensAt, perSlot, slots: kinds.filter(k => k === "full").length,
+  return { cols, kinds, perSlot, stage: st, openCols: kinds.slice(0, cols).filter(k => k !== "locked").length,
+    slots: kinds.filter(k => k === "full").length,
     // Room in tier 1 cards (the collapsed mat's "x/y").
     cap: kinds.reduce((n, k) => n + (k === "full" ? perSlot : k === "top" ? 1 : 0), 0) };
 }
@@ -10365,16 +10360,14 @@ function renderMatGridCells(s){
   const mat = matOnMat();
   const { L, slot } = matPack(mat);
   const card = (c, cls) => matCardHTML(c.name, { complete: s.completeNames.has(c.name), cls });
-  // Slots not open yet: a lock and the turn they open.
-  const lock = i => `<span class="mm-lock">🔒 ${L.opensAt[i]}</span>`;
-  const html = slot.map((sl, i) => sl.cover ? ""
+  // Only open slots are drawn (locked ones aren't there yet).
+  const html = slot.map(sl => sl.cover || sl.kind === "locked" ? ""
     : sl.card ? `<div class="mm-slot filled ${sl.w > 1 ? "wide" : ""}" data-idx="${sl.idx}">${card(sl.card)}</div>`
     // Tier 1 squares, stacked; an open half shows as a small dashed square.
     : sl.kind === "full" && sl.stack ? `<div class="mm-slot filled stack">${sl.stack.map(t => card(t.card, "mini")).join("")}${
         sl.stack.length < L.perSlot ? `<span class="mm-mini-empty"></span>` : ""}</div>`
-    // Bottom strip (turns 12-17): one tier 1 place over a locked half.
-    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}<span class="mm-mini-locked">${lock(i)}</span></div>`
-    : sl.kind === "locked" ? `<div class="mm-slot locked">${lock(i)}</div>`
+    // Bottom strip (turns 12-17): a half-height row, one tier 1 card each.
+    : sl.kind === "top" ? `<div class="mm-slot stack${sl.stack ? " filled" : ""}">${sl.stack ? card(sl.stack[0].card, "mini") : `<span class="mm-mini-empty"></span>`}</div>`
     : `<div class="mm-slot empty"></div>`);
   document.getElementById("matGrid").innerHTML = html.join("");
 }
@@ -10537,7 +10530,16 @@ function renderMatTop(){
       </div>
       <button type="button" class="mat-rules-btn" id="matRulesBtn" title="How the Display Mat scores" aria-label="Display Mat rules"></button>` : "";
   maybeShowCollectionFound();
-  document.getElementById("drawerTop").style.setProperty("--mat-cols", matLayout(mat).cols);
+  // The mat always spans the full width: its open columns share it (so cards
+  // shrink as it grows), and its height is its open rows -- one, one and a
+  // half-height strip, or two (--mat-rows / --mat-h, see .mat-grid).
+  const ML = matLayout(mat), top = document.getElementById("drawerTop");
+  top.style.setProperty("--mat-cols", ML.openCols);
+  const [rows, h] = ML.stage < 2 ? ["var(--mat-row-h)", "var(--mat-row-h)"]
+    : ML.stage === 2 ? ["var(--mat-row-h) calc((var(--mat-row-h) - 2px) / 2)", "(var(--mat-row-h) * 1.5 + 4px)"]
+    : ["var(--mat-row-h) var(--mat-row-h)", "(var(--mat-row-h) * 2 + 5px)"];
+  top.style.setProperty("--mat-rows", rows);
+  top.style.setProperty("--mat-h", h);
   document.getElementById("drawerTop").innerHTML = scoreRowHTML + matMiniRowHTML(mat) +
     `<div class="mat-zone-wrap">${topbarHTML}${pageHTML}${rulesBtnHTML}</div>`;
   syncMatFloatBtns();
