@@ -45,10 +45,10 @@ const matHas = (cards, name) => cards.some(c => c.name === name);
    places (turn 12), then the full second row (turn 18) -- today's 4x2. Not
    a run (no state yet, e.g. building collections at load) = full size. */
 const MAT_GROW_ROUNDS = [6, 12, 18];
-// It grows at that turn's board check (its challenge drawn: state.order.round).
+// It grows at that turn's board check (started: state.checkRound, set by
+// startCheckOrder() even when no challenge could be drawn).
 const matStage = () => typeof state === "undefined" || !state ? MAT_GROW_ROUNDS.length
-  : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) > r
-    || (state.visits === r && state.order && state.order.round === r)).length;
+  : MAT_GROW_ROUNDS.filter(r => (state.visits || 0) > r || (state.visits === r && state.checkRound === r)).length;
 /* The mat's shape for these cards: every slot of the cols x 2 grid is
    "full" (open), "top" (only its top half: one tier 1 card) or "locked"
    (not there yet -- never shown). Metropolis (Expansion) adds a column,

@@ -186,6 +186,7 @@ function currentOrder(){
 // A board check's shutter: draw this check's challenge (once -- backing out
 // and travelling again keeps it), never the one it replaces.
 function startCheckOrder(){
+  state.checkRound = state.visits; // this turn's check has started (matStage())
   if (state.order && state.order.round === state.visits) return;
   setOrder(drawOrder(state.visits, state.order));
 }
