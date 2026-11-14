@@ -10,6 +10,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Hub order.** Market and Items swapped places: the hub now reads To-Do
+  List, Inventory, Home, Market, Items.
+
 - **Clock pulses on check rounds.** On a board-check round the turn clock
   pulses (gold glow and a slight swell) instead of a still glow; with low
   motion it keeps the still glow.
