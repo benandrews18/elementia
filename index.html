@@ -4763,7 +4763,7 @@ const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http:/
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14d",
+ "version": "2026.11.14e",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -5058,11 +5058,11 @@ const DATA = /*__GAME_DATA_START__*/{
      3
     ],
     [
-     "🌱",
-     "Soil",
+     "🛢️",
+     "Natural Gas",
      "MATERIAL",
-     "🏺 Clay + ⏳ Sand",
-     6
+     "C + H",
+     1
     ],
     [
      "🍎",
@@ -5410,13 +5410,6 @@ const DATA = /*__GAME_DATA_START__*/{
      4
     ],
     [
-     "🍫",
-     "Chocolate",
-     "COMPONENT",
-     "🍬 Sugar + __FURNACE__ Furnace",
-     10
-    ],
-    [
      "🍥",
      "Fish Cakes",
      "CREATION",
@@ -5434,7 +5427,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__BANANABREAD__",
      "Banana Bread",
      "CREATION",
-     "🫓 Dough + 🍫 Chocolate + __FURNACE__ Furnace + 🍌 Banana",
+     "🫓 Dough + __FURNACE__ Furnace + 🍌 Banana",
      24
     ]
    ],
@@ -5452,6 +5445,13 @@ const DATA = /*__GAME_DATA_START__*/{
      "COMPONENT",
      "🐄 Cow + 💧 Water",
      14
+    ],
+    [
+     "🍫",
+     "Chocolate",
+     "COMPONENT",
+     "🍬 Sugar + __FURNACE__ Furnace",
+     10
     ],
     [
      "🥨",
@@ -6259,7 +6259,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"beach-town",              name:"Beach Town",              items:["Speedboat","Lighthouse","Fish Cakes"] },
   { id:"cabin-life",              name:"Cabin Life",              items:["Log Cabin","Tree","Deer","Fossil"] },
   { id:"concrete-jungle",         name:"Concrete Jungle",         items:["Concrete","Building","Skyscraper","Museum"] },
-  { id:"confectionery",           name:"Confectionery",           items:["Sugar","Banana","Apple","Chocolate"] },
+  { id:"confectionery",           name:"Confectionery",           items:["Sugar","Banana","Apple","Banana Bread"] },
   { id:"deep-freight",            name:"Deep Freight",            items:["Natural Gas","Steel","Rubber","Maglev Train"] },
   { id:"fauna",                   name:"Fauna",                   items:["Deer","Chicken","Salmon","Orca"] },
   { id:"heavy-metal",             name:"Heavy Metal",             items:["Engine","Turbine Blade","Satellite Dish","Bridge"] },
@@ -6274,14 +6274,14 @@ const MAT_COLLECTIONS_RAW = [
   { id:"metal-works",             name:"Metal Works",             items:["Steel","Stainless Steel","Aluminum Alloy","Tools","Wire"] },
   { id:"precious-earth",          name:"Precious Earth",          items:["Soil","Limestone","Diamond","Natural Gas","Rubber"] },
   { id:"around-the-world",        name:"Around the World",        items:["Bicycle","Canoe","Speedboat","Car","Tractor","Helicopter","Maglev Train"] },
-  { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Chocolate"] },
+  { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Furnace"] },
   { id:"city-complete",           name:"City Complete",           items:["Sand","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
   { id:"deep-mine-complete",      name:"Deep Mine Complete",      items:["Clay","Natural Gas","Steel","Tools","Furnace","Aluminum Alloy","Diamond"] },
   { id:"observatory-complete",    name:"Observatory Complete",    items:["Microchip","Magnet","Compass","Satellite Dish","Telescope","Star","Rocket"] },
   { id:"ocean-complete",          name:"Ocean Complete",          items:["Water","Limestone","Sand","Seaweed","Banana","Cloud","Orca"] },
   { id:"old-growth-complete",     name:"Old Growth Complete",     items:["Sand","Bone","Soil","Salmon","Tree","Canoe","Deer"] },
   { id:"power-plant-complete",    name:"Power Plant Complete",    items:["Battery","Wire","Clock","Engine","Light Bulb","Computer","Turbine Blade"] },
-  { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Soil","Farm","Chicken","Apple","Grain"] },
+  { id:"greenhouse-complete",     name:"Greenhouse Complete",     items:["Fertilizer","Sugar","DNA","Natural Gas","Farm","Chicken","Apple","Grain"] },
   { id:"world-tour",              name:"World Tour",              items:["Cloud","Tree","Diamond","Grain","Light Bulb","Dough","Building","Telescope"] },
   // Discoverable sub-groups (2026-11-03): tight 3-4 item clusters found
   // inside strong full mats (the player's exported boards plus hill-climb
@@ -11608,17 +11608,17 @@ const CHECK_ORDERS = {
   closedStation: { kind: "restriction", level: "easy", name: "Closed Station",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} cards`,
     params: owned => Object.keys(STATION_BY_NAME).filter(st => matStationCount(owned, st) >= 1), ok: (mat, p) => matStationCount(mat, p) === 0 },
-  thinStock: { kind: "restriction", level: "easy", name: "Thin Stock",
-    icon: () => "📦", text: () => "Ⅰ ≤ 2", desc: () => "At most 2 tier 1 cards",
-    params: () => [null], ok: mat => mat.filter(matIsTier1).length <= 2 },
+  freshFaces: { kind: "restriction", level: "easy", name: "Fresh Faces",
+    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Half your cards or fewer from the last check",
+    params: () => (state.lastCheckedMat || []).length ? [null] : [],
+    ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
   // ---- restrictions, hard (rounds 18-23)
   shortTable: { kind: "restriction", level: "hard", name: "Short Table",
     icon: () => "🪑", text: () => "⬜ 1+", desc: () => "1 empty slot",
     params: () => [null], ok: mat => matHasEmptySlot(mat) },
-  freshFaces: { kind: "restriction", level: "hard", name: "Fresh Faces",
-    icon: () => "🆕", text: () => "↺ ≤ ½", desc: () => "Half your cards or fewer from the last check",
-    params: () => (state.lastCheckedMat || []).length ? [null] : [],
-    ok: mat => { const last = state.lastCheckedMat || []; return mat.filter(c => last.includes(c.name)).length * 2 <= mat.length; } },
+  thinStock: { kind: "restriction", level: "hard", name: "Thin Stock",
+    icon: () => "📦", text: () => "Ⅰ ≤ 3", desc: () => "At most 3 tier 1 cards",
+    params: () => [null], ok: mat => mat.filter(matIsTier1).length <= 3 },
   trendShift: { kind: "restriction", level: "hard", name: "Trend Shift",
     icon: p => em(STATION_BY_NAME[p].emoji), text: p => `🚫 3+ ${em(STATION_BY_NAME[p].emoji)}`, desc: p => `No ${p} combo`,
     params: () => state.lastTopStation ? [state.lastTopStation] : [], ok: (mat, p) => matStationCount(mat, p) < 3 },
@@ -11628,8 +11628,8 @@ const CHECK_ORDERS = {
     params: () => ORDER_SUITS.flatMap((a, i) => ORDER_SUITS.slice(i + 1).map(b => a + "|" + b)),
     ok: (mat, p) => !mat.some(c => p.split("|").some(su => c.pips.includes(su))) },
   spreadOut: { kind: "restriction", level: "hard", name: "Spread Out",
-    icon: () => "↔️", text: () => "🚫 3+ 🏠", desc: () => "No 3 cards from one station",
-    params: () => [null], ok: mat => Object.values(matGroupsOf(mat).st).every(n => n < 3) },
+    icon: () => "↔️", text: () => "🚫 4+ 🏠", desc: () => "No 4 cards from one station",
+    params: () => [null], ok: mat => Object.values(matGroupsOf(mat).st).every(n => n < 4) },
 };
 function drawOrder(round, avoid){
   if (round > RUN_COMPLETE_VISIT) return null;
