@@ -272,8 +272,10 @@
       expect(orderMultFor(matOnMat()) === 1, "a kept restriction should not change the score");
       state.order = { id: "stationWeek", p: card.station, round: 6 }; state.mat = [];
       expect(orderMultFor(matOnMat()) === 1, "an unmet request should not change the score");
-      state.visits = 7; state.order = { id: "drought", p: card.pips[0], round: 6 }; state.mat = [card.name];
-      expect(orderMultFor(matOnMat()) === 1, "orders must not apply to quiet checks");
+      state.visits = 8; state.order = { id: "drought", p: card.pips[0], round: 6 }; state.mat = [card.name];
+      expect(orderMultFor(matOnMat()) === ORDER_RESTRICT_MULT, "a challenge should count on the trips until the next check");
+      state.visits = 9;
+      expect(orderMultFor(matOnMat()) === 1, "a challenge should end at the next check's shutter");
       expect(drawOrder(24).id === "grand" && drawOrder(27) === null, "round 24 should be the Grand Exhibition, Overtime has no orders");
       // No exact repeat: four request checks in a row are all different.
       { const its = state.items, uo = state.usedOrders; state.items = [...CORE_ITEM_NAMES]; state.usedOrders = [];

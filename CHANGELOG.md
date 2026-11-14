@@ -10,6 +10,13 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Challenges start at a board check.** Each board check's shutter now
+  reveals a new challenge that counts for that check and every trip until
+  the next check (rounds 3-5, 6-8, ...), so the mat matters between checks
+  too. Challenges are no longer shown a check ahead. Requests cover rounds
+  3-14, restrictions 15-23, the Grand Exhibition round 24. Game over still
+  only happens at a check round.
+
 - **"New Items Unlocked!" reveal.** After a capstone is crafted and the
   screen is clear (its card closed, any Marketplace tray dismissed), the
   screen dims and the items it unlocks pop in in full colour under "New

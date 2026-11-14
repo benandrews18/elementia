@@ -113,6 +113,7 @@ document.getElementById("hubHome").addEventListener("click", ev => {
       matDrawerView = "mat";
       // The shutter scene change, then the full inventory; the first check
       // ever also explains it (announceMatCheck()).
+      startCheckOrder();
       playShutter("Display Mat Challenge!", () => { openDrawer(); announceMatCheck(); }, orderShutterLine());
       return;
     }

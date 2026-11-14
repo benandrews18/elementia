@@ -114,13 +114,15 @@ function quietCheck(){
   state.tripDice = Math.max(floor, quiet);
 }
 
-/* Check orders: each board check carries one, drawn a check ahead
-   (state.order = {id, p, round}). Requests (checks up to ORDER_LAST_REQUEST)
-   multiply that check's Quarks by ORDER_REQUEST_MULT when met; restrictions
-   (later checks) by ORDER_RESTRICT_MULT when broken. Round
+/* Check orders ("challenges"): each board check STARTS one, revealed on its
+   shutter (startCheckOrder()), and it lasts MAT_CHECK_EVERY rounds: that
+   check plus the quiet checks until the next one (state.order = {id, p,
+   round}, round = the check that started it). Requests (from checks up to
+   ORDER_LAST_REQUEST) multiply the Quarks by ORDER_REQUEST_MULT when met;
+   restrictions (later) by ORDER_RESTRICT_MULT when broken. Round
    RUN_COMPLETE_VISIT's final check is the Grand Exhibition: a high target
    (GRAND_EXHIBITION_TARGET), nothing else. Only orders the player's owned
-   cards can satisfy are drawn. Quiet checks never use them. */
+   cards can satisfy are drawn, and none repeats. */
 const ORDER_REQUEST_MULT = 1.5, ORDER_RESTRICT_MULT = 0.75, ORDER_LAST_REQUEST = 12;
 const GRAND_EXHIBITION_TARGET = Math.round(lockInTiersForRound(RUN_COMPLETE_VISIT).two);
 const ORDER_SUITS = Object.keys(ELEMENT_SUIT_LABEL);
@@ -173,15 +175,19 @@ function setOrder(o){
   state.order = o;
   if (o) (state.usedOrders || (state.usedOrders = [])).push(orderKey(o));
 }
-// The next board check's order, drawn when first needed (null until one is
-// possible -- early on the player may not own enough cards).
+// The challenge in force this round: from the check that started it until
+// the next check's shutter. None before the first check, or (early on) when
+// the player's cards can't satisfy any.
 function currentOrder(){
   if (typeof comboLabActive !== "undefined" && comboLabActive) return null;
-  // Once this round's check is done, the order shown is the next one's.
-  const done = isSunsetVisit() && (state.checkLog || []).some(e => e.v === state.visits);
-  const round = nextCheckRound() + (done ? MAT_CHECK_EVERY : 0);
-  if (!state.order || state.order.round !== round) setOrder(drawOrder(round));
-  return state.order;
+  const o = state.order;
+  return o && state.visits >= o.round && state.visits < o.round + MAT_CHECK_EVERY ? o : null;
+}
+// A board check's shutter: draw this check's challenge (once -- backing out
+// and travelling again keeps it), never the one it replaces.
+function startCheckOrder(){
+  if (state.order && state.order.round === state.visits) return;
+  setOrder(drawOrder(state.visits, state.order));
 }
 // Is the mat meeting the order (requests), keeping to it (restrictions), or
 // reaching the target (Grand Exhibition)?
@@ -191,8 +197,8 @@ function orderMet(o, mat, total){
 // The order's multiplier on matScore(), only while its board check is the
 // one underway (never on quiet checks or saved-layout previews elsewhere).
 function orderMultFor(mat){
-  const o = state.order;
-  if (!o || o.id === "grand" || o.round !== state.visits || !isSunsetVisit()) return 1;
+  const o = currentOrder();
+  if (!o || o.id === "grand") return 1;
   const ok = CHECK_ORDERS[o.id].ok(mat, o.p);
   return CHECK_ORDERS[o.id].kind === "request" ? (ok ? ORDER_REQUEST_MULT : 1) : (ok ? 1 : ORDER_RESTRICT_MULT);
 }
@@ -202,18 +208,15 @@ function orderMultLabel(o){
 }
 function orderIconHTML(o){ return o.id === "grand" ? "🏛️" : CHECK_ORDERS[o.id].icon(o.p); }
 function orderName(o){ return o.id === "grand" ? "Grand Exhibition" : CHECK_ORDERS[o.id].name; }
-// Combo-row chip (matComboChipsHTML(..., true)). Its multiplier only counts
-// at its own board check: before that round it's "upcoming" (dim, the round
-// number in the corner); on the round it lights when met, red when a
-// restriction is broken. Tap: openOrderInfo().
+// Combo-row chip (matComboChipsHTML(..., true)) for the challenge in force:
+// lit when met, red when a restriction is broken. Tap: openOrderInfo().
 function orderChipHTML(s){
   const o = currentOrder();
   if (!o) return "";
-  const now = o.round === state.visits && isSunsetVisit();
   const ok = orderMet(o, matOnMat(), s.total);
   const restr = o.id !== "grand" && CHECK_ORDERS[o.id].kind === "restriction";
-  const cls = !now ? "off upcoming" : restr ? (ok ? "off" : "bad") : (ok ? "on" : "off");
-  return `<button type="button" class="mm-combo order ${cls}" data-order title="${esc(orderName(o))} (round ${o.round} board check)"><span class="mm-cico order-ic">${orderIconHTML(o)}${now ? "" : `<span class="mm-ccount">${o.round}</span>`}</span><b>${orderMultLabel(o)}</b></button>`;
+  const cls = restr ? (ok ? "off" : "bad") : (ok ? "on" : "off");
+  return `<button type="button" class="mm-combo order ${cls}" data-order title="${esc(orderName(o))} (rounds ${o.round}-${o.round + MAT_CHECK_EVERY - 1})"><span class="mm-cico order-ic">${orderIconHTML(o)}</span><b>${orderMultLabel(o)}</b></button>`;
 }
 function orderShutterLine(){
   const o = currentOrder();
@@ -239,7 +242,7 @@ function openOrderInfo(){
   if (!o) return;
   // Round clock in the top-left corner, a short title on the banner, one
   // line of text, the rule in icons, and the swap button.
-  const clock = `<div class="ord-clock" title="Board check on round ${o.round}">${roundClockSVG(o.round)}</div>`;
+  const clock = `<div class="ord-clock" title="Started at the round ${o.round} board check">${roundClockSVG(o.round)}</div>`;
   const okBtn = `<button type="button" class="bigbtn" id="orderInfoOk">OK</button>`;
   let title, html;
   if (o.id === "grand"){
@@ -486,7 +489,6 @@ function finishLockIn(reward, opts = {}){
   const st = Object.entries(matGroupsOf(matOnMat()).st).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
   state.lastTopStation = st ? st[0] : null;
   state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
-  setOrder(drawOrder(state.visits + MAT_CHECK_EVERY, order)); // shown a check ahead, never the same one again
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
@@ -605,6 +607,7 @@ function startFinalCheck(){
   state.finalCheckPending = true;
   save();
   matDrawerView = "mat";
+  startCheckOrder();
   playShutter("Final Score!", () => { openDrawer(); updateHub(); orderInfoPending = true; continueCheckIntro(); }, orderShutterLine());
 }
 function confirmFinalLockIn(){
@@ -683,9 +686,9 @@ function maybeShowOrderTip(){
 }
 function openOrderTip(){
   document.getElementById("orderTipBody").innerHTML = `
-    <p class="mct-line">⏰ Every board check comes with a <b>challenge</b>. You see the next one a check ahead, by your combos.</p>
-    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST}: <b>Requests</b>. Do it and that check's Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
-    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - MAT_CHECK_EVERY}: <b>Restrictions</b>. Break it and that check's Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
+    <p class="mct-line">⏰ Every board check starts a new <b>challenge</b>. It counts for that check and every trip until the next one.</p>
+    <p class="mct-line">✅ Rounds 3-${ORDER_LAST_REQUEST + MAT_CHECK_EVERY - 1}: <b>Requests</b>. Do it and your Quarks are <b>×${ORDER_REQUEST_MULT}</b>.</p>
+    <p class="mct-line">⛔ Rounds ${ORDER_LAST_REQUEST + MAT_CHECK_EVERY}-${RUN_COMPLETE_VISIT - 1}: <b>Restrictions</b>. Break it and your Quarks are <b>×${ORDER_RESTRICT_MULT}</b>.</p>
     <p class="mct-line">🏛️ Round ${RUN_COMPLETE_VISIT}: the <b>Grand Exhibition</b>. Reach ${GRAND_EXHIBITION_TARGET.toLocaleString()} Quarks.</p>
     <p class="mct-line">👆 Tap the challenge for details, or swap it for 1 "?".</p>`;
   openOverlay("orderTip");
@@ -699,7 +702,7 @@ document.getElementById("matCheckTutorial").innerHTML = `
   <p class="mct-line">🕒 Your Display Mat is scored <b>every 3 turns</b> -- the big numbers on the clock.</p>
   <p class="mct-line">🎲 Your <b>Quark Score</b> earns <b>bonus dice</b> for each of the next 3 stations. Reach the top breakpoint for a <b>"?"</b> element too.</p>
   <p class="mct-line">📈 Between checks, a higher score earns even more dice on your next trip -- never fewer.</p>
-  <p class="mct-line">📜 Each check has a <b>challenge</b> -- tap its chip by your combos to see it.</p>
+  <p class="mct-line">📜 Each check starts a <b>challenge</b> for the next 3 rounds -- tap its chip by your combos to see it.</p>
   <p class="mct-line mct-warn">⚠️ From turn ${BREAKPOINT_GATE_VISIT}, a score below the first breakpoint <b>ends your run</b>.</p>`;
 
 // Fill-in for the mat rules popup's two summary lines.
