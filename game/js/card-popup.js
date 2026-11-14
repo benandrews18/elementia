@@ -18,6 +18,7 @@ let cardPopBackStack = [];
 function showCardPop(entry, autoDismiss = true, keepBackStack = false){
   if (!keepBackStack) cardPopBackStack = [];
   document.getElementById("cpCeleb").hidden = true;
+  document.getElementById("cpCeleb").className = "cp-celeb";
   cardPopEntry = entry;
   // Capstones show as a double-wide (landscape) card with room for their
   // Display Mat rule.

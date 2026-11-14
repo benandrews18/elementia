@@ -104,6 +104,11 @@ function renderMap(){
   // This map badge marks only the station where the tracked item itself is
   // crafted -- one breadcrumb, not every station selling a component.
   const trackedEntry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
+  // Stations selling a component of the tracked item not crafted yet: a
+  // small magnifier on their top-right corner.
+  const compStations = new Set(trackedEntry ? trackedEntry.reqs
+    .filter(r => r.kind === "item" && !owns(r.name))
+    .flatMap(r => ENTRIES.filter(e => e.name === r.name).map(e => e.station)) : []);
 
   const nodesHTML = Object.keys(MAP_NODE_POS).map(name => {
     const [x] = MAP_NODE_POS[name];
@@ -126,8 +131,10 @@ function renderMap(){
     const capstoneBadge = state.lastStation === null && !classicIntroHideCapstones
       ? `<span class="map-node-capstone-badge" style="left:${x}%;top:${topStyle}" title="Capstone: ${esc(s.capstone[1])}">${em(s.capstone[0])}</span>` : "";
     const trackedBadge = (hasTracked && !capstoneBadge)
-      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Feeds ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}<span class="map-node-tracked-glass">🔍</span></span>` : "";
-    return `${trackedBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+      ? `<span class="map-node-tracked-badge" style="left:${x}%;top:${topStyle}" title="Tracking ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
+    const compBadge = compStations.has(name) && !capstoneBadge
+      ? `<span class="map-node-comp-badge" style="left:${x}%;top:${topStyle}" title="Sells a component of ${esc(selectedJobItem)}"></span>` : "";
+    return `${trackedBadge}${compBadge}${capstoneBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${em(s.emoji)}</span>
       ${isHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;

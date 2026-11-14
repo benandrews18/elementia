@@ -36,7 +36,13 @@ function renderTrackedPill(){
 // its own click listener rather than going through #screen's delegation.
 document.getElementById("trackedPill").addEventListener("click", () => {
   const entry = selectedJobItem && ENTRIES.find(e => e.name === selectedJobItem);
-  if (entry) showCardPop(entry, false);
+  if (!entry) return;
+  showCardPop(entry, false);
+  // Above the card: the magnifier button's circle and a green pill.
+  const banner = document.getElementById("cpCeleb");
+  banner.className = "cp-celeb cp-tracking";
+  banner.innerHTML = `<span class="cpt-glass" aria-hidden="true"></span><span class="cpt-pill">You are tracking this item!</span>`;
+  banner.hidden = false;
 });
 
 /* --------------------------------------------------- pinned items --- */

@@ -10,6 +10,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 
 ## 2026-11-13
 
+- **Tracking cues.** Tapping the tracked pill opens the item's card with
+  the magnifier circle and a green "You are tracking this item!" pill above
+  it. On the map, the tracked item's badge sits on its station's top-left
+  corner with a gold border, and stations selling a component it still
+  needs get a small magnifier on their top-right corner.
+
 - **Intro: Inventory lights up.** When the first station is chosen and its
   elements fly into the Inventory, the Inventory button (and only it)
   lights up until the To-Do List opens.
