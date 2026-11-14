@@ -125,12 +125,12 @@ const ITEM_SUIT_COST_TABLE = {
 
   Oven: ["metal", "reactive"], "Satellite Dish": ["metal", "reactive"], Telescope: ["metal", "metal"],
   Diamond: ["earth", "earth"], Orca: ["organic", "organic"],
-  Lighthouse: ["earth", "reactive"], Star: ["organic", "reactive"],
+  Lighthouse: ["earth", "reactive"], Star: ["reactive"],
   Rainbow: ["organic", "reactive"], Speedboat: ["metal", "metal"], Computer: ["metal", "reactive"],
   Tractor: ["metal", "earth"], Bicycle: ["metal", "earth"], Skyscraper: ["earth", "metal"], "Turbine Blade": ["metal", "reactive"],
-  Life: ["organic", "earth"], Car: ["metal", "reactive"], "Banana Bread": ["organic", "organic"],
+  Life: ["organic", "earth"], Car: ["metal", "reactive"], "Banana Bread": ["organic", "reactive"],
   Museum: ["earth", "metal"], Helicopter: ["metal", "metal"], Rocket: ["metal", "reactive"],
-  "Fish Cakes": ["organic", "organic"], "Apple Pie": ["organic", "organic"],
+  "Fish Cakes": ["organic", "organic"], "Apple Pie": ["organic", "reactive"],
 
   "Maglev Train": ["metal", "earth", "reactive"], Homestead: ["organic", "earth", "metal"],
   "Coral Reef": ["organic", "organic", "organic"], Robot: ["metal", "metal", "reactive"],

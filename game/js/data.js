@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.13d",
+ "version": "2026.11.14a",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -131,7 +131,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "__LIFE__",
      "Life",
      "CREATION",
-     "🧬 DNA + 💧 Water + 🕐 Clock + ⭐ Star",
+     "🧬 DNA + 💧 Water + ⭐ Star",
      23
     ],
     [
@@ -146,7 +146,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "__CORAL__",
     "Coral Reef",
     "CAPSTONE",
-    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + 🕐 Clock + __LIFE__ Life",
+    "__ORCA__ Orca + 🌿 Seaweed + 🪨 Limestone + __LIFE__ Life",
     34
    ],
    "unlock": [
@@ -204,14 +204,14 @@ const DATA = /*__GAME_DATA_START__*/{
      "💡",
      "Light Bulb",
      "COMPONENT",
-     "🪟 Glass + 🔌 Wire",
+     "🪟 Glass + 🔌 Wire + 🔋 Battery",
      10
     ],
     [
      "🕐",
      "Clock",
      "COMPONENT",
-     "🔋 Battery + 🛠️ Tools",
+     "🔋 Battery + 🛠️ Tools + 🔌 Wire",
      10
     ],
     [
@@ -246,7 +246,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🚗",
      "Car",
      "CREATION",
-     "⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel",
+     "⚙️ Engine + 🥤 Plastic + 🪟 Glass + __RUBBER__ Rubber + __WHEEL__ Wheel + 🔋 Battery",
      22
     ]
    ],
@@ -340,7 +340,7 @@ const DATA = /*__GAME_DATA_START__*/{
      "🔆",
      "Solar Panel",
      "COMPONENT",
-     "Si + 🔌 Wire + 🪟 Glass + 🔋 Battery",
+     "Si + 🔌 Wire + 🪟 Glass",
      11
     ],
     [
@@ -728,7 +728,7 @@ const DATA = /*__GAME_DATA_START__*/{
     "Ca",
     "C",
     "O",
-    "Al",
+    "Fe",
     "Si",
     "Mg"
    ],
@@ -748,10 +748,10 @@ const DATA = /*__GAME_DATA_START__*/{
      1
     ],
     [
-     "🏺",
-     "Clay",
+     "⏳",
+     "Sand",
      "MATERIAL",
-     "Al + Si + Mg",
+     "Si + O",
      1
     ],
     [
@@ -907,9 +907,9 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "⭐",
      "Star",
-     "CREATION",
-     "__FURNACE__ Furnace + H + 🕐 Clock",
-     20
+     "COMPONENT",
+     "__FURNACE__ Furnace + H",
+     10
     ],
     [
      "🌈",

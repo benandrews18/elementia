@@ -206,7 +206,7 @@ const MAT_COLLECTIONS_RAW = [
   { id:"precious-earth",          name:"Precious Earth",          items:["Soil","Limestone","Diamond","Natural Gas","Rubber"] },
   { id:"around-the-world",        name:"Around the World",        items:["Bicycle","Canoe","Speedboat","Car","Tractor","Helicopter","Maglev Train"] },
   { id:"bakery-complete",         name:"Bakery Complete",         items:["Sugar","Water","Yeast","Egg","Flour","Dough","Oven"] },
-  { id:"city-complete",           name:"City Complete",           items:["Clay","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
+  { id:"city-complete",           name:"City Complete",           items:["Sand","Limestone","Steel","Concrete","Bridge","Building","Glass"] },
   { id:"deep-mine-complete",      name:"Deep Mine Complete",      items:["Clay","Natural Gas","Steel","Tools","Furnace","Aluminum Alloy","Diamond"] },
   { id:"observatory-complete",    name:"Observatory Complete",    items:["Microchip","Magnet","Compass","Satellite Dish","Telescope","Star","Rocket"] },
   { id:"ocean-complete",          name:"Ocean Complete",          items:["Water","Limestone","Sand","Seaweed","Banana","Cloud","Orca"] },
