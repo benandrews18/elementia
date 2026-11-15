@@ -3687,26 +3687,26 @@ html.low-motion .mat-qs-pill{animation:none}
 .ms-pip :is(img,svg){width:13px; height:13px}
 .ms-station{background:var(--st); border:1.5px solid rgba(0,0,0,.35)}
 .ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
-/* Add/Remove for the open row: centred just above Home, clear of the
-   Sort (left) and Filter/Hide (right) float buttons. */
-/* Below the hub (72) so it hides behind it: down out of sight when no item
-   is selected, bouncing up when one is (syncMatListActions()). */
-#matListActions{
-  position:fixed; z-index:61; left:50%; display:flex; gap:10px;
-  bottom:calc(var(--hub-h, 67px) + 22px);
-  transform:translate(-50%, calc(100% + 40px)); pointer-events:none;
-  transition:transform .32s cubic-bezier(.5,0,.75,0);
-}
-#matListActions.show{transform:translate(-50%, 0); pointer-events:auto;
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+/* Add/Remove for the selected item, just under the Crafting Bench
+   (#matSelPanel, z-index 2): a row whose buttons tuck up behind the bench
+   when nothing is selected and drop down below it when something is
+   (syncMatListActions()); the row opens to make room as they do. */
+#matListActions{position:relative; z-index:1; height:0; display:flex; justify-content:center; gap:10px;
+  flex:none; transition:height .25s ease}
+#matListActions.show{height:42px} /* makes room, so the buttons don't cover the search bar */
 html.low-motion #matListActions{transition:none}
+#matListActions .mat-list-act{transform:translateY(-110%); visibility:hidden; pointer-events:none;
+  transition:transform .25s cubic-bezier(.5,0,.75,0), visibility 0s .25s}
+#matListActions.show .mat-list-act{transform:translateY(4px); visibility:visible; pointer-events:auto;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+html.low-motion #matListActions .mat-list-act{transition:none}
 .mat-list-act{
-  width:76px; height:68px; padding:6px 4px; border-radius:16px; font-size:13px; font-weight:900;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  border:2.5px solid #000; box-shadow:0 4px 0 rgba(0,0,0,.45), 0 6px 12px rgba(0,0,0,.35); color:#181614;
+  width:96px; height:34px; padding:0 8px; border-radius:12px; font-size:13px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  border:2.5px solid #000; box-shadow:0 3px 0 rgba(0,0,0,.45), 0 5px 10px rgba(0,0,0,.35); color:#181614;
 }
-.mla-ic{font-size:22px; line-height:1}
-.mat-list-act:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.mla-ic{font-size:15px; line-height:1}
+#matListActions.show .mat-list-act:not(:disabled):active{transform:translateY(7px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
@@ -3961,6 +3961,12 @@ html.low-motion #matListActions{transition:none}
   <div id="matCollapseBar"><button type="button" id="matCollapseBtn" aria-label="Hide the Display Mat" aria-expanded="true"><span class="mcb-chev"></span></button></div>
   <!-- The selected item's shop row, pinned under the mat (syncMatSelPanel()). -->
   <div class="shop mat-sel-panel" id="matSelPanel" hidden></div>
+  <!-- Add/Remove for the selected item: slides down from behind the
+       Crafting Bench above (syncMatListActions()). -->
+  <div id="matListActions" aria-hidden="true">
+    <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat"><span class="mla-ic">➕</span>Add</button>
+    <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat"><span class="mla-ic">➖</span>Remove</button>
+  </div>
   <div class="dbody">
     <!-- Classic only: filter bar for the item grid below. Built once
          (buildMatFilterBar()), never re-rendered, so typing never loses
@@ -3983,11 +3989,6 @@ html.low-motion #matListActions{transition:none}
      #drawer.expanded (60). -->
 <button type="button" class="floatbtn mat-sf-btn" id="matSortBtn" title="Sort" aria-label="Sort items" hidden></button>
 <button type="button" class="floatbtn mat-sf-btn" id="matFilterBtn" title="Filter" aria-label="Filter items" hidden></button>
-<!-- List view: Add/Remove for the open row, above Home (syncMatListActions()). -->
-<div id="matListActions" aria-hidden="true">
-  <button type="button" class="mat-list-act add" id="matListAdd" aria-label="Add to the Display Mat"><span class="mla-ic">➕</span>Add</button>
-  <button type="button" class="mat-list-act remove" id="matListRemove" aria-label="Remove from the Display Mat"><span class="mla-ic">➖</span>Remove</button>
-</div>
 
 <!-- Half-width slide-out trays. Sort's options are static; Filter's are
      built from game data (buildMatFilterBar()). -->
@@ -10665,7 +10666,7 @@ function syncMatSelPanel(){
 /* The selected item (matListOpen), in both views. List view: one slim line
    per item (icon, name, suit pips, home stations, points). Either view:
    tapping an item highlights it and docks its station shop row under the
-   mat, and #matListActions offers Add/Remove above the hub. */
+   mat, and #matListActions offers Add/Remove just under it. */
 let matListOpen = null;
 const matStationBadgesHTML = (c, cls) => c.stations.map(st =>
   `<span class="${cls}" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
@@ -10693,13 +10694,13 @@ function toggleMatListRow(name){
   matListOpen = matListOpen === name ? null : name;
   renderMatResultsGrid();
 }
-/* Add/Remove for the selected item, above Home. Shown only while one is
-   selected in the full tray (syncMatFloatBtns()). */
+/* Add/Remove for the selected item, just under its Crafting Bench. Shown
+   only while one is selected in the full tray (syncMatFloatBtns()). */
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
   syncMatSelPanel();
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
-  // Slides up from behind the hub (.show), and back down when hidden.
+  // Drops down from behind the Crafting Bench (.show), back up when hidden.
   bar.classList.toggle("show", show);
   bar.setAttribute("aria-hidden", String(!show));
   if (!show) return;
