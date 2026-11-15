@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Developer mode (hidden): tap the version line in Settings 5 times to show Dev Tools, then switch on Developer mode for the 🛠 Dev Panel. Jump: set the turn, go to any station without spending a turn, the next board check, the final check, the Run Complete and Game Over screens. Inventory: elements, "?", grant an item (or its whole tree, or everything), remove items. Snapshots: save the whole run by name, load it, copy/paste it as text. Runs changed with it go to a "Dev runs" tab in History (with its own Export) and earn no Stars or trophies; "Restore my real save" brings back the save from before the first change.
 - The Crafting Bench pinned atop Convert is as wide as the other benches.
 - Marketplace: the Market rows sit on wood in the brass frame. Next to the title: "Complete a market row to earn a reward!"; under the last row: "Tap on an item to craft it directly from the market!"
 - Crafting Bench: as wide in the Marketplace as in the shops, and also behind the item pinned to the top of Convert after tapping a missing element.
