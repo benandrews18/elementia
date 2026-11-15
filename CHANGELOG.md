@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Inventory: the Add / Remove buttons are half as tall and drop down from behind the Crafting Bench to sit just below it (they used to rise from the hub).
 - The settings cog can be tapped on the Item Reference and Marketplace screens.
 - "You are here" sits at the Ocean's lower right (it was hidden under the hub).
 - The Quark Meter bar at the top is wood with a gold line beneath it, like the bottom hub.
