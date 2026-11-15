@@ -39,7 +39,7 @@ Load order, by area:
 5. **Moments:** `card-popup`, `craft-animations`, `roll`, `travel`, `minigames`, `suit-spend`
 6. **Display Mat and Lock-In:** `display-mat`, `mat-layouts`, `combo-lab`, `lock-in`, `empty-elements`
 7. **Run flow:** `opening`, `bingo`, `end-game`, `trophies`, `welcome`
-8. **Settings and input:** `settings`, `convert`, `tour`, `input`
+8. **Settings and input:** `settings`, `convert`, `tour`, `input`, `dev` (Developer mode's Dev Panel, hidden behind 5 taps on Settings' version line)
 9. **Startup:** `pwa` (manifest + service worker), `boot` (load save, first render). `boot` must stay last.
 
 Each file starts with a header that says what it owns.
