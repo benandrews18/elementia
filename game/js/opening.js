@@ -230,6 +230,8 @@ function finishBingoCraft(){
 // overlay is outside #screen).
 document.getElementById("bingoCraftOverlay").addEventListener("click", ev => {
   if (ev.target === ev.currentTarget){ closeBingoCraftOverlay(); return; } // scrim tap
+  // A missing element or suit-cost badge: Convert, exactly as in a shop.
+  if (ev.target.closest(".tok.el.need[data-elem], .isuit-badge.need")){ handleScreenClick(ev); return; }
 
   // A recipe token opens that ingredient's card on top (checked first, same
   // order as handleScreenClick).
