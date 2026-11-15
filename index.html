@@ -3872,6 +3872,16 @@ html.low-motion #matListActions .mat-list-act{transition:none}
 .dev-snap{display:flex; align-items:center; gap:5px; background:var(--card); border-radius:8px; padding:5px 6px}
 .dev-snap > span{flex:1; min-width:0; display:flex; flex-direction:column}
 .dev-snap small{color:var(--mute)}
+.dev-tabs{flex-wrap:wrap}
+.dev-tabs button{flex:1 1 auto; font-size:12px}
+.dev-score{font-size:13px; line-height:1.5}
+.dev-score b{font-size:17px; color:var(--gold)}
+.dev-hit{color:var(--ok); font-weight:800}
+.dev-matlist{display:flex; flex-wrap:wrap; gap:4px}
+.dev-chip{display:inline-flex; align-items:center; gap:3px; background:var(--card); border-radius:999px; padding:2px 4px 2px 8px; font-size:12px}
+.dev-chip :is(img,svg){width:16px; height:16px}
+.dev-panel .dev-chip button{padding:0 5px; border:none; background:none; color:var(--mute)}
+.dev-sub{font-weight:800; margin-top:6px; border-top:1px solid var(--line); padding-top:8px}
 /* History's Runs / Dev runs tabs (dev mode only, renderHistory()). */
 .hist-tabs{display:flex; gap:6px; margin:6px 0 10px}
 .hist-tabs[hidden]{display:none}
@@ -14543,8 +14553,10 @@ document.getElementById("screen").addEventListener("change", ev => {
    the first change is kept (DEV_BACKUP_KEY) for "Restore my real save".
 
    Tabs: Jump (turn, station, checks and end screens), Inventory
-   (elements, "?", items) and Snapshots (named saves of the whole run, to
-   load again, or copy/paste as text).
+   (elements, "?", items), Board (the mat, the challenge, the live score
+   against this turn's breakpoints), Events (replay any big screen, window,
+   tip or banner) and Snapshots (named saves of the whole run, to load
+   again, or copy/paste as text, plus ready-made scenarios).
    ===================================================================== */
 const DEV_SNAP_KEY = "elementia-dev-snapshots-v1", DEV_BACKUP_KEY = "elementia-save-backup-dev";
 let devTab = "jump";
@@ -14675,13 +14687,120 @@ function devCopy(text, btn){
   navigator.clipboard.writeText(text).then(() => { btn.textContent = "✓"; }).catch(() => window.prompt("Copy this text:", text));
 }
 
+/* --------------------------------------------------------- Board --- */
+// Put a card on the mat (granting it first if needed), if it fits.
+function devMatAdd(name){
+  if (!MAT_CARD_BY_NAME[name]) return;
+  devTouch();
+  if (!owns(name)) state.items.push(name);
+  if (!state.mat.includes(name) && matFits([...state.mat, name].map(n => MAT_CARD_BY_NAME[n]))) state.mat.push(name);
+  devApply();
+}
+function devMatRemove(name){ devTouch(); state.mat = state.mat.filter(n => n !== name); devApply(); }
+// Owned cards, biggest points first, while they fit.
+function devFillMat(){
+  devTouch();
+  state.mat = [];
+  state.items.filter(n => MAT_CARD_BY_NAME[n]).sort((a, b) => ITEM_POINTS[b] - ITEM_POINTS[a])
+    .forEach(n => { if (matFits([...state.mat, n].map(x => MAT_CARD_BY_NAME[x]))) state.mat.push(n); });
+  devApply();
+}
+// What each challenge's target can be.
+const devOrderParams = id => {
+  const stations = DATA.stations.map(s => s.name), suits = Object.keys(ELEMENT_SUIT_LABEL);
+  return ["stationWeek", "closedStation", "trendShift"].includes(id) ? stations
+    : ["drought", "suitSet"].includes(id) ? suits
+    : id === "doubleDrought" ? suits.flatMap((a, i) => suits.slice(i + 1).map(b => a + "|" + b)) : [null];
+};
+// Make this the challenge in force now (started by this stretch's check).
+function devSetOrder(id, p){
+  devTouch();
+  if (!id) state.order = null;
+  else {
+    const round = id === "grand" ? RUN_COMPLETE_VISIT : Math.max(MAT_CHECK_EVERY, Math.floor(state.visits / MAT_CHECK_EVERY) * MAT_CHECK_EVERY);
+    state.order = { id, p: p === "" || p == null ? null : p, round };
+  }
+  devApply();
+}
+
+/* -------------------------------------------------------- Events --- */
+const DEV_EVENTS = [
+  ["unlock", "New Items Unlocked"], ["expand", "Display Mat Expansion"], ["challenge", "This check's challenge"],
+  ["challengeTip", "Challenges intro"], ["rules", "Display Mat rules"], ["reward", "Lock-In reward (+2 dice)"],
+  ["rewardTop", "Lock-In reward (+3 and a \"?\")"], ["rewardZero", "Lock-In reward (no dice)"], ["market", "Market row complete"],
+  ["toast", "Banner (toast)"], ["howto", "How to play"], ["pinTip", "Pin items tip"], ["unknown", "Unknown Elements tip"],
+];
+function devEvent(kind){
+  closeDevPanel();
+  const cap = document.getElementById("devCap")?.value || CAPSTONES[0];
+  ({
+    unlock: () => queueUnlockReveal(cap),
+    expand: () => {
+      // The turn 12 growth, at its check, with the mat open behind it.
+      devTouch();
+      Object.assign(state, { visits: 12, checkRound: 12, matExpandSeen: 1, matChecked: true });
+      save(); render(); matDrawerView = "mat"; openDrawer();
+      setTimeout(() => maybeShowMatExpansion() || openDevPanel(), 50);
+    },
+    challenge: () => { if (currentOrder()) openOrderInfo(); else { openDevPanel(); devTab = "board"; renderDevPanel(); } },
+    challengeTip: openOrderTip, rules: openMatRules,
+    reward: () => showLockInRewardModal(2, false, () => {}),
+    rewardTop: () => showLockInRewardModal(3, true, () => {}),
+    rewardZero: () => showLockInRewardModal(0, false, () => {}),
+    market: () => openBingoClearOverlay(1),
+    toast: () => queueEventToast("stations", "🧪", "Test banner", "From the Dev Panel"),
+    howto: () => openClassicTutorial(null, true), pinTip: () => openOverlay("pinTip"), unknown: showEmptyElTip,
+  })[kind]();
+}
+// Every tip and window "seen" flag back to unseen.
+function devResetTips(){
+  prefs.tutorialHintsSeen = []; prefs.hiddenTips = []; prefs.sawMatCheckTutorial = false; savePrefs();
+  mouseTipsShown = new Set();
+  state.sawOrderTip = false; save();
+  renderDevPanel();
+}
+
+/* ----------------------------------------------------- Scenarios --- */
+// A fresh dev run at the Ocean, then the scenario's own setup.
+function devFresh(){
+  devTouch();
+  state = Object.assign(freshState(), { mode: "classic", dev: true, lastStation: "The Ocean" });
+  state.visitedStations["The Ocean"] = true;
+  ensureBingoCard();
+  current = null; screen = "map"; selectedMapStation = null; travelPromptFor = null;
+  closeDrawer();
+}
+// Each sets the turn before filling the mat (the mat's size follows the turn).
+const DEV_SCENARIOS = [
+  ["firstCheck", "First board check (turn 3)", () => {
+    devFresh(); devGrant(["Water", "Sand", "Seaweed", "Clay", "Tools"]); devSetTurn(3); devFillMat();
+  }],
+  ["weak15", "Weak mat before turn 15", () => {
+    devFresh(); devGrant(["Water", "Sand", "Seaweed", "Clay", "Tools", "Limestone", "Sugar", "Natural Gas", "Bone", "Soil"]);
+    devSetTurn(14); devFillMat(); devAllElements(2);
+  }],
+  ["capReady", "Capstone one craft away", () => {
+    const cap = document.getElementById("devCap")?.value || CAPSTONES[0];
+    devFresh(); devGrant(componentClosure(cap)); devSetTurn(15); devFillMat(); devAllElements(5);
+    state.emptyElements = 2; devTeleport(capstoneStationOf(cap));
+  }],
+  ["late", "Turn 23, strong board", () => {
+    devFresh(); devGrant(["Maglev Train", "Metropolis", "Robot"].flatMap(c => [...componentClosure(c), c]));
+    devSetTurn(23); devFillMat(); devAllElements(3);
+  }],
+  ["lastStation", "One station left to visit", () => {
+    devFresh(); DATA.stations.forEach(s => { if (s.name !== "The City") state.visitedStations[s.name] = true; });
+    devSetTurn(9);
+  }],
+];
+
 /* --------------------------------------------------------- Panel --- */
 document.body.insertAdjacentHTML("beforeend", `
   <button type="button" id="devFab" class="dev-fab" hidden aria-label="Dev Panel">🛠</button>
   <div id="devPanel" class="dev-panel" hidden role="dialog" aria-label="Dev Panel">
     <div class="dev-head"><b>🛠 Dev Panel</b><span class="dev-flag" id="devFlag"></span>
       <button type="button" class="dev-x" data-dev="close" aria-label="Close the Dev Panel">✕</button></div>
-    <div class="dev-tabs">${[["jump", "Jump"], ["inv", "Inventory"], ["snaps", "Snapshots"]]
+    <div class="dev-tabs">${[["jump", "Jump"], ["inv", "Inventory"], ["board", "Board"], ["events", "Events"], ["snaps", "Snapshots"]]
       .map(([k, l]) => `<button type="button" data-dev-tab="${k}">${l}</button>`).join("")}</div>
     <div class="dev-body" id="devBody"></div>
   </div>`);
@@ -14719,6 +14838,29 @@ function renderDevPanel(){
       <div class="dev-row"><input id="devItem" list="devItemList" placeholder="Item name…"><datalist id="devItemList">${items.map(n => `<option value="${esc(n)}">`).join("")}</datalist></div>
       <div class="dev-row"><button type="button" data-dev="grant">Grant</button><button type="button" data-dev="tree">Grant with its whole tree</button><button type="button" data-dev="remove">Remove</button></div>
       <div class="dev-row"><button type="button" data-dev="grantAll">Grant every item</button><span class="dev-note">${state.items.length} owned</span></div>`;
+  } else if (devTab === "board"){
+    const mat = matOnMat(), sc = matScore(mat), round = matCheckRound(), t = lockInTiersForRound(round);
+    const tier = emptyElementsForScore(sc.total, round), o = state.order;
+    const ids = ["", ...Object.keys(CHECK_ORDERS), "grand"];
+    const cur = o ? o.id : "", params = cur ? devOrderParams(cur) : [null];
+    body.innerHTML = `
+      <div class="dev-score"><b>${sc.total.toLocaleString()}</b> Quarks${sc.orderMult !== 1 ? ` (×${sc.orderMult} challenge)` : ""}
+        <span class="dev-note">turn ${round}${round % MAT_CHECK_EVERY ? " quiet" : " check"} breakpoints:
+        ${[t.one, t.two, t.three, t.four].map((v, i) => `<span class="${tier > i ? "dev-hit" : ""}">${Math.round(v).toLocaleString()}</span>`).join(" · ")}</span></div>
+      <div class="dev-matlist">${mat.length ? mat.map(c => `<span class="dev-chip">${em(c.emoji)} ${esc(c.name)}<button type="button" data-dev-matrm="${esc(c.name)}" aria-label="Take ${esc(c.name)} off">✕</button></span>`).join("")
+        : '<span class="dev-note">The mat is empty.</span>'}</div>
+      <div class="dev-row"><input id="devMatItem" list="devMatList" placeholder="Card to place…"><datalist id="devMatList">${MAT_CARDS.map(c => `<option value="${esc(c.name)}">`).join("")}</datalist>
+        <button type="button" data-dev="matAdd">Place</button></div>
+      <div class="dev-row"><button type="button" data-dev="matFill">Fill with my best cards</button><button type="button" data-dev="matClear">Clear the mat</button></div>
+      <div class="dev-row"><span class="dev-note">Challenge</span>
+        <select id="devOrder">${ids.map(id => `<option value="${id}"${id === cur ? " selected" : ""}>${id ? esc(id === "grand" ? "Grand Exhibition" : CHECK_ORDERS[id].name) : "(none)"}</option>`).join("")}</select>
+        <select id="devOrderP"${params[0] === null ? " hidden" : ""}>${params.filter(p => p !== null).map(p => `<option${o && o.p === p ? " selected" : ""}>${esc(p)}</option>`).join("")}</select>
+        <button type="button" data-dev="order">Set</button></div>`;
+  } else if (devTab === "events"){
+    body.innerHTML = `
+      <div class="dev-row"><span class="dev-note">Capstone</span><select id="devCap">${CAPSTONES.map(c => `<option>${esc(c)}</option>`).join("")}</select></div>
+      <div class="dev-grid">${DEV_EVENTS.map(([k, label]) => `<button type="button" data-dev-ev="${k}">${esc(label)}</button>`).join("")}</div>
+      <div class="dev-row"><button type="button" data-dev="resetTips">Reset all tips to unseen</button></div>`;
   } else {
     const snaps = devSnaps();
     body.innerHTML = `
@@ -14726,7 +14868,10 @@ function renderDevPanel(){
       <div class="dev-snaps">${snaps.length ? snaps.map((s, i) => `<div class="dev-snap"><span><b>${esc(s.name)}</b><small>turn ${s.state.visits} · ${esc(s.at)}</small></span>
         <button type="button" data-dev-snap="load" data-i="${i}">Load</button><button type="button" data-dev-snap="copy" data-i="${i}">⧉</button><button type="button" data-dev-snap="del" data-i="${i}">🗑</button></div>`).join("")
         : '<p class="dev-note">No snapshots yet.</p>'}</div>
-      <div class="dev-row"><textarea id="devPaste" rows="2" placeholder="Paste a snapshot here…"></textarea><button type="button" data-dev="import">Import</button></div>`;
+      <div class="dev-row"><textarea id="devPaste" rows="2" placeholder="Paste a snapshot here…"></textarea><button type="button" data-dev="import">Import</button></div>
+      <div class="dev-sub">Ready-made scenarios <span class="dev-note">(start a new dev run)</span></div>
+      <div class="dev-row"><span class="dev-note">Capstone</span><select id="devCap">${CAPSTONES.map(c => `<option>${esc(c)}</option>`).join("")}</select></div>
+      <div class="dev-grid">${DEV_SCENARIOS.map(([k, label]) => `<button type="button" data-dev-sc="${k}">${esc(label)}</button>`).join("")}</div>`;
   }
 }
 
@@ -14735,6 +14880,12 @@ devPanel.addEventListener("click", ev => {
   if (tab){ devTab = tab.dataset.devTab; renderDevPanel(); return; }
   const el = ev.target.closest("[data-dev-el]");
   if (el){ devElement(el.dataset.devEl, +el.dataset.d); return; }
+  const evb = ev.target.closest("[data-dev-ev]");
+  if (evb){ devEvent(evb.dataset.devEv); return; }
+  const sc = ev.target.closest("[data-dev-sc]");
+  if (sc){ DEV_SCENARIOS.find(x => x[0] === sc.dataset.devSc)[2](); return; }
+  const mr = ev.target.closest("[data-dev-matrm]");
+  if (mr){ devMatRemove(mr.dataset.devMatrm); return; }
   const sn = ev.target.closest("[data-dev-snap]");
   if (sn){
     const i = +sn.dataset.i, kind = sn.dataset.devSnap;
@@ -14757,9 +14908,19 @@ devPanel.addEventListener("click", ev => {
     grant: () => devGrant([item()]), tree: () => devGrant([...componentClosure(item()), item()]),
     remove: () => devRemove(item()), grantAll: () => devGrant([...CORE_ITEM_NAMES]),
     snapSave: () => devSnapSave(document.getElementById("devSnapName").value.trim()),
+    matAdd: () => devMatAdd(document.getElementById("devMatItem").value),
+    matFill: devFillMat, matClear: () => { devTouch(); state.mat = []; devApply(); },
+    order: () => devSetOrder(document.getElementById("devOrder").value, document.getElementById("devOrderP").value),
+    resetTips: devResetTips,
     import: () => { if (!devSnapImport(document.getElementById("devPaste").value)) b.textContent = "Not a snapshot"; },
   }[b.dataset.dev];
   if (act) act();
+});
+devPanel.addEventListener("change", ev => {
+  if (ev.target.id !== "devOrder") return;
+  const ps = ev.target.value ? devOrderParams(ev.target.value) : [null], sel = document.getElementById("devOrderP");
+  sel.hidden = ps[0] === null;
+  sel.innerHTML = ps.filter(p => p !== null).map(p => `<option>${esc(p)}</option>`).join("");
 });
 document.getElementById("devFab").addEventListener("click", () => devPanel.hidden ? openDevPanel() : closeDevPanel());
 
