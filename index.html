@@ -2757,6 +2757,8 @@ html.low-motion .ur-card{animation:none; opacity:1}
 /* How to Play slide 1: the 8 stations in a row above the goal. */
 .ct-st-row{display:inline-flex; gap:4px; font-size:22px; margin-bottom:4px}
 .ct-st-row :is(img, svg){width:24px; height:24px}
+/* askConfirm() messages may use line breaks (e.g. the game-over warning). */
+#confirmMsg{white-space:pre-line}
 
 </style>
 <style>
@@ -11918,9 +11920,7 @@ function confirmLockIn(){
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
     if (!lockInGated()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
-    askConfirm(state.runComplete
-      ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
-      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,
+    askConfirm("Your mat doesn't have enough points to continue!\nIf you lock-in now your run ends here.\nAre you sure?",
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;
