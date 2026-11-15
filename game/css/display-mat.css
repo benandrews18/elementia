@@ -576,3 +576,20 @@ html.low-motion #matListActions{transition:none}
   border-image:url("../ui/panel_parchment.webp") 56 / 24px stretch;
   background:linear-gradient(180deg, #193b4c, #122e3c) padding-box;
 }
+
+/* Crafting Bench: the tapped item's card (station card view, Inventory,
+   Marketplace) sits on a wooden bench in the hub buttons' brass frame
+   (hub_frame.webp as a 9-slice), titled above. The card itself is unchanged.
+   #bingoCraftOverlayBody.sheetbox / #matSelPanel set their own frames, so
+   this matches their specificity and loads after them. */
+:is(.st-card-sel, #matSelPanel, #bingoCraftOverlayBody.sheetbox){
+  border:0 solid transparent; border-image:url("../ui/hub_frame.webp") 58 fill / 16px stretch;
+  background:none; padding:30px 18px 18px;
+  box-shadow:0 6px 12px -4px rgba(0,0,0,.5);
+}
+#bingoCraftOverlayBody.sheetbox{position:relative} /* the others are sticky / already positioned */
+:is(.st-card-sel, #matSelPanel, #bingoCraftOverlayBody.sheetbox)::before{
+  content:"Crafting Bench"; position:absolute; top:9px; left:0; right:0; text-align:center;
+  font-size:11px; font-weight:900; letter-spacing:.14em; text-transform:uppercase;
+  color:#ffe08a; text-shadow:0 1px 0 #000, 0 0 3px rgba(0,0,0,.8); pointer-events:none;
+}
