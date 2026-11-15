@@ -5,7 +5,8 @@ Publish the game to the website (https://benandrews18.github.io/elementia/).
     python game/deploy.py "What changed"
 
 Runs the smoke test, builds game/build/elementia_artifact.html, copies it
-over ../elementia-site/index.html (a separate clone of the site repo),
+over ../elementia-site/index.html (a separate clone of the site repo, with
+js/pwa.js added back and the installed-app files beside it),
 commits there with the message given and pushes. Then pushes this repo's
 master to the same GitHub repo's `source` branch as the source backup
 (`main` there is the website; never push master to it). Stops before
@@ -24,6 +25,8 @@ GAME = Path(__file__).resolve().parent
 REPO = GAME.parent
 SITE = REPO.parent / "elementia-site"
 BUILD = GAME / "build" / "elementia_artifact.html"
+APP_FILES = ["manifest.webmanifest", "sw.js", "icons/apple-touch-icon.png",
+             "icons/icon-192.png", "icons/icon-512.png", "icons/icon-512-maskable.png"]
 
 
 def run(cmd, cwd=REPO):
@@ -45,10 +48,19 @@ def main():
 
     run(["node", str(GAME / "tools" / "run_smoke.mjs")])
     run([sys.executable, str(GAME / "build_artifact.py")])
-    shutil.copyfile(BUILD, SITE / "index.html")
+    # The website is also an installable app: the build leaves js/pwa.js out
+    # (the claude.ai link can't use it), so it's added back here, with the
+    # manifest, service worker and icons it needs beside the page.
+    page = BUILD.read_text(encoding="utf-8")
+    pwa = (GAME / "js" / "pwa.js").read_text(encoding="utf-8")
+    assert page.count("</body>") == 1, "build has no single </body>"
+    (SITE / "index.html").write_text(page.replace("</body>", f"<script>{pwa}</script></body>"), encoding="utf-8")
+    for name in APP_FILES:
+        (SITE / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(GAME / name, SITE / name)
     if subprocess.run(["git", "status", "--porcelain"], cwd=SITE,
                       capture_output=True, text=True, check=True).stdout.strip():
-        run(["git", "add", "index.html"], cwd=SITE)
+        run(["git", "add", "index.html", *APP_FILES], cwd=SITE)
         run(["git", "commit", "-m", message], cwd=SITE)
         run(["git", "push", "origin", "main"], cwd=SITE)
         print("\nWebsite pushed. GitHub Pages updates in a minute or two.")

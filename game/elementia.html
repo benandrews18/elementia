@@ -15,13 +15,16 @@
 <meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- "black", not "black-translucent": installed on an iPhone, the game starts
+     below the clock/notch instead of being drawn under it. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Elementia">
-<!-- Icon + manifest are inlined as data URIs so they need no extra
-     files. Installability additionally needs the page served over
-     http(s); from file:// it still runs fine, just not installable. -->
+<!-- Installed (home screen) app: the manifest and PNG icons are real files
+     next to this page (copied to the website by deploy.py); offline support
+     is js/pwa.js + sw.js. The favicon stays inline. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%97%EF%B8%8F%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232e9e5b'/%3E%3Ctext x='50' y='50' font-size='58' text-anchor='middle' dominant-baseline='central'%3E%E2%9A%97%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- Styles, in cascade order (later files win ties). -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/topbar.css">
