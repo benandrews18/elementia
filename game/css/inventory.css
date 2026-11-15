@@ -99,6 +99,10 @@
    trigger. Kept in the DOM because render code still writes #jobTitle and
    #drawerScoreCount. */
 .dhead{display:none}
+/* ...except Convert's, which shows just its title. */
+#convert .dhead{display:flex; justify-content:center; border-bottom:none; padding:12px 16px 0}
+#convert .dhead h2{margin:0; font-size:18px; font-weight:900; letter-spacing:.3px}
+#convertClose{display:none}
 /* Marketplace tray title icon at 2x. vertical-align reset to 0 since flex
    centring now does the alignment. */
 #jobTitle .marketicon{width:2em; height:2em; vertical-align:0}
