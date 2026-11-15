@@ -467,26 +467,26 @@ html.low-motion .mat-qs-pill{animation:none}
 .ms-pip :is(img,svg){width:13px; height:13px}
 .ms-station{background:var(--st); border:1.5px solid rgba(0,0,0,.35)}
 .ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
-/* Add/Remove for the open row: centred just above Home, clear of the
-   Sort (left) and Filter/Hide (right) float buttons. */
-/* Below the hub (72) so it hides behind it: down out of sight when no item
-   is selected, bouncing up when one is (syncMatListActions()). */
-#matListActions{
-  position:fixed; z-index:61; left:50%; display:flex; gap:10px;
-  bottom:calc(var(--hub-h, 67px) + 22px);
-  transform:translate(-50%, calc(100% + 40px)); pointer-events:none;
-  transition:transform .32s cubic-bezier(.5,0,.75,0);
-}
-#matListActions.show{transform:translate(-50%, 0); pointer-events:auto;
-  transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+/* Add/Remove for the selected item, just under the Crafting Bench
+   (#matSelPanel, z-index 2): a row whose buttons tuck up behind the bench
+   when nothing is selected and drop down below it when something is
+   (syncMatListActions()); the row opens to make room as they do. */
+#matListActions{position:relative; z-index:1; height:0; display:flex; justify-content:center; gap:10px;
+  flex:none; transition:height .25s ease}
+#matListActions.show{height:42px} /* makes room, so the buttons don't cover the search bar */
 html.low-motion #matListActions{transition:none}
+#matListActions .mat-list-act{transform:translateY(-110%); visibility:hidden; pointer-events:none;
+  transition:transform .25s cubic-bezier(.5,0,.75,0), visibility 0s .25s}
+#matListActions.show .mat-list-act{transform:translateY(4px); visibility:visible; pointer-events:auto;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+html.low-motion #matListActions .mat-list-act{transition:none}
 .mat-list-act{
-  width:76px; height:68px; padding:6px 4px; border-radius:16px; font-size:13px; font-weight:900;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
-  border:2.5px solid #000; box-shadow:0 4px 0 rgba(0,0,0,.45), 0 6px 12px rgba(0,0,0,.35); color:#181614;
+  width:96px; height:34px; padding:0 8px; border-radius:12px; font-size:13px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+  border:2.5px solid #000; box-shadow:0 3px 0 rgba(0,0,0,.45), 0 5px 10px rgba(0,0,0,.35); color:#181614;
 }
-.mla-ic{font-size:22px; line-height:1}
-.mat-list-act:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
+.mla-ic{font-size:15px; line-height:1}
+#matListActions.show .mat-list-act:not(:disabled):active{transform:translateY(7px); box-shadow:0 1px 0 rgba(0,0,0,.45)}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}

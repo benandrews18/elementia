@@ -357,7 +357,7 @@ function syncMatSelPanel(){
 /* The selected item (matListOpen), in both views. List view: one slim line
    per item (icon, name, suit pips, home stations, points). Either view:
    tapping an item highlights it and docks its station shop row under the
-   mat, and #matListActions offers Add/Remove above the hub. */
+   mat, and #matListActions offers Add/Remove just under it. */
 let matListOpen = null;
 const matStationBadgesHTML = (c, cls) => c.stations.map(st =>
   `<span class="${cls}" style="--st:${DATA.suits[STATION_BY_NAME[st].suit].color}" title="${esc(st)}">${em(STATION_BY_NAME[st].emoji)}</span>`).join("");
@@ -385,13 +385,13 @@ function toggleMatListRow(name){
   matListOpen = matListOpen === name ? null : name;
   renderMatResultsGrid();
 }
-/* Add/Remove for the selected item, above Home. Shown only while one is
-   selected in the full tray (syncMatFloatBtns()). */
+/* Add/Remove for the selected item, just under its Crafting Bench. Shown
+   only while one is selected in the full tray (syncMatFloatBtns()). */
 function syncMatListActions(){
   const bar = document.getElementById("matListActions");
   syncMatSelPanel();
   const show = matTrayExpanded && !!matListOpen && owns(matListOpen);
-  // Slides up from behind the hub (.show), and back down when hidden.
+  // Drops down from behind the Crafting Bench (.show), back up when hidden.
   bar.classList.toggle("show", show);
   bar.setAttribute("aria-hidden", String(!show));
   if (!show) return;
