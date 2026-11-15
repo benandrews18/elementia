@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Marketplace: the Market rows sit on wood in the brass frame. Next to the title: "Complete a market row to earn a reward!"; under the last row: "Tap on an item to craft it directly from the market!"
 - Crafting Bench: as wide in the Marketplace as in the shops, and also behind the item pinned to the top of Convert after tapping a missing element.
 - Inventory: the Add / Remove buttons are half as tall and drop down from behind the Crafting Bench to sit just below it (they used to rise from the hub).
 - The settings cog can be tapped on the Item Reference and Marketplace screens.
