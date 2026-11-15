@@ -10,8 +10,11 @@ function goStation(name){
     const capName = STATION_BY_NAME[name].capstone[1];
     if (!isPinned(capName)) togglePin(capName);
   }
+  // A Helicopter trip off the map's paths (the Fast Travel trophy).
+  if (state.lastStation && !isMapConnected(state.lastStation, name)) state.heliTrips = (state.heliTrips || 0) + 1;
   current = name; screen = "station";
   state.visits++; state.rolledHere = false;
+  recordPlayDay();
   state.pendingRoll = null; state.lastRoll = null;
   // One turn-log entry per real visit, before any crafting or rolling can
   // add to it.

@@ -91,6 +91,7 @@ document.getElementById("emptyElPick").addEventListener("click", ev => {
   const fly = lowMotion() ? null : flightClone(chip);
   closeOverlay("emptyElPick");
   state.emptyElements -= 1;
+  state.qSpent = (state.qSpent || 0) + 1; // the Into the Unknown trophy
   state.elements[sym] = (state.elements[sym] || 0) + 1;
   save();
   if (!fly){ render(); return; }

@@ -299,6 +299,7 @@ document.getElementById("comboInfoOverlay").addEventListener("click", ev => {
   const o = currentOrder(), next = o && drawOrder(o.round, o);
   if (!next || !(state.emptyElements > 0)) return;
   state.emptyElements -= 1;
+  state.qSpent = (state.qSpent || 0) + 1;
   setOrder(next);
   save(); render();
   if (drawer.classList.contains("open")) renderMatTop();
@@ -520,6 +521,7 @@ function finishLockIn(reward, opts = {}){
   const st = Object.entries(matGroupsOf(matOnMat()).st).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1])[0];
   state.lastTopStation = st ? st[0] : null;
   state.lastCheckedMat = [...state.mat]; // the mat's "Last" button
+  noteMatFeats(); // the Display Mat trophies
   // Old Growth: board checks in a row with Ecosystem on the mat.
   state.ecoStreak = matHas(matOnMat(), "Ecosystem") ? (state.ecoStreak || 0) + 1 : 0;
   document.body.classList.remove("lockin-playing"); // never leave input blocked
@@ -652,6 +654,7 @@ function confirmFinalLockIn(){
 function finishFinalCheck(total){
   document.body.classList.remove("lockin-playing"); endLockInLayers();
   (state.checkLog || (state.checkLog = [])).push({ v: state.visits, q: Math.round(total), final: true });
+  noteMatFeats();
   state.finalCheckPending = false;
   lockInCommitted = false;
   closeDrawer();

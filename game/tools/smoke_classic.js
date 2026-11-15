@@ -315,6 +315,18 @@
         recordHistory();
         expect(history.length === real && loadDevHistory().length === dev + 1, "a dev run should go to Dev runs, not History");
         state = keep; save(); render(); }
+      // Trophies are daily and cumulative: earned once a day, counted again
+      // on a later day.
+      { const keep = state, tk = lsGet(TROPHY_KEY), lp = JSON.stringify(prefs.lifetime || null), st = prefs.stars;
+        state = Object.assign(freshState(), { mode: "classic", runComplete: true, visits: 24 });
+        lsSet(TROPHY_KEY, "{}");
+        const first = awardTrophies().map(t => t.id), same = awardTrophies().length;
+        const got = loadTrophies(); got["first-run"].last = "2000-01-01"; lsSet(TROPHY_KEY, JSON.stringify(got));
+        const again = awardTrophies().find(t => t.id === "first-run");
+        expect(first.includes("first-run") && same === 0 && again && again.again === 2,
+          `trophies should be earned once a day and count up (first ${first.length}, same day ${same}, next ${again && again.again})`);
+        tk === null ? localStorage.removeItem(TROPHY_KEY) : lsSet(TROPHY_KEY, tk);
+        prefs.lifetime = JSON.parse(lp); prefs.stars = st; savePrefs(); state = keep; save(); }
       // A tip window hidden with its ✕ is skipped straight to what follows it.
       { const h = prefs.hiddenTips; let ran = 0; prefs.hiddenTips = ["classicTut"];
         openClassicTutorial(() => ran++);

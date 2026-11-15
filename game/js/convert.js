@@ -130,6 +130,7 @@ document.getElementById("convertGo").addEventListener("click", () => {
   state.elements[convertFrom] = count(convertFrom) - CONVERT_RATE;
   if (state.elements[convertFrom] <= 0) delete state.elements[convertFrom];
   state.elements[convertTo] = count(convertTo) + 1;
+  state.converts = (state.converts || 0) + 1; // the Alchemist trophy
   save();
   playConvertAnimation(convertTo);
   // "Convert Elements!" no longer fires here -- see updateHub(), it now

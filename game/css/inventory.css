@@ -449,6 +449,9 @@
 .trophy-mini.earned{background:var(--gold-soft); border-color:var(--gold); box-shadow:0 2px 0 var(--gold-line)}
 .tm-ic{display:flex; align-items:center; justify-content:center}
 .trophy-mini:not(.earned) .tm-ic{filter:brightness(0) opacity(.4)}
+/* How many times (days) it's been earned. */
+.trophy-mini{position:relative}
+.tm-n{position:absolute; right:3px; bottom:2px; font-size:10px; font-weight:900; color:#241d10; background:var(--gold); border-radius:999px; padding:0 4px; line-height:1.4}
 #trophyDetail{z-index:81}
 .trophy-detail{max-width:320px; text-align:center}
 .trophy-detail-ic{font-size:72px; line-height:1; margin:4px 0 8px}
