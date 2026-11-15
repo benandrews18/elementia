@@ -468,13 +468,12 @@ html.low-motion .mat-qs-pill{animation:none}
 .ms-station{background:var(--st); border:1.5px solid rgba(0,0,0,.35)}
 .ms-station :is(img,svg){width:14px; height:14px; filter:var(--icon-outline)}
 /* Add/Remove for the selected item, just under the Crafting Bench
-   (#matSelPanel, z-index 2): a row whose buttons tuck up behind the bench
-   when nothing is selected and drop down below it when something is
-   (syncMatListActions()); the row opens to make room as they do. */
-#matListActions{position:relative; z-index:1; height:0; display:flex; justify-content:center; gap:10px;
-  flex:none; transition:height .25s ease}
-#matListActions.show{height:42px} /* makes room, so the buttons don't cover the search bar */
-html.low-motion #matListActions{transition:none}
+   (#matSelPanel, z-index 2): buttons that tuck up behind the bench when
+   nothing is selected and drop down below it when something is
+   (syncMatListActions()). */
+/* No height of its own: the buttons float over the top of the list
+   (transparent behind them), so the list keeps all its scrolling room. */
+#matListActions{position:relative; z-index:1; height:0; display:flex; justify-content:center; gap:10px; flex:none}
 #matListActions .mat-list-act{transform:translateY(-110%); visibility:hidden; pointer-events:none;
   transition:transform .25s cubic-bezier(.5,0,.75,0), visibility 0s .25s}
 #matListActions.show .mat-list-act{transform:translateY(4px); visibility:visible; pointer-events:auto;
