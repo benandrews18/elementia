@@ -60,8 +60,8 @@ const CORE_ELEMENT_SYMS = ["H","C","N","O","P","S","K","Ca","Si","Al","Mg","Ni",
 const ELEMENT_SUIT = {
   C:"organic", H:"organic", N:"organic", O:"organic",
   S:"reactive", K:"reactive", Ca:"reactive", P:"reactive",
-  Si:"earth", Al:"earth", Mg:"earth", Ni:"earth",
-  Fe:"metal", Ti:"metal", Cu:"metal", Ag:"metal", Zn:"metal",
+  Si:"earth", Al:"earth", Mg:"earth", Ti:"earth",
+  Fe:"metal", Ni:"metal", Cu:"metal", Ag:"metal", Zn:"metal",
 };
 const ELEMENT_SUIT_LABEL = {organic:"ORGANIC", reactive:"REACTIVE", earth:"EARTH", metal:"METAL"};
 // Suit colours keyed by suit (same palette as ELEMENT_COLOR); used for an
@@ -246,8 +246,8 @@ const CLASSIC_ELEMENTS = [...new Set(DATA.stations.flatMap(s => s.dice))];
 const ELEMENT_COLOR = {
   C:"#3aab6d", H:"#3aab6d", N:"#3aab6d", O:"#3aab6d",
   S:"#e2543b", K:"#e2543b", Ca:"#e2543b", P:"#e2543b",
-  Si:"#e2a83e", Al:"#e2a83e", Mg:"#e2a83e", Ni:"#e2a83e",
-  Fe:"#4d7cf2", Ti:"#4d7cf2", Cu:"#4d7cf2", Ag:"#4d7cf2", Zn:"#4d7cf2",
+  Si:"#e2a83e", Al:"#e2a83e", Mg:"#e2a83e", Ti:"#e2a83e",
+  Fe:"#4d7cf2", Ni:"#4d7cf2", Cu:"#4d7cf2", Ag:"#4d7cf2", Zn:"#4d7cf2",
 };
 /* Darker suit palette, only for element tokens inside recipes
    (tokenHTML()), dark enough that the green "owned" border (.tok.el.have)
@@ -255,8 +255,8 @@ const ELEMENT_COLOR = {
 const ELEMENT_COLOR_DARK = {
   C:"#3d4a1f", H:"#3d4a1f", N:"#3d4a1f", O:"#3d4a1f",
   S:"#6b2338", K:"#6b2338", Ca:"#6b2338", P:"#6b2338",
-  Si:"#6b4518", Al:"#6b4518", Mg:"#6b4518", Ni:"#6b4518",
-  Fe:"#22366b", Ti:"#22366b", Cu:"#22366b", Ag:"#22366b", Zn:"#22366b",
+  Si:"#6b4518", Al:"#6b4518", Mg:"#6b4518", Ti:"#6b4518",
+  Fe:"#22366b", Ni:"#22366b", Cu:"#22366b", Ag:"#22366b", Zn:"#22366b",
 };
 /* Applies (or clears, with no sym) an element's colours to a box (Convert
    boxes and picker). */

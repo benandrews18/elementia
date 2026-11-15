@@ -47,10 +47,10 @@ ELEMENTS = [
     ("Mg", "Magnesium",  12, "earth"),
     ("P",  "Phosphorus", 15, "reactive"),
     ("Fe", "Iron",       26, "metal"),
-    ("Ti", "Titanium",   22, "metal"),
+    ("Ti", "Titanium",   22, "earth"),
     ("Cu", "Copper",     29, "metal"),
     ("Ag", "Silver",     47, "metal"),
-    ("Ni", "Nickel",     28, "earth"),
+    ("Ni", "Nickel",     28, "metal"),
 ]
 
 # which stations gather each element (for the "GATHERED AT" row)
