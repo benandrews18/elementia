@@ -2,7 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- Fixed design width: every phone lays the game out 390 points wide (an
+     iPhone 12-14) and its browser scales that to fit, so cards, text
+     wrapping and buttons come out the same on every phone. Tablets (wider
+     shapes) get a wider width so the page stays at least 844 tall.
+     Computers ignore this tag. -->
+<script>(function(){
+  var s = Math.min(screen.width, screen.height), l = Math.max(screen.width, screen.height);
+  var w = !(s > 0) || s / l <= 0.6 ? 390 : Math.round(844 * s / l); // no screen size reported: 390
+  document.getElementById("viewport").content = "width=" + w + ", user-scalable=no, viewport-fit=cover";
+})();</script>
 <title>Elementia</title>
 <meta name="description" content="Elementia — a STEM crafting game for summer camp.">
 <meta name="theme-color" content="#0f2733">

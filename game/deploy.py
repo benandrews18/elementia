@@ -15,6 +15,12 @@ work.
 
 The shared claude.ai link is published separately, with the Artifact tool,
 from the same build file (see CLAUDE.md).
+
+    python game/deploy.py --preview "What changed"
+
+publishes the current build (any branch) to the site's preview/ page
+(https://benandrews18.github.io/elementia/preview/) for trying out work in
+progress; the main page, and the source backup, are left alone.
 """
 import shutil
 import subprocess
@@ -35,9 +41,12 @@ def run(cmd, cwd=REPO):
 
 
 def main():
-    if len(sys.argv) < 2 or not sys.argv[1].strip():
-        sys.exit('Usage: python game/deploy.py "What changed"')
-    message = sys.argv[1].strip()
+    args = sys.argv[1:]
+    preview = "--preview" in args
+    args = [a for a in args if a != "--preview"]
+    if not args or not args[0].strip():
+        sys.exit('Usage: python game/deploy.py [--preview] "What changed"')
+    message = args[0].strip()
     if not (SITE / ".git").exists():
         sys.exit(f"Site repo not found at {SITE}")
     for repo in (SITE, REPO):
@@ -48,6 +57,14 @@ def main():
 
     run(["node", str(GAME / "tools" / "run_smoke.mjs")])
     run([sys.executable, str(GAME / "build_artifact.py")])
+    if preview:
+        (SITE / "preview").mkdir(exist_ok=True)
+        shutil.copyfile(BUILD, SITE / "preview" / "index.html")
+        run(["git", "add", "preview/index.html"], cwd=SITE)
+        run(["git", "commit", "-m", "Preview: " + message], cwd=SITE)
+        run(["git", "push", "origin", "main"], cwd=SITE)
+        print("Preview pushed: https://benandrews18.github.io/elementia/preview/ (in a minute or two).")
+        return
     # The website is also an installable app: the build leaves js/pwa.js out
     # (the claude.ai link can't use it), so it's added back here, with the
     # manifest, service worker and icons it needs beside the page.
