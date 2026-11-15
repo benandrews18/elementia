@@ -53,8 +53,8 @@ def main():
     # manifest, service worker and icons it needs beside the page.
     page = BUILD.read_text(encoding="utf-8")
     pwa = (GAME / "js" / "pwa.js").read_text(encoding="utf-8")
-    assert page.count("</body>") == 1, "build has no single </body>"
-    (SITE / "index.html").write_text(page.replace("</body>", f"<script>{pwa}</script></body>"), encoding="utf-8")
+    # The build has no </body> (build_artifact.py strips the wrapper): append.
+    (SITE / "index.html").write_text(page + f"<script>{pwa}</script>\n", encoding="utf-8")
     for name in APP_FILES:
         (SITE / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(GAME / name, SITE / name)
