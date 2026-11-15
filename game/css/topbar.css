@@ -79,8 +79,13 @@ body:has(#classicTut.open, #capChoice.open, #capConfirm.open, #pinTip.open) :is(
    pills (30) but under every tray, drawer and overlay (33+). */
 #quarkTopBar{
   position:fixed; top:0; left:0; right:0; z-index:31; display:none; cursor:pointer;
-  padding:8px 14px 6px; background:linear-gradient(180deg, rgba(10,24,32,.96), rgba(10,24,32,.88));
-  border-bottom:1.5px solid var(--line); box-shadow:0 4px 12px rgba(0,0,0,.3);
+  padding:8px 14px 6px;
+  /* The hub bar's wood and brass edge (#hub), mirrored. */
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 3px, transparent 3px 22px),
+    linear-gradient(0deg, #7a4a25, #5a3418 60%, #43260f);
+  border-bottom:3px solid #d9a441;
+  box-shadow:0 6px 16px rgba(0,0,0,.3), inset 0 -2px 0 rgba(255,220,140,.25);
 }
 body.has-qtop #quarkTopBar{display:block}
 [data-combo-lab] #quarkTopBar{display:none}
@@ -251,6 +256,8 @@ body[data-screen="map"] main{
 /* Item Reference and Marketplace need a z-index so they stack above the
    floating pills/pins/convert buttons. */
 body[data-screen="codex"] #screen, body[data-screen="market"] #screen{position:relative; z-index:33}
+/* ...so the settings cog goes one above, or those screens cover it. */
+body:is([data-screen="codex"], [data-screen="market"]) #settingsBtn{z-index:34}
 /* Hide the pins/convert buttons and tracked pill while Item Reference or
    Marketplace is open; the hub bar stays. */
 body[data-screen="codex"] #pinsBtn, body[data-screen="codex"] #quickConvertBtn,
