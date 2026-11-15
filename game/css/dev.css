@@ -41,6 +41,16 @@
 .dev-snap{display:flex; align-items:center; gap:5px; background:var(--card); border-radius:8px; padding:5px 6px}
 .dev-snap > span{flex:1; min-width:0; display:flex; flex-direction:column}
 .dev-snap small{color:var(--mute)}
+.dev-tabs{flex-wrap:wrap}
+.dev-tabs button{flex:1 1 auto; font-size:12px}
+.dev-score{font-size:13px; line-height:1.5}
+.dev-score b{font-size:17px; color:var(--gold)}
+.dev-hit{color:var(--ok); font-weight:800}
+.dev-matlist{display:flex; flex-wrap:wrap; gap:4px}
+.dev-chip{display:inline-flex; align-items:center; gap:3px; background:var(--card); border-radius:999px; padding:2px 4px 2px 8px; font-size:12px}
+.dev-chip :is(img,svg){width:16px; height:16px}
+.dev-panel .dev-chip button{padding:0 5px; border:none; background:none; color:var(--mute)}
+.dev-sub{font-weight:800; margin-top:6px; border-top:1px solid var(--line); padding-top:8px}
 /* History's Runs / Dev runs tabs (dev mode only, renderHistory()). */
 .hist-tabs{display:flex; gap:6px; margin:6px 0 10px}
 .hist-tabs[hidden]{display:none}
