@@ -521,10 +521,11 @@ function marketRowsHTML(){
     <section class="mrow-market" aria-labelledby="mrowMarketTitle">
       <div class="mrow-top">
         <h3 class="mrow-head" id="mrowMarketTitle">🛒 Market</h3>
-        <span class="mrow-hint">Tap on an item to craft directly from here!</span>
+        <span class="mrow-hint">Complete a market row to earn a reward!</span>
         <span class="mrow-gift" title="Finish a row to earn a &quot;?&quot; element" aria-label="Row reward">🎁</span>
       </div>
       ${rows}
+      <p class="mrow-foot">Tap on an item to craft it directly from the market!</p>
     </section>
     <h3 class="mrow-head mrow-caps-head">🏆 Capstones</h3>
     <p class="mrow-caps-sub">Capstones must be crafted at their own station</p>

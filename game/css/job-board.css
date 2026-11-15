@@ -87,8 +87,12 @@
    end; a finished row gets a gold rim. */
 /* The Market panel: the only squares craftable from the tray, on a card. */
 .mrow-page{border-top:none; padding-top:0}
-.mrow-market{padding:6px 8px 3px; border-radius:16px; border:2px solid var(--gold);
-  background:linear-gradient(180deg, #24526a, #1a3d50); box-shadow:0 4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.3)}
+/* Wood with the hub buttons' brass frame (hub_frame.webp, as on the
+   Crafting Bench). */
+.mrow-market{padding:14px 14px 10px; border:0 solid transparent;
+  border-image:url("../ui/hub_frame.webp") 58 fill / 16px stretch; box-shadow:0 6px 14px -4px rgba(0,0,0,.5)}
+.mrow-market :is(.mrow-head, .mrow-hint, .mrow-foot){text-shadow:0 1px 0 rgba(0,0,0,.7)}
+.mrow-foot{margin:4px 0 0; text-align:center; font-size:11.5px; font-weight:800; color:#ffe08a}
 .mrow-top{display:flex; align-items:center; justify-content:space-between; padding:0 3px 0 0; margin-bottom:2px}
 .mrow-head{font-size:16px; font-weight:900; letter-spacing:.3px; margin:0; text-align:left}
 /* Sits over the row-reward column (.mrow-reward is 30px wide, row padding 3px). */
