@@ -323,9 +323,7 @@ function confirmLockIn(){
   const reward = emptyElementsForScore(s.total, matCheckRound());
   if (reward === 0){
     if (!lockInGated()){ lockInCommitted = true; updateHub(); finishLockIn(0); return; }
-    askConfirm(state.runComplete
-      ? `Your Display Mat only scored ${s.total.toLocaleString()} Quarks, not enough to clear the first Quark breakpoint. In Overtime, every Lock-In must clear it. End your run here?`
-      : `Your Display Mat only scored ${s.total.toLocaleString()} Quarks at a checkpoint -- not enough to clear the first Quark breakpoint. From turn ${BREAKPOINT_GATE_VISIT} on, missing it at a checkpoint ends your run here. End it now?`,
+    askConfirm("Your mat doesn't have enough points to continue!\nIf you lock-in now your run ends here.\nAre you sure?",
       () => {
         lockInCommitted = true;
         state.finalGameOver = true;

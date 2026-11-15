@@ -479,3 +479,5 @@ html.low-motion .ur-card{animation:none; opacity:1}
 /* How to Play slide 1: the 8 stations in a row above the goal. */
 .ct-st-row{display:inline-flex; gap:4px; font-size:22px; margin-bottom:4px}
 .ct-st-row :is(img, svg){width:24px; height:24px}
+/* askConfirm() messages may use line breaks (e.g. the game-over warning). */
+#confirmMsg{white-space:pre-line}
