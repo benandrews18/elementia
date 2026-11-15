@@ -313,9 +313,6 @@ const MAT_TIER_BANDS = [
   { key: "t2", label: "Tier 2", tier: "COMPONENT" },
   { key: "t1", label: "Tier 1", tier: "MATERIAL" },
 ];
-// Collapsed band keys: an in-memory Set (like matFilt), so collapsed
-// sections survive re-renders but not a reload.
-let matTierCollapsed = new Set();
 /* The scrollable owned-items grid in #drawerBody. A pure string builder
    (matResultsGridHTML()) plus a small DOM wrapper, so
    renderClassicDrawer() and the filter handlers (which update #drawerBody
@@ -331,11 +328,11 @@ function matResultsGridHTML(){
   const sections = MAT_TIER_BANDS.map(band => {
     const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
-    const collapsed = matTierCollapsed.has(band.key);
-    return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
-        <button type="button" class="mat-tier-heading" data-mat-tier="${band.key}">
-          <span class="mat-tier-line"></span>${esc(band.label)}<span class="collapse-chevron"></span><span class="mat-tier-line"></span>
-        </button>
+    // A plain label (it used to collapse its section, and got tapped by accident).
+    return `<div class="mat-tier-section">
+        <div class="mat-tier-heading">
+          <span class="mat-tier-line"></span>${esc(band.label)}<span class="mat-tier-line"></span>
+        </div>
         ${prefs.itemsListView
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
           // Tier 1 cards at half height, as they stack on the mat.

@@ -489,23 +489,16 @@ html.low-motion #matListActions .mat-list-act{transition:none}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
-/* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
-   collapsible with the shared .collapse-chevron. */
+/* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section. */
 .mat-tier-section{margin-bottom:14px}
 .mat-tier-section:last-child{margin-bottom:0}
 .mat-tier-heading{
   display:flex; align-items:center; gap:8px; width:100%; margin:0 0 10px;
-  padding:6px 0; border:none; background:none; cursor:pointer;
+  padding:6px 0;
   font-size:13px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
   -webkit-user-select:none; user-select:none;
 }
 .mat-tier-line{flex:1; height:2px; background:var(--line2)}
-.mat-tier-heading .collapse-chevron{flex:none}
-/* These sections default open, so the expanded rotation is the resting
-   state and .collapsed flips it. */
-.mat-tier-heading .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
-.mat-tier-section.collapsed .mat-tier-heading .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
-.mat-tier-section.collapsed :is(.mat-results-grid, .mat-shop-list){display:none}
 
 /* Parchment face like the BINGO cards. No overflow:hidden, so the corner
    badges (.mm-pts/.mm-pips/.mm-station) can straddle the border. */
