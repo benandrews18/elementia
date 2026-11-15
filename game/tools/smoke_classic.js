@@ -304,6 +304,17 @@
         expect(kinds === "request,request,request,easy,easy,hard,hard", "challenge schedule should be requests, easy, hard: " + kinds);
         state.items = its; state.usedOrders = uo; }
       state.matChecked = mc; state.matBonusDice = fb; state.tripDice = td; state.order = o; state.mat = m;
+      // Dev mode: jumping to turn 12 sets up that stretch (challenge from the
+      // turn 9 check) and marks the run; a dev run's History entry goes to
+      // the Dev runs list, never the real one.
+      { const keep = state; state = Object.assign(freshState(), JSON.parse(JSON.stringify(keep))); state.dev = false;
+        devSetTurn(12);
+        expect(state.visits === 12 && state.dev && state.matChecked && (!state.order || state.order.round === 9),
+          `dev jump to turn 12 should set the turn, mark the run and draw turn 9's challenge (got ${state.visits}, ${state.order && state.order.round})`);
+        const real = history.length, dev = loadDevHistory().length;
+        recordHistory();
+        expect(history.length === real && loadDevHistory().length === dev + 1, "a dev run should go to Dev runs, not History");
+        state = keep; save(); render(); }
       // A tip window hidden with its ✕ is skipped straight to what follows it.
       { const h = prefs.hiddenTips; let ran = 0; prefs.hiddenTips = ["classicTut"];
         openClassicTutorial(() => ran++);

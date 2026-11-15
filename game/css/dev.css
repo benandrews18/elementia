@@ -1,0 +1,48 @@
+/* Developer mode (dev.js): the 🛠 button and the Dev Panel. Above the hub
+   and every window (the end screens included), since it's used over them. */
+.dev-fab{
+  position:fixed; left:6px; top:42%; z-index:160; width:42px; height:42px; border-radius:50%;
+  border:2px solid var(--gold); background:#2b1d0e; font-size:20px; line-height:1; color:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.5);
+}
+.dev-panel{
+  position:fixed; left:8px; right:8px; bottom:calc(var(--hub-h, 67px) + 8px); z-index:161;
+  max-width:520px; margin:0 auto; max-height:62vh; display:flex; flex-direction:column;
+  background:#10242f; color:var(--ink); border:2px solid var(--gold); border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.6); font-size:13px;
+}
+.dev-panel[hidden]{display:none}
+.dev-head{display:flex; align-items:center; gap:8px; padding:8px 10px 6px}
+.dev-head b{font-size:14px}
+.dev-flag{font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--ok-soft); color:var(--ok)}
+.dev-flag.on{background:var(--bad-soft); color:var(--bad)}
+.dev-x{margin-left:auto; background:none; border:none; color:var(--ink2); font-size:18px; padding:2px 6px}
+.dev-tabs{display:flex; gap:4px; padding:0 10px 6px; border-bottom:1px solid var(--line)}
+.dev-tabs button{flex:1; padding:6px 4px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink2); font-weight:800}
+.dev-tabs button.on{background:var(--gold); color:#241d10; border-color:var(--gold)}
+.dev-body{overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px}
+.dev-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.dev-panel :is(button:not(.dev-x):not([data-dev-tab]), input, select, textarea){
+  font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px 9px;
+}
+.dev-panel button:not(.dev-x):not([data-dev-tab]){font-weight:800}
+.dev-panel button:active{transform:translateY(1px)}
+.dev-panel input[type=number]{width:64px}
+.dev-panel #devItem, .dev-panel #devSnapName, .dev-panel #devPaste{flex:1; min-width:0}
+.dev-panel select{flex:1; min-width:0}
+.dev-note{color:var(--mute); font-size:12px}
+.dev-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.dev-els{display:grid; grid-template-columns:repeat(4, 1fr); gap:5px}
+.dev-el{display:flex; align-items:center; gap:3px; border-left:4px solid var(--suit); border-radius:6px; background:var(--card); padding:2px}
+.dev-el b{width:22px; text-align:center}
+.dev-el span{flex:1; text-align:center; font-weight:800}
+.dev-panel .dev-el button{padding:2px 6px; border-radius:6px}
+.dev-snaps{display:flex; flex-direction:column; gap:5px}
+.dev-snap{display:flex; align-items:center; gap:5px; background:var(--card); border-radius:8px; padding:5px 6px}
+.dev-snap > span{flex:1; min-width:0; display:flex; flex-direction:column}
+.dev-snap small{color:var(--mute)}
+/* History's Runs / Dev runs tabs (dev mode only, renderHistory()). */
+.hist-tabs{display:flex; gap:6px; margin:6px 0 10px}
+.hist-tabs[hidden]{display:none}
+.hist-tab{flex:1; padding:6px; border-radius:10px; border:1.5px solid var(--line); background:var(--sunken); color:var(--ink2); font-weight:800}
+.hist-tab.on{background:var(--gold); border-color:var(--gold); color:#241d10}

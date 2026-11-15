@@ -13,6 +13,7 @@ if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
   lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
 }
 loadAll();
+syncDevTools(); // dev.js: needs the loaded prefs
 // Every load, a refresh included, opens on the main menu.
 showWelcomeSlide();
 render();

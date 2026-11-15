@@ -3,6 +3,13 @@
    overlay, and its export.
    ===================================================================== */
 let history = [];
+// Runs touched by Developer mode (state.dev, see dev.js) are kept apart, so
+// testing never mixes into the real History or its exports.
+const DEV_HISTORY_KEY = "elementia-devhistory-v1";
+const loadDevHistory = () => { try { return JSON.parse(lsGet(DEV_HISTORY_KEY) || "[]"); } catch(e){ return []; } };
+// Which list the History window shows: "runs" or (dev mode only) "dev".
+let histTab = "runs";
+const histRuns = () => histTab === "dev" && prefs.devMode ? loadDevHistory() : history;
 
 function loadHistory(){
   try { history = JSON.parse(lsGet(HISTORY_KEY) || "[]"); } catch(e){ history = []; }
@@ -12,7 +19,8 @@ function saveHistory(){ lsSet(HISTORY_KEY, JSON.stringify(history)); }
    untouched session. */
 function recordHistory(){
   if (state.visits <= 0) return;
-  history.unshift({
+  const list = state.dev ? loadDevHistory() : history;
+  list.unshift({
     mode: state.mode,
     date: new Date().toISOString(),
     visits: state.visits,
@@ -28,8 +36,9 @@ function recordHistory(){
     bingoCard: state.bingoCard ? [...state.bingoCard] : null,
     bingoLinesCompleted: [...(state.bingoLinesCompleted || [])],
   });
-  history.length = Math.min(history.length, HISTORY_MAX);
-  saveHistory();
+  list.length = Math.min(list.length, HISTORY_MAX);
+  if (state.dev){ list[0].dev = true; lsSet(DEV_HISTORY_KEY, JSON.stringify(list)); }
+  else saveHistory();
 }
 
 let histExpanded = new Set();
@@ -59,11 +68,18 @@ function histTurnsHTML(h){
 }
 function renderHistory(){
   const list = document.getElementById("historyList");
-  if (!history.length){
-    list.innerHTML = '<p class="empty">No finished runs yet — they show up here once you start a new session.</p>';
+  const tabs = document.getElementById("historyTabs");
+  tabs.hidden = !prefs.devMode;
+  tabs.innerHTML = prefs.devMode ? ["runs", "dev"].map(t =>
+    `<button type="button" class="hist-tab${histTab === t ? " on" : ""}" data-hist-tab="${t}">${t === "dev" ? "🛠 Dev runs" : "Runs"}</button>`).join("") : "";
+  const runs = histRuns();
+  if (!runs.length){
+    list.innerHTML = histTab === "dev" && prefs.devMode
+      ? '<p class="empty">No dev runs yet -- runs you change with the Dev Panel land here when they end.</p>'
+      : '<p class="empty">No finished runs yet — they show up here once you start a new session.</p>';
     return;
   }
-  list.innerHTML = `<div class="histrows">${history.map((h, i) => {
+  list.innerHTML = `<div class="histrows">${runs.map((h, i) => {
     const open = histExpanded.has(i);
     return `<div class="histentry">
       <div class="histrow-line">
@@ -91,12 +107,18 @@ document.getElementById("modeHistoryBtn").addEventListener("click", () => {
   openOverlay("history");
 });
 document.getElementById("historyClose").addEventListener("click", () => closeOverlay("history"));
+document.getElementById("historyTabs").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-hist-tab]");
+  if (!b) return;
+  histTab = b.dataset.histTab; histExpanded = new Set();
+  renderHistory();
+});
 document.getElementById("historyList").addEventListener("click", ev => {
   // Per-run export: just this run as JSON (the same shape #historyExport
   // uses for every run).
   const exportBtn = ev.target.closest("[data-hist-export]");
   if (exportBtn){
-    const h = history[+exportBtn.dataset.histExport];
+    const h = histRuns()[+exportBtn.dataset.histExport];
     if (!h) return;
     const json = JSON.stringify(h, null, 2);
     navigator.clipboard.writeText(json).then(() => {
@@ -116,7 +138,7 @@ document.getElementById("historyList").addEventListener("click", ev => {
 // to manual selection if the clipboard API is unavailable.
 document.getElementById("historyExport").addEventListener("click", async () => {
   const btn = document.getElementById("historyExport");
-  const json = JSON.stringify(history, null, 2);
+  const json = JSON.stringify(histRuns(), null, 2);
   try {
     await navigator.clipboard.writeText(json);
     btn.textContent = "✓ Copied!";

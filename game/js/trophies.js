@@ -43,7 +43,7 @@ function loadTrophies(){
 /* Awards every trophy this run now qualifies for; returns the newly earned
    ones. Only for a completed run (turn 24 or crafted everything). */
 function awardTrophies(){
-  if (!state.runComplete && !state.craftedEverything) return [];
+  if (state.dev || (!state.runComplete && !state.craftedEverything)) return []; // not from dev runs
   const got = loadTrophies();
   const fresh = TROPHIES.filter(t => !got[t.id] && t.test(state));
   if (!fresh.length) return [];

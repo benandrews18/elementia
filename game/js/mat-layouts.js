@@ -243,7 +243,7 @@ document.getElementById("collectionFound").addEventListener("click", ev => {
    state.starsEarned is this run's total, for the end screen. */
 const STARS_RUN = 5, STARS_TROPHY = 2, STARS_DISCOVERY = 1, CLUE_COST = 3;
 function grantStars(n){
-  if (!n) return;
+  if (!n || state.dev) return; // dev runs earn nothing (dev.js)
   prefs.stars = (prefs.stars || 0) + n; savePrefs();
   state.starsEarned = (state.starsEarned || 0) + n;
   syncCollectionsBtn();

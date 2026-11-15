@@ -36,6 +36,7 @@
 <link rel="stylesheet" href="css/card-inspect.css">
 <link rel="stylesheet" href="css/reference.css">
 <link rel="stylesheet" href="css/display-mat.css">
+<link rel="stylesheet" href="css/dev.css">
 <link rel="stylesheet" href="css/desktop-frame.css">
 </head>
 <body>
@@ -430,7 +431,7 @@
       </span>
       <span class="setbtn">Open</span>
     </button>
-    <button type="button" class="setting-row" id="settingsDevBtn">
+    <button type="button" class="setting-row" id="settingsDevBtn" hidden>
       <span class="setting-ico">🛠️</span>
       <span class="setting-body">
         <span class="setting-label">Dev Tools</span>
@@ -508,6 +509,22 @@
   <div class="sheetbox parch">
     <button type="button" class="cp-close-x coll-x" id="setDevBack" aria-label="Back to Settings"></button>
     <h2 id="setDevTitle">🛠️ Dev Tools</h2>
+    <div class="setting-row">
+      <span class="setting-ico">🧪</span>
+      <span class="setting-body">
+        <span class="setting-label">Developer mode</span>
+        <span class="setting-sub">Shows the 🛠 Dev Panel. Runs you change with it are kept out of History, trophies and Stars.</span>
+      </span>
+      <input type="checkbox" id="devModeSwitch" class="switch" aria-label="Developer mode">
+    </div>
+    <button type="button" class="setting-row" id="devRestoreBtn" hidden>
+      <span class="setting-ico">↩️</span>
+      <span class="setting-body">
+        <span class="setting-label">Restore my real save</span>
+        <span class="setting-sub">The save from just before the Dev Panel first changed this run.</span>
+      </span>
+      <span class="setbtn">Restore</span>
+    </button>
     <button type="button" class="setting-row warn" id="resetCacheBtn">
       <span class="setting-ico">🧹</span>
       <span class="setting-body">
@@ -566,6 +583,7 @@
       <button type="button" class="tbtn ghost histexport-btn" id="historyExport" title="Copy all run history as JSON">⧉ Export</button>
     </div>
     <p>Past runs on this device, most recent first. Tap a run to see its turn-by-turn log.</p>
+    <div class="hist-tabs" id="historyTabs" hidden></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -857,6 +875,7 @@
 <script src="js/convert.js"></script>
 <script src="js/tour.js"></script>
 <script src="js/input.js"></script>
+<script src="js/dev.js"></script>
 <script src="js/pwa.js"></script>
 <script src="js/boot.js"></script>
 <!-- Station mini-games (game/minigames/*.js): each assigns
