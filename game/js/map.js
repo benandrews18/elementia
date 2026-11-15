@@ -125,9 +125,13 @@ function renderMap(){
       ? `<span class="map-node-tracked-badge" data-map-badge="tracked" role="button" style="left:${x}%;top:${topStyle}" title="Tracking ${esc(selectedJobItem)}">${em(trackedEntry.emoji)}</span>` : "";
     const compBadge = compStations.has(name) && !initialPick
       ? `<span class="map-node-comp-badge" data-map-badge="comp" role="button" style="left:${x}%;top:${topStyle}" title="Sells a component of ${esc(selectedJobItem)}"></span>` : "";
-    return `${trackedBadge}${compBadge}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
+    // The bottom-row node (the Ocean): its label is fixed above the hub,
+    // level with the floating buttons, outside the node (whose transform
+    // would pin a fixed child to it).
+    const sideHere = isHere && MAP_NODE_POS[name][1] > 80;
+    return `${trackedBadge}${compBadge}${sideHere ? '<span class="map-here-side">You are here</span>' : ""}<button type="button" class="${cls.join(" ")}" style="left:${x}%;top:${topStyle};--suit:${DATA.suits[s.suit].color}" data-map-node="${esc(name)}" aria-label="${esc(name)}">
       <span class="mn-em">${em(s.emoji)}</span>
-      ${isHere ? `<span class="mn-here-label${MAP_NODE_POS[name][1] > 80 ? " side" : ""}">You are here</span>` : ""}
+      ${isHere && !sideHere ? '<span class="mn-here-label">You are here</span>' : ""}
     </button>`;
   }).join("");
 

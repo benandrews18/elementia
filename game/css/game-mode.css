@@ -140,7 +140,7 @@
 @keyframes here-pulse{
   0%{transform:scale(.85); opacity:.9} 100%{transform:scale(1.35); opacity:0}
 }
-.map-node.here .mn-here-label{
+.map-node.here .mn-here-label, .map-here-side{
   position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%);
   font-size:10.5px; font-weight:900; letter-spacing:.06em; text-transform:uppercase;
   color:#fff; padding:4px 12px; white-space:nowrap; text-shadow:0 1px 0 rgba(0,0,0,.6);
@@ -148,9 +148,9 @@
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
 /* The bottom-row node (the Ocean): under it is the hub, so the label sits
-   at the circle's lower right instead -- opposite the tracked badge's
-   top-left corner, toward the Convert button. */
-.map-node.here .mn-here-label.side{top:auto; bottom:-6px; left:78%; transform:none}
+   to its lower right, level with the tracked pill / floating buttons
+   (14px above the hub, as .floatbtn), toward the Convert button. */
+.map-here-side{position:fixed; top:auto; bottom:calc(var(--hub-h, 67px) + 14px); left:calc(50% + 21px); transform:none; z-index:5}
 /* "here" glows green; "unreachable" is greyscale. */
 /* Reachable: lit in colour with the brass rim, no extra glow. */
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
