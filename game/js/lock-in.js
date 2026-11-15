@@ -19,57 +19,57 @@
 // 4,784 since 2026-11-02 (capstones now count their own station twice) --
 // the best mat a hill-climb finds with every Classic item owned.
 const MAT_ABSOLUTE_CEILING = 4784;
-// Hand-tuned in the Quark Breakpoint Tuner, one row per visit
-// (lockInTiersForRound() would blend between rows if any were skipped).
-// The top two breakpoints were retuned (2026-11-03) for big boards arriving
-// around visit 10. Rows past MAT_ABSOLUTE_CEILING can't be reached. The
-// previous table is kept in game/tools/quark_breakpoints_2026-11-03.html.
+// One row per visit (lockInTiersForRound() would blend between rows if any
+// were skipped). Visits 1-24 (2026-11-15): fitted in the Quark Breakpoint
+// Tuner to 500 simulated runs so that 90% / 60% / 30% / 10% of runs clear
+// each tier at every turn; they step up with the mat's growth at 12 and 18.
+// Visits 25-40 (Overtime) are the older hand-tuned values.
 const LOCKIN_ROUND_ANCHORS = [
   // [visit, oneDieMin, twoDiceMin, threeDiceMin, emptyElementMin] -- one row per visit
-  [1,   0,     5,     5,     5],
-  [2,   5,     15,    20,    35],
-  [3,   10,    35,    55,    100],
-  [4,   25,    75,    115,   205],
-  [5,   45,    125,   200,   355],
-  [6,   75,    190,   320,   545],
-  [7,   110,   270,   470,   770],
-  [8,   150,   365,   645,   1030],
-  [9,   205,   475,   850,   1315],
-  [10,  265,   600,   1075,  1615],
-  [11,  340,   740,   1315,  1925],
-  [12,  420,   890,   1565,  2230],
-  [13,  510,   1050,  1825,  2530],
-  [14,  610,   1220,  2085,  2820],
-  [15,  720,   1395,  2345,  3095],
-  [16,  840,   1580,  2595,  3350],
-  [17,  970,   1765,  2835,  3590],
-  [18,  1105,  1955,  3070,  3815],
-  [19,  1250,  2150,  3285,  4015],
-  [20,  1405,  2340,  3490,  4200],
-  [21,  1560,  2530,  3685,  4370],
-  [22,  1725,  2720,  3865,  4525],
-  [23,  1895,  2905,  4030,  4665],
-  [24,  2065,  3090,  4180,  4795],
-  [25,  2245,  3265,  4320,  4910],
-  [26,  2425,  3440,  4450,  5015],
-  [27,  2605,  3605,  4570,  5110],
-  [28,  2790,  3770,  4680,  5195],
-  [29,  2975,  3925,  4780,  5275],
-  [30,  3155,  4075,  4870,  5345],
-  [31,  3340,  4220,  4955,  5410],
-  [32,  3525,  4360,  5035,  5470],
-  [33,  3705,  4495,  5105,  5525],
-  [34,  3885,  4620,  5170,  5575],
-  [35,  4060,  4745,  5230,  5620],
-  [36,  4235,  4860,  5290,  5660],
-  [37,  4405,  4970,  5340,  5700],
-  [38,  4570,  5075,  5385,  5735],
-  [39,  4735,  5175,  5430,  5770],
-  [40,  4895,  5270,  5470,  5800],
+  [1,  0,     5,     20,    30],
+  [2,  0,     5,     20,    65],
+  [3,  5,     25,    65,    160],
+  [4,  5,     40,    120,   220],
+  [5,  10,    80,    190,   260],
+  [6,  40,    220,   360,   470],
+  [7,  80,    300,   495,   790],
+  [8,  175,   385,   550,   975],
+  [9,  285,   430,   675,   1040],
+  [10, 330,   480,   695,   1040],
+  [11, 370,   515,   695,   1040],
+  [12, 820,   1105,  1345,  1655],
+  [13, 895,   1175,  1455,  1710],
+  [14, 960,   1230,  1505,  1870],
+  [15, 1010,  1285,  1560,  1960],
+  [16, 1080,  1320,  1595,  1960],
+  [17, 1105,  1380,  1670,  1995],
+  [18, 2310,  2820,  3385,  4130],
+  [19, 2395,  2975,  3590,  4395],
+  [20, 2520,  3080,  3860,  4730],
+  [21, 2565,  3140,  3940,  5130],
+  [22, 2695,  3330,  4240,  5740],
+  [23, 2770,  3460,  4500,  5985],
+  [24, 3360,  4310,  5885,  8035],
+  [25, 2245,  3265,  4320,  4910],
+  [26, 2425,  3440,  4450,  5015],
+  [27, 2605,  3605,  4570,  5110],
+  [28, 2790,  3770,  4680,  5195],
+  [29, 2975,  3925,  4780,  5275],
+  [30, 3155,  4075,  4870,  5345],
+  [31, 3340,  4220,  4955,  5410],
+  [32, 3525,  4360,  5035,  5470],
+  [33, 3705,  4495,  5105,  5525],
+  [34, 3885,  4620,  5170,  5575],
+  [35, 4060,  4745,  5230,  5620],
+  [36, 4235,  4860,  5290,  5660],
+  [37, 4405,  4970,  5340,  5700],
+  [38, 4570,  5075,  5385,  5735],
+  [39, 4735,  5175,  5430,  5770],
+  [40, 4895,  5270,  5470,  5800],
 ];
 // Official board checks (every MAT_CHECK_EVERY-th round): breakpoints x
-// (1 + this), tuned in tools/quark_breakpoint_tuner.html.
-const OFFICIAL_CHECK_BUMP = 0.25;
+// (1 + this). 0 since 2026-11-15: the table's check rows are fitted as is.
+const OFFICIAL_CHECK_BUMP = 0;
 function lockInTiersForRound(round){
   const t = baseTiersForRound(round);
   if (round % MAT_CHECK_EVERY !== 0) return t;
