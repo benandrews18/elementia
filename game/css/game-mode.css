@@ -147,6 +147,10 @@
   border:0 solid transparent; border-image:url("../ui/pill_short.webp") 52 fill / 13px stretch;
   filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));
 }
+/* The bottom-row node (the Ocean): under it is the hub, so the label sits
+   at the circle's lower right instead -- opposite the tracked badge's
+   top-left corner, toward the Convert button. */
+.map-node.here .mn-here-label.side{top:auto; bottom:-6px; left:78%; transform:none}
 /* "here" glows green; "unreachable" is greyscale. */
 /* Reachable: lit in colour with the brass rim, no extra glow. */
 .map-node.reachable:hover{transform:translate(-50%,-50%) scale(1.08)}
