@@ -9,6 +9,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- The settings cog can be tapped on the Item Reference and Marketplace screens.
+- "You are here" sits at the Ocean's lower right (it was hidden under the hub).
+- The Quark Meter bar at the top is wood with a gold line beneath it, like the bottom hub.
+- In the Marketplace's craft card, tapping a missing element or a missing suit-cost badge opens Convert, as in a shop.
+- Crafting Bench: the tapped item in the shop card view, the Inventory and the Marketplace sits on a wooden bench in the hub buttons' brass frame, titled "Crafting Bench".
 - A capstone card now counts once toward its station's combo (it used to count twice). Station Week, Trend Shift and Spread Out count it the same way.
 - Element groups: Nickel (Ni) is now a metal (blue) and Titanium (Ti) is earth (yellow), so Ni can pay metal suit costs. Printed element cards match.
 - Data 2026.11.14f. Engine moves to the Deep Mine and Rubber to the Power Plant. Battery is Ni + K. The Power Plant rolls S instead of Fe; the Deep Mine rolls H instead of S (Natural Gas is local there again). Collections: Power Plant Complete uses Rubber, Deep Freight uses Engine.
