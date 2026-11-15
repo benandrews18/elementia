@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Installable app: the website can be added to a phone's home screen (iPhone: Share > Add to Home Screen) and opens full-screen without browser bars, with an Elementia icon, and works offline after the first visit. On iPhone the status bar is solid black so the game isn't drawn under the clock. The home-screen copy keeps its own save, separate from the browser's.
 - Inventory: the Tier 1/2/3 headings no longer collapse their section when tapped (it kept happening by accident).
 - Breakpoints eased: turns 12-17 are 20% lower (the simulator out-plays people there), turns 18-20 lowered 20/13/7% so turn 18 isn't a cliff, turn 21's small dip removed, and Overtime (25-40) now carries on from turn 24 instead of dropping. Every breakpoint now rises turn to turn.
 - The game-over warning reads: "Your mat doesn't have enough points to continue! / If you lock-in now your run ends here. / Are you sure?"
