@@ -3722,23 +3722,16 @@ html.low-motion #matListActions .mat-list-act{transition:none}
 .mat-list-act.add{background:var(--ok); color:#fff}
 .mat-list-act.remove{background:var(--bad); color:#fff}
 .mat-list-act:disabled{filter:grayscale(1) brightness(.7); opacity:.6}
-/* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section,
-   collapsible with the shared .collapse-chevron. */
+/* Point-tier dividers (MAT_TIER_BANDS): a labelled line per section. */
 .mat-tier-section{margin-bottom:14px}
 .mat-tier-section:last-child{margin-bottom:0}
 .mat-tier-heading{
   display:flex; align-items:center; gap:8px; width:100%; margin:0 0 10px;
-  padding:6px 0; border:none; background:none; cursor:pointer;
+  padding:6px 0;
   font-size:13px; font-weight:800; letter-spacing:.3px; color:var(--ink2);
   -webkit-user-select:none; user-select:none;
 }
 .mat-tier-line{flex:1; height:2px; background:var(--line2)}
-.mat-tier-heading .collapse-chevron{flex:none}
-/* These sections default open, so the expanded rotation is the resting
-   state and .collapsed flips it. */
-.mat-tier-heading .collapse-chevron{transform:rotate(45deg) translate(-2px,-2px)}
-.mat-tier-section.collapsed .mat-tier-heading .collapse-chevron{transform:rotate(-45deg) translate(-1px,-1px)}
-.mat-tier-section.collapsed :is(.mat-results-grid, .mat-shop-list){display:none}
 
 /* Parchment face like the BINGO cards. No overflow:hidden, so the corner
    badges (.mm-pts/.mm-pips/.mm-station) can straddle the border. */
@@ -10744,9 +10737,6 @@ const MAT_TIER_BANDS = [
   { key: "t2", label: "Tier 2", tier: "COMPONENT" },
   { key: "t1", label: "Tier 1", tier: "MATERIAL" },
 ];
-// Collapsed band keys: an in-memory Set (like matFilt), so collapsed
-// sections survive re-renders but not a reload.
-let matTierCollapsed = new Set();
 /* The scrollable owned-items grid in #drawerBody. A pure string builder
    (matResultsGridHTML()) plus a small DOM wrapper, so
    renderClassicDrawer() and the filter handlers (which update #drawerBody
@@ -10762,11 +10752,11 @@ function matResultsGridHTML(){
   const sections = MAT_TIER_BANDS.map(band => {
     const items = inv.filter(c => c.tier === band.tier);
     if (!items.length) return "";
-    const collapsed = matTierCollapsed.has(band.key);
-    return `<div class="mat-tier-section ${collapsed ? "collapsed" : ""}">
-        <button type="button" class="mat-tier-heading" data-mat-tier="${band.key}">
-          <span class="mat-tier-line"></span>${esc(band.label)}<span class="collapse-chevron"></span><span class="mat-tier-line"></span>
-        </button>
+    // A plain label (it used to collapse its section, and got tapped by accident).
+    return `<div class="mat-tier-section">
+        <div class="mat-tier-heading">
+          <span class="mat-tier-line"></span>${esc(band.label)}<span class="mat-tier-line"></span>
+        </div>
         ${prefs.itemsListView
           ? `<div class="shop mat-shop-list">${items.map(c => matShopRowHTML(c.name)).join("")}</div>`
           // Tier 1 cards at half height, as they stack on the mat.
@@ -11562,15 +11552,6 @@ document.getElementById("drawer").addEventListener("click", ev => {
   if (!ev.target.closest("#drawerBody, #matSelPanel")) return;
   if (ev.target.closest("[data-mat-sel-close]")){ matListOpen = null; renderMatResultsGrid(); return; }
   if (ev.target.closest("#openConvertBtn")){ closeDrawer(); openConvertScreen(); return; }
-  // Tier breakline (see MAT_TIER_BANDS/matTierCollapsed) -- collapses/
-  // expands just that one section's own grid.
-  const tierHeading = ev.target.closest("[data-mat-tier]");
-  if (tierHeading){
-    const key = tierHeading.dataset.matTier;
-    matTierCollapsed.has(key) ? matTierCollapsed.delete(key) : matTierCollapsed.add(key);
-    renderMatResultsGrid();
-    return;
-  }
   const elBtn = ev.target.closest("[data-elem]");
   if (elBtn){ showElCardPop(elBtn.dataset.elem); return; }
   // The open row's square picture opens the item card (as in the Market).
