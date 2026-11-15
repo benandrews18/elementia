@@ -105,7 +105,7 @@ function diceDeltaForReward(reward){ return Math.min(reward, 3); }
 /* Quiet check: every trip that isn't a board check. The mat's score now
    sets this trip's dice (state.tripDice), never below the last board
    check's (state.matBonusDice, the floor). No shutter, no "?", never ends
-   the run, and check orders don't apply. */
+   the run -- but the challenge in force still applies (orderMultFor()). */
 function quietCheck(){
   if (!state.matChecked) return;
   const total = matScore(matOnMat()).total;
@@ -225,8 +225,8 @@ function startCheckOrder(){
 function orderMet(o, mat, total){
   return o.id === "grand" ? total >= GRAND_EXHIBITION_TARGET : CHECK_ORDERS[o.id].ok(mat, o.p);
 }
-// The order's multiplier on matScore(), only while its board check is the
-// one underway (never on quiet checks or saved-layout previews elsewhere).
+// The order's multiplier on matScore() while the challenge is in force: its
+// board check and every quiet check until the next one (currentOrder()).
 function orderMultFor(mat){
   const o = currentOrder();
   if (!o || o.id === "grand") return 1;
