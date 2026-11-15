@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Breakpoints eased: turns 12-17 are 20% lower (the simulator out-plays people there), turns 18-20 lowered 20/13/7% so turn 18 isn't a cliff, turn 21's small dip removed, and Overtime (25-40) now carries on from turn 24 instead of dropping. Every breakpoint now rises turn to turn.
 - The game-over warning reads: "Your mat doesn't have enough points to continue! / If you lock-in now your run ends here. / Are you sure?"
 - Inventory: the Add / Remove buttons float over the top of the list on a transparent background, so the list keeps all its scrolling room.
 - The first Quark breakpoint (1 die, and the game-over line from turn 12) now sits where about 95% of simulated runs clear it, at every turn 1-24 (was 90%).
