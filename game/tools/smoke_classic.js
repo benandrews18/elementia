@@ -223,6 +223,8 @@
       // Robot: +5 per card on the mat (itself included).
       { const a = sc([C("Robot"), ...two]), b0 = [C("Robot"), ...two].reduce((n, c) => n + c.points, 0);
         expect(a.base === b0 + 15, `Robot should add +5 per card (base ${a.base}, plain ${b0})`); }
+      // A capstone is one card: it counts once toward its station's combo.
+      expect(matGroupsOf([C("Robot")]).st["The Power Plant"] === 1, "a capstone should count once toward its station");
       // Metropolis: 10 slots, 5 columns (full-size mat).
       { const v = state.visits; state.visits = 24;
         const L = matLayout([C("Metropolis")]); expect(L.slots === 10 && L.cols === 5, "Metropolis should give 10 slots");
