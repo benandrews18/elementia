@@ -247,7 +247,7 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
   overflow:visible;
 }
 #convert.open{transform:translateY(0)}
-#convertEmptyEl{position:absolute; top:10px; right:14px; z-index:2}
+#convertEmptyEl{position:absolute; top:42px; right:14px; z-index:2} /* just under the "Convert Elements" title */
 #convertEmptyEl:empty{display:none}
 #convertEmptyEl .empty-el-badge{flex-direction:row; gap:6px; padding:4px 10px 4px 5px; border-radius:999px;
   background:var(--sunken); border:1.5px solid var(--line)}
@@ -256,7 +256,7 @@ html.low-motion .lockin-reward-die{animation:none; opacity:1}
 /* Bottom padding so .convert-row clears #quickConvertBtn, which sits over
    the tray's bottom-right corner. */
 #convert .dbody{padding-bottom:56px}
-#convert:has(#convertEmptyEl:not(:empty)) .dbody{padding-top:54px}
+#convert:has(#convertEmptyEl:not(:empty)) .dbody{padding-top:44px} /* room for the counter, then the element row */
 .bigbtn{
   background:var(--ok); color:#fff; font-size:15px; font-weight:800; padding:12px 22px;
   border-radius:11px; box-shadow:0 3px 0 #24774a;
