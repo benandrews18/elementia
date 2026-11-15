@@ -3822,6 +3822,57 @@ html.low-motion #matListActions .mat-list-act{transition:none}
 
 </style>
 <style>
+/* Developer mode (dev.js): the 🛠 button and the Dev Panel. Above the hub
+   and every window (the end screens included), since it's used over them. */
+.dev-fab{
+  position:fixed; left:6px; top:42%; z-index:160; width:42px; height:42px; border-radius:50%;
+  border:2px solid var(--gold); background:#2b1d0e; font-size:20px; line-height:1; color:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.5);
+}
+.dev-panel{
+  position:fixed; left:8px; right:8px; bottom:calc(var(--hub-h, 67px) + 8px); z-index:161;
+  max-width:520px; margin:0 auto; max-height:62vh; display:flex; flex-direction:column;
+  background:#10242f; color:var(--ink); border:2px solid var(--gold); border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.6); font-size:13px;
+}
+.dev-panel[hidden]{display:none}
+.dev-head{display:flex; align-items:center; gap:8px; padding:8px 10px 6px}
+.dev-head b{font-size:14px}
+.dev-flag{font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--ok-soft); color:var(--ok)}
+.dev-flag.on{background:var(--bad-soft); color:var(--bad)}
+.dev-x{margin-left:auto; background:none; border:none; color:var(--ink2); font-size:18px; padding:2px 6px}
+.dev-tabs{display:flex; gap:4px; padding:0 10px 6px; border-bottom:1px solid var(--line)}
+.dev-tabs button{flex:1; padding:6px 4px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink2); font-weight:800}
+.dev-tabs button.on{background:var(--gold); color:#241d10; border-color:var(--gold)}
+.dev-body{overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px}
+.dev-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px}
+.dev-panel :is(button:not(.dev-x):not([data-dev-tab]), input, select, textarea){
+  font:inherit; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:6px 9px;
+}
+.dev-panel button:not(.dev-x):not([data-dev-tab]){font-weight:800}
+.dev-panel button:active{transform:translateY(1px)}
+.dev-panel input[type=number]{width:64px}
+.dev-panel #devItem, .dev-panel #devSnapName, .dev-panel #devPaste{flex:1; min-width:0}
+.dev-panel select{flex:1; min-width:0}
+.dev-note{color:var(--mute); font-size:12px}
+.dev-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.dev-els{display:grid; grid-template-columns:repeat(4, 1fr); gap:5px}
+.dev-el{display:flex; align-items:center; gap:3px; border-left:4px solid var(--suit); border-radius:6px; background:var(--card); padding:2px}
+.dev-el b{width:22px; text-align:center}
+.dev-el span{flex:1; text-align:center; font-weight:800}
+.dev-panel .dev-el button{padding:2px 6px; border-radius:6px}
+.dev-snaps{display:flex; flex-direction:column; gap:5px}
+.dev-snap{display:flex; align-items:center; gap:5px; background:var(--card); border-radius:8px; padding:5px 6px}
+.dev-snap > span{flex:1; min-width:0; display:flex; flex-direction:column}
+.dev-snap small{color:var(--mute)}
+/* History's Runs / Dev runs tabs (dev mode only, renderHistory()). */
+.hist-tabs{display:flex; gap:6px; margin:6px 0 10px}
+.hist-tabs[hidden]{display:none}
+.hist-tab{flex:1; padding:6px; border-radius:10px; border:1.5px solid var(--line); background:var(--sunken); color:var(--ink2); font-weight:800}
+.hist-tab.on{background:var(--gold); border-color:var(--gold); color:#241d10}
+
+</style>
+<style>
 /* Phone frame: on any screen wider than a phone the game renders in a
    fixed phone-width column (--frame-w), full window height, so widening the
    window never stretches it. Phones (430px or narrower) are untouched.
@@ -4270,7 +4321,7 @@ html.low-motion #matListActions .mat-list-act{transition:none}
       </span>
       <span class="setbtn">Open</span>
     </button>
-    <button type="button" class="setting-row" id="settingsDevBtn">
+    <button type="button" class="setting-row" id="settingsDevBtn" hidden>
       <span class="setting-ico">🛠️</span>
       <span class="setting-body">
         <span class="setting-label">Dev Tools</span>
@@ -4348,6 +4399,22 @@ html.low-motion #matListActions .mat-list-act{transition:none}
   <div class="sheetbox parch">
     <button type="button" class="cp-close-x coll-x" id="setDevBack" aria-label="Back to Settings"></button>
     <h2 id="setDevTitle">🛠️ Dev Tools</h2>
+    <div class="setting-row">
+      <span class="setting-ico">🧪</span>
+      <span class="setting-body">
+        <span class="setting-label">Developer mode</span>
+        <span class="setting-sub">Shows the 🛠 Dev Panel. Runs you change with it are kept out of History, trophies and Stars.</span>
+      </span>
+      <input type="checkbox" id="devModeSwitch" class="switch" aria-label="Developer mode">
+    </div>
+    <button type="button" class="setting-row" id="devRestoreBtn" hidden>
+      <span class="setting-ico">↩️</span>
+      <span class="setting-body">
+        <span class="setting-label">Restore my real save</span>
+        <span class="setting-sub">The save from just before the Dev Panel first changed this run.</span>
+      </span>
+      <span class="setbtn">Restore</span>
+    </button>
     <button type="button" class="setting-row warn" id="resetCacheBtn">
       <span class="setting-ico">🧹</span>
       <span class="setting-body">
@@ -4406,6 +4473,7 @@ html.low-motion #matListActions .mat-list-act{transition:none}
       <button type="button" class="tbtn ghost histexport-btn" id="historyExport" title="Copy all run history as JSON">⧉ Export</button>
     </div>
     <p>Past runs on this device, most recent first. Tap a run to see its turn-by-turn log.</p>
+    <div class="hist-tabs" id="historyTabs" hidden></div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -7004,6 +7072,13 @@ function applyLowMotion(){
    overlay, and its export.
    ===================================================================== */
 let history = [];
+// Runs touched by Developer mode (state.dev, see dev.js) are kept apart, so
+// testing never mixes into the real History or its exports.
+const DEV_HISTORY_KEY = "elementia-devhistory-v1";
+const loadDevHistory = () => { try { return JSON.parse(lsGet(DEV_HISTORY_KEY) || "[]"); } catch(e){ return []; } };
+// Which list the History window shows: "runs" or (dev mode only) "dev".
+let histTab = "runs";
+const histRuns = () => histTab === "dev" && prefs.devMode ? loadDevHistory() : history;
 
 function loadHistory(){
   try { history = JSON.parse(lsGet(HISTORY_KEY) || "[]"); } catch(e){ history = []; }
@@ -7013,7 +7088,8 @@ function saveHistory(){ lsSet(HISTORY_KEY, JSON.stringify(history)); }
    untouched session. */
 function recordHistory(){
   if (state.visits <= 0) return;
-  history.unshift({
+  const list = state.dev ? loadDevHistory() : history;
+  list.unshift({
     mode: state.mode,
     date: new Date().toISOString(),
     visits: state.visits,
@@ -7029,8 +7105,9 @@ function recordHistory(){
     bingoCard: state.bingoCard ? [...state.bingoCard] : null,
     bingoLinesCompleted: [...(state.bingoLinesCompleted || [])],
   });
-  history.length = Math.min(history.length, HISTORY_MAX);
-  saveHistory();
+  list.length = Math.min(list.length, HISTORY_MAX);
+  if (state.dev){ list[0].dev = true; lsSet(DEV_HISTORY_KEY, JSON.stringify(list)); }
+  else saveHistory();
 }
 
 let histExpanded = new Set();
@@ -7060,11 +7137,18 @@ function histTurnsHTML(h){
 }
 function renderHistory(){
   const list = document.getElementById("historyList");
-  if (!history.length){
-    list.innerHTML = '<p class="empty">No finished runs yet — they show up here once you start a new session.</p>';
+  const tabs = document.getElementById("historyTabs");
+  tabs.hidden = !prefs.devMode;
+  tabs.innerHTML = prefs.devMode ? ["runs", "dev"].map(t =>
+    `<button type="button" class="hist-tab${histTab === t ? " on" : ""}" data-hist-tab="${t}">${t === "dev" ? "🛠 Dev runs" : "Runs"}</button>`).join("") : "";
+  const runs = histRuns();
+  if (!runs.length){
+    list.innerHTML = histTab === "dev" && prefs.devMode
+      ? '<p class="empty">No dev runs yet -- runs you change with the Dev Panel land here when they end.</p>'
+      : '<p class="empty">No finished runs yet — they show up here once you start a new session.</p>';
     return;
   }
-  list.innerHTML = `<div class="histrows">${history.map((h, i) => {
+  list.innerHTML = `<div class="histrows">${runs.map((h, i) => {
     const open = histExpanded.has(i);
     return `<div class="histentry">
       <div class="histrow-line">
@@ -7092,12 +7176,18 @@ document.getElementById("modeHistoryBtn").addEventListener("click", () => {
   openOverlay("history");
 });
 document.getElementById("historyClose").addEventListener("click", () => closeOverlay("history"));
+document.getElementById("historyTabs").addEventListener("click", ev => {
+  const b = ev.target.closest("[data-hist-tab]");
+  if (!b) return;
+  histTab = b.dataset.histTab; histExpanded = new Set();
+  renderHistory();
+});
 document.getElementById("historyList").addEventListener("click", ev => {
   // Per-run export: just this run as JSON (the same shape #historyExport
   // uses for every run).
   const exportBtn = ev.target.closest("[data-hist-export]");
   if (exportBtn){
-    const h = history[+exportBtn.dataset.histExport];
+    const h = histRuns()[+exportBtn.dataset.histExport];
     if (!h) return;
     const json = JSON.stringify(h, null, 2);
     navigator.clipboard.writeText(json).then(() => {
@@ -7117,7 +7207,7 @@ document.getElementById("historyList").addEventListener("click", ev => {
 // to manual selection if the clipboard API is unavailable.
 document.getElementById("historyExport").addEventListener("click", async () => {
   const btn = document.getElementById("historyExport");
-  const json = JSON.stringify(history, null, 2);
+  const json = JSON.stringify(histRuns(), null, 2);
   try {
     await navigator.clipboard.writeText(json);
     btn.textContent = "✓ Copied!";
@@ -11222,7 +11312,7 @@ document.getElementById("collectionFound").addEventListener("click", ev => {
    state.starsEarned is this run's total, for the end screen. */
 const STARS_RUN = 5, STARS_TROPHY = 2, STARS_DISCOVERY = 1, CLUE_COST = 3;
 function grantStars(n){
-  if (!n) return;
+  if (!n || state.dev) return; // dev runs earn nothing (dev.js)
   prefs.stars = (prefs.stars || 0) + n; savePrefs();
   state.starsEarned = (state.starsEarned || 0) + n;
   syncCollectionsBtn();
@@ -13250,7 +13340,7 @@ function loadTrophies(){
 /* Awards every trophy this run now qualifies for; returns the newly earned
    ones. Only for a completed run (turn 24 or crafted everything). */
 function awardTrophies(){
-  if (!state.runComplete && !state.craftedEverything) return [];
+  if (state.dev || (!state.runComplete && !state.craftedEverything)) return []; // not from dev runs
   const got = loadTrophies();
   const fresh = TROPHIES.filter(t => !got[t.id] && t.test(state));
   if (!fresh.length) return [];
@@ -14306,6 +14396,274 @@ document.getElementById("screen").addEventListener("change", ev => {
 
 </script>
 <script>
+/* =====================================================================
+   dev.js -- Developer mode: a Dev Panel for jumping around a run and
+   changing it, to test a scenario without playing up to it.
+
+   Hidden: tapping Settings' version line 5 times shows (or hides again)
+   Settings -> Dev Tools (prefs.devUnlocked), where the Developer mode
+   switch (prefs.devMode) shows the 🛠 button that opens the panel.
+
+   Any change made with the panel marks the run (state.dev): its History
+   entry goes to the Dev runs list (recordHistory()), and it earns no Stars
+   or trophies (grantStars(), awardTrophies()). The save from just before
+   the first change is kept (DEV_BACKUP_KEY) for "Restore my real save".
+
+   Tabs: Jump (turn, station, checks and end screens), Inventory
+   (elements, "?", items) and Snapshots (named saves of the whole run, to
+   load again, or copy/paste as text).
+   ===================================================================== */
+const DEV_SNAP_KEY = "elementia-dev-snapshots-v1", DEV_BACKUP_KEY = "elementia-save-backup-dev";
+let devTab = "jump";
+
+// Marks the run as a dev run, keeping the real save the first time.
+function devTouch(){
+  if (state.dev) return;
+  save();
+  const real = lsGet(SAVE_KEY);
+  if (real) lsSet(DEV_BACKUP_KEY, real);
+  state.dev = true;
+  syncDevTools();
+}
+// After any change: save, redraw the screen and anything open over it.
+function devApply(){
+  save(); render();
+  if (drawer.classList.contains("open")) renderMatTop();
+  renderDevPanel();
+}
+
+/* ---------------------------------------------------------- Jump --- */
+// Arrive at turn n: the clock, mat size, breakpoints and this stretch's
+// challenge (drawn for the check that started it) all follow.
+function devSetTurn(n){
+  n = Math.max(1, Math.min(MAX_VISITS, Math.round(n) || 1));
+  devTouch();
+  state.visits = n;
+  state.matChecked = n > MAT_CHECK_EVERY;
+  Object.assign(state, { runComplete: false, ended: false, finalGameOver: false, finalCheckPending: false });
+  const c = Math.floor((n - 1) / MAT_CHECK_EVERY) * MAT_CHECK_EVERY; // the last check before this turn
+  state.checkRound = c >= MAT_CHECK_EVERY ? c : null;
+  state.order = null;
+  if (c >= MAT_CHECK_EVERY) setOrder(drawOrder(c));
+  devApply();
+}
+// Be at a station without spending a turn (and roll there again).
+function devTeleport(name){
+  devTouch();
+  current = name; state.lastStation = name; screen = "station";
+  state.visitedStations[name] = true;
+  state.rolledHere = false; state.pendingRoll = null;
+  devApply();
+}
+// Turn n is a board check when you leave it: jump there, then pick a
+// station on the map and tap Travel.
+function devNextCheck(){
+  devSetTurn(Math.max(MAT_CHECK_EVERY, Math.ceil(state.visits / MAT_CHECK_EVERY) * MAT_CHECK_EVERY));
+  if (current) goMap(); else { screen = "map"; render(); }
+}
+function devFinalCheck(){
+  devSetTurn(RUN_COMPLETE_VISIT);
+  current = null; screen = "map"; render();
+  closeDevPanel();
+  startFinalCheck();
+}
+function devEndScreen(kind){
+  devTouch();
+  if (kind === "complete") state.runComplete = true;
+  else { state.finalGameOver = true; state.ended = true; }
+  save(); closeDevPanel();
+  showEndGame();
+}
+
+/* ----------------------------------------------------- Inventory --- */
+function devElement(sym, d){
+  devTouch();
+  const n = Math.max(0, count(sym) + d);
+  if (n) state.elements[sym] = n; else delete state.elements[sym];
+  devApply();
+}
+function devAllElements(n){
+  devTouch();
+  state.elements = {};
+  if (n) CORE_ELEMENT_SYMS.forEach(s => { state.elements[s] = n; });
+  devApply();
+}
+function devEmpty(d){
+  devTouch();
+  state.emptyElements = Math.max(0, (state.emptyElements || 0) + d);
+  devApply();
+}
+// Given straight to the inventory: no elements spent, no craft reveal.
+function devGrant(names){
+  devTouch();
+  names.forEach(n => { if (CORE_ITEM_NAMES.has(n) && !owns(n)) state.items.push(n); });
+  devApply();
+}
+function devRemove(name){
+  devTouch();
+  state.items = state.items.filter(n => n !== name);
+  state.mat = state.mat.filter(n => n !== name);
+  devApply();
+}
+
+/* ----------------------------------------------------- Snapshots --- */
+const devSnaps = () => { try { return JSON.parse(lsGet(DEV_SNAP_KEY) || "[]"); } catch(e){ return []; } };
+const devSaveSnaps = list => lsSet(DEV_SNAP_KEY, JSON.stringify(list));
+function devSnapSave(name){
+  const list = devSnaps();
+  list.unshift({ name: name || `Turn ${state.visits}`, at: new Date().toISOString().slice(0, 16).replace("T", " "),
+    state: JSON.parse(JSON.stringify(state)) });
+  devSaveSnaps(list);
+  renderDevPanel();
+}
+function devSnapLoad(i){
+  const snap = devSnaps()[i];
+  if (!snap) return;
+  devTouch();
+  state = Object.assign(freshState(), JSON.parse(JSON.stringify(snap.state)));
+  state.dev = true;
+  current = null; screen = "map"; selectedMapStation = null; travelPromptFor = null;
+  closeDrawer();
+  devApply();
+}
+// A pasted snapshot: one copied from here ({name, state}) or a bare state.
+function devSnapImport(text){
+  let snap;
+  try { snap = JSON.parse(text); } catch(e){ return false; }
+  if (snap && !snap.state && Array.isArray(snap.items)) snap = { name: "Pasted", state: snap };
+  if (!snap || !snap.state || !Array.isArray(snap.state.items)) return false;
+  const list = devSnaps();
+  list.unshift({ name: snap.name || "Pasted", at: snap.at || new Date().toISOString().slice(0, 16).replace("T", " "), state: snap.state });
+  devSaveSnaps(list);
+  renderDevPanel();
+  return true;
+}
+function devCopy(text, btn){
+  navigator.clipboard.writeText(text).then(() => { btn.textContent = "✓"; }).catch(() => window.prompt("Copy this text:", text));
+}
+
+/* --------------------------------------------------------- Panel --- */
+document.body.insertAdjacentHTML("beforeend", `
+  <button type="button" id="devFab" class="dev-fab" hidden aria-label="Dev Panel">🛠</button>
+  <div id="devPanel" class="dev-panel" hidden role="dialog" aria-label="Dev Panel">
+    <div class="dev-head"><b>🛠 Dev Panel</b><span class="dev-flag" id="devFlag"></span>
+      <button type="button" class="dev-x" data-dev="close" aria-label="Close the Dev Panel">✕</button></div>
+    <div class="dev-tabs">${[["jump", "Jump"], ["inv", "Inventory"], ["snaps", "Snapshots"]]
+      .map(([k, l]) => `<button type="button" data-dev-tab="${k}">${l}</button>`).join("")}</div>
+    <div class="dev-body" id="devBody"></div>
+  </div>`);
+const devPanel = document.getElementById("devPanel");
+function openDevPanel(){ devPanel.hidden = false; renderDevPanel(); }
+function closeDevPanel(){ devPanel.hidden = true; }
+
+function renderDevPanel(){
+  if (devPanel.hidden) return;
+  document.getElementById("devFlag").textContent = state.dev ? "dev run" : "real run";
+  document.getElementById("devFlag").classList.toggle("on", !!state.dev);
+  devPanel.querySelectorAll("[data-dev-tab]").forEach(b => b.classList.toggle("on", b.dataset.devTab === devTab));
+  const stations = DATA.stations.map(s => s.name);
+  const body = document.getElementById("devBody");
+  if (devTab === "jump"){
+    body.innerHTML = `
+      <div class="dev-row"><label>Turn <input type="number" id="devTurn" min="1" max="${MAX_VISITS}" value="${state.visits}"></label>
+        <button type="button" data-dev="turn">Set</button>
+        <span class="dev-note">now ${state.visits} / ${RUN_COMPLETE_VISIT}${current ? ` · at ${esc(current)}` : ""}</span></div>
+      <div class="dev-row"><select id="devStation">${stations.map(s => `<option${s === (current || state.lastStation) ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
+        <button type="button" data-dev="teleport">Go there (no turn)</button></div>
+      <div class="dev-grid">
+        <button type="button" data-dev="nextCheck">Next board check</button>
+        <button type="button" data-dev="final">Final check (24)</button>
+        <button type="button" data-dev="complete">Run Complete screen</button>
+        <button type="button" data-dev="gameover">Game Over screen</button>
+      </div>`;
+  } else if (devTab === "inv"){
+    const items = [...CORE_ITEM_NAMES].sort();
+    body.innerHTML = `
+      <div class="dev-els">${CORE_ELEMENT_SYMS.map(s => `<div class="dev-el" style="--suit:${ELEMENT_COLOR[s]}">
+        <button type="button" data-dev-el="${s}" data-d="-1">−</button><b>${s}</b><span>${count(s)}</span><button type="button" data-dev-el="${s}" data-d="1">+</button></div>`).join("")}</div>
+      <div class="dev-row"><button type="button" data-dev="all5">All to 5</button><button type="button" data-dev="clearEls">Clear</button>
+        <span class="dev-note">"?" ${state.emptyElements || 0}</span><button type="button" data-dev="q-">−</button><button type="button" data-dev="q+">+</button></div>
+      <div class="dev-row"><input id="devItem" list="devItemList" placeholder="Item name…"><datalist id="devItemList">${items.map(n => `<option value="${esc(n)}">`).join("")}</datalist></div>
+      <div class="dev-row"><button type="button" data-dev="grant">Grant</button><button type="button" data-dev="tree">Grant with its whole tree</button><button type="button" data-dev="remove">Remove</button></div>
+      <div class="dev-row"><button type="button" data-dev="grantAll">Grant every item</button><span class="dev-note">${state.items.length} owned</span></div>`;
+  } else {
+    const snaps = devSnaps();
+    body.innerHTML = `
+      <div class="dev-row"><input id="devSnapName" placeholder="Name this snapshot…" maxlength="50"><button type="button" data-dev="snapSave">Save</button></div>
+      <div class="dev-snaps">${snaps.length ? snaps.map((s, i) => `<div class="dev-snap"><span><b>${esc(s.name)}</b><small>turn ${s.state.visits} · ${esc(s.at)}</small></span>
+        <button type="button" data-dev-snap="load" data-i="${i}">Load</button><button type="button" data-dev-snap="copy" data-i="${i}">⧉</button><button type="button" data-dev-snap="del" data-i="${i}">🗑</button></div>`).join("")
+        : '<p class="dev-note">No snapshots yet.</p>'}</div>
+      <div class="dev-row"><textarea id="devPaste" rows="2" placeholder="Paste a snapshot here…"></textarea><button type="button" data-dev="import">Import</button></div>`;
+  }
+}
+
+devPanel.addEventListener("click", ev => {
+  const tab = ev.target.closest("[data-dev-tab]");
+  if (tab){ devTab = tab.dataset.devTab; renderDevPanel(); return; }
+  const el = ev.target.closest("[data-dev-el]");
+  if (el){ devElement(el.dataset.devEl, +el.dataset.d); return; }
+  const sn = ev.target.closest("[data-dev-snap]");
+  if (sn){
+    const i = +sn.dataset.i, kind = sn.dataset.devSnap;
+    if (kind === "load") devSnapLoad(i);
+    else if (kind === "copy") devCopy(JSON.stringify(devSnaps()[i]), sn);
+    else { const list = devSnaps(); list.splice(i, 1); devSaveSnaps(list); renderDevPanel(); }
+    return;
+  }
+  const b = ev.target.closest("[data-dev]");
+  if (!b) return;
+  const item = () => (document.getElementById("devItem") || {}).value || "";
+  const act = {
+    close: closeDevPanel,
+    turn: () => devSetTurn(+document.getElementById("devTurn").value),
+    teleport: () => devTeleport(document.getElementById("devStation").value),
+    nextCheck: devNextCheck, final: devFinalCheck,
+    complete: () => devEndScreen("complete"), gameover: () => devEndScreen("over"),
+    all5: () => devAllElements(5), clearEls: () => devAllElements(0),
+    "q-": () => devEmpty(-1), "q+": () => devEmpty(1),
+    grant: () => devGrant([item()]), tree: () => devGrant([...componentClosure(item()), item()]),
+    remove: () => devRemove(item()), grantAll: () => devGrant([...CORE_ITEM_NAMES]),
+    snapSave: () => devSnapSave(document.getElementById("devSnapName").value.trim()),
+    import: () => { if (!devSnapImport(document.getElementById("devPaste").value)) b.textContent = "Not a snapshot"; },
+  }[b.dataset.dev];
+  if (act) act();
+});
+document.getElementById("devFab").addEventListener("click", () => devPanel.hidden ? openDevPanel() : closeDevPanel());
+
+/* --------------------------------------------- Settings / unlock --- */
+function syncDevTools(){
+  document.getElementById("settingsDevBtn").hidden = !prefs.devUnlocked;
+  document.getElementById("devModeSwitch").checked = !!prefs.devMode;
+  document.getElementById("devFab").hidden = !prefs.devMode;
+  document.getElementById("devRestoreBtn").hidden = !lsGet(DEV_BACKUP_KEY);
+  if (!prefs.devMode) closeDevPanel();
+}
+// Five taps on the version line, each within 1.5s of the last.
+let devTaps = 0, devTapTimer = null;
+document.getElementById("setVersion").addEventListener("click", () => {
+  clearTimeout(devTapTimer);
+  devTapTimer = setTimeout(() => { devTaps = 0; }, 1500);
+  if (++devTaps < 5) return;
+  devTaps = 0;
+  prefs.devUnlocked = !prefs.devUnlocked;
+  if (!prefs.devUnlocked) prefs.devMode = false;
+  savePrefs(); syncDevTools();
+});
+document.getElementById("devModeSwitch").addEventListener("change", ev => {
+  prefs.devMode = ev.target.checked; savePrefs(); syncDevTools();
+});
+document.getElementById("devRestoreBtn").addEventListener("click", () => {
+  askConfirm("Replace the current run with your real save from before the Dev Panel changed it?", () => {
+    const real = lsGet(DEV_BACKUP_KEY);
+    if (!real) return;
+    lsSet(SAVE_KEY, real);
+    try { localStorage.removeItem(DEV_BACKUP_KEY); } catch(e){}
+    location.reload();
+  });
+});
+
+</script>
+<script>
 /* PWA installability (manifest + service worker) is intentionally omitted
    from this Artifact-hosted copy -- Blob/service-worker registration isn't
    compatible with the sandboxed hosting here. The full version with PWA
@@ -14328,6 +14686,7 @@ if (lsGet(RESET_EPOCH_KEY) !== RESET_EPOCH){
   lsSet(RESET_EPOCH_KEY, RESET_EPOCH);
 }
 loadAll();
+syncDevTools(); // dev.js: needs the loaded prefs
 // Every load, a refresh included, opens on the main menu.
 showWelcomeSlide();
 render();
