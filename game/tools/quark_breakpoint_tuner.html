@@ -119,6 +119,11 @@ button:focus-visible, input:focus-visible{outline:2px solid var(--gold); outline
 .fit-bar label.chk{display:inline-flex; align-items:center; gap:6px; font-weight:600; cursor:pointer}
 .fit-params{flex-basis:100%; display:flex; flex-wrap:wrap; gap:4px 16px; font-size:11.5px; color:var(--mute); font-variant-numeric:tabular-nums}
 .fit-params b{color:var(--ink2); font-weight:700}
+.fit-sim{flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding-top:10px; border-top:1px solid var(--line2)}
+.fit-sim h3{margin:0}
+.fit-sim label{display:inline-flex; align-items:center; gap:4px; font-weight:600}
+.fit-sim input{width:52px; padding:4px 5px; text-align:center; font:inherit; font-weight:700; color:var(--ink); background:var(--sunken); border:1.5px solid var(--line); border-radius:7px}
+.fit-sim-note{flex-basis:100%; font-size:11.5px; color:var(--mute)}
 .ghost-line{fill:none; stroke-width:1.5; stroke-dasharray:2 4; opacity:.75; pointer-events:none}
 textarea{
   width:100%; min-height:150px; margin-top:12px; background:var(--bg-soft); color:var(--ink);
@@ -172,6 +177,16 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
       <button type="button" id="refitBtn" title="Fit a fresh curve through each line as it stands now (handy after dragging a few dots)">Refit to table</button>
       <label class="chk"><input type="checkbox" id="ghostChk" checked> Show hand-drawn lines</label>
       <label class="fit-scale">Official checks (every 3rd visit) <input type="range" id="bumpRange" min="0" max="80" step="1"> +<input type="number" id="bumpPct" min="0" max="80" step="1">%</label>
+      <div class="fit-sim" id="fitSim">
+        <h3>Fit to simulated runs</h3>
+        <span>Share of runs clearing each breakpoint, every turn 1-24:</span>
+        <label>1 die <input type="number" id="fs1" min="1" max="99" value="90">%</label>
+        <label>2 dice <input type="number" id="fs2" min="1" max="99" value="60">%</label>
+        <label>3 dice <input type="number" id="fs3" min="1" max="99" value="30">%</label>
+        <label>? <input type="number" id="fs4" min="1" max="99" value="10">%</label>
+        <button type="button" id="fitSimBtn">Fit</button>
+        <span class="fit-sim-note">Check turns are fitted to what's needed there (after the bump). Turns 25-40 keep their values.</span>
+      </div>
       <div class="fit-params" id="fitParams"></div>
     </div>
     <div class="chart-box"><svg id="chart" viewBox="0 0 900 460" role="img" aria-label="Breakpoint curves by visit"></svg></div>
@@ -762,6 +777,26 @@ tr.check-row td.round-col::before{content:"\25C6 "; color:var(--gold)}
     }
   });
 
+  // Fit to simulated runs: at each turn, the score that the chosen share of
+  // simulated runs reach (sorted scores, D.sim). On a check turn that's
+  // what's needed, so the quiet value stored is it / (1 + bump). Kept
+  // ascending within a row; turns past the data keep their values.
+  function fitToSim(){
+    if (!D) return;
+    const shares = [1, 2, 3, 4].map(k => Math.max(1, Math.min(99, +document.getElementById("fs" + k).value || 50)) / 100);
+    data = data.map(row => {
+      const qs = D.sim[row[0] - 1];
+      if (!qs || !qs.length) return row;
+      const vals = shares.map(sh => qs[Math.min(qs.length - 1, Math.floor((1 - sh) * qs.length))] / (isCheck(row[0]) ? 1 + bump : 1));
+      const out = [row[0]];
+      vals.forEach((v, i) => out.push(Math.max(i ? out[i] + 5 : 0, Math.round(v / 5) * 5)));
+      return out;
+    });
+    data.forEach((r, ri) => refreshRow(ri));
+    drawChart(); updateCode();
+  }
+  document.getElementById("fitSimBtn").addEventListener("click", fitToSim);
+  if (!D) document.getElementById("fitSim").hidden = true;
   const bumpRange = document.getElementById("bumpRange"), bumpPct = document.getElementById("bumpPct");
   function setBump(pct){
     if (!isFinite(pct)) return;
