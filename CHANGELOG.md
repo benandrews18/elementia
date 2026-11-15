@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-13
+- Inventory: the Add / Remove buttons float over the top of the list on a transparent background, so the list keeps all its scrolling room.
 - The first Quark breakpoint (1 die, and the game-over line from turn 12) now sits where about 95% of simulated runs clear it, at every turn 1-24 (was 90%).
 - Quark breakpoints for turns 1-24 refitted to the simulator: at every turn, about 90% of runs clear 1 die, 60% 2 dice, 30% 3 dice and 10% the "?". They step up with the Display Mat's growth (turns 12 and 18). Board checks no longer raise the breakpoints by 25%.
 - Convert: the "?" counter sits just above the element row again, under the title, without the big gap.
