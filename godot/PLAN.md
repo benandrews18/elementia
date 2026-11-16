@@ -11,12 +11,17 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M1 Rules core
-**Next task:** 5x5 BINGO goldens, then the hand-tested rules (convert, "?"
-spend, suit costs, Market row reward, mat placement, challenge reroll,
-opening gift), then trophies/history/stars and save/load.
+**Current milestone:** M2 Look foundation (M1 done)
+**Next task:** M2: theme and tokens from `game/css/`, then the components
+(ItemIcon, ItemCard, BenchPanel, buttons, QuarkBar), a gallery scene, and
+the Chrome side of the screenshot comparison.
 
 Log (newest first, one line per session):
+- 2026-11-15: M1 done. Parity 3594/3594 over 24 runs (incl. 6 on the 5x5
+  BINGO card, and the trophies each run earns: 54 of 67 exercised).
+  `tests/rules_test` covers convert, "?", suit costs, Market rewards,
+  reroll, mat placement/Last, run start, trophies, history, save, collections,
+  clues, layouts. Not ported (screens): Combo Lab sandbox, dev panel.
 - 2026-11-15: M1 first batch: every action the sim plays is ported
   (`core/` catalog, mat, orders, market; `game/game.gd`). Parity 3580/3580
   over 24 runs (all 8 capstones on a mat, all 13 challenges, a game over).
@@ -107,6 +112,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 24]` |
 | Import assets (after new art) | `G --headless --path godot --import` |
 | Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
+| Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 
@@ -178,6 +184,8 @@ Godot's own random and never touches `Rng`.
   `Util.js_str()` for keys like `collector:null`.
 - **`Math.round`** rounds halves up; Godot's `round()` rounds them away from
   zero. Use `Util.js_round()`.
+- **`bool(null)` is an error** in GDScript: test `x == true` for a key that
+  may be missing.
 - **Truthiness and missing keys:** JS `undefined`/`0`/`""` checks and
   `obj.x || default` need explicit `dict.get("x", default)` in GDScript.
 - **Iteration order:** JS objects and Godot Dictionaries both keep insertion
@@ -272,12 +280,13 @@ to the user. Rough sizes are in sessions and are guesses.
 - [x] Data loader, model (elements, suits, suit costs, item catalog), map graph
 - [x] Mat scoring (collections, combos, BINGO), mat stages and growth
 - [x] Rolling and dice rules, crafting, station visits and limits, travel
-- [ ] Convert, suit spend, Market
+- [x] Convert, suit spend, Market
 - [x] Lock-In: breakpoints, check orders (requests, restrictions), game over
-- [ ] BINGO board and redraws, opening and capstone pick, end of run
-- [ ] Trophies, history, stars; plain save/load (no old-save migration)
-- [ ] Convert, "?" spend, suit costs, Market collect: hand-written tests
-- [ ] **Done when:** parity passes on all recorded goldens (aim: 50+ runs).
+- [x] BINGO board and redraws, opening and capstone pick, end of run
+- [x] Trophies, history, stars; plain save/load (no old-save migration)
+- [x] Convert, "?" spend, suit costs, Market collect: hand-written tests
+- [x] **Done when:** parity passes on all recorded goldens (24 runs, one per
+      capstone in turn, cover every capstone rule and challenge; 50 wasn't needed).
 
 ### M2 Look foundation (~1-2 sessions)
 - [ ] Theme + tokens from the CSS; font (see "Open questions")

@@ -49,7 +49,19 @@ const runs = await withGame(async (evalJS, errs) => {
   })()`);
   const runs = [];
   for (let i = 0; i < RUNS; i++) {
-    await evalJS(`GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "${START}", index: ${i}})`);
+    // Every 4th run uses the 5x5 BINGO card instead of Market rows (a setting).
+    await evalJS(`prefs.classicBingo = ${i % 4 === 3}; GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "${START}", index: ${i}})`);
+    // The trophies the HTML game awards this run, with varied across-run
+    // totals (prefs) so the milestone and collection trophies get tested.
+    await evalJS(`(() => {
+      const ids = MAT_COLLECTIONS.map(c => c.id);
+      prefs.lifetime = { runs: ${i * 5}, items: ${i * 100}, capCount: ${i}, caps: CAPSTONES.slice(0, ${i % 9}) };
+      prefs.everUnlockedMatCollections = ids.slice(0, ${i * 3});
+      GOLDEN.push({ fn: "__trophies", allIds: TROPHIES.map(t => t.id),
+        before: JSON.parse(JSON.stringify({ state, prefs: { lifetime: prefs.lifetime,
+          everUnlockedMatCollections: prefs.everUnlockedMatCollections, playDays: prefs.playDays } })),
+        earned: TROPHIES.filter(t => t.test(state)).map(t => t.id) });
+    })()`);
     runs.push(await evalJS("GOLDEN"));
   }
   if (errs.length) throw new Error("page errors:\n" + errs.join("\n"));

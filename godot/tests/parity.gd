@@ -8,6 +8,7 @@ const GOLDENS := "res://tests/goldens"
 const SHOW_FAILS := 8
 
 func _ready() -> void:
+	Game.autosave = false
 	var files := DirAccess.get_files_at(GOLDENS)
 	if files.is_empty():
 		print("No goldens: run node godot/tools/record_golden.mjs")
@@ -20,6 +21,18 @@ func _ready() -> void:
 		var steps: Array = JSON.parse_string(FileAccess.get_file_as_string(GOLDENS + "/" + f))
 		for i in steps.size():
 			var step: Dictionary = steps[i]
+			if step.fn == "__trophies":  # the trophies the HTML game awarded this run
+				var got := Trophies.earned(step.before.state, step.before.prefs)
+				var ids: Array = Trophies.all().map(func(t): return t.id)
+				var d := "" if ids == step.allIds else "trophy ids differ: %s" % str(ids.filter(func(x): return not step.allIds.has(x)) + step.allIds.filter(func(x): return not ids.has(x)))
+				if d == "" and got != step.earned:
+					d = "earned %s, HTML game %s" % [got.filter(func(x): return not step.earned.has(x)), step.earned.filter(func(x): return not got.has(x))]
+				if d == "":
+					passed += 1
+				else:
+					failed += 1
+					print("FAIL %s trophies: %s" % [f, d])
+				continue
 			var method: String = step.fn.to_snake_case()
 			if not Game.has_method(method):
 				not_ported[step.fn] = not_ported.get(step.fn, 0) + 1

@@ -1,0 +1,166 @@
+## Hand-written rule tests for actions the golden runs don't play (PLAN.md,
+## "Rules parity"), with expectations taken from the HTML game's code.
+##   G --headless --path godot --quit-after 600 res://tests/rules_test.tscn
+extends Node
+
+var fails := 0
+
+
+func parity_diff(a: Variant, b: Variant) -> String:
+	return load("res://tests/parity.gd").diff(a, b, "")
+
+
+func check(ok: bool, what: String) -> void:
+	if not ok:
+		fails += 1
+		print("FAIL " + what)
+
+
+## A run in progress at `station` on visit 5, before rolling.
+func fresh(station := "The Ocean") -> Dictionary:
+	Game.state = Game.fresh_state()
+	Game.state.visits = 5
+	Game.state.mat = []
+	Game.ctx = {"current": station, "screen": "station", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	return Game.state
+
+
+func _ready() -> void:
+	Game.autosave = false
+	# Util
+	check(Util.js_round(2.5) == 3 and Util.js_round(-2.5) == -2, "js_round halves up like Math.round")
+	check(Util.stable_sort([[1, "a"], [0, "b"], [1, "c"]], func(x, y): return x[0] - y[0]).map(func(x): return x[1]) == ["b", "a", "c"], "stable_sort keeps ties in order")
+	check(Orders.key({"id": "collector", "p": null}) == "collector:null", "order keys match JS")
+
+	# Convert 3:1
+	var s := fresh()
+	s.elements = {"H": 4}
+	check(Game.convert_elements("H", "O") and s.elements == {"H": 1.0, "O": 1.0} and s.converts == 1, "convert 3 H -> 1 O")
+	check(not Game.convert_elements("H", "O"), "convert needs 3")
+	check(not Game.convert_elements("O", "O"), "convert to itself refused")
+
+	# "?" spend: only this station's elements
+	s = fresh("The Ocean")
+	s.emptyElements = 1
+	var ocean_die: String = Catalog.station("The Ocean").dice[0]
+	check(not Game.spend_unknown("Zz"), "? refuses an element the station doesn't have")
+	check(Game.spend_unknown(ocean_die) and s.emptyElements == 0 and Catalog.count(s, ocean_die) == 1 and s.qSpent == 1, "? spent on a station element")
+	check(not Game.spend_unknown(ocean_die), "no ? left")
+
+	# Suit costs: paid exactly, from the suit's own elements, sparing the recipe
+	var item := ""
+	for n in Data.t("ITEM_SUIT_COST_TABLE"):
+		var e = Catalog.entry(n)
+		if e != null and Data.t("ITEM_SUIT_COST_TABLE")[n].size() == 1 and Data.t("ITEM_SUIT_COST_TABLE")[n][0] != "any":
+			item = n
+			break
+	check(item != "", "found an item with one suit cost")
+	s = fresh()
+	var e = Catalog.entry(item)
+	var suit: String = Data.t("ITEM_SUIT_COST_TABLE")[item][0]
+	var need: Dictionary = Catalog.needs_of(e.reqs).els
+	s.items = Catalog.needs_of(e.reqs).items.map(func(x): return x.name)
+	for sym in need:
+		s.elements[sym] = need[sym]
+	var payer: String = Data.t("SUIT_CORE_ELEMENTS")[suit].filter(func(x): return not need.has(x))[0]
+	check(not Game.suit_cost_payable(item), "%s: suit cost not payable with only the recipe" % item)
+	s.elements[payer] = 1
+	check(Game.suit_cost_payable(item), "%s: payable with one spare %s" % [item, payer])
+	check(not Game.craft_paying(item, {}), "unpaid suit cost refused")
+	check(not Game.craft_paying(item, {payer: 2}), "overpaying refused")
+	check(Game.craft_paying(item, {payer: 1}) and Catalog.owns(s, item) and Catalog.count(s, payer) == 0, "%s crafted, %s paid" % [item, payer])
+
+	# Market row rewards
+	s = fresh()
+	s.pendingBingoClears = [0, 2]
+	check(Game.collect_market_rewards() == 2 and s.emptyElements == 2 and s.pendingBingoClears.is_empty(), "two finished rows pay two ?")
+
+	# Challenge reroll: a ? for a different challenge
+	s = fresh()
+	s.visits = 12
+	s.lastCheckedMat = ["Water"]
+	s.order = {"id": "drought", "p": "organic", "round": 12}
+	s.usedOrders = ["drought:organic"]
+	s.emptyElements = 1
+	check(Game.reroll_order() and Orders.key(s.order) != "drought:organic" and s.emptyElements == 0 and s.usedOrders.size() == 2, "reroll swaps the challenge for a ?")
+	check(not Game.reroll_order(), "no reroll without a ?")
+
+	# Mat: placing, full mat, capstone room, Last
+	s = fresh()
+	s.visits = 19  # fully grown
+	var t2: Array = Data.t("MAT_CARDS").filter(func(c): return c.tier == "CREATION").map(func(c): return c.name).slice(0, 9)
+	var cap: String = Data.t("CAPSTONES")[0]
+	s.items = t2 + [cap]
+	for i in 8:
+		check(Game.toggle_mat_card(t2[i]) == "", "place card %d" % i)
+	check(Game.toggle_mat_card(t2[8]) == "The display mat is full.", "9th card refused")
+	check(Game.toggle_mat_card(cap) == "A capstone needs two free slots.", "capstone needs two slots")
+	check(Game.toggle_mat_card(t2[0]) == "" and Game.toggle_mat_card(t2[1]) == "" and Game.toggle_mat_card(cap) == "", "capstone fits in two freed slots")
+	s.lastCheckedMat = [t2[0]]
+	var before: Array = s.mat.duplicate()
+	Game.mat_last_tap()
+	check(s.mat == [t2[0]] and s.quickSavedMat == before, "Last: back to the locked-in mat, this one quick-saved")
+	Game.mat_last_tap()
+	check(s.mat == before and s.quickSavedMat == null, "Last again: the quick-saved mat is back")
+
+	# Starting a run
+	var capstone: String = Data.t("CAPSTONES")[2]
+	Game.start_run(capstone)
+	s = Game.state
+	var home: String = Data.t("CORE_ITEM_STATION")[capstone]
+	var gift := Catalog.sorted_dice(Catalog.station(home))
+	check(int(s.visits) == 1 and Game.ctx.current == home, "run starts at the capstone's station")
+	check(s.bingoCard.size() == 12 and s.bingoCard.has(capstone) and s.bingoCenterChosen, "Market rows drawn around the capstone")
+	check(Game.is_pinned(capstone), "capstone pinned")
+	var logged := 0
+	for k in s.visitLog[0].elements:
+		logged += s.visitLog[0].elements[k]
+	check(logged == gift.size() and s.elements.keys().size() > 0, "starting gift given and logged on turn 1")
+
+	# Trophies: awarded once a day, repeats count, the run counts toward totals once
+	Game.state.runComplete = true
+	Game.trophies = {}
+	Game.prefs.erase("lifetime")
+	var stars_before: int = Game.prefs.stars
+	var won := Game.award_trophies()
+	check(won.size() > 0 and Game.trophies.has("first-run") and Game.prefs.stars == stars_before + won.size() * int(Data.t("STARS_TROPHY")), "trophies awarded with Stars")
+	check(Game.prefs.lifetime.runs == 1 and Game.state.lifetimeCounted, "run counted toward totals")
+	check(Game.award_trophies().is_empty() and Game.prefs.lifetime.runs == 1, "same day: nothing again, not counted twice")
+	Game.trophies["first-run"].last = "2000-01-01"
+	var again := Game.award_trophies()
+	check(again.size() == 1 and again[0].again == 2 and Game.trophies["first-run"].n == 2, "a new day earns it again (x2)")
+
+	# History and a save round trip (a scratch file, never the real save)
+	Game.history = []
+	Game.record_history()
+	check(Game.history.size() == 1 and Game.history[0].capstones == [] and int(Game.history[0].visits) == 1, "run recorded in history")
+	Game._write("user://_rules_test.json", Game.state)
+	var back: Dictionary = Game._read("user://_rules_test.json", {})
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://_rules_test.json"))
+	check(parity_diff(back, Game.state) == "", "save round trip: " + parity_diff(back, Game.state))
+
+	# Collections: discovery pays a Star; clues cost Stars and can discover
+	s = fresh()
+	s.visits = 19
+	var col: Dictionary = Mat.collections()[0]
+	s.items = col.items.duplicate()
+	s.mat = col.items.duplicate()
+	Game.prefs.everUnlockedMatCollections = []
+	Game.prefs.stars = 0
+	check(Game.undiscovered_on_mat() != null and Game.undiscovered_on_mat().id == col.id, "a completed collection waits to be discovered")
+	Game.discover_collection(col.id)
+	check(Game.undiscovered_on_mat() == null and Game.prefs.stars == int(Data.t("STARS_DISCOVERY")), "discovered, one Star")
+	Game.prefs.stars = int(Data.t("CLUE_COST")) * 2 + 1
+	var clues := Game.buy_clues(5)
+	check(clues.size() == 2 and Game.prefs.stars == 1, "two clues bought with the Stars there were")
+	check(clues.all(func(c): return not c.c.id == col.id), "clues are for hidden collections")
+
+	# Saved layouts
+	Game.prefs.savedMatLayouts = []
+	Game.save_layout("  Mine ")
+	s.mat = []
+	Game.load_layout(0)
+	check(Game.prefs.savedMatLayouts[0].name == "Mine" and s.mat == col.items, "a saved layout loads back")
+
+	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
+	get_tree().quit(0 if fails == 0 else 1)
