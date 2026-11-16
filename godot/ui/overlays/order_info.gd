@@ -174,17 +174,17 @@ func _rule(o: Dictionary) -> Control:
 		"fullRecipe": parts = [Tok.icon("🧩", 34), txt.call("×2")]
 		"suitSet": parts = [txt.call("3+"), _suit(p)]
 		"commonThread": parts = [Tok.icon("🧵", 34), txt.call("3+")]
-		"drought": parts = [_no(), _suit(p)]
-		"closedStation": parts = [_no(), st.call()]
+		"drought": parts = [Tok.icon("🚫", 34), _suit(p)]
+		"closedStation": parts = [Tok.icon("🚫", 34), st.call()]
 		"freshFaces": parts = [Tok.loop_arrow(Color("#3b2412"), 30), txt.call("≤ ½")]
-		"shortTable": parts = [_square(), txt.call("1+")]
+		"shortTable": parts = [Tok.icon("⬜", 34), txt.call("1+")]
 		"thinStock": parts = [txt.call("I ≤ 3")]
-		"trendShift": parts = [_no(), txt.call("3+"), st.call()]
+		"trendShift": parts = [Tok.icon("🚫", 34), txt.call("3+"), st.call()]
 		"doubleDrought":
-			parts = [_no()]
+			parts = [Tok.icon("🚫", 34)]
 			for su in String(p).split("|"):
 				parts.append(_suit(su))
-		"spreadOut": parts = [_no(), txt.call("4+"), _house()]
+		"spreadOut": parts = [Tok.icon("🚫", 34), txt.call("4+"), Tok.icon("🏠", 34)]
 	var row := Control.new()
 	var x := 0.0
 	for c in parts:
@@ -208,36 +208,6 @@ func _suit(su: String) -> Control:
 	ic.position = Vector2(7, 7)
 	ic.material = Tok.white()
 	c.add_child(ic)
-	return c
-
-
-## 🚫, drawn: a red ring with a slash.
-static func _no() -> Control:
-	var c := Control.new()
-	c.size = Vector2(34, 34)
-	c.draw.connect(func():
-		c.draw_arc(Vector2(17, 17), 13.5, 0, TAU, 40, Color("#e0332f"), 4.5, true)
-		var d := Vector2(1, 1).normalized() * 13.5
-		c.draw_line(Vector2(17, 17) - d, Vector2(17, 17) + d, Color("#e0332f"), 4.5, true))
-	return c
-
-
-## ⬜, drawn: a white square with a grey edge.
-static func _square() -> Control:
-	var c := Panel.new()
-	c.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 4, 2, Color("#9aa3ad")))
-	c.size = Vector2(28, 28)
-	return c
-
-
-## 🏠, drawn: a little house (roof, walls, door).
-static func _house() -> Control:
-	var c := Control.new()
-	c.size = Vector2(34, 34)
-	c.draw.connect(func():
-		c.draw_rect(Rect2(7, 15, 20, 15), Color("#f2d6a2"))
-		c.draw_colored_polygon(PackedVector2Array([Vector2(3, 17), Vector2(17, 4), Vector2(31, 17)]), Color("#d2483c"))
-		c.draw_rect(Rect2(14, 21, 7, 9), Color("#7a4a2a")))
 	return c
 
 
