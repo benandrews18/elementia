@@ -18,6 +18,7 @@ var _drawer: Panel
 var _scroll: ScrollContainer
 var _body: Control  # the mat half, rebuilt on every change (drawn over the list)
 var _inv_cards := {}  # item name -> its card in the list, to dim it in place
+var _inv_ring: Panel  # the selected card's green ring in the list
 var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
@@ -112,7 +113,7 @@ func _redraw() -> void:
 	_scroll.size = Vector2(size.x, size.y - HUB_H - y)
 	if selected != "" and _body.has_meta("acts"):
 		_body.move_child(_body.get_meta("acts"), -1)
-	var key := "%d|%d|%s" % [s.items.size(), int(size.x), selected]
+	var key := "%d|%d" % [s.items.size(), int(size.x)]
 	if key != _inv_key:
 		_inv_key = key
 		for c in _scroll.get_children():
@@ -122,6 +123,13 @@ func _redraw() -> void:
 	else:
 		for n in _inv_cards:
 			_inv_cards[n].modulate = Color(0.6, 0.6, 0.6) if s.mat.has(n) else Color.WHITE
+	# The selection's green ring, moved onto its card (no list rebuild).
+	if is_instance_valid(_inv_ring):
+		_inv_ring.visible = _inv_cards.has(selected)
+		if _inv_ring.visible:
+			var c: Control = _inv_cards[selected]
+			_inv_ring.position = c.position - Vector2(6, 6)
+			_inv_ring.size = c.size + Vector2(12, 12)
 	var fold := Panel.new()
 	fold.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 2, GOLD_LINE, 3, 2))
 	fold.size = Vector2(38, 20)
@@ -283,8 +291,6 @@ func _inventory(width: float) -> Control:
 			if x + span > 4:
 				x = 0
 				y += h + 8
-			if c.name == selected:
-				list.add_child(_selected_ring(Vector2(pad + x * (col_w + 8), y), Vector2(col_w * span + 8 * (span - 1), h)))
 			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name), "tag": "inv:" + c.name})
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
@@ -294,6 +300,10 @@ func _inventory(width: float) -> Control:
 			list.add_child(card)
 			x += span
 		y += h + 14
+	_inv_ring = _selected_ring(Vector2.ZERO, Vector2.ZERO)
+	_inv_ring.visible = false
+	list.add_child(_inv_ring)
+	list.move_child(_inv_ring, 0)
 	list.custom_minimum_size = Vector2(width, y + 150)  # room to scroll clear of the hub
 	return list
 
@@ -327,7 +337,7 @@ func _sel_bench(y: float) -> float:
 	var bench := BenchPanel.new()
 	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 36, func(_n, _r): pass, func(n):
 		Progress.toggle_pin(n)
-		_redraw()))
+		Game._changed(), true))  # saves, then redraws; plain row (no have/missing marks)
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(size.x, 30 + ShopRow.H + 18)
 	_body.add_child(bench)

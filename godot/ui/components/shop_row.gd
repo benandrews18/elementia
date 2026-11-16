@@ -11,10 +11,12 @@ const H := 86.0
 var entry: Dictionary
 var on_craft: Callable
 var on_pin: Callable
+var plain := false  # the Inventory's row (matShopRowHTML()): no have/missing marks
 
 
-static func make(e: Dictionary, width: float, craft: Callable, pin: Callable) -> ShopRow:
+static func make(e: Dictionary, width: float, craft: Callable, pin: Callable, plain_row := false) -> ShopRow:
 	var r := ShopRow.new()
+	r.plain = plain_row
 	r.entry = e
 	r.on_craft = craft
 	r.on_pin = pin
@@ -149,7 +151,7 @@ func _recipe(at: Vector2) -> void:
 		var have: bool
 		var w: float
 		if r.kind == "element":
-			have = Catalog.count(s, r.name) >= n.els[r.name]
+			have = plain or Catalog.count(s, r.name) >= n.els[r.name]
 			var color := Color("#1c2b3d") if have else Color("#a3311d")
 			var tw := Tok.font(800).get_string_size(r.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
 			w = tw + 22 + 3
@@ -183,7 +185,7 @@ func _recipe(at: Vector2) -> void:
 			item_ic.position = Vector2(x, at.y)
 			item_ic.material = Tok.outline(26.0 * 1.5 / 1.0)  # 1px black outline (.tok-icon)
 			add_child(item_ic)
-		if have:
+		if have and not plain:
 			var t := Tok.tick(Color.WHITE, 15, Tok.OK, Tok.CARD)
 			t.position = Vector2(x + w - 9, at.y - 6)
 			add_child(t)

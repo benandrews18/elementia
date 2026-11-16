@@ -141,7 +141,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	var craft := func(n, at: Rect2): _craft(n, at)
 	var pin := func(n):
 		Progress.toggle_pin(n)
-		Game.state_changed.emit()
+		Game._changed()  # saves, then redraws
 	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
@@ -281,7 +281,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		pic.material = Tok.grey()
 	pin.add_child(pic)
 	pin.mouse_filter = MOUSE_FILTER_PASS  # taps here, drags still scroll the page
-	pin.gui_input.connect(_on_tap.bind(func(): Progress.toggle_pin(e.name); Game.state_changed.emit()))
+	pin.gui_input.connect(_on_tap.bind(func(): Progress.toggle_pin(e.name); Game._changed()))  # saves, then redraws
 	pin.set_meta("cmp", "st:pin:" + e.name)
 	page.add_child(pin)
 	var btn := Label.new()
@@ -378,7 +378,7 @@ func _round_btn(at: Vector2, fold: bool) -> Control:
 		b.add_child(c)
 		b.gui_input.connect(_on_tap.bind(func():
 			Game.state.collapseCraftedItems = not Game.state.get("collapseCraftedItems", false)
-			Game.state_changed.emit()))
+			Game._changed()))  # saves, then redraws
 	else:
 		var ic := Tok.icon("📋", 15)  # list view: comes later (cards only for now)
 		ic.position = Vector2(7.5, 7.5)

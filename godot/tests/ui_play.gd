@@ -6,6 +6,7 @@
 extends Node
 
 var fails := 0
+var balloon_done := false
 
 
 func check(ok: bool, what: String) -> void:
@@ -28,6 +29,8 @@ func _ready() -> void:
 		check(app._screen is StationScreen, "turn %d: at a station" % turns)
 		check(app.home_face() == "roll", "turn %d: Home says Roll" % turns)
 		app._on_hub("home")  # roll
+		if not balloon_done:
+			balloon_done = _craft_through_balloon(app)
 		for e in StationScreen.shop_entries(Game.ctx.current):
 			if not Catalog.owns(Game.state, e.name) and Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(e.name):
 				Game.craft(e.name, Game.suggest_suit_picks(e.name))
@@ -55,5 +58,54 @@ func _ready() -> void:
 	print("ui_play: %d turns, visits %d, %s, %d items, best mat %d" % [turns, Game.state.visits,
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
+	check(balloon_done, "crafted something through the suit-spend balloon")
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
+
+
+## Crafts the first craftable item here that has a suit cost through the
+## balloon, tapping like a player (one more from the element with the most
+## spare each time). Checks it's crafted and exactly recipe + cost was spent.
+func _craft_through_balloon(app: App) -> bool:
+	for e in StationScreen.shop_entries(Game.ctx.current):
+		if Catalog.owns(Game.state, e.name) or Game.suit_cost_need(e.name).is_empty() 				or not Catalog.can_craft(Game.state, e) or not Game.suit_cost_payable(e.name):
+			continue
+		var before := 0.0
+		for v in Game.state.elements.values():
+			before += v
+		var n := Catalog.needs_of(e.reqs)
+		var spend := 0.0
+		for sym in n.els:
+			if not e.reqs.any(func(r): return r.name == sym and r.kind == "element" and r.catalyst):
+				spend += n.els[sym]
+		var need := Game.suit_cost_need(e.name)
+		for su in need:
+			spend += need[su]
+		app.craft_tap(e.name, Rect2(100, 400, 60, 35))
+		var b: SuitSpend = app.get_children().filter(func(c): return c is SuitSpend)[0]
+		var guard := 0
+		while is_instance_valid(b) and not b.is_queued_for_deletion() and guard < 20:
+			guard += 1
+			var tapped := false
+			for su in need:
+				if b._picked_for(su) >= need[su]:
+					continue
+				var best := ""
+				var spare := 0.0
+				for el in Data.t("SUIT_CORE_ELEMENTS")[su]:
+					var left: float = Catalog.count(Game.state, el) - b._reserved().get(el, 0) - b._picks.get(el, 0)
+					if left > spare:
+						best = el
+						spare = left
+				b._tap(best, su, int(Catalog.count(Game.state, best) - b._reserved().get(best, 0)))
+				tapped = true
+				break
+			if not tapped:
+				break
+		var after := 0.0
+		for v in Game.state.elements.values():
+			after += v
+		check(Catalog.owns(Game.state, e.name), "balloon crafted " + e.name)
+		check(is_equal_approx(before - after, spend), "%s: spent %d elements, recipe + suit cost is %d" % [e.name, before - after, spend])
+		return true
+	return false
