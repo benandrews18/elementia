@@ -27,7 +27,8 @@ func _ready() -> void:
 	if a.has("rects"):  # every node tagged with meta "cmp": [x, y, w, h] in 390-wide design pixels
 		var rects := {}
 		var walk := func(n: Node, self_ref: Callable) -> void:
-			if n is Control and n.has_meta("cmp") and n.is_visible_in_tree():
+			# First one wins: a card on the mat comes before the same card in the list.
+			if n is Control and n.has_meta("cmp") and n.is_visible_in_tree() and not rects.has(n.get_meta("cmp")):
 				var r: Rect2 = n.get_global_rect()
 				rects[n.get_meta("cmp")] = [snappedf(r.position.x, 0.1), snappedf(r.position.y, 0.1), snappedf(r.size.x, 0.1), snappedf(r.size.y, 0.1)]
 			for c in n.get_children():
