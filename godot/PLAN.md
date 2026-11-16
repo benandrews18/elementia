@@ -11,10 +11,14 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M0 Foundation (not started)
-**Next task:** M0.1, create the project.
+**Current milestone:** M1 Rules core (M0 done)
+**Next task:** M1, start with the data loader helpers and model rules,
+then `goStation` / `goMap` (the most common steps after `craft` and `doRoll`).
 
 Log (newest first, one line per session):
+- 2026-11-15: M0 done. Project, export (115 tables, 111 icons, art),
+  shot runner (icon sheet: every icon imports), 3 golden runs (449 steps),
+  parity runner (0/449 ported, as expected).
 - 2026-11-15: plan reviewed; 8 fixes folded in (see Decisions).
 - 2026-11-15: plan written. Godot 4.7.2 installed; a probe proved Claude can
   run it, screenshot a 390x844 screen in ~2s and view the picture.
@@ -43,7 +47,7 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
 - **Content and tables stay in one place.** Until cutover (M9) content is
   edited only in `game/js/` (`data.js`, plus the tables in `model.js`,
   `mat-scoring.js` and `lock-in.js`). `godot/data/game_data.json` is
-  generated from the running HTML game by `godot/tools/export_data.mjs`
+  generated from the running HTML game by `godot/tools/export_from_game.mjs`
   (it loads the page through `game/tools/headless_game.mjs` and writes
   `DATA` plus every plain table: `ITEM_SUIT_COST_TABLE`,
   `LOCKIN_ROUND_ANCHORS`, `MAT_COLLECTIONS_RAW`, `MAT_GROW_ROUNDS`, the
@@ -79,6 +83,23 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
 - Screenshots need a normal (not `--headless`) run: headless has no
   renderer. A window flashes for about 2 seconds.
 - Export templates (web, Android, iOS) are not installed yet. Needed from M3.
+- **Always pass `--quit-after <frames>`** to test runs: a script error
+  doesn't quit Godot, it just sits there forever.
+- Tests run as scenes (`res://tests/x.tscn`), not `-s` scripts, so the
+  autoloads (Data, Rng, Game) are there.
+
+## Commands
+
+G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe`
+
+| What | Command (from the repo root) |
+|---|---|
+| Re-export data, icons, art from `game/` | `node godot/tools/export_from_game.mjs` |
+| Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 3]` |
+| Import assets (after new art) | `G --headless --path godot --import` |
+| Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
+| Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
+| Icon sheet | `--screen res://tests/icon_sheet.gd` |
 
 ---
 
@@ -222,16 +243,16 @@ Each milestone ends with a commit, an updated log above, and a short report
 to the user. Rough sizes are in sessions and are guesses.
 
 ### M0 Foundation (~1 session)
-- [ ] M0.1 Create `godot/` project (Compatibility renderer, 390x844,
+- [x] M0.1 Create `godot/` project (Compatibility renderer, 390x844,
       portrait, `.gitignore` for `.godot/`). Add a pointer to this plan in `CLAUDE.md`.
-- [ ] M0.2 `tools/export_data.mjs`: `DATA` and the plain rule tables, read
+- [x] M0.2 `tools/export_from_game.mjs`: `DATA` and the plain rule tables, read
       from the running HTML game -> `data/game_data.json`.
-- [ ] M0.3 Icon export: `images.js` + Noto PNGs -> `assets/icons/`; copy
+- [x] M0.3 Icon export: `images.js` + Noto PNGs -> `assets/icons/`; copy
       backdrops, banners, frames.
-- [ ] M0.4 `tests/shot.gd` screenshot runner with its own `--save <file>
+- [x] M0.4 `tests/shot.gd` screenshot runner with its own `--save <file>
       --screen <name>` (loads the save into `Game`, opens that scene
       directly). The comparison page waits for M2.
-- [ ] M0.5 Parity skeleton: `record_golden.mjs` wraps the sim's rule calls
+- [x] M0.5 Parity skeleton: `record_golden.mjs` wraps the sim's rule calls
       and records steps; `parity.gd` replays them (fails until M1, fine).
 
 ### M1 Rules core (~2-4 sessions)
