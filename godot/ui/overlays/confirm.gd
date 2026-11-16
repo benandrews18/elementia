@@ -34,6 +34,8 @@ static func window(sz: Vector2, title_text: String) -> Control:
 		box.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
 		box.draw_style_box(sb, Rect2(Vector2.ZERO, box.size / k))
 		box.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
+	if title_text == "":  # no banner
+		return box
 	var tw := Tok.font(800).get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
 	var banner := Control.new()
 	banner.size = Vector2(tw + 60, 13 + 6 + 28 + 7)

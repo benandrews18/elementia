@@ -23,8 +23,15 @@ func _ready() -> void:
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	Game.start_run("Coral Reef")
-	await get_tree().process_frame
+	# The opening: New Game, pick Coral Reef, confirm; the gift flies in and
+	# the run starts at its station.
+	app.new_game()
+	var pick: CapstoneChoice = app.get_children().filter(func(c): return c is CapstoneChoice)[0]
+	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
+	pick._confirm("Coral Reef")
+	pick._start("Coral Reef", pick._box.get_child(1))
+	check(await _until(func(): return app._screen is StationScreen), "the opening lands at a station")
+	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
 	var turns := 0
 	while not Game.state.get("ended") and not Game.state.get("runComplete") and turns < 60:
 		turns += 1

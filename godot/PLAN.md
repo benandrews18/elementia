@@ -12,13 +12,19 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5 Run flow (M4 done)
-**Next task:** M5: the opening (rules slides, capstone choice, starting gift),
-the Market tray and rows, convert, "?" spend. (Done: Lock-In count and
-reward, check opening, end screen.)
+**Next task:** M5: the Market tray and rows, convert, "?" spend; the
+opening's logo + how-to-play slides. (Done: Lock-In count and reward,
+check opening, end screen, capstone choice.)
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5: the opening's capstone choice and confirm (CapstoneChoice:
+  grid, station card via MapScreen.station_card(boxed), components, the
+  gift flying to the Inventory, fade into the station). New Game and a
+  first launch (no save) go through it; the demo board is gone. 34 more
+  Noto emoji fetched (user OK'd). Still to do: logo + how-to-play slides,
+  To-Do List + pin tip.
 - 2026-11-16: M5: EndGame (game over, Run Complete with Continue in
   Overtime, hard limit, crafted everything): scores, capstones, biggest turn,
   most visited, trophies won (awarded there) and Stars; confetti; New Game

@@ -82,12 +82,20 @@ func _confetti() -> void:
 		tw.tween_callback(p.queue_free)
 
 
-## New Game: the finished run goes into History, then a fresh one.
-## shortcut: starts at a random capstone until the opening (capstone choice) lands in M5.
+## New Game (restartRun() / startNewRun()): the finished run goes into
+## History; a fresh run waits on the bare map while the capstone is chosen.
+## shortcut: the logo and the how-to-play slides come before the choice in
+## the HTML game; not yet here.
 func new_game() -> void:
 	Progress.record_history()
-	var caps: Array = Data.t("CAPSTONES")
-	Game.start_run(caps[randi() % caps.size()])
+	close_panel()
+	Game.state = Game.fresh_state()
+	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Progress.prefs.pinnedItems = []
+	Game._changed()
+	var c := CapstoneChoice.new()
+	c.size = size
+	add_child(c)
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the

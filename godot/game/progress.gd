@@ -134,7 +134,7 @@ func award_trophies() -> Array:
 
 ## recordHistory(): the finished run, for the History screen and exports.
 func record_history() -> void:
-	if int(Game.state.visits) <= 0:
+	if int(Game.state.get("visits", 0)) <= 0:  # also no run at all (first launch)
 		return
 	var pts: Dictionary = Data.t("ITEM_POINTS")
 	var item_score := 0.0

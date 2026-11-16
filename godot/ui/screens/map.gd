@@ -57,7 +57,7 @@ func _redraw() -> void:
 		add_child(qt)
 	StationScreen.corner_buttons(self, false)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
-		add_child(_card(ctx.selectedMapStation))
+		add_child(station_card(ctx.selectedMapStation, size.x))
 
 
 ## A node's centre: its MAP_NODE_POS percentage, nudged down by
@@ -167,10 +167,10 @@ func _here_label(d: float) -> Control:
 	return pill
 
 
-## The picked station's card at the top (mapCardHTML()).
-func _card(name: String) -> Control:
+## The picked station's card at the top (mapCardHTML()). Also the opening's
+## capstone confirm (boxed: all corners round, no capstone line).
+static func station_card(name: String, w: float, boxed := false) -> Control:
 	var st := Catalog.station(name)
-	var w := size.x
 	var card := Control.new()
 	card.set_meta("cmp", "map:card")
 	var y := 14.0
@@ -186,6 +186,7 @@ func _card(name: String) -> Control:
 	for i in dice.size():
 		var chip := StationScreen.element_chip(dice[i], cw)
 		chip.position = Vector2(19 + i * (cw + 4), y)
+		chip.set_meta("sym", dice[i])  # the opening flies these to the Inventory
 		card.add_child(chip)
 	y += cw + 13.8 + 11
 	# Every item sold here, icon only (owned: gold-soft square with a tick).
@@ -209,8 +210,11 @@ func _card(name: String) -> Control:
 			box.add_child(t)
 		card.add_child(box)
 	y += 43 + 11
+	if boxed:
+		y -= 11
 	# The capstone, under a dashed rule.
 	var rule := Control.new()  # the dashed rule (a child: drawn over the card's wood)
+	rule.visible = not boxed
 	rule.position = Vector2(19, y)
 	rule.size = Vector2(w - 38, 1)
 	rule.mouse_filter = MOUSE_FILTER_IGNORE
@@ -219,18 +223,21 @@ func _card(name: String) -> Control:
 	var cap: Array = st.capstone
 	var done := Catalog.owns(Game.state, cap[1])
 	var cem := Tok.icon(cap[0], 28.5)
+	cem.visible = not boxed
 	cem.position = Vector2(19, y + 10 + 1.4)
 	card.add_child(cem)
 	var cn := Tok.label(cap[1], 20, Tok.OK if done else Color("#fff7e0"), 700)
+	cn.visible = not boxed
 	cn.position = Vector2(19 + 28.5 + 12, y + 10 + 2)
 	card.add_child(cn)
-	y += 41.3 + 14
+	y += 0.0 if boxed else 41.3 + 14
 	card.size = Vector2(w, y)
 	card.draw.connect(func():
 		var sb := Tok.box(Color("#4a2b13"), 16, 3, Color("#d9a441"), 10, 6, Color(0, 0, 0, 0.45))
-		sb.border_width_top = 0
-		sb.corner_radius_top_left = 0
-		sb.corner_radius_top_right = 0
+		if not boxed:
+			sb.border_width_top = 0
+			sb.corner_radius_top_left = 0
+			sb.corner_radius_top_right = 0
 		card.draw_style_box(sb, Rect2(Vector2.ZERO, card.size)))
 	return card
 
