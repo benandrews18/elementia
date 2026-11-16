@@ -26,7 +26,8 @@ func _ready() -> void:
 				continue
 			Game.load_snapshot(step.before)
 			Rng.feed(step.rand)
-			Game.callv(method, step.args)
+			# craft(entry) was recorded as {entry: name}; Godot takes the name.
+			Game.callv(method, step.args.map(func(a): return a.entry if a is Dictionary and a.has("entry") else a))
 			var d := diff(Game.snapshot(), step.after, "")
 			if d == "" and Rng.leftover() > 0:
 				d = "%d random numbers left unused" % Rng.leftover()

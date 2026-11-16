@@ -4,7 +4,8 @@
 // call to one of ACTIONS is recorded as state before, arguments, the random
 // numbers it drew, and state after. Nested calls (confirmLockIn ->
 // finishLockIn -> goStation) belong to the outer step.
-//   node godot/tools/record_golden.mjs [--runs 3] [--seed 7]
+//   node godot/tools/record_golden.mjs [--runs 24] [--seed 7] [--start capstone|random|guided]
+// (capstone: run i chases capstone i % 8, so every capstone rule is played)
 // Writes godot/tests/goldens/run_<i>.json (not committed: re-record after any
 // rule change in game/js).
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
@@ -14,7 +15,7 @@ import { withGame, GAME } from "../../game/tools/headless_game.mjs";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "tests", "goldens");
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
-const RUNS = +arg("runs", 3), SEED = +arg("seed", 7);
+const RUNS = +arg("runs", 24), SEED = +arg("seed", 7), START = arg("start", "capstone");
 // The rule functions the sim player calls (see sim_agent.js playRun()).
 const ACTIONS = ["goStation", "doRoll", "craft", "startCheckOrder", "confirmLockIn", "quietCheck",
   "goMap", "confirmFinalLockIn", "setBingoCenter"];
@@ -48,7 +49,7 @@ const runs = await withGame(async (evalJS, errs) => {
   })()`);
   const runs = [];
   for (let i = 0; i < RUNS; i++) {
-    await evalJS(`GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "random", index: ${i}})`);
+    await evalJS(`GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "${START}", index: ${i}})`);
     runs.push(await evalJS("GOLDEN"));
   }
   if (errs.length) throw new Error("page errors:\n" + errs.join("\n"));

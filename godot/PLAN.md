@@ -11,11 +11,16 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M1 Rules core (M0 done)
-**Next task:** M1, start with the data loader helpers and model rules,
-then `goStation` / `goMap` (the most common steps after `craft` and `doRoll`).
+**Current milestone:** M1 Rules core
+**Next task:** 5x5 BINGO goldens, then the hand-tested rules (convert, "?"
+spend, suit costs, Market row reward, mat placement, challenge reroll,
+opening gift), then trophies/history/stars and save/load.
 
 Log (newest first, one line per session):
+- 2026-11-15: M1 first batch: every action the sim plays is ported
+  (`core/` catalog, mat, orders, market; `game/game.gd`). Parity 3580/3580
+  over 24 runs (all 8 capstones on a mat, all 13 challenges, a game over).
+  Planted bugs are caught.
 - 2026-11-15: M0 done. Project, export (115 tables, 111 icons, art),
   shot runner (icon sheet: every icon imports), 3 golden runs (449 steps),
   parity runner (0/449 ported, as expected).
@@ -87,6 +92,10 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   doesn't quit Godot, it just sits there forever.
 - Tests run as scenes (`res://tests/x.tscn`), not `-s` scripts, so the
   autoloads (Data, Rng, Game) are there.
+- After adding a new `class_name` script, run the import once
+  (`G --headless --path godot --import`): class names only register then.
+- GDScript can't infer a type from untyped values (`var x := dict.key ...`
+  is a parse error): write `var x: bool = ...`.
 
 ## Commands
 
@@ -95,7 +104,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | What | Command (from the repo root) |
 |---|---|
 | Re-export data, icons, art from `game/` | `node godot/tools/export_from_game.mjs` |
-| Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 3]` |
+| Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 24]` |
 | Import assets (after new art) | `G --headless --path godot --import` |
 | Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
@@ -165,6 +174,10 @@ Godot's own random and never touches `Rng`.
   `core/util.gd`'s `stable_sort(arr, cmp)` (ties broken by original
   position), or a rule that sorts then picks with a random number picks a
   different item.
+- **JS `String(null)` is "null"**, GDScript's `str(null)` is "<null>": use
+  `Util.js_str()` for keys like `collector:null`.
+- **`Math.round`** rounds halves up; Godot's `round()` rounds them away from
+  zero. Use `Util.js_round()`.
 - **Truthiness and missing keys:** JS `undefined`/`0`/`""` checks and
   `obj.x || default` need explicit `dict.get("x", default)` in GDScript.
 - **Iteration order:** JS objects and Godot Dictionaries both keep insertion
@@ -256,11 +269,11 @@ to the user. Rough sizes are in sessions and are guesses.
       and records steps; `parity.gd` replays them (fails until M1, fine).
 
 ### M1 Rules core (~2-4 sessions)
-- [ ] Data loader, model (elements, suits, suit costs, item catalog), map graph
-- [ ] Mat scoring (collections, combos, BINGO), mat stages and growth
-- [ ] Rolling and dice rules, crafting, station visits and limits, travel
+- [x] Data loader, model (elements, suits, suit costs, item catalog), map graph
+- [x] Mat scoring (collections, combos, BINGO), mat stages and growth
+- [x] Rolling and dice rules, crafting, station visits and limits, travel
 - [ ] Convert, suit spend, Market
-- [ ] Lock-In: breakpoints, check orders (requests, restrictions), game over
+- [x] Lock-In: breakpoints, check orders (requests, restrictions), game over
 - [ ] BINGO board and redraws, opening and capstone pick, end of run
 - [ ] Trophies, history, stars; plain save/load (no old-save migration)
 - [ ] Convert, "?" spend, suit costs, Market collect: hand-written tests
