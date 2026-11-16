@@ -5,6 +5,13 @@ portrait mode. **Classic Mode is the only mode.** Plain HTML/CSS/JS, no
 framework, no build step to play. See `game/README.md` for how the code
 is laid out.
 
+## Godot rebuild
+
+The game is being rebuilt in Godot 4 under `godot/`. **Before any Godot work,
+read `godot/PLAN.md`** (current milestone, next task, decisions) and update
+its log when done. Until cutover, `game/` stays the reference for every rule
+and screen, and `data.js` stays the only place content is edited.
+
 ## Source of truth
 
 The game is the source of truth for all content. Edit these, nothing else:
