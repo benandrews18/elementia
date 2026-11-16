@@ -93,6 +93,19 @@ func _sync_hub() -> void:
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
+## The visit's roll, then the dice pop-up over everything (Collect sends
+## the elements into the Inventory button).
+func _roll() -> void:
+	var out := Game.do_roll()
+	if out.is_empty():
+		return
+	var pop := RollPopup.new()
+	pop.roll = out
+	pop.fly_to = _hub.button_center("inv")
+	pop.size = size
+	add_child(pop)
+
+
 ## Travel: on a board-check turn the mat opens for the Lock-In (Home becomes
 ## Lock In); otherwise a quiet check sets this trip's dice and off you go.
 func _travel(dest: String) -> void:
@@ -125,7 +138,7 @@ func _on_hub(id: String) -> void:
 				"close":
 					close_panel()
 				"roll":
-					Game.do_roll()  # shortcut: the roll animation (#rollPopup) comes later in M4
+					_roll()
 				"map":
 					Game.go_map()
 				"shop":  # back into the station you're at, free (no visit spent)

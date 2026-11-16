@@ -34,6 +34,15 @@ func _ready() -> void:
 	_build()
 
 
+## Where a side button's centre is (in this bar's coordinates), e.g. for
+## things flying into the Inventory.
+func button_center(id: String) -> Vector2:
+	var side_w := (size.x - (HOME + 8)) / 4 - 4
+	var i := SIDES.map(func(x): return x[0]).find(id)
+	var x := 2.0 + i * (side_w + 4) + (HOME + 8 if i >= 2 else 0.0)
+	return Vector2(x + side_w / 2, size.y - H - 16.2 + SIDE_H / 2)
+
+
 ## Shows a new state: face, lit buttons, badges.
 func show_state(new_face: String, new_active: Dictionary, new_badges: Dictionary, air := false) -> void:
 	face = new_face
