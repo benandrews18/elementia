@@ -4,7 +4,8 @@
 ##   ItemCard.make("Water", {"mini": true})
 ## opts: mini (tier 1 small card), in_grid (false = on the mat: a mini card
 ## drops its name), wide (capstone art 1.5x), complete (points doubled),
-## on (already on the mat: dimmed).
+## on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
+## combo: their badges get a gold halo).
 class_name ItemCard
 extends Control
 
@@ -54,7 +55,7 @@ func _ready() -> void:
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	ic.set_meta("cmp", item + ":icon")
 	if not mini and not opts.get("wide"):
-		col.add_child(_gap(3))  # .mm-icon margin-top:3px
+		col.add_child(_gap(5.6))  # .mm-icon margin-top:3px, + 2.6px of line box above the inline image
 	if opts.get("wide"):
 		col.add_child(_gap(5))  # the HTML icon's line box sits ~5px above 66px art (inline image)
 	col.add_child(ic)
@@ -100,6 +101,8 @@ func _ready() -> void:
 		var g := Tok.icon("suit:" + su, 11.0 if mini else 16.0)
 		g.position = (pip.size - g.size) / 2
 		pip.add_child(g)
+		if opts.get("lit_suits", []).has(su):
+			pip.add_child(_halo(psz))
 		pip.set_meta("cmp", "%s:pip%d" % [item, i])
 		add_child(pip)
 		_pips.append(pip)
@@ -115,6 +118,8 @@ func _ready() -> void:
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		var g := Tok.icon(Catalog.station(st).emoji, 12.0 if mini else 17.0)
 		g.material = Tok.outline(12.0 if mini else 17.0)
+		if opts.get("lit_stations", []).has(st):
+			b.add_child(_halo(ssz))
 		var k := "%s:st%d" % [item, _stations.get_child_count()]
 		b.set_meta("cmp", k)
 		g.set_meta("cmp", k + "icon")
@@ -161,6 +166,18 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 	nm.offset_bottom = 0 if one_line else -1
 	holder.add_child(nm)
 	return holder
+
+
+## "Lit" (part of a live combo): a 3.5px gold ring and a 10px glow, behind
+## the badge (.mm-pip.lit, .mm-station.lit).
+static func _halo(px: float) -> Panel:
+	var h := Panel.new()
+	h.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, px / 2 + 3.5, 0, Color.BLACK, 5, 0, Color(Tok.GOLD, 0.9)))
+	h.position = Vector2(-3.5, -3.5)
+	h.size = Vector2(px + 7, px + 7)
+	h.show_behind_parent = true
+	h.mouse_filter = MOUSE_FILTER_IGNORE
+	return h
 
 
 static func _gap(px: float) -> Control:

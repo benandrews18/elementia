@@ -12,11 +12,17 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M3 Proof of concept (M2 done)
-**Next task:** M3: the Display Mat screen (mat grid that grows, Quark meter,
-combo chips, inventory grid below), compared with the HTML game's drawer;
-then the web export and a bundled font.
+**Next task:** M3: the mat's tabs and corner buttons, the inventory grid
+below it, tapping cards on/off the mat; then the web export, a bundled
+font, and the preview page for the iPhone.
 
 Log (newest first, one line per session):
+- 2026-11-15: M3 started: Display Mat top (QuarkMeter, combo chips incl.
+  challenge and capstone chips, the growing mat page with stacked tier 1
+  cards, lit halos, complete glow). `compare.mjs` now runs shots (gallery,
+  mat at run 1's visit-18 check): mat 109 elements, 1 off by 2.1px.
+  Measure text with `Tok.font().get_string_size()`, not Label min size
+  (Label adds ~5px).
 - 2026-11-15: M2 done: BenchPanel (hub_frame 9-slice drawn at 16px) matches.
   QuarkBar moves to M3 and hub buttons / top bar to M4: each component is
   built with the screen that uses it.
@@ -310,7 +316,7 @@ to the user. Rough sizes are in sessions and are guesses.
 ### M3 Proof of concept: the Display Mat (~1-2 sessions)
 - [ ] The Display Mat screen with real data, cards placed and scored, its
       Quark meter and combo chips
-- [ ] ItemCard "lit" states: gold halos on pips / station badges in a live combo
+- [x] ItemCard "lit" states: gold halos on pips / station badges in a live combo
 - [ ] Web export (thread-less, so GitHub Pages works) published as a
       preview page, like `fixed-screen`'s `/preview/`
 - [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.

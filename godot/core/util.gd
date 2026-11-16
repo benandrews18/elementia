@@ -29,3 +29,13 @@ static func js_str(x: Variant) -> String:
 static func get_or(d: Dictionary, key: String, default: Variant) -> Variant:
 	var v = d.get(key)
 	return default if v == null else v
+
+
+## JS n.toLocaleString() for whole numbers: 4000 -> "4,000".
+static func thousands(n: int) -> String:
+	var s := str(absi(n))
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.right(3) + out
+		s = s.left(s.length() - 3)
+	return ("-" if n < 0 else "") + s + out

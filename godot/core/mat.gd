@@ -209,5 +209,28 @@ static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 		func(su): return cards.any(func(c): return c.pips.has(su)))
 	var pre := (base + col_bonus) * mult
 	var order_mult := Orders.mult_for(cards, s)
+	var complete := cards.filter(func(c): return is_complete(c, cards)).map(func(c): return c.name)
+	# What each capstone on the mat is doing right now (the combo-row chips).
+	var sigs := []
+	if has(cards, "Coral Reef"): sigs.append({"name": "Coral Reef", "label": "+%d" % coral, "on": true})
+	if robot: sigs.append({"name": "Robot", "label": "+%d" % (5 * cards.size()), "on": true})
+	if homestead: sigs.append({"name": "Homestead", "label": "×3", "on": not complete.is_empty()})
+	if maglev: sigs.append({"name": "Maglev Train", "label": "+%d" % (2 * cards.filter(is_tier1).size()), "on": cards.any(is_tier1)})
+	if has(cards, "Ecosystem"): sigs.append({"name": "Ecosystem", "label": "+%d" % eco, "on": true})
+	if has(cards, "Fruit Cake"): sigs.append({"name": "Fruit Cake", "label": "×2", "on": layered})
+	if has(cards, "Metropolis"): sigs.append({"name": "Metropolis", "label": "+2", "on": true})
+	if has(cards, "Space Station"): sigs.append({"name": "Space Station", "label": "×2", "on": dest != null and cards.any(func(c): return c.stations.has(dest))})
 	return {"base": base, "colBonus": col_bonus, "mult": mult, "layered": layered, "orderMult": order_mult,
+		"combos": {"station": all_groups(g.st), "suit": all_groups(g.su), "component": all_groups(g.cp)},
+		"cols": completed_in(cards), "completeNames": complete, "sigs": sigs,
 		"total": Util.js_round((pre * 2 if layered else pre) * order_mult)}
+
+
+## matAllGroups(): every group of 3+, biggest first, then by name.
+static func all_groups(counts: Dictionary) -> Array:
+	var out := []
+	for k in counts:
+		if combo_tier(int(counts[k])) > 0:
+			out.append({"name": k, "k": int(counts[k]), "bonus": combo_tier(int(counts[k]))})
+	out.sort_custom(func(a, b): return a.k > b.k or (a.k == b.k and a.name.nocasecmp_to(b.name) < 0))
+	return out

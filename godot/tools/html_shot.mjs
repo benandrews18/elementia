@@ -10,8 +10,8 @@ export async function htmlShot(snap, open, { rectsJS = "({})", http = 8797, cdp 
     await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await evalJS(`(() => {
       const s = ${JSON.stringify(snap)};
-      state = Object.assign(freshState(), s.state || s);
-      const c = s.ctx || {};
+      if (s) state = Object.assign(freshState(), s.state || s);
+      const c = (s && s.ctx) || {};
       current = c.current ?? null; screen = c.screen || "map";
       travelPromptFor = c.travelPromptFor ?? null; selectedMapStation = c.selectedMapStation ?? null;
       prefs.everUnlockedMatCollections = MAT_COLLECTIONS.map(c => c.id); // no "New collection!" pop-ups

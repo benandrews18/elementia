@@ -9,6 +9,9 @@ extends Node
 
 func _ready() -> void:
 	var a := _args()
+	Progress.autosave = false  # never touch the player's files
+	# As html_shot.mjs: every collection already found, so no "New collection!".
+	Progress.prefs.everUnlockedMatCollections = Mat.collections().map(func(c): return c.id)
 	if a.has("save"):
 		Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string(a.save)))
 	var res = load(a.get("screen", "res://main.tscn"))

@@ -11,11 +11,6 @@ static func _slug(s: String) -> String:
 	return re.sub(s.to_lower(), "-", true)
 
 
-static func _thousands(n: int) -> String:
-	var s := str(n)
-	return s if n < 1000 else s.left(s.length() - 3) + "," + s.right(3)
-
-
 static func run_caps(st: Dictionary) -> Array:
 	return Data.t("CAPSTONES").filter(func(c): return st.items.has(c))
 
@@ -102,10 +97,10 @@ static func all() -> Array:
 	var qs := [1000, 2500, 4000]
 	for i in 3:
 		var q: int = qs[i]
-		add.call("quarks-%d" % q, q_icons[i], "%s Quarks" % _thousands(q), "Lock In a Display Mat worth %s Quarks" % _thousands(q),
+		add.call("quarks-%d" % q, q_icons[i], "%s Quarks" % Util.thousands(q), "Lock In a Display Mat worth %s Quarks" % Util.thousands(q),
 			func(st, _p): return Util.get_or(st, "bestMatScore", 0) >= q)
 	var grand: int = Data.t("GRAND_EXHIBITION_TARGET")
-	add.call("grand", "🏛️", "Grand Exhibition", "Reach %s Quarks at the final check" % _thousands(grand), func(st, _p): return final_q(st) >= grand)
+	add.call("grand", "🏛️", "Grand Exhibition", "Reach %s Quarks at the final check" % Util.thousands(grand), func(st, _p): return final_q(st) >= grand)
 	add.call("grand-gala", "🎆", "Grand Gala", "Reach 6,000 Quarks at the final check", func(st, _p): return final_q(st) >= 6000)
 	add.call("top-shelf", "❓", "Top Shelf", "Reach the top breakpoint at a board check (its \"?\")",
 		func(st, _p): return board_checks(st).any(func(c): return check_tier(c) >= 4))
@@ -158,7 +153,7 @@ static func all() -> Array:
 		add.call("runs-%d" % n, m[1], m[2], "Complete %d runs" % n, func(_st, p): return _life(p, "runs", 0) >= n)
 	for m in [[500, "📦", "Stockpile"], [2000, "🏭", "Factory"]]:
 		var n: int = m[0]
-		add.call("crafted-%d" % n, m[1], m[2], "Craft %s items in total" % _thousands(n), func(_st, p): return _life(p, "items", 0) >= n)
+		add.call("crafted-%d" % n, m[1], m[2], "Craft %s items in total" % Util.thousands(n), func(_st, p): return _life(p, "items", 0) >= n)
 	add.call("capstones-10", "🏆", "Capstone Veteran", "Craft 10 capstones in total", func(_st, p): return _life(p, "capCount", 0) >= 10)
 	for m in [[3, "📅", "Three in a Row"], [7, "🗓️", "Week Streak"], [30, "🔥", "Month Streak"]]:
 		var n: int = m[0]
