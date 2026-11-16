@@ -9,6 +9,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 Data="*res://core/data.gd"
 Rng="*res://game/rng.gd"
+Progress="*res://game/progress.gd"
 Game="*res://game/game.gd"
 
 [display]

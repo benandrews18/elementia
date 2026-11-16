@@ -1,7 +1,7 @@
 ## The run: `state` (same JSON shape as the HTML game's state, so the same
 ## save loads in both), the globals outside it that rules read (`ctx`),
-## `prefs`, and the player actions. Screens call actions and redraw on
-## state_changed; animations play from the result afterwards (in the HTML
+## and the player actions. What's kept across runs is in progress.gd.
+## Screens call actions and redraw on state_changed; animations play from the result afterwards (in the HTML
 ## game they ran in between).
 ## Actions are named like the JS functions in snake_case (goStation ->
 ## go_station); tests/parity.gd finds them by that name.
@@ -12,10 +12,6 @@ signal state_changed
 var state: Dictionary = {}
 var ctx: Dictionary = {"current": null, "screen": "map", "travelPromptFor": null,
 	"selectedMapStation": null, "lockInCommitted": false}
-## Kept across runs (the HTML game's prefs); not part of parity.
-var prefs: Dictionary = {"pinnedItems": [], "capstonesEverCrafted": [], "playDays": [], "stars": 0,
-	"classicBingo": false, "minigamesEnabled": false}
-
 
 func load_snapshot(s: Dictionary) -> void:
 	state = s.get("state", s).duplicate(true)
@@ -29,7 +25,7 @@ func snapshot() -> Dictionary:
 
 
 func _changed() -> void:
-	save_all()
+	Progress.save_all()
 	state_changed.emit()
 
 
@@ -39,40 +35,10 @@ func fresh_state() -> Dictionary:
 		"rolledHere": false, "pendingRoll": null, "lastRoll": null, "noRepeat": true, "ended": false, "mode": "classic",
 		"visitedStations": {}, "collapseCraftedItems": true, "convertRevealed": false, "marketVisited": false,
 		"finalCheckPending": false, "checkLog": [], "ecoStreak": 0, "starsEarned": 0, "marketUnseen": false, "mat": [],
-		"bingoLayout": "bingo" if prefs.classicBingo else "rows", "bingoCard": null, "bingoLinesCompleted": [],
+		"bingoLayout": "rows", "bingoCard": null, "bingoLinesCompleted": [],
 		"pendingBingoClears": [], "emptyElements": 0, "matChecked": false, "matBonusDice": 0, "quickSavedMat": null,
 		"bingoCenterChosen": false, "finalGameOver": false, "craftedEverything": false, "runComplete": false,
 		"reachedHardLimit": false, "bestMatScore": 0}
-
-
-# ---- pins (prefs)
-
-func is_pinned(name: String) -> bool:
-	return prefs.pinnedItems.has(name)
-
-
-func toggle_pin(name: String) -> void:
-	if prefs.pinnedItems.has(name):
-		prefs.pinnedItems.erase(name)
-	else:
-		prefs.pinnedItems.append(name)
-
-
-func _record_play_day() -> void:
-	if state.get("dev"):
-		return
-	var d := Time.get_date_string_from_system()
-	if prefs.playDays.is_empty() or prefs.playDays[-1] != d:
-		prefs.playDays.append(d)
-		if prefs.playDays.size() > 60:
-			prefs.playDays = prefs.playDays.slice(-60)
-
-
-func _grant_stars(n: int) -> void:
-	if n == 0 or state.get("dev"):
-		return
-	prefs.stars += n
-	state.starsEarned = Util.get_or(state, "starsEarned", 0) + n
 
 
 # ---- travel (travel.js)
@@ -85,15 +51,15 @@ func go_station(name: String) -> void:
 		return
 	if int(state.visits) == 0 and Data.t("STATION_BY_NAME").has(name):
 		var cap: String = Catalog.station(name).capstone[1]
-		if not is_pinned(cap):
-			toggle_pin(cap)
+		if not Progress.is_pinned(cap):
+			Progress.toggle_pin(cap)
 	if state.get("lastStation") and not Catalog.is_map_connected(state.lastStation, name):
 		state.heliTrips = Util.get_or(state, "heliTrips", 0) + 1
 	ctx.current = name
 	ctx.screen = "station"
 	state.visits += 1
 	state.rolledHere = false
-	_record_play_day()
+	Progress.record_play_day()
 	state.pendingRoll = null
 	state.lastRoll = null
 	if state.get("visitLog") == null:
@@ -151,7 +117,16 @@ func do_roll(roll_count: Variant = null) -> Array:
 
 # ---- crafting (crafting.js)
 
-func craft(name: String) -> bool:
+## Crafting from a screen: an item with a suit cost needs its picks (the
+## suit-spend balloon, {sym: n}); see craft_paying().
+func craft(name: String, picks: Dictionary = {}) -> bool:
+	return craft_raw(name) if suit_cost_need(name).is_empty() else craft_paying(name, picks)
+
+
+## The rule as the HTML game's craft(): never checks suit costs (its
+## buttons do). Only craft() and craft_paying() call it; the parity test
+## replays the recorded craft() steps through it.
+func craft_raw(name: String) -> bool:
 	var e = Catalog.entry(name)
 	if e == null or Catalog.owns(state, name) or not Catalog.can_craft(state, e):
 		return false
@@ -171,10 +146,10 @@ func craft(name: String) -> bool:
 			and Mat.fits(state.items.map(func(x): return Catalog.mat_card(x)).filter(func(c): return c != null), st) \
 			and Mat.fits(Mat.on_mat(state) + [card], st):
 		state.mat.append(name)
-	if e.tier == "CAPSTONE" and not prefs.capstonesEverCrafted.has(name):
-		prefs.capstonesEverCrafted.append(name)
-	if is_pinned(name):
-		toggle_pin(name)
+	if e.tier == "CAPSTONE" and not Progress.prefs.capstonesEverCrafted.has(name):
+		Progress.prefs.capstonesEverCrafted.append(name)
+	if Progress.is_pinned(name):
+		Progress.toggle_pin(name)
 	Market.check_lines(state)
 	_check_crafted_everything()
 	if state.get("visitLog"):
@@ -318,7 +293,7 @@ func confirm_final_lock_in() -> float:
 	state.finalCheckPending = false
 	ctx.lockInCommitted = false
 	state.runComplete = true
-	_grant_stars(int(Data.t("STARS_RUN")))
+	Progress.grant_stars(int(Data.t("STARS_RUN")))
 	_changed()
 	return total
 
@@ -329,11 +304,11 @@ func confirm_final_lock_in() -> float:
 ## around it, it's pinned, and that station's dice are the starting gift.
 func start_run(capstone: String) -> void:
 	state = fresh_state()
-	prefs.pinnedItems = []
+	Progress.prefs.pinnedItems = []
 	ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
 	Market.set_center(state, capstone)
-	if not is_pinned(capstone):
-		toggle_pin(capstone)
+	if not Progress.is_pinned(capstone):
+		Progress.toggle_pin(capstone)
 	var st: String = Data.t("CORE_ITEM_STATION")[capstone]
 	var dice := Catalog.sorted_dice(Catalog.station(st))
 	for d in dice:
@@ -423,7 +398,7 @@ func craft_paying(name: String, picks: Dictionary) -> bool:
 		state.elements[sym] = Catalog.count(state, sym) - picks[sym]
 		if state.elements[sym] <= 0:
 			state.elements.erase(sym)
-	return craft(name)
+	return craft_raw(name)
 
 
 ## A finished Market row (or BINGO line) pays a "?" once its animation has
@@ -530,197 +505,3 @@ func _trim_mat_to_fit() -> void:
 	while not state.mat.is_empty() and not Mat.fits(Mat.on_mat(state), Mat.stage(state)):
 		state.mat.pop_back()
 
-
-# ---- saving (state.js) and what's kept across runs (trophies.js, history.js)
-
-const SAVE_PATH := "user://save.json"
-const PREFS_PATH := "user://prefs.json"
-const TROPHY_PATH := "user://trophies.json"
-const HISTORY_PATH := "user://history.json"
-
-## Off in tests, so they never touch the player's files.
-var autosave := true
-## id -> {at, last, n}: first day earned, latest day, times earned.
-var trophies: Dictionary = {}
-## Finished runs, newest first (HISTORY_MAX kept).
-var history: Array = []
-
-
-static func _read(path: String, default: Variant) -> Variant:
-	if not FileAccess.file_exists(path):
-		return default
-	var v = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return default if v == null else v
-
-
-static func _write(path: String, value: Variant) -> void:
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(value))
-
-
-## loadAll(): the saved run (if any), prefs, trophies and history.
-func load_all() -> void:
-	prefs.merge(_read(PREFS_PATH, {}), true)
-	trophies = _read(TROPHY_PATH, {})
-	history = _read(HISTORY_PATH, [])
-	var saved = _read(SAVE_PATH, null)
-	state = fresh_state()
-	if saved is Dictionary:
-		state.merge(saved, true)
-
-
-func save_all() -> void:
-	if not autosave:
-		return
-	if state.get("mode"):
-		_write(SAVE_PATH, state)
-	_write(PREFS_PATH, prefs)
-
-
-func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
-
-
-## Awards every trophy this completed run qualifies for that wasn't already
-## earned today; returns them (with "again": n on a repeat). The run counts
-## toward the across-run totals once (state.lifetimeCounted).
-func award_trophies() -> Array:
-	if state.get("dev") or (not state.get("runComplete") and not state.get("craftedEverything")):
-		return []
-	if not state.get("lifetimeCounted"):
-		if not prefs.get("lifetime") is Dictionary:
-			prefs.lifetime = {"runs": 0, "items": 0, "capCount": 0, "caps": []}
-		var L: Dictionary = prefs.lifetime
-		L.runs += 1
-		L.items += state.items.size()
-		for c in Trophies.run_caps(state):
-			L.capCount += 1
-			if not L.caps.has(c):
-				L.caps.append(c)
-		state.lifetimeCounted = true
-	var day := Trophies.local_day(0)
-	var won := []
-	var stars := 0
-	for t in Trophies.all():
-		var g = trophies.get(t.id)
-		if (g != null and Util.get_or(g, "last", g.at) == day) or not t.test.call(state, prefs):
-			continue
-		var w: Dictionary = t.duplicate()
-		if g != null:
-			g.n = Util.get_or(g, "n", 1) + 1
-			g.last = day
-			stars += int(Data.t("STARS_TROPHY_AGAIN"))
-			w.again = g.n
-		else:
-			trophies[t.id] = {"at": day, "last": day, "n": 1}
-			stars += int(Data.t("STARS_TROPHY"))
-		won.append(w)
-	if autosave:
-		_write(TROPHY_PATH, trophies)
-	_grant_stars(stars)
-	_changed()
-	return won
-
-
-## recordHistory(): the finished run, for the History screen and exports.
-func record_history() -> void:
-	if int(state.visits) <= 0:
-		return
-	var pts: Dictionary = Data.t("ITEM_POINTS")
-	var item_score := 0.0
-	for n in state.items:
-		item_score += pts.get(n, 0)
-	history.push_front({"mode": state.get("mode"), "date": Time.get_datetime_string_from_system(true) + "Z",
-		"visits": state.visits, "score": Util.js_round(Util.get_or(state, "bestMatScore", 0)), "itemScore": item_score,
-		"checks": Util.get_or(state, "checkLog", []).duplicate(true), "capstones": Trophies.run_caps(state),
-		"visitLog": Util.get_or(state, "visitLog", []).duplicate(true),
-		"bingoCard": state.bingoCard.duplicate() if state.get("bingoCard") != null else null,
-		"bingoLinesCompleted": Util.get_or(state, "bingoLinesCompleted", []).duplicate(), "dev": state.get("dev") == true})
-	history = history.slice(0, int(Data.t("HISTORY_MAX")))
-	if autosave:
-		_write(HISTORY_PATH, history)
-
-
-# ---- collections, Stars and clues; saved layouts (mat-layouts.js; prefs)
-
-func _found() -> Array:
-	if prefs.get("everUnlockedMatCollections") == null:
-		prefs.everUnlockedMatCollections = []
-	return prefs.everUnlockedMatCollections
-
-
-## A collection complete on the mat that hasn't been discovered yet (the
-## screen shows "New collection!"), or null.
-func undiscovered_on_mat() -> Variant:
-	for c in Mat.completed_in(Mat.on_mat(state)):
-		if not _found().has(c.id):
-			return c
-	return null
-
-
-## "Add to Collections": discovered for good, one Star.
-func discover_collection(id: String) -> void:
-	if not _found().has(id):
-		_found().append(id)
-	if prefs.get("collectionClues") is Dictionary:
-		prefs.collectionClues.erase(id)
-	_grant_stars(int(Data.t("STARS_DISCOVERY")))
-	_changed()
-
-
-## drawCollectionClue(): one more item of a random hidden collection,
-## preferring ones without a clue yet; its last item discovers it.
-func _draw_clue() -> Variant:
-	if not prefs.get("collectionClues") is Dictionary:
-		prefs.collectionClues = {}
-	var clues: Dictionary = prefs.collectionClues
-	var hidden := Mat.collections().filter(func(c): return not _found().has(c.id))
-	if hidden.is_empty():
-		return null
-	var fresh := hidden.filter(func(c): return not clues.has(c.id))
-	var c: Dictionary = Rng.pick(fresh if not fresh.is_empty() else hidden)
-	var known: Array = clues.get(c.id, [])
-	var item = Market.shuffle(c.items.filter(func(n): return not known.has(n)))[0]
-	clues[c.id] = known + [item]
-	var discovered: bool = clues[c.id].size() >= c.items.size()
-	if discovered:
-		_found().append(c.id)
-		clues.erase(c.id)
-	return {"c": c, "item": item, "known": c.items if discovered else clues[c.id], "discovered": discovered}
-
-
-## buyClues(n): CLUE_COST Stars each, as many as Stars allow. Returns the clues.
-func buy_clues(n: int) -> Array:
-	n = mini(n, int(Util.get_or(prefs, "stars", 0)) / int(Data.t("CLUE_COST")))
-	var got := []
-	for i in n:
-		var clue = _draw_clue()
-		if clue == null:
-			break
-		got.append(clue)
-	prefs.stars -= got.size() * int(Data.t("CLUE_COST"))
-	_changed()
-	return got
-
-
-func save_layout(name: String) -> void:
-	if name.strip_edges() == "":
-		return
-	if prefs.get("savedMatLayouts") == null:
-		prefs.savedMatLayouts = []
-	prefs.savedMatLayouts.append({"name": name.strip_edges(), "items": state.mat.duplicate()})
-	_changed()
-
-
-func load_layout(i: int) -> void:
-	var L: Array = Util.get_or(prefs, "savedMatLayouts", [])
-	if i >= 0 and i < L.size():
-		place_mat_cards(L[i].items)
-
-
-func delete_layout(i: int) -> void:
-	var L: Array = Util.get_or(prefs, "savedMatLayouts", [])
-	if i >= 0 and i < L.size():
-		L.remove_at(i)
-		_changed()

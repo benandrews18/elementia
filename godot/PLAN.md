@@ -17,6 +17,8 @@ reference for every rule and screen until the Godot version replaces it.
 the Chrome side of the screenshot comparison.
 
 Log (newest first, one line per session):
+- 2026-11-15: M1 review fixes: 5x5 BINGO removed, safe craft(), Overtime
+  tests, cross-run code split into `game/progress.gd`. Parity 3604/3604.
 - 2026-11-15: M1 done. Parity 3594/3594 over 24 runs (incl. 6 on the 5x5
   BINGO card, and the trophies each run earns: 54 of 67 exercised).
   `tests/rules_test` covers convert, "?", suit costs, Market rewards,
@@ -126,7 +128,8 @@ godot/
   PLAN.md                  this file
   data/game_data.json      generated from game/js/data.js (don't edit)
   core/                    rules: plain GDScript classes, no nodes
-  game/                    autoloads: Game (state + actions + signals), Save, Prefs, Rng
+  game/                    autoloads: Game (the run: state + actions + signals),
+                           Progress (prefs, trophies, history, layouts, saving), Rng
   ui/
     theme/                 the Theme resource: colours, fonts, panel styles
     components/            ItemCard, ItemIcon, BenchPanel, QuarkBar, Button styles ...
@@ -198,7 +201,7 @@ Godot's own random and never touches `Rng`.
 | `data.js` | `data/game_data.json` + `core/data.gd` (loader) | data |
 | `model.js`, `map-graph.js` | `core/model.gd`, `core/map_graph.gd` | rules |
 | `mat-scoring.js` | `core/mat_scoring.gd` | rules |
-| `state.js` | `game/game.gd`, `game/save.gd`, `game/prefs.gd` | state |
+| `state.js` | `game/game.gd` (the run), `game/progress.gd` (prefs, saving) | state |
 | `crafting.js`, `station.js`, `travel.js` | `core/crafting.gd`, `core/station.gd`, `core/travel.gd` | rules |
 | rule parts of `roll`, `convert`, `suit-spend`, `lock-in`, `bingo`, `end-game`, `trophies`, `history`, `mat-layouts`, `empty-elements`, `opening` | matching `core/*.gd` | rules (split from screen code) |
 | screen parts of the files above, plus `hub`, `drawer`, `map`, `display-mat`, `job-board`, `pins`, `reference`, `card-popup`, `settings`, `welcome`, `tour`, `hints`, `overlays`, `combo-lab` | `ui/screens/*`, `ui/overlays/*` | screens |
@@ -342,6 +345,10 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-15: Save format identical to the HTML game's `state` JSON.
 - 2026-11-15: Port rules first (M1) and prove one screen on the iPhone (M3)
   before building the rest.
+- 2026-11-15: The 5x5 BINGO card (an HTML Settings switch) is retired: not
+  ported; the Market is 3 rows of 4. Goldens force `prefs.classicBingo = false`.
+- 2026-11-15: `Game.craft(name, picks)` is the safe craft (asks for suit-cost
+  picks); `craft_raw()` is the HTML game's unchecked rule, for replay only.
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
   are exported from the running game, never copied; no old-save migration;
   no pixel-difference overlay; comparison page built in M2.

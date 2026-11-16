@@ -8,7 +8,7 @@ const GOLDENS := "res://tests/goldens"
 const SHOW_FAILS := 8
 
 func _ready() -> void:
-	Game.autosave = false
+	Progress.autosave = false
 	var files := DirAccess.get_files_at(GOLDENS)
 	if files.is_empty():
 		print("No goldens: run node godot/tools/record_golden.mjs")
@@ -33,7 +33,8 @@ func _ready() -> void:
 					failed += 1
 					print("FAIL %s trophies: %s" % [f, d])
 				continue
-			var method: String = step.fn.to_snake_case()
+			# Recorded craft() is the raw rule (suit costs paid by the sim before it).
+			var method: String = "craft_raw" if step.fn == "craft" else step.fn.to_snake_case()
 			if not Game.has_method(method):
 				not_ported[step.fn] = not_ported.get(step.fn, 0) + 1
 				continue

@@ -49,8 +49,7 @@ const runs = await withGame(async (evalJS, errs) => {
   })()`);
   const runs = [];
   for (let i = 0; i < RUNS; i++) {
-    // Every 4th run uses the 5x5 BINGO card instead of Market rows (a setting).
-    await evalJS(`prefs.classicBingo = ${i % 4 === 3}; GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "${START}", index: ${i}})`);
+    await evalJS(`prefs.classicBingo = false; GOLDEN.length = 0; simPlay(1, {seed: ${SEED * 1000 + i}, start: "${START}", index: ${i}})`);
     // The trophies the HTML game awards this run, with varied across-run
     // totals (prefs) so the milestone and collection trophies get tested.
     await evalJS(`(() => {

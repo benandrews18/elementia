@@ -1,19 +1,11 @@
-## The Market card (mat-scoring.js, bingo.js): rows of 4 (default) or the
-## 5x5 BINGO card, drawing it, the centre capstone and finished lines.
+## The Market (mat-scoring.js, bingo.js): 3 rows of 4 items, drawn once per
+## run around the chosen capstone; each finished row pays a "?". (The HTML
+## game's old 5x5 BINGO card setting isn't ported: retired.)
 class_name Market
 
 
 static func _tier(n: String) -> String:
 	return Data.t("ITEM_TIER")[n]
-
-
-## JS arr[0]: null when empty.
-static func _first(arr: Array) -> Variant:
-	return null if arr.is_empty() else arr[0]
-
-
-static func rows_mode(s: Dictionary) -> bool:
-	return s.get("bingoLayout") == "rows"
 
 
 ## JS shuffle(): Fisher-Yates in place, drawing from Rng.
@@ -65,36 +57,8 @@ static func draw_row_card(capstone: Variant) -> Array:
 	return flat
 
 
-## drawBingoCard(): the 5x5 card, a capstone in the centre.
-static func draw_bingo_card(center: Variant) -> Array:
-	var el := eligible()
-	var cap_pool := shuffle(el.filter(func(n): return _tier(n) == "CAPSTONE"))
-	if center == null:
-		center = cap_pool[0]
-	var unlocked: Dictionary = Data.t("UNLOCKED_BY")
-	var used := {center: true}
-	var picks := []
-	for spread in Data.t("BINGO_TIER_SPREAD"):
-		var tier: String = spread[0]
-		var from_el := shuffle(el.filter(func(x): return _tier(x) == tier and not used.has(x)))
-		var from_core := shuffle(Data.t("CORE_ITEM_NAMES").filter(func(x):
-			return _tier(x) == tier and not used.has(x) and not unlocked.has(x) and not from_el.has(x)))
-		for x in (from_el + from_core).slice(0, int(spread[1])):
-			used[x] = true
-			picks.append(x)
-	var size := int(Data.t("BINGO_SIZE"))
-	var need := size * size - 1
-	if picks.size() < need:
-		for x in shuffle(el.filter(func(x): return not used.has(x) and _tier(x) != "CAPSTONE" and _tier(x) != "MATERIAL")).slice(0, need - picks.size()):
-			used[x] = true
-			picks.append(x)
-	var others := shuffle(picks)
-	var c := int(Data.t("BINGO_CENTER_IDX"))
-	return others.slice(0, c) + [center] + others.slice(c)
-
-
 static func ensure_card(s: Dictionary) -> Array:
-	var need := int(Data.t("MARKET_ROWS")) * int(Data.t("MARKET_ROW_LEN")) if rows_mode(s) else int(Data.t("BINGO_SIZE")) ** 2
+	var need := int(Data.t("MARKET_ROWS")) * int(Data.t("MARKET_ROW_LEN"))
 	var core: Array = Data.t("CORE_ITEM_NAMES")
 	var card = s.get("bingoCard")
 	var stale: bool = card != null and card.any(func(n): return not core.has(n))
@@ -103,67 +67,34 @@ static func ensure_card(s: Dictionary) -> Array:
 			s.bingoLinesCompleted = []
 			s.pendingBingoClears = []
 			s.bingoCenterChosen = false
-		s.bingoCard = draw_row_card(null) if rows_mode(s) else draw_bingo_card(null)
+		s.bingoCard = draw_row_card(null)
 	return s.bingoCard
 
 
-## setBingoCenter(): the run's chosen capstone (or "__RANDOM__").
+## setBingoCenter(): the run's chosen capstone (or "__RANDOM__") gets its own
+## row, if no row has paid out yet.
 static func set_center(s: Dictionary, name: String) -> void:
 	if name == Data.t("BINGO_RANDOM_CAPSTONE"):
 		name = Rng.pick(capstone_choices())
-	if rows_mode(s):
-		if Util.get_or(s, "bingoLinesCompleted", []).is_empty():
-			s.bingoCard = draw_row_card(name)
-		else:
-			ensure_card(s)
-		s.bingoCenterChosen = true
-		return
-	var card := ensure_card(s).duplicate()
-	var c := int(Data.t("BINGO_CENTER_IDX"))
-	var dup := -1
-	for i in card.size():
-		if i != c and card[i] == name:
-			dup = i
-			break
-	if dup != -1:
-		var used := {}
-		for n in card:
-			used[n] = true
-		used[name] = true
-		var filler = _first(shuffle(eligible().filter(func(n): return _tier(n) == _tier(card[dup]) and not used.has(n))))
-		if filler == null:
-			filler = _first(shuffle(eligible().filter(func(n): return _tier(n) != "CAPSTONE" and _tier(n) != "MATERIAL" and not used.has(n))))
-		if filler != null:
-			card[dup] = filler
-	card[c] = name
-	s.bingoCard = card
+	if Util.get_or(s, "bingoLinesCompleted", []).is_empty():
+		s.bingoCard = draw_row_card(name)
+	else:
+		ensure_card(s)
 	s.bingoCenterChosen = true
 
 
-static func lines(s: Dictionary) -> Array:
-	var out := []
-	if rows_mode(s):
-		var n := int(Data.t("MARKET_ROW_LEN"))
-		for r in int(Data.t("MARKET_ROWS")):
-			out.append(range(r * n, r * n + n))
-		return out
-	var n := int(Data.t("BINGO_SIZE"))
-	for r in n:
-		out.append(range(n).map(func(c): return r * n + c))
-	for c in n:
-		out.append(range(n).map(func(r): return r * n + c))
-	out.append(range(n).map(func(i): return i * n + i))
-	out.append(range(n).map(func(i): return i * n + n - 1 - i))
-	return out
+static func lines() -> Array:
+	var n := int(Data.t("MARKET_ROW_LEN"))
+	return range(int(Data.t("MARKET_ROWS"))).map(func(r): return range(r * n, r * n + n))
 
 
-## checkBingoLines(): each newly finished line, once ever.
+## checkBingoLines(): each newly finished row, once ever.
 static func check_lines(s: Dictionary) -> void:
 	if s.get("bingoCard") == null:
 		return
 	if s.get("pendingBingoClears") == null:
 		s.pendingBingoClears = []
-	var ls := lines(s)
+	var ls := lines()
 	for i in ls.size():
 		if s.bingoLinesCompleted.any(func(x): return int(x) == i):
 			continue

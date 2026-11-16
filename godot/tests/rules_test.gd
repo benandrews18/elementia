@@ -26,7 +26,7 @@ func fresh(station := "The Ocean") -> Dictionary:
 
 
 func _ready() -> void:
-	Game.autosave = false
+	Progress.autosave = false
 	# Util
 	check(Util.js_round(2.5) == 3 and Util.js_round(-2.5) == -2, "js_round halves up like Math.round")
 	check(Util.stable_sort([[1, "a"], [0, "b"], [1, "c"]], func(x, y): return x[0] - y[0]).map(func(x): return x[1]) == ["b", "a", "c"], "stable_sort keeps ties in order")
@@ -111,7 +111,7 @@ func _ready() -> void:
 	var gift := Catalog.sorted_dice(Catalog.station(home))
 	check(int(s.visits) == 1 and Game.ctx.current == home, "run starts at the capstone's station")
 	check(s.bingoCard.size() == 12 and s.bingoCard.has(capstone) and s.bingoCenterChosen, "Market rows drawn around the capstone")
-	check(Game.is_pinned(capstone), "capstone pinned")
+	check(Progress.is_pinned(capstone), "capstone pinned")
 	var logged := 0
 	for k in s.visitLog[0].elements:
 		logged += s.visitLog[0].elements[k]
@@ -119,25 +119,54 @@ func _ready() -> void:
 
 	# Trophies: awarded once a day, repeats count, the run counts toward totals once
 	Game.state.runComplete = true
-	Game.trophies = {}
-	Game.prefs.erase("lifetime")
-	var stars_before: int = Game.prefs.stars
-	var won := Game.award_trophies()
-	check(won.size() > 0 and Game.trophies.has("first-run") and Game.prefs.stars == stars_before + won.size() * int(Data.t("STARS_TROPHY")), "trophies awarded with Stars")
-	check(Game.prefs.lifetime.runs == 1 and Game.state.lifetimeCounted, "run counted toward totals")
-	check(Game.award_trophies().is_empty() and Game.prefs.lifetime.runs == 1, "same day: nothing again, not counted twice")
-	Game.trophies["first-run"].last = "2000-01-01"
-	var again := Game.award_trophies()
-	check(again.size() == 1 and again[0].again == 2 and Game.trophies["first-run"].n == 2, "a new day earns it again (x2)")
+	Progress.trophies = {}
+	Progress.prefs.erase("lifetime")
+	var stars_before: int = Progress.prefs.stars
+	var won := Progress.award_trophies()
+	check(won.size() > 0 and Progress.trophies.has("first-run") and Progress.prefs.stars == stars_before + won.size() * int(Data.t("STARS_TROPHY")), "trophies awarded with Stars")
+	check(Progress.prefs.lifetime.runs == 1 and Game.state.lifetimeCounted, "run counted toward totals")
+	check(Progress.award_trophies().is_empty() and Progress.prefs.lifetime.runs == 1, "same day: nothing again, not counted twice")
+	Progress.trophies["first-run"].last = "2000-01-01"
+	var again := Progress.award_trophies()
+	check(again.size() == 1 and again[0].again == 2 and Progress.trophies["first-run"].n == 2, "a new day earns it again (x2)")
 
 	# History and a save round trip (a scratch file, never the real save)
-	Game.history = []
-	Game.record_history()
-	check(Game.history.size() == 1 and Game.history[0].capstones == [] and int(Game.history[0].visits) == 1, "run recorded in history")
-	Game._write("user://_rules_test.json", Game.state)
-	var back: Dictionary = Game._read("user://_rules_test.json", {})
+	Progress.history = []
+	Progress.record_history()
+	check(Progress.history.size() == 1 and Progress.history[0].capstones == [] and int(Progress.history[0].visits) == 1, "run recorded in history")
+	Progress._write("user://_rules_test.json", Game.state)
+	var back: Dictionary = Progress._read("user://_rules_test.json", {})
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://_rules_test.json"))
 	check(parity_diff(back, Game.state) == "", "save round trip: " + parity_diff(back, Game.state))
+
+	# Overtime: every Lock-In risks the run; visit 40 ends it
+	s = fresh()
+	s.visits = 26  # not a regular check visit: only Overtime makes it risky
+	s.runComplete = true
+	s.matChecked = true
+	check(Game.lock_in_ends_run(), "Overtime: an empty mat's Lock-In ends the run")
+	Game.ctx.selectedMapStation = "The City"
+	Game.confirm_lock_in()
+	check(s.ended and s.finalGameOver and int(s.visits) == 26, "Overtime game over, no travel")
+	s = fresh()
+	s.visits = int(Data.t("MAX_VISITS"))
+	s.runComplete = true
+	Game.go_map()
+	check(s.ended and s.reachedHardLimit, "visit 40: the run ends")
+
+	# craft() asks for suit-cost picks; craft_raw() is only the replayed rule
+	s = fresh()
+	var costly := ""
+	for n in Data.t("ITEM_SUIT_COST_TABLE"):
+		if Catalog.entry(n) != null and Catalog.needs_of(Catalog.entry(n).reqs).items.is_empty():
+			costly = n
+			break
+	for sym in Catalog.needs_of(Catalog.entry(costly).reqs).els:
+		s.elements[sym] = 5
+	for su in Game.suit_cost_need(costly):
+		for el in Data.t("SUIT_CORE_ELEMENTS")[su]:
+			s.elements[el] = Catalog.count(s, el) + 5
+	check(not Game.craft(costly), "%s: craft() refuses without paying its suit cost" % costly)
 
 	# Collections: discovery pays a Star; clues cost Stars and can discover
 	s = fresh()
@@ -145,22 +174,22 @@ func _ready() -> void:
 	var col: Dictionary = Mat.collections()[0]
 	s.items = col.items.duplicate()
 	s.mat = col.items.duplicate()
-	Game.prefs.everUnlockedMatCollections = []
-	Game.prefs.stars = 0
-	check(Game.undiscovered_on_mat() != null and Game.undiscovered_on_mat().id == col.id, "a completed collection waits to be discovered")
-	Game.discover_collection(col.id)
-	check(Game.undiscovered_on_mat() == null and Game.prefs.stars == int(Data.t("STARS_DISCOVERY")), "discovered, one Star")
-	Game.prefs.stars = int(Data.t("CLUE_COST")) * 2 + 1
-	var clues := Game.buy_clues(5)
-	check(clues.size() == 2 and Game.prefs.stars == 1, "two clues bought with the Stars there were")
+	Progress.prefs.everUnlockedMatCollections = []
+	Progress.prefs.stars = 0
+	check(Progress.undiscovered_on_mat() != null and Progress.undiscovered_on_mat().id == col.id, "a completed collection waits to be discovered")
+	Progress.discover_collection(col.id)
+	check(Progress.undiscovered_on_mat() == null and Progress.prefs.stars == int(Data.t("STARS_DISCOVERY")), "discovered, one Star")
+	Progress.prefs.stars = int(Data.t("CLUE_COST")) * 2 + 1
+	var clues := Progress.buy_clues(5)
+	check(clues.size() == 2 and Progress.prefs.stars == 1, "two clues bought with the Stars there were")
 	check(clues.all(func(c): return not c.c.id == col.id), "clues are for hidden collections")
 
 	# Saved layouts
-	Game.prefs.savedMatLayouts = []
-	Game.save_layout("  Mine ")
+	Progress.prefs.savedMatLayouts = []
+	Progress.save_layout("  Mine ")
 	s.mat = []
-	Game.load_layout(0)
-	check(Game.prefs.savedMatLayouts[0].name == "Mine" and s.mat == col.items, "a saved layout loads back")
+	Progress.load_layout(0)
+	check(Progress.prefs.savedMatLayouts[0].name == "Mine" and s.mat == col.items, "a saved layout loads back")
 
 	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
