@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/suit_metal.png-f74db804b272b0d61d779ced0a8aaf
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

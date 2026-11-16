@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/btn_filter.webp-f9c3c563db9f1b04ff822f9a325cc
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

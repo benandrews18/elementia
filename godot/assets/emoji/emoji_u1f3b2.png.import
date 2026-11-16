@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/emoji_u1f3b2.png-acb7edbebf0e787bb644d6b15b97
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

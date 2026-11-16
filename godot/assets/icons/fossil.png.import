@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/fossil.png-59251cb1332d8db26745a31e94b52f11.c
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

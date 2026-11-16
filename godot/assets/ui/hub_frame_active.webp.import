@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/hub_frame_active.webp-2b27e17f2b434a13b91258e
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

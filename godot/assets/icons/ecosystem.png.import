@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/ecosystem.png-63260fb8687f4e7b30b4903f7a33daf
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/st_forest.webp-0758f89c5e55a4a32066f60b7533aa
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

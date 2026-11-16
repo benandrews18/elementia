@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/pill_long.webp-61b482e088bd24b54ff26c9bfec6d7
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

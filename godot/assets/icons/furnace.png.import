@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/furnace.png-5a286f34180803176c996ea62143abee.
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

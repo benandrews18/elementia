@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/st_greenhouse.webp-906c5212ef29d1c4b6c1116824
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

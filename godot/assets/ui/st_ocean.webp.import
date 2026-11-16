@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/st_ocean.webp-45976996024a3cab56feff548b5979d
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

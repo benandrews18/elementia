@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/diamond_map_full.webp-8d2783b17f56cad29a850c8
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

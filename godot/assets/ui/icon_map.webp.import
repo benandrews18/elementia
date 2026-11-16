@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/icon_map.webp-2a65a68d078c8f26b763cfa94f9571c
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -28,5 +28,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 [importer_defaults]
 
 texture={
+"compress/mode": 1,
+"compress/lossy_quality": 0.8,
 "mipmaps/generate": true
 }

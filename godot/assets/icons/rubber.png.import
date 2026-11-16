@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/rubber.png-ea7698ad86dcc1c4589189df895ab69d.c
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/st_bakery.webp-fc3e03b85f92c9866e29153072a67a
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
