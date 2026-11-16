@@ -14,11 +14,7 @@ static func open(on: Control) -> UnknownPick:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.gui_input.connect(func(ev): if ConvertTray._tap(ev): queue_free())
-	add_child(dim)
+	ConfirmDialog.dim(self, queue_free)
 	var at = Game.ctx.current if Game.ctx.current else Game.state.get("lastStation")
 	if not at:
 		queue_free()

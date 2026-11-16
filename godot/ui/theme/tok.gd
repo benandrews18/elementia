@@ -61,6 +61,22 @@ static func box(bg: Color, radius: float, border := 0.0, border_color := Color.B
 	return s
 
 
+## .bigbtn.sec on parchment: a sunken tan face with a darker edge.
+static func parch_box() -> StyleBoxFlat:
+	return box(Color("#e6cf9f"), 11, 1.5, Color("#c9a571"))
+
+
+## A parchment window's secondary button (Cancel, Back, New Game...).
+static func parch_button(text: String, sz: Vector2, px := 15.0) -> Label:
+	var l := label(text, px, Color("#3b2412"), 800)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_stylebox_override("normal", parch_box())
+	l.mouse_filter = Control.MOUSE_FILTER_STOP
+	l.size = sz
+	return l
+
+
 ## A label in the game's font.
 static func label(text: String, size: float, color: Color, weight := 400) -> Label:
 	var l := Label.new()

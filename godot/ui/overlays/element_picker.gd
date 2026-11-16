@@ -11,11 +11,7 @@ var on_pick: Callable
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.gui_input.connect(func(ev): if ConvertTray._tap(ev): queue_free())
-	add_child(dim)
+	ConfirmDialog.dim(self, queue_free)
 	var is_from := side == "from"
 	var order: Array = Data.t("ELEMENT_SUIT").keys()
 	var syms: Array = (Game.state.elements.keys().filter(func(s): return Game.state.elements[s] > 0) if is_from
@@ -52,11 +48,4 @@ func _ready() -> void:
 		var none := Tok.label("You don't have any elements yet." if is_from else "No other elements to pick.", 14, Color("#5e4026"), 600)
 		none.position = Vector2(28, gy)
 		box.add_child(none)
-	var close := TextureRect.new()
-	close.texture = load("res://assets/ui/btn_close.webp")
-	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.size = Vector2(38, 38)
-	close.position = Vector2(w - 26, -12)
-	close.gui_input.connect(func(ev): if ConvertTray._tap(ev): queue_free())
-	box.add_child(close)
+	ConfirmDialog.close_x(box, queue_free)

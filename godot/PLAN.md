@@ -19,6 +19,11 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5 review fixes: a run still at visit 0 (quit during the
+  capstone choice) restarts the opening; closing the mat after the run ends
+  shows the end screen again (and New Game doesn't); Game.reward_of() is the
+  one dice/"?" rule; ConfirmDialog.dim()/close_x() and Tok.parch_button()
+  replace 7/2/4 copies. ui_play checks both dead ends (verified failing).
 - 2026-11-16: M5: Convert (ConvertTray panel: element grid, FROM stack,
   arrow 3:1, TO; ElementPicker; the result flies to the Inventory) and
   spending a "?" (UnknownPick: this station's elements). ui_play converts

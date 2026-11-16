@@ -63,13 +63,34 @@ static func window(sz: Vector2, title_text: String) -> Control:
 	return box
 
 
+## The dark backdrop behind a window, filling `on`; a tap on it calls
+## on_tap (none: it only blocks taps).
+static func dim(on: Control, on_tap := Callable()) -> ColorRect:
+	var d := ColorRect.new()
+	d.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
+	d.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if on_tap.is_valid():
+		d.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_tap.call())
+	on.add_child(d)
+	return d
+
+
+## A window's ✕, on its top-right corner.
+static func close_x(box: Control, on_close: Callable) -> TextureRect:
+	var x := TextureRect.new()
+	x.texture = load("res://assets/ui/btn_close.webp")
+	x.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	x.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	x.size = Vector2(38, 38)
+	x.position = Vector2(box.size.x - 26, -12)
+	x.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_close.call())
+	box.add_child(x)
+	return x
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
-	add_child(dim)
+	ConfirmDialog.dim(self, queue_free)
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * (30 + 8)
 	var msg := Tok.label(message, 15, Color("#5e4026"), 400)
@@ -95,12 +116,7 @@ func _ready() -> void:
 		queue_free()
 		on_yes.call())
 	box.add_child(yes)
-	var no := Tok.label("Cancel", 15, Color("#3b2412"), 800)
-	no.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	no.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	no.add_theme_stylebox_override("normal", Tok.box(Color("#e6cf9f"), 11, 1.5, Color("#c9a571")))
+	var no := Tok.parch_button("Cancel", Vector2(Tok.font(800).get_string_size("Cancel", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
 	no.position = Vector2(yes.position.x + yes.size.x + 10, by)
-	no.size = Vector2(Tok.font(800).get_string_size("Cancel", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46)
-	no.mouse_filter = MOUSE_FILTER_STOP
 	no.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
 	box.add_child(no)

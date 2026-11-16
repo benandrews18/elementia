@@ -18,11 +18,7 @@ var _popped := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _done())
-	add_child(dim)
+	ConfirmDialog.dim(self, _done)
 	_build()
 
 

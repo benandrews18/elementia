@@ -185,7 +185,7 @@ func mat_score() -> Dictionary:
 func quiet_check() -> void:
 	if not state.get("matChecked"):
 		return
-	var quiet := mini(Orders.reward_for(mat_score().total, int(state.visits)), 3)
+	var quiet: int = reward_of(Orders.reward_for(mat_score().total, int(state.visits))).dice
 	state.tripDice = maxi(int(Util.get_or(state, "matBonusDice", 0)), quiet)
 	_changed()
 
@@ -209,6 +209,12 @@ func _start_final_check() -> void:
 func lock_in_ends_run() -> bool:
 	var gated: bool = state.get("runComplete") or (int(state.visits) >= int(Data.t("BREAKPOINT_GATE_VISIT")) and Catalog.is_sunset_visit(state))
 	return gated and Orders.reward_for(mat_score().total, Orders.check_round(state)) == 0
+
+
+## What a reward tier (0-4) gives (diceDeltaForReward()): bonus dice, at
+## most 3, and at the top tier an Unknown Element.
+static func reward_of(tier: int) -> Dictionary:
+	return {"dice": mini(tier, 3), "unknown": tier >= 4}
 
 
 ## Scores the mat and travels to ctx.selectedMapStation, or ends the run on a
@@ -252,11 +258,11 @@ func _finish_lock_in(reward: int) -> void:
 	state.lastCheckedMat = state.mat.duplicate()
 	_note_mat_feats()
 	state.ecoStreak = int(Util.get_or(state, "ecoStreak", 0)) + 1 if Mat.has(cards, "Ecosystem") else 0
-	var delta := mini(reward, 3)
+	var delta: int = reward_of(reward).dice
 	state.matChecked = true
 	state.matBonusDice = delta
 	state.tripDice = delta
-	if reward >= 4:
+	if reward_of(reward).unknown:
 		state.emptyElements = Util.get_or(state, "emptyElements", 0) + 1
 	var dest = ctx.selectedMapStation
 	ctx.travelPromptFor = null

@@ -45,11 +45,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var s := Game.state
 	_completing = s.get("runComplete") == true and not s.ended
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.mouse_filter = MOUSE_FILTER_STOP
-	add_child(dim)
+	ConfirmDialog.dim(self)
 	var w := minf(420, size.x - 24)
 	var inner := w - 2 * 38
 	var won: Array = Progress.award_trophies()
@@ -262,13 +258,7 @@ func _foot(inner: float) -> Control:
 		if wide:
 			c = RollPopup._pill_button(b[0], Vector2(bw, 46))
 		else:
-			var l := Tok.label(b[0], 13.5, INK, 800)
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			l.add_theme_stylebox_override("normal", Tok.box(Color("#e6cf9f"), 11, 1.5, LINE))
-			l.mouse_filter = MOUSE_FILTER_STOP
-			l.size = Vector2(bw, 46)
-			c = l
+			c = Tok.parch_button(b[0], Vector2(bw, 46), 13.5)
 		c.position = Vector2(x, y)
 		var act: Callable = b[2]
 		c.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: act.call())

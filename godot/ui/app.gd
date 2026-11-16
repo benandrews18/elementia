@@ -88,10 +88,10 @@ func _confetti() -> void:
 ## the HTML game; not yet here.
 func new_game() -> void:
 	Progress.record_history()
-	close_panel()
-	Game.state = Game.fresh_state()
+	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
 	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
 	Progress.prefs.pinnedItems = []
+	close_panel()
 	Game._changed()
 	var c := CapstoneChoice.new()
 	c.size = size
@@ -134,6 +134,8 @@ func close_panel() -> void:
 		_panel_node.queue_free()
 	_panel_node = null
 	panel = ""
+	if Game.state.get("ended"):  # e.g. after "Review my collection": the end screen again (New Game)
+		Game.ctx.endShown = ""
 	_sync()
 
 
@@ -220,11 +222,11 @@ Are you sure?", func():
 			close_panel()
 			Game.confirm_lock_in())
 		return
-	var reward := Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state))
+	var reward := Game.reward_of(Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state)))
 	_count_then(func():
 		var dlg := LockInReward.new()
-		dlg.dice = mini(reward, 3)
-		dlg.unknown = reward >= 4
+		dlg.dice = reward.dice
+		dlg.unknown = reward.unknown
 		dlg.quarks = Game.mat_score().total
 		dlg.size = size
 		dlg.on_done = func(): fade_through_black(func():

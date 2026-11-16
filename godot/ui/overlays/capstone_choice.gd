@@ -18,11 +18,7 @@ var _busy := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.mouse_filter = MOUSE_FILTER_STOP  # no way out but choosing
-	add_child(dim)
+	ConfirmDialog.dim(self)
 	_choice()
 
 
@@ -116,12 +112,7 @@ func _confirm(name: String) -> void:
 	box.add_child(lab)
 	y += 22
 	y = _components(box, e, y, w) + 16
-	var back := Tok.label("Back", 15, INK, 800)
-	back.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	back.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	back.add_theme_stylebox_override("normal", Tok.box(Color("#e6cf9f"), 11, 1.5, Color("#c9a571")))
-	back.mouse_filter = MOUSE_FILTER_STOP
-	back.size = Vector2(80, 46)
+	var back := Tok.parch_button("Back", Vector2(80, 46))
 	back.position = Vector2((w - 80) / 2, y)
 	back.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and not _busy: _choice())
 	box.add_child(back)

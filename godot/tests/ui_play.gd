@@ -90,6 +90,25 @@ func _ready() -> void:
 	check(convert_done, "converted through the Convert tray")
 	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame)), "the end screen shows")
+	# "Review my collection", then closing the mat: the end screen comes back.
+	var shown := func(cls): return app.get_children().any(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	for c in app.get_children():
+		if c is EndGame:
+			c.queue_free()
+	app.open_panel("drawer")
+	app.close_panel()
+	check(await _until(func(): return shown.call(EndGame)), "closing the mat after the run ends brings the end screen back")
+	# New Game from there: the capstone choice, and the end screen stays gone.
+	for c in app.get_children():
+		if c is EndGame:
+			c.queue_free()
+	app.new_game()
+	for i in 3:
+		await get_tree().process_frame
+	check(shown.call(CapstoneChoice) and not shown.call(EndGame), "New Game shows the capstone choice, not the end screen")
+	for c in app.get_children():
+		if c is CapstoneChoice:
+			c.queue_free()
 	await _final_score(app)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)

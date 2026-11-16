@@ -62,11 +62,7 @@ var _box: Control
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
-	add_child(dim)
+	ConfirmDialog.dim(self, queue_free)
 	_build()
 
 
@@ -118,14 +114,7 @@ func _build() -> void:
 			_box.add_child(rest)
 		d.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_box.add_child(rule)
-	var close := TextureRect.new()  # the corner ✕
-	close.texture = load("res://assets/ui/btn_close.webp")
-	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.size = Vector2(38, 38)
-	close.position = Vector2(w - 26, -12)
-	close.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
-	_box.add_child(close)
+	ConfirmDialog.close_x(_box, queue_free)
 	var clock := _clock(int(o.round))
 	clock.position = Vector2(-22, -22)
 	_box.add_child(clock)
@@ -137,7 +126,7 @@ func _build() -> void:
 		var can: bool = Util.get_or(Game.state, "emptyElements", 0) > 0 and not Game.ctx.lockInCommitted \
 			and Orders.draw(Game.state, int(o.round), o) != null
 		var sw := Panel.new()
-		sw.add_theme_stylebox_override("panel", Tok.box(Color("#e6cf9f"), 11, 1.5, Color("#c9a571")))
+		sw.add_theme_stylebox_override("panel", Tok.parch_box())
 		sw.size = Vector2(22 + 8 + 28 + 44, 46)
 		var arrow := Tok.loop_arrow(Color("#3b2412"), 28, true)
 		arrow.position = Vector2(22, 9)
