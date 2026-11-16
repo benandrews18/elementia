@@ -21,6 +21,18 @@ func _ready() -> void:
 	for i in 3:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
+	if a.has("rects"):  # every node tagged with meta "cmp": [x, y, w, h] in 390-wide design pixels
+		var rects := {}
+		var walk := func(n: Node, self_ref: Callable) -> void:
+			if n is Control and n.has_meta("cmp") and n.is_visible_in_tree():
+				var r: Rect2 = n.get_global_rect()
+				rects[n.get_meta("cmp")] = [snappedf(r.position.x, 0.1), snappedf(r.position.y, 0.1), snappedf(r.size.x, 0.1), snappedf(r.size.y, 0.1)]
+			for c in n.get_children():
+				self_ref.call(c, self_ref)
+		walk.call(screen, walk)
+		var f := FileAccess.open(a.rects, FileAccess.WRITE)
+		f.store_string(JSON.stringify(rects))
+		f.close()
 	var out: String = a.get("out", "user://shot.png")
 	var err := get_viewport().get_texture().get_image().save_png(out)
 	print("saved " + out if err == OK else "FAILED to save %s (%d)" % [out, err])

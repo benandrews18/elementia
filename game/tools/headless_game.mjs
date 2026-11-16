@@ -12,8 +12,9 @@ export const GAME = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 export const wait = ms => new Promise(r => setTimeout(r, ms));
 
-// fn(evalJS, errs) runs with the game booted; returns fn's result. errs
-// collects uncaught page exceptions.
+// fn(evalJS, errs, send) runs with the game booted; returns fn's result. errs
+// collects uncaught page exceptions; send(method, params) is a raw DevTools
+// call (screenshots, viewport size).
 // page: which page under game/ to open (default the game itself).
 export async function withGame(fn, { http = 8791, cdp = 9339, page = "elementia.html" } = {}) {
   const profile = mkdtempSync(join(tmpdir(), "elementia-headless-"));
@@ -47,7 +48,7 @@ export async function withGame(fn, { http = 8791, cdp = 9339, page = "elementia.
       try { if (await evalJS("document.readyState === 'complete' && typeof state !== 'undefined' && typeof render === 'function'")) break; } catch {}
     }
     await wait(500);
-    return await fn(evalJS, errs);
+    return await fn(evalJS, errs, send);
   } finally {
     chrome.kill(); server.kill();
     await wait(500);

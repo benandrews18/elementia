@@ -62,6 +62,8 @@ const out = await withGame(async (evalJS, errs) => {
     const grab = (key, html) => {
       const img = /src="data:image\\/(png|webp|jpeg);base64,([^"]+)"/.exec(html);
       if (img) return icons[key] = { ext: img[1] === "jpeg" ? "jpg" : img[1], b64: img[2] };
+      const svgSrc = /src="data:image\\/svg\\+xml;base64,([^"]+)"/.exec(html);
+      if (svgSrc) return icons[key] = { ext: "svg", text: atob(svgSrc[1]) };
       const uri = /^data:image\\/svg\\+xml;base64,(.+)$/.exec(html);
       if (uri) return icons[key] = { ext: "svg", text: atob(uri[1]) };
       const svg = /<svg[\\s\\S]*<\\/svg>/.exec(html);

@@ -12,11 +12,14 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M2 Look foundation (M1 done)
-**Next task:** M2: theme and tokens from `game/css/`, then the components
-(ItemIcon, ItemCard, BenchPanel, buttons, QuarkBar), a gallery scene, and
-the Chrome side of the screenshot comparison.
+**Next task:** M2: BenchPanel (hub_frame 9-slice), buttons, QuarkBar, top
+bar; add each to the gallery and `tools/compare.mjs`.
 
 Log (newest first, one line per session):
+- 2026-11-15: M2 started: `ui/theme/tok.gd` (tokens, system font, box/label/
+  icon helpers, icon outline shader), `ui/components/item_card.gd`,
+  `tests/gallery.gd`, `tools/compare.mjs`. Cards: 127 elements, 0 off by
+  more than 2px. Images now import with mipmaps (smooth when shrunk).
 - 2026-11-15: M1 review fixes: 5x5 BINGO removed, safe craft(), Overtime
   tests, cross-run code split into `game/progress.gd`. Parity 3604/3604.
 - 2026-11-15: M1 done. Parity 3594/3594 over 24 runs (incl. 6 on the 5x5
@@ -117,6 +120,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
+| HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |
 
 ---
 
@@ -349,6 +353,8 @@ Recorded so they aren't re-argued. Add new ones with the date.
   ported; the Market is 3 rows of 4. Goldens force `prefs.classicBingo = false`.
 - 2026-11-15: `Game.craft(name, picks)` is the safe craft (asks for suit-cost
   picks); `craft_raw()` is the HTML game's unchecked rule, for replay only.
+- 2026-11-15: Font = the device's own (SystemFont: Segoe UI / Helvetica Neue /
+  Arial), as the HTML game. Needs a bundled font for the web export (M3).
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
   are exported from the running game, never copied; no old-save migration;
   no pixel-difference overlay; comparison page built in M2.
