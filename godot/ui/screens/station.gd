@@ -122,6 +122,15 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	return 243.8
 
 
+## Craft through the app (it asks which elements pay a suit cost); alone
+## (tests), the simulator's picks.
+func _craft(n: String, at: Rect2) -> void:
+	if App.current:
+		App.current.craft_tap(n, at)
+	else:
+		Game.craft(n, Game.suggest_suit_picks(n))
+
+
 ## The Crafting Bench under the header: the tapped card's shop row (craft
 ## and pin from it) and the close button. Returns where the shop starts.
 func _bench(page: Control, w: float, y: float) -> float:
@@ -129,7 +138,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	if e == null:
 		return y
 	var bench := BenchPanel.new()
-	var craft := func(n): Game.craft(n, Game.suggest_suit_picks(n))
+	var craft := func(n, at: Rect2): _craft(n, at)
 	var pin := func(n):
 		Progress.toggle_pin(n)
 		Game.state_changed.emit()
@@ -293,7 +302,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		go.border_color = Color("#a05d12")
 		go.expand_margin_bottom = 3
 		btn.add_theme_stylebox_override("normal", go)
-		btn.gui_input.connect(_on_tap.bind(func(): Game.craft(e.name, Game.suggest_suit_picks(e.name))))
+		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
 	elif owned:
 		btn.add_theme_color_override("font_color", Tok.OK)
 		btn.add_theme_stylebox_override("normal", Tok.box(Color("#16301f"), 10))

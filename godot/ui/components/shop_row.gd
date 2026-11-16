@@ -90,7 +90,7 @@ func _ready() -> void:
 		go.expand_margin_bottom = 3
 		btn.add_theme_stylebox_override("normal", go)
 		btn.mouse_filter = MOUSE_FILTER_STOP
-		btn.gui_input.connect(func(ev): if _released(ev): on_craft.call(e.name))
+		btn.gui_input.connect(func(ev): if _released(ev): on_craft.call(e.name, btn.get_global_rect()))
 	else:
 		btn.add_theme_color_override("font_color", Tok.MUTE)
 		btn.add_theme_stylebox_override("normal", Tok.box(Tok.SUNKEN, 10))

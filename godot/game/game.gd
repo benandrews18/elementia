@@ -374,8 +374,7 @@ func suit_cost_payable(name: String) -> bool:
 
 ## Suit-cost picks for name, from each suit's elements with the most to
 ## spare beyond the recipe (as the simulator pays). {} if none needed or it
-## can't be paid. shortcut: the HTML game lets the player choose (the
-## suit-spend balloon); that screen comes later in M4.
+## can't be paid. For tests and the simulator: players choose (SuitSpend).
 func suggest_suit_picks(name: String) -> Dictionary:
 	var e = Catalog.entry(name)
 	if e == null or not suit_cost_payable(name):

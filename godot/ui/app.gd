@@ -11,8 +11,11 @@ var _screen_name := ""
 var _panel_node: Control
 var _hub: HubBar
 
+static var current: App  # the running app, for screens that need it (crafting)
+
 
 func _ready() -> void:
+	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_hub = HubBar.new()
 	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -33,6 +36,19 @@ func _sync() -> void:
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()
+
+
+## A Craft tap: crafts at once, or, for an item with a suit cost, opens the
+## balloon to choose which elements pay it (pointing at the button).
+func craft_tap(name: String, button: Rect2) -> void:
+	if Game.suit_cost_need(name).is_empty():
+		Game.craft(name)
+		return
+	var b := SuitSpend.new()
+	b.item = name
+	b.anchor = button
+	b.size = size
+	add_child(b)
 
 
 ## Puts a shop card's row on the station's Crafting Bench (screenshots, tests).
