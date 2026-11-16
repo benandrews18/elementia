@@ -21,18 +21,21 @@ const SHADOW := Color(0, 0, 0, 0.45)
 
 static var _fonts := {}
 static var _outlines := {}
+static var _white: ShaderMaterial
 
 
 ## The game's font: Nunito (chosen 2026-11-15; assets/fonts, OFL), one
 ## variable file drawn at any weight. Bundled, so text looks the same on every
 ## device and on the web, where Godot can't use the phone's own fonts.
-static func font(weight := 400) -> Font:
-	if not _fonts.has(weight):
+static func font(weight := 400, spacing := 0) -> Font:
+	var key := "%d/%d" % [weight, spacing]
+	if not _fonts.has(key):
 		var f := FontVariation.new()
 		f.base_font = load("res://assets/fonts/Nunito-VariableFont_wght.ttf")
 		f.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
-		_fonts[weight] = f
-	return _fonts[weight]
+		f.spacing_glyph = spacing  # CSS letter-spacing, whole pixels
+		_fonts[key] = f
+	return _fonts[key]
 
 
 static func suit_color(suit: String) -> Color:
@@ -129,4 +132,28 @@ static func loop_arrow(color: Color, px: float, clockwise := false) -> Control:
 		var dir := Vector2(-sin(a0), cos(a0))  # along the arc, away from the gap
 		var out := Vector2(cos(a0), sin(a0))
 		c.draw_colored_polygon(PackedVector2Array([tip - dir * w * 2.2, tip + out * w * 1.8 + dir * w * 0.6, tip - out * w * 1.8 + dir * w * 0.6]), color))
+	return c
+
+
+## Draws an icon all white, keeping its shape (the suit glyphs on coloured badges).
+static func white() -> ShaderMaterial:
+	if _white == null:
+		_white = ShaderMaterial.new()
+		_white.shader = load("res://ui/theme/tint.gdshader")
+	return _white
+
+
+## A tick (✓), drawn: Nunito has none. In a coloured circle when bg is set.
+static func tick(color: Color, px: float, bg := Color.TRANSPARENT, ring := Color.TRANSPARENT) -> Control:
+	var c := Control.new()
+	c.size = Vector2(px, px)
+	c.custom_minimum_size = c.size
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		if ring.a > 0:
+			c.draw_circle(Vector2(px, px) / 2, px / 2 + 2, ring)
+		if bg.a > 0:
+			c.draw_circle(Vector2(px, px) / 2, px / 2, bg)
+		var k := px / 14.0
+		c.draw_polyline(PackedVector2Array([Vector2(3.5, 7.2) * k, Vector2(6, 9.8) * k, Vector2(10.5, 4.5) * k]), color, maxf(1.5, 1.8 * k), true))
 	return c

@@ -26,11 +26,7 @@ func _ready() -> void:
 		t.set_meta("cmp", "bench:title")
 		t.set_meta("bench_title", true)
 		add_child(t)
-		# letter-spacing .14em
-		var fv := FontVariation.new()
-		fv.base_font = Tok.font(900)
-		fv.spacing_glyph = int(round(11 * 0.14))
-		t.add_theme_font_override("font", fv)
+		t.add_theme_font_override("font", Tok.font(900, 2))  # letter-spacing .14em
 
 
 func _notification(what: int) -> void:

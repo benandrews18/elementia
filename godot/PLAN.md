@@ -18,6 +18,11 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M4: StationScreen (art + wash, header, element chips, crafted
+  bar, shop cards with pin/Craft, Convert button) and QuarkTopBar; App shows
+  it and Home's Roll / Map work. Station shot 110 elements, 1 off (title,
+  Nunito wider). Tok.font(weight, spacing); ✓ drawn (Tok.tick). Suit costs
+  paid automatically for now (suggest_suit_picks). Missing emoji: + 📌.
 - 2026-11-15: M4 started: `ui/app.gd` (screens, panels, Home's face as
   hubHomeFace()), `HubBar` (wood bar, framed side buttons, glossy Home ball
   shader + brass rim), `Frame9` shared 9-slice. Hub matches (mat shot 115

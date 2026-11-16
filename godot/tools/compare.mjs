@@ -18,8 +18,8 @@ const TOL = 2;
 mkdirSync(OUT, { recursive: true });
 
 // Tags an item card's parts (matCardHTML()) by the card's name.
-const TAG_CARDS = `(root => root.querySelectorAll(".mm-card").forEach(c => {
-  const n = c.dataset.matCard;
+const TAG_CARDS = `((root, pre = "") => root.querySelectorAll(".mm-card").forEach(c => {
+  const n = pre + c.dataset.matCard;
   c.dataset.cmp = n;
   const tag = (sel, k) => { const e = c.querySelector(sel); if (e) e.dataset.cmp = n + ":" + k; };
   tag(".mm-pts", "pts"); tag(".mm-icon img, .mm-icon svg", "icon"); tag(".mm-name", "name"); tag(".mm-stations", "stations");
@@ -67,6 +67,20 @@ const SHOTS = [
       ${TAG_CARDS}(document.getElementById("matGrid"));
     })()`,
     godot: ["--screen", "res://ui/app.gd", "--call", "open_panel:drawer", "--save", MAT_STATE] },
+  { name: "station", note: "The City at turn 7 of a recorded run, just rolled", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      render();
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t("#quarkTopBar", "qtop"); t("#settingsBtn", "settings"); t(".stationhead", "st:head"); t(".station-title-text", "st:title");
+      document.querySelectorAll(".gchip").forEach((e, i) => e.dataset.cmp = "st:chip" + i);
+      ${TAG_CARDS}(document.querySelector(".st-cards"), "st:");
+      document.querySelectorAll(".st-cell").forEach(c => { const n = c.querySelector(".mm-card").dataset.matCard;
+        c.querySelector(".st-acts > :first-child").dataset.cmp = "st:pin:" + n; c.querySelector(".craftbtn").dataset.cmp = "st:craft:" + n; });
+      const hub = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      hub("#hub", "hub"); hub("#hubHome", "hub:home"); hub("#hubJobs", "hub:jobs"); hub("#hubInv", "hub:inv");
+      hub("#hubMarket", "hub:market"); hub("#hubCodex", "hub:codex");
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
 ];
 
 // ---- run each shot on both sides

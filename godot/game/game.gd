@@ -372,6 +372,30 @@ func suit_cost_payable(name: String) -> bool:
 	return need.keys().all(func(su): return suit_surplus(su, reserved) >= need[su])
 
 
+## Suit-cost picks for name, from each suit's elements with the most to
+## spare beyond the recipe (as the simulator pays). {} if none needed or it
+## can't be paid. shortcut: the HTML game lets the player choose (the
+## suit-spend balloon); that screen comes later in M4.
+func suggest_suit_picks(name: String) -> Dictionary:
+	var e = Catalog.entry(name)
+	if e == null or not suit_cost_payable(name):
+		return {}
+	var reserved: Dictionary = Catalog.needs_of(e.reqs).els
+	var picks := {}
+	var need := suit_cost_need(name)
+	for su in need:
+		for i in need[su]:
+			var best = null
+			for el in Data.t("SUIT_CORE_ELEMENTS").get(su, []):
+				var spare: float = Catalog.count(state, el) - reserved.get(el, 0) - picks.get(el, 0)
+				if spare > 0 and (best == null or spare > Catalog.count(state, best) - reserved.get(best, 0) - picks.get(best, 0)):
+					best = el
+			if best == null:
+				return {}
+			picks[best] = picks.get(best, 0) + 1
+	return picks
+
+
 ## Crafting an item with a suit cost: picks {sym: n} are the elements paid
 ## (the suit-spend balloon). They must cover each suit exactly, from that
 ## suit's elements, without touching what the recipe needs.

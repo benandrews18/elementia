@@ -171,7 +171,10 @@ func _tap(ev: InputEvent, id: String) -> void:
 
 ## The bar's wood: a dark-brown vertical gradient with faint grain lines,
 ## a 3px brass top edge and a soft highlight under it.
+## flip: the Quark bar's copy, brass edge at the bottom.
 class HubWood extends Control:
+	var flip := false
+
 	func _draw() -> void:
 		var g := Gradient.new()
 		g.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
@@ -179,8 +182,11 @@ class HubWood extends Control:
 		var steps := 24
 		for i in steps:
 			var y0 := size.y * i / steps
-			draw_rect(Rect2(0, y0, size.x, size.y / steps + 1), g.sample((i + 0.5) / steps))
+			var t := (i + 0.5) / steps
+			draw_rect(Rect2(0, y0, size.x, size.y / steps + 1), g.sample(1.0 - t if flip else t))
 		for x in range(0, int(size.x), 22):
 			draw_rect(Rect2(x, 0, 3, size.y), Color(0, 0, 0, 0.05))
+		if flip:
+			draw_set_transform(Vector2(0, size.y), 0, Vector2(1, -1))
 		draw_rect(Rect2(0, 0, size.x, 3), Color("#d9a441"))
 		draw_rect(Rect2(0, 3, size.x, 2), Color(1, 0.86, 0.55, 0.25))

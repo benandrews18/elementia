@@ -26,6 +26,8 @@ static func make(name: String, o := {}) -> ItemCard:
 
 func _ready() -> void:
 	var card: Dictionary = Catalog.mat_card(item)
+	if opts.has("tag"):
+		set_meta("cmp", opts.tag)
 	var mini: bool = opts.get("mini", false)
 	var grid_mini: bool = mini and opts.get("in_grid", true)
 	var border := 3 if mini else 4

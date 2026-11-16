@@ -7,6 +7,7 @@ extends Control
 
 var panel := ""  # "" or "drawer"
 var _screen: Control
+var _screen_name := ""
 var _panel_node: Control
 var _hub: HubBar
 
@@ -17,7 +18,21 @@ func _ready() -> void:
 	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_hub)
 	_hub.pressed.connect(_on_hub)
-	Game.state_changed.connect(_sync_hub)
+	Game.state_changed.connect(_sync)
+	_sync()
+
+
+## The screen follows Game.ctx.screen; the hub follows everything.
+func _sync() -> void:
+	var want: String = Game.ctx.screen if Game.ctx.get("current") or Game.ctx.screen == "map" else "map"
+	if want != _screen_name:
+		_screen_name = want
+		if is_instance_valid(_screen):
+			_screen.queue_free()
+		# shortcut: the map screen comes next in M4; until then the map is empty.
+		_screen = StationScreen.new() if want == "station" else Control.new()
+		add_child(_screen)
+		move_child(_screen, 0)
 	_sync_hub()
 
 
@@ -29,7 +44,7 @@ func open_panel(name: String) -> void:
 		_panel_node = DisplayMatScreen.new()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
-	_sync_hub()
+	_sync()
 
 
 func close_panel() -> void:
@@ -37,7 +52,7 @@ func close_panel() -> void:
 		_panel_node.queue_free()
 	_panel_node = null
 	panel = ""
-	_sync_hub()
+	_sync()
 
 
 ## hubHomeFace(): what Home does right now.
@@ -89,5 +104,10 @@ func _on_hub(id: String) -> void:
 			else:
 				open_panel("drawer")
 		"home":
-			if home_face() == "close":
-				close_panel()
+			match home_face():
+				"close":
+					close_panel()
+				"roll":
+					Game.do_roll()  # shortcut: the roll animation (#rollPopup) comes later in M4
+				"map":
+					Game.go_map()
