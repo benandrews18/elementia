@@ -33,7 +33,7 @@ func _ready() -> void:
 			if x + span > 4:
 				x = 0
 				y += h + GAP
-			var c := ItemCard.make(n, {"mini": t1, "wide": wide})
+			var c := ItemCard.make(n, {"mini": t1, "wide": wide, "complete": n == "Light Bulb"})
 			c.position = Vector2(PAD + x * (col_w + GAP), y)
 			c.size = Vector2(col_w * span + GAP * (span - 1), h)
 			add_child(c)

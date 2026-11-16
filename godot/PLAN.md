@@ -310,6 +310,7 @@ to the user. Rough sizes are in sessions and are guesses.
 ### M3 Proof of concept: the Display Mat (~1-2 sessions)
 - [ ] The Display Mat screen with real data, cards placed and scored, its
       Quark meter and combo chips
+- [ ] ItemCard "lit" states: gold halos on pips / station badges in a live combo
 - [ ] Web export (thread-less, so GitHub Pages works) published as a
       preview page, like `fixed-screen`'s `/preview/`
 - [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.

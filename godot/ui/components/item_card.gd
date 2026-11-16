@@ -78,6 +78,15 @@ func _ready() -> void:
 	badge.size = Vector2(maxf(bsz, ceilf(text_w) + 12), bsz)
 	num.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	badge.add_child(num)
+	if opts.get("complete"):
+		# Whole recipe on the mat: a 2px gold ring and glow round the badge (.mm-card.complete .mm-pts).
+		var glow := Panel.new()
+		glow.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, bsz / 2 + 2, 0, Color.BLACK, 3, 0, Color(Tok.GOLD, 0.85)))
+		glow.mouse_filter = MOUSE_FILTER_IGNORE
+		glow.position = badge.position - Vector2(2, 2)
+		glow.size = badge.size + Vector2(4, 4)
+		add_child(glow)
+		move_child(glow, badge.get_index())  # behind the badge
 	badge.set_meta("cmp", item + ":pts")
 	add_child(badge)
 	# Suit pips: a column down the top-right corner (placed in _place()).

@@ -29,7 +29,7 @@ const galleryHTML = `(() => {
   box.innerHTML = '<div style="container-type:inline-size">' + tiers.map(names => {
     const t1 = MAT_CARD_BY_NAME[names[0]].tier === "MATERIAL";
     return '<div class="mat-tier-section"><div class="mat-results-grid ' + (t1 ? "half" : "") + '">' +
-      names.map(n => matCardHTML(n, { tray: true, cls: t1 ? "small mini" : "small" })).join("") + "</div></div>";
+      names.map(n => matCardHTML(n, { tray: true, complete: n === "Light Bulb", cls: t1 ? "small mini" : "small" })).join("") + "</div></div>";
   }).join("") + '<div class="st-card-sel" data-cmp="bench" style="margin-top:14px"><div data-cmp="bench:content" style="height:80px"></div></div></div>';
   document.body.appendChild(box);
   box.querySelectorAll(".mm-card").forEach(c => {
