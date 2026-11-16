@@ -81,6 +81,17 @@ const SHOTS = [
       hub("#hubMarket", "hub:market"); hub("#hubCodex", "hub:codex");
     })()`,
     godot: ["--screen", "res://ui/app.gd", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "map", note: "The map at turn 7 of a recorded run, The Power Plant picked", snap: join(GODOT_DIR, "tests", "fixtures", "map_visit7.json"),
+    open: `(() => {
+      render();
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t("#quarkTopBar", "qtop"); t(".map-card", "map:card"); t(".mn-here-label", "map:here");
+      document.querySelectorAll(".map-node").forEach(n => n.dataset.cmp = "map:" + n.dataset.mapNode);
+      const hub = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      hub("#hub", "hub"); hub("#hubHome", "hub:home"); hub("#hubJobs", "hub:jobs"); hub("#hubInv", "hub:inv");
+      hub("#hubMarket", "hub:market"); hub("#hubCodex", "hub:codex");
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--save", join(GODOT_DIR, "tests", "fixtures", "map_visit7.json")] },
 ];
 
 // ---- run each shot on both sides

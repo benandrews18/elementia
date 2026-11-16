@@ -29,8 +29,7 @@ func _sync() -> void:
 		_screen_name = want
 		if is_instance_valid(_screen):
 			_screen.queue_free()
-		# shortcut: the map screen comes next in M4; until then the map is empty.
-		_screen = StationScreen.new() if want == "station" else Control.new()
+		_screen = StationScreen.new() if want == "station" else MapScreen.new()
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()
@@ -94,8 +93,26 @@ func _sync_hub() -> void:
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
-## shortcut: only the drawer and Close are wired; the other buttons and faces
-## come with their screens in M4.
+## Travel: on a board-check turn the mat opens for the Lock-In (Home becomes
+## Lock In); otherwise a quiet check sets this trip's dice and off you go.
+func _travel(dest: String) -> void:
+	if Catalog.is_mat_check_visit(Game.state):
+		Game.ctx.travelPromptFor = dest
+		Game.start_check_order()
+		open_panel("drawer")
+	else:
+		Game.quiet_check()
+		Game.go_station(dest)
+
+
+## shortcut: the Lock-In sequence (Quarks counting up, the reward) and the
+## "your run ends here" question come later in M4; this scores and travels.
+func _lock_in() -> void:
+	close_panel()
+	Game.confirm_lock_in()
+
+
+## shortcut: To-Do List, Market and Items come later in M4.
 func _on_hub(id: String) -> void:
 	match id:
 		"inv":
@@ -111,3 +128,15 @@ func _on_hub(id: String) -> void:
 					Game.do_roll()  # shortcut: the roll animation (#rollPopup) comes later in M4
 				"map":
 					Game.go_map()
+				"shop":  # back into the station you're at, free (no visit spent)
+					Game.ctx.screen = "station"
+					Game.ctx.current = Game.state.lastStation
+					Game.ctx.selectedMapStation = null
+					Game.state_changed.emit()
+				"travel":
+					_travel(Game.ctx.selectedMapStation)
+				"lockin":
+					_lock_in()
+				"final":
+					Game.confirm_final_lock_in()
+					close_panel()

@@ -18,6 +18,10 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M4: MapScreen (art, nodes, paths, here label, station card)
+  matches (17 elements, card 5px short). App: Travel (quiet check or the
+  board-check Lock-In), Shop re-entry, Lock In, End. `tests/ui_play` plays a
+  whole run through the screens (found 2 redraw bugs).
 - 2026-11-15: M4: StationScreen (art + wash, header, element chips, crafted
   bar, shop cards with pin/Craft, Convert button) and QuarkTopBar; App shows
   it and Home's Roll / Map work. Station shot 110 elements, 1 off (title,
@@ -152,6 +156,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Import assets (after new art) | `G --headless --path godot --import` |
 | Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
+| A whole run through the screens | `G --path godot --quit-after 3000 res://tests/ui_play.tscn` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 | HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |

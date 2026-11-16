@@ -21,6 +21,8 @@ func _ready() -> void:
 
 
 func _redraw() -> void:
+	if is_queued_for_deletion() or not Game.ctx.get("current"):
+		return  # leaving the station: the app is swapping this screen out
 	var keep := 0
 	if is_instance_valid(_scroll):
 		keep = _scroll.scroll_vertical
@@ -62,7 +64,7 @@ func _redraw() -> void:
 		var qt := QuarkTopBar.new()
 		qt.size = Vector2(w, TOP)
 		add_child(qt)
-	_corner_buttons(w)
+	corner_buttons(self, true)
 
 
 ## The dark header: icon and name, the element chips, the crafted-items bar.
@@ -86,7 +88,7 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	var dice := Catalog.sorted_dice(st)
 	var cw := (w - 44 - 4 * (dice.size() - 1)) / dice.size()
 	for i in dice.size():
-		var chip := _element_chip(dice[i], cw)
+		var chip := element_chip(dice[i], cw)
 		chip.position = Vector2(22 + i * (cw + 4), 98.8)
 		chip.get_child(0).set_meta("cmp", "st:chip%d" % i)
 		page.add_child(chip)
@@ -103,7 +105,7 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	page.add_child(bar)
 	if Game.state.get("collapseCraftedItems"):
 		var x := 57.0
-		for e in _sorted(_shop_entries(st.name)):
+		for e in _sorted(shop_entries(st.name)):
 			if Catalog.owns(Game.state, e.name) and e.tier != "CAPSTONE":
 				var i2 := Tok.icon(e.emoji, 18)
 				i2.position = Vector2(x + 3, row_y + 8.3)
@@ -126,7 +128,7 @@ static func _sorted(entries: Array) -> Array:
 
 
 ## Station shop: open items here (entriesAt()), in data order.
-static func _shop_entries(station: String) -> Array:
+static func shop_entries(station: String) -> Array:
 	var unlocked: Dictionary = Data.t("UNLOCKED_BY")
 	return Data.t("ENTRIES").filter(func(e): return e.station == station \
 		and (not unlocked.has(e.name) or Catalog.owns(Game.state, unlocked[e.name])))
@@ -149,7 +151,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 	page.add_child(line)
 	y += 25.5 + 10
 	var fold: bool = s.get("collapseCraftedItems", false)
-	var shown := _shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
+	var shown := shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
 	var col_w := (w - 12 - 3 * GAP) / 4
 	var row_h := col_w * 1.4
 	var groups := [shown.filter(func(e): return e.tier == "MATERIAL"),
@@ -264,7 +266,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 
 ## A white element chip with its suit-coloured border, atomic number, the
 ## suit badge in the corner and the name under it (.gchip, .gname).
-func _element_chip(sym: String, w: float) -> Control:
+static func element_chip(sym: String, w: float) -> Control:
 	var col := Control.new()
 	col.size = Vector2(w, w + 13.8)
 	col.mouse_filter = MOUSE_FILTER_IGNORE
@@ -340,8 +342,10 @@ func _caps_label(text: String, at: Vector2, px := 12.0, spacing := 1.5) -> Label
 	return l
 
 
-## Settings (top right) and Convert (bottom right, once revealed).
-func _corner_buttons(w: float) -> void:
+## Settings (top right; not on the map, under its card) and Convert (bottom
+## right, once any element is held), on screen `on`.
+static func corner_buttons(on: Control, settings: bool) -> void:
+	var w := on.size.x
 	var gear := TextureRect.new()
 	gear.texture = load("res://assets/ui/btn_settings.webp")
 	gear.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -349,19 +353,20 @@ func _corner_buttons(w: float) -> void:
 	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
 	gear.size = Vector2(46, 46)
 	gear.set_meta("cmp", "settings")
-	add_child(gear)
+	if settings:
+		on.add_child(gear)
 	# Convert: on screen once any element is held (state.convertRevealed in
 	# the HTML game's updateHub()), with how many 3:1 conversions are possible.
-	var held: Array = Game.state.elements.values()
+	var held: Array = Util.get_or(Game.state, "elements", {}).values()
 	if Game.state.get("convertRevealed") or held.any(func(v): return v > 0):
 		var conv := TextureRect.new()
 		conv.texture = load("res://assets/ui/btn_quark.webp")
 		conv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		conv.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		conv.position = Vector2(w - 16 - 58, size.y - HubBar.H - 14 - 58)
+		conv.position = Vector2(w - 16 - 58, on.size.y - HubBar.H - 14 - 58)
 		conv.size = Vector2(58, 58)
 		conv.set_meta("cmp", "convert")
-		add_child(conv)
+		on.add_child(conv)
 		var n := 0
 		for v in held:
 			n += int(v) / int(Data.t("CONVERT_RATE"))
