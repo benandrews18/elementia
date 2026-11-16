@@ -12,10 +12,13 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M3 Proof of concept (M2 done)
-**Next task:** M3: publish the web build as a preview page (the user wants
-to be asked first), then the user's iPhone test. Go / no-go after.
+**Next task:** the user's iPhone test of https://benandrews18.github.io/elementia/godot/
+(Safari), then go / no-go for M4. Republish: export Web, copy build/web/*
+to ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M3 preview published (/elementia/godot/). Images import as lossy
+  WebP (game files 27 -> 5.5 MB; engine wasm 40 MB). Demo board doesn't save.
 - 2026-11-15: M3 review fix: a tap rebuilds only the mat half; the item list
   re-dims in place (late-game tap ~70ms -> ~10ms on a PC). Inventory list
   passes input through so the wheel / touch scroll reaches the ScrollContainer.
@@ -329,7 +332,7 @@ to the user. Rough sizes are in sessions and are guesses.
 - [x] ItemCard "lit" states: gold halos on pips / station badges in a live combo
 - [x] Web export (thread-less, so GitHub Pages works): `export_presets.cfg`,
       `G --headless --path godot --export-release "Web" build/web/index.html`
-- [ ] Published as a preview page (ask the user first)
+- [x] Published as a preview page: https://benandrews18.github.io/elementia/godot/
 - [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.
 
 ### M4 Core loop (~3-5 sessions)
