@@ -12,13 +12,23 @@
 //   godot/assets/<folder>/*     the game's art folders, copied as-is
 // Constants holding functions are rules, not data: they're listed as skipped
 // and ported by hand.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { withGame, GAME } from "../../game/tools/headless_game.mjs";
 
 const GODOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ART_FOLDERS = ["backdrops", "banners", "ui", "suits", "mouse", "tutorial"];
+
+// Files under dir, as "a/b.png" paths.
+const filesIn = dir => readdirSync(dir, { recursive: true }).map(f => String(f).replaceAll("\\", "/"))
+  .filter(f => statSync(join(dir, f)).isFile());
+// Deletes files in dir whose name (or, for a .import file, whose image) isn't
+// in keep. Folders are never wiped: Godot's .import files hold each image's
+// permanent ID, which scenes refer to.
+function prune(dir, keep) {
+  for (const f of filesIn(dir)) if (!keep.has(f.replace(/\.import$/, ""))) rmSync(join(dir, f));
+}
 
 // Every ALL_CAPS const in game/js, including `const A = 1, B = 2;` lines.
 const names = [];
@@ -63,15 +73,14 @@ const out = await withGame(async (evalJS, errs) => {
     return { tables, skipped, icons, missing };
   })()`);
   return { ...result, errs };
-});
+}, { http: 8795, cdp: 9343 }); // own ports, so it can run beside the smoke test
 
 // ---- data
 mkdirSync(join(GODOT, "data"), { recursive: true });
 writeFileSync(join(GODOT, "data", "game_data.json"), JSON.stringify(out.tables, null, 1) + "\n");
 
-// ---- icons (folder rebuilt from scratch so removed icons don't linger)
+// ---- icons (written over the old ones; icons no longer in the game pruned)
 const iconDir = join(GODOT, "assets", "icons");
-rmSync(iconDir, { recursive: true, force: true });
 mkdirSync(iconDir, { recursive: true });
 const fileFor = key => {
   const m = /^__(.+)__$/.exec(key);
@@ -86,11 +95,13 @@ for (const [key, ic] of Object.entries(out.icons)) {
   manifest[key] = `res://assets/icons/${file}`;
 }
 writeFileSync(join(iconDir, "icons.json"), JSON.stringify(manifest, null, 1) + "\n");
+prune(iconDir, new Set([...Object.values(manifest).map(p => p.split("/").pop()), "icons.json"]));
 
 // ---- art folders
 for (const f of ART_FOLDERS) {
-  rmSync(join(GODOT, "assets", f), { recursive: true, force: true });
-  cpSync(join(GAME, f), join(GODOT, "assets", f), { recursive: true, filter: p => !p.endsWith(".b64.txt") });
+  const wanted = p => !p.endsWith(".b64.txt");
+  cpSync(join(GAME, f), join(GODOT, "assets", f), { recursive: true, filter: wanted });
+  prune(join(GODOT, "assets", f), new Set(filesIn(join(GAME, f)).filter(wanted)));
 }
 
 console.log(`tables: ${Object.keys(out.tables).length} exported, ${Object.keys(out.skipped).length} skipped (rules or markup):`);
