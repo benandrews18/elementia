@@ -11,12 +11,14 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M3 Proof of concept (M2 done)
-**Next task:** the user's iPhone test of https://benandrews18.github.io/elementia/godot/
-(Safari), then go / no-go for M4. Republish: export Web, copy build/web/*
-to ../elementia-site/godot/, commit, push main (ask the user first).
+**Current milestone:** M4 Core loop (M3 done: go)
+**Next task:** M4: the hub bar and top bar, then map and travel, the station
+screen, rolling, the shop and crafting (Crafting Bench, suit-cost picks).
+Republish the preview: export Web, copy build/web/* to
+../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: User tested the preview on the iPhone: "looks and feels great". Go.
 - 2026-11-15: M3 preview published (/elementia/godot/). Images import as lossy
   WebP (game files 27 -> 5.5 MB; engine wasm 40 MB). Demo board doesn't save.
 - 2026-11-15: M3 review fix: a tap rebuilds only the mat half; the item list
@@ -333,7 +335,7 @@ to the user. Rough sizes are in sessions and are guesses.
 - [x] Web export (thread-less, so GitHub Pages works): `export_presets.cfg`,
       `G --headless --path godot --export-release "Web" build/web/index.html`
 - [x] Published as a preview page: https://benandrews18.github.io/elementia/godot/
-- [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.
+- [x] **User tests it on the iPhone.** Go (2026-11-15).
 
 ### M4 Core loop (~3-5 sessions)
 - [ ] Map and travel, station hub (hub buttons, top bar), rolling, shop and
@@ -376,6 +378,8 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-15: Save format identical to the HTML game's `state` JSON.
 - 2026-11-15: Port rules first (M1) and prove one screen on the iPhone (M3)
   before building the rest.
+- 2026-11-15: M3 go: the user tested the Display Mat preview on the iPhone
+  and it looks and feels right. The port continues with M4.
 - 2026-11-15: The 5x5 BINGO card (an HTML Settings switch) is retired: not
   ported; the Market is 3 rows of 4. Goldens force `prefs.classicBingo = false`.
 - 2026-11-15: `Game.craft(name, picks)` is the safe craft (asks for suit-cost
