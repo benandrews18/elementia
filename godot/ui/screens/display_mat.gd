@@ -24,6 +24,7 @@ func _ready() -> void:
 	_body.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_body)
 	Game.state_changed.connect(_redraw)
+	resized.connect(_redraw)  # e.g. Safari's bar collapsing makes the screen wider
 	_redraw()
 
 
@@ -160,8 +161,13 @@ func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 			circle = _icon_circle(Catalog.station(o.p).emoji, Color("#fff3c4"), Tok.GOLD, 2)
 		"suitSet", "drought":
 			circle = _icon_circle("suit:" + o.p, Color("#fff3c4"), Tok.GOLD, 2)
-		"doubleDrought":
-			circle = _icon_circle("suit:" + o.p.split("|")[0], Color("#fff3c4"), Tok.GOLD, 2)
+		"doubleDrought":  # both banned suits, side by side
+			circle = _icon_circle("", Color("#fff3c4"), Tok.GOLD, 2)
+			var two: PackedStringArray = o.p.split("|")
+			for i in 2:
+				var ic := Tok.icon("suit:" + two[i], 11)
+				ic.position = Vector2(2.5 + i * 11, 8)
+				circle.add_child(ic)
 		_:
 			var glyph: String = {"grand": "🏛️", "collector": "★", "fullRecipe": "🧩", "commonThread": "🧵", "freshFaces": "🆕",
 				"shortTable": "🪑", "thinStock": "📦", "spreadOut": "↔️"}.get(o.id, "?")

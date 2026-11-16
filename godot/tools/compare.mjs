@@ -33,9 +33,9 @@ const RECTS = `Object.fromEntries([...document.querySelectorAll("[data-cmp]")].f
 const gallery = { tiers: [["Water", "Sand", "Clay", "Steel", "Soil"], ["Battery", "Magnet", "Glass", "Dough"],
   ["Fossil", "Light Bulb", "Log Cabin", "Rocket"], ["Coral Reef", "Fruit Cake"]] };
 writeFileSync(join(OUT, "gallery_items.json"), JSON.stringify(gallery));
-// A mid-run mat from the recorded runs: the board check at visit 18 (grown to full size).
-const run = JSON.parse(readFileSync(join(GODOT_DIR, "tests", "goldens", "run_1.json"), "utf8"));
-writeFileSync(join(OUT, "mat_state.json"), JSON.stringify(run.find(s => s.fn === "confirmLockIn" && s.before.state.visits === 18).before));
+// A mid-run mat (a recorded run's visit-18 board check, grown to full size),
+// kept as a fixture so screenshots stay comparable after goldens are re-recorded.
+const MAT_STATE = join(GODOT_DIR, "tests", "fixtures", "mat_visit18.json");
 
 const SHOTS = [
   { name: "gallery", note: "Item cards as the Inventory grid shows them, and the Crafting Bench",
@@ -53,7 +53,7 @@ const SHOTS = [
       ${TAG_CARDS}(box);
     })()`,
     godot: ["--screen", "res://tests/gallery.gd", "--items", join(OUT, "gallery_items.json")] },
-  { name: "mat", note: "The Display Mat at the visit-18 board check of recorded run 1", snap: join(OUT, "mat_state.json"),
+  { name: "mat", note: "The Display Mat at the visit-18 board check of recorded run 1", snap: MAT_STATE,
     open: `(() => {
       openDrawer();
       const top = document.getElementById("drawerTop");
@@ -63,7 +63,7 @@ const SHOTS = [
       tag(".mat-combos .mm-combo", "chip#"); tag(".mat-zone-page", "mat:page");
       ${TAG_CARDS}(document.getElementById("matGrid"));
     })()`,
-    godot: ["--screen", "res://ui/screens/display_mat.gd", "--save", join(OUT, "mat_state.json")] },
+    godot: ["--screen", "res://ui/screens/display_mat.gd", "--save", MAT_STATE] },
 ];
 
 // ---- run each shot on both sides
