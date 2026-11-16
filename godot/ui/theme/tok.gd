@@ -157,3 +157,14 @@ static func tick(color: Color, px: float, bg := Color.TRANSPARENT, ring := Color
 		var k := px / 14.0
 		c.draw_polyline(PackedVector2Array([Vector2(3.5, 7.2) * k, Vector2(6, 9.8) * k, Vector2(10.5, 4.5) * k]), color, maxf(1.5, 1.8 * k), true))
 	return c
+
+
+## Greyscale (CSS filter:grayscale(1)): the unpinned pin.
+static func grey() -> ShaderMaterial:
+	if not _fonts.has("__grey"):
+		var m := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = "shader_type canvas_item;\nvoid fragment(){ vec4 c = texture(TEXTURE, UV); COLOR = vec4(vec3(dot(c.rgb, vec3(0.299, 0.587, 0.114))), c.a); }"
+		m.shader = sh
+		_fonts["__grey"] = m
+	return _fonts["__grey"]

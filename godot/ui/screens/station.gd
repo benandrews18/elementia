@@ -10,6 +10,7 @@ const GAP := 8.0
 const ACT_H := 35.0
 
 var _scroll: ScrollContainer
+var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen)
 var _press_at := Vector2.ZERO
 
 
@@ -57,6 +58,8 @@ func _redraw() -> void:
 	page.mouse_filter = MOUSE_FILTER_PASS
 	_scroll.add_child(page)
 	var y := _header(page, st, w)
+	if open_card != "":
+		y = _bench(page, w, y)
 	y = _shop(page, name, w, y)
 	page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
 	_scroll.set_deferred("scroll_vertical", keep)
@@ -117,6 +120,35 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	var view := _round_btn(Vector2(w - 42, row_y + 2.3), false)
 	page.add_child(view)
 	return 243.8
+
+
+## The Crafting Bench under the header: the tapped card's shop row (craft
+## and pin from it) and the close button. Returns where the shop starts.
+func _bench(page: Control, w: float, y: float) -> float:
+	var e = Catalog.entry(open_card)
+	if e == null:
+		return y
+	var bench := BenchPanel.new()
+	var craft := func(n): Game.craft(n, Game.suggest_suit_picks(n))
+	var pin := func(n):
+		Progress.toggle_pin(n)
+		Game.state_changed.emit()
+	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
+	bench.position = Vector2(0, y)
+	bench.size = Vector2(w, 30 + ShopRow.H + 18)
+	page.add_child(bench)
+	var close := TextureRect.new()
+	close.texture = load("res://assets/ui/btn_close.webp")
+	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	close.position = Vector2(w - 20 - 34, y + bench.size.y - 4 - 34)
+	close.size = Vector2(34, 34)
+	close.mouse_filter = MOUSE_FILTER_PASS
+	close.gui_input.connect(_on_tap.bind(func():
+		open_card = ""
+		_redraw()))
+	page.add_child(close)
+	return y + bench.size.y
 
 
 ## sortShopItems(): the fundamentals first (FUNDAMENTAL_ITEMS order), then by points.
@@ -203,9 +235,19 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		ring.size = card_size + Vector2(8, 8)
 		ring.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(ring)
+	if e.name == open_card:  # .selected: 4px gold outline, 2px out
+		var sel := Panel.new()
+		sel.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 17 if not t1 else 15, 4, Color("#d9a441")))
+		sel.position = pos - Vector2(6, 6)
+		sel.size = card_size + Vector2(12, 12)
+		sel.mouse_filter = MOUSE_FILTER_IGNORE
+		page.add_child(sel)
 	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name})
 	card.position = pos
 	card.size = card_size
+	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
+		open_card = "" if open_card == e.name else e.name
+		_redraw()))
 	if owned:
 		card.modulate = Color(0.7, 0.7, 0.7)
 	page.add_child(card)
@@ -226,6 +268,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	pin.modulate.a = 1.0 if pinned else 0.5
 	var pic := Tok.icon("📌", 17)
 	pic.position = Vector2(9, 9)
+	if not pinned:
+		pic.material = Tok.grey()
 	pin.add_child(pic)
 	pin.mouse_filter = MOUSE_FILTER_PASS  # taps here, drags still scroll the page
 	pin.gui_input.connect(_on_tap.bind(func(): Progress.toggle_pin(e.name); Game.state_changed.emit()))

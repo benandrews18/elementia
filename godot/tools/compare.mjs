@@ -92,6 +92,15 @@ const SHOTS = [
       hub("#hubMarket", "hub:market"); hub("#hubCodex", "hub:codex");
     })()`,
     godot: ["--screen", "res://ui/app.gd", "--save", join(GODOT_DIR, "tests", "fixtures", "map_visit7.json")] },
+  { name: "bench", note: "The City at turn 7 with Bridge on the Crafting Bench", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      stationCardOpen = "Bridge"; render();
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t(".st-card-sel", "bench"); t(".st-card-sel .item", "row:Bridge"); t(".st-card-sel .iname", "row:name");
+      t(".st-card-sel .craftbtn", "row:craft"); t(".st-card-sel .shop-pin", "row:pin");
+      ${TAG_CARDS}(document.querySelector(".st-cards"), "st:");
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_card:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
 ];
 
 // ---- run each shot on both sides

@@ -18,6 +18,8 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M4: Crafting Bench on the station (tap a card: its ShopRow,
+  Craft, pin, close); bench shot 81 elements, 0 off. Unpinned pins grey.
 - 2026-11-15: M4: RollPopup (dice tumble, reveal, Collect flies to the
   Inventory button) on Home's Roll.
 - 2026-11-15: 13 more Noto emoji (hub faces, pin, challenge chips) in

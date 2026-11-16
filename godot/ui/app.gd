@@ -35,6 +35,13 @@ func _sync() -> void:
 	_sync_hub()
 
 
+## Puts a shop card's row on the station's Crafting Bench (screenshots, tests).
+func open_card(name: String) -> void:
+	if _screen is StationScreen:
+		_screen.open_card = name
+		_screen._redraw()
+
+
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
 	close_panel()
