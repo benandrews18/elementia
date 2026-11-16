@@ -80,14 +80,16 @@ for (const shot of SHOTS.filter(s => !pick.length || pick.includes(s.name))) {
   if (r.status !== 0) { console.log(r.stdout, r.stderr); process.exit(1); }
   const godot = JSON.parse(readFileSync(gRects, "utf8"));
   const rows = [];
+  let untagged = 0; // parts Godot names that this shot doesn't tag in the HTML page
   for (const k of new Set([...Object.keys(html.rects), ...Object.keys(godot)])) {
     const a = html.rects[k], b = godot[k];
-    if (!a || !b) { rows.push([k, a ? "only in HTML" : "only in Godot", a, b]); continue; }
+    if (!a) { untagged++; continue; }
+    if (!b) { rows.push([k, "only in HTML", a, b]); continue; }
     const d = a.map((v, i) => Math.round((b[i] - v) * 10) / 10);
     if (d.some(v => Math.abs(v) > TOL)) rows.push([k, "dx dy dw dh " + d.join(" "), a, b]);
   }
   results.push({ shot, rows });
-  console.log(`${shot.name}: ${Object.keys(html.rects).length} HTML elements, ${Object.keys(godot).length} Godot; ${rows.length} differ by > ${TOL}px`);
+  console.log(`${shot.name}: ${Object.keys(html.rects).length} HTML elements checked (${untagged} more in Godot not tagged in HTML); ${rows.length} differ by > ${TOL}px`);
   rows.slice(0, 24).forEach(r => console.log("  " + r[0].padEnd(26) + r[1]));
 }
 
