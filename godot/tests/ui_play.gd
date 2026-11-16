@@ -46,6 +46,11 @@ func _ready() -> void:
 		if app.panel == "drawer":
 			check(app.home_face() == "lockin", "turn %d: check turn, Home says Lock In" % turns)
 			app._on_hub("home")
+			var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
+			if not ask.is_empty():  # "your run ends here": yes
+				check(Game.lock_in_ends_run(), "asked only when the Lock-In ends the run")
+				ask[0].on_yes.call()
+				ask[0].queue_free()
 		await get_tree().process_frame
 	print("ui_play: %d turns, visits %d, %s, %d items, best mat %d" % [turns, Game.state.visits,
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])

@@ -141,11 +141,19 @@ func _travel(dest: String) -> void:
 		Game.go_station(dest)
 
 
-## shortcut: the Lock-In sequence (Quarks counting up, the reward) and the
-## "your run ends here" question come later in M4; this scores and travels.
+## Scores the mat and travels; if the mat misses the breakpoint on a turn
+## that can end the run, asks first (confirmLockIn()).
+## shortcut: the Lock-In sequence (Quarks counting up, the reward) is M5.
 func _lock_in() -> void:
-	close_panel()
-	Game.confirm_lock_in()
+	var go := func():
+		close_panel()
+		Game.confirm_lock_in()
+	if Game.lock_in_ends_run():
+		ConfirmDialog.ask(self, "Your mat doesn't have enough points to continue!
+If you lock-in now your run ends here.
+Are you sure?", go)
+	else:
+		go.call()
 
 
 ## shortcut: To-Do List, Market and Items come later in M4.

@@ -20,6 +20,8 @@ var _body: Control  # the mat half, rebuilt on every change (drawn over the list
 var _inv_cards := {}  # item name -> its card in the list, to dim it in place
 var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
+var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
+var selected := ""  # the card on the Crafting Bench (matListOpen)
 
 
 func _ready() -> void:
@@ -79,14 +81,19 @@ func _redraw() -> void:
 	var row_h := ((w - 14 - (open - 1) * COLS_GAP) / open) * 1.4
 	var mat_h: float = row_h if st < 2 else (row_h * 1.5 + 4 if st == 2 else row_h * 2 + COLS_GAP)
 	var page := Panel.new()
-	var sb := Tok.box(Color("#cda874"), 14, 2, Color("#a67c4a"))
+	var elements := view == "elements"
+	var sb := Tok.box(Color("#f2e6cc") if elements else Color("#cda874"), 14, 2, Color("#c3a06a") if elements else Color("#a67c4a"))
 	sb.corner_radius_bottom_left = 4
 	page.add_theme_stylebox_override("panel", sb)
 	page.position = Vector2(SIDE, y)
 	page.size = Vector2(w, mat_h + 14)
+	page.clip_contents = elements
 	page.set_meta("cmp", "mat:page")
 	_body.add_child(page)
-	_slots(cards, sc, page, row_h, open)
+	if elements:
+		_elements(page)
+	else:
+		_slots(cards, sc, page, row_h, open)
 	_page_controls(page)
 	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
 	# The gold line between the mat and the item list, with the fold button.
@@ -95,10 +102,17 @@ func _redraw() -> void:
 	line.position = Vector2(0, y)
 	line.size = Vector2(size.x, 2)
 	_body.add_child(line)
+	var line_y := y
+	y += 2
+	# The selected card's row on the Crafting Bench, Add / Remove below it.
+	if selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null:
+		y = _sel_bench(y)
 	# The item list: search bar, then the owned cards by tier.
-	_scroll.position = Vector2(0, y + 2)
-	_scroll.size = Vector2(size.x, size.y - HUB_H - y - 2)
-	var key := "%d|%d" % [s.items.size(), int(size.x)]
+	_scroll.position = Vector2(0, y)
+	_scroll.size = Vector2(size.x, size.y - HUB_H - y)
+	if selected != "" and _body.has_meta("acts"):
+		_body.move_child(_body.get_meta("acts"), -1)
+	var key := "%d|%d|%s" % [s.items.size(), int(size.x), selected]
 	if key != _inv_key:
 		_inv_key = key
 		for c in _scroll.get_children():
@@ -111,19 +125,19 @@ func _redraw() -> void:
 	var fold := Panel.new()
 	fold.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 2, GOLD_LINE, 3, 2))
 	fold.size = Vector2(38, 20)
-	fold.position = Vector2((size.x - 38) / 2, y + 1 - 10)
+	fold.position = Vector2((size.x - 38) / 2, line_y + 1 - 10)
 	fold.add_child(_chevron())
 	_body.add_child(fold)
 
 
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
 ## rules "?" riding its lower-right edge (renderMatTop()).
-## shortcut: the Elements tab doesn't switch pages yet, Layouts and "?" open
-## nothing, and Last swaps without asking; all come with M4's drawer.
+## shortcut: Layouts and "?" open nothing yet (saved layouts and the rules
+## pages come with M6).
 func _page_controls(page: Control) -> void:
 	var bottom := page.position.y + page.size.y
 	var x := page.position.x + 4
-	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), false], ["Display Mat", Color("#cda874"), Color("#a67c4a"), true]]:
+	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), view == "elements"], ["Display Mat", Color("#cda874"), Color("#a67c4a"), view == "mat"]]:
 		var tab := Label.new()
 		tab.text = t[0]
 		tab.add_theme_font_override("font", Tok.font(800))
@@ -143,6 +157,11 @@ func _page_controls(page: Control) -> void:
 		if not t[3]:
 			tab.modulate = Color(0.72, 0.72, 0.72)  # the inactive tab, recessed
 		tab.set_meta("cmp", "tab:" + t[0])
+		tab.mouse_filter = MOUSE_FILTER_STOP
+		var to: String = "elements" if t[0] == "Elements" else "mat"
+		tab.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+			view = to
+			_redraw())
 		_body.add_child(tab)
 		x += tab.size.x + 2
 	var right := page.position.x + page.size.x
@@ -156,7 +175,9 @@ func _page_controls(page: Control) -> void:
 	_body.add_child(help)
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
-	var btns := [["💾", 30.0, func(): pass], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, Game.mat_last_tap]]
+	if view != "mat":
+		return
+	var btns := [["💾", 30.0, func(): pass], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
 	for b in btns:
 		var text: String = b[0]
 		var is_text: bool = b[1] == 0.0
@@ -262,6 +283,8 @@ func _inventory(width: float) -> Control:
 			if x + span > 4:
 				x = 0
 				y += h + 8
+			if c.name == selected:
+				list.add_child(_selected_ring(Vector2(pad + x * (col_w + 8), y), Vector2(col_w * span + 8 * (span - 1), h)))
 			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name), "tag": "inv:" + c.name})
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
@@ -275,15 +298,118 @@ func _inventory(width: float) -> Control:
 	return list
 
 
-## A tap (not a scroll) toggles the card on the mat.
+## A tap (not a scroll) selects the card: its row goes on the Crafting Bench
+## with Add / Remove (tap it again to put it back).
 func _on_card_input(ev: InputEvent, name: String) -> void:
 	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 		if ev.pressed:
 			_press_at = ev.global_position
 		elif ev.global_position.distance_to(_press_at) < 10:
-			var msg := Game.toggle_mat_card(name)
-			if msg != "":
-				_show_toast(msg)
+			selected = "" if selected == name else name
+			_redraw()
+
+
+## Last: back to the last locked-in mat (asks first, quick-saving this one);
+## with a quick save, it comes straight back.
+func _last() -> void:
+	if Game.state.get("quickSavedMat") != null:
+		Game.mat_last_tap()
+		return
+	ConfirmDialog.ask(App.current if App.current else self,
+		"Reset the Display Mat to your last locked-in layout? Your current mat is quick-saved -- tap the arrow again to bring it back.",  # ↻ isn't in Nunito
+		Game.mat_last_tap)
+
+
+## The Crafting Bench under the gold line (#matSelPanel) with the selected
+## card's row, and Add / Remove dropping down below it (#matListActions).
+## Returns where the list starts.
+func _sel_bench(y: float) -> float:
+	var bench := BenchPanel.new()
+	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 36, func(_n, _r): pass, func(n):
+		Progress.toggle_pin(n)
+		_redraw()))
+	bench.position = Vector2(0, y)
+	bench.size = Vector2(size.x, 30 + ShopRow.H + 18)
+	_body.add_child(bench)
+	var close := TextureRect.new()
+	close.texture = load("res://assets/ui/btn_close.webp")
+	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	close.position = Vector2(size.x - 8 - 34, y + bench.size.y + 2 - 34)
+	close.size = Vector2(34, 34)
+	close.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+		selected = ""
+		_redraw())
+	_body.add_child(close)
+	var end := y + bench.size.y
+	var on: bool = Game.state.mat.has(selected)
+	var card = Catalog.mat_card(selected)
+	var fits: bool = card != null and Mat.fits(Mat.on_mat(Game.state) + [card], Mat.stage(Game.state))
+	var acts := Control.new()  # no height of its own: floats over the list
+	acts.position = Vector2(0, end + 4)
+	acts.mouse_filter = MOUSE_FILTER_IGNORE
+	var bx := (size.x - (96 * 2 + 10)) / 2
+	for i in 2:
+		var add := i == 0
+		var enabled := (not on and fits) if add else on
+		var b := Label.new()
+		b.text = ("+  Add" if add else "–  Remove")
+		b.add_theme_font_override("font", Tok.font(900))
+		b.add_theme_font_size_override("font_size", 13)
+		b.add_theme_color_override("font_color", Color.WHITE)
+		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		var bs := Tok.box(Tok.OK if add else Tok.BAD, 12, 2.5, Color.BLACK, 5, 4, Color(0, 0, 0, 0.35))
+		b.add_theme_stylebox_override("normal", bs)
+		b.position = Vector2(bx + i * (96 + 10), 0)
+		b.size = Vector2(96, 34)
+		if not enabled:
+			b.modulate = Color(0.55, 0.55, 0.55, 0.6)
+		else:
+			b.mouse_filter = MOUSE_FILTER_STOP
+			b.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+				var msg := Game.toggle_mat_card(selected)
+				if msg != "":
+					_show_toast(msg))
+		b.set_meta("cmp", "mat:add" if add else "mat:remove")
+		acts.add_child(b)
+	_body.add_child(acts)
+	_body.set_meta("acts", acts)
+	return end
+
+
+## The Elements page: every element held, 8 to a row (elementsGridHTML()).
+func _elements(page: Control) -> void:
+	var held: Array = Game.state.elements.keys().filter(func(k): return Game.state.elements[k] > 0)
+	var an: Dictionary = Data.t("ATOMIC_NUMBER")
+	held = Util.stable_sort(held, func(a, b): return an.get(a, 999) - an.get(b, 999))
+	var inner := page.size.x - 14
+	var cw := (inner - 7 * 5) / 8
+	for i in held.size():
+		var sym: String = held[i]
+		var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
+		var at := Vector2(7 + (i % 8) * (cw + 5), 7 + (i / 8) * (cw + 3 + 12 + 6))
+		var box := Panel.new()
+		box.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 8, 5, color))
+		box.position = at
+		box.size = Vector2(cw, cw)
+		box.mouse_filter = MOUSE_FILTER_IGNORE
+		page.add_child(box)
+		var l := Tok.label(sym, 13, Color("#221f1a"), 800)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.position = at
+		l.size = box.size
+		page.add_child(l)
+		var q := Tok.label(str(int(Game.state.elements[sym])), 9, Color("#3b2412"), 800)
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		q.position = at + Vector2(0, cw + 3)
+		q.size = Vector2(cw, 12)
+		page.add_child(q)
+	if held.is_empty():
+		var none := Tok.label("No loose elements — visit a station and roll.", 14, Color("#8a6a48"), 400)
+		none.position = Vector2(12, 12)
+		page.add_child(none)
 
 
 ## The mat's red message pill (.mat-toast), for 2 seconds.
@@ -489,6 +615,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 		var pos := Vector2(PAGE_PAD + 2 + c * (col_w + COLS_GAP), PAGE_PAD + 2 + r * (row_h + COLS_GAP))
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
 		if sl.has("card"):
+			if sl.card.name == selected:
+				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)))
 			var card := ItemCard.make(sl.card.name, card_opts.call(sl.card, false))
 			card.gui_input.connect(_on_card_input.bind(sl.card.name))
 			card.position = pos
@@ -510,6 +638,16 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
 		else:
 			page.add_child(_dashed(Rect2(pos, Vector2(col_w, h)), 12))
+
+
+## .mm-card.selected: a 4px green outline, 2px out.
+static func _selected_ring(pos: Vector2, sz: Vector2) -> Panel:
+	var r := Panel.new()
+	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 17, 4, Tok.OK))
+	r.position = pos - Vector2(6, 6)
+	r.size = sz + Vector2(12, 12)
+	r.mouse_filter = MOUSE_FILTER_IGNORE
+	return r
 
 
 ## An empty slot: a 2px dashed outline (.mm-slot.empty, .mm-mini-empty).

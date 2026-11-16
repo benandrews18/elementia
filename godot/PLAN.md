@@ -11,13 +11,17 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M4 Core loop (M3 done: go)
-**Next task:** M4: the hub bar and top bar, then map and travel, the station
-screen, rolling, the shop and crafting (Crafting Bench, suit-cost picks).
+**Current milestone:** M5 Run flow (M4 done)
+**Next task:** M5: the opening (rules slides, capstone choice, starting gift),
+the Lock-In sequence (Quarks counting up, reward, mat expansion reveal),
+the Market tray and rows, convert, "?" spend, game over and end of run.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M4 done: suit-spend balloon, ConfirmDialog (Last, run-ending
+  Lock-In), drawer Elements tab, select a card -> Crafting Bench with Add /
+  Remove. 5 comparison shots, ui_play passes.
 - 2026-11-15: M4: Crafting Bench on the station (tap a card: its ShopRow,
   Craft, pin, close); bench shot 81 elements, 0 off. Unpinned pins grey.
 - 2026-11-15: M4: RollPopup (dice tumble, reveal, Collect flies to the
@@ -359,9 +363,10 @@ to the user. Rough sizes are in sessions and are guesses.
 - [x] **User tests it on the iPhone.** Go (2026-11-15).
 
 ### M4 Core loop (~3-5 sessions)
-- [ ] Map and travel, station hub (hub buttons, top bar), rolling, shop and
+- [x] Map and travel, station hub (hub buttons, top bar), rolling, shop and
       crafting, inventory drawer
-- [ ] **Done when:** a whole run can be played in Godot from start to Lock-In.
+- [x] **Done when:** a whole run can be played in Godot from start to Lock-In
+      (`tests/ui_play`).
 
 ### M5 Run flow (~3-5 sessions)
 - [ ] Opening, Lock-In screens and check orders, mat expansion reveal, BINGO
