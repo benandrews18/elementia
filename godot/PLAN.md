@@ -18,6 +18,9 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: 13 more Noto emoji (hub faces, pin, challenge chips) in
+  assets/emoji (from 2D/png/128 of googlefonts/noto-emoji, user OK'd).
+  Ask before more downloads.
 - 2026-11-15: M4: MapScreen (art, nodes, paths, here label, station card)
   matches (17 elements, card 5px short). App: Travel (quiet check or the
   board-check Lock-In), Shop re-entry, Lock In, End. `tests/ui_play` plays a
@@ -410,9 +413,6 @@ Recorded so they aren't re-argued. Add new ones with the date.
 
 ## Open questions (for the user, when they come up)
 
-- **More UI emoji images:** the challenge chips for Full Recipe 🧩, Common
-  Thread 🧵, Fresh Faces 🆕, Short Table 🪑, Thin Stock 📦 and Spread Out ↔️
-  need Noto PNGs on the web (ask before downloading).
 - **Mini-games:** keep all 8, some, or none? (M7)
 - **Sound and music:** source and style. (M8)
 - **App identity:** store name, bundle id (e.g. `com.<you>.elementia`),

@@ -418,7 +418,13 @@ func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 		_:
 			var glyph: String = {"grand": "🏛️", "collector": "★", "fullRecipe": "🧩", "commonThread": "🧵", "freshFaces": "🆕",
 				"shortTable": "🪑", "thinStock": "📦", "spreadOut": "↔️"}.get(o.id, "?")
-			circle = _text_circle(glyph, 16.5, Tok.CARD_INK, Color("#fff3c4"), Tok.GOLD, 2)
+			if o.id == "collector":  # ★: drawn (not in Nunito)
+				circle = _icon_circle("", Color("#fff3c4"), Tok.GOLD, 2)
+				var st := Tok.star(Tok.GOLD, 15)
+				st.position = Vector2(6, 5.5)
+				circle.add_child(st)
+			else:  # an emoji: its Noto image
+				circle = _icon_circle(glyph, Color("#fff3c4"), Tok.GOLD, 2)
 	var label := Util.thousands(int(Data.t("GRAND_EXHIBITION_TARGET"))) if grand \
 		else "×%s" % _num(Data.t("ORDER_REQUEST_MULT") if kind == "request" else Data.t("ORDER_RESTRICT_MULT"))
 	var bad: bool = kind == "restriction" and not ok
