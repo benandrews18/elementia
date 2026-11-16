@@ -19,6 +19,11 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5: the board-check opening: Shutter (Round N / 24, title,
+  challenge line), MatExpand (dark round the new slots on growth turns),
+  OrderInfo (clock, rule in icons, Unknown Element swap; also from the
+  mat's challenge chip); the Final Score shutter on the map. 🚫 ⬜ 🏠 drawn
+  (no Noto images). ui_play also plays turn 24's final score.
 - 2026-11-16: M5: the Lock-In count (cards and chips bounce beat by beat,
   the meter climbs), the Bonus Dice window (LockInReward, why / Unknown
   Element hints), fade through black to the station; the final score

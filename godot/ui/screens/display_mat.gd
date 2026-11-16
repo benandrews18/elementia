@@ -27,6 +27,7 @@ var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
 var _chip_nodes := {}  # "kind:name" -> its combo chip
+var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 
 
 func _ready() -> void:
@@ -65,6 +66,7 @@ func _redraw() -> void:
 		return
 	_mat_nodes.clear()
 	_chip_nodes.clear()
+	slot_rects.clear()
 	for c in _body.get_children():
 		c.queue_free()
 	var s := Game.state
@@ -537,6 +539,7 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	if o != null:
 		chips.append(_order_chip(o, sc))
 		chips[-1].set_meta("combo", "order")
+		chips[-1].gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: OrderInfo.open(App.current))
 	for g in sc.sigs:
 		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))
 	for g in sc.combos.station:
@@ -723,6 +726,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 		var c: int = i % cols
 		var pos := Vector2(PAGE_PAD + 2 + c * (col_w + COLS_GAP), PAGE_PAD + 2 + r * (row_h + COLS_GAP))
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
+		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + COLS_GAP * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") or sl.kind == "top" else h))
 		if sl.has("card"):
 			if sl.card.name == selected:
 				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)))

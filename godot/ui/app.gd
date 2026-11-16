@@ -129,13 +129,21 @@ func _roll() -> void:
 	add_child(pop)
 
 
-## Travel: on a board-check turn the mat opens for the Lock-In (Home becomes
-## Lock In); otherwise a quiet check sets this trip's dice and off you go.
+## Travel: on a board-check turn the shutter, then the mat opens for the
+## Lock-In (Home becomes Lock In); tapping Travel again just reopens the mat.
+## Otherwise a quiet check sets this trip's dice and off you go.
+## shortcut: the first check's rules pages and the one-time challenge tip
+## aren't shown (they come with M6's rules pages).
 func _travel(dest: String) -> void:
 	if Catalog.is_mat_check_visit(Game.state):
+		if Game.ctx.get("travelPromptFor") == dest:
+			open_panel("drawer")
+			return
 		Game.ctx.travelPromptFor = dest
 		Game.start_check_order()
-		open_panel("drawer")
+		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
+			open_panel("drawer")
+			_check_intro())
 	else:
 		Game.quiet_check()
 		Game.go_station(dest)
@@ -165,10 +173,43 @@ Are you sure?", func():
 		add_child(dlg))
 
 
-## The final score: the count, then Run Complete.
+## Under the shutter: the mat-expansion reveal on a growth turn, then this
+## check's challenge.
+func _check_intro() -> void:
+	var r := MatExpand.fresh_rect(_panel_node) if _panel_node is DisplayMatScreen else Rect2()
+	if r.size == Vector2.ZERO:
+		_challenge()
+		return
+	await get_tree().create_timer(Shutter.HOLD + Shutter.CLOSE).timeout  # once the shutter has parted
+	var mx := MatExpand.new()
+	mx.hole = r
+	mx.on_done = _challenge
+	mx.size = size
+	add_child(mx)
+
+
+func _challenge() -> void:
+	var o = Orders.current(Game.state)
+	if o != null and int(o.round) == int(Game.state.visits):
+		OrderInfo.open(self)
+
+
+## Back on the map after turn 24's shopping: the "Final Score!" shutter and
+## the mat (startFinalCheck()).
+func _go_map() -> void:
+	Game.go_map()
+	if Game.state.get("finalCheckPending"):
+		Shutter.play(self, "Final Score!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
+			open_panel("drawer")
+			_challenge())
+
+
+## The final score: opens the mat if it's closed; then the count and Run
+## Complete.
 func _final_lock_in() -> void:
 	if panel != "drawer":
 		open_panel("drawer")
+		return
 	_count_then(func():
 		Game.confirm_final_lock_in()
 		close_panel())
@@ -219,7 +260,7 @@ func _on_hub(id: String) -> void:
 				"roll":
 					_roll()
 				"map":
-					Game.go_map()
+					_go_map()
 				"shop":  # back into the station you're at, free (no visit spent)
 					Game.ctx.screen = "station"
 					Game.ctx.current = Game.state.lastStation

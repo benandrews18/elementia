@@ -72,8 +72,9 @@ func _build() -> void:
 	_popped = true
 	parts.append([row, 44.0, 0.0])
 	if _why:
-		var txt := ("⚛ %s: below the first breakpoint\nNo bonus dice this time" if dice == 0
-			else "⚛ %s → +%d dice at every station\nuntil the next board check") % [Util.thousands(int(quarks)), dice]
+		var q := Util.thousands(int(quarks))
+		var txt := ("%s Quarks: below the first breakpoint\nNo bonus dice this time" % q if dice == 0
+			else "%s Quarks: +%d dice at every station\nuntil the next board check" % [q, dice])
 		parts.append([_hint_label(txt, inner), 13 * 1.4 * 2, 8.0 + 8])
 	if unknown:
 		var line := Control.new()

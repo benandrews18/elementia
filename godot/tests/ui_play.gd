@@ -7,6 +7,7 @@ extends Node
 
 var fails := 0
 var balloon_done := false
+var expansions := 0
 
 
 func check(ok: bool, what: String) -> void:
@@ -40,6 +41,8 @@ func _ready() -> void:
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
 		if Game.state.get("finalCheckPending"):
 			check(app.home_face() == "final", "final check face")
+			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "the Final Score shutter opens the mat")
+			_dismiss(app)
 			app._on_hub("home")
 			check(await _until(func(): return Game.state.get("runComplete")), "the final count ends the run")
 			break
@@ -47,7 +50,13 @@ func _ready() -> void:
 		Game.ctx.selectedMapStation = options[randi() % options.size()]
 		Game.state_changed.emit()
 		check(app.home_face() == "travel", "turn %d: Home says Travel" % turns)
+		var check_turn := Catalog.is_mat_check_visit(Game.state)
 		app._on_hub("home")  # travel
+		if check_turn:
+			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn %d: the shutter opens the mat" % turns)
+			if Orders.current(Game.state) != null:
+				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
+			_dismiss(app)
 		if app.panel == "drawer":
 			check(app.home_face() == "lockin", "turn %d: check turn, Home says Lock In" % turns)
 			app._on_hub("home")
@@ -68,8 +77,47 @@ func _ready() -> void:
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
 	check(balloon_done, "crafted something through the suit-spend balloon")
+	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
+	await _final_score(app)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
+
+
+## The run's last turn (24): leaving the station plays the "Final Score!"
+## shutter and opens the mat; Home counts it and the run is complete.
+func _final_score(app: App) -> void:
+	Game.start_run("Coral Reef")
+	await get_tree().process_frame
+	Game.state.visits = int(Data.t("RUN_COMPLETE_VISIT"))
+	Game.state.rolledHere = true
+	Game.state_changed.emit()
+	check(app.home_face() == "map", "turn 24: Home says Map")
+	app._on_hub("home")
+	check(Game.state.get("finalCheckPending") == true, "turn 24: the final check is pending")
+	check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn 24: the shutter opens the mat")
+	check(app.get_children().any(func(c): return c is OrderInfo), "turn 24: the Grand Exhibition shows")
+	_dismiss(app)
+	check(app.home_face() == "final", "turn 24: Home says Final Score")
+	app._on_hub("home")
+	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
+
+
+## Is the shutter still playing?
+func _busy(app: App) -> bool:
+	return app.get_children().any(func(c): return c is Shutter)
+
+
+## Closes the mat-expansion reveal (going on to the challenge) and the
+## challenge window, as taps would.
+func _dismiss(app: App) -> void:
+	for c in app.get_children():
+		if c is MatExpand:
+			expansions += 1
+			c.queue_free()
+			c.on_done.call()
+	for c in app.get_children():
+		if c is OrderInfo:
+			c.queue_free()
 
 
 ## Waits (up to ~600 frames) until cond() is true.
