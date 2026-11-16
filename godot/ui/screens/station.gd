@@ -419,6 +419,11 @@ static func corner_buttons(on: Control, settings: bool) -> void:
 		conv.position = Vector2(w - 16 - 58, on.size.y - HubBar.H - 14 - 58)
 		conv.size = Vector2(58, 58)
 		conv.set_meta("cmp", "convert")
+		conv.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current:
+			if App.current.panel == "convert":
+				App.current.close_panel()
+			else:
+				App.current.open_panel("convert"))
 		on.add_child(conv)
 		var n := 0
 		for v in held:

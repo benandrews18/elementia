@@ -8,6 +8,7 @@ extends Node
 var fails := 0
 var balloon_done := false
 var expansions := 0
+var convert_done := false
 
 
 func check(ok: bool, what: String) -> void:
@@ -40,6 +41,8 @@ func _ready() -> void:
 		app._on_hub("home")  # roll
 		if not balloon_done:
 			balloon_done = _craft_through_balloon(app)
+		if not convert_done:
+			convert_done = await _convert(app)
 		for e in StationScreen.shop_entries(Game.ctx.current):
 			if not Catalog.owns(Game.state, e.name) and Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(e.name):
 				Game.craft(e.name, Game.suggest_suit_picks(e.name))
@@ -84,6 +87,7 @@ func _ready() -> void:
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
 	check(balloon_done, "crafted something through the suit-spend balloon")
+	check(convert_done, "converted through the Convert tray")
 	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame)), "the end screen shows")
 	await _final_score(app)
@@ -109,6 +113,32 @@ func _final_score(app: App) -> void:
 	app._on_hub("home")
 	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame and c._completing)), "turn 24: Run Complete shows")
+
+
+## Converts 3 of the first element held 3+ into one Fe (or C) through the
+## tray: FROM from the picker, TO from the picker, then the arrow.
+func _convert(app: App) -> bool:
+	var three: Array = Game.state.elements.keys().filter(func(s): return Game.state.elements[s] >= 3)
+	if three.is_empty():
+		return false
+	var from: String = three[0]
+	var to := "Fe" if from != "Fe" else "C"
+	var before_from := Catalog.count(Game.state, from)
+	var before_to := Catalog.count(Game.state, to)
+	app.open_panel("convert")
+	check(app.home_face() == "close", "Convert open: Home says Close")
+	var tray: ConvertTray = app._panel_node
+	for side in ["from", "to"]:
+		tray._pick(side)
+		var p: ElementPicker = app.get_children().filter(func(c): return c is ElementPicker).back()  # the last one's freed only at frame end
+		p.queue_free()
+		p.on_pick.call(from if side == "from" else to)
+	tray.do_convert()
+	check(Catalog.count(Game.state, from) == before_from - 3 and Catalog.count(Game.state, to) == before_to + 1, "converted 3 %s into 1 %s" % [from, to])
+	check(tray.from == "" and tray.to == "", "the tray resets after converting")
+	app.close_panel()
+	await get_tree().process_frame
+	return true
 
 
 ## Is the shutter still playing?

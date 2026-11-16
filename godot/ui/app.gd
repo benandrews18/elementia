@@ -5,7 +5,7 @@
 class_name App
 extends Control
 
-var panel := ""  # "" or "drawer"
+var panel := ""  # "", "drawer" (the Display Mat) or "convert"
 var _screen: Control
 var _screen_name := ""
 var _panel_node: Control
@@ -122,8 +122,8 @@ func open_card(name: String) -> void:
 func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
-	if name == "drawer":
-		_panel_node = DisplayMatScreen.new()
+	if name == "drawer" or name == "convert":
+		_panel_node = DisplayMatScreen.new() if name == "drawer" else ConvertTray.new()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
 	_sync()

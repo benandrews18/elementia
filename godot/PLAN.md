@@ -12,13 +12,17 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5 Run flow (M4 done)
-**Next task:** M5: the Market tray and rows, convert, "?" spend; the
+**Next task:** M5: the Market tray and rows (and the To-Do List); the
 opening's logo + how-to-play slides. (Done: Lock-In count and reward,
-check opening, end screen, capstone choice.)
+check opening, end screen, capstone choice, convert, "?" spend.)
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5: Convert (ConvertTray panel: element grid, FROM stack,
+  arrow 3:1, TO; ElementPicker; the result flies to the Inventory) and
+  spending a "?" (UnknownPick: this station's elements). ui_play converts
+  through the tray.
 - 2026-11-16: M5: the opening's capstone choice and confirm (CapstoneChoice:
   grid, station card via MapScreen.station_card(boxed), components, the
   gift flying to the Inventory, fade into the station). New Game and a
