@@ -141,19 +141,67 @@ func _travel(dest: String) -> void:
 		Game.go_station(dest)
 
 
-## Scores the mat and travels; if the mat misses the breakpoint on a turn
-## that can end the run, asks first (confirmLockIn()).
-## shortcut: the Lock-In sequence (Quarks counting up, the reward) is M5.
+## Lock In (confirmLockIn()): the count, the Bonus Dice window, then a fade
+## through black to the station. A mat that misses the breakpoint on a turn
+## that can end the run asks first, and ends it.
 func _lock_in() -> void:
-	var go := func():
-		close_panel()
-		Game.confirm_lock_in()
 	if Game.lock_in_ends_run():
 		ConfirmDialog.ask(self, "Your mat doesn't have enough points to continue!
 If you lock-in now your run ends here.
-Are you sure?", go)
-	else:
-		go.call()
+Are you sure?", func():
+			close_panel()
+			Game.confirm_lock_in())
+		return
+	var reward := Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state))
+	_count_then(func():
+		var dlg := LockInReward.new()
+		dlg.dice = mini(reward, 3)
+		dlg.unknown = reward >= 4
+		dlg.quarks = Game.mat_score().total
+		dlg.size = size
+		dlg.on_done = func(): fade_through_black(func():
+			close_panel()
+			Game.confirm_lock_in())
+		add_child(dlg))
+
+
+## The final score: the count, then Run Complete.
+func _final_lock_in() -> void:
+	if panel != "drawer":
+		open_panel("drawer")
+	_count_then(func():
+		Game.confirm_final_lock_in()
+		close_panel())
+
+
+## Plays the drawer's Lock-In count with input blocked (and Home can't
+## score twice), then runs then_do.
+func _count_then(then_do: Callable) -> void:
+	var mat := _panel_node as DisplayMatScreen
+	if mat == null or mat.playing:
+		return
+	var block := Control.new()
+	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(block)
+	mat.play_lock_in(func():
+		block.queue_free()
+		then_do.call())
+
+
+## fadeThroughBlack(): black over everything (.5s), midpoint() under it,
+## then back.
+func fade_through_black(midpoint: Callable) -> void:
+	var c := ColorRect.new()
+	c.color = Color.BLACK
+	c.modulate.a = 0
+	c.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(c)
+	var tw := c.create_tween()
+	tw.tween_property(c, "modulate:a", 1.0, 0.5)
+	tw.tween_callback(func(): midpoint.call(); move_child(c, -1))
+	tw.tween_interval(0.04)
+	tw.tween_property(c, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(c.queue_free)
 
 
 ## shortcut: To-Do List, Market and Items come later in M4.
@@ -182,5 +230,4 @@ func _on_hub(id: String) -> void:
 				"lockin":
 					_lock_in()
 				"final":
-					Game.confirm_final_lock_in()
-					close_panel()
+					_final_lock_in()

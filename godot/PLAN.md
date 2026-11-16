@@ -19,6 +19,11 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5: the Lock-In count (cards and chips bounce beat by beat,
+  the meter climbs), the Bonus Dice window (LockInReward, why / Unknown
+  Element hints), fade through black to the station; the final score
+  counts too. ConfirmDialog.window() shared. shot.gd: --call a,b and --wait.
+  M4 preview republished (live pck byte-identical to the export).
 - 2026-11-15: M4 review fixes: pin/fold taps save (Game._changed()); a
   selection moves one ring (late-game select ~80 -> ~21ms); ui_play crafts
   through the suit-spend balloon and checks what's spent; drawer rows plain.

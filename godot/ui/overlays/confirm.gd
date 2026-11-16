@@ -20,6 +20,47 @@ static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
 	return d
 
 
+## .sheetbox.parch: the parchment window (56px corners drawn 30px wide) with
+## its title on a wooden banner over the top edge. Content starts at y 59.
+static func window(sz: Vector2, title_text: String) -> Control:
+	var box := Control.new()
+	box.size = sz
+	var parch: Texture2D = load("res://assets/ui/panel_parchment.webp")
+	box.draw.connect(func():
+		var sb := StyleBoxTexture.new()
+		sb.texture = parch
+		sb.set_texture_margin_all(56)
+		var k := 30.0 / 56.0
+		box.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
+		box.draw_style_box(sb, Rect2(Vector2.ZERO, box.size / k))
+		box.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
+	var tw := Tok.font(800).get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
+	var banner := Control.new()
+	banner.size = Vector2(tw + 60, 13 + 6 + 28 + 7)
+	banner.position = Vector2((sz.x - banner.size.x) / 2, 30 + 10 - 22 - 13)
+	var wood: Texture2D = load("res://assets/ui/banner_wood.webp")
+	banner.draw.connect(func():  # slices 64 / 96, drawn 13 / 24
+		var sb := StyleBoxTexture.new()
+		sb.texture = wood
+		sb.texture_margin_top = 64
+		sb.texture_margin_bottom = 64
+		sb.texture_margin_left = 96
+		sb.texture_margin_right = 96
+		var k := 13.0 / 64.0
+		banner.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
+		banner.draw_style_box(sb, Rect2(Vector2.ZERO, banner.size / k))
+		banner.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
+	var t := Tok.label(title_text, 21, Color("#fff7e0"), 800)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
+	t.add_theme_constant_override("shadow_offset_y", 2)
+	t.size = banner.size
+	banner.add_child(t)
+	box.add_child(banner)
+	return box
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var dim := ColorRect.new()
@@ -39,44 +80,9 @@ func _ready() -> void:
 	var msg_h := roundf(lines) * 15 * 1.5
 	msg.size = Vector2(inner, msg_h)
 	var h := 30 + 10 + 33 + 12 + msg_h + 14 + 18 + 46 + 6 + 30
-	var box := Control.new()
-	box.size = Vector2(w, h)
+	var box := window(Vector2(w, h), title)
 	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	var parch: Texture2D = load("res://assets/ui/panel_parchment.webp")
-	box.draw.connect(func():  # 56px corners drawn 30px wide
-		var sb := StyleBoxTexture.new()
-		sb.texture = parch
-		sb.set_texture_margin_all(56)
-		var k := 30.0 / 56.0
-		box.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		box.draw_style_box(sb, Rect2(Vector2.ZERO, box.size / k))
-		box.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
 	add_child(box)
-	# The title on its wooden banner, over the frame's top edge.
-	var tw := Tok.font(800).get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
-	var banner := Control.new()
-	banner.size = Vector2(tw + 60, 13 + 6 + 28 + 7)
-	banner.position = Vector2((w - banner.size.x) / 2, 30 + 10 - 22 - 13)
-	var wood: Texture2D = load("res://assets/ui/banner_wood.webp")
-	banner.draw.connect(func():  # slices 64 / 96, drawn 13 / 24
-		var sb := StyleBoxTexture.new()
-		sb.texture = wood
-		sb.texture_margin_top = 64
-		sb.texture_margin_bottom = 64
-		sb.texture_margin_left = 96
-		sb.texture_margin_right = 96
-		var k := 13.0 / 64.0
-		banner.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		banner.draw_style_box(sb, Rect2(Vector2.ZERO, banner.size / k))
-		banner.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
-	var t := Tok.label(title, 21, Color("#fff7e0"), 800)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
-	t.add_theme_constant_override("shadow_offset_y", 2)
-	t.size = banner.size
-	banner.add_child(t)
-	box.add_child(banner)
 	msg.position = Vector2(38, 30 + 10 + 33 + 12 - 13)
 	box.add_child(msg)
 	# Yes (the green pill) and Cancel (parchment-sunken), 10px apart.

@@ -1,6 +1,6 @@
 ## Screenshot runner (PLAN.md, "Screen comparison"). Opens one screen,
 ## optionally with a save loaded, saves a PNG of it and quits:
-##   Godot_console.exe --path godot res://tests/shot.tscn -- --screen res://tests/icon_sheet.gd --out C:/x/shot.png [--save step.json] [--scale 2]
+##   Godot_console.exe --path godot res://tests/shot.tscn -- --screen res://tests/icon_sheet.gd --out C:/x/shot.png [--save step.json] [--scale 2] [--call m:arg,m2] [--wait 1.5]
 ## --screen: a .tscn, or a .gd script extending Control.
 ## --save: a JSON file holding {state, ctx} (a golden step's "before") or a
 ## bare HTML-game save. Needs a normal run (not --headless): headless
@@ -19,13 +19,16 @@ func _ready() -> void:
 	add_child(screen)
 	if screen is Control:
 		screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	if a.has("call"):  # --call method:arg, e.g. open_panel:drawer
-		var m: PackedStringArray = a.call.split(":")
-		screen.call(m[0], m[1]) if m.size() > 1 else screen.call(m[0])
+	if a.has("call"):  # --call method:arg[,method2...], e.g. open_panel:drawer,_lock_in
+		for one in a.call.split(","):
+			var m: PackedStringArray = one.split(":")
+			screen.call(m[0], m[1]) if m.size() > 1 else screen.call(m[0])
 	var scale := float(a.get("scale", "1"))
 	get_window().size = Vector2i(roundi(390 * scale), roundi(844 * scale))
 	for i in 3:
 		await get_tree().process_frame
+	if a.has("wait"):  # --wait seconds: e.g. partway through an animation
+		await get_tree().create_timer(float(a.wait)).timeout
 	await RenderingServer.frame_post_draw
 	if a.has("rects"):  # every node tagged with meta "cmp": [x, y, w, h] in 390-wide design pixels
 		var rects := {}

@@ -23,6 +23,10 @@ var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
+var playing := false  # the Lock-In count is running: no redraws under it
+var _qm: QuarkMeter
+var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
+var _chip_nodes := {}  # "kind:name" -> its combo chip
 
 
 func _ready() -> void:
@@ -57,6 +61,10 @@ func _ready() -> void:
 ## when the items or the width change, otherwise its cards just re-dim. A
 ## full rebuild with a late-game inventory took ~70ms on a PC.
 func _redraw() -> void:
+	if playing:
+		return
+	_mat_nodes.clear()
+	_chip_nodes.clear()
 	for c in _body.get_children():
 		c.queue_free()
 	var s := Game.state
@@ -70,6 +78,7 @@ func _redraw() -> void:
 	qm.position = Vector2(SIDE, y)
 	qm.size = Vector2(w, qm.custom_minimum_size.y)
 	_body.add_child(qm)
+	_qm = qm
 	qm.show_score(sc.total, Orders.tiers(Orders.check_round(s)))
 	y += qm.size.y + 4
 	# Combo chips (min height 40, wrapping rows).
@@ -136,6 +145,88 @@ func _redraw() -> void:
 	fold.position = Vector2((size.x - 38) / 2, line_y + 1 - 10)
 	fold.add_child(_chevron())
 	_body.add_child(fold)
+
+
+## The Lock-In count (playLockInSequence()): the meter drops to 0 and builds
+## back up one scoring beat at a time (score_beats()), bouncing the cards and
+## chips each beat is for; then it snaps to the real total, the Quarks
+## bounce, and on_done runs. Collections locked in for the first time are
+## discovered on the way (one Star each).
+## shortcut: a first-time collection bounces the "!" chip instead of
+## revealing its own chip, fine until the collections row gets its reveal.
+func play_lock_in(on_done: Callable) -> void:
+	playing = true
+	var s := Game.state
+	var cards := Mat.on_mat(s)
+	var sc := Mat.score(cards, s, Game.ctx)
+	var beats := score_beats(cards, sc)
+	var tiers := Orders.tiers(Orders.check_round(s))
+	_qm.show_score(0, tiers)
+	var pts := 0.0
+	var mult := 1.0
+	for i in beats.size():
+		await get_tree().create_timer(0.22 if i > 0 else 0.0).timeout
+		if not is_instance_valid(self):
+			return
+		var b: Dictionary = beats[i]
+		for n in b.cards:
+			bounce(_mat_nodes.get(n))
+		if b.has("chip"):
+			bounce(_chip_nodes.get(b.chip, _chip_nodes.get("new") if b.chip == "collection" else null))
+		pts += b.points
+		mult += b.mult
+		_qm.show_score(pts * mult, tiers)
+	await get_tree().create_timer(0.38 + 0.15).timeout
+	_qm.show_score(sc.total, tiers)
+	bounce(_qm.total_label())
+	bounce(_chip_nodes.get("order"))
+	await get_tree().create_timer(0.38 + 0.3).timeout
+	for col in sc.cols:
+		if not Util.get_or(Progress.prefs, "everUnlockedMatCollections", []).has(col.id):
+			Progress.discover_collection(col.id)
+	on_done.call()
+
+
+## lockInScoreBeats(): every card's points; every complete recipe again
+## (the card and its ingredients); each completed collection's bonus; each
+## station / suit / component combo's multiplier; then whatever the
+## capstone signatures add, as one points beat and one multiplier beat.
+static func score_beats(cards: Array, sc: Dictionary) -> Array:
+	var beats := []
+	for c in cards:
+		beats.append({"cards": [c.name], "points": c.points, "mult": 0})
+	for c in cards:
+		if Mat.is_complete(c, cards):
+			var need := Mat.direct_items(c)
+			beats.append({"cards": [c.name] + cards.filter(func(m): return need.has(m.name)).map(func(m): return m.name), "points": c.points, "mult": 0})
+	for col in sc.cols:
+		beats.append({"cards": cards.filter(func(c): return col.items.has(c.name)).map(func(c): return c.name), "points": col.bonus, "mult": 0, "chip": "collection"})
+	for kind in ["station", "suit", "component"]:
+		for g in sc.combos[kind]:
+			var members: Array = cards.filter(func(c): return (c.stations.has(g.name) if kind == "station"
+				else c.pips.has(g.name) if kind == "suit" else c.name == g.name or Mat.direct_items(c).has(g.name)))
+			beats.append({"cards": members.map(func(c): return c.name), "points": 0, "mult": g.bonus, "chip": kind + ":" + g.name})
+	var sig := func(names: Array) -> Array: return cards.filter(func(c): return names.has(c.name)).map(func(c): return c.name)
+	var pts := 0.0
+	var mult := 0.0
+	for b in beats:
+		pts += b.points
+		mult += b.mult
+	if sc.base + sc.colBonus - pts != 0:
+		beats.append({"cards": sig.call(["Robot", "Homestead", "Maglev Train", "Space Station"]), "points": sc.base + sc.colBonus - pts, "mult": 0})
+	if sc.mult - 1 - mult != 0:
+		beats.append({"cards": sig.call(["Coral Reef", "Ecosystem"]), "points": 0, "mult": sc.mult - 1 - mult})
+	return beats
+
+
+## bouncePulse(): a quick scale punch (1 -> 1.35 -> 1, 380ms).
+static func bounce(c) -> void:
+	if not is_instance_valid(c):
+		return
+	c.pivot_offset = c.size / 2
+	var tw: Tween = c.create_tween()
+	tw.tween_property(c, "scale", Vector2(1.35, 1.35), 0.19).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(c, "scale", Vector2.ONE, 0.19).set_trans(Tween.TRANS_SINE)
 
 
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
@@ -445,15 +536,19 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	var o = Orders.current(Game.state)
 	if o != null:
 		chips.append(_order_chip(o, sc))
+		chips[-1].set_meta("combo", "order")
 	for g in sc.sigs:
 		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))
 	for g in sc.combos.station:
 		chips.append(_counted(_icon_circle(Catalog.station(g.name).emoji, Tok.station_color(g.name), Color.TRANSPARENT, 0, true), g.k))
+		chips[-1].set_meta("combo", "station:" + g.name)
 	for g in sc.combos.suit:
 		chips.append(_counted(_icon_circle("suit:" + g.name, Tok.suit_color(g.name)), g.k))
+		chips[-1].set_meta("combo", "suit:" + g.name)
 	for g in sc.combos.component:
 		var em = Data.t("ITEM_EMOJI").get(g.name)
 		chips.append(_counted(_icon_circle(em if em else "", Tok.PARCHMENT, Color.TRANSPARENT, 0, true), g.k))
+		chips[-1].set_meta("combo", "component:" + g.name)
 	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 	var known: Array = sc.cols.filter(func(c): return found.has(c.id))
 	if not known.is_empty():
@@ -462,8 +557,10 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 		st_ic.position = Vector2(6, 5.5)
 		star.add_child(st_ic)
 		chips.append(_counted(star, known.size(), Color("#8a5ce0"), Color.WHITE))
+		chips[-1].set_meta("combo", "collection")
 	if sc.cols.any(func(c): return not found.has(c.id)):
 		chips.append(_chip(_text_circle("!", 18, Color.WHITE, Tok.BAD, Color.WHITE, 2), "", 0))
+		chips[-1].set_meta("combo", "new")
 	# Wrap into rows (gap 8px between rows, 10px between chips).
 	var x := 0.0
 	var y := 0.0
@@ -479,6 +576,8 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 		c.size = sz
 		c.set_meta("cmp", "chip%d" % i)
 		_body.add_child(c)
+		if c.has_meta("combo"):
+			_chip_nodes[c.get_meta("combo")] = c
 		x += sz.x + CHIP_GAP
 		row_h = maxf(row_h, sz.y)
 	# Chips in a row stretch to its tallest (flex align-items:stretch).
@@ -632,6 +731,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 			card.position = pos
 			card.size = Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)
 			page.add_child(card)
+			_mat_nodes[sl.card.name] = card
 		elif sl.has("stack") or sl.kind == "top":
 			var stack: Array = sl.get("stack", [])
 			var per: int = 1 if sl.kind == "top" else L.perSlot
@@ -644,6 +744,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					mini.position = at
 					mini.size = Vector2(col_w, mh)
 					page.add_child(mini)
+					_mat_nodes[stack[k].card.name] = mini
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
 		else:

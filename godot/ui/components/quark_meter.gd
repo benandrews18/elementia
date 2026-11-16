@@ -89,6 +89,10 @@ func show_score(total: float, tiers: Dictionary) -> void:
 	_layout()
 
 
+func total_label() -> Control:
+	return _total
+
+
 static func _reached(total: float, bounds: Array) -> int:
 	var n := 0
 	for i in range(1, 5):

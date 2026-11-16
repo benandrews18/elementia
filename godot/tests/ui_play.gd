@@ -17,6 +17,7 @@ func check(ok: bool, what: String) -> void:
 
 func _ready() -> void:
 	Progress.autosave = false
+	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
 	var app := App.new()
 	add_child(app)
@@ -40,6 +41,7 @@ func _ready() -> void:
 		if Game.state.get("finalCheckPending"):
 			check(app.home_face() == "final", "final check face")
 			app._on_hub("home")
+			check(await _until(func(): return Game.state.get("runComplete")), "the final count ends the run")
 			break
 		var options: Array = Data.t("MAP_NODE_POS").keys().filter(func(n): return app.can_travel_to(n))
 		Game.ctx.selectedMapStation = options[randi() % options.size()]
@@ -54,6 +56,13 @@ func _ready() -> void:
 				check(Game.lock_in_ends_run(), "asked only when the Lock-In ends the run")
 				ask[0].on_yes.call()
 				ask[0].queue_free()
+			else:  # the count, then the Bonus Dice window; Nice travels
+				var reward := Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state))
+				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "turn %d: the Bonus Dice window opens" % turns)
+				var dlg: LockInReward = app.get_children().filter(func(c): return c is LockInReward)[0]
+				check(dlg.dice == mini(reward, 3) and dlg.unknown == (reward >= 4), "turn %d: shows the reward" % turns)
+				dlg._done()
+				check(await _until(func(): return app._screen is StationScreen and app.panel == ""), "turn %d: the fade lands at the station" % turns)
 		await get_tree().process_frame
 	print("ui_play: %d turns, visits %d, %s, %d items, best mat %d" % [turns, Game.state.visits,
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])
@@ -61,6 +70,15 @@ func _ready() -> void:
 	check(balloon_done, "crafted something through the suit-spend balloon")
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
+
+
+## Waits (up to ~600 frames) until cond() is true.
+func _until(cond: Callable) -> bool:
+	for i in 600:
+		if cond.call():
+			return true
+		await get_tree().process_frame
+	return false
 
 
 ## Crafts the first craftable item here that has a suit cost through the
