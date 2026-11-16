@@ -12,11 +12,15 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M3 Proof of concept (M2 done)
-**Next task:** M3: the mat's tabs and corner buttons, the inventory grid
-below it, tapping cards on/off the mat; then the web export, a bundled
-font, and the preview page for the iPhone.
+**Next task:** M3: web export (needs export templates), a bundled font and
+Noto images for the UI emoji (the web has no system fonts), then the
+preview page for the iPhone. Waiting on the user's OK for the downloads.
 
 Log (newest first, one line per session):
+- 2026-11-15: M3: the whole drawer (mat by growth stage, tabs, Last/Clear,
+  fold line, inventory by tier, tap to place/remove). Mat 109 elements, 1
+  off by 2.1px. Shortcuts noted in display_mat.gd (Elements tab, Layouts,
+  "?", Last's confirm, the Crafting Bench flow come in M4).
 - 2026-11-15: M3 started: Display Mat top (QuarkMeter, combo chips incl.
   challenge and capstone chips, the growing mat page with stacked tier 1
   cards, lit halos, complete glow). `compare.mjs` now runs shots (gallery,
