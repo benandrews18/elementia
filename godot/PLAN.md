@@ -15,6 +15,7 @@ reference for every rule and screen until the Godot version replaces it.
 **Next task:** M0.1, create the project.
 
 Log (newest first, one line per session):
+- 2026-11-15: plan reviewed; 8 fixes folded in (see Decisions).
 - 2026-11-15: plan written. Godot 4.7.2 installed; a probe proved Claude can
   run it, screenshot a 390x844 screen in ~2s and view the picture.
 
@@ -39,9 +40,16 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
 - **The HTML game is the reference.** When the Godot version disagrees with
   `game/`, Godot is wrong, unless the user decided to change it (record that
   in "Decisions").
-- **Content stays in one place.** `game/js/data.js` remains the only place
-  content is edited until cutover (M9). `godot/data/game_data.json` is
-  generated from it by `godot/tools/export_data.py`; never hand-edit it.
+- **Content and tables stay in one place.** Until cutover (M9) content is
+  edited only in `game/js/` (`data.js`, plus the tables in `model.js`,
+  `mat-scoring.js` and `lock-in.js`). `godot/data/game_data.json` is
+  generated from the running HTML game by `godot/tools/export_data.mjs`
+  (it loads the page through `game/tools/headless_game.mjs` and writes
+  `DATA` plus every plain table: `ITEM_SUIT_COST_TABLE`,
+  `LOCKIN_ROUND_ANCHORS`, `MAT_COLLECTIONS_RAW`, `MAT_GROW_ROUNDS`, the
+  BINGO/Market constants ...). Never hand-copy a table into GDScript, and
+  never hand-edit the JSON. Anything holding functions (e.g. the challenge
+  checks in `CHECK_ORDERS`) is a rule and is ported as code.
 - **Balance freeze, mostly.** Data tweaks (a recipe, a price) are fine: re-run
   the export. Rule changes in `game/js` during the port must also be made in
   Godot; the parity test (below) flags any that are missed.
@@ -51,7 +59,9 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   parity tests and a later simulator possible.
 - **Same save format.** The Godot save is the same JSON shape as the HTML
   game's `state` object, so the same save loads in both. That powers the
-  tests and screenshots, and lets players carry a run across if we want.
+  tests and screenshots. Old-save upgrades (`loadAll()`'s migrations) are
+  not ported: app players start fresh. Add an importer only if carrying
+  runs across becomes a real feature.
 - **One commit per logical change, on `master`**, as for the HTML game.
   Godot work doesn't trigger the HTML publish steps in `CLAUDE.md`.
 
@@ -113,7 +123,31 @@ bench and hub frames (CSS `border-image`) become `NinePatchRect` / `StyleBoxText
 by a tool, so both versions show identical icons.
 
 **Randomness:** all random numbers go through the `Rng` autoload (no
-`randi()` scattered in code), so tests can feed it fixed numbers.
+`randi()` scattered in code), so tests can feed it fixed numbers. Rule
+code only uses it the way the JS does: `floor(r * n)` picks and the
+shuffle in `mat-scoring.js`. Visual randomness (confetti, sparks) uses
+Godot's own random and never touches `Rng`.
+
+### JS -> GDScript pitfalls (check every ported rule against these)
+
+- **Division:** in GDScript, whole number / whole number drops the fraction
+  (`7/2` is `3`; in JS it's `3.5`). Example: the breakpoint interpolation
+  `(round - r0) / (r1 - r0)` (`lock-in.js:92`) would always be 0. Write
+  `float(a) / b` wherever the JS divides, and round only where the JS rounds
+  (`Math.round`, `Math.floor`, `| 0`).
+- **JSON numbers:** Godot's JSON loader makes every number a float, so a
+  value is `3.0` when it came from a save and `3` when it came from code.
+  Use `int()` where a number is a count or index. The parity compare treats
+  `3` and `3.0` as equal.
+- **Sorting:** JS's `sort` keeps tied items in their original order;
+  Godot's `sort_custom` doesn't promise to. Every ported sort uses
+  `core/util.gd`'s `stable_sort(arr, cmp)` (ties broken by original
+  position), or a rule that sorts then picks with a random number picks a
+  different item.
+- **Truthiness and missing keys:** JS `undefined`/`0`/`""` checks and
+  `obj.x || default` need explicit `dict.get("x", default)` in GDScript.
+- **Iteration order:** JS objects and Godot Dictionaries both keep insertion
+  order; keep building them in the same order as the JS.
 
 ### JS file -> Godot mapping
 
@@ -129,7 +163,7 @@ by a tool, so both versions show identical icons.
 | `render`, `render-helpers`, `input`, `low-motion` | Godot's own nodes, input and Theme; little to port | replaced |
 | `craft-animations`, `travel` animation, reveals | Tweens and AnimationPlayer in M8 | polish |
 | `minigames.js` + `minigames/*.js` (8 games, ~3,300 lines, off by default) | M7, if kept | optional |
-| `dev.js` | `ui/dev/` (needed early: tests and screenshots use its jumps) | tool |
+| `dev.js` | `ui/dev/` in M6 (the screenshot runner has its own "load save, open screen" from M0) | tool |
 | `pwa.js`, `boot.js` | not needed | gone |
 
 ---
@@ -137,26 +171,36 @@ by a tool, so both versions show identical icons.
 ## How Claude checks its own work
 
 ### 1. Rules parity (automatic, every change)
-- A Node script (`game/tools/record_golden.mjs`, using the existing
-  `headless_game.mjs`) plays runs in the HTML game and records each step as
-  **state before, the action, the random numbers it used, state after**.
-- A Godot test (`tests/parity.gd`, run with `--headless`) replays every step:
-  it loads "state before", feeds the same random numbers through `Rng`, runs
-  the action, and compares with "state after", printing the first field that
-  differs.
+- **Recorder = the simulator.** `game/tools/sim/` already plays whole,
+  varied runs through the HTML game's own rule functions, with animations
+  and timers off and seeded dice. `godot/tools/record_golden.mjs` runs it
+  with those functions wrapped (`goStation`, `doRoll`, `craft`,
+  `startCheckOrder`, `confirmLockIn`, `quietCheck`, ... the list the sim
+  calls) and records each call as **state before, the action and its
+  arguments, the random numbers it used, state after**. Because the sim has
+  timers switched off, "state after" is complete when the call returns.
+- **Replay:** `tests/parity.gd` (run with `--headless`) loads "state
+  before", feeds the same random numbers through `Rng`, runs the matching
+  Godot action, and compares with "state after" (3 and 3.0 count as equal),
+  printing the first field that differs.
 - Steps are independent, so one bug shows as one failing step rather than
   ruining the rest of the run.
-- Goldens are re-recorded from the HTML game whenever its rules change, so a
-  rule changed in JS but not Godot fails the test straight away.
-- Plus small hand-written tests for edge cases, like `smoke_classic.js` today.
+- **Re-record whenever `game/js` rules change**, so a rule changed in JS
+  but not Godot fails straight away.
+- **Actions that only exist in the HTML game's buttons** (convert 3:1,
+  spending a "?", paying suit costs, collecting a Market row) have no rule
+  function to wrap; the sim re-implements them. In Godot they become
+  proper rules in `core/`, each with hand-written tests taken from the
+  HTML game's behaviour, the way `smoke_classic.js` tests rules today.
 
 ### 2. Screen comparison (every screen change)
 - Both games load the **same save** and open the **same screen** at 390x844:
   the HTML game in headless Chrome, Godot through `tests/shot.gd`
   (`-- --save <file> --screen <name> --out <png>`, optionally with taps).
-- A tool puts each pair side by side, with a difference overlay, into
-  `godot/build/compare.html`. Claude looks at the pairs and fixes mismatches
-  before showing the user.
+- A tool puts each pair side by side into `godot/build/compare.html`.
+  Claude looks at the pairs and fixes mismatches before showing the user.
+  (No pixel-difference overlay: the two versions use different fonts, so
+  every letter would differ and hide the real problems.)
 - Layout numbers too: both sides dump each key element's position and size
   as JSON, and a script reports anything more than a few pixels off.
 - A fixed set of screens and states (the "shot list") is kept in
@@ -180,13 +224,15 @@ to the user. Rough sizes are in sessions and are guesses.
 ### M0 Foundation (~1 session)
 - [ ] M0.1 Create `godot/` project (Compatibility renderer, 390x844,
       portrait, `.gitignore` for `.godot/`). Add a pointer to this plan in `CLAUDE.md`.
-- [ ] M0.2 `tools/export_data.py`: data.js JSON block -> `data/game_data.json`.
+- [ ] M0.2 `tools/export_data.mjs`: `DATA` and the plain rule tables, read
+      from the running HTML game -> `data/game_data.json`.
 - [ ] M0.3 Icon export: `images.js` + Noto PNGs -> `assets/icons/`; copy
       backdrops, banners, frames.
-- [ ] M0.4 `tests/shot.gd` screenshot runner, and the matching Chrome side;
-      side-by-side `compare.html`.
-- [ ] M0.5 Parity skeleton: `record_golden.mjs` records one step; `parity.gd`
-      replays it (will fail until M1, which is fine).
+- [ ] M0.4 `tests/shot.gd` screenshot runner with its own `--save <file>
+      --screen <name>` (loads the save into `Game`, opens that scene
+      directly). The comparison page waits for M2.
+- [ ] M0.5 Parity skeleton: `record_golden.mjs` wraps the sim's rule calls
+      and records steps; `parity.gd` replays them (fails until M1, fine).
 
 ### M1 Rules core (~2-4 sessions)
 - [ ] Data loader, model (elements, suits, suit costs, item catalog), map graph
@@ -195,14 +241,17 @@ to the user. Rough sizes are in sessions and are guesses.
 - [ ] Convert, suit spend, Market
 - [ ] Lock-In: breakpoints, check orders (requests, restrictions), game over
 - [ ] BINGO board and redraws, opening and capstone pick, end of run
-- [ ] Trophies, history, stars; save/load including old-save migration (`loadAll()`)
+- [ ] Trophies, history, stars; plain save/load (no old-save migration)
+- [ ] Convert, "?" spend, suit costs, Market collect: hand-written tests
 - [ ] **Done when:** parity passes on all recorded goldens (aim: 50+ runs).
 
 ### M2 Look foundation (~1-2 sessions)
 - [ ] Theme + tokens from the CSS; font (see "Open questions")
 - [ ] Components: ItemIcon, ItemCard (tier 1 / 2 / capstone sizes), BenchPanel,
       buttons, QuarkBar, top bar
-- [ ] A component gallery scene, screenshotted next to the HTML versions
+- [ ] A component gallery scene, and the Chrome screenshot side plus the
+      side-by-side `compare.html`, first used on the gallery; element
+      positions dumped from both sides and compared by number
 
 ### M3 Proof of concept: the Display Mat (~1-2 sessions)
 - [ ] The Display Mat screen with real data, cards placed and scored
@@ -250,6 +299,9 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-15: Save format identical to the HTML game's `state` JSON.
 - 2026-11-15: Port rules first (M1) and prove one screen on the iPhone (M3)
   before building the rest.
+- 2026-11-15 (plan review): goldens come from the simulator; rule tables
+  are exported from the running game, never copied; no old-save migration;
+  no pixel-difference overlay; comparison page built in M2.
 
 ## Open questions (for the user, when they come up)
 

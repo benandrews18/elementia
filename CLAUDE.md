@@ -10,7 +10,8 @@ is laid out.
 The game is being rebuilt in Godot 4 under `godot/`. **Before any Godot work,
 read `godot/PLAN.md`** (current milestone, next task, decisions) and update
 its log when done. Until cutover, `game/` stays the reference for every rule
-and screen, and `data.js` stays the only place content is edited.
+and screen, and content and rule tables are edited only in `game/js/`
+(Godot's copy is exported from the running game, never hand-copied).
 
 ## Source of truth
 
