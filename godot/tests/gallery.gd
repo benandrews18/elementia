@@ -39,3 +39,12 @@ func _ready() -> void:
 			add_child(c)
 			x += span
 		y += h + SECTION_GAP
+	# The Crafting Bench around an 80px-tall placeholder.
+	var bench := BenchPanel.new()
+	var inner := Control.new()
+	inner.custom_minimum_size = Vector2(0, 80)
+	inner.set_meta("cmp", "bench:content")
+	bench.add_child(inner)
+	bench.position = Vector2(PAD, y)
+	bench.size = Vector2(390 - 2 * PAD, 80 + 48)
+	add_child(bench)

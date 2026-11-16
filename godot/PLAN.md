@@ -11,11 +11,15 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M2 Look foundation (M1 done)
-**Next task:** M2: BenchPanel (hub_frame 9-slice), buttons, QuarkBar, top
-bar; add each to the gallery and `tools/compare.mjs`.
+**Current milestone:** M3 Proof of concept (M2 done)
+**Next task:** M3: the Display Mat screen (mat grid that grows, Quark meter,
+combo chips, inventory grid below), compared with the HTML game's drawer;
+then the web export and a bundled font.
 
 Log (newest first, one line per session):
+- 2026-11-15: M2 done: BenchPanel (hub_frame 9-slice drawn at 16px) matches.
+  QuarkBar moves to M3 and hub buttons / top bar to M4: each component is
+  built with the screen that uses it.
 - 2026-11-15: M2 started: `ui/theme/tok.gd` (tokens, system font, box/label/
   icon helpers, icon outline shader), `ui/components/item_card.gd`,
   `tests/gallery.gd`, `tools/compare.mjs`. Cards: 127 elements, 0 off by
@@ -296,21 +300,23 @@ to the user. Rough sizes are in sessions and are guesses.
       capstone in turn, cover every capstone rule and challenge; 50 wasn't needed).
 
 ### M2 Look foundation (~1-2 sessions)
-- [ ] Theme + tokens from the CSS; font (see "Open questions")
-- [ ] Components: ItemIcon, ItemCard (tier 1 / 2 / capstone sizes), BenchPanel,
-      buttons, QuarkBar, top bar
-- [ ] A component gallery scene, and the Chrome screenshot side plus the
+- [x] Tokens from the CSS (`ui/theme/tok.gd`); font = the device's own
+- [x] Components: ItemCard (tier 1 / 2 / capstone sizes), BenchPanel
+      (QuarkBar -> M3, buttons and top bar -> M4, built with their screens)
+- [x] A component gallery scene, and the Chrome screenshot side plus the
       side-by-side `compare.html`, first used on the gallery; element
       positions dumped from both sides and compared by number
 
 ### M3 Proof of concept: the Display Mat (~1-2 sessions)
-- [ ] The Display Mat screen with real data, cards placed and scored
+- [ ] The Display Mat screen with real data, cards placed and scored, its
+      Quark meter and combo chips
 - [ ] Web export (thread-less, so GitHub Pages works) published as a
       preview page, like `fixed-screen`'s `/preview/`
 - [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.
 
 ### M4 Core loop (~3-5 sessions)
-- [ ] Map and travel, station hub, rolling, shop and crafting, inventory drawer
+- [ ] Map and travel, station hub (hub buttons, top bar), rolling, shop and
+      crafting, inventory drawer
 - [ ] **Done when:** a whole run can be played in Godot from start to Lock-In.
 
 ### M5 Run flow (~3-5 sessions)
@@ -355,6 +361,9 @@ Recorded so they aren't re-argued. Add new ones with the date.
   picks); `craft_raw()` is the HTML game's unchecked rule, for replay only.
 - 2026-11-15: Font = the device's own (SystemFont: Segoe UI / Helvetica Neue /
   Arial), as the HTML game. Needs a bundled font for the web export (M3).
+- 2026-11-15: Styling is code (`Tok` helpers + components), not a Theme
+  .tres: every CSS value sits next to the component using it, and the
+  comparison checks it.
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
   are exported from the running game, never copied; no old-save migration;
   no pixel-difference overlay; comparison page built in M2.
