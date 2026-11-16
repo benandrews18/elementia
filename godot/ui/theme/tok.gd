@@ -23,14 +23,14 @@ static var _fonts := {}
 static var _outlines := {}
 
 
-## The HTML game's font stack (base.css): the device's own UI font, so text
-## matches it letter for letter. shortcut: SystemFont finds nothing on the
-## web export (falls back to Godot's font); bundle a font before M3's preview.
+## The game's font: Nunito (chosen 2026-11-15; assets/fonts, OFL), one
+## variable file drawn at any weight. Bundled, so text looks the same on every
+## device and on the web, where Godot can't use the phone's own fonts.
 static func font(weight := 400) -> Font:
 	if not _fonts.has(weight):
-		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["Segoe UI", "Helvetica Neue", "Arial", "sans-serif"])
-		f.font_weight = weight
+		var f := FontVariation.new()
+		f.base_font = load("res://assets/fonts/Nunito-VariableFont_wght.ttf")
+		f.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): weight}
 		_fonts[weight] = f
 	return _fonts[weight]
 
@@ -91,3 +91,42 @@ static func outline(icon_px: float) -> ShaderMaterial:
 		m.set_shader_parameter("width", 1.5 / icon_px)
 		_outlines[icon_px] = m
 	return _outlines[icon_px]
+
+
+## A five-point star, drawn (Nunito has no ★, and the web has no fallback font).
+static func star(color: Color, px: float) -> Control:
+	var c := Control.new()
+	c.size = Vector2(px, px)
+	c.custom_minimum_size = c.size
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		var pts := PackedVector2Array()
+		for i in 10:
+			var r := px * (0.5 if i % 2 == 0 else 0.2)
+			var a := -PI / 2 + i * PI / 5
+			pts.append(Vector2(px / 2, px / 2 + px * 0.04) + Vector2(cos(a), sin(a)) * r)
+		c.draw_colored_polygon(pts, color))
+	return c
+
+
+## A circular arrow (↺, or ↻ when clockwise), drawn: Nunito has neither.
+static func loop_arrow(color: Color, px: float, clockwise := false) -> Control:
+	var c := Control.new()
+	c.size = Vector2(px, px)
+	c.custom_minimum_size = c.size
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		var mid := Vector2(px, px) / 2
+		var r := px * 0.34
+		var w := px * 0.13
+		# The arc leaves a gap at the top; the arrowhead sits on one end of it.
+		var a0 := -PI / 2 + 0.55
+		var a1 := -PI / 2 + TAU - 0.15
+		if clockwise:
+			c.draw_set_transform(Vector2(px, 0), 0, Vector2(-1, 1))
+		c.draw_arc(mid, r, a0, a1, 24, color, w, true)
+		var tip := mid + Vector2(cos(a0), sin(a0)) * r
+		var dir := Vector2(-sin(a0), cos(a0))  # along the arc, away from the gap
+		var out := Vector2(cos(a0), sin(a0))
+		c.draw_colored_polygon(PackedVector2Array([tip - dir * w * 2.2, tip + out * w * 1.8 + dir * w * 0.6, tip - out * w * 1.8 + dir * w * 0.6]), color))
+	return c

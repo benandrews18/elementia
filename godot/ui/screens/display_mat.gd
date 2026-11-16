@@ -152,7 +152,11 @@ func _page_controls(page: Control) -> void:
 		var bh := 34.0 if is_text else 30.0
 		var px := 12 if is_text else (13 if text == "💾" else 18)
 		var bg := Color("#3f8fd0") if qs and text == "↻" else Tok.GOLD
-		var btn := _round_button(text, Vector2(bw, bh), px, bg)
+		var btn := _round_button(text if is_text else "", Vector2(bw, bh), px, bg)
+		if not is_text:  # 💾 as its Noto image; ↺ / ↻ drawn (not in Nunito)
+			var ic: Control = Tok.icon(text, 15) if text == "💾" else Tok.loop_arrow(Color.WHITE if qs else Tok.CARD_INK, 20, qs)
+			ic.position = (Vector2(bw, bh) - ic.size) / 2
+			btn.add_child(ic)
 		x2 -= bw
 		btn.position = Vector2(x2, bottom + 24 - bh)
 		btn.pressed.connect(b[2])
@@ -207,12 +211,11 @@ func _inventory(width: float) -> Control:
 	search.set_meta("cmp", "inv:search")
 	list.add_child(search)
 	for i in 2:
-		var b := Label.new()
-		b.text = ["📋", "🏆"][i]
-		b.add_theme_font_size_override("font_size", 18)
-		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		b.add_theme_stylebox_override("normal", Tok.box(Color("#241c3a"), 8, 1.5, Color("#4a3a75")))
+		var b := Panel.new()
+		b.add_theme_stylebox_override("panel", Tok.box(Color("#241c3a"), 8, 1.5, Color("#4a3a75")))
+		var ic := Tok.icon(["📋", "🏆"][i], 20)
+		ic.position = Vector2(9, 9)
+		b.add_child(ic)
 		b.position = Vector2(pad + w - 38 - (1 - i) * (38 + 8), y)
 		b.size = Vector2(38, 38)
 		list.add_child(b)
@@ -304,7 +307,10 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 	var known: Array = sc.cols.filter(func(c): return found.has(c.id))
 	if not known.is_empty():
-		var star := _text_circle("★", 17, Color("#ffd166"), Color("#241c3a"), Color("#8a5ce0"), 1.5)
+		var star := _icon_circle("", Color("#241c3a"), Color("#8a5ce0"), 1.5)
+		var st_ic := Tok.star(Color("#ffd166"), 15)
+		st_ic.position = Vector2(6, 5.5)
+		star.add_child(st_ic)
 		chips.append(_counted(star, known.size(), Color("#8a5ce0"), Color.WHITE))
 	if sc.cols.any(func(c): return not found.has(c.id)):
 		chips.append(_chip(_text_circle("!", 18, Color.WHITE, Tok.BAD, Color.WHITE, 2), "", 0))

@@ -14,9 +14,18 @@ func t(name: String) -> Variant:
 	assert(tables.has(name), "No table %s in game_data.json (re-run the export?)" % name)
 	return tables[name]
 
-## The texture for an icon key, or null if the game has no image for it.
+## The texture for an icon key (an item's emoji, __NAME__, suit:x), or one of
+## the UI emoji in assets/emoji (Noto images: the web has no emoji font), or
+## null.
 func icon(key: String) -> Texture2D:
-	return load(icons[key]) if icons.has(key) else null
+	if icons.has(key):
+		return load(icons[key])
+	var cps := []
+	for c in key:
+		if c.unicode_at(0) != 0xfe0f:
+			cps.append("%x" % c.unicode_at(0))
+	var path := "res://assets/emoji/emoji_u%s.png" % "_".join(cps)
+	return load(path) if ResourceLoader.exists(path) else null
 
 static func _read_json(path: String) -> Dictionary:
 	var text := FileAccess.get_file_as_string(path)

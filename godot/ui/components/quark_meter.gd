@@ -11,7 +11,7 @@ const SEG_H := 14.0
 const SEG_GAP := 6.0
 const LINE_GAP := 8.0
 
-var _icon: Label
+var _icon: TextureRect
 var _total: Label
 var _segs: Array[Panel] = []
 var _fills: Array[Panel] = []
@@ -24,7 +24,8 @@ var _passed := 0
 func _init() -> void:
 	custom_minimum_size = Vector2(0, LABELS_H + ROW_GAP + SEG_H)
 	mouse_filter = MOUSE_FILTER_PASS
-	_icon = Tok.label("⚛️", 22, Tok.INK)
+	_icon = Tok.icon("⚛️", 22)
+	_icon.custom_minimum_size = Vector2(30, 22)  # the HTML glyph box is ~30px wide
 	add_child(_icon)
 	for i in 4:
 		var seg := Panel.new()
@@ -47,11 +48,16 @@ func _init() -> void:
 		var b := Panel.new()
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		b.size = Vector2(20, 20)
-		var glyph := Tok.label("🎲" if i < 3 else "?", 12 if i < 3 else 11, Tok.CARD_INK, 800)
-		glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		glyph.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-		b.add_child(glyph)
+		if i < 3:
+			var die := Tok.icon("🎲", 12)
+			die.position = Vector2(4, 4)
+			b.add_child(die)
+		else:
+			var q := Tok.label("?", 11, Tok.CARD_INK, 800)
+			q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			q.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			q.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+			b.add_child(q)
 		b.set_meta("cmp", "qm:break%d" % i)
 		add_child(b)
 		_breaks.append(b)
@@ -94,7 +100,7 @@ static func _reached(total: float, bounds: Array) -> int:
 ## .qm-line: icon | meter (labels over segments) | total, bottoms aligned.
 func _layout() -> void:
 	var h := size.y
-	var icon_sz := _icon.get_minimum_size()
+	var icon_sz := _icon.custom_minimum_size
 	_icon.size = icon_sz
 	_icon.position = Vector2(0, h - icon_sz.y + 3)  # margin-bottom:-3px
 	# min-width 56px; padding 4px 10px; border 1.5px; line-height 1.1

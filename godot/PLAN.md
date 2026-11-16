@@ -12,11 +12,14 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M3 Proof of concept (M2 done)
-**Next task:** M3: web export (needs export templates), a bundled font and
-Noto images for the UI emoji (the web has no system fonts), then the
-preview page for the iPhone. Waiting on the user's OK for the downloads.
+**Next task:** M3: publish the web build as a preview page (the user wants
+to be asked first), then the user's iPhone test. Go / no-go after.
 
 Log (newest first, one line per session):
+- 2026-11-15: M3 web build works (browser pane: draws, taps place/remove).
+  Nunito bundled; UI emoji as Noto PNGs (assets/emoji); ★ and ↺/↻ drawn
+  (not in Nunito). Export templates installed (%APPDATA%/Godot). Build is
+  ~66 MB (wasm 40 MB, pck 27 MB): shrink before release.
 - 2026-11-15: M3: the whole drawer (mat by growth stage, tabs, Last/Clear,
   fold line, inventory by tier, tap to place/remove). Mat 109 elements, 1
   off by 2.1px. Shortcuts noted in display_mat.gd (Elements tab, Layouts,
@@ -318,11 +321,12 @@ to the user. Rough sizes are in sessions and are guesses.
       positions dumped from both sides and compared by number
 
 ### M3 Proof of concept: the Display Mat (~1-2 sessions)
-- [ ] The Display Mat screen with real data, cards placed and scored, its
+- [x] The Display Mat screen with real data, cards placed and scored, its
       Quark meter and combo chips
 - [x] ItemCard "lit" states: gold halos on pips / station badges in a live combo
-- [ ] Web export (thread-less, so GitHub Pages works) published as a
-      preview page, like `fixed-screen`'s `/preview/`
+- [x] Web export (thread-less, so GitHub Pages works): `export_presets.cfg`,
+      `G --headless --path godot --export-release "Web" build/web/index.html`
+- [ ] Published as a preview page (ask the user first)
 - [ ] **User tests it on the iPhone.** Go / no-go for the rest of the port.
 
 ### M4 Core loop (~3-5 sessions)
@@ -370,8 +374,9 @@ Recorded so they aren't re-argued. Add new ones with the date.
   ported; the Market is 3 rows of 4. Goldens force `prefs.classicBingo = false`.
 - 2026-11-15: `Game.craft(name, picks)` is the safe craft (asks for suit-cost
   picks); `craft_raw()` is the HTML game's unchecked rule, for replay only.
-- 2026-11-15: Font = the device's own (SystemFont: Segoe UI / Helvetica Neue /
-  Arial), as the HTML game. Needs a bundled font for the web export (M3).
+- 2026-11-15: Font = Nunito (user's choice), bundled (`assets/fonts`, OFL),
+  for every device and the web. The HTML game still uses system fonts, so
+  text widths differ slightly in comparisons.
 - 2026-11-15: Styling is code (`Tok` helpers + components), not a Theme
   .tres: every CSS value sits next to the component using it, and the
   comparison checks it.
@@ -381,8 +386,9 @@ Recorded so they aren't re-argued. Add new ones with the date.
 
 ## Open questions (for the user, when they come up)
 
-- **Font:** the HTML game uses the phone's system font. Godot needs a font
-  file bundled. Pick one in M2 (Claude will offer a few side by side).
+- **More UI emoji images:** the challenge chips for Full Recipe 🧩, Common
+  Thread 🧵, Fresh Faces 🆕, Short Table 🪑, Thin Stock 📦 and Spread Out ↔️
+  need Noto PNGs on the web (ask before downloading).
 - **Mini-games:** keep all 8, some, or none? (M7)
 - **Sound and music:** source and style. (M8)
 - **App identity:** store name, bundle id (e.g. `com.<you>.elementia`),
