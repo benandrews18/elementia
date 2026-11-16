@@ -11,7 +11,7 @@ const COLS_GAP := 5.0
 const PAGE_PAD := 5.0  # .mat-zone-page padding + border (2px) are inside the 14px
 const CHIP_GAP := 6.0  # .mat-combos gap (rows and columns)
 
-const HUB_H := 67.0  # the hub bar below the drawer (M4)
+const HUB_H := HubBar.H  # the drawer ends at the hub bar's top
 const GOLD_LINE := Color("#e2b25a")
 
 var _drawer: Panel

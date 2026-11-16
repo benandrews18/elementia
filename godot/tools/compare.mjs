@@ -61,9 +61,12 @@ const SHOTS = [
       tag(".qm-total", "qm:total"); tag(".qm-seg", "qm:seg#"); tag(".qm-seg-label", "qm:label#");
       tag(".qm-break .qm-break-dice, .qm-break .empty-el-square", "qm:break#");
       tag(".mat-combos .mm-combo", "chip#"); tag(".mat-zone-page", "mat:page");
+      const hub = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      hub("#hub", "hub"); hub("#hubHome", "hub:home"); hub("#hubJobs", "hub:jobs"); hub("#hubInv", "hub:inv");
+      hub("#hubMarket", "hub:market"); hub("#hubCodex", "hub:codex");
       ${TAG_CARDS}(document.getElementById("matGrid"));
     })()`,
-    godot: ["--screen", "res://ui/screens/display_mat.gd", "--save", MAT_STATE] },
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_panel:drawer", "--save", MAT_STATE] },
 ];
 
 // ---- run each shot on both sides

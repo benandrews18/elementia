@@ -5,11 +5,8 @@
 class_name BenchPanel
 extends Container
 
-const SLICE := 58.0  # border-image-slice, source pixels
-const EDGE := 16.0  # border-image-width, design pixels
 const PAD := [18.0, 30.0, 18.0, 18.0]  # left, top, right, bottom
 
-static var _frame: StyleBoxTexture
 
 var title := "Crafting Bench"
 
@@ -49,11 +46,7 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_DRAW:
 		# box-shadow 0 6px 12px -4px
 		draw_style_box(Tok.box(Color(0, 0, 0, 0), 4, 0, Color.BLACK, 8, 6, Color(0, 0, 0, 0.5)), Rect2(4, 4, size.x - 8, size.y - 8))
-		# Corners are 58 source px drawn at 16: draw scaled down, at full resolution.
-		var k := EDGE / SLICE
-		draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		draw_style_box(_frame_box(), Rect2(Vector2.ZERO, size / k))
-		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+		Frame9.draw_frame(self, Rect2(Vector2.ZERO, size), preload("res://assets/ui/hub_frame.webp"))
 
 
 func _get_minimum_size() -> Vector2:
@@ -62,12 +55,3 @@ func _get_minimum_size() -> Vector2:
 		if c is Control and not c.has_meta("bench_title"):
 			m = m.max(c.get_combined_minimum_size())
 	return m + Vector2(PAD[0] + PAD[2], PAD[1] + PAD[3])
-
-
-static func _frame_box() -> StyleBoxTexture:
-	if _frame == null:
-		_frame = StyleBoxTexture.new()
-		_frame.texture = load("res://assets/ui/hub_frame.webp")
-		_frame.set_texture_margin_all(SLICE)
-		_frame.draw_center = true
-	return _frame

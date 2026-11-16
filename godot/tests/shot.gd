@@ -19,6 +19,9 @@ func _ready() -> void:
 	add_child(screen)
 	if screen is Control:
 		screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if a.has("call"):  # --call method:arg, e.g. open_panel:drawer
+		var m: PackedStringArray = a.call.split(":")
+		screen.call(m[0], m[1]) if m.size() > 1 else screen.call(m[0])
 	var scale := float(a.get("scale", "1"))
 	get_window().size = Vector2i(roundi(390 * scale), roundi(844 * scale))
 	for i in 3:

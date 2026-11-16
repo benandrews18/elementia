@@ -18,6 +18,10 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-15: M4 started: `ui/app.gd` (screens, panels, Home's face as
+  hubHomeFace()), `HubBar` (wood bar, framed side buttons, glossy Home ball
+  shader + brass rim), `Frame9` shared 9-slice. Hub matches (mat shot 115
+  elements, 1 off by 2.1px). Missing Noto emoji so far: 🛒 🥾 🔒 🏁 🗺️ ⬅️.
 - 2026-11-15: User tested the preview on the iPhone: "looks and feels great". Go.
 - 2026-11-15: M3 preview published (/elementia/godot/). Images import as lossy
   WebP (game files 27 -> 5.5 MB; engine wasm 40 MB). Demo board doesn't save.
