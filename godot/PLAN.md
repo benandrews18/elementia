@@ -13,12 +13,17 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M5 Run flow (M4 done)
 **Next task:** M5: the opening (rules slides, capstone choice, starting gift),
-the Lock-In sequence (Quarks counting up, reward, mat expansion reveal),
-the Market tray and rows, convert, "?" spend, game over and end of run.
+the Market tray and rows, convert, "?" spend. (Done: Lock-In count and
+reward, check opening, end screen.)
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-16: M5: EndGame (game over, Run Complete with Continue in
+  Overtime, hard limit, crafted everything): scores, capstones, biggest turn,
+  most visited, trophies won (awarded there) and Stars; confetti; New Game
+  records History (random capstone until the opening exists). 32 emoji the
+  end screen and trophies use have no Noto image yet (ask before fetching).
 - 2026-11-16: M5: the board-check opening: Shutter (Round N / 24, title,
   challenge line), MatExpand (dark round the new slots on growth turns),
   OrderInfo (clock, rule in icons, Unknown Element swap; also from the

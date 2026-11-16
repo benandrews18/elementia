@@ -78,6 +78,7 @@ func _ready() -> void:
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
 	check(balloon_done, "crafted something through the suit-spend balloon")
 	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
+	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame)), "the end screen shows")
 	await _final_score(app)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
@@ -100,6 +101,7 @@ func _final_score(app: App) -> void:
 	check(app.home_face() == "final", "turn 24: Home says Final Score")
 	app._on_hub("home")
 	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
+	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame and c._completing)), "turn 24: Run Complete shows")
 
 
 ## Is the shutter still playing?

@@ -36,6 +36,58 @@ func _sync() -> void:
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()
+	_maybe_end()
+
+
+## The end screen, once per ending (game over, Run Complete, then an
+## Overtime ending); crafting everything ends the run here.
+func _maybe_end() -> void:
+	var s := Game.state
+	var key := "ended" if s.get("ended") or s.get("craftedEverything") else ("complete" if s.get("runComplete") else "")
+	if key == "" or key == Game.ctx.get("endShown", ""):
+		return
+	Game.ctx.endShown = key
+	var party: bool = key == "complete" or (s.get("craftedEverything") and not s.get("ended"))
+	if s.get("craftedEverything") and not s.get("ended"):
+		s.ended = true
+		Game._changed()
+	_show_end.call_deferred(party)
+
+
+func _show_end(party: bool) -> void:
+	var e := EndGame.new()
+	e.size = size
+	add_child(e)
+	if party:
+		_confetti()
+
+
+## fireConfetti(): 70 bits of coloured paper falling and spinning.
+func _confetti() -> void:
+	var colors := ["#2e9e5b", "#d9432b", "#b7791f", "#3b7fc4", "#a16a34", "#e2b25a"]
+	for i in 70:
+		var p := Panel.new()
+		var round_bit := randf() < 0.35
+		p.add_theme_stylebox_override("panel", Tok.box(Color(colors[randi() % colors.size()]), 5 if round_bit else 0))
+		p.size = Vector2(9, 9) if round_bit else Vector2(8, 14)
+		p.pivot_offset = p.size / 2
+		p.position = Vector2(randf() * size.x, -size.y * (0.12 + randf() * 0.2))
+		p.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(p)
+		var t := 1.9 + randf() * 1.6
+		var tw := p.create_tween()
+		tw.tween_interval(randf() * 0.5)
+		tw.tween_property(p, "position:y", size.y * 1.05, t).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(p, "rotation_degrees", randf_range(-540, 540), t)
+		tw.tween_callback(p.queue_free)
+
+
+## New Game: the finished run goes into History, then a fresh one.
+## shortcut: starts at a random capstone until the opening (capstone choice) lands in M5.
+func new_game() -> void:
+	Progress.record_history()
+	var caps: Array = Data.t("CAPSTONES")
+	Game.start_run(caps[randi() % caps.size()])
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the
