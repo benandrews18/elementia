@@ -4,7 +4,8 @@
 ##   ItemCard.make("Water", {"mini": true})
 ## opts: mini (tier 1 small card), in_grid (false = on the mat: a mini card
 ## drops its name), wide (capstone art 1.5x), complete (points doubled),
-## on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
+## tag (the name its parts are measured under in comparisons; default the
+## item), on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
 ## combo: their badges get a gold halo).
 class_name ItemCard
 extends Control
@@ -53,7 +54,7 @@ func _ready() -> void:
 	var icon_px := 26.0 if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	var ic := Tok.icon(card.emoji, icon_px)
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
-	ic.set_meta("cmp", item + ":icon")
+	ic.set_meta("cmp", opts.get("tag", item) + ":icon")
 	if not mini and not opts.get("wide"):
 		col.add_child(_gap(5.6))  # .mm-icon margin-top:3px, + 2.6px of line box above the inline image
 	if opts.get("wide"):
@@ -88,7 +89,7 @@ func _ready() -> void:
 		glow.size = badge.size + Vector2(4, 4)
 		add_child(glow)
 		move_child(glow, badge.get_index())  # behind the badge
-	badge.set_meta("cmp", item + ":pts")
+	badge.set_meta("cmp", opts.get("tag", item) + ":pts")
 	add_child(badge)
 	# Suit pips: a column down the top-right corner (placed in _place()).
 	var psz := 18.0 if mini else 27.0
@@ -103,7 +104,7 @@ func _ready() -> void:
 		pip.add_child(g)
 		if opts.get("lit_suits", []).has(su):
 			pip.add_child(_halo(psz))
-		pip.set_meta("cmp", "%s:pip%d" % [item, i])
+		pip.set_meta("cmp", "%s:pip%d" % [opts.get("tag", item), i])
 		add_child(pip)
 		_pips.append(pip)
 	# Station badges: a row centred on the bottom edge (placed in _place()).
@@ -120,13 +121,13 @@ func _ready() -> void:
 		g.material = Tok.outline(12.0 if mini else 17.0)
 		if opts.get("lit_stations", []).has(st):
 			b.add_child(_halo(ssz))
-		var k := "%s:st%d" % [item, _stations.get_child_count()]
+		var k := "%s:st%d" % [opts.get("tag", item), _stations.get_child_count()]
 		b.set_meta("cmp", k)
 		g.set_meta("cmp", k + "icon")
 		g.position = (Vector2(ssz, ssz) - g.size) / 2
 		b.add_child(g)
 		_stations.add_child(b)
-	_stations.set_meta("cmp", item + ":stations")
+	_stations.set_meta("cmp", opts.get("tag", item) + ":stations")
 	add_child(_stations)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
@@ -149,7 +150,7 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = Vector2(0, lines * line + (1 if one_line else 2))
 	holder.mouse_filter = MOUSE_FILTER_IGNORE
-	holder.set_meta("cmp", item + ":name")
+	holder.set_meta("cmp", opts.get("tag", item) + ":name")
 	var nm := Tok.label(text, SIZE, Tok.CARD_INK, 800)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

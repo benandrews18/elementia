@@ -16,6 +16,9 @@ reference for every rule and screen until the Godot version replaces it.
 to be asked first), then the user's iPhone test. Go / no-go after.
 
 Log (newest first, one line per session):
+- 2026-11-15: M3 review fix: a tap rebuilds only the mat half; the item list
+  re-dims in place (late-game tap ~70ms -> ~10ms on a PC). Inventory list
+  passes input through so the wheel / touch scroll reaches the ScrollContainer.
 - 2026-11-15: M3 web build works (browser pane: draws, taps place/remove).
   Nunito bundled; UI emoji as Noto PNGs (assets/emoji); ★ and ↺/↻ drawn
   (not in Nunito). Export templates installed (%APPDATA%/Godot). Build is

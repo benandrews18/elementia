@@ -14,9 +14,11 @@ const CHIP_GAP := 6.0  # .mat-combos gap (rows and columns)
 const HUB_H := 67.0  # the hub bar below the drawer (M4)
 const GOLD_LINE := Color("#e2b25a")
 
-var _body: Control
+var _drawer: Panel
 var _scroll: ScrollContainer
-var _scroll_y := 0
+var _body: Control  # the mat half, rebuilt on every change (drawn over the list)
+var _inv_cards := {}  # item name -> its card in the list, to dim it in place
+var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
 
 
@@ -26,33 +28,38 @@ func _ready() -> void:
 	bg.color = Tok.BG
 	bg.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(bg)
+	# The drawer: card blue, gold top edge, rounded top, above the hub.
+	_drawer = Panel.new()
+	var dsb := Tok.box(Tok.CARD, 16, 0)
+	dsb.border_width_top = 3
+	dsb.border_color = GOLD_LINE
+	dsb.corner_radius_bottom_left = 0
+	dsb.corner_radius_bottom_right = 0
+	_drawer.add_theme_stylebox_override("panel", dsb)
+	_drawer.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(_drawer)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(_scroll)
 	_body = Control.new()
 	_body.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_body.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(_body)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)  # e.g. Safari's bar collapsing makes the screen wider
 	_redraw()
 
 
+## The mat half is rebuilt on every change (it's small); the item list only
+## when the items or the width change, otherwise its cards just re-dim. A
+## full rebuild with a late-game inventory took ~70ms on a PC.
 func _redraw() -> void:
-	if is_instance_valid(_scroll):
-		_scroll_y = _scroll.scroll_vertical
 	for c in _body.get_children():
 		c.queue_free()
 	var s := Game.state
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
-	# The drawer: card blue, gold top edge, rounded top, above the hub.
-	var drawer := Panel.new()
-	var dsb := Tok.box(Tok.CARD, 16, 0)
-	dsb.border_width_top = 3
-	dsb.border_color = GOLD_LINE
-	dsb.corner_radius_bottom_left = 0
-	dsb.corner_radius_bottom_right = 0
-	drawer.add_theme_stylebox_override("panel", dsb)
-	drawer.size = Vector2(size.x, size.y - HUB_H)
-	drawer.mouse_filter = MOUSE_FILTER_IGNORE
-	_body.add_child(drawer)
+	_drawer.size = Vector2(size.x, size.y - HUB_H)
 	var w := size.x - 2 * SIDE
 	var y := TOP
 	# Quark Meter line.
@@ -89,13 +96,18 @@ func _redraw() -> void:
 	line.size = Vector2(size.x, 2)
 	_body.add_child(line)
 	# The item list: search bar, then the owned cards by tier.
-	_scroll = ScrollContainer.new()
 	_scroll.position = Vector2(0, y + 2)
 	_scroll.size = Vector2(size.x, size.y - HUB_H - y - 2)
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_body.add_child(_scroll)
-	_scroll.add_child(_inventory(size.x))
-	_scroll.set_deferred("scroll_vertical", _scroll_y)
+	var key := "%d|%d" % [s.items.size(), int(size.x)]
+	if key != _inv_key:
+		_inv_key = key
+		for c in _scroll.get_children():
+			c.queue_free()
+		_inv_cards.clear()
+		_scroll.add_child(_inventory(size.x))
+	else:
+		for n in _inv_cards:
+			_inv_cards[n].modulate = Color(0.6, 0.6, 0.6) if s.mat.has(n) else Color.WHITE
 	var fold := Panel.new()
 	fold.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 2, GOLD_LINE, 3, 2))
 	fold.size = Vector2(38, 20)
@@ -194,6 +206,7 @@ func _chevron() -> Control:
 ## on the mat or takes it off.
 func _inventory(width: float) -> Control:
 	var list := Control.new()
+	list.mouse_filter = MOUSE_FILTER_PASS  # wheel and touch drags reach the ScrollContainer
 	var pad := 18.0
 	var w := width - 2 * pad
 	var y := 16.0 + 14.0
@@ -249,10 +262,11 @@ func _inventory(width: float) -> Control:
 			if x + span > 4:
 				x = 0
 				y += h + 8
-			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name)})
+			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name), "tag": "inv:" + c.name})
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
 			card.set_meta("cmp", "inv:" + c.name)
+			_inv_cards[c.name] = card
 			card.gui_input.connect(_on_card_input.bind(c.name))
 			list.add_child(card)
 			x += span
