@@ -11,7 +11,13 @@ const COLS_GAP := 5.0
 const PAGE_PAD := 5.0  # .mat-zone-page padding + border (2px) are inside the 14px
 const CHIP_GAP := 6.0  # .mat-combos gap (rows and columns)
 
+const HUB_H := 67.0  # the hub bar below the drawer (M4)
+const GOLD_LINE := Color("#e2b25a")
+
 var _body: Control
+var _scroll: ScrollContainer
+var _scroll_y := 0
+var _press_at := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -29,11 +35,24 @@ func _ready() -> void:
 
 
 func _redraw() -> void:
+	if is_instance_valid(_scroll):
+		_scroll_y = _scroll.scroll_vertical
 	for c in _body.get_children():
 		c.queue_free()
 	var s := Game.state
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
+	# The drawer: card blue, gold top edge, rounded top, above the hub.
+	var drawer := Panel.new()
+	var dsb := Tok.box(Tok.CARD, 16, 0)
+	dsb.border_width_top = 3
+	dsb.border_color = GOLD_LINE
+	dsb.corner_radius_bottom_left = 0
+	dsb.corner_radius_bottom_right = 0
+	drawer.add_theme_stylebox_override("panel", dsb)
+	drawer.size = Vector2(size.x, size.y - HUB_H)
+	drawer.mouse_filter = MOUSE_FILTER_IGNORE
+	_body.add_child(drawer)
 	var w := size.x - 2 * SIDE
 	var y := TOP
 	# Quark Meter line.
@@ -45,17 +64,225 @@ func _redraw() -> void:
 	y += qm.size.y + 4
 	# Combo chips (min height 40, wrapping rows).
 	y += _chips(sc, Vector2(SIDE, y), w) + 6
-	# The mat page and its slots.
-	var row_h := ((w - 14 - 3 * COLS_GAP) / 4) * 1.4
+	# The mat page: as many columns as are open, and one row, a row and a
+	# half-height strip, or two, as the mat has grown.
+	var st := Mat.stage(s)
+	var L := Mat.layout(cards, st)
+	var open: int = L.kinds.slice(0, L.cols).filter(func(k): return k != "locked").size()
+	var row_h := ((w - 14 - (open - 1) * COLS_GAP) / open) * 1.4
+	var mat_h: float = row_h if st < 2 else (row_h * 1.5 + 4 if st == 2 else row_h * 2 + COLS_GAP)
 	var page := Panel.new()
 	var sb := Tok.box(Color("#cda874"), 14, 2, Color("#a67c4a"))
 	sb.corner_radius_bottom_left = 4
 	page.add_theme_stylebox_override("panel", sb)
 	page.position = Vector2(SIDE, y)
-	page.size = Vector2(w, row_h * 2 + COLS_GAP + 14)
+	page.size = Vector2(w, mat_h + 14)
 	page.set_meta("cmp", "mat:page")
 	_body.add_child(page)
-	_slots(cards, sc, page, row_h)
+	_slots(cards, sc, page, row_h, open)
+	_page_controls(page)
+	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
+	# The gold line between the mat and the item list, with the fold button.
+	var line := ColorRect.new()
+	line.color = GOLD_LINE
+	line.position = Vector2(0, y)
+	line.size = Vector2(size.x, 2)
+	_body.add_child(line)
+	# The item list: search bar, then the owned cards by tier.
+	_scroll = ScrollContainer.new()
+	_scroll.position = Vector2(0, y + 2)
+	_scroll.size = Vector2(size.x, size.y - HUB_H - y - 2)
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_body.add_child(_scroll)
+	_scroll.add_child(_inventory(size.x))
+	_scroll.set_deferred("scroll_vertical", _scroll_y)
+	var fold := Panel.new()
+	fold.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 2, GOLD_LINE, 3, 2))
+	fold.size = Vector2(38, 20)
+	fold.position = Vector2((size.x - 38) / 2, y + 1 - 10)
+	fold.add_child(_chevron())
+	_body.add_child(fold)
+
+
+## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
+## rules "?" riding its lower-right edge (renderMatTop()).
+## shortcut: the Elements tab doesn't switch pages yet, Layouts and "?" open
+## nothing, and Last swaps without asking; all come with M4's drawer.
+func _page_controls(page: Control) -> void:
+	var bottom := page.position.y + page.size.y
+	var x := page.position.x + 4
+	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), false], ["Display Mat", Color("#cda874"), Color("#a67c4a"), true]]:
+		var tab := Label.new()
+		tab.text = t[0]
+		tab.add_theme_font_override("font", Tok.font(800))
+		tab.add_theme_font_size_override("font_size", 10)
+		tab.add_theme_color_override("font_color", Color("#3a2f1e"))
+		var tsb := Tok.box(t[1], 10, 2, t[2], 3 if t[3] else 0, 3, Color(0, 0, 0, 0.35))
+		tsb.border_width_top = 0
+		tsb.corner_radius_top_left = 0
+		tsb.corner_radius_top_right = 0
+		tsb.content_margin_left = 9
+		tsb.content_margin_right = 9
+		tsb.content_margin_top = 5
+		tsb.content_margin_bottom = 8
+		tab.add_theme_stylebox_override("normal", tsb)
+		tab.position = Vector2(x, bottom - (0.0 if t[3] else 4.0))
+		tab.size = tab.get_minimum_size()
+		if not t[3]:
+			tab.modulate = Color(0.72, 0.72, 0.72)  # the inactive tab, recessed
+		tab.set_meta("cmp", "tab:" + t[0])
+		_body.add_child(tab)
+		x += tab.size.x + 2
+	var right := page.position.x + page.size.x
+	var help := TextureRect.new()
+	help.texture = load("res://assets/ui/btn_help.webp")
+	help.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	help.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	help.size = Vector2(34, 34)
+	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
+	help.set_meta("cmp", "btn:rules")
+	_body.add_child(help)
+	var qs: bool = Game.state.get("quickSavedMat") != null
+	var x2 := right - 30
+	var btns := [["💾", 30.0, func(): pass], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, Game.mat_last_tap]]
+	for b in btns:
+		var text: String = b[0]
+		var is_text: bool = b[1] == 0.0
+		var bw: float = b[1] if not is_text else Tok.font(800).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 24
+		var bh := 34.0 if is_text else 30.0
+		var px := 12 if is_text else (13 if text == "💾" else 18)
+		var bg := Color("#3f8fd0") if qs and text == "↻" else Tok.GOLD
+		var btn := _round_button(text, Vector2(bw, bh), px, bg)
+		x2 -= bw
+		btn.position = Vector2(x2, bottom + 24 - bh)
+		btn.pressed.connect(b[2])
+		btn.set_meta("cmp", "btn:" + text)
+		_body.add_child(btn)
+		x2 -= 4
+
+
+func _round_button(text: String, sz: Vector2, font_px: int, bg: Color) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.add_theme_font_override("font", Tok.font(900 if font_px >= 18 else 800))
+	b.add_theme_font_size_override("font_size", font_px)
+	b.add_theme_color_override("font_color", Tok.CARD_INK)
+	b.add_theme_color_override("font_pressed_color", Tok.CARD_INK)
+	b.add_theme_color_override("font_hover_color", Tok.CARD_INK)
+	for k in ["normal", "hover", "pressed", "focus"]:
+		b.add_theme_stylebox_override(k, Tok.box(bg.darkened(0.08) if k == "pressed" else bg, sz.y / 2, 2, Color("#5c4a20"), 4, 3))
+	b.size = sz
+	return b
+
+
+## The fold button's chevron (.mcb-chev: a 9px corner, pointing up).
+func _chevron() -> Control:
+	var c := Control.new()
+	c.size = Vector2(38, 20)
+	c.mouse_filter = MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		c.draw_polyline(PackedVector2Array([Vector2(13, 13), Vector2(19, 7), Vector2(25, 13)]), GOLD_LINE, 2.5, true))
+	return c
+
+
+## The scrolling item list (.dbody padding 16px 18px; renderMatResultsGrid()):
+## search bar, then owned cards by tier, highest first; tapping one puts it
+## on the mat or takes it off.
+func _inventory(width: float) -> Control:
+	var list := Control.new()
+	var pad := 18.0
+	var w := width - 2 * pad
+	var y := 16.0 + 14.0
+	var search := Label.new()
+	search.text = "Search items or components…"
+	search.add_theme_font_override("font", Tok.font(400))
+	search.add_theme_font_size_override("font_size", 13)
+	search.add_theme_color_override("font_color", Tok.MUTE)
+	var ssb := Tok.box(Tok.SUNKEN, 8, 1.5, Tok.LINE)
+	ssb.content_margin_left = 10
+	search.add_theme_stylebox_override("normal", ssb)
+	search.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	search.position = Vector2(pad, y)
+	search.size = Vector2(w - 2 * (38 + 8), 38)
+	search.set_meta("cmp", "inv:search")
+	list.add_child(search)
+	for i in 2:
+		var b := Label.new()
+		b.text = ["📋", "🏆"][i]
+		b.add_theme_font_size_override("font_size", 18)
+		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		b.add_theme_stylebox_override("normal", Tok.box(Color("#241c3a"), 8, 1.5, Color("#4a3a75")))
+		b.position = Vector2(pad + w - 38 - (1 - i) * (38 + 8), y)
+		b.size = Vector2(38, 38)
+		list.add_child(b)
+	y += 38 + 10
+	var inv: Array = Game.state.items.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
+	inv = Util.stable_sort(inv, func(a, b): return b.points - a.points if b.points != a.points else a.name.nocasecmp_to(b.name))
+	var col_w := (w - 3 * 8) / 4
+	var row_h := col_w * 1.4
+	for band in Data.t("MAT_TIER_BANDS"):
+		var items := inv.filter(func(c): return c.tier == band.tier)
+		if items.is_empty():
+			continue
+		# Heading: a label between two lines (.mat-tier-heading, 6px padding, 10px below).
+		var head := Tok.label(band.label, 13, Tok.INK2, 800)
+		var hw := Tok.font(800).get_string_size(band.label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		head.position = Vector2(pad + (w - hw) / 2, y + 6)
+		head.set_meta("cmp", "inv:head:" + band.key)
+		list.add_child(head)
+		for side in 2:
+			var ln := ColorRect.new()
+			ln.color = Tok.LINE2
+			ln.size = Vector2((w - hw) / 2 - 8, 2)
+			ln.position = Vector2(pad + side * ((w + hw) / 2 + 8), y + 6 + 9)
+			list.add_child(ln)
+		y += 6 + 18 + 6 + 10
+		var t1: bool = band.tier == "MATERIAL"
+		var h := (row_h - 2) / 2 if t1 else row_h
+		var x := 0
+		for c in items:
+			var span := 2 if c.tier == "CAPSTONE" else 1
+			if x + span > 4:
+				x = 0
+				y += h + 8
+			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name)})
+			card.position = Vector2(pad + x * (col_w + 8), y)
+			card.size = Vector2(col_w * span + 8 * (span - 1), h)
+			card.set_meta("cmp", "inv:" + c.name)
+			card.gui_input.connect(_on_card_input.bind(c.name))
+			list.add_child(card)
+			x += span
+		y += h + 14
+	list.custom_minimum_size = Vector2(width, y + 150)  # room to scroll clear of the hub
+	return list
+
+
+## A tap (not a scroll) toggles the card on the mat.
+func _on_card_input(ev: InputEvent, name: String) -> void:
+	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+		if ev.pressed:
+			_press_at = ev.global_position
+		elif ev.global_position.distance_to(_press_at) < 10:
+			var msg := Game.toggle_mat_card(name)
+			if msg != "":
+				_show_toast(msg)
+
+
+## The mat's red message pill (.mat-toast), for 2 seconds.
+func _show_toast(msg: String) -> void:
+	var t := Tok.label(msg, 12.5, Color.WHITE, 800)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var sb := Tok.box(Tok.BAD, 16, 0, Color.BLACK, 6, 4, Color(0, 0, 0, 0.4))
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 8
+	sb.content_margin_bottom = 8
+	t.add_theme_stylebox_override("normal", sb)
+	t.size = t.get_minimum_size()
+	t.position = Vector2((size.x - t.size.x) / 2, size.y - HUB_H - 16 - t.size.y)
+	add_child(t)
+	get_tree().create_timer(2.0).timeout.connect(t.queue_free)
 
 
 ## The combo row: the challenge in force, capstone effects, station / suit /
@@ -216,13 +443,13 @@ func _text_circle(text: String, px: float, ink: Color, bg: Color, border: Color,
 
 ## renderMatGridCells(): only open slots are drawn; a stack of tier 1 cards
 ## shows a dashed square where another fits.
-func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float) -> void:
+func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int) -> void:
 	var st := Mat.stage(Game.state)
 	var pack := Mat.pack(cards, st)
 	var L: Dictionary = pack.L
 	var cols: int = L.cols
 	var inner := page.size.x - 2 * (PAGE_PAD + 2)
-	var col_w := (inner - (cols - 1) * COLS_GAP) / cols
+	var col_w := (inner - (open - 1) * COLS_GAP) / open  # open columns share the width
 	var lit_suits: Array = sc.combos.suit.map(func(g): return g.name)
 	var lit_st: Array = sc.combos.station.map(func(g): return g.name)
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
@@ -237,6 +464,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float) -> void:
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
 		if sl.has("card"):
 			var card := ItemCard.make(sl.card.name, card_opts.call(sl.card, false))
+			card.gui_input.connect(_on_card_input.bind(sl.card.name))
 			card.position = pos
 			card.size = Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)
 			page.add_child(card)
@@ -248,6 +476,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float) -> void:
 				var at := pos + Vector2(0, k * (mh + 2))
 				if k < stack.size():
 					var mini := ItemCard.make(stack[k].card.name, card_opts.call(stack[k].card, true))
+					mini.gui_input.connect(_on_card_input.bind(stack[k].card.name))
 					mini.position = at
 					mini.size = Vector2(col_w, mh)
 					page.add_child(mini)
