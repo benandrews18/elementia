@@ -156,9 +156,8 @@ func _confetti() -> void:
 
 
 ## New Game (restartRun() / startNewRun()): the finished run goes into
-## History; a fresh run waits on the bare map while the capstone is chosen.
-## shortcut: the logo and the how-to-play slides come before the choice in
-## the HTML game; not yet here.
+## History; a fresh run waits on the bare map: the Elementia logo, the
+## how-to-play slides, then the capstone is chosen (playClassicIntro()).
 func new_game() -> void:
 	Progress.record_history()
 	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
@@ -166,9 +165,29 @@ func new_game() -> void:
 	Progress.prefs.pinnedItems = []
 	close_panel()
 	Game._changed()
-	var c := CapstoneChoice.new()
-	c.size = size
-	add_child(c)
+	var logo := TextureRect.new()  # #introLogo: bounces in, a second on screen
+	logo.texture = load("res://assets/banners/elementia-logo.webp")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.size = Vector2(size.x * 0.9, size.x * 0.9 * 0.55)
+	logo.position = (size - logo.size) / 2 - Vector2(0, HubBar.H / 2)
+	logo.pivot_offset = logo.size / 2
+	logo.scale = Vector2(0.6, 0.6)
+	logo.modulate.a = 0
+	logo.mouse_filter = MOUSE_FILTER_STOP
+	add_child(logo)
+	var tw := logo.create_tween()
+	tw.tween_property(logo, "modulate:a", 1.0, 0.2)
+	tw.parallel().tween_property(logo, "scale", Vector2(1.05, 1.05), 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(logo, "scale", Vector2.ONE, 0.15)
+	tw.tween_interval(0.5)
+	tw.tween_property(logo, "modulate:a", 0.0, 0.2)
+	tw.tween_callback(func():
+		logo.queue_free()
+		HowToPlay.play(self, func():
+			var c := CapstoneChoice.new()
+			c.size = size
+			add_child(c)))
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the

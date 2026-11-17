@@ -26,11 +26,19 @@ func _ready() -> void:
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# The opening: New Game, pick Coral Reef, confirm; the gift flies in and
 	# the run starts at its station.
+	Progress.prefs.hiddenTips = []
 	app.new_game()
+	check(await _until(func(): return app.get_children().any(func(c): return c is HowToPlay)), "the logo, then the how-to-play slides")
+	var tut: HowToPlay = app.get_children().filter(func(c): return c is HowToPlay)[0]
+	for i in 3:
+		tut._next()  # Next, Next, Let's play
+	check(await _until(func(): return app.get_children().any(func(c): return c is CapstoneChoice)), "then the capstone choice")
 	var pick: CapstoneChoice = app.get_children().filter(func(c): return c is CapstoneChoice)[0]
 	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
 	pick._confirm("Coral Reef")
 	pick._start("Coral Reef", pick._box.get_child(1))
+	check(await _until(func(): return app.get_children().any(func(c): return c is PinTip)) and app.panel == "todo", "the To-Do List and the pinning tip")
+	app.get_children().filter(func(c): return c is PinTip)[0]._done()
 	check(await _until(func(): return app._screen is StationScreen), "the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
 	var turns := 0
@@ -102,10 +110,10 @@ func _ready() -> void:
 	for c in app.get_children():
 		if c is EndGame:
 			c.queue_free()
+	Progress.hide_tip("classicTut")  # "✕ Hide" was tapped: no slides this time
 	app.new_game()
-	for i in 3:
-		await get_tree().process_frame
-	check(shown.call(CapstoneChoice) and not shown.call(EndGame), "New Game shows the capstone choice, not the end screen")
+	check(await _until(func(): return shown.call(CapstoneChoice)) and not shown.call(EndGame) and not shown.call(HowToPlay),
+		"New Game: the capstone choice (slides hidden for good), not the end screen")
 	for c in app.get_children():
 		if c is CapstoneChoice:
 			c.queue_free()

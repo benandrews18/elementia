@@ -11,6 +11,17 @@ var prefs: Dictionary = {"pinnedItems": [], "capstonesEverCrafted": [], "playDay
 
 # ---- pins (prefs)
 
+## Tips hidden for good with their ✕ (tipHidden() / hideTipForever()).
+func tip_hidden(id: String) -> bool:
+	return Util.get_or(prefs, "hiddenTips", []).has(id)
+
+
+func hide_tip(id: String) -> void:
+	if not tip_hidden(id):
+		prefs.hiddenTips = Util.get_or(prefs, "hiddenTips", []) + [id]
+	save_all()
+
+
 func is_pinned(name: String) -> bool:
 	return prefs.pinnedItems.has(name)
 

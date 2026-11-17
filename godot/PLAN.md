@@ -11,15 +11,17 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M5 Run flow (M4 done)
-**Next task:** M5: the opening's logo + how-to-play slides, and the
-To-Do List + pin tip in the opening; then the M5 review. (Done: Lock-In
-count and reward, check opening, end screen, capstone choice, convert,
-"?" spend, Market, To-Do List.)
+**Current milestone:** M5 Run flow, built; review due (M4 done)
+**Next task:** the M5 review (Market, To-Do List, opening since the last
+one), then M6 (everything around the run).
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5: the opening is whole: logo, HowToPlay (3 slides from the
+  data, ✕ Hide for good: Progress.tip_hidden/hide_tip), capstone choice,
+  then the To-Do List + PinTip, fade into the station. 🎁 🎉 fetched.
+  M5 built; next: the M5 review (Lock-In onwards since the last review).
 - 2026-11-17: M5: the To-Do List (TodoTray from the hub button: pinned
   rows, full breakdown trees, pins, Get a Hint lighting the suggestion).
   Game.todo_hint() (computeTodoHint()) matches the HTML game on 4 states

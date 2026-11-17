@@ -3,8 +3,8 @@
 ## station's card, the capstone, its components, Back / "Start at <station>
 ## and track <capstone>"). Start flies the station's elements into the
 ## Inventory, then fades into that station with the run begun.
-## shortcut: the To-Do List and its pinning tip (beat 2) come with the
-## To-Do List itself.
+## Then the To-Do List with the capstone's breakdown and the pinning tip
+## (unless hidden for good), and the fade into its station.
 class_name CapstoneChoice
 extends Control
 
@@ -207,5 +207,20 @@ func _start(name: String, card: Control) -> void:
 		tw.parallel().tween_property(fly, "modulate:a", 0.0, 0.16)
 		tw.tween_callback(fly.queue_free)
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
+	var go := func(): app.fade_through_black(func(): Game.start_run(name))
+	if Progress.tip_hidden("pinTip"):
+		queue_free()
+		go.call()
+		return
+	visible = false  # freed once the tip is up (a freed node's await never resumes)
+	# Beat 2: the To-Do List with the capstone pinned and its breakdown
+	# open, and the pinning tip over it; Got it goes on into the station.
+	if not Progress.is_pinned(name):
+		Progress.toggle_pin(name)
+	TodoTray.expanded["refroot/" + name] = true
+	app.open_panel("todo")
+	await get_tree().create_timer(0.45).timeout
+	PinTip.open(app, func():
+		app.close_panel()
+		go.call())
 	queue_free()
-	app.fade_through_black(func(): Game.start_run(name))
