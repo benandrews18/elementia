@@ -45,8 +45,9 @@ func _sync() -> void:
 
 ## runBingoSequence(): a craft that owns a new Market square or finishes a
 ## row. A finished row opens the Market, bounces the row, and pays its "?"
-## (Row complete!); a square alone does that only the first time ever, and
-## otherwise puts "!" on the Market button.
+## (Row complete!); a square alone does that the first time ever, bounces in
+## the tray when it's open (crafted from it), and otherwise puts "!" on the
+## Market button.
 ## shortcut: no toast for a square (the HTML game's "Marketplace item done").
 func _market_check() -> void:
 	var s := Game.state
@@ -62,10 +63,9 @@ func _market_check() -> void:
 	_squares = owned
 	if lines.is_empty() and fresh.is_empty():
 		return
-	if lines.is_empty() and s.get("sawMarketSquareTray"):
-		if panel != "market":
-			s.marketUnseen = true
-			Game._changed.call_deferred()
+	if lines.is_empty() and s.get("sawMarketSquareTray") and panel != "market":
+		s.marketUnseen = true  # with the tray open (crafted from it) it bounces there instead
+		Game._changed.call_deferred()
 		return
 	s.sawMarketSquareTray = true
 	_market_sequence.call_deferred(fresh, lines)
@@ -80,7 +80,7 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(block)
 	var tray := _panel_node as MarketTray
-	await get_tree().create_timer(0.45).timeout
+	await get_tree().create_timer(0.45 if opened else 0.15).timeout  # the tray's slide-in first
 	for i in fresh:
 		DisplayMatScreen.bounce(tray.cells.get(i))
 		await get_tree().create_timer(0.32).timeout

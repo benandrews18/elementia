@@ -12,16 +12,13 @@ extends Control
 
 var cells := {}  # card index -> its square (the row sequence bounces them)
 var _body: Control
-var _tray: Panel
+var _scroll: ScrollContainer
+var _tray: Control  # the content, at most 420 wide, centred (it scrolls when tall)
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var scrim := ColorRect.new()
-	scrim.color = Color(0, 0, 0, 0.35)
-	scrim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	scrim.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current: App.current.close_panel())
-	add_child(scrim)
+	ConfirmDialog.scrim(self)
 	_body = Control.new()
 	add_child(_body)
 	Game.state_changed.connect(_redraw)
@@ -29,21 +26,35 @@ func _ready() -> void:
 
 
 func _redraw() -> void:
+	var keep := _scroll.scroll_vertical if is_instance_valid(_scroll) else 0
 	for c in _body.get_children():
 		c.queue_free()
 	cells.clear()
 	var s := Game.state
 	Market.ensure_card(s)
-	var w := size.x
-	_tray = Panel.new()
+	var full := size.x
+	var w := minf(420, full)  # a tablet's wider screen keeps phone-sized squares
+	var bg := Panel.new()
 	var sb := Tok.box(Tok.CARD, 14, 0)
 	sb.border_width_bottom = 3
 	sb.border_color = Tok.GOLD
 	sb.corner_radius_top_left = 0
 	sb.corner_radius_top_right = 0
-	_tray.add_theme_stylebox_override("panel", sb)
-	_tray.mouse_filter = MOUSE_FILTER_STOP
-	_body.add_child(_tray)
+	bg.add_theme_stylebox_override("panel", sb)
+	bg.mouse_filter = MOUSE_FILTER_STOP
+	_body.add_child(bg)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	bg.add_child(scroll)
+	_scroll = scroll
+	scroll.set_deferred("scroll_vertical", keep)  # a pin's redraw keeps your place
+	var content := Control.new()
+	content.mouse_filter = MOUSE_FILTER_PASS
+	scroll.add_child(content)
+	_tray = Control.new()
+	_tray.mouse_filter = MOUSE_FILTER_PASS
+	_tray.position.x = (full - w) / 2
+	content.add_child(_tray)
 	var y := 14.0 + _stations(Vector2(16, 14), w - 32) + 12
 	# The Market: brass-framed wood with its rows.
 	var panel := Frame9.new()
@@ -116,7 +127,10 @@ func _redraw() -> void:
 		c.position = Vector2(16 + 22 + (i % 4) * (cw + 8), y + (i / 4) * (cw + 10))
 		_tray.add_child(c)
 	y += ceili(caps.size() / 4.0) * (cw + 10) + 8
-	_tray.size = Vector2(w, minf(y, size.y - HubBar.H - 30))
+	_tray.size = Vector2(w, y)
+	content.custom_minimum_size = Vector2(full, y)
+	bg.size = Vector2(full, minf(y, size.y - HubBar.H - 30))
+	scroll.size = bg.size - Vector2(0, 3)
 
 
 ## "5/8 Stations Visited", a circle per station (ticked once visited) and
@@ -162,7 +176,7 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	var sb := Tok.box(Color("#16301f") if owned else Color("#f2e6cc"), 16, 3 if owned or craftable else 0, Color("#4fe583"), 6, 4, Color(0, 0, 0, 0.4))
 	c.add_theme_stylebox_override("panel", sb)
 	c.size = Vector2(sz, sz)
-	c.mouse_filter = MOUSE_FILTER_STOP
+	c.mouse_filter = MOUSE_FILTER_PASS  # taps still land; a drag scrolls the tray
 	var ic := Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), sz * 0.6)
 	ic.position = Vector2(sz * 0.2, sz * 0.12)
 	ic.material = Tok.outline(sz * 0.6 * 1.5)  # a 1px edge

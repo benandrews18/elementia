@@ -18,11 +18,7 @@ var _to_box: Control
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var scrim := ColorRect.new()  # a tap above the tray closes it
-	scrim.color = Color(0, 0, 0, 0.35)
-	scrim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: App.current.close_panel())
-	add_child(scrim)
+	ConfirmDialog.scrim(self)
 	_body = Control.new()
 	add_child(_body)
 	Game.state_changed.connect(_redraw)

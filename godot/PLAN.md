@@ -11,13 +11,19 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M5 Run flow, built; review due (M4 done)
-**Next task:** the M5 review (Market, To-Do List, opening since the last
-one), then M6 (everything around the run).
+**Current milestone:** M6 Everything around the run (M5 done)
+**Next task:** decide with the user: scenes + an editable theme (so they
+can edit menus in the editor) before or during M6; then M6.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5 review 2 fixes: the Market keeps phone-sized squares on
+  wide screens and scrolls; the opening's slide 2 falls back like the HTML;
+  a square crafted from the open Market bounces there; ConfirmDialog.scrim()
+  for the 3 trays. ui_play crafts a Market square through its bench and
+  balloon, and each section must reach its end (a script error used to
+  pass quietly; verified). shot.gd --size WxH. M5 done.
 - 2026-11-17: M5: the opening is whole: logo, HowToPlay (3 slides from the
   data, ✕ Hide for good: Progress.tip_hidden/hide_tip), capstone choice,
   then the To-Do List + PinTip, fade into the station. 🎁 🎉 fetched.
@@ -414,7 +420,7 @@ to the user. Rough sizes are in sessions and are guesses.
       (`tests/ui_play`).
 
 ### M5 Run flow (~3-5 sessions)
-- [ ] Opening, Lock-In screens and check orders, mat expansion reveal, BINGO
+- [x] Opening, Lock-In screens and check orders, mat expansion reveal, BINGO
       tray and To-Do, convert, Market, suit spend, game over and end of run
 
 ### M6 Everything around the run (~3-4 sessions)

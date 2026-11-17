@@ -174,17 +174,24 @@ func _goal(slide: Control, w: float) -> float:
 ## 2: gather & craft: a station's dice, then elements spent, an item kept.
 func _gather(slide: Control, w: float) -> float:
 	var y := _kicker(slide, "Gather & craft", w)
-	var st := Catalog.station("The Ocean")
+	var st := _example_station()
 	var parts: Array = [Tok.icon(st.emoji, 40), Tok.icon("🎲", 20)]
 	for d in Catalog.sorted_dice(st):
 		parts.append(_chip(d, 30))
 	y += _row(slide, parts, y, w, 7) + 10
 	y += _line(slide, "Every station has its own pool of elements", y, w, 12.5, "#b3becd") + 14
+	# An item made only of elements, sold here, else anywhere (as the HTML game).
+	var plain := func(e): return e.reqs.size() >= 2 and e.reqs.all(func(r): return r.kind == "element")
 	var ex = null
 	for e in Data.t("ENTRIES"):
-		if e.station == st.name and e.reqs.size() >= 2 and e.reqs.all(func(r): return r.kind == "element"):
+		if e.station == st.name and plain.call(e):
 			ex = e
 			break
+	if ex == null:
+		for e in Data.t("ENTRIES"):
+			if plain.call(e):
+				ex = e
+				break
 	var spent := Control.new()
 	var chips: Array = ex.reqs.map(func(r): return _chip(r.name, 30))
 	var cx := 0.0
@@ -220,7 +227,7 @@ func _gather(slide: Control, w: float) -> float:
 ## 24 turns.
 func _mat(slide: Control, w: float) -> float:
 	var y := _kicker(slide, "Display Mat", w)
-	var st := Catalog.station("The Ocean")
+	var st := _example_station()
 	var emoji: Dictionary = Data.t("ITEM_EMOJI")
 	var names: Array = [st.capstone[1]] + Data.t("CORE_ITEM_NAMES")
 	var mat := Panel.new()
@@ -319,6 +326,12 @@ func _combos(st: Dictionary) -> Array:
 			out.append([strip.call([Tok.star(Color.WHITE, 12)] + col.items.map(func(n): return _tile(emoji[n], 26))), "Secret [b]collections[/b] for bonus Quarks"])
 			break
 	return out
+
+
+## The Ocean, or the first station if it's ever renamed.
+static func _example_station() -> Dictionary:
+	var all: Dictionary = Data.t("STATION_BY_NAME")
+	return all.get("The Ocean", all.values()[0])
 
 
 static func _chip(sym: String, w: float) -> Control:

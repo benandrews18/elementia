@@ -1,6 +1,6 @@
 ## Screenshot runner (PLAN.md, "Screen comparison"). Opens one screen,
 ## optionally with a save loaded, saves a PNG of it and quits:
-##   Godot_console.exe --path godot res://tests/shot.tscn -- --screen res://tests/icon_sheet.gd --out C:/x/shot.png [--save step.json] [--scale 2] [--call m:arg,m2] [--wait 1.5]
+##   Godot_console.exe --path godot res://tests/shot.tscn -- --screen res://tests/icon_sheet.gd --out C:/x/shot.png [--save step.json] [--scale 2] [--call m:arg,m2] [--wait 1.5] [--size 768x1024]
 ## --screen: a .tscn, or a .gd script extending Control.
 ## --save: a JSON file holding {state, ctx} (a golden step's "before") or a
 ## bare HTML-game save. Needs a normal run (not --headless): headless
@@ -25,6 +25,9 @@ func _ready() -> void:
 			screen.call(m[0], m[1]) if m.size() > 1 else screen.call(m[0])
 	var scale := float(a.get("scale", "1"))
 	get_window().size = Vector2i(roundi(390 * scale), roundi(844 * scale))
+	if a.has("size"):  # --size 768x1024: another screen shape (e.g. a tablet)
+		var wh: PackedStringArray = a.size.split("x")
+		get_window().size = Vector2i(int(wh[0]), int(wh[1]))
 	for i in 3:
 		await get_tree().process_frame
 	if a.has("wait"):  # --wait seconds: e.g. partway through an animation

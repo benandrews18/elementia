@@ -9,6 +9,7 @@ var fails := 0
 var balloon_done := false
 var expansions := 0
 var convert_done := false
+var finished := {}  # section -> true once it ran to its end (a script error stops one quietly)
 
 
 func check(ok: bool, what: String) -> void:
@@ -120,6 +121,8 @@ func _ready() -> void:
 	await _final_score(app)
 	await _market(app)
 	await _todo(app)
+	for part in ["final_score", "market", "todo"]:
+		check(finished.has(part), "the %s section ran to its end (else a script error stopped it)" % part)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -142,6 +145,7 @@ func _final_score(app: App) -> void:
 	app._on_hub("home")
 	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame and c._completing)), "turn 24: Run Complete shows")
+	finished.final_score = true
 
 
 ## Converts 3 of the first element held 3+ into one Fe (or C) through the
@@ -204,6 +208,37 @@ func _market(app: App) -> void:
 	rw.queue_free()
 	rw.on_done.call()
 	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 1 and Game.state.pendingBingoClears.is_empty()), "Nice pays the row's ?")
+	# Crafting a square from the open Market: its Crafting Bench, Craft.
+	await get_tree().process_frame
+	var name := ""
+	for i in Market.lines()[1] + Market.lines()[2]:  # (every square has a suit cost: the balloon pays it)
+		if not Catalog.owns(Game.state, Game.state.bingoCard[i]):
+			name = Game.state.bingoCard[i]
+			break
+	var e: Dictionary = Catalog.entry(name)
+	var needs := Catalog.needs_of(e.reqs)
+	for it in needs.items:  # what it takes, handed over
+		if not Catalog.owns(Game.state, it.name):
+			Game.state.items.append(it.name)
+	for sym in needs.els:
+		Game.state.elements[sym] = needs.els[sym]
+	var cost := Game.suit_cost_need(name)
+	for su in cost:  # the suit cost, in the suit's first element
+		var el: String = Data.t("SUIT_CORE_ELEMENTS").get(su, Data.t("SUIT_CORE_ELEMENTS").values()[0])[0]
+		Game.state.elements[el] = Catalog.count(Game.state, el) + cost[su]
+	_squares_reset(app)
+	app._on_hub("market")
+	var bench := MarketCraft.open(app, name)
+	var shop_row: ShopRow = bench._bench.get_children().filter(func(c): return c is ShopRow)[0]
+	shop_row.on_craft.call(name, Rect2(100, 400, 60, 35))  # its Craft button
+	if not Game.suit_cost_need(name).is_empty():
+		_pay_balloon(app, Game.suit_cost_need(name))
+	check(Catalog.owns(Game.state, name), "crafted %s from its Market square" % name)
+	check(await _until(func(): return not is_instance_valid(bench) or bench.is_queued_for_deletion()), "the Crafting Bench closes once it's made")
+	check(await _until(func(): return app._market_playing), "the square bounces in the open tray")
+	check(await _until(func(): return not app._market_playing), "and the tray settles")
+	app.close_panel()
+	finished.market = true
 
 
 ## The To-Do List: the hub button opens it (Home reads Close); the hint
@@ -225,6 +260,7 @@ func _todo(app: App) -> void:
 	app._on_hub("jobs")
 	check(app.panel == "", "the To-Do List button closes it again")
 	TodoTray.hint_open = false
+	finished.todo = true
 
 
 func _release() -> InputEventMouseButton:
@@ -232,6 +268,12 @@ func _release() -> InputEventMouseButton:
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = false
 	return ev
+
+
+## The handed-over ingredients aren't new Market squares (only the craft is).
+func _squares_reset(app: App) -> void:
+	app._squares_card = ""
+	app._market_check()
 
 
 ## Is the shutter still playing?
@@ -280,26 +322,7 @@ func _craft_through_balloon(app: App) -> bool:
 		for su in need:
 			spend += need[su]
 		app.craft_tap(e.name, Rect2(100, 400, 60, 35))
-		var b: SuitSpend = app.get_children().filter(func(c): return c is SuitSpend)[0]
-		var guard := 0
-		while is_instance_valid(b) and not b.is_queued_for_deletion() and guard < 20:
-			guard += 1
-			var tapped := false
-			for su in need:
-				if b._picked_for(su) >= need[su]:
-					continue
-				var best := ""
-				var spare := 0.0
-				for el in Data.t("SUIT_CORE_ELEMENTS")[su]:
-					var left: float = Catalog.count(Game.state, el) - b._reserved().get(el, 0) - b._picks.get(el, 0)
-					if left > spare:
-						best = el
-						spare = left
-				b._tap(best, su, int(Catalog.count(Game.state, best) - b._reserved().get(best, 0)))
-				tapped = true
-				break
-			if not tapped:
-				break
+		_pay_balloon(app, need)
 		var after := 0.0
 		for v in Game.state.elements.values():
 			after += v
@@ -307,3 +330,28 @@ func _craft_through_balloon(app: App) -> bool:
 		check(is_equal_approx(before - after, spend), "%s: spent %d elements, recipe + suit cost is %d" % [e.name, before - after, spend])
 		return true
 	return false
+
+
+## Taps the open balloon like a player until it crafts: one more from the
+## element with the most spare, for each suit still short.
+func _pay_balloon(app: App, need: Dictionary) -> void:
+	var b: SuitSpend = app.get_children().filter(func(c): return c is SuitSpend).back()
+	var guard := 0
+	while is_instance_valid(b) and not b.is_queued_for_deletion() and guard < 20:
+		guard += 1
+		var tapped := false
+		for su in need:
+			if b._picked_for(su) >= need[su]:
+				continue
+			var best := ""
+			var spare := 0.0
+			for el in Data.t("SUIT_CORE_ELEMENTS")[su]:
+				var left: float = Catalog.count(Game.state, el) - b._reserved().get(el, 0) - b._picks.get(el, 0)
+				if left > spare:
+					best = el
+					spare = left
+			b._tap(best, su, int(Catalog.count(Game.state, best) - b._reserved().get(best, 0)))
+			tapped = true
+			break
+		if not tapped:
+			break

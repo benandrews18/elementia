@@ -23,11 +23,7 @@ var _hint_name := ""
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var scrim := ColorRect.new()
-	scrim.color = Color(0, 0, 0, 0.35)
-	scrim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	scrim.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current: App.current.close_panel())
-	add_child(scrim)
+	ConfirmDialog.scrim(self)
 	var w := minf(400, size.x * 0.92)
 	var tray := Panel.new()
 	var sb := Tok.box(Tok.CARD, 0, 0)

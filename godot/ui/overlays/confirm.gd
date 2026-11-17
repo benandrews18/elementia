@@ -75,6 +75,13 @@ static func dim(on: Control, on_tap := Callable()) -> ColorRect:
 	return d
 
 
+## A tray's backdrop: a lighter dim; a tap on it closes the open panel.
+static func scrim(on: Control) -> ColorRect:
+	var d := dim(on, func(): if App.current: App.current.close_panel())
+	d.color = Color(0, 0, 0, 0.35)
+	return d
+
+
 ## A window's ✕, on its top-right corner.
 static func close_x(box: Control, on_close: Callable) -> TextureRect:
 	var x := TextureRect.new()
