@@ -19,6 +19,11 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5: the Market (MarketTray panel from the hub's Market button,
+  Home reads Map: stations visited, 3 rows of 4 with their "?", capstones;
+  MarketCraft: craft a square from its Crafting Bench; the row sequence and
+  RowReward pay the "?"; first square opens the tray, later ones mark "!").
+  ui_play plays those moments. No 🎁 image yet.
 - 2026-11-16: M5 review fixes: a run still at visit 0 (quit during the
   capstone choice) restarts the opening; closing the mat after the run ends
   shows the end screen again (and New Game doesn't); Game.reward_of() is the

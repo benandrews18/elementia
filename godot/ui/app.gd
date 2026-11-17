@@ -5,7 +5,10 @@
 class_name App
 extends Control
 
-var panel := ""  # "", "drawer" (the Display Mat) or "convert"
+var panel := ""  # "", "drawer" (the Display Mat), "convert" or "market"
+var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
+var _squares_card := ""  # the card _squares is for (a new run or a load starts afresh)
+var _market_playing := false
 var _screen: Control
 var _screen_name := ""
 var _panel_node: Control
@@ -36,6 +39,74 @@ func _sync() -> void:
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()
+	_market_check()
+	_maybe_end()
+
+
+## runBingoSequence(): a craft that owns a new Market square or finishes a
+## row. A finished row opens the Market, bounces the row, and pays its "?"
+## (Row complete!); a square alone does that only the first time ever, and
+## otherwise puts "!" on the Market button.
+## shortcut: no toast for a square (the HTML game's "Marketplace item done").
+func _market_check() -> void:
+	var s := Game.state
+	if _market_playing or s.get("bingoCard") == null:
+		return
+	var card: Array = s.bingoCard
+	var owned := range(card.size()).filter(func(i): return Catalog.owns(s, card[i]))
+	var lines: Array = Util.get_or(s, "pendingBingoClears", []).duplicate()  # a load can bring some
+	if str(card) != _squares_card:  # a new run or a loaded one: what's owned is the starting point
+		_squares_card = str(card)
+		_squares = owned
+	var fresh := owned.filter(func(i): return not _squares.has(i))
+	_squares = owned
+	if lines.is_empty() and fresh.is_empty():
+		return
+	if lines.is_empty() and s.get("sawMarketSquareTray"):
+		if panel != "market":
+			s.marketUnseen = true
+			Game._changed.call_deferred()
+		return
+	s.sawMarketSquareTray = true
+	_market_sequence.call_deferred(fresh, lines)
+
+
+func _market_sequence(fresh: Array, lines: Array) -> void:
+	_market_playing = true
+	var opened := panel != "market"
+	if opened:
+		open_panel("market")
+	var block := Control.new()
+	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(block)
+	var tray := _panel_node as MarketTray
+	await get_tree().create_timer(0.45).timeout
+	for i in fresh:
+		DisplayMatScreen.bounce(tray.cells.get(i))
+		await get_tree().create_timer(0.32).timeout
+	for r in lines:
+		await get_tree().create_timer(0.3).timeout
+		for i in Market.lines()[r]:
+			DisplayMatScreen.bounce(tray.cells.get(i))
+		await get_tree().create_timer(0.56 + 0.65).timeout
+	block.queue_free()
+	if not lines.is_empty():
+		var rw := RowReward.new()
+		rw.rows = lines.size()
+		rw.size = size
+		var done := false
+		rw.on_done = func(): done = true
+		add_child(rw)
+		while not done and is_instance_valid(rw):
+			await get_tree().process_frame
+		_market_playing = false
+		Game.collect_market_rewards()
+	else:
+		_market_playing = false
+	if opened:
+		await get_tree().create_timer(1.6).timeout
+		if panel == "market":
+			close_panel()
 	_maybe_end()
 
 
@@ -43,6 +114,8 @@ func _sync() -> void:
 ## Overtime ending); crafting everything ends the run here.
 func _maybe_end() -> void:
 	var s := Game.state
+	if _market_playing:  # the end waits for the Market's own moment
+		return
 	var key := "ended" if s.get("ended") or s.get("craftedEverything") else ("complete" if s.get("runComplete") else "")
 	if key == "" or key == Game.ctx.get("endShown", ""):
 		return
@@ -122,8 +195,8 @@ func open_card(name: String) -> void:
 func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
-	if name == "drawer" or name == "convert":
-		_panel_node = DisplayMatScreen.new() if name == "drawer" else ConvertTray.new()
+	if name in ["drawer", "convert", "market"]:
+		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray}[name].new()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
 	_sync()
@@ -148,6 +221,8 @@ func home_face() -> String:
 		return "final"
 	if panel == "drawer" and c.screen == "map" and sel and can_travel_to(sel) and c.get("travelPromptFor") == sel:
 		return "lockin"
+	if panel == "market":  # the tray reads Map (tapping it closes the tray)
+		return "map"
 	if panel != "":
 		return "close"
 	if c.current and not s.get("rolledHere"):
@@ -174,7 +249,7 @@ func _sync_hub() -> void:
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
 		badges.market = "!"
-	_hub.show_state(home_face(), {"inv": panel == "drawer"}, badges,
+	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
@@ -315,6 +390,14 @@ func _on_hub(id: String) -> void:
 				close_panel()
 			else:
 				open_panel("drawer")
+		"market":  # visiting the Market clears its "!"
+			if panel == "market":
+				close_panel()
+			else:
+				Game.state.marketVisited = true
+				Game.state.marketUnseen = false
+				open_panel("market")
+				Game._changed()
 		"home":
 			match home_face():
 				"close":
@@ -322,7 +405,10 @@ func _on_hub(id: String) -> void:
 				"roll":
 					_roll()
 				"map":
-					_go_map()
+					if panel == "market":
+						close_panel()
+					else:
+						_go_map()
 				"shop":  # back into the station you're at, free (no visit spent)
 					Game.ctx.screen = "station"
 					Game.ctx.current = Game.state.lastStation

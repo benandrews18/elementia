@@ -110,6 +110,7 @@ func _ready() -> void:
 		if c is CapstoneChoice:
 			c.queue_free()
 	await _final_score(app)
+	await _market(app)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -158,6 +159,42 @@ func _convert(app: App) -> bool:
 	app.close_panel()
 	await get_tree().process_frame
 	return true
+
+
+## The Market's moments, as crafts land: the run's first square ever opens
+## the tray; a later one only puts "!" on the Market button; a finished row
+## opens it, shows Row complete! and pays one "?" on Nice. (The crafts are
+## stood in for by owning the items: the screens react to the same state.)
+func _market(app: App) -> void:
+	for c in app.get_children():
+		if c is EndGame:
+			c.queue_free()
+	Game.start_run("Coral Reef")
+	await get_tree().process_frame
+	var row: Array = Market.lines()[0].map(func(i): return Game.state.bingoCard[i])
+	var own := func(n):
+		Game.state.items.append(n)
+		Market.check_lines(Game.state)
+		Game._changed()
+	own.call(row[0])
+	check(await _until(func(): return app.panel == "market"), "the first Market square opens the tray")
+	check(await _until(func(): return app.panel == ""), "the tray closes again after the square")
+	own.call(row[1])
+	await get_tree().process_frame
+	check(app.panel == "" and Game.state.get("marketUnseen") == true, "a later square only marks the Market button")
+	app._on_hub("market")
+	check(app.panel == "market" and not Game.state.marketUnseen and app.home_face() == "map", "the Market button opens the tray (Home reads Map) and clears its mark")
+	app._on_hub("home")
+	check(app.panel == "", "Home closes the tray")
+	var q: int = Util.get_or(Game.state, "emptyElements", 0)
+	own.call(row[2])
+	await get_tree().process_frame
+	own.call(row[3])
+	check(await _until(func(): return app.get_children().any(func(c): return c is RowReward)), "a finished row shows Row complete!")
+	var rw: RowReward = app.get_children().filter(func(c): return c is RowReward)[0]
+	rw.queue_free()
+	rw.on_done.call()
+	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 1 and Game.state.pendingBingoClears.is_empty()), "Nice pays the row's ?")
 
 
 ## Is the shutter still playing?
