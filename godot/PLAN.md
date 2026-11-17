@@ -12,13 +12,15 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 step 0 (`tools/shot_diff.py`, the "before" shots),
-then step 1 (tokens). Start every session with `git status`: the user may
+**Next task:** waiting on the user to try the map in the editor (M5.5
+step 3); then step 4 (windows). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5.5 step 3: the map is a scene (map.tscn, MapNode pieces with
+  @tool so the editor shows their icons; Map.make()). Over to the user.
 - 2026-11-17: M5.5 steps 0-1 (before/after check; colours in tokens.tres).
   Fixed on the way: the suit-spend balloon drew on its replacement (Godot
   errors), the Market's auto-close could shut a tray the player reopened,
@@ -483,9 +485,15 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
       overflows them ~4px, so it's left out: set the font on each scene's
       root instead, and check with the before/after diff.
 - [ ] 2. Shared pieces: parchment window, pill / parchment buttons, element
-      chip, item card, combo chip.
-- [ ] 3. **Pilot: the map** (scene with the 8 nodes placed in the editor; the
-      paths drawn between wherever they sit; station card as a scene).
+      chip, item card, combo chip. **Converted as the first screen that needs
+      each one comes up** (decided in the session: gets the map to the user
+      sooner, and each piece is proved in a real screen). Done: MapNode,
+      the "YOU ARE HERE" pill (`ui/pieces/`).
+- [x] 3. **Pilot: the map** (`ui/screens/map.tscn`: art, the 8 MapNode
+      copies anchored to their spots, paths drawn between wherever they sit).
+      Pixel-identical except "YOU ARE HERE", now centred in its pill as in the
+      HTML (it sat 3px right). The station card stays code for now (data,
+      and the capstone choice uses it): with the station screen (step 5).
       **Stop here: the user opens it in the editor and tries it** (drag a
       node, change a colour, press play). Go / adjust / stop.
 - [ ] 4. Windows: confirm, end game, Lock-In reward, challenge, how-to-play,

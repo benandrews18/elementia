@@ -3,85 +3,81 @@
 ## brass rim: green ring where you are, gold where you've picked, grey where
 ## you can't go); dashed gold paths from where you are; and, for the picked
 ## station, the wooden card at the top (its elements, items, capstone).
+## The layout is ui/screens/map.tscn: the art, and the 8 stations (MapNode)
+## anchored to their spots on it, which can be dragged in the editor (the
+## paths follow them). This script only shows the run's state on it.
 class_name MapScreen
 extends Control
 
-const NODE := 0.195  # node width, share of the map's width
-const RIM := preload("res://assets/ui/clock_rim.webp")
+const SCENE := "res://ui/screens/map.tscn"
 
 static var _grey: ShaderMaterial
 
 
+static func make() -> MapScreen:
+	return load(SCENE).instantiate()
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	$Base.color = Tok.CARD
+	for n in _nodes():
+		n.tapped.connect(_on_node)
+	$Area/Paths.draw.connect(_draw_paths)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
 	_redraw()
 
 
+func _nodes() -> Array:
+	return $Area.get_children().filter(func(c): return c is MapNode)
+
+
 func _redraw() -> void:
 	if is_queued_for_deletion():
 		return
-	for c in get_children():
+	for c in $Dynamic.get_children():
 		c.queue_free()
 	var s := Game.state
 	var ctx := Game.ctx
 	var checked: bool = s.get("matChecked", false)
 	var top := (QuarkTopBar.H + 4) if checked else 0.0
-	# The map: 6px past each side, from under the Quark bar down to the hub.
-	var r := Rect2(-6, top, size.x + 12, size.y - HubBar.H - top)
-	var base := ColorRect.new()
-	base.color = Tok.CARD
-	base.position = r.position
-	base.size = r.size
-	add_child(base)
-	var art := TextureRect.new()
-	art.texture = load("res://assets/backdrops/diamond_map_full.webp")
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_SCALE
-	art.position = r.position
-	art.size = r.size
-	art.modulate.a = 0.96
-	art.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(art)
-	var nodes := Rect2(r.position + Vector2(0, 1), r.size - Vector2(0, 2))  # inside the 1px borders
-	var here = s.get("lastStation")
-	if here != null:
-		add_child(_paths(nodes, here))
-	var pos: Dictionary = Data.t("MAP_NODE_POS")
-	for name in pos:
-		add_child(_node(name, _center(nodes, name), nodes.size.x * NODE))
+	# The map runs from under the Quark bar (when it's showing) to the hub.
+	$Base.offset_top = top
+	$Art.offset_top = top
+	$Area.offset_top = top + 1
+	var app := _app()
+	for n in _nodes():
+		var here: bool = n.station == s.get("lastStation")
+		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
+		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
+	$Area/Paths.queue_redraw()
 	if checked:
 		var qt := QuarkTopBar.new()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
-		add_child(qt)
-	StationScreen.corner_buttons(self, false)
+		$Dynamic.add_child(qt)
+	StationScreen.corner_buttons($Dynamic, false)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
-		add_child(station_card(ctx.selectedMapStation, size.x))
+		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
 
 
-## A node's centre: its MAP_NODE_POS percentage, nudged down by
-## MAP_NODE_MM_SHIFT millimetres (mapNodeTopStyle()).
-static func _center(r: Rect2, name: String) -> Vector2:
-	var p: Array = Data.t("MAP_NODE_POS")[name]
-	var mm: float = Data.t("MAP_NODE_MM_SHIFT").get(name, 0)
-	return r.position + Vector2(p[0] / 100.0 * r.size.x, p[1] / 100.0 * r.size.y + mm * float(Data.t("MM_TO_PX")))
-
-
-## Dashed paths: bright gold out of where you are, faint white elsewhere.
-func _paths(r: Rect2, here: String) -> Control:
-	var c := Control.new()
-	c.mouse_filter = MOUSE_FILTER_IGNORE
-	c.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	c.draw.connect(func():
-		for e in Data.t("MAP_EDGES"):
-			var a := _center(r, e[0])
-			var b := _center(r, e[1])
-			var active: bool = e[0] == here or e[1] == here
-			if active:  # a dark halo under the gold so it reads over the art
-				_dashed(c, a, b, Color(0, 0, 0, 0.55), 7.2)
-			_dashed(c, a, b, Color("#ffce54") if active else Color(1, 1, 1, 0.2), 5.2 if active else 4.2))
-	return c
+## Dashed paths between the stations (MAP_EDGES), wherever their nodes sit:
+## bright gold out of where you are, faint white elsewhere.
+func _draw_paths() -> void:
+	var here = Game.state.get("lastStation")
+	if here == null:
+		return
+	var c: Control = $Area/Paths
+	var at := {}
+	for n in _nodes():
+		at[n.station] = n.position + n.size / 2
+	for e in Data.t("MAP_EDGES"):
+		if not at.has(e[0]) or not at.has(e[1]):
+			continue
+		var active: bool = e[0] == here or e[1] == here
+		if active:  # a dark halo under the gold so it reads over the art
+			_dashed(c, at[e[0]], at[e[1]], Color(0, 0, 0, 0.55), 7.2)
+		_dashed(c, at[e[0]], at[e[1]], Color("#ffce54") if active else Color(1, 1, 1, 0.2), 5.2 if active else 4.2)
 
 
 ## stroke-dasharray 5 4.5 with round caps.
@@ -96,75 +92,6 @@ static func _dashed(c: Control, a: Vector2, b: Vector2, color: Color, w: float) 
 		c.draw_circle(a + u * t, w / 2, color)
 		c.draw_circle(a + u * e, w / 2, color)
 		t += 9.5
-
-
-func _node(name: String, at: Vector2, d: float) -> Control:
-	var s := Game.state
-	var here: bool = name == s.get("lastStation")
-	var app := _app()
-	var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(name))
-	var picked: bool = name == Game.ctx.get("selectedMapStation")
-	var n := Control.new()
-	n.position = at - Vector2(d, d) / 2
-	n.size = Vector2(d, d)
-	n.set_meta("cmp", "map:" + name)
-	n.gui_input.connect(_on_node.bind(name))
-	n.draw.connect(func():
-		var mid := Vector2(d, d) / 2
-		if picked:  # 8px gold ring and glow
-			n.draw_circle(mid, d / 2 + 14, Color(Tok.GOLD, 0.18))
-			n.draw_circle(mid, d / 2 + 8, Tok.GOLD)
-		elif here:  # 4px green ring and glow
-			n.draw_circle(mid, d / 2 + 12, Color(Tok.OK, 0.2))
-			n.draw_circle(mid, d / 2 + 4, Tok.OK)
-		n.draw_circle(mid, d / 2 * 0.84, Color("#122e3c").darkened(0.45 if not reach and not here else 0.0)))
-	var rim := TextureRect.new()
-	rim.texture = RIM
-	rim.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	rim.stretch_mode = TextureRect.STRETCH_SCALE
-	rim.size = Vector2(d, d)
-	rim.mouse_filter = MOUSE_FILTER_IGNORE
-	if not reach and not here:
-		rim.material = _greyed()
-	n.add_child(rim)
-	var ic := Tok.icon(Catalog.station(name).emoji, d * 0.5)
-	ic.position = (n.size - ic.size) / 2
-	if not reach and not here:
-		ic.material = _greyed()
-	n.add_child(ic)
-	if here:
-		n.add_child(_here_label(d))
-	return n
-
-
-## "YOU ARE HERE" on its brass pill, under the node.
-func _here_label(d: float) -> Control:
-	var text := "YOU ARE HERE"
-	var f := Tok.font(900)
-	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-	var pill := Control.new()
-	pill.size = Vector2(tw + 24, 22.2)
-	pill.position = Vector2((d - pill.size.x) / 2, d + 6)
-	pill.mouse_filter = MOUSE_FILTER_IGNORE
-	var tex: Texture2D = load("res://assets/ui/pill_short.webp")
-	pill.draw.connect(func():
-		var sb := StyleBoxTexture.new()
-		sb.texture = tex
-		sb.set_texture_margin_all(52)
-		var k := 13.0 / 52.0
-		pill.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		pill.draw_style_box(sb, Rect2(Vector2.ZERO, pill.size / k))
-		pill.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
-	var l := Tok.label(text, 10.5, Color.WHITE, 900)
-	l.add_theme_font_override("font", f)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
-	l.add_theme_constant_override("shadow_offset_y", 1)
-	l.size = pill.size
-	pill.add_child(l)
-	pill.set_meta("cmp", "map:here")
-	return pill
 
 
 ## The picked station's card at the top (mapCardHTML()). Also the opening's
@@ -242,10 +169,9 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	return card
 
 
-func _on_node(ev: InputEvent, name: String) -> void:
-	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed:
-		Game.ctx.selectedMapStation = name
-		Game.state_changed.emit()
+func _on_node(name: String) -> void:
+	Game.ctx.selectedMapStation = name
+	Game.state_changed.emit()
 
 
 func _app() -> App:
