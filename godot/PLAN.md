@@ -226,6 +226,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 | HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |
+| Before/after (M5.5) | `python godot/tools/shot_diff.py shoot godot/build/after` then `... diff godot/build/before godot/build/after` |
 
 ---
 
@@ -469,8 +470,9 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
   screenshots (it can't use the editor itself).
 
 **Order:**
-- [ ] 0. `tools/shot_diff.py` (before/after pixel check) and a "before" shot
+- [x] 0. `tools/shot_diff.py` (before/after pixel check) and a "before" shot
       set of every screen and window (kept in `build/`, not committed).
+      27 states in `tests/shot_states.gd`; two runs are pixel-identical.
 - [ ] 1. Tokens: `tokens.tres` + `theme.tres`; `Tok` reads them. Zero visual change.
 - [ ] 2. Shared pieces: parchment window, pill / parchment buttons, element
       chip, item card, combo chip.
