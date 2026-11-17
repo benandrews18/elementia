@@ -191,5 +191,21 @@ func _ready() -> void:
 	Progress.load_layout(0)
 	check(Progress.prefs.savedMatLayouts[0].name == "Mine" and s.mat == col.items, "a saved layout loads back")
 
+	# The To-Do List's hint (computeTodoHint()); the HTML game answers Glass,
+	# craftable now, for Metropolis, on this state with these pins.
+	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/station_visit7.json")))
+	Progress.prefs.pinnedItems = ["Metropolis", "Plastic"]
+	var hint = Game.todo_hint()
+	check(hint != null and hint.name == "Glass" and hint.can_now and hint.roots == ["Metropolis"] and hint.homes.has("The City"), "the hint: %s" % [hint])
+	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
+	for t in [[["Space Station", "Fruit Cake", "Speedboat"], "Apple", ["Space Station", "Fruit Cake"]],
+			[["Metropolis"], "Wheel", ["Metropolis"]], [["Homestead", "Coral Reef"], "Farm", ["Homestead"]]]:
+		Progress.prefs.pinnedItems = t[0]
+		var h = Game.todo_hint()
+		check(h != null and h.name == t[1] and h.can_now and h.roots == t[2], "the hint for %s: %s (the HTML game: %s)" % [t[0], h.name if h else null, t[1]])
+	Progress.prefs.pinnedItems = ["Glass"]
+	Game.state.items.append("Glass")
+	check(Game.todo_hint() == null, "no hint once everything pinned is owned")
+
 	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)

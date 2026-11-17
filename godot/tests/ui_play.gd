@@ -111,6 +111,7 @@ func _ready() -> void:
 			c.queue_free()
 	await _final_score(app)
 	await _market(app)
+	await _todo(app)
 	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
 
@@ -195,6 +196,34 @@ func _market(app: App) -> void:
 	rw.queue_free()
 	rw.on_done.call()
 	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 1 and Game.state.pendingBingoClears.is_empty()), "Nice pays the row's ?")
+
+
+## The To-Do List: the hub button opens it (Home reads Close); the hint
+## opens the breakdowns down to its suggestion; a pin in a tree pins.
+func _todo(app: App) -> void:
+	Progress.prefs.pinnedItems = ["Metropolis"]
+	TodoTray.expanded.clear()
+	TodoTray.hint_open = false
+	app._on_hub("jobs")
+	check(app.panel == "todo" and app.home_face() == "close", "the To-Do List opens (Home reads Close)")
+	var tray: TodoTray = app._panel_node
+	tray.hint_open = true
+	tray._open_hint_paths()
+	var hint = Game.todo_hint()
+	check(hint != null and TodoTray.expanded.has("refroot/Metropolis"), "the hint opens the breakdown it's in (%s)" % [hint.name if hint else null])
+	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items[0].name
+	tray._pin_button(comp, Vector2.ZERO, false).gui_input.emit(_release())
+	check(Progress.is_pinned(comp), "a pin in the tree pins " + comp)
+	app._on_hub("jobs")
+	check(app.panel == "", "the To-Do List button closes it again")
+	TodoTray.hint_open = false
+
+
+func _release() -> InputEventMouseButton:
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = false
+	return ev
 
 
 ## Is the shutter still playing?

@@ -12,13 +12,18 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5 Run flow (M4 done)
-**Next task:** M5: the Market tray and rows (and the To-Do List); the
-opening's logo + how-to-play slides. (Done: Lock-In count and reward,
-check opening, end screen, capstone choice, convert, "?" spend.)
+**Next task:** M5: the opening's logo + how-to-play slides, and the
+To-Do List + pin tip in the opening; then the M5 review. (Done: Lock-In
+count and reward, check opening, end screen, capstone choice, convert,
+"?" spend, Market, To-Do List.)
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5: the To-Do List (TodoTray from the hub button: pinned
+  rows, full breakdown trees, pins, Get a Hint lighting the suggestion).
+  Game.todo_hint() (computeTodoHint()) matches the HTML game on 4 states
+  (rules_test); Catalog.still_needed/item_open; Tok.tinted(colour).
 - 2026-11-17: M5: the Market (MarketTray panel from the hub's Market button,
   Home reads Map: stations visited, 3 rows of 4 with their "?", capstones;
   MarketCraft: craft a square from its Crafting Bench; the row sequence and

@@ -21,7 +21,7 @@ const SHADOW := Color(0, 0, 0, 0.45)
 
 static var _fonts := {}
 static var _outlines := {}
-static var _white: ShaderMaterial
+static var _tints := {}  # colour -> its tint material
 
 
 ## The game's font: Nunito (chosen 2026-11-15; assets/fonts, OFL), one
@@ -153,10 +153,17 @@ static func loop_arrow(color: Color, px: float, clockwise := false) -> Control:
 
 ## Draws an icon all white, keeping its shape (the suit glyphs on coloured badges).
 static func white() -> ShaderMaterial:
-	if _white == null:
-		_white = ShaderMaterial.new()
-		_white.shader = load("res://ui/theme/tint.gdshader")
-	return _white
+	return tinted(Color.WHITE)
+
+
+## An icon painted one colour (e.g. a suit glyph in its suit's colour).
+static func tinted(color: Color) -> ShaderMaterial:
+	if not _tints.has(color):
+		var m := ShaderMaterial.new()
+		m.shader = load("res://ui/theme/tint.gdshader")
+		m.set_shader_parameter("tint", color)
+		_tints[color] = m
+	return _tints[color]
 
 
 ## A tick (✓), drawn: Nunito has none. In a coloured circle when bg is set.

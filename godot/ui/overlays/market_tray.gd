@@ -9,8 +9,6 @@
 class_name MarketTray
 extends Control
 
-const ORDER := ["The Ocean", "Old Growth Forest", "Deep Mine", "Greenhouse",
-	"The Power Plant", "The Bakery", "The City", "The Observatory"]
 
 var cells := {}  # card index -> its square (the row sequence bounces them)
 var _body: Control
@@ -126,6 +124,7 @@ func _redraw() -> void:
 func _stations(at: Vector2, w: float) -> float:
 	var s := Game.state
 	var visited: Dictionary = Util.get_or(s, "visitedStations", {})
+	var ORDER: Array = Data.t("STATION_TRACKER_ORDER")
 	var n := ORDER.filter(func(st): return visited.has(st)).size()
 	var l := Tok.label("%d/%d STATIONS VISITED" % [n, ORDER.size()], 11, Color(1, 1, 1, 0.75), 800)
 	l.position = at

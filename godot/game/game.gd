@@ -440,6 +440,64 @@ func collect_market_rewards() -> int:
 	return lines.size()
 
 
+## computeTodoHint(): what to craft next for the pinned items. Only items
+## whose components are all owned (advice that can be acted on), ranked by:
+## craftable now, pinned items it feeds, unowned items using it directly,
+## fewest missing elements, points, then by name. null when nothing's left.
+## {name, entry, roots, can_now, missing, homes}
+func todo_hint() -> Variant:
+	var roots: Array = Progress.prefs.pinnedItems.filter(func(n): return Catalog.entry(n) != null and not Catalog.owns(state, n))
+	var feeds := {}  # item -> the pinned items it feeds
+	var parents := {}  # item -> the unowned items using it directly
+	for root in roots:
+		for name in [root] + Catalog.still_needed(state, root):
+			if not feeds.has(name):
+				feeds[name] = []
+			if not feeds[name].has(root):
+				feeds[name].append(root)
+			var e = Catalog.entry(name)
+			if e != null:
+				for it in Catalog.needs_of(e.reqs).items:
+					if Catalog.owns(state, it.name):
+						continue
+					if not parents.has(it.name):
+						parents[it.name] = []
+					if not parents[it.name].has(name):
+						parents[it.name].append(name)
+	var pts: Dictionary = Data.t("ITEM_POINTS")
+	var home: Dictionary = Data.t("CORE_ITEM_STATION")
+	var best = null
+	var best_key := []
+	for name in feeds:
+		var entry = null
+		for e in Data.t("ENTRIES"):
+			if e.name == name and e.station == home.get(name):
+				entry = e
+				break
+		if entry == null:
+			entry = Catalog.entry(name)
+		if entry == null or not Catalog.needs_of(entry.reqs).items.all(func(it): return Catalog.owns(state, it.name)) 				or not Catalog.item_open(state, name):
+			continue
+		var els: Dictionary = Catalog.needs_of(entry.reqs).els
+		var missing: Array = els.keys().filter(func(sym): return Catalog.count(state, sym) < els[sym])
+		var can_now: bool = Catalog.can_craft(state, entry) and suit_cost_payable(name)
+		var key := [1 if can_now else 0, feeds[name].size(), parents.get(name, []).size(), -missing.size(), pts.get(name, 0)]
+		var better := best == null
+		if not better:
+			var diff := 0.0
+			for i in key.size():
+				if key[i] != best_key[i]:
+					diff = key[i] - best_key[i]
+					break
+			better = diff > 0 or (diff == 0 and best.name.naturalnocasecmp_to(name) > 0)  # ties: alphabetical
+		if better:
+			best = {"name": name, "entry": entry, "roots": feeds[name], "can_now": can_now, "missing": missing}
+			best_key = key
+	if best != null:
+		best.homes = Data.t("ENTRIES").filter(func(e): return e.name == best.name).map(func(e): return e.station)
+	return best
+
+
 ## Swap the challenge in force for another, for one "?".
 func reroll_order() -> bool:
 	var o = Orders.current(state)

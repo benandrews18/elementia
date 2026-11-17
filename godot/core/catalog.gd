@@ -56,6 +56,35 @@ static func can_craft(s: Dictionary, e: Dictionary) -> bool:
 	return n.items.all(func(it): return owns(s, it.name))
 
 
+## stillNeededClosure(): the unowned items in name's recipe tree (an owned
+## one ends its branch), excluding name.
+static func still_needed(s: Dictionary, name: String) -> Array:
+	var needed := []
+	var seen := {}
+	var visit := func(items: Array, self_ref: Callable) -> void:
+		for it in items:
+			if owns(s, it.name):
+				continue
+			if not needed.has(it.name):
+				needed.append(it.name)
+			if seen.has(it.name):
+				continue
+			seen[it.name] = true
+			var e = entry(it.name)
+			if e != null:
+				self_ref.call(needs_of(e.reqs).items, self_ref)
+	var root = entry(name)
+	if root != null:
+		visit.call(needs_of(root.reqs).items, visit)
+	return needed
+
+
+## itemOpen(): not locked behind another item (UNLOCKED_BY), or that's owned.
+static func item_open(s: Dictionary, name: String) -> bool:
+	var by = Data.t("UNLOCKED_BY").get(name)
+	return by == null or owns(s, by)
+
+
 ## componentClosure(): every item in name's recipe tree, excluding name.
 static func component_closure(name: String) -> Array:
 	var seen := {}

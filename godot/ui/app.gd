@@ -5,7 +5,7 @@
 class_name App
 extends Control
 
-var panel := ""  # "", "drawer" (the Display Mat), "convert" or "market"
+var panel := ""  # "", "drawer" (the Display Mat), "convert", "market" or "todo"
 var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
 var _squares_card := ""  # the card _squares is for (a new run or a load starts afresh)
 var _market_playing := false
@@ -195,8 +195,8 @@ func open_card(name: String) -> void:
 func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
-	if name in ["drawer", "convert", "market"]:
-		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray}[name].new()
+	if name in ["drawer", "convert", "market", "todo"]:
+		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray}[name].new()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
 	_sync()
@@ -249,7 +249,7 @@ func _sync_hub() -> void:
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
 		badges.market = "!"
-	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market"}, badges,
+	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
@@ -390,6 +390,11 @@ func _on_hub(id: String) -> void:
 				close_panel()
 			else:
 				open_panel("drawer")
+		"jobs":
+			if panel == "todo":
+				close_panel()
+			else:
+				open_panel("todo")
 		"market":  # visiting the Market clears its "!"
 			if panel == "market":
 				close_panel()
