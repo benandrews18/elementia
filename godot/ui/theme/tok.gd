@@ -32,6 +32,9 @@ static var _tints := {}  # colour -> its tint material
 ## device and on the web, where Godot can't use the phone's own fonts.
 static func font(weight := 400, spacing := 0) -> Font:
 	var key := "%d/%d" % [weight, spacing]
+	var path := "res://ui/theme/fonts/nunito_%d.tres" % weight  # shared with the scenes
+	if not _fonts.has(key) and spacing == 0 and ResourceLoader.exists(path):
+		_fonts[key] = load(path)
 	if not _fonts.has(key):
 		var f := FontVariation.new()
 		f.base_font = load("res://assets/fonts/Nunito-VariableFont_wght.ttf")
