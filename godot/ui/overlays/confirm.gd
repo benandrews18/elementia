@@ -5,14 +5,20 @@
 class_name ConfirmDialog
 extends Control
 
+## The layout is ui/overlays/confirm.tscn (title, button texts, gaps, fonts);
+## this fills in the message and sizes the window to it.
+const SCENE := "res://ui/overlays/confirm.tscn"
+
 var message: String
 var on_yes: Callable
-var title := "Are you sure?"
+var title := ""  # "" keeps the scene's title
+## Parchment below the buttons.
+@export var bottom_pad := 49.0
 
 
 ## Shows the dialog over `on` (the app).
 static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
-	var d := ConfirmDialog.new()
+	var d: ConfirmDialog = load(SCENE).instantiate()
 	d.message = msg
 	d.on_yes = yes
 	d.size = on.size
@@ -63,33 +69,33 @@ static func close_x(box: Control, on_close: Callable) -> TextureRect:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self, queue_free)
+	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	var win: ParchmentWindow = $Window
+	if title != "":
+		win.title = title
+	var content: VBoxContainer = $Window/Content
 	var w := minf(420, size.x - 40)
-	var inner := w - 2 * (30 + 8)
-	var msg := Tok.label(message, 15, Color("#5e4026"), 400)
-	msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	msg.add_theme_constant_override("line_spacing", int(round(15 * 1.5 - Tok.font(400).get_height(15))))
-	msg.size = Vector2(inner, 0)
-	msg.custom_minimum_size = Vector2(inner, 0)
-	# Wrapped height, from the font (a label only knows it once laid out); 1.5 line height.
-	var lines := Tok.font(400).get_multiline_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, inner, 15).y / Tok.font(400).get_height(15)
-	var msg_h := roundf(lines) * 15 * 1.5
-	msg.size = Vector2(inner, msg_h)
-	var h := 30 + 10 + 33 + 12 + msg_h + 14 + 18 + 46 + 6 + 30
-	var box := window(Vector2(w, h), title)
-	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	add_child(box)
-	msg.position = Vector2(38, 30 + 10 + 33 + 12 - 13)
-	box.add_child(msg)
-	# Yes (the green pill) and Cancel (parchment-sunken), 10px apart.
-	var by := msg.position.y + msg_h + 14 + 18
-	var yes := RollPopup._pill_button("Yes, do it", Vector2(Tok.font(800).get_string_size("Yes, do it", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
-	yes.position = Vector2(38, by)
-	yes.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+	var inner := w - 2 * content.position.x
+	# The message wraps at 1.5 line height (its height from the font: a label
+	# only knows it once laid out).
+	var msg: Label = $Window/Content/Message
+	msg.text = message
+	var f := msg.get_theme_font("font")
+	var px := msg.get_theme_font_size("font_size")
+	msg.add_theme_constant_override("line_spacing", int(round(px * 1.5 - f.get_height(px))))
+	var lines := f.get_multiline_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, inner, px).y / f.get_height(px)
+	msg.custom_minimum_size = Vector2(inner, roundf(lines) * px * 1.5)
+	# Each button fits its text with 22px either side.
+	for b in [$Window/Content/Buttons/Yes, $Window/Content/Buttons/Cancel]:
+		var l: Label = b if b is Label else b.get_node("Text")
+		b.custom_minimum_size = Vector2(l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x + 44, 46)
+	$Window/Content/Buttons/Yes.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
 		queue_free()
 		on_yes.call())
-	box.add_child(yes)
-	var no := Tok.parch_button("Cancel", Vector2(Tok.font(800).get_string_size("Cancel", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
-	no.position = Vector2(yes.position.x + yes.size.x + 10, by)
-	no.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
-	box.add_child(no)
+	$Window/Content/Buttons/Cancel.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	# The content's height from its parts (a wrapping label reports a huge minimum).
+	var content_h: float = msg.custom_minimum_size.y + content.get_theme_constant("separation") + $Window/Content/Buttons.get_combined_minimum_size().y
+	content.size = Vector2(inner, content_h)
+	var h := content.position.y + content_h + bottom_pad
+	win.size = Vector2(w, h)
+	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
