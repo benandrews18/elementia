@@ -12,9 +12,13 @@ func _ready() -> void:
 	ConfirmDialog.dim(self)
 	var w := minf(420, size.x - 40)
 	var h := 59 + 26 + 14 + 48 + 18 + 46 + 30
-	var box := ConfirmDialog.window(Vector2(w, h), "Row complete!")
+	var box := ConfirmDialog.window(Vector2(w, h), "      Row complete!")  # room for the 🎉
 	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
 	add_child(box)
+	var banner: Control = box.get_child(0)
+	var party := Tok.icon("🎉", 22)
+	party.position = Vector2(28, (banner.size.y - 22) / 2 - 1)
+	banner.add_child(party)
 	var t := Tok.label("Here's your reward" if rows == 1 else "%d rows complete" % rows, 15, Color("#5e4026"), 400)
 	t.position = Vector2(38, 59)
 	box.add_child(t)
