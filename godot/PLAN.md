@@ -473,7 +473,11 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
 - [x] 0. `tools/shot_diff.py` (before/after pixel check) and a "before" shot
       set of every screen and window (kept in `build/`, not committed).
       27 states in `tests/shot_states.gd`; two runs are pixel-identical.
-- [ ] 1. Tokens: `tokens.tres` + `theme.tres`; `Tok` reads them. Zero visual change.
+- [x] 1. Tokens: `tokens.tres` (`Tokens` resource, a colour picker per
+      colour); `Tok` reads it. Zero visual change. A project-wide
+      `theme.tres` (Nunito default) moved centred labels whose text
+      overflows them ~4px, so it's left out: set the font on each scene's
+      root instead, and check with the before/after diff.
 - [ ] 2. Shared pieces: parchment window, pill / parchment buttons, element
       chip, item card, combo chip.
 - [ ] 3. **Pilot: the map** (scene with the 8 nodes placed in the editor; the

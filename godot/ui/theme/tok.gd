@@ -1,23 +1,26 @@
 ## The HTML game's design tokens (game/css/base.css :root), fonts, and small
-## drawing helpers shared by every component. Change a colour here, once.
+## drawing helpers shared by every component. Colours: ui/theme/tokens.tres.
 class_name Tok
 
-const INK := Color("#e8edf4")
-const INK2 := Color("#b3becd")
-const MUTE := Color("#7d8899")
-const LINE := Color("#2a5a72")
-const LINE2 := Color("#1c4257")
-const BG := Color("#0f2733")
-const CARD := Color("#163544")
-const BG_SOFT := Color("#122e3c")
-const SUNKEN := Color("#1c4257")
-const OK := Color("#3fb46c")
-const BAD := Color("#f0674c")
-const GOLD := Color("#e2b25a")
-const GOLD_SOFT := Color("#3a2e14")
-const PARCHMENT := Color("#f2e6cc")  # .mm-card face
-const CARD_INK := Color("#181614")
-const SHADOW := Color(0, 0, 0, 0.45)
+## The colours come from ui/theme/tokens.tres (edit them in the Godot
+## editor's Inspector); the names stay as they were.
+static var T: Tokens = load("res://ui/theme/tokens.tres")
+static var INK: Color = T.ink
+static var INK2: Color = T.ink2
+static var MUTE: Color = T.mute
+static var LINE: Color = T.line
+static var LINE2: Color = T.line2
+static var BG: Color = T.bg
+static var CARD: Color = T.card
+static var BG_SOFT: Color = T.bg_soft
+static var SUNKEN: Color = T.sunken
+static var OK: Color = T.ok
+static var BAD: Color = T.bad
+static var GOLD: Color = T.gold
+static var GOLD_SOFT: Color = T.gold_soft
+static var PARCHMENT: Color = T.parchment  # .mm-card face
+static var CARD_INK: Color = T.card_ink
+static var SHADOW: Color = T.shadow
 
 static var _fonts := {}
 static var _outlines := {}
