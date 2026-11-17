@@ -7,36 +7,39 @@ var rows := 1
 var on_done: Callable
 
 
+## Its layout, texts and styles: ui/overlays/row_reward.tscn.
+static func make(n: int, done: Callable) -> RowReward:
+	var r: RowReward = load("res://ui/overlays/row_reward.tscn").instantiate()
+	r.rows = n
+	r.on_done = done
+	return r
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self)
+	var win: ParchmentWindow = $Window
 	var w := minf(420, size.x - 40)
-	var h := 59 + 26 + 14 + 48 + 18 + 46 + 30
-	var box := ConfirmDialog.window(Vector2(w, h), "      Row complete!")  # room for the 🎉
-	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	add_child(box)
-	var banner: Control = box.get_child(0)
-	var party := Tok.icon("🎉", 22)
-	party.position = Vector2(28, (banner.size.y - 22) / 2 - 1)
-	banner.add_child(party)
-	var t := Tok.label("Here's your reward" if rows == 1 else "%d rows complete" % rows, 15, Color("#5e4026"), 400)
-	t.position = Vector2(38, 59)
-	box.add_child(t)
-	var plus := Tok.label("+%d" % rows, 24, Color("#3b2412"), 900)
-	var pw := Tok.font(900).get_string_size(plus.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 24).x
+	var h := win.size.y
+	win.size.x = w
+	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
+	if rows > 1:
+		$Window/Text.text = "%d rows complete" % rows
+	# "+n" and a "?" square per row, centred together.
+	var plus: Label = $Window/Plus
+	plus.text = "+%d" % rows
+	var pw := plus.get_theme_font("font").get_string_size(plus.text, HORIZONTAL_ALIGNMENT_LEFT, -1, plus.get_theme_font_size("font_size")).x
 	var total := pw + 10 + rows * 48 + (rows - 1) * 8
 	var x := (w - total) / 2
-	plus.position = Vector2(x, 59 + 26 + 14 + 8)
-	box.add_child(plus)
+	plus.position.x = x
 	x += pw + 10
 	for i in rows:
 		var sq := LockInReward.unknown_square(48)
-		sq.position = Vector2(x, 59 + 26 + 14)
-		box.add_child(sq)
+		sq.position = Vector2(x, 0)
+		$Window/Squares.add_child(sq)
 		x += 56
-	var nice := RollPopup._pill_button("Nice!", Vector2(Tok.font(800).get_string_size("Nice!", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
-	nice.position = Vector2(38, h - 30 - 46)
+	var nice: Control = $Window/Nice
+	var nt: Label = nice.get_node("Text")
+	nice.size.x = nt.get_theme_font("font").get_string_size(nt.text, HORIZONTAL_ALIGNMENT_LEFT, -1, nt.get_theme_font_size("font_size")).x + 44
 	nice.gui_input.connect(func(ev): if ConvertTray._tap(ev):
 		queue_free()
 		on_done.call())
-	box.add_child(nice)

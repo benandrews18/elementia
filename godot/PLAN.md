@@ -12,8 +12,10 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** waiting on the user to try the map in the editor (M5.5
-step 3); then step 4 (windows). Start every session with `git status`: the user may
+**Next task:** M5.5 step 4, the remaining windows (Lock-In reward,
+challenge, how-to-play, capstone choice, end game, "?" pick, element picker,
+Market craft, roll pop-up, suit-spend balloon); then steps 5-8, then the
+full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -504,6 +506,12 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
 - [ ] 4. Windows: confirm, end game, Lock-In reward, challenge, how-to-play,
       pin tip, capstone choice, row reward, "?" pick, element picker,
       roll pop-up, suit-spend balloon, Market craft.
+      Done (scene + script that only fills it, pixel-identical): confirm,
+      pin tip, row reward. Every window's frame, banner and buttons are
+      already scenes (step 2). Pattern: the scene holds every node and its
+      style; the script sets data-driven text and centres what depends on
+      text width; window heights come from the scene unless the content
+      wraps.
 - [ ] 5. Station: frame scene, shop card and shop row scenes, the packing
       numbers in the Inspector.
 - [ ] 6. Display Mat / inventory: frame scene, the mat's layout numbers in

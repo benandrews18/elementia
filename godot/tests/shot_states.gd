@@ -55,9 +55,8 @@ func _ready() -> void:
 			MarketCraft.open(app, "Plastic")
 		"row_reward":
 			app._on_hub("market")
-			var r := RowReward.new()
+			var r := RowReward.make(1, func(): pass)
 			r.size = app.size
-			r.on_done = func(): pass
 			app.add_child(r)
 		"todo":
 			TodoTray.hint_open = true

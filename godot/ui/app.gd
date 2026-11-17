@@ -93,13 +93,10 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		await get_tree().create_timer(0.56 + 0.65).timeout
 	block.queue_free()
 	if not lines.is_empty():
-		var rw := RowReward.new()
-		rw.rows = lines.size()
+		var rw := RowReward.make(lines.size(), func(): pass)
 		rw.size = size
-		var done := false
-		rw.on_done = func(): done = true
 		add_child(rw)
-		while not done and is_instance_valid(rw):
+		while is_instance_valid(rw) and not rw.is_queued_for_deletion():  # until Nice
 			await get_tree().process_frame
 		_market_playing = false
 		Game.collect_market_rewards()
