@@ -74,12 +74,10 @@ static func parch_box() -> StyleBoxFlat:
 
 ## A parchment window's secondary button (Cancel, Back, New Game...).
 static func parch_button(text: String, sz: Vector2, px := 15.0) -> Label:
-	var l := label(text, px, Color("#3b2412"), 800)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.add_theme_stylebox_override("normal", parch_box())
-	l.mouse_filter = Control.MOUSE_FILTER_STOP
-	l.size = sz
+	var l: Label = load("res://ui/pieces/parch_button.tscn").instantiate()  # its look: ui/pieces/parch_button.tscn
+	l.text = text
+	l.add_theme_font_size_override("font_size", int(round(px)))
+	l.size = sz.max(l.get_combined_minimum_size())  # never narrower than its text
 	return l
 
 

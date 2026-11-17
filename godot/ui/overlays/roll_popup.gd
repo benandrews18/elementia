@@ -135,24 +135,9 @@ func _chip(r: Dictionary) -> Control:
 
 ## The green pill button (.bigbtn on pill_long.webp, 46 / 14px).
 static func _pill_button(text: String, sz: Vector2) -> Control:
-	var b := Control.new()
+	var b: Control = load("res://ui/pieces/pill_button.tscn").instantiate()  # its Label is child 0
 	b.size = sz
-	var tex: Texture2D = load("res://assets/ui/pill_long.webp")
-	b.draw.connect(func():
-		var sb := StyleBoxTexture.new()
-		sb.texture = tex
-		sb.set_texture_margin_all(46)
-		var k := 14.0 / 46.0
-		b.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		b.draw_style_box(sb, Rect2(Vector2.ZERO, b.size / k))
-		b.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
-	var l := Tok.label(text, 15, Color.WHITE, 800)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
-	l.add_theme_constant_override("shadow_offset_y", 1)
-	l.size = sz
-	b.add_child(l)
+	b.get_node("Text").text = text
 	return b
 
 

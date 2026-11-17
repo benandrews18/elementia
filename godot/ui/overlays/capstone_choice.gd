@@ -121,7 +121,7 @@ func _confirm(name: String) -> void:
 	var go_w := maxf(Tok.font(800).get_string_size(line1, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x, 0) + 44
 	var go := RollPopup._pill_button(line1, Vector2(go_w, 54))
 	var l: Label = go.get_child(0)
-	l.size.y = 38
+	l.set_anchor_and_offset(SIDE_BOTTOM, 0, 38)  # the top 38px: "and track ..." goes under it
 	var small := Tok.label("and track " + name, 12, Color(1, 1, 1, 0.85), 700)
 	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	small.position = Vector2(0, 30)

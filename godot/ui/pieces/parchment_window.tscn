@@ -1,0 +1,48 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/pieces/parchment_window.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/panel_parchment.webp" id="2"]
+[ext_resource type="Script" path="res://ui/pieces/nine_slice.gd" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/banner_wood.webp" id="4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f"]
+
+[node name="ParchmentWindow" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 350.0
+offset_bottom = 220.0
+script = ExtResource("1")
+title = "Title"
+texture = ExtResource("2")
+margin_x = 56.0
+margin_y = 56.0
+corner = 30.0
+
+[node name="Banner" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 115.0
+offset_top = 5.0
+offset_right = 235.0
+offset_bottom = 59.0
+mouse_filter = 2
+script = ExtResource("3")
+texture = ExtResource("4")
+margin_x = 96.0
+margin_y = 64.0
+corner = 13.0
+
+[node name="Title" type="Label" parent="Banner"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.878431, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("f")
+theme_override_font_sizes/font_size = 21
+text = "Title"
+horizontal_alignment = 1
+vertical_alignment = 1

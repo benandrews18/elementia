@@ -487,8 +487,13 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
 - [ ] 2. Shared pieces: parchment window, pill / parchment buttons, element
       chip, item card, combo chip. **Converted as the first screen that needs
       each one comes up** (decided in the session: gets the map to the user
-      sooner, and each piece is proved in a real screen). Done: MapNode,
-      the "YOU ARE HERE" pill (`ui/pieces/`).
+      sooner, and each piece is proved in a real screen). Done: MapNode;
+      NineSlice (any 9-slice image: parchment, banner, pills); the
+      parchment window with its title banner, the pill button and the
+      parchment button (`ui/pieces/*.tscn`), which every window uses; the
+      Nunito weights as font files (`ui/theme/fonts`). Intended change: the
+      Game Over "Review my collection" button is as wide as its text (145px,
+      it was 162 from a mis-measure).
 - [x] 3. **Pilot: the map** (`ui/screens/map.tscn`: art, the 8 MapNode
       copies anchored to their spots, paths drawn between wherever they sit).
       Pixel-identical except "YOU ARE HERE", now centred in its pill as in the

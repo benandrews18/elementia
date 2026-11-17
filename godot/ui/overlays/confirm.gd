@@ -20,46 +20,12 @@ static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
 	return d
 
 
-## .sheetbox.parch: the parchment window (56px corners drawn 30px wide) with
-## its title on a wooden banner over the top edge. Content starts at y 59.
+## .sheetbox.parch: the parchment window with its title on a wooden banner
+## (ui/pieces/parchment_window.tscn). Content starts at y 59.
 static func window(sz: Vector2, title_text: String) -> Control:
-	var box := Control.new()
+	var box: ParchmentWindow = load("res://ui/pieces/parchment_window.tscn").instantiate()
 	box.size = sz
-	var parch: Texture2D = load("res://assets/ui/panel_parchment.webp")
-	box.draw.connect(func():
-		var sb := StyleBoxTexture.new()
-		sb.texture = parch
-		sb.set_texture_margin_all(56)
-		var k := 30.0 / 56.0
-		box.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		box.draw_style_box(sb, Rect2(Vector2.ZERO, box.size / k))
-		box.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
-	if title_text == "":  # no banner
-		return box
-	var tw := Tok.font(800).get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 21).x
-	var banner := Control.new()
-	banner.size = Vector2(tw + 60, 13 + 6 + 28 + 7)
-	banner.position = Vector2((sz.x - banner.size.x) / 2, 30 + 10 - 22 - 13)
-	var wood: Texture2D = load("res://assets/ui/banner_wood.webp")
-	banner.draw.connect(func():  # slices 64 / 96, drawn 13 / 24
-		var sb := StyleBoxTexture.new()
-		sb.texture = wood
-		sb.texture_margin_top = 64
-		sb.texture_margin_bottom = 64
-		sb.texture_margin_left = 96
-		sb.texture_margin_right = 96
-		var k := 13.0 / 64.0
-		banner.draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
-		banner.draw_style_box(sb, Rect2(Vector2.ZERO, banner.size / k))
-		banner.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE))
-	var t := Tok.label(title_text, 21, Color("#fff7e0"), 800)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	t.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
-	t.add_theme_constant_override("shadow_offset_y", 2)
-	t.size = banner.size
-	banner.add_child(t)
-	box.add_child(banner)
+	box.title = title_text
 	return box
 
 
