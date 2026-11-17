@@ -11,13 +11,17 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M6 Everything around the run (M5 done)
-**Next task:** decide with the user: scenes + an editable theme (so they
-can edit menus in the editor) before or during M6; then M6.
+**Current milestone:** M5.5 Editable in the Godot editor (M5 done)
+**Next task:** M5.5 step 0 (`tools/shot_diff.py`, the "before" shots),
+then step 1 (tokens). Start every session with `git status`: the user may
+have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: Planned M5.5 (screens, windows and repeated pieces as scenes,
+  layout numbers in the Inspector, colours in tokens.tres) with the user,
+  before M6. Reverses the "styling is code" decision.
 - 2026-11-17: M5 review 2 fixes: the Market keeps phone-sized squares on
   wide screens and scrolls; the opening's slide 2 falls back like the HTML;
   a square crafted from the open Market bounces there; ConfirmDialog.scrim()
@@ -257,10 +261,11 @@ scaled to fit (the idea tested on the `fixed-screen` branch); taller phones
 get extra height, and tablets get a wider layout (~587). Notches use
 `DisplayServer.get_display_safe_area()`.
 
-**Styling:** the CSS becomes one Theme resource plus a few component scenes.
-The colours and sizes from `game/css/` become named constants in
-`ui/theme/tokens.gd`, so a colour is changed in one place. The wooden
-bench and hub frames (CSS `border-image`) become `NinePatchRect` / `StyleBoxTexture`.
+**Styling:** through M5, `Tok` helpers in `ui/theme/tok.gd` (colours as
+constants, boxes and labels built in code). From M5.5: colours and fonts in
+`ui/theme/tokens.tres` (editable in the Inspector), screens, windows and
+repeated pieces as scenes; see M5.5. The wooden bench and hub frames (CSS
+`border-image`) are 9-slice `StyleBoxTexture`s.
 
 **Icons:** the Noto emoji PNGs and custom art now embedded in
 `game/assets/images.js` are written out as image files under `assets/icons/`
@@ -423,9 +428,79 @@ to the user. Rough sizes are in sessions and are guesses.
 - [x] Opening, Lock-In screens and check orders, mat expansion reveal, BINGO
       tray and To-Do, convert, Market, suit spend, game over and end of run
 
+### M5.5 Editable in the Godot editor (~3-4 sessions)
+**Why:** so the user can open the project in the Godot editor and change
+how screens look (move, resize, recolour, retext, swap images, later
+animate) without code. Done now, before M6, so nothing new is built the old
+way and M8's polish can happen in the editor. Decided 2026-11-17.
+
+**What becomes what:**
+- **A scene (`.tscn`) for every screen's frame and every window:** the fixed
+  layout (backgrounds, headers, buttons, panels, labels and their text) is
+  placed in the scene, not built in `_ready()`. Its script only fills it in.
+- **A scene for every repeated piece**, placed by code from the data: item
+  card, shop row, shop card, element chip, combo chip, Market square, map
+  node, pill and parchment buttons, the parchment window. Editing the piece
+  changes every copy.
+- **Layout numbers in the Inspector:** what code still places (card gaps,
+  columns, the mat's row height, shop packing) reads `@export` values on the
+  screen's root, so they're edited in the editor's side panel.
+- **Colours and fonts in one editable file:** `ui/theme/tokens.tres` (a small
+  Resource with an `@export` per colour and font, colour pickers in the
+  Inspector) replaces the constants in `tok.gd`; `Tok` reads from it, so
+  callers don't change. A Godot Theme (`theme.tres`) holds the default font
+  and label/button styles.
+- **Stays in code:** rules and data (`core/`, `game/`, `data/`), anything whose
+  count or order comes from the data (which cards, which slots are open,
+  which elements a station shows), and the animations until M8 moves them to
+  AnimationPlayer timelines.
+
+**Care rules (every step):**
+- One screen or piece per commit; it must look and behave the same as before.
+- Before/after check: a screenshot of the same state before and after the
+  conversion, compared pixel by pixel (`tools/shot_diff.py`, new). Any
+  visible change is a bug unless planned. Then the usual `compare.mjs`
+  numbers (no worse), `ui_play`, `rules_test`, parity.
+- Node names in scenes are stable and meaningful (`Header`, `CraftButton`):
+  tests and code find nodes by name, and the user sees them in the editor.
+- The `cmp` tags the comparison uses move into the scenes as node metadata.
+- No game logic in scenes; scripts stay where they are (`ui/...`).
+- Scenes are text files: Claude writes them by hand and checks them with
+  screenshots (it can't use the editor itself).
+
+**Order:**
+- [ ] 0. `tools/shot_diff.py` (before/after pixel check) and a "before" shot
+      set of every screen and window (kept in `build/`, not committed).
+- [ ] 1. Tokens: `tokens.tres` + `theme.tres`; `Tok` reads them. Zero visual change.
+- [ ] 2. Shared pieces: parchment window, pill / parchment buttons, element
+      chip, item card, combo chip.
+- [ ] 3. **Pilot: the map** (scene with the 8 nodes placed in the editor; the
+      paths drawn between wherever they sit; station card as a scene).
+      **Stop here: the user opens it in the editor and tries it** (drag a
+      node, change a colour, press play). Go / adjust / stop.
+- [ ] 4. Windows: confirm, end game, Lock-In reward, challenge, how-to-play,
+      pin tip, capstone choice, row reward, "?" pick, element picker,
+      roll pop-up, suit-spend balloon, Market craft.
+- [ ] 5. Station: frame scene, shop card and shop row scenes, the packing
+      numbers in the Inspector.
+- [ ] 6. Display Mat / inventory: frame scene, the mat's layout numbers in
+      the Inspector, the inventory list's card scene.
+- [ ] 7. Trays and shell: Market, To-Do List, Convert, the hub bar, the top bar.
+- [ ] 8. A short "Editing Elementia in Godot" guide (`godot/EDITING.md`): how
+      to open it, which scene is which screen, what's safe to change, what
+      lives in the data instead, and the commit-before-a-session rule.
+- [ ] **Done when:** every screen and window opens as a scene in the editor,
+      all checks pass, and the user has made an edit themselves.
+
+**Working together:** if the user edits in the editor, they commit before
+the next session (or tell Claude), and Claude starts each session with
+`git status`, so the two never overwrite each other. The editor also adds
+`.uid` / `.import` files and may rewrite scenes when saving: commit those.
+
 ### M6 Everything around the run (~3-4 sessions)
 - [ ] Welcome, tour and hints, settings, item reference, pins, trophies,
       history, saved layouts and Combo Lab, dev mode
+- New screens are built as scenes from the start (M5.5 rules).
 
 ### M7 Mini-games (size unknown; decide first)
 - [ ] Decide which of the 8 to keep. Then port them one at a time.
@@ -433,6 +508,8 @@ to the user. Rough sizes are in sessions and are guesses.
 ### M8 Polish (ongoing)
 - [ ] Animations (crafting, travel, reveals), screen transitions, sound and
       music, haptics, a loading screen, performance on an older phone
+- Animations move to AnimationPlayer timelines in the scenes, so the user
+  can tune timing in the editor.
 
 ### M9 Release and cutover (~2-3 sessions plus store review time)
 - [ ] Android: export templates, a signing key, Play Console listing, testing track
@@ -467,6 +544,12 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-15: Styling is code (`Tok` helpers + components), not a Theme
   .tres: every CSS value sits next to the component using it, and the
   comparison checks it.
+- 2026-11-17: **Reverses "styling is code":** the user wants to edit the
+  game in the Godot editor. Screens and windows become scenes, repeated
+  pieces become scenes placed by code, layout numbers are `@export`ed, and
+  colours / fonts live in `ui/theme/tokens.tres` (M5.5, before M6). Rules
+  and data stay in code. The HTML comparison still runs on every converted
+  screen while the HTML reference exists.
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
   are exported from the running game, never copied; no old-save migration;
   no pixel-difference overlay; comparison page built in M2.
