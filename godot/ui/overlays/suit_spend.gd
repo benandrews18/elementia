@@ -55,10 +55,11 @@ func _build() -> void:
 	var x := clampf(anchor.get_center().x - w / 2, 8, size.x - w - 8)
 	_balloon.position = Vector2(x, anchor.position.y - h - 12 if above else anchor.end.y + 12)
 	var tail_x := clampf(anchor.get_center().x - x, 14, w - 14)
-	_balloon.draw.connect(func():  # the bubble and its diamond tail
+	var bal := _balloon  # this balloon, not whichever _balloon is newest when it draws
+	bal.draw.connect(func():  # the bubble and its diamond tail
 		var ty := h if above else 0.0
-		_balloon.draw_colored_polygon(PackedVector2Array([Vector2(tail_x - 9, ty), Vector2(tail_x, ty + (9 if above else -9)), Vector2(tail_x + 9, ty)]), Tok.CARD)
-		_balloon.draw_style_box(Tok.box(Tok.CARD, 16, 2, Tok.LINE, 14, 10, Color(0, 0, 0, 0.4)), Rect2(Vector2.ZERO, _balloon.size)))
+		bal.draw_colored_polygon(PackedVector2Array([Vector2(tail_x - 9, ty), Vector2(tail_x, ty + (9 if above else -9)), Vector2(tail_x + 9, ty)]), Tok.CARD)
+		bal.draw_style_box(Tok.box(Tok.CARD, 16, 2, Tok.LINE, 14, 10, Color(0, 0, 0, 0.4)), Rect2(Vector2.ZERO, bal.size)))
 	add_child(_balloon)
 	var reserved := _reserved()
 	for ri in rows.size():

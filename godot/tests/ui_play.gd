@@ -227,15 +227,17 @@ func _market(app: App) -> void:
 		var el: String = Data.t("SUIT_CORE_ELEMENTS").get(su, Data.t("SUIT_CORE_ELEMENTS").values()[0])[0]
 		Game.state.elements[el] = Catalog.count(Game.state, el) + cost[su]
 	_squares_reset(app)
-	app._on_hub("market")
+	if app.panel != "market":  # the row's own tray may still be open (the button would close it)
+		app._on_hub("market")
 	var bench := MarketCraft.open(app, name)
 	var shop_row: ShopRow = bench._bench.get_children().filter(func(c): return c is ShopRow)[0]
+	var plays := app.market_plays
 	shop_row.on_craft.call(name, Rect2(100, 400, 60, 35))  # its Craft button
 	if not Game.suit_cost_need(name).is_empty():
 		_pay_balloon(app, Game.suit_cost_need(name))
 	check(Catalog.owns(Game.state, name), "crafted %s from its Market square" % name)
 	check(await _until(func(): return not is_instance_valid(bench) or bench.is_queued_for_deletion()), "the Crafting Bench closes once it's made")
-	check(await _until(func(): return app._market_playing), "the square bounces in the open tray")
+	check(await _until(func(): return app.market_plays > plays), "the square bounces in the open tray")
 	check(await _until(func(): return not app._market_playing), "and the tray settles")
 	app.close_panel()
 	finished.market = true

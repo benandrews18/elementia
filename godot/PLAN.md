@@ -19,6 +19,10 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-17: M5.5 steps 0-1 (before/after check; colours in tokens.tres).
+  Fixed on the way: the suit-spend balloon drew on its replacement (Godot
+  errors), the Market's auto-close could shut a tray the player reopened,
+  and ui_play's Market-bounce check was flaky (now a play counter).
 - 2026-11-17: Planned M5.5 (screens, windows and repeated pieces as scenes,
   layout numbers in the Inspector, colours in tokens.tres) with the user,
   before M6. Reverses the "styling is code" decision.

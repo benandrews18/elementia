@@ -9,6 +9,7 @@ var panel := ""  # "", "drawer" (the Display Mat), "convert", "market" or "todo"
 var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
 var _squares_card := ""  # the card _squares is for (a new run or a load starts afresh)
 var _market_playing := false
+var market_plays := 0  # how often the Market's moment has played (tests read it)
 var _screen: Control
 var _screen_name := ""
 var _panel_node: Control
@@ -73,6 +74,7 @@ func _market_check() -> void:
 
 func _market_sequence(fresh: Array, lines: Array) -> void:
 	_market_playing = true
+	market_plays += 1
 	var opened := panel != "market"
 	if opened:
 		open_panel("market")
@@ -105,7 +107,7 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		_market_playing = false
 	if opened:
 		await get_tree().create_timer(1.6).timeout
-		if panel == "market":
+		if _panel_node == tray:  # the tray this opened (not one the player reopened since)
 			close_panel()
 	_maybe_end()
 
