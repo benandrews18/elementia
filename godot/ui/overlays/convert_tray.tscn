@@ -1,0 +1,98 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/convert_tray.gd" id="1"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_900.tres" id="f9"]
+
+[sub_resource type="StyleBoxFlat" id="tray"]
+bg_color = Color(0.105882, 0.203922, 0.27451, 1)
+border_width_top = 3
+border_color = Color(0.886275, 0.698039, 0.352941, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+
+[sub_resource type="StyleBoxFlat" id="arrow_on"]
+bg_color = Color(1, 1, 1, 0.08)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 0.5)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="arrow_off"]
+bg_color = Color(1, 1, 1, 0.08)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 0.2)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[node name="ConvertTray" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+arrow_on = SubResource("arrow_on")
+arrow_off = SubResource("arrow_off")
+
+[node name="Scrim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.35)
+
+[node name="Tray" type="Panel" parent="."]
+layout_mode = 0
+offset_top = 450.0
+offset_right = 390.0
+offset_bottom = 844.0
+theme_override_styles/panel = SubResource("tray")
+
+[node name="Title" type="Label" parent="Tray"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 14.0
+offset_bottom = 38.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 17
+text = "Convert Elements"
+horizontal_alignment = 1
+
+[node name="Content" type="Control" parent="Tray"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Arrow" type="Panel" parent="Tray"]
+layout_mode = 0
+offset_left = 169.0
+offset_top = 200.0
+offset_right = 221.0
+offset_bottom = 252.0
+
+[node name="Rate" type="Label" parent="Tray"]
+layout_mode = 0
+offset_left = 159.0
+offset_top = 260.0
+offset_right = 231.0
+offset_bottom = 284.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("f9")
+theme_override_font_sizes/font_size = 20
+text = "3:1"
+horizontal_alignment = 1

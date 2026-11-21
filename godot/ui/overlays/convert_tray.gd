@@ -7,26 +7,39 @@
 class_name ConvertTray
 extends Control
 
+## The layout is ui/overlays/convert_tray.tscn (the tray, its title, the
+## arrow's two looks, "3:1"); this lays out the elements held.
+const SCENE := "res://ui/overlays/convert_tray.tscn"
 const TOP_PAD := 14.0
 const NAVY := Color("#1b3446")
 
+@export var arrow_on: StyleBox  # FROM and TO are set: tap to convert
+@export var arrow_off: StyleBox
+
 var from := ""
 var to := ""
-var _body: Control
 var _to_box: Control
+var _ready_now := false
+
+
+static func make() -> ConvertTray:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.scrim(self)
-	_body = Control.new()
-	add_child(_body)
+	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
+	$Tray/Arrow.gui_input.connect(func(ev): if _tap(ev) and _ready_now: do_convert())
 	Game.state_changed.connect(_redraw)
 	_redraw()
 
 
 func _redraw() -> void:
-	for c in _body.get_children():
+	var tray: Control = $Tray
+	var content: Control = $Tray/Content
+	for c in content.get_children():
+		c.queue_free()
+	for c in $Tray/Arrow.get_children():
 		c.queue_free()
 	var w := size.x
 	var held: Array = Game.state.elements.keys().filter(func(k): return Game.state.elements[k] > 0)
@@ -38,24 +51,9 @@ func _redraw() -> void:
 	var big := minf(110.0, (w - 32 - 72 - 40) / 2)
 	var grid_y := TOP_PAD + 26 + 30 + 10  # under the title and the "?" counter
 	var h := grid_y + grid_h + 26 + big + 30 + 20
-	var top := size.y - HubBar.H - h
-	var tray := Panel.new()
-	var sb := Tok.box(NAVY, 18, 0)
-	sb.border_width_top = 3
-	sb.border_color = Tok.GOLD
-	sb.corner_radius_bottom_left = 0
-	sb.corner_radius_bottom_right = 0
-	tray.add_theme_stylebox_override("panel", sb)
-	tray.position = Vector2(0, top)
+	tray.position = Vector2(0, size.y - HubBar.H - h)
 	tray.size = Vector2(w, h + HubBar.H)
-	tray.mouse_filter = MOUSE_FILTER_STOP
-	_body.add_child(tray)
-	var title := Tok.label("Convert Elements", 17, Color.WHITE, 800)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.position = Vector2(0, TOP_PAD)
-	title.size = Vector2(w, 24)
-	tray.add_child(title)
-	tray.add_child(_unknown_badge(Vector2(w - 16 - 54, TOP_PAD + 26)))
+	content.add_child(_unknown_badge(Vector2(w - 16 - 54, TOP_PAD + 26)))
 	# The quick grid: a tap on an element with 3+ sets FROM.
 	var y := grid_y
 	for i in held.size():
@@ -67,7 +65,7 @@ func _redraw() -> void:
 			b.gui_input.connect(func(ev): if _tap(ev):
 				from = sym
 				_redraw())
-		tray.add_child(b)
+		content.add_child(b)
 	y += grid_h + 26
 	# FROM (with two cards stacked behind it), the arrow, TO.
 	var fx := (w - (big * 2 + 72 + 40)) / 2
@@ -77,30 +75,22 @@ func _redraw() -> void:
 			var ghost := _big_box(from, big)
 			ghost.position = Vector2(fx - k * 8, y + k * 8)
 			ghost.mouse_filter = MOUSE_FILTER_IGNORE
-			tray.add_child(ghost)
+			content.add_child(ghost)
 	from_box.position = Vector2(fx, y)
 	from_box.gui_input.connect(func(ev): if _tap(ev): _pick("from"))
-	tray.add_child(from_box)
-	var ready := from != "" and to != "" and from != to and Catalog.count(Game.state, from) >= int(Data.t("CONVERT_RATE"))
-	var arrow := Panel.new()
-	arrow.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.08), 26, 3, Color(1, 1, 1, 0.5 if ready else 0.2)))
-	arrow.size = Vector2(52, 52)
+	content.add_child(from_box)
+	_ready_now = from != "" and to != "" and from != to and Catalog.count(Game.state, from) >= int(Data.t("CONVERT_RATE"))
+	var arrow: Panel = $Tray/Arrow
+	arrow.add_theme_stylebox_override("panel", arrow_on if _ready_now else arrow_off)
 	arrow.position = Vector2(fx + big + 20 + 10, y + big / 2 - 34)
-	var ar := _arrow_glyph(Color.WHITE if ready else Color(1, 1, 1, 0.35))
+	var ar := _arrow_glyph(Color.WHITE if _ready_now else Color(1, 1, 1, 0.35))
 	ar.position = Vector2(14, 14)
 	arrow.add_child(ar)
-	if ready:
-		arrow.gui_input.connect(func(ev): if _tap(ev): do_convert())
-	tray.add_child(arrow)
-	var rate := Tok.label("3:1", 20, Color.WHITE, 900)
-	rate.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rate.position = Vector2(arrow.position.x - 10, arrow.position.y + 60)
-	rate.size = Vector2(72, 24)
-	tray.add_child(rate)
+	$Tray/Rate.position = Vector2(arrow.position.x - 10, arrow.position.y + 60)
 	var to_box := _big_box(to, big)
 	to_box.position = Vector2(fx + big + 72 + 40 - 0, y)
 	to_box.gui_input.connect(func(ev): if _tap(ev): _pick("to"))
-	tray.add_child(to_box)
+	content.add_child(to_box)
 	_to_box = to_box
 
 
