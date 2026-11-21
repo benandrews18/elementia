@@ -13,7 +13,7 @@ func _ready() -> void:
 	super()
 	$Window/Content/Tips.on = Progress.prefs.get("guidedTutorialEnabled", true) != false
 	$Window/Content/SaveRow/Save.set_meta("button", true)
-	$Window/Content/SaveRow/Save.gui_input.connect(func(ev): if _tap(ev): _save())
+	$Window/Content/SaveRow/Save.gui_input.connect(func(ev): if Tap.tap(ev): _save())
 
 
 func _save() -> void:

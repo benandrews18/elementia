@@ -26,7 +26,7 @@ static func open(on: Control, s: String) -> ElementCard:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	for n in [$Dim, $Card]:
-		n.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
+		n.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
 	var card: Panel = $Card

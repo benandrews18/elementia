@@ -57,7 +57,7 @@ func _ready() -> void:
 
 
 func _gui_input(ev: InputEvent) -> void:
-	if ev is InputEventMouseButton and not ev.pressed and Time.get_ticks_msec() - _ready_at >= 2000 / Engine.time_scale:
+	if Tap.tap(ev) and Time.get_ticks_msec() - _ready_at >= 2000 / Engine.time_scale:
 		queue_free()
 		on_done.call()
 

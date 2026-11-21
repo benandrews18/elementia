@@ -40,7 +40,7 @@ static func open(on: Control, scene: String, vals := {}) -> ParchDialog:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	if has_node("Dim"):
-		$Dim.gui_input.connect(func(ev): if _tap(ev) and dim_closes: close())
+		$Dim.gui_input.connect(func(ev): if Tap.tap(ev) and dim_closes: close())
 	_wire(self)
 	_fill(self)
 	$Window/Content.minimum_size_changed.connect(_layout)
@@ -54,7 +54,7 @@ func _wire(n: Node) -> void:
 		if c is Control and c.name in ["Close", "Ok", "Hide"]:
 			var nm: String = c.name
 			c.mouse_filter = MOUSE_FILTER_STOP
-			c.gui_input.connect(func(ev): if _tap(ev):
+			c.gui_input.connect(func(ev): if Tap.tap(ev):
 				if nm == "Hide" and tip_id != "":
 					Progress.hide_tip(tip_id)
 				close())
@@ -64,7 +64,7 @@ func _wire(n: Node) -> void:
 		elif c is Control and c.has_meta("button"):  # any other tappable: meta "button"
 			var nm3: String = c.name
 			c.mouse_filter = MOUSE_FILTER_STOP
-			c.gui_input.connect(func(ev): if _tap(ev): pressed.emit(nm3))
+			c.gui_input.connect(func(ev): if Tap.tap(ev): pressed.emit(nm3))
 		_wire(c)
 
 
@@ -87,9 +87,6 @@ static func emojify(text: String, px: int) -> String:
 		text = text.replace(m.get_string(), "[img=%dx%d]%s[/img]" % [px, px, tex.resource_path] if tex else "")
 	return text
 
-
-static func _tap(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
 
 
 func close() -> void:

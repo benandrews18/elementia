@@ -71,7 +71,7 @@ func _ready() -> void:
 	if can:
 		btn.add_theme_stylebox_override("normal", can_style)
 		btn.mouse_filter = MOUSE_FILTER_STOP
-		btn.gui_input.connect(func(ev): if _released(ev): on_craft.call(e.name, btn.get_global_rect()))
+		btn.gui_input.connect(func(ev): if Tap.tap(ev): on_craft.call(e.name, btn.get_global_rect()))
 	else:
 		btn.add_theme_color_override("font_color", locked_color)
 		btn.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
@@ -88,7 +88,7 @@ func _ready() -> void:
 	pin.modulate.a = 1.0 if pinned else 0.5
 	if not pinned:
 		$Pin/Icon.material = Tok.grey()
-	pin.gui_input.connect(func(ev): if _released(ev): on_pin.call(e.name))
+	pin.gui_input.connect(func(ev): if Tap.tap(ev): on_pin.call(e.name))
 
 
 ## The recipe tokens: elements first (declared order), then items by points,
@@ -162,6 +162,3 @@ func _recipe(at: Vector2) -> void:
 			$Recipe.add_child(t)
 		x += w
 
-
-static func _released(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed

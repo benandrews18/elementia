@@ -250,7 +250,7 @@ func _page_controls(page: Control) -> void:
 		tab.set_meta("cmp", "tab:" + t[0])
 		tab.mouse_filter = MOUSE_FILTER_STOP
 		var to: String = "elements" if t[0] == "Elements" else "mat"
-		tab.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+		tab.gui_input.connect(func(ev): if Tap.tap(ev):
 			view = to
 			_redraw())
 		_body.add_child(tab)
@@ -263,7 +263,7 @@ func _page_controls(page: Control) -> void:
 	help.size = Vector2(34, 34)
 	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
 	help.set_meta("cmp", "btn:rules")
-	help.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: MatRules.show_on(App.current))
+	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: MatRules.show_on(App.current))
 	_body.add_child(help)
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
@@ -431,7 +431,7 @@ func _sel_bench(y: float) -> float:
 	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	close.position = Vector2(size.x - 8 - 34, y + bench.size.y + 2 - 34)
 	close.size = Vector2(34, 34)
-	close.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+	close.gui_input.connect(func(ev): if Tap.tap(ev):
 		selected = ""
 		_redraw())
 	_body.add_child(close)
@@ -461,7 +461,7 @@ func _sel_bench(y: float) -> float:
 			b.modulate = Color(0.55, 0.55, 0.55, 0.6)
 		else:
 			b.mouse_filter = MOUSE_FILTER_STOP
-			b.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+			b.gui_input.connect(func(ev): if Tap.tap(ev):
 				var msg := Game.toggle_mat_card(selected)
 				if msg != "":
 					_show_toast(msg))
@@ -530,7 +530,7 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	if o != null:
 		chips.append(_order_chip(o, sc))
 		chips[-1].set_meta("combo", "order")
-		chips[-1].gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: OrderInfo.open(App.current))
+		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
 	for g in sc.sigs:
 		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))
 	for g in sc.combos.station:

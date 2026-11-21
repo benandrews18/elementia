@@ -29,9 +29,9 @@ static func make() -> LockInReward:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Dim.gui_input.connect(func(ev): if _tap(ev): _done())
-	$Window/Nice.gui_input.connect(func(ev): if _tap(ev): _done())
-	$Window/Help.gui_input.connect(func(ev): if _tap(ev):
+	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): _done())
+	$Window/Nice.gui_input.connect(func(ev): if Tap.tap(ev): _done())
+	$Window/Help.gui_input.connect(func(ev): if Tap.tap(ev):
 		$Window/Why.visible = not $Window/Why.visible
 		_layout())
 	var w := minf(420, size.x - 40)
@@ -52,7 +52,7 @@ func _ready() -> void:
 		var sq := unknown_square(34)
 		sq.position = Vector2(lx + tw + 10, 0)
 		sq.mouse_filter = MOUSE_FILTER_STOP
-		sq.gui_input.connect(func(ev): if _tap(ev):
+		sq.gui_input.connect(func(ev): if Tap.tap(ev):
 			$Window/Hint.visible = not $Window/Hint.visible
 			_layout())
 		$Window/Unknown.add_child(sq)
@@ -62,9 +62,6 @@ func _ready() -> void:
 	nice.position.x = (w - nice.size.x) / 2
 	_layout()
 
-
-static func _tap(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
 
 
 func _done() -> void:

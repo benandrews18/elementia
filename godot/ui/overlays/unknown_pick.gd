@@ -21,7 +21,7 @@ static func open(on: Control) -> UnknownPick:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
+	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	var at = Game.ctx.current if Game.ctx.current else Game.state.get("lastStation")
 	if not at:
 		queue_free()
@@ -54,7 +54,7 @@ func _ready() -> void:
 		var c := StationScreen.element_chip(sym, cw)
 		c.position = Vector2(x0 + i * (cw + chip_gap), 0)
 		c.mouse_filter = MOUSE_FILTER_STOP
-		c.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+		c.gui_input.connect(func(ev): if Tap.tap(ev):
 			queue_free()
 			Game.spend_unknown(sym))
 		chips.add_child(c)

@@ -24,7 +24,7 @@ static func open(on: Control, name: String) -> MarketCraft:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
+	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	Game.state_changed.connect(_redraw)
 	_redraw()
 

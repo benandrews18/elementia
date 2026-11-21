@@ -40,6 +40,6 @@ func _ready() -> void:
 	var nice: Control = $Window/Nice
 	var nt: Label = nice.get_node("Text")
 	nice.size.x = nt.get_theme_font("font").get_string_size(nt.text, HORIZONTAL_ALIGNMENT_LEFT, -1, nt.get_theme_font_size("font_size")).x + 44
-	nice.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	nice.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		on_done.call())

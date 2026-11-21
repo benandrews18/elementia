@@ -28,7 +28,7 @@ static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	var win: ParchmentWindow = $Window
 	if title != "":
 		win.title = title
@@ -48,10 +48,10 @@ func _ready() -> void:
 	for b in [$Window/Content/Buttons/Yes, $Window/Content/Buttons/Cancel]:
 		var l: Label = b if b is Label else b.get_node("Text")
 		b.custom_minimum_size = Vector2(l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x + 44, 46)
-	$Window/Content/Buttons/Yes.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
+	$Window/Content/Buttons/Yes.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		on_yes.call())
-	$Window/Content/Buttons/Cancel.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	$Window/Content/Buttons/Cancel.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	# The content's height from its parts (a wrapping label reports a huge minimum).
 	var content_h: float = msg.custom_minimum_size.y + content.get_theme_constant("separation") + $Window/Content/Buttons.get_combined_minimum_size().y
 	content.size = Vector2(inner, content_h)

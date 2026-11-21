@@ -28,7 +28,7 @@ static func make() -> TodoTray:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
+	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
 	var w := minf(400, size.x * 0.92)
 	$Tray.size = Vector2(w, size.y - HubBar.H)
 	_scroll.size = $Tray.size - Vector2(3, 3)
@@ -81,7 +81,7 @@ func _hint_button(y: float) -> float:
 	var l := Tok.label(text, 13, Color("#b3becd"), 800)
 	l.position = Vector2(36, 6)
 	b.add_child(l)
-	b.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
 		hint_open = not hint_open
 		if hint_open:
 			_open_hint_paths()
@@ -181,7 +181,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 		Color("#4fbf7a") if owned else Color("#c9a571"), 4, 2, Color(0, 0, 0, 0.3)))
 	card.position = at
 	card.mouse_filter = MOUSE_FILTER_PASS
-	card.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current: App.current.show_card(e.name))  # its card
+	card.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(e.name))  # its card
 	_list.add_child(card)
 	var tack := Panel.new()  # the red pushpin at the top
 	tack.add_theme_stylebox_override("panel", Tok.box(Color("#d9483c"), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.4)))
@@ -237,7 +237,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 	var tl := Tok.label("Hide full breakdown" if open else "Full breakdown", 11.5, Color("#8a5a1a"), 800)
 	tl.position = Vector2(16, 1)
 	tog.add_child(tl)
-	tog.gui_input.connect(func(ev): if ConvertTray._tap(ev): _toggle(path))
+	tog.gui_input.connect(func(ev): if Tap.tap(ev): _toggle(path))
 	card.add_child(tog)
 	card.add_child(_pin_button(e.name, Vector2(w - 48, 14)))
 	var h := 88.0
@@ -261,7 +261,7 @@ func _pin_button(name: String, at: Vector2) -> Control:
 	if not pinned:
 		ic.material = Tok.grey()
 	b.add_child(ic)
-	b.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.toggle_pin(name)
 		Game._changed())
 	return b

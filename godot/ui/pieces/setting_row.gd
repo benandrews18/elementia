@@ -58,7 +58,7 @@ static func make(plain := false) -> SettingRow:
 func _ready() -> void:
 	$Switch.draw.connect(_draw_switch)
 	if not Engine.is_editor_hint():
-		gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed:
+		gui_input.connect(func(ev): if Tap.tap(ev):
 			if is_switch:
 				on = not on
 				toggled.emit(on)

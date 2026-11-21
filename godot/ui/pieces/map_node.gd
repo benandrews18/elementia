@@ -35,7 +35,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	set_meta("cmp", "map:" + station)
-	gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: tapped.emit(station))
+	gui_input.connect(func(ev): if Tap.tap(ev): tapped.emit(station))
 	# "YOU ARE HERE" fits its text (in the label's own font and size).
 	var pill: Control = $HerePill
 	var l: Label = $HerePill/Label

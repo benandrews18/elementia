@@ -147,5 +147,5 @@ static func _badge(text: String, at: Vector2) -> Control:
 
 
 func _tap(ev: InputEvent, id: String) -> void:
-	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed:
+	if Tap.tap(ev):
 		pressed.emit(id)

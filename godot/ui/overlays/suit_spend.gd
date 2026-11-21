@@ -31,7 +31,7 @@ static func make() -> SuitSpend:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())  # tap outside
+	gui_input.connect(func(ev): if Tap.tap(ev): queue_free())  # tap outside
 	_balloon.draw.connect(func():  # the bubble and its diamond tail
 		var ty := _balloon.size.y if _above else 0.0
 		var col: Color = bubble.bg_color if bubble is StyleBoxFlat else Tok.CARD
@@ -129,7 +129,7 @@ func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 		pk.size = Vector2(22, 22)
 		c.add_child(pk)
 	if not inert:
-		c.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: _tap(sym, suit, avail))
+		c.gui_input.connect(func(ev): if Tap.tap(ev): _tap(sym, suit, avail))
 	return c
 
 

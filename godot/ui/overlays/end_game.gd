@@ -184,11 +184,11 @@ func _foot(inner: float) -> Control:
 	var review: Control = $Window/Foot/Review
 	go_on.visible = _completing
 	review.visible = not _completing
-	go_on.gui_input.connect(func(ev): if LockInReward._tap(ev): queue_free())
-	$Window/Foot/NewGame.gui_input.connect(func(ev): if LockInReward._tap(ev):
+	go_on.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
+	$Window/Foot/NewGame.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		App.current.new_game())
-	review.gui_input.connect(func(ev): if LockInReward._tap(ev):
+	review.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		App.current.open_panel("drawer"))
 	var x := 0.0

@@ -36,8 +36,8 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var star := Tok.star(Color("#f5b400"), 14)  # drawn: Nunito has no ★
 	$Confirm/Star.add_child(star)
-	$Confirm/Back.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and not _busy: _choice())
-	$Confirm/Start.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _start(_shown_name, _card))
+	$Confirm/Back.gui_input.connect(func(ev): if Tap.tap(ev) and not _busy: _choice())
+	$Confirm/Start.gui_input.connect(func(ev): if Tap.tap(ev): _start(_shown_name, _card))
 	_choice()
 
 
@@ -94,7 +94,7 @@ func _cell(name: String, sz: float) -> Control:
 	n.size = Vector2(sz, 12)
 	n.clip_text = true
 	c.add_child(n)
-	c.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _confirm(name))
+	c.gui_input.connect(func(ev): if Tap.tap(ev): _confirm(name))
 	return c
 
 

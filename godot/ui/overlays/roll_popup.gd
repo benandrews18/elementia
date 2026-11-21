@@ -129,7 +129,7 @@ func _chip(r: Dictionary) -> Control:
 ## Collect: each chip flies to the Inventory button, shrinking into it; the
 ## card fades away underneath.
 func _on_collect(ev: InputEvent) -> void:
-	if not (ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed) or not _collect.visible:
+	if not Tap.tap(ev) or not _collect.visible:
 		return
 	_collect.visible = false
 	var fade := create_tween()

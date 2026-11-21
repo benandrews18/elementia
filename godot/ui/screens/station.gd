@@ -335,7 +335,7 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
 	gear.size = Vector2(46, 46)
 	gear.set_meta("cmp", "settings")
-	gear.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: App.current.open_settings())
+	gear.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_settings())
 	if settings:
 		on.add_child(gear)
 	# Convert: on screen once any element is held (state.convertRevealed in
@@ -349,7 +349,7 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 		conv.position = Vector2(w - 16 - 58, on.size.y - HubBar.H - 14 - 58)
 		conv.size = Vector2(58, 58)
 		conv.set_meta("cmp", "convert")
-		conv.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current:
+		conv.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
 			if App.current.panel == "convert":
 				App.current.close_panel()
 			else:

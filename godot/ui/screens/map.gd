@@ -181,7 +181,7 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 ## A tap on c opens an item's card (or an element's).
 static func _opens(c: Control, item: String, element := "") -> void:
 	c.mouse_filter = MOUSE_FILTER_STOP
-	c.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current:
+	c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
 		if element != "":
 			App.current.show_element_card(element)
 		else:

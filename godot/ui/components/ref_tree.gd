@@ -94,7 +94,7 @@ func node(parent: Control, name: String, kind: String, path: String, seen: Dicti
 	box.position = Vector2(x0, at.y)
 	box.size = Vector2(row_w - (x0 - at.x), ROW)
 	box.mouse_filter = Control.MOUSE_FILTER_STOP
-	box.gui_input.connect(func(ev): if ConvertTray._tap(ev): on_toggle.call(path))
+	box.gui_input.connect(func(ev): if Tap.tap(ev): on_toggle.call(path))
 	parent.add_child(box)
 	var arr := arrow(open, look.ink)
 	arr.position = Vector2(12, 20)
@@ -170,7 +170,7 @@ func pin_button(name: String, at: Vector2) -> Control:
 	if not pinned:
 		ic.material = Tok.grey()
 	b.add_child(ic)
-	b.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.toggle_pin(name)
 		Game._changed())
 	return b

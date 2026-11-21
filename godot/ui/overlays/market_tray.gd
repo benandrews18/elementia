@@ -24,7 +24,7 @@ static func make() -> MarketTray:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
+	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
 	Game.state_changed.connect(_redraw)
 	_redraw()
 
@@ -176,12 +176,12 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	if not pinned:
 		pic.material = Tok.grey()
 	pin.add_child(pic)
-	pin.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	pin.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.toggle_pin(name)
 		Game._changed())
 	c.add_child(pin)
 	if e != null:  # not yet owned: craft it from here; else its card
-		c.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+		c.gui_input.connect(func(ev): if Tap.tap(ev):
 			if not inspect and not owned:
 				MarketCraft.open(App.current, name)
 			else:

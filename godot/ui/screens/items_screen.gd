@@ -107,7 +107,7 @@ func _redraw() -> void:
 			row = RefRow.make()
 			row.fill(e, w, open, tree)
 			row.set_meta("search", RefRow.search_text(e))
-			row.gui_input.connect(func(ev): if ConvertTray._tap(ev): tree.on_toggle.call(path))
+			row.gui_input.connect(func(ev): if Tap.tap(ev): tree.on_toggle.call(path))
 		kept[e.name] = [row, sig if not open else []]
 		var table: Control = $Scroll/Page/PinTable if pinned else $Scroll/Page/Table
 		if row.get_parent() != table:

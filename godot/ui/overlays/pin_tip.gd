@@ -36,8 +36,8 @@ func _ready() -> void:
 	var ot: Label = ok.get_node("Text")
 	ok.size.x = ot.get_theme_font("font").get_string_size(ot.text, HORIZONTAL_ALIGNMENT_LEFT, -1, ot.get_theme_font_size("font_size")).x + 44
 	ok.position.x = (w - ok.size.x) / 2
-	ok.gui_input.connect(func(ev): if ConvertTray._tap(ev): _done())
-	$Window/Hide.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	ok.gui_input.connect(func(ev): if Tap.tap(ev): _done())
+	$Window/Hide.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.hide_tip("pinTip")
 		_done())
 

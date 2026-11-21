@@ -28,8 +28,8 @@ static func make() -> ConvertTray:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
-	$Tray/Arrow.gui_input.connect(func(ev): if _tap(ev) and _ready_now: do_convert())
+	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
+	$Tray/Arrow.gui_input.connect(func(ev): if Tap.tap(ev) and _ready_now: do_convert())
 	Game.state_changed.connect(_redraw)
 	_redraw()
 
@@ -62,7 +62,7 @@ func _redraw() -> void:
 		var b := box(sym, cell, "%d" % int(Game.state.elements[sym]), 1.0 if ok else 0.45)
 		b.position = Vector2(16 + (i % 8) * (cell + 6), y + (i / 8) * (cell + 16 + 6))
 		if ok:
-			b.gui_input.connect(func(ev): if _tap(ev):
+			b.gui_input.connect(func(ev): if Tap.tap(ev):
 				from = sym
 				_redraw())
 		content.add_child(b)
@@ -77,7 +77,7 @@ func _redraw() -> void:
 			ghost.mouse_filter = MOUSE_FILTER_IGNORE
 			content.add_child(ghost)
 	from_box.position = Vector2(fx, y)
-	from_box.gui_input.connect(func(ev): if _tap(ev): _pick("from"))
+	from_box.gui_input.connect(func(ev): if Tap.tap(ev): _pick("from"))
 	content.add_child(from_box)
 	_ready_now = from != "" and to != "" and from != to and Catalog.count(Game.state, from) >= int(Data.t("CONVERT_RATE"))
 	var arrow: Panel = $Tray/Arrow
@@ -89,13 +89,10 @@ func _redraw() -> void:
 	$Tray/Rate.position = Vector2(arrow.position.x - 10, arrow.position.y + 60)
 	var to_box := _big_box(to, big)
 	to_box.position = Vector2(fx + big + 72 + 40 - 0, y)
-	to_box.gui_input.connect(func(ev): if _tap(ev): _pick("to"))
+	to_box.gui_input.connect(func(ev): if Tap.tap(ev): _pick("to"))
 	content.add_child(to_box)
 	_to_box = to_box
 
-
-static func _tap(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
 
 
 ## An element box with a caption under it (the count, "×n"); faded = alpha.
@@ -167,7 +164,7 @@ func _unknown_badge(at: Vector2) -> Control:
 	l.position = Vector2(32, 4)
 	b.add_child(l)
 	if n > 0:
-		b.gui_input.connect(func(ev): if _tap(ev):
+		b.gui_input.connect(func(ev): if Tap.tap(ev):
 			var app := App.current
 			app.close_panel()
 			UnknownPick.open(app))

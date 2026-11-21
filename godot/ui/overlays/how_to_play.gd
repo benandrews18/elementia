@@ -60,9 +60,9 @@ static func play(on: Control, then_do: Callable, force := false) -> void:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_dot_off = $Card/Dots/Dot0.get_theme_stylebox("panel")
-	$Card/Slide.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
-	$Card/Next.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
-	$Card/Hide.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+	$Card/Slide.gui_input.connect(func(ev): if Tap.tap(ev): _next())
+	$Card/Next.gui_input.connect(func(ev): if Tap.tap(ev): _next())
+	$Card/Hide.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.hide_tip("classicTut")
 		_next(true))
 	_show()

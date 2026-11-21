@@ -25,8 +25,8 @@ static func make() -> ElementPicker:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
-	$Window/Close.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
+	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
+	$Window/Close.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	var is_from := side == "from"
 	if not is_from:
 		$Window/Kicker.text = to_kicker
@@ -53,7 +53,7 @@ func _ready() -> void:
 		cap.add_theme_color_override("font_color", Color("#3b2412"))
 		b.position = Vector2((i % 4) * (cell + gap.x), (i / 4) * (cell + 22 + gap.y))
 		if ok:
-			b.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+			b.gui_input.connect(func(ev): if Tap.tap(ev):
 				queue_free()
 				on_pick.call(sym))
 		grid.add_child(b)

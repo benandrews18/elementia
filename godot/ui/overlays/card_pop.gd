@@ -34,14 +34,14 @@ static func open(on: Control, name: String) -> CardPop:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	for n in [$Dim, $Card, $Close]:
-		n.gui_input.connect(func(ev): if _tap(ev): queue_free())
-	$Actions/Pin.gui_input.connect(func(ev): if _tap(ev):
+		n.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
+	$Actions/Pin.gui_input.connect(func(ev): if Tap.tap(ev):
 		Progress.toggle_pin(entry.name)
 		Game._changed()
 		_show_pin())
 	$Actions/Back.mouse_filter = MOUSE_FILTER_STOP
-	$Actions/Back.gui_input.connect(func(ev): if _tap(ev) and not _back.is_empty(): show_item(_back.pop_back().name, true))
-	$Actions/Info.gui_input.connect(func(ev): if _tap(ev) and App.current:  # its row on the Items screen
+	$Actions/Back.gui_input.connect(func(ev): if Tap.tap(ev) and not _back.is_empty(): show_item(_back.pop_back().name, true))
+	$Actions/Info.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:  # its row on the Items screen
 		var name: String = entry.name
 		queue_free()
 		App.current.open_items(name))
@@ -51,9 +51,6 @@ func _ready() -> void:
 		a.draw_line(Vector2(4, y), Vector2(a.size.x - 2, y), Tok.INK, 3.5, true)
 		a.draw_polyline(PackedVector2Array([Vector2(12, y - 8), Vector2(4, y), Vector2(12, y + 8)]), Tok.INK, 3.5, true))
 
-
-static func _tap(ev: InputEvent) -> bool:
-	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
 
 
 ## Shows an item's card; keep_back: drilling in or Back (the back stack stays).
@@ -222,7 +219,7 @@ func _element(sym: String, small: bool) -> Control:
 	var tw := l.get_theme_font("font").get_string_size(sym, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	l.size = Vector2(tw + (10.0 if small else 18.0) + 4, px + (6.0 if small else 10.0) + 4)
 	l.mouse_filter = MOUSE_FILTER_STOP
-	l.gui_input.connect(func(ev): if _tap(ev):
+	l.gui_input.connect(func(ev): if Tap.tap(ev):
 		var on := get_parent()
 		queue_free()
 		ElementCard.open(on, sym))
@@ -239,7 +236,7 @@ func _item(name: String, px: float) -> Control:
 		t.position = Vector2(px - 11, -4)
 		c.add_child(t)
 	if Catalog.entry(name) != null:
-		c.gui_input.connect(func(ev): if _tap(ev):
+		c.gui_input.connect(func(ev): if Tap.tap(ev):
 			_back.append(entry)
 			show_item(name, true))
 	return c

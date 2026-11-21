@@ -351,7 +351,14 @@ func _items(app: App) -> void:
 	check(not shown.is_empty() and shown.all(func(r): return String(r.get_meta("search")).contains("steel")), "searching keeps only the matches")
 	scr.get_node("Bar/Search").text_changed.emit("")
 	var row: RefRow = rows.call().filter(func(r): return r.item == "Bridge")[0]
-	row.gui_input.emit(_release())
+	row.gui_input.emit(_press(Vector2(100, 400)))  # a finger that drags the list by this row
+	row.gui_input.emit(_release(Vector2(100, 340)))
+	await get_tree().process_frame
+	check(not TodoTray.expanded.has("refroot/Bridge"), "dragging the list by a row doesn't open it (Tap)")
+	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
+	row.gui_input.emit(_press(Vector2(100, 400)))
+	row.gui_input.emit(_release(Vector2(103, 404)))  # a tap: the finger stayed put
+	Tap._down = null  # the other checks send bare releases
 	await get_tree().process_frame
 	check(TodoTray.expanded.has("refroot/Bridge"), "a tap on a row opens its breakdown")
 	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
@@ -447,10 +454,17 @@ func _settings(app: App) -> void:
 	finished.settings = true
 
 
-func _release() -> InputEventMouseButton:
+func _release(at := Vector2.ZERO) -> InputEventMouseButton:
 	var ev := InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = false
+	ev.global_position = at
+	return ev
+
+
+func _press(at: Vector2) -> InputEventMouseButton:
+	var ev := _release(at)
+	ev.pressed = true
 	return ev
 
 

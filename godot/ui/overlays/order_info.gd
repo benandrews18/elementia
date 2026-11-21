@@ -67,10 +67,10 @@ var _can_swap := false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var tap := func(ev): return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
+	var tap := func(ev): return Tap.tap(ev)
 	$Dim.gui_input.connect(func(ev): if tap.call(ev): queue_free())
 	$Window/Close.gui_input.connect(func(ev): if tap.call(ev): queue_free())
-	$Window/OK.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	$Window/OK.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	# The swap: ↻ and a "?" square (one Unknown Element for another challenge).
 	var sw: Control = $Window/Swap
 	var arrow := Tok.loop_arrow(Color("#3b2412"), 28, true)
@@ -80,7 +80,7 @@ func _ready() -> void:
 	sq.position = Vector2(22 + 28 + 8, 12)
 	sq.mouse_filter = MOUSE_FILTER_IGNORE
 	sw.add_child(sq)
-	sw.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and _can_swap and Game.reroll_order(): _build())
+	sw.gui_input.connect(func(ev): if Tap.tap(ev) and _can_swap and Game.reroll_order(): _build())
 	_build()
 
 
