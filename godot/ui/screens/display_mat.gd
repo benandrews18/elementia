@@ -527,6 +527,10 @@ func _show_toast(msg: String) -> void:
 ## component groups, then the collections star. Returns its height.
 func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	var chips := combo_chips(sc)
+	if chips.is_empty():  # .mm-combo-none, centred in the row's 40px
+		var hint := Tok.label("Three cards alike start a combo", 11.5, Tok.MUTE)
+		hint.position = at + Vector2(0, (40 - hint.get_minimum_size().y) / 2)
+		_body.add_child(hint)
 	# Wrap into rows (gap 8px between rows, 10px between chips).
 	return _place_chips(chips, at, w)
 
