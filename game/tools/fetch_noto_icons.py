@@ -39,7 +39,7 @@ TARGET_HTML = HERE.parent / "elementia.html"
 # The generated icon block lives in the split-out image file (2026-11-05).
 TARGET_ICONS = HERE.parent / "assets" / "images.js"
 
-CDN_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/png/128/"
+CDN_BASE = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/2D/png/128/"  # moved from png/128/ (2026-11)
 START, END = "/*__NOTO_ICONS_START__*/", "/*__NOTO_ICONS_END__*/"
 
 
