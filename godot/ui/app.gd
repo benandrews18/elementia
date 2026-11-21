@@ -184,7 +184,7 @@ func new_game() -> void:
 	tw.tween_callback(func():
 		logo.queue_free()
 		HowToPlay.play(self, func():
-			var c := CapstoneChoice.new()
+			var c := CapstoneChoice.make()
 			c.size = size
 			add_child(c)))
 

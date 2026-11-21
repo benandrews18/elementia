@@ -37,7 +37,7 @@ func _ready() -> void:
 	var pick: CapstoneChoice = app.get_children().filter(func(c): return c is CapstoneChoice)[0]
 	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
 	pick._confirm("Coral Reef")
-	pick._start("Coral Reef", pick._box.get_child(1))
+	pick._start("Coral Reef", pick._card)
 	check(await _until(func(): return app.get_children().any(func(c): return c is PinTip)) and app.panel == "todo", "the To-Do List and the pinning tip")
 	app.get_children().filter(func(c): return c is PinTip)[0]._done()
 	check(await _until(func(): return app._screen is StationScreen), "the opening lands at a station")

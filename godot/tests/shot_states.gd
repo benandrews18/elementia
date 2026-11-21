@@ -100,7 +100,7 @@ func _ready() -> void:
 			for i in int(state.right(1)):
 				h._next()
 		"capstone", "capstone_confirm":
-			var c := CapstoneChoice.new()
+			var c := CapstoneChoice.make()
 			c.size = app.size
 			app.add_child(c)
 			if state == "capstone_confirm":

@@ -10,47 +10,69 @@ extends Control
 
 const INK := Color("#3b2412")
 const INK2 := Color("#5e4026")
-const MUTE := Color("#8a6a48")
 
-var _box: Control
+## The layout is ui/overlays/capstone_choice.tscn: the two windows (Choice,
+## Confirm), their texts and styles; this fills in the capstones.
+const SCENE := "res://ui/overlays/capstone_choice.tscn"
+
+## The Start button's two lines (%s: the station, the capstone).
+@export var start_text := "Start at %s"
+@export var track_text := "and track %s"
+@export var points_text := "%d pts"
+## The grid: columns and the gap between tiles.
+@export var columns := 4
+@export var cell_gap := 8.0
+
 var _busy := false
+var _card: Control  # the confirm window's station card (its chips fly at Start)
+var _shown_name := ""  # the capstone it shows
+
+
+static func make() -> CapstoneChoice:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self)
+	var star := Tok.star(Color("#f5b400"), 14)  # drawn: Nunito has no ★
+	$Confirm/Star.add_child(star)
+	$Confirm/Back.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and not _busy: _choice())
+	$Confirm/Start.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _start(_shown_name, _card))
 	_choice()
 
 
+
+## Shows one window, centred above the hub.
 func _swap(box: Control) -> void:
-	if is_instance_valid(_box):
-		_box.queue_free()
-	_box = box
+	for w in [$Choice, $Confirm]:
+		w.visible = w == box
 	box.position = Vector2((size.x - box.size.x) / 2, maxf(20, (size.y - HubBar.H - box.size.y) / 2))
-	add_child(box)
 
 
 ## The grid of capstones (openCapstoneChoice()).
 func _choice() -> void:
+	var box: Control = $Choice
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * 38
-	var sub := Tok.label("Completing Capstone Projects will guide your journey through Elementia!", 14, INK2, 400)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var lines := roundf(Tok.font(400).get_multiline_string_size(sub.text, HORIZONTAL_ALIGNMENT_LEFT, inner, 14).y / Tok.font(400).get_height(14))
-	sub.size = Vector2(inner, lines * 14 * 1.5)
-	sub.position = Vector2(38, 59)
+	var sub: Label = $Choice/Sub
+	var f := sub.get_theme_font("font")
+	var px := sub.get_theme_font_size("font_size")
+	var lines := roundf(f.get_multiline_string_size(sub.text, HORIZONTAL_ALIGNMENT_LEFT, inner, px).y / f.get_height(px))
+	var sub_h := lines * px * 1.5  # its 1.5 line height (the label itself grows to the font's)
+	sub.size = Vector2(inner, sub_h)
+	var grid: Control = $Choice/Grid
+	for c in grid.get_children():
+		c.queue_free()
 	var caps := Market.capstone_choices()
-	var cell := (inner - 3 * 8) / 4
-	var gy := sub.position.y + sub.size.y + 14
-	var rows := ceili(caps.size() / 4.0)
-	var h := gy + rows * cell + (rows - 1) * 8 + 30
-	var box := ConfirmDialog.window(Vector2(w, h), "Choose a Capstone Project")
-	box.add_child(sub)
+	var cell := (inner - (columns - 1) * cell_gap) / columns
+	var gy := sub.position.y + sub_h + 14
+	var rows := ceili(caps.size() / float(columns))
+	var h := gy + rows * cell + (rows - 1) * cell_gap + 30
+	box.size = Vector2(w, h)
 	for i in caps.size():
 		var c := _cell(caps[i], cell)
-		c.position = Vector2(38 + (i % 4) * (cell + 8), gy + (i / 4) * (cell + 8))
-		box.add_child(c)
+		c.position = Vector2(sub.position.x + (i % columns) * (cell + cell_gap), gy + (i / columns) * (cell + cell_gap))
+		grid.add_child(c)
 	_swap(box)
 
 
@@ -78,59 +100,48 @@ func _cell(name: String, sz: float) -> Control:
 
 ## The confirm window (openCapstoneConfirm()).
 func _confirm(name: String) -> void:
+	var box: Control = $Confirm
+	_shown_name = name
 	var e: Dictionary = Catalog.entry(name)
 	var st_name := String(Data.t("CORE_ITEM_STATION")[name])
 	var w := minf(420, size.x - 24)
 	var inner := w - 2 * 20
-	var box := ConfirmDialog.window(Vector2(w, 100), "")
-	var card := MapScreen.station_card(st_name, inner, true)
-	card.position = Vector2(20, 30)
-	box.add_child(card)
-	var y := card.position.y + card.size.y + 14
-	var ic := Tok.icon(e.emoji, 64)
-	ic.position = Vector2((w - 64) / 2, y)
-	box.add_child(ic)
+	box.size.x = w
+	if is_instance_valid(_card):
+		_card.queue_free()
+	_card = MapScreen.station_card(st_name, inner, true)
+	_card.position = Vector2(20, 30)
+	$Confirm/Card.add_child(_card)
+	var y := _card.position.y + _card.size.y + 14
+	var ic: TextureRect = $Confirm/Emoji
+	ic.texture = Data.icon(e.emoji)
+	ic.position = Vector2((w - ic.size.x) / 2, y)
 	y += 66
-	var n := Tok.label(name, 20, INK, 800)
-	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.position = Vector2(0, y)
-	n.size = Vector2(w, 28)
-	box.add_child(n)
+	$Confirm/Name.text = name
+	$Confirm/Name.position.y = y
 	y += 30
-	var pts := Tok.label("%d pts" % e.points, 13, Color("#b7791f"), 700)
-	var pw := Tok.font(700).get_string_size(pts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-	var star := Tok.star(Color("#f5b400"), 14)
-	star.position = Vector2((w - pw - 18) / 2, y + 2)
-	box.add_child(star)
-	pts.position = Vector2(star.position.x + 18, y)
-	box.add_child(pts)
+	var pts: Label = $Confirm/Points
+	pts.text = points_text % e.points
+	var pw := pts.get_theme_font("font").get_string_size(pts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, pts.get_theme_font_size("font_size")).x
+	$Confirm/Star.position = Vector2((w - pw - 18) / 2, y + 2)
+	pts.position = Vector2($Confirm/Star.position.x + 18, y)
 	y += 22 + 4
-	var lab := Tok.label("COMPONENTS", 12, MUTE, 800)
-	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lab.position = Vector2(0, y)
-	lab.size = Vector2(w, 16)
-	box.add_child(lab)
+	$Confirm/Components.position.y = y
 	y += 22
-	y = _components(box, e, y, w) + 16
-	var back := Tok.parch_button("Back", Vector2(80, 46))
-	back.position = Vector2((w - 80) / 2, y)
-	back.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and not _busy: _choice())
-	box.add_child(back)
+	for c in $Confirm/Parts.get_children():
+		c.queue_free()
+	y = _components($Confirm/Parts, e, y, w) + 16
+	var back: Control = $Confirm/Back
+	back.size = back.get_combined_minimum_size().max(Vector2(80, 46))
+	back.position = Vector2((w - back.size.x) / 2, y)
 	y += 46 + 10
-	var line1 := "Start at " + st_name
-	var go_w := maxf(Tok.font(800).get_string_size(line1, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x, 0) + 44
-	var go := RollPopup._pill_button(line1, Vector2(go_w, 54))
-	var l: Label = go.get_child(0)
-	l.set_anchor_and_offset(SIDE_BOTTOM, 0, 38)  # the top 38px: "and track ..." goes under it
-	var small := Tok.label("and track " + name, 12, Color(1, 1, 1, 0.85), 700)
-	small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	small.position = Vector2(0, 30)
-	small.size = Vector2(go_w, 16)
-	go.add_child(small)
-	go.position = Vector2((w - go_w) / 2, y)
-	go.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _start(name, card))
-	box.add_child(go)
-	box.size.y = y + 54 + 30
+	var go: Control = $Confirm/Start
+	var line1: Label = go.get_node("Text")
+	line1.text = start_text % st_name
+	go.get_node("Small").text = track_text % name
+	go.size.x = line1.get_theme_font("font").get_string_size(line1.text, HORIZONTAL_ALIGNMENT_LEFT, -1, line1.get_theme_font_size("font_size")).x + 44
+	go.position = Vector2((w - go.size.x) / 2, y)
+	box.size.y = y + go.size.y + 30
 	_swap(box)
 
 
