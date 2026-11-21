@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { withGame, wait } from "../../game/tools/headless_game.mjs";
 
-export async function htmlShot(snap, open, { rectsJS = "({})", http = 8797, cdp = 9345 } = {}) {
+export async function htmlShot(snap, open, { rectsJS = "({})", http = 8797, cdp = 9345, keep = [] } = {}) {
   return withGame(async (evalJS, errs, send) => {
     await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await evalJS(`(() => {
@@ -22,8 +22,9 @@ export async function htmlShot(snap, open, { rectsJS = "({})", http = 8797, cdp 
     await wait(400);
     await evalJS(open);
     await wait(1200);
-    // Tips that pop up over the screen (they'd only show once to a player).
-    await evalJS(`document.querySelectorAll(".overlay.open").forEach(o => closeOverlay(o.id))`);
+    // Tips that pop up over the screen (they'd only show once to a player);
+    // `keep`: the overlays the shot itself opened.
+    await evalJS(`document.querySelectorAll(".overlay.open").forEach(o => { if (!${JSON.stringify(keep)}.includes(o.id)) closeOverlay(o.id); })`);
     await wait(400);
     const rects = await evalJS(rectsJS);
     const png = Buffer.from((await send("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: 390, height: 844, scale: 1 } })).result.data, "base64");

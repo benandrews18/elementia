@@ -101,6 +101,34 @@ const SHOTS = [
       ${TAG_CARDS}(document.querySelector(".st-cards"), "st:");
     })()`,
     godot: ["--screen", "res://ui/app.gd", "--call", "open_card:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "cardpop", keep: ["cardPop"], note: "Bridge's card pop-up (tapped at The City, turn 7)", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      showCardPop(ENTRIES.find(e => e.name === "Bridge"), false);
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t("#cpCard", "cp:card"); t("#cpName", "cp:name"); t("#cpIcon img, #cpIcon svg", "cp:icon"); t("#cardPop .pc-badge", "cp:pts");
+      t("#cpStationBadge", "cp:station"); t("#cardPop .pc-label", "cp:label"); t("#cardPop .pc-divider", "cp:divider");
+      t("#cpTreeBtn", "cp:info"); t("#cpPinBtn", "cp:pin"); t("#cpCloseX", "cp:close");
+      document.querySelectorAll("#cpIngredients .pc-ping").forEach((e, i) => e.dataset.cmp = "cp:ing" + i);
+      document.querySelectorAll("#cpSuitCosts .pc-suitcost-badge").forEach((e, i) => e.dataset.cmp = "cp:cost" + i);
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_card:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "cardcap", keep: ["cardPop"], note: "A capstone's card: landscape, with its Display Mat rule", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      showCardPop(ENTRIES.find(e => e.name === "Robot"), false);
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t("#cpCard", "cp:card"); t("#cpName", "cp:name"); t("#cpIcon img, #cpIcon svg", "cp:icon"); t("#cpSig", "cp:sig");
+      t("#cardPop .pc-label", "cp:label"); t("#cardPop .pc-divider", "cp:divider");
+      document.querySelectorAll("#cpIngredients .pc-ping").forEach((e, i) => e.dataset.cmp = "cp:ing" + i);
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_card:Robot", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "elcard", keep: ["elCardPop"], note: "Iron's element card", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      showElCardPop("Fe");
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t("#ecCard", "ec:card"); t("#ecNum", "ec:num"); t("#ecNum2", "ec:num2"); t("#ecSym", "ec:sym"); t("#ecName", "ec:name");
+      t("#ecPill", "ec:pill"); t("#ecIconTR", "ec:iconTR"); t("#ecIconBL", "ec:iconBL");
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_element_card:Fe", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
 ];
 
 // ---- run each shot on both sides
@@ -108,7 +136,7 @@ const pick = process.argv.slice(2);
 const results = [];
 for (const shot of SHOTS.filter(s => !pick.length || pick.includes(s.name))) {
   const snap = shot.snap ? JSON.parse(readFileSync(shot.snap, "utf8")) : null;
-  const html = await htmlShot(snap, shot.open, { rectsJS: RECTS });
+  const html = await htmlShot(snap, shot.open, { rectsJS: RECTS, keep: shot.keep || [] });
   if (html.errs.length) console.log(`${shot.name}: page errors`, html.errs);
   writeFileSync(join(OUT, `${shot.name}_html.png`), html.png);
   const gRects = join(OUT, `${shot.name}_godot.json`);
