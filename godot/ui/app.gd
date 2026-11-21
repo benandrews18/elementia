@@ -195,7 +195,7 @@ func craft_tap(name: String, button: Rect2) -> void:
 	if Game.suit_cost_need(name).is_empty():
 		Game.craft(name)
 		return
-	var b := SuitSpend.new()
+	var b := SuitSpend.make()
 	b.item = name
 	b.anchor = button
 	b.size = size

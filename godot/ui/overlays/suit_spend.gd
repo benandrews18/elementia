@@ -6,17 +6,37 @@
 class_name SuitSpend
 extends Control
 
-const PICK := 56.0
+## The layout is ui/overlays/suit_spend.tscn: the bubble's look (its tail
+## takes the bubble's colour) and these sizes; the rows come from the item.
+const SCENE := "res://ui/overlays/suit_spend.tscn"
+
+@export var bubble: StyleBox
+## An element square's size, the bubble's padding, the gaps between squares (x) and rows (y).
+@export var pick := 56.0
+@export var pad := 12.0
+@export var gap := Vector2(8, 10)
+@export var tail := 9.0
 
 var item: String
 var anchor: Rect2  # the button it points at, in screen coordinates
 var _picks := {}
-var _balloon: Control
+var _above := true
+var _tail_x := 0.0
+@onready var _balloon: Control = $Balloon
+
+
+static func make() -> SuitSpend:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())  # tap outside
+	_balloon.draw.connect(func():  # the bubble and its diamond tail
+		var ty := _balloon.size.y if _above else 0.0
+		var col: Color = bubble.bg_color if bubble is StyleBoxFlat else Tok.CARD
+		_balloon.draw_colored_polygon(PackedVector2Array([Vector2(_tail_x - tail, ty), Vector2(_tail_x, ty + (tail if _above else -tail)), Vector2(_tail_x + tail, ty)]), col)
+		_balloon.draw_style_box(bubble, Rect2(Vector2.ZERO, _balloon.size)))
 	_build()
 
 
@@ -37,8 +57,8 @@ func _picked_for(suit: String) -> int:
 
 
 func _build() -> void:
-	if is_instance_valid(_balloon):
-		_balloon.queue_free()
+	for c in _balloon.get_children():
+		c.queue_free()
 	var need := _need()
 	var order: Array = Data.t("ELEMENT_SUIT_LABEL").keys() + ["any"]
 	var suits := order.filter(func(s): return need.has(s))
@@ -46,21 +66,15 @@ func _build() -> void:
 	var cols := 0
 	for r in rows:
 		cols = maxi(cols, r.size())
-	var row_h := PICK + 5 + 18
-	var w := 12 * 2 + cols * PICK + (cols - 1) * 8
-	var h := 12 * 2 + rows.size() * row_h + (rows.size() - 1) * 10
-	_balloon = Control.new()
+	var row_h := pick + 5 + 18
+	var w := pad * 2 + cols * pick + (cols - 1) * gap.x
+	var h := pad * 2 + rows.size() * row_h + (rows.size() - 1) * gap.y
 	_balloon.size = Vector2(w, h)
-	var above := anchor.position.y - h - 12 >= 4
+	_above = anchor.position.y - h - 12 >= 4
 	var x := clampf(anchor.get_center().x - w / 2, 8, size.x - w - 8)
-	_balloon.position = Vector2(x, anchor.position.y - h - 12 if above else anchor.end.y + 12)
-	var tail_x := clampf(anchor.get_center().x - x, 14, w - 14)
-	var bal := _balloon  # this balloon, not whichever _balloon is newest when it draws
-	bal.draw.connect(func():  # the bubble and its diamond tail
-		var ty := h if above else 0.0
-		bal.draw_colored_polygon(PackedVector2Array([Vector2(tail_x - 9, ty), Vector2(tail_x, ty + (9 if above else -9)), Vector2(tail_x + 9, ty)]), Tok.CARD)
-		bal.draw_style_box(Tok.box(Tok.CARD, 16, 2, Tok.LINE, 14, 10, Color(0, 0, 0, 0.4)), Rect2(Vector2.ZERO, bal.size)))
-	add_child(_balloon)
+	_balloon.position = Vector2(x, anchor.position.y - h - 12 if _above else anchor.end.y + 12)
+	_tail_x = clampf(anchor.get_center().x - x, 14, w - 14)
+	_balloon.queue_redraw()
 	var reserved := _reserved()
 	for ri in rows.size():
 		var row: Array = rows[ri]
@@ -68,20 +82,20 @@ func _build() -> void:
 			var sym: String = row[ci]
 			var avail := maxf(0, Catalog.count(Game.state, sym) - reserved.get(sym, 0))
 			var p := _pick(sym, int(avail), _picks.get(sym, 0), suits[ri])
-			p.position = Vector2(12 + ci * (PICK + 8), 12 + ri * (row_h + 10))
+			p.position = Vector2(pad + ci * (pick + gap.x), pad + ri * (row_h + gap.y))
 			_balloon.add_child(p)
 
 
 func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 	var c := Control.new()
-	c.size = Vector2(PICK, PICK + 5 + 18)
+	c.size = Vector2(pick, pick + 5 + 18)
 	var inert := avail <= 0 and have == 0
 	if inert:
 		c.modulate.a = 0.4
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
 	var box := Panel.new()
 	box.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 9, 7, color))
-	box.size = Vector2(PICK, PICK)
+	box.size = Vector2(pick, pick)
 	box.mouse_filter = MOUSE_FILTER_IGNORE
 	c.add_child(box)
 	var l := Tok.label(sym, 23, Color("#221f1a"), 800)
@@ -93,7 +107,7 @@ func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 	if es != "":
 		var b := Panel.new()
 		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(es), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
-		b.position = Vector2(PICK - 14, 3)
+		b.position = Vector2(pick - 14, 3)
 		b.size = Vector2(13, 13)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		var g := Tok.icon("suit:" + es, 9)
@@ -103,8 +117,8 @@ func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 		c.add_child(b)
 	var q := Tok.label("×%d" % avail, 13, Tok.INK, 800)
 	q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	q.position = Vector2(0, PICK + 3)
-	q.size = Vector2(PICK, 18)
+	q.position = Vector2(0, pick + 3)
+	q.size = Vector2(pick, 18)
 	c.add_child(q)
 	if have > 0:  # how many picked, top-left
 		var pk := Tok.label(str(have), 11, Color("#0f2733"), 800)
