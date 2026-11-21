@@ -7,12 +7,43 @@ class_name HowToPlay
 extends Control
 
 const GOLD_TEXT := "#f5c04a"
-const NAVY := Color("#163544")
 const EDGE := Color("#2a5a72")
+
+## The layout is ui/overlays/how_to_play.tscn (the card, ✕ Hide, the dots,
+## Next); the slides' examples are built from the game data, their words are
+## below ([b]...[/b]: bold, in gold).
+const SCENE := "res://ui/overlays/how_to_play.tscn"
+
+## The current slide's dot (the others keep the scene's).
+@export var dot_on: StyleBox
+@export var next_text := "Next"
+@export var last_text := "Let's play"
+@export_group("Slide 1: the goal")
+@export var goal_kicker := "The goal"
+@export var goal_line := "Discover and craft the 8 [b]Capstones[/b]"
+@export_group("Slide 2: gather & craft")
+@export var gather_kicker := "Gather & craft"
+@export var gather_note := "Every station has its own pool of elements"
+@export var spent_text := "spent"
+@export var kept_text := "∞ kept"
+@export_multiline var gather_line := "Spend elements like currency.\n[b]Item cards are yours forever![/b]"
+@export_group("Slide 3: the Display Mat")
+@export var mat_kicker := "Display Mat"
+@export var mat_line := "Arrange a [b]Display Mat[/b] to earn [b]Quark Points[/b]"
+@export var combo_station := "3+ from the [b]same station[/b]"
+@export var combo_suit := "3+ of the [b]same suit[/b]"
+@export var combo_shared := "3+ that [b]share an item[/b]"
+@export var combo_recipe := "An item with its recipe = [b]2× points[/b]"
+@export var combo_collection := "Secret [b]collections[/b] for bonus Quarks"
+@export var turns_text := "%d Turns in a game!"
 
 var on_done: Callable
 var _i := 0
-var _box: Control
+var _dot_off: StyleBox
+
+
+static func make() -> HowToPlay:
+	return load(SCENE).instantiate()
 
 
 ## Plays the slides over `on` (straight to then_do if hidden for good).
@@ -20,7 +51,7 @@ static func play(on: Control, then_do: Callable) -> void:
 	if Progress.tip_hidden("classicTut"):
 		then_do.call()
 		return
-	var h := HowToPlay.new()
+	var h := make()
 	h.on_done = then_do
 	h.size = on.size
 	on.add_child(h)
@@ -28,7 +59,12 @@ static func play(on: Control, then_do: Callable) -> void:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self)
+	_dot_off = $Card/Dots/Dot0.get_theme_stylebox("panel")
+	$Card/Slide.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
+	$Card/Next.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
+	$Card/Hide.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+		Progress.hide_tip("classicTut")
+		_next(true))
 	_show()
 
 
@@ -42,50 +78,22 @@ func _next(skip_rest := false) -> void:
 
 
 func _show() -> void:
-	if is_instance_valid(_box):
-		_box.queue_free()
+	var card: Control = $Card
+	var slide: Control = $Card/Slide
+	for c in slide.get_children():
+		c.queue_free()
 	var w := minf(360, size.x - 40)
-	var inner := w - 36
-	var slide := Control.new()
-	slide.mouse_filter = MOUSE_FILTER_STOP
-	slide.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
+	var inner := w - 2 * slide.position.x
 	var h: float = [_goal, _gather, _mat][_i].call(slide, inner)
-	slide.position = Vector2(18, 20)
 	slide.size = Vector2(inner, h)
-	var box := Panel.new()
-	box.add_theme_stylebox_override("panel", Tok.box(NAVY, 18, 2, EDGE, 10, 6, Color(0, 0, 0, 0.45)))
-	box.size = Vector2(w, 20 + h + 18 + 40 + 18)
-	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - box.size.y) / 2))
-	box.add_child(slide)
-	# The foot: ✕ Hide, the dots, Next.
-	var fy := box.size.y - 18 - 40
-	var hide := Panel.new()
-	hide.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.06), 14, 1.5, Color(1, 1, 1, 0.25)))
-	hide.size = Vector2(68, 28)
-	hide.position = Vector2(18, fy + 6)
-	var hl := Tok.label("✕  Hide", 12, Color(1, 1, 1, 0.6), 800)
-	hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hl.size = Vector2(68, 28)
-	hl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	hide.add_child(hl)
-	hide.gui_input.connect(func(ev): if ConvertTray._tap(ev):
-		Progress.hide_tip("classicTut")
-		_next(true))
-	box.add_child(hide)
+	card.size = Vector2(w, slide.position.y + h + 18 + 40 + 18)
+	card.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - card.size.y) / 2))
 	for d in 3:
-		var dot := Panel.new()
-		dot.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD if d == _i else Color(1, 1, 1, 0.25), 4))
-		dot.size = Vector2(8, 8)
-		dot.position = Vector2(w / 2 - 22 + d * 16, fy + 16)
-		box.add_child(dot)
-	var text := "Let's play" if _i == 2 else "Next"
-	var nw := Tok.font(800).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 60
-	var nx := RollPopup._pill_button(text, Vector2(nw, 40))
-	nx.position = Vector2(w - 18 - nw, fy)
-	nx.gui_input.connect(func(ev): if ConvertTray._tap(ev): _next())
-	box.add_child(nx)
-	_box = box
-	add_child(box)
+		card.get_node("Dots/Dot%d" % d).add_theme_stylebox_override("panel", dot_on if d == _i else _dot_off)
+	var nx: Control = $Card/Next
+	var nt: Label = nx.get_node("Text")
+	nt.text = last_text if _i == 2 else next_text
+	nx.offset_left = nx.offset_right - (nt.get_theme_font("font").get_string_size(nt.text, HORIZONTAL_ALIGNMENT_LEFT, -1, nt.get_theme_font_size("font_size")).x + 60)
 
 
 ## The kicker over a slide (THE GOAL ...); returns the y under it.
@@ -155,7 +163,7 @@ static func _row(slide: Control, parts: Array, y: float, w: float, gap := 8.0) -
 
 ## 1: the goal, the 8 capstones (with their stations).
 func _goal(slide: Control, w: float) -> float:
-	var y := _kicker(slide, "The goal", w)
+	var y := _kicker(slide, goal_kicker, w)
 	var stations: Array = Data.t("STATION_BY_NAME").values()
 	var cell := (w - 3 * 10) / 4
 	for i in stations.size():
@@ -168,18 +176,18 @@ func _goal(slide: Control, w: float) -> float:
 		slide.add_child(t)
 	y += 2 * cell + 10 + 14
 	y += _row(slide, stations.map(func(st): return Tok.icon(st.emoji, 22)), y, w, 6) + 6
-	return y + _line(slide, "Discover and craft the 8 [b]Capstones[/b]", y, w)
+	return y + _line(slide, goal_line, y, w)
 
 
 ## 2: gather & craft: a station's dice, then elements spent, an item kept.
 func _gather(slide: Control, w: float) -> float:
-	var y := _kicker(slide, "Gather & craft", w)
+	var y := _kicker(slide, gather_kicker, w)
 	var st := _example_station()
 	var parts: Array = [Tok.icon(st.emoji, 40), Tok.icon("🎲", 20)]
 	for d in Catalog.sorted_dice(st):
 		parts.append(_chip(d, 30))
 	y += _row(slide, parts, y, w, 7) + 10
-	y += _line(slide, "Every station has its own pool of elements", y, w, 12.5, "#b3becd") + 14
+	y += _line(slide, gather_note, y, w, 12.5, "#b3becd") + 14
 	# An item made only of elements, sold here, else anywhere (as the HTML game).
 	var plain := func(e): return e.reqs.size() >= 2 and e.reqs.all(func(r): return r.kind == "element")
 	var ex = null
@@ -200,10 +208,10 @@ func _gather(slide: Control, w: float) -> float:
 		spent.add_child(c)
 		cx += 36
 	var coin := _coin(7)
-	var sw := Tok.font(800).get_string_size("spent", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+	var sw := Tok.font(800).get_string_size(spent_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 	coin.position = Vector2((cx - 6 - (14 + 4 + sw)) / 2, 37)
 	spent.add_child(coin)
-	var sl := Tok.label("spent", 12, Color("#e8edf4"), 800)
+	var sl := Tok.label(spent_text, 12, Color("#e8edf4"), 800)
 	sl.position = Vector2(coin.position.x + 18, 33)
 	spent.add_child(sl)
 	spent.size = Vector2(cx - 6, 50)
@@ -215,18 +223,18 @@ func _gather(slide: Control, w: float) -> float:
 	ic.position = Vector2(9, 9)
 	item.add_child(ic)
 	kept.add_child(item)
-	var kl := Tok.label("∞ kept", 12, Color("#e8edf4"), 800)
+	var kl := Tok.label(kept_text, 12, Color("#e8edf4"), 800)
 	kl.position = Vector2(4, 54)
 	kept.add_child(kl)
 	kept.size = Vector2(52, 70)
 	y += _row(slide, [spent, ConvertTray._arrow_glyph(Color("#ffe08a")), kept], y, w, 14) + 12
-	return y + _line(slide, "Spend elements like currency.\n[b]Item cards are yours forever![/b]", y, w)
+	return y + _line(slide, gather_line, y, w)
 
 
 ## 3: the Display Mat: its cards earn Quarks, Quarks earn dice; the combos;
 ## 24 turns.
 func _mat(slide: Control, w: float) -> float:
-	var y := _kicker(slide, "Display Mat", w)
+	var y := _kicker(slide, mat_kicker, w)
 	var st := _example_station()
 	var emoji: Dictionary = Data.t("ITEM_EMOJI")
 	var names: Array = [st.capstone[1]] + Data.t("CORE_ITEM_NAMES")
@@ -248,7 +256,7 @@ func _mat(slide: Control, w: float) -> float:
 		dice.add_child(d)
 	dice.size = Vector2(70, 22)
 	y += _row(slide, [mat, ConvertTray._arrow_glyph(Color("#ffe08a")), Tok.icon("⚛️", 30), ConvertTray._arrow_glyph(Color("#ffe08a")), dice], y, w, 8) + 10
-	y += _line(slide, "Arrange a [b]Display Mat[/b] to earn [b]Quark Points[/b]", y, w) + 10
+	y += _line(slide, mat_line, y, w) + 10
 	# The combos, in a box.
 	var box := Panel.new()
 	box.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.04), 12, 1.5, EDGE))
@@ -268,7 +276,7 @@ func _mat(slide: Control, w: float) -> float:
 	clock.scale = Vector2(0.75, 0.75)
 	clock.size = Vector2(44, 44)
 	var tl := Control.new()
-	var turns := Tok.label("%d Turns in a game!" % Data.t("RUN_COMPLETE_VISIT"), 13, Color("#e8edf4"), 800)
+	var turns := Tok.label(turns_text % Data.t("RUN_COMPLETE_VISIT"), 13, Color("#e8edf4"), 800)
 	tl.add_child(turns)
 	tl.size = Vector2(Tok.font(800).get_string_size(turns.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x, 20)
 	return y + _row(slide, [clock, tl], y, w, 10)
@@ -287,7 +295,7 @@ func _combos(st: Dictionary) -> Array:
 		c.size = Vector2(x - 4, 26)
 		return c
 	var out := []
-	out.append([strip.call([_tile(st.emoji, 26), _tile(st.emoji, 26), _tile(st.emoji, 26)]), "3+ from the [b]same station[/b]"])
+	out.append([strip.call([_tile(st.emoji, 26), _tile(st.emoji, 26), _tile(st.emoji, 26)]), combo_station])
 	var suit: String = Data.t("ELEMENT_SUIT_LABEL").keys()[0]
 	var suits := []
 	for i in 3:
@@ -299,7 +307,7 @@ func _combos(st: Dictionary) -> Array:
 		g.material = Tok.white()
 		c.add_child(g)
 		suits.append(c)
-	out.append([strip.call(suits), "3+ of the [b]same suit[/b]"])
+	out.append([strip.call(suits), combo_suit])
 	# A component shared by the most cards, and a card with its 2-item recipe.
 	var shared := {}
 	for c in Data.t("MAT_CARDS"):
@@ -312,18 +320,18 @@ func _combos(st: Dictionary) -> Array:
 		if emoji.has(n) and shared[n].size() >= 3 and (comp == null or shared[n].size() > shared[comp].size()):
 			comp = n
 	if comp != null:
-		out.append([strip.call(shared[comp].slice(0, 3).map(func(n): return _tile(emoji[n], 26, emoji[comp]))), "3+ that [b]share an item[/b]"])
+		out.append([strip.call(shared[comp].slice(0, 3).map(func(n): return _tile(emoji[n], 26, emoji[comp]))), combo_shared])
 	for c in Data.t("MAT_CARDS"):
 		if Mat.direct_items(c).size() == 2 and c.tier != "CAPSTONE":
 			var plus := Tok.label("+", 14, Color.WHITE, 900)
 			plus.size = Vector2(10, 26)
 			plus.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			out.append([strip.call([_tile(emoji[c.name], 26), plus] + Mat.direct_items(c).map(func(n): return _tile(emoji[n], 26))),
-				"An item with its recipe = [b]2× points[/b]"])
+				combo_recipe])
 			break
 	for col in Data.t("MAT_COLLECTIONS_RAW"):
 		if col.items.size() == 3 and col.items.all(func(n): return emoji.has(n)):
-			out.append([strip.call([Tok.star(Color.WHITE, 12)] + col.items.map(func(n): return _tile(emoji[n], 26))), "Secret [b]collections[/b] for bonus Quarks"])
+			out.append([strip.call([Tok.star(Color.WHITE, 12)] + col.items.map(func(n): return _tile(emoji[n], 26))), combo_collection])
 			break
 	return out
 

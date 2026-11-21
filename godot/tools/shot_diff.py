@@ -37,6 +37,7 @@ def shoot(out: Path, only=()):
     out.mkdir(parents=True, exist_ok=True)
     for s in only or states():
         save = SAVES.get(s, "station_visit7")
+        (out / f"{s}.png").unlink(missing_ok=True)  # a failed shot must not leave an old one
         cmd = [GODOT, "--path", str(ROOT), "--quit-after", "3000", "res://tests/shot.tscn", "--",
                "--screen", "res://tests/shot_states.gd", "--state", s, "--save", f"tests/fixtures/{save}.json",
                "--wait", "1.2", "--out", str(out / f"{s}.png")]
