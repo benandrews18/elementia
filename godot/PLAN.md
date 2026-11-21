@@ -12,13 +12,17 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** the
-full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
+**Next task:** M5.5 is done once you've made an edit in the editor
+yourself (EDITING.md); then M6. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-20: M5.5 review fixes: stations scale with the map width
+  (tablets), YOU ARE HERE and the station colours editable, dead helpers
+  gone, dim/scrim pieces, tools/recolour.py (a colour everywhere at once;
+  a style shared by scenes can't follow tokens.tres, so this replaces that).
 - 2026-11-20: Faster, stricter checks: tools/check.py (PASS needs the pass
   line), ui_play headless (~15s, was ~2.5min) with --only sections, every
   screen state shot in one Godot run (~35s, was ~3min), scene roots no longer
