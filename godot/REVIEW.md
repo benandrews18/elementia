@@ -60,3 +60,45 @@ it); the Web export includes the data JSON.
 trophies.gd in depth (the parity test replays 3604 recorded steps against
 the HTML game); the screen and window scripts beyond app.gd (pass 3 reads
 them).
+
+## Pass 2: architecture (2026-11-21)
+Skills loaded: save-load, event-bus. Judged by their criteria without
+loading (not worth the cost here): state-machine (the flow is worked out
+from the saved state by `App.home_face()`; a state machine would be a second
+copy of that state), dependency-injection (four autoloads plus
+`App.current` suit a one-screen app), resource-pattern (data stays JSON
+exported from game/js by decision; colours are already a Resource,
+tokens.tres), scene-organization (M5.5 did it; pass 3 looks at the scenes).
+Read: game/progress.gd load/save, the HTML `loadAll()` (game/js/state.js),
+PLAN.md decisions on saves.
+
+**Should**
+5. **App saves have no version and no upgrade step** (`game/progress.gd:83-90`).
+   The plan decided "no old-save migration", meaning HTML saves carried into
+   the app. But once the app ships, its own saves outlive data changes. The
+   HTML `loadAll()` already needs 6 clean-ups for exactly this (items cut
+   from the game, a challenge that no longer exists, an overfull mat...).
+   Case: after release an item is cut (as Oven was on 2026-11-14); a
+   player's save still lists it; `Catalog.entry()` returns null and screens
+   that read it break. **Fix:** a `saveVersion` number in the save and an
+   upgrade step in `load_all()` with the HTML's clean-ups; also report failed
+   writes (`push_error`) instead of skipping them silently (`:77`). ~20 lines,
+   best before M9. **Plan wording:** the decision should say it covers HTML
+   saves only (needs your OK).
+
+**Nice / for M8**
+6. **One signal for every change, and a listener that fires it again**
+   (`ui/app.gd:123-125`). `_maybe_end()` runs inside the `state_changed`
+   handler and calls `Game._changed()`, which emits `state_changed` again
+   in the middle of the first one. Case: crafting the last item rebuilds
+   every open screen twice. Harmless now. **Fix:** `Game._changed.call_deferred()`
+   there (1 line). For M8: sound needs to know *what* happened (crafted,
+   rolled, row done, checked), which one `state_changed` can't say. Add a
+   few named signals on Game when sound arrives, not before.
+
+**Kept (good as is):** saves are JSON, not Resource files (the save-load
+skill's rule: a Resource file can run code, so player files must not be
+one); rules (Game), what's kept across runs (Progress) and the screens are
+cleanly apart; core/ is pure functions of the state, which is why the
+parity test works; screens are worked out from the state rather than kept
+in a separate state machine.
