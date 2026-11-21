@@ -1,0 +1,290 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/mat_rules.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u269b.png" id="r2"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="r3"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="r4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="r5"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="r6"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_600.tres" id="r7"]
+
+[sub_resource type="StyleBoxFlat" id="warn"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(0.964706, 0.839216, 0.8, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.941176, 0.403922, 0.298039, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="MatRules" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+
+[node name="Dim" parent="." instance=ExtResource("r1")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("r3")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Display Mat Score"
+icon = ExtResource("r2")
+wrap_title = true
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Page1" type="VBoxContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="L1" type="RichTextLabel" parent="Window/Content/Page1"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 1
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]{🕒} Display Mat [b]challenge[/b] every 3 turns[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G1" type="Control" parent="Window/Content/Page1"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="L2" type="RichTextLabel" parent="Window/Content/Page1"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 1
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]{🎲} Your [b]Quark Score[/b] earns [b]bonus dice[/b][/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G2" type="Control" parent="Window/Content/Page1"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Warn" type="PanelContainer" parent="Window/Content/Page1"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("warn")
+
+[node name="L3" type="RichTextLabel" parent="Window/Content/Page1/Warn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 1
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]{⚠️} A score below the first breakpoint [b]ends your run[/b].[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G3" type="Control" parent="Window/Content/Page1"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="NextRow" type="HBoxContainer" parent="Window/Content/Page1"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Next" parent="Window/Content/Page1/NextRow" instance=ExtResource("r6")]
+custom_minimum_size = Vector2(80, 46)
+layout_mode = 2
+metadata/button = true
+
+[node name="Text" parent="Window/Content/Page1/NextRow/Next" index="0"]
+text = "Next"
+
+[node name="Page2" type="VBoxContainer" parent="Window/Content"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Sub" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 1
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center][b]{⚛️} Generate Quarks from your Card Display.[/b]\n[b]{🎲} More Quarks = More Elements at the next Station[/b][/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G1" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="D1" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = -1
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]Quark Score = Display Score × Combo Multiplier[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G2" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="D2" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = -1
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]Complete item recipes DOUBLE the points for that item![/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G3" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="D3" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = -1
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]Build Combo Multiplier by matching 3+ icons[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G4" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Stations" type="HFlowContainer" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+alignment = 1
+
+[node name="G5" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Suits" type="HFlowContainer" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+alignment = 1
+
+[node name="G6" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="D4" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = -1
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]Ingredient items count toward Combo Multiplier too![/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G7" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Items" type="HFlowContainer" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+alignment = 1
+
+[node name="G8" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="OkRow" type="HBoxContainer" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Ok" parent="Window/Content/Page2/OkRow" instance=ExtResource("r6")]
+custom_minimum_size = Vector2(86, 46)
+layout_mode = 2
+
+[node name="Text" parent="Window/Content/Page2/OkRow/Ok" index="0"]
+text = "Got it"

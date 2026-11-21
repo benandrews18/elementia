@@ -223,6 +223,25 @@ func open_items(name := "") -> void:
 		(_panel_node as ItemsScreen).jump_to(name)
 
 
+## Settings (the gear); page "rules" or "tuts" opens that window instead.
+func open_settings(page := "") -> void:
+	match page:
+		"rules": ParchDialog.open(self, GameRules.SCENE)
+		"tuts": ParchDialog.open(self, TutorialMessages.SCENE)
+		_: SettingsWindow.show_on(self)
+
+
+## A rules or tip window by name (mat_rules, mat_rules2, order, unknown).
+func show_tip(name: String) -> void:
+	match name:
+		"mat_rules", "mat_rules2":
+			var m := MatRules.show_on(self)
+			if name == "mat_rules2":
+				m._page2()
+		"order": MatRules.order_tip(self)
+		"unknown": ParchDialog.open(self, UnknownTip.SCENE)
+
+
 ## An element's card (a tap on an element anywhere: ElementCard).
 func show_element_card(sym: String) -> void:
 	ElementCard.open(self, sym)
@@ -306,8 +325,8 @@ func _roll() -> void:
 ## Travel: on a board-check turn the shutter, then the mat opens for the
 ## Lock-In (Home becomes Lock In); tapping Travel again just reopens the mat.
 ## Otherwise a quiet check sets this trip's dice and off you go.
-## shortcut: the first check's rules pages and the one-time challenge tip
-## aren't shown (they come with M6's rules pages).
+## The very first check ever opens the Display Mat rules first.
+## shortcut: the once-a-run challenge tip comes with M6 step 7 (tips).
 func _travel(dest: String) -> void:
 	if Catalog.is_mat_check_visit(Game.state):
 		if Game.ctx.get("travelPromptFor") == dest:
@@ -317,7 +336,12 @@ func _travel(dest: String) -> void:
 		Game.start_check_order()
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
 			open_panel("drawer")
-			_check_intro())
+			if not Progress.prefs.get("sawMatCheckTutorial"):  # the very first check ever: the rules first
+				Progress.prefs.sawMatCheckTutorial = true
+				Progress.save_all()
+				MatRules.show_on(self).closed.connect(_check_intro)
+			else:
+				_check_intro())
 	else:
 		Game.quiet_check()
 		Game.go_station(dest)

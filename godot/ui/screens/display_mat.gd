@@ -224,8 +224,7 @@ static func bounce(c) -> void:
 
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
 ## rules "?" riding its lower-right edge (renderMatTop()).
-## shortcut: Layouts and "?" open nothing yet (saved layouts and the rules
-## pages come with M6).
+## shortcut: Layouts opens nothing yet (saved layouts come with M6 step 8).
 func _page_controls(page: Control) -> void:
 	var bottom := page.position.y + page.size.y
 	var x := page.position.x + 4
@@ -264,6 +263,7 @@ func _page_controls(page: Control) -> void:
 	help.size = Vector2(34, 34)
 	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
 	help.set_meta("cmp", "btn:rules")
+	help.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and App.current: MatRules.show_on(App.current))
 	_body.add_child(help)
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30

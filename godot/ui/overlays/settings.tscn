@@ -1,0 +1,195 @@
+[gd_scene load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/settings_window.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/icons/u2699.png" id="r2"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="r3"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="r4"]
+[ext_resource type="PackedScene" path="res://ui/pieces/setting_row.tscn" id="r5"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="r6"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="r7"]
+
+[sub_resource type="Gradient" id="red_g"]
+offsets = PackedFloat32Array(0, 0.65, 1)
+colors = PackedColorArray(0.85098, 0.388235, 0.290196, 1, 0.941176, 0.403922, 0.298039, 1, 0.941176, 0.403922, 0.298039, 1)
+
+[sub_resource type="GradientTexture2D" id="red"]
+gradient = SubResource("red_g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxFlat" id="mask14"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="redge"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.227451, 0.0784314, 0.0470588, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="rledge"]
+bg_color = Color(0.227451, 0.0784314, 0.0470588, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 7
+shadow_offset = Vector2(0, 3)
+
+[node name="SettingsWindow" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 50.0
+
+[node name="Dim" parent="." instance=ExtResource("r1")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("r3")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Settings"
+icon = ExtResource("r2")
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Close" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -44.0
+offset_right = 0.0
+offset_bottom = 44.0
+texture = ExtResource("r4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HowToPlay" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "How to Play"
+emoji = "▶️"
+button_text = "Open"
+
+[node name="Gap1" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Rules" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Game Rules"
+emoji = "🎲"
+button_text = "Open"
+
+[node name="Gap2" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Tuts" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Tutorial Messages"
+emoji = "📖"
+button_text = "Open"
+
+[node name="Gap3" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Reset" type="Control" parent="Window/Content/Buttons"]
+custom_minimum_size = Vector2(0, 46.2)
+layout_mode = 2
+size_flags_horizontal = 3
+metadata/button = true
+
+[node name="Ledge" type="Panel" parent="Window/Content/Buttons/Reset"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+offset_top = 4.0
+offset_bottom = 4.0
+theme_override_styles/panel = SubResource("rledge")
+
+[node name="Face" type="Panel" parent="Window/Content/Buttons/Reset"]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("mask14")
+
+[node name="Grad" type="TextureRect" parent="Window/Content/Buttons/Reset/Face"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource("red")
+expand_mode = 1
+
+[node name="Edge" type="Panel" parent="Window/Content/Buttons/Reset"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("redge")
+
+[node name="Text" type="Label" parent="Window/Content/Buttons/Reset"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.164706, 0.0509804, 0.027451, 1)
+theme_override_fonts/font = ExtResource("r6")
+theme_override_font_sizes/font_size = 14
+text = "Reset"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Gap4" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Version" type="Label" parent="Window/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("r7")
+theme_override_font_sizes/font_size = 15
+text = "Elementia v{version}"
+horizontal_alignment = 1

@@ -47,8 +47,8 @@ static func make() -> HowToPlay:
 
 
 ## Plays the slides over `on` (straight to then_do if hidden for good).
-static func play(on: Control, then_do: Callable) -> void:
-	if Progress.tip_hidden("classicTut"):
+static func play(on: Control, then_do: Callable, force := false) -> void:
+	if Progress.tip_hidden("classicTut") and not force:  # force: Settings' How to Play
 		then_do.call()
 		return
 	var h := make()

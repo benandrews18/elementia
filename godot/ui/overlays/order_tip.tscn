@@ -1,0 +1,103 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/parch_dialog.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f4dc.png" id="r2"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="r3"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="r4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="r5"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="r6"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parch_button.tscn" id="r7"]
+
+[node name="OrderTip" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+tip_id = "orderTip"
+
+[node name="Dim" parent="." instance=ExtResource("r1")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("r3")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Display Mat Challenges"
+icon = ExtResource("r2")
+wrap_title = true
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="L1" type="RichTextLabel" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 2
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
+bbcode_enabled = true
+text = "{🎲} Your [b]Quark Score[/b] earns [b]bonus dice[/b]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G1" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="L2" type="RichTextLabel" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 2
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
+bbcode_enabled = true
+text = "{✅} [b]Requests[/b]: ×{req} {⚛️}\n{⛔} [b]Restrictions[/b]: ×{res} {⚛️}"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G2" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="OkRow" type="HBoxContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="Ok" parent="Window/Content/OkRow" instance=ExtResource("r6")]
+custom_minimum_size = Vector2(86, 46)
+layout_mode = 2
+
+[node name="Text" parent="Window/Content/OkRow/Ok" index="0"]
+text = "Got it"
+
+[node name="Hide" parent="Window" instance=ExtResource("r7")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -46.0
+offset_right = 84.0
+offset_bottom = -16.0
+theme_override_font_sizes/font_size = 12
+text = "✕  Hide"

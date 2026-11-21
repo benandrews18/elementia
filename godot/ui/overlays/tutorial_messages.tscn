@@ -1,0 +1,99 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/tutorial_messages.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f4d6.png" id="r2"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="r3"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="r4"]
+[ext_resource type="PackedScene" path="res://ui/pieces/plain_row.tscn" id="r5"]
+
+[node name="TutorialMessages" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+
+[node name="Dim" parent="." instance=ExtResource("r1")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("r3")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Tutorial Messages"
+icon = ExtResource("r2")
+wrap_title = true
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Back" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -44.0
+offset_right = 0.0
+offset_bottom = 44.0
+texture = ExtResource("r4")
+expand_mode = 1
+stretch_mode = 5
+metadata/button = true
+
+[node name="HowToPlay" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "How to play"
+emoji = "▶️"
+button_text = "View"
+
+[node name="Gap1" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PinTip" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Pin items to your To-Do List"
+emoji = "📌"
+button_text = "View"
+
+[node name="Gap2" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BoardChecks" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Display Mat board checks"
+emoji = "🕒"
+button_text = "View"
+
+[node name="Gap3" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Challenges" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Display Mat Challenges"
+emoji = "📜"
+button_text = "View"
+
+[node name="Gap4" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Unknown" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Unknown Elements"
+emoji = "❓"
+button_text = "View"
