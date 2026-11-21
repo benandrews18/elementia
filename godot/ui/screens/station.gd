@@ -238,53 +238,17 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	# Pin and Craft (60px, shrinking to fit) centred under the card (.st-acts).
 	var acts_w := minf(card_size.x, act_h + 3 + 60)
 	var ax := pos.x + (card_size.x - acts_w) / 2
-	var pinned := Progress.is_pinned(e.name)
-	var pin := Panel.new()
-	pin.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if pinned else Tok.CARD, 10, 2,
-		Tok.GOLD if pinned else Color(1, 1, 1, 0.4), 0, 0))
-	pin.position = Vector2(ax, ay)
-	pin.size = Vector2(act_h, act_h)
-	pin.modulate.a = 1.0 if pinned else 0.5
-	var pic := Tok.icon("📌", 17)
-	pic.position = Vector2(9, 9)
-	if not pinned:
-		pic.material = Tok.grey()
-	pin.add_child(pic)
-	pin.mouse_filter = MOUSE_FILTER_PASS  # taps here, drags still scroll the page
+	var acts := ShopActs.make()
+	acts.position = Vector2(ax, ay)
+	acts.show_state(acts_w, act_h, Progress.is_pinned(e.name), can, owned)
+	var pin: Control = acts.get_node("Pin")
 	pin.gui_input.connect(_on_tap.bind(func(): Progress.toggle_pin(e.name); Game._changed()))  # saves, then redraws
 	pin.set_meta("cmp", "st:pin:" + e.name)
-	page.add_child(pin)
-	var btn := Label.new()
-	btn.text = "    Owned" if owned else "Craft"  # the tick is drawn in front (not in Nunito)
-	btn.add_theme_font_override("font", Tok.font(800))
-	btn.add_theme_font_size_override("font_size", 13)
-	btn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	btn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	btn.position = Vector2(ax + act_h + 3, ay)
-	btn.size = Vector2(acts_w - act_h - 3, 34.9)
+	var btn: Control = acts.get_node("Craft")
 	if can:
-		btn.add_theme_color_override("font_color", Color.WHITE)
-		btn.add_theme_color_override("font_shadow_color", Color(0.47, 0.24, 0, 0.4))
-		btn.add_theme_constant_override("shadow_offset_y", 1)
-		# Gold-orange (the CSS gradient #ffce6b -> #f0a428, averaged) over a 3px lip.
-		var go := Tok.box(Color("#f8ba4b"), 10)
-		go.border_width_bottom = 3
-		go.border_color = Color("#a05d12")
-		go.expand_margin_bottom = 3
-		btn.add_theme_stylebox_override("normal", go)
 		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
-	elif owned:
-		btn.add_theme_color_override("font_color", Tok.OK)
-		btn.add_theme_stylebox_override("normal", Tok.box(Color("#16301f"), 10))
-		var tk := Tok.tick(Tok.OK, 13)
-		tk.position = Vector2(4, 11)
-		btn.add_child(tk)
-	else:
-		btn.add_theme_color_override("font_color", Tok.MUTE)
-		btn.add_theme_stylebox_override("normal", Tok.box(Tok.SUNKEN, 10))
-	btn.mouse_filter = MOUSE_FILTER_PASS
 	btn.set_meta("cmp", "st:craft:" + e.name)
-	page.add_child(btn)
+	page.add_child(acts)
 
 
 ## A white element chip with its suit-coloured border, atomic number, the
