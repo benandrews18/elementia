@@ -12,6 +12,7 @@ const WAIT := 1.2
 
 func _ready() -> void:
 	Progress.autosave = false  # never touch the player's files
+	OS.low_processor_usage_mode = false  # every frame drawn, so frame_post_draw fires
 	Progress.prefs.everUnlockedMatCollections = Mat.collections().map(func(c): return c.id)
 	var prefs: Dictionary = Progress.prefs.duplicate(true)
 	var ctx: Dictionary = Game.ctx.duplicate(true)

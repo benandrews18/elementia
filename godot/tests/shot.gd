@@ -10,6 +10,7 @@ extends Node
 func _ready() -> void:
 	var a := _args()
 	Progress.autosave = false  # never touch the player's files
+	OS.low_processor_usage_mode = false  # every frame drawn, so frame_post_draw fires
 	# As html_shot.mjs: every collection already found, so no "New collection!".
 	Progress.prefs.everUnlockedMatCollections = Mat.collections().map(func(c): return c.id)
 	if a.has("save"):

@@ -12,6 +12,7 @@ config_version=5
 
 config/name="Elementia"
 run/main_scene="res://main.tscn"
+run/low_processor_mode=true
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
