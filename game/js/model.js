@@ -73,12 +73,10 @@ const SUIT_CORE_ELEMENTS = {};
 Object.keys(ELEMENT_SUIT_LABEL).forEach(suit => {
   SUIT_CORE_ELEMENTS[suit] = CORE_ELEMENT_SYMS.filter(sym => ELEMENT_SUIT[sym] === suit);
 });
-/* "any" -- Planet's tag: paid with any core element, and on the Display
-   Mat it counts as all four suits (MAT_CARDS' pips). Non-enumerable on the
-   label table so Object.keys() loops still see only the four real suits. */
-Object.defineProperty(ELEMENT_SUIT_LABEL, "any", {value: "ANY SUIT", enumerable: false});
-SUIT_COLOR.any = "conic-gradient(#3aab6d 0 25%, #e2a83e 0 50%, #4d7cf2 0 75%, #e2543b 0)";
-SUIT_CORE_ELEMENTS.any = [...CORE_ELEMENT_SYMS];
+/* Planet (tier 3) is the one card whose suits aren't a suit cost: it costs
+   one of every element and no element tax, yet its card shows all four
+   suits, and they count on the Display Mat (MAT_CARDS' pips). */
+const MAT_PIPS_EXTRA = {"Planet": Object.keys(ELEMENT_SUIT_LABEL)};
 /* Each item's single suit, derived from its recipe: tally the suits of its
    raw elements (item ingredients recurse into their own suit, memoized)
    and take the most common. Lazy, so it runs after ENTRIES is built. */
@@ -137,8 +135,8 @@ const ITEM_SUIT_COST_TABLE = {
   "Fruit Cake": ["organic", "organic", "reactive"], Ecosystem: ["earth", "earth", "organic"],
   Metropolis: ["metal", "earth", "reactive"], "Space Station": ["metal", "reactive", "organic"],
 
-  // Capstone-unlocked items (data.js "unlock"). Planet's "any" counts as all four suits.
-  "Sailboat": ["earth"], "Biofuel": ["organic"], "Sunflower": ["organic", "organic"], "Cow": ["organic"], "Volcano": ["reactive", "reactive"], "Dinosaur": ["organic", "earth"], "Milk": ["organic"], "Chocolate": ["reactive"], "Pretzel": ["reactive", "reactive"], "Éclair": ["organic", "reactive"], "Trumpet": ["metal"], "Motorcycle": ["metal", "reactive"], "Book": ["earth"], "Library": ["earth", "earth"], "Planet": ["any"], "Solar System": ["earth", "reactive"], "University": ["metal", "earth"],
+  // Capstone-unlocked items (data.js "unlock"). Planet has none (MAT_PIPS_EXTRA).
+  "Sailboat": ["earth"], "Biofuel": ["organic"], "Sunflower": ["organic", "organic"], "Cow": ["organic"], "Volcano": ["reactive", "reactive"], "Dinosaur": ["organic", "earth"], "Milk": ["organic"], "Chocolate": ["reactive"], "Pretzel": ["reactive", "reactive"], "Éclair": ["organic", "reactive"], "Trumpet": ["metal"], "Motorcycle": ["metal", "reactive"], "Book": ["earth"], "Library": ["earth", "earth"], "Solar System": ["earth", "reactive"], "University": ["metal", "earth"],
 };
 const NO_SUIT_COST = [];
 function itemSuitCosts(name){
@@ -200,13 +198,11 @@ function elSuitBadgeHTML(sym){
 }
 /* Small black glyph per suit (leaf/flame/anvil/mountain), used as the two
    icon corner-bubbles on the element-card popup -- see showElCardPop(). */
-const ANY_SUIT_SVG = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/></svg>');
 const SUIT_ICON = {
   organic: `<img src="data:image/png;base64,${ORGANIC_ICON_B64}" alt="">`,
   reactive: `<img src="data:image/png;base64,${REACTIVE_ICON_B64}" alt="">`,
   metal: `<img src="data:image/png;base64,${METAL_ICON_B64}" alt="">`,
   earth: `<img src="data:image/png;base64,${EARTH_ICON_B64}" alt="">`,
-  any: `<img src="${ANY_SUIT_SVG}" alt="">`,
 };
 // Raw base64, for tinting the glyph with CSS mask-image (.refsuit).
 const SUIT_ICON_B64 = { organic: ORGANIC_ICON_B64, reactive: REACTIVE_ICON_B64, metal: METAL_ICON_B64, earth: EARTH_ICON_B64 };

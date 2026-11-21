@@ -14,7 +14,7 @@
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14f",
+ "version": "2026.11.21a",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -937,7 +937,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌎",
      "Planet",
-     "COMPONENT",
+     "CREATION",
      "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
      20
     ],

@@ -48,7 +48,7 @@ function refSuitsHTML(name){
   // Tinted with CSS mask-image (.refsuit): the SUIT_ICON art is a black
   // glyph CSS colour can't reach.
   return `<div class="refsuits">${suits.map(s =>
-    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(${s === "any" ? ANY_SUIT_SVG : "data:image/png;base64," + SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
+    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(data:image/png;base64,${SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
 }
 
 function refExpandHTML(entry){

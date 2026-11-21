@@ -29,7 +29,7 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
     emoji: ITEM_EMOJI[name],
     station,
     stations,
-    pips: itemSuitCosts(name).flatMap(s => s === "any" ? Object.keys(ELEMENT_SUIT_LABEL) : [s]),
+    pips: MAT_PIPS_EXTRA[name] || itemSuitCosts(name),
     components: entry ? entry.reqs : [],
   };
 });

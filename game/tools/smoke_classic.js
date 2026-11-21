@@ -417,7 +417,10 @@
 
     // An item's tier is its element-icon count: none = I, one = II, two = III, three = capstone.
     const TIER_BY_ICONS = ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"];
-    const offTier = ENTRIES.filter(e => e.tier !== TIER_BY_ICONS[Math.min(itemSuitCosts(e.name).length, 3)]).map(e => e.name);
+    // Planet is the exception: tier 3 with no suit cost (MAT_PIPS_EXTRA).
+    const offTier = ENTRIES.filter(e => e.name !== "Planet" && e.tier !== TIER_BY_ICONS[Math.min(itemSuitCosts(e.name).length, 3)]).map(e => e.name);
+    expect(ITEM_TIER["Planet"] === "CREATION" && !itemSuitCosts("Planet").length && MAT_CARDS.find(c => c.name === "Planet").pips.length === 4,
+      "Planet: tier 3, no suit cost, all four suits on its card");
     expect(!offTier.length, `tier should match element icons: ${offTier.join(", ")}`);
 
     // Main menu "New Game" over a run in progress records it in History.

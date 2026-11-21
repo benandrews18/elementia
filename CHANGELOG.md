@@ -8,6 +8,9 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-21
+- Planet is now a tier 3 card (still 20 points). It costs one of every element and no element tax. Its card shows all four suits, and they all count toward Display Mat bonuses. It's the only card whose suits aren't a tax. The "any suit" tag and its star icon are gone.
+
 ## 2026-11-13
 - Installable app: the website can be added to a phone's home screen (iPhone: Share > Add to Home Screen) and opens full-screen without browser bars, with an Elementia icon, and works offline after the first visit. On iPhone the status bar is solid black so the game isn't drawn under the clock. The home-screen copy keeps its own save, separate from the browser's.
 - Inventory: the Tier 1/2/3 headings no longer collapse their section when tapped (it kept happening by accident).
