@@ -215,6 +215,14 @@ func show_card(name: String) -> void:
 		CardPop.open(self, name)
 
 
+## The Items screen; with a name, that item's breakdown open and in view
+## (Item Info on its card).
+func open_items(name := "") -> void:
+	open_panel("codex")
+	if name != "":
+		(_panel_node as ItemsScreen).jump_to(name)
+
+
 ## An element's card (a tap on an element anywhere: ElementCard).
 func show_element_card(sym: String) -> void:
 	ElementCard.open(self, sym)
@@ -224,8 +232,8 @@ func show_element_card(sym: String) -> void:
 func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
-	if name in ["drawer", "convert", "market", "todo"]:
-		_panel_node = DisplayMatScreen.make() if name == "drawer" else ConvertTray.make() if name == "convert" else MarketTray.make() if name == "market" else TodoTray.make()
+	if name in ["drawer", "convert", "market", "todo", "codex"]:
+		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen}[name].make()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
 	_sync()
@@ -278,7 +286,7 @@ func _sync_hub() -> void:
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
 		badges.market = "!"
-	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo"}, badges,
+	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
@@ -411,7 +419,6 @@ func fade_through_black(midpoint: Callable) -> void:
 	tw.tween_callback(c.queue_free)
 
 
-## shortcut: To-Do List, Market and Items come later in M4.
 func _on_hub(id: String) -> void:
 	match id:
 		"inv":
@@ -424,6 +431,11 @@ func _on_hub(id: String) -> void:
 				close_panel()
 			else:
 				open_panel("todo")
+		"codex":
+			if panel == "codex":
+				close_panel()
+			else:
+				open_panel("codex")
 		"market":  # visiting the Market clears its "!"
 			if panel == "market":
 				close_panel()

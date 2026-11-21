@@ -326,7 +326,7 @@ func _round_btn(at: Vector2, fold: bool) -> Control:
 
 ## Settings (top right; not on the map, under its card) and Convert (bottom
 ## right, once any element is held), on screen `on`.
-static func corner_buttons(on: Control, settings: bool) -> void:
+static func corner_buttons(on: Control, settings: bool, convert := true) -> void:
 	var w := on.size.x
 	var gear := TextureRect.new()
 	gear.texture = load("res://assets/ui/btn_settings.webp")
@@ -340,7 +340,7 @@ static func corner_buttons(on: Control, settings: bool) -> void:
 	# Convert: on screen once any element is held (state.convertRevealed in
 	# the HTML game's updateHub()), with how many 3:1 conversions are possible.
 	var held: Array = Util.get_or(Game.state, "elements", {}).values()
-	if Game.state.get("convertRevealed") or held.any(func(v): return v > 0):
+	if convert and (Game.state.get("convertRevealed") or held.any(func(v): return v > 0)):
 		var conv := TextureRect.new()
 		conv.texture = load("res://assets/ui/btn_quark.webp")
 		conv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

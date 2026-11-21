@@ -3,10 +3,10 @@
 ## station bottom-right, the art, the name, and its components (an item's
 ## icon, an element's symbol; a tick on what you own). A capstone is the same
 ## card in landscape, with its Display Mat rule. A tap on a component opens
-## that card (Back returns); 📌 pins it; a tap anywhere else closes it.
+## that card (Back returns); Item Info shows it on the Items screen; 📌 pins
+## it; a tap anywhere else closes it.
 ## The layout is ui/overlays/card_pop.tscn; this fills it in and stacks the
 ## parts (the CSS gaps are below).
-## shortcut: Item Info is hidden until the Items screen exists (M6 step 2).
 class_name CardPop
 extends Control
 
@@ -41,7 +41,10 @@ func _ready() -> void:
 		_show_pin())
 	$Actions/Back.mouse_filter = MOUSE_FILTER_STOP
 	$Actions/Back.gui_input.connect(func(ev): if _tap(ev) and not _back.is_empty(): show_item(_back.pop_back().name, true))
-	$Actions/Info.visible = false
+	$Actions/Info.gui_input.connect(func(ev): if _tap(ev) and App.current:  # its row on the Items screen
+		var name: String = entry.name
+		queue_free()
+		App.current.open_items(name))
 	$Actions/Back/Arrow.draw.connect(func():  # ←, drawn (not in Nunito)
 		var a: Control = $Actions/Back/Arrow
 		var y := a.size.y / 2
