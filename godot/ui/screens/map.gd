@@ -120,6 +120,7 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		var chip := StationScreen.element_chip(dice[i], cw)
 		chip.position = Vector2(19 + i * (cw + 4), y)
 		chip.set_meta("sym", dice[i])  # the opening flies these to the Inventory
+		_opens(chip, "", dice[i])
 		card.add_child(chip)
 	y += cw + 13.8 + 11
 	# Every item sold here, icon only (owned: gold-soft square with a tick).
@@ -133,7 +134,7 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if owned else Color.TRANSPARENT, 7))
 		box.position = Vector2(x0 + i * (slot + 5), y + 9)
 		box.size = Vector2(slot, slot)
-		box.mouse_filter = MOUSE_FILTER_IGNORE
+		_opens(box, e.name)
 		var ic := Tok.icon(e.emoji, slot - 6)
 		ic.position = Vector2(3, 3)
 		box.add_child(ic)
@@ -159,7 +160,9 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	cem.visible = not boxed
 	cem.position = Vector2(19, y + 10 + 1.4)
 	card.add_child(cem)
+	_opens(cem, cap[1])
 	var cn := Tok.label(cap[1], 20, Tok.OK if done else Color("#fff7e0"), 700)
+	_opens(cn, cap[1])
 	cn.visible = not boxed
 	cn.position = Vector2(19 + 28.5 + 12, y + 10 + 2)
 	card.add_child(cn)
@@ -173,6 +176,16 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 			sb.corner_radius_top_right = 0
 		card.draw_style_box(sb, Rect2(Vector2.ZERO, card.size)))
 	return card
+
+
+## A tap on c opens an item's card (or an element's).
+static func _opens(c: Control, item: String, element := "") -> void:
+	c.mouse_filter = MOUSE_FILTER_STOP
+	c.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current:
+		if element != "":
+			App.current.show_element_card(element)
+		else:
+			App.current.show_card(item))
 
 
 func _on_node(name: String) -> void:

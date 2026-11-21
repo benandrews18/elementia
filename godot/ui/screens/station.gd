@@ -77,6 +77,9 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 		var chip := element_chip(dice[i], cw)
 		chip.position = Vector2(22 + i * (cw + 4), 98.8)
 		chip.get_child(0).set_meta("cmp", "st:chip%d" % i)
+		var sym: String = dice[i]
+		chip.mouse_filter = MOUSE_FILTER_PASS  # a tap opens its card; a drag still scrolls
+		chip.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.show_element_card(sym)))
 		$Scroll/Page/Chips.add_child(chip)
 	# The fold button, the crafted icons in the bar, the list/cards switch.
 	var bar: Control = $Scroll/Page/Bar
@@ -88,6 +91,9 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 			if Catalog.owns(Game.state, e.name) and e.tier != "CAPSTONE":
 				var i2 := Tok.icon(e.emoji, 18)
 				i2.position = Vector2(x + 3, row_y + 8.3)
+				var item: String = e.name
+				i2.mouse_filter = MOUSE_FILTER_PASS
+				i2.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.show_card(item)))
 				$Scroll/Page/Crafted.add_child(i2)
 				var t := Tok.tick(Color.WHITE, 14, Tok.OK, Tok.CARD)  # .station-item-icon.owned::after
 				t.position = Vector2(x + 24 - 9, row_y + 5 - 5)

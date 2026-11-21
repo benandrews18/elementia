@@ -4,8 +4,7 @@
 ## row ending in its "?" reward (a tick once paid); then every capstone.
 ## A square you don't own opens the Crafting Bench to craft it from here;
 ## the corner pin pins it. Home reads Map; a tap outside closes it.
-## shortcut: tapping an owned square or a capstone opens nothing yet (the
-## item card comes with M6's Items screen).
+## An owned square or a capstone opens its card (CardPop).
 class_name MarketTray
 extends Control
 
@@ -181,6 +180,10 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 		Progress.toggle_pin(name)
 		Game._changed())
 	c.add_child(pin)
-	if not inspect and not owned and e != null:
-		c.gui_input.connect(func(ev): if ConvertTray._tap(ev): MarketCraft.open(App.current, name))
+	if e != null:  # not yet owned: craft it from here; else its card
+		c.gui_input.connect(func(ev): if ConvertTray._tap(ev):
+			if not inspect and not owned:
+				MarketCraft.open(App.current, name)
+			else:
+				App.current.show_card(name))
 	return c

@@ -183,6 +183,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 		Color("#4fbf7a") if owned else Color("#c9a571"), 4, 2, Color(0, 0, 0, 0.3)))
 	card.position = at
 	card.mouse_filter = MOUSE_FILTER_PASS
+	card.gui_input.connect(func(ev): if ConvertTray._tap(ev) and App.current: App.current.show_card(e.name))  # its card
 	_list.add_child(card)
 	var tack := Panel.new()  # the red pushpin at the top
 	tack.add_theme_stylebox_override("panel", Tok.box(Color("#d9483c"), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.4)))
