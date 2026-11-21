@@ -10,14 +10,24 @@
 class_name ItemCard
 extends Control
 
+## The layout is ui/components/item_card.tscn: the face and points badge
+## (full size and mini), the badge's number, the station row's gap. The
+## icon, name, pips and badges come from the item.
+const SCENE := "res://ui/components/item_card.tscn"
+
+@export var face: StyleBox
+@export var face_mini: StyleBox
+@export var badge: StyleBox
+@export var badge_mini: StyleBox
+
 var item: String
 var opts: Dictionary
 var _pips: Array[Control] = []
-var _stations: HBoxContainer
+@onready var _stations: HBoxContainer = $Stations
 
 
 static func make(name: String, o := {}) -> ItemCard:
-	var c := ItemCard.new()
+	var c: ItemCard = load(SCENE).instantiate()
 	c.item = name
 	c.opts = o
 	c.set_meta("cmp", name)
@@ -31,16 +41,10 @@ func _ready() -> void:
 	var mini: bool = opts.get("mini", false)
 	var grid_mini: bool = mini and opts.get("in_grid", true)
 	var border := 3 if mini else 4
-	mouse_filter = MOUSE_FILTER_PASS
 	# Face: parchment, black border, rounded, soft shadow.
-	var face := Panel.new()
-	face.add_theme_stylebox_override("panel", Tok.box(Tok.PARCHMENT, 10 if mini else 12, border, Color.BLACK, 5, 3))
-	face.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	face.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(face)
+	$Face.add_theme_stylebox_override("panel", face_mini if mini else face)
 	# Icon over name, centred (a grid mini card starts from the top).
-	var col := VBoxContainer.new()
-	col.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	var col: VBoxContainer = $Col
 	# CSS padding: 5px 3px 3px (mini 2px; 3px on top in a grid).
 	var side := 2 if mini else 3
 	col.offset_left = border + side
@@ -50,9 +54,6 @@ func _ready() -> void:
 		col.offset_top -= 19  # capstone art rides up into the free top centre (margin-top:-19px)
 	col.offset_bottom = -(border + side)
 	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini else BoxContainer.ALIGNMENT_CENTER
-	col.add_theme_constant_override("separation", 0)
-	col.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(col)
 	var icon_px := 26.0 if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	var ic := Tok.icon(card.emoji, icon_px)
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -68,31 +69,28 @@ func _ready() -> void:
 	# Points badge, top-left, straddling the border.
 	var pts: int = int(card.points) * (2 if opts.get("complete") else 1)
 	var bsz := 22.0 if mini else 28.0
-	var num := Tok.label(str(pts), 11 if mini else 13, Tok.CARD_INK, 900)
-	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var badge := Panel.new()
-	badge.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, bsz / 2, 2))
-	badge.mouse_filter = MOUSE_FILTER_IGNORE
+	var num: Label = $Badge/Num
+	num.text = str(pts)
+	if mini:
+		num.add_theme_font_size_override("font_size", 11)
+	var b_panel: Panel = $Badge
+	b_panel.add_theme_stylebox_override("panel", badge_mini if mini else badge)
 	# CSS top/left are from inside the border: -3px (mini -5px).
 	var off := border - (5 if mini else 3)
-	badge.position = Vector2(off, off)
+	b_panel.position = Vector2(off, off)
 	# min-width 28px (mini 22), padding 0 4px, border 2px.
-	var text_w := Tok.font(900).get_string_size(str(pts), HORIZONTAL_ALIGNMENT_LEFT, -1, 11 if mini else 13).x
-	badge.size = Vector2(maxf(bsz, ceilf(text_w) + 12), bsz)
-	num.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	badge.add_child(num)
+	var text_w := num.get_theme_font("font").get_string_size(num.text, HORIZONTAL_ALIGNMENT_LEFT, -1, num.get_theme_font_size("font_size")).x
+	b_panel.size = Vector2(maxf(bsz, ceilf(text_w) + 12), bsz)
 	if opts.get("complete"):
 		# Whole recipe on the mat: a 2px gold ring and glow round the badge (.mm-card.complete .mm-pts).
 		var glow := Panel.new()
 		glow.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, bsz / 2 + 2, 0, Color.BLACK, 3, 0, Color(Tok.GOLD, 0.85)))
 		glow.mouse_filter = MOUSE_FILTER_IGNORE
-		glow.position = badge.position - Vector2(2, 2)
-		glow.size = badge.size + Vector2(4, 4)
+		glow.position = b_panel.position - Vector2(2, 2)
+		glow.size = b_panel.size + Vector2(4, 4)
 		add_child(glow)
-		move_child(glow, badge.get_index())  # behind the badge
-	badge.set_meta("cmp", opts.get("tag", item) + ":pts")
-	add_child(badge)
+		move_child(glow, b_panel.get_index())  # behind the badge
+	b_panel.set_meta("cmp", opts.get("tag", item) + ":pts")
 	# Suit pips: a column down the top-right corner (placed in _place()).
 	var psz := 18.0 if mini else 27.0
 	for i in card.pips.size():
@@ -107,13 +105,10 @@ func _ready() -> void:
 		if opts.get("lit_suits", []).has(su):
 			pip.add_child(_halo(psz))
 		pip.set_meta("cmp", "%s:pip%d" % [opts.get("tag", item), i])
-		add_child(pip)
+		$Pips.add_child(pip)
 		_pips.append(pip)
 	# Station badges: a row centred on the bottom edge (placed in _place()).
 	var ssz := 18.0 if mini else 26.0
-	_stations = HBoxContainer.new()
-	_stations.add_theme_constant_override("separation", 3)
-	_stations.mouse_filter = MOUSE_FILTER_IGNORE
 	for st in card.stations:
 		var b := Panel.new()
 		b.add_theme_stylebox_override("panel", Tok.box(Tok.station_color(st), ssz / 2, 1.5))
@@ -130,7 +125,6 @@ func _ready() -> void:
 		b.add_child(g)
 		_stations.add_child(b)
 	_stations.set_meta("cmp", opts.get("tag", item) + ":stations")
-	add_child(_stations)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
 	resized.connect(_place)
