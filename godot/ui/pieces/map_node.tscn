@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://ui/pieces/map_node.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/ui/clock_rim.webp" id="2"]
 [ext_resource type="Script" path="res://ui/pieces/nine_slice.gd" id="3"]
 [ext_resource type="Texture2D" path="res://assets/ui/pill_short.webp" id="4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_900.tres" id="f9"]
 
 [node name="MapNode" type="Control"]
 layout_mode = 3
@@ -54,6 +55,7 @@ anchor_bottom = 1.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
 theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f9")
 theme_override_font_sizes/font_size = 11
 text = "YOU ARE HERE"
 horizontal_alignment = 1
