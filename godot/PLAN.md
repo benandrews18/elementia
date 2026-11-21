@@ -12,7 +12,7 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 step 8 (EDITING.md), then the
+**Next task:** the
 full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
@@ -536,7 +536,7 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
       Intended changes: the hub's side labels fill their buttons (were
       3px low, off-centre; now within 1px of the HTML); the Market footer is
       centred. Still code: the To-Do trees, Market squares, Quark Meter.
-- [ ] 8. A short "Editing Elementia in Godot" guide (`godot/EDITING.md`): how
+- [x] 8. A short "Editing Elementia in Godot" guide (`godot/EDITING.md`): how
       to open it, which scene is which screen, what's safe to change, what
       lives in the data instead, and the commit-before-a-session rule.
 - [ ] **Done when:** every screen and window opens as a scene in the editor,
