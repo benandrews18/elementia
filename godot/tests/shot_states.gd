@@ -7,7 +7,7 @@ extends Control
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
-	"suit_spend", "expand", "reward_open"]
+	"suit_spend", "expand", "reward_open", "roll"]
 
 
 func _ready() -> void:
@@ -88,7 +88,7 @@ func _ready() -> void:
 			e.size = app.size
 			app.add_child(e)
 		"howto0", "howto1", "howto2":
-			var h := HowToPlay.new()
+			var h := HowToPlay.make()
 			h.on_done = func(): pass
 			h.size = app.size
 			app.add_child(h)
@@ -124,3 +124,10 @@ func _ready() -> void:
 			d.get_node("Window/Why").visible = true
 			d.get_node("Window/Hint").visible = true
 			d._layout()
+		"roll":  # 4 dice, already revealed (the tweens run to their end)
+			var pop := RollPopup.new()
+			pop.roll = [{"face": 3, "sym": "C"}, {"face": 5, "sym": "O"}, {"face": 1, "sym": "Fe"}, {"face": 6, "sym": "Si"}]
+			pop.size = app.size
+			app.add_child(pop)
+			for t in get_tree().get_processed_tweens():
+				t.custom_step(10)
