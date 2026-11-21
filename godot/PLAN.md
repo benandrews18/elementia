@@ -610,15 +610,18 @@ Order (each makes the next useful):
       (step 9), the Mini-games / Auto card / Low motion / 5x5 switches (with
       their features), the once-a-run challenge and Unknown tips (step 7).
 - [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
-      screen's Main Menu.
+      screen's Main Menu. Skills: godot-ui, input-handling.
 - [ ] 5. Trophies and History (`trophies.js`, `history.js` screens; their
-      rules are ported).
-- [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`).
+      rules are ported). Skills: godot-ui.
+- [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`). Skills: hud-system,
+      tween-animation.
 - [ ] 7. Hints and tips (`hints.js`, `tour.js`): one-time tips, the
-      challenge tip, the coach.
+      challenge tip, the coach. Skills: hud-system, tween-animation.
 - [ ] 8. Saved layouts, collections list, Combo Lab (`mat-layouts.js`,
-      `combo-lab.js`): the mat's Layouts button.
-- [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots.
+      `combo-lab.js`): the mat's Layouts button. Skills: godot-ui,
+      input-handling.
+- [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots. Skills:
+      godot-debugging.
 - [ ] 10. M6 review.
 
 ### Review with the godot-prompter plugin (planned 2026-11-21, redone the same day)
@@ -682,16 +685,33 @@ new screen) and the godot-code-review skill at the end of each step,
 alongside ponytail-review; no agents unless the user asks.
 
 ### M7 Mini-games (size unknown; decide first)
-- [ ] Decide which of the 8 to keep. Then port them one at a time.
+- [ ] Decide which of the 8 to keep (godot-grill first: a new system with
+      open questions). Then port them one at a time (input-handling,
+      tween-animation, math-essentials as each needs).
 
 ### M8 Polish (ongoing)
 - [ ] Animations (crafting, travel, reveals), screen transitions, sound and
       music, haptics, a loading screen, performance on an older phone
-- Animations move to AnimationPlayer timelines in the scenes, so the user
-  can tune timing in the editor.
+- Animations: fixed motions (bounces, the logo, the shutter, the Lock-In
+  count) move to AnimationPlayer timelines in the scenes, so the user can
+  tune them in the editor; motions aimed at a place known only while playing
+  (dice flying to the Inventory, confetti) stay tweens, their timings as
+  Inspector numbers. Low motion shortens or skips both. (Review 16;
+  skills: animation-system, tween-animation.)
+- Sound: an audio bus layout (Music, SFX), one small Sound helper driven by
+  named Game signals (crafted, rolled, row done, checked: review 6);
+  volume switches in Settings. (Skill: audio-system.)
+- Performance on a real phone (godot-optimization): re-measure the station
+  and the mat (review 12); `tests/tmp/bench.gd`-style timing.
+- Haptics: mobile-development.
 
 ### M9 Release and cutover (~2-3 sessions plus store review time)
 - [ ] Android: export templates, a signing key, Play Console listing, testing track
+- [ ] Before any store build: the Back button closes the top window, never
+      quits (review 14); the safe area keeps the bars clear of notches and
+      the home bar (review 8, responsive-ui); app saves get a version and the
+      `loadAll()` clean-ups (review 5).
+- Skills: export-pipeline, mobile-development, web-export, assets-pipeline.
 - [ ] iOS: a Mac, Apple developer account, Xcode export, TestFlight
 - [ ] Store rules for a children's game: Apple Kids category and Google
       Families policy (no third-party ads or tracking, a privacy policy)
@@ -732,6 +752,16 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
   are exported from the running game, never copied; no HTML-save import (app saves are upgraded: see Same save format);
   no pixel-difference overlay; comparison page built in M2.
+- 2026-11-21 (godot-prompter review, REVIEW.md): **Skills drive each step:**
+  the matching godot-prompter skill is loaded before each step (listed on
+  the steps) and godot-code-review runs at each step's end, alongside
+  ponytail-review. **No parallel agent fan-outs** (they used up the usage
+  limit); agents only when asked, one at a time. **Tests stay in
+  check.py** (no GUT/gdUnit4: third-party code for little gain over the
+  parity, rule, play and screen checks). **A mid-visit quit keeps the
+  visit, in Godot only** (the HTML game keeps its behaviour; a deliberate
+  parity exception). Low-processor mode on (the screenshot tools turn it
+  off to draw every frame).
 
 ## Open questions (for the user, when they come up)
 
