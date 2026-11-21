@@ -207,6 +207,17 @@ func _ready() -> void:
 	Game.state.items.append("Glass")
 	check(Game.todo_hint() == null, "no hint once everything pinned is owned")
 
+	# A save made mid-visit resumes at that station (Godot only); leaving
+	# for the map forgets it.
+	fresh()
+	Game.go_station("The City")
+	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.resume()
+	check(Game.ctx.current == "The City" and Game.ctx.screen == "station", "a mid-visit save resumes at the station")
+	Game.go_map()
+	Game.resume()
+	check(Game.ctx.current == null and Game.ctx.screen == "map", "after leaving, a save resumes on the map")
+
 	# Saving: the temp file is swapped in over the old save; a write cut off
 	# half-way (only the temp file) leaves the last good save; a file of the
 	# wrong kind reads as the default.

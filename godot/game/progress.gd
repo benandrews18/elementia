@@ -100,6 +100,7 @@ func load_all() -> void:
 	Game.state = Game.fresh_state()
 	if saved is Dictionary:
 		Game.state.merge(saved, true)
+	Game.resume()
 
 
 func save_all() -> void:

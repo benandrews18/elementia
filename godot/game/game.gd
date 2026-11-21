@@ -20,6 +20,16 @@ func load_snapshot(s: Dictionary) -> void:
 	state_changed.emit()
 
 
+## After loading a save: back at the station you were visiting (the HTML
+## game's resumeRun() puts you on the map, and its Shop then goes to the
+## station before; Godot only, PLAN.md decisions 2026-11-21).
+func resume() -> void:
+	var at = Progress.prefs.get("atStation")
+	if at and int(state.get("visits", 0)) > 0 and not state.get("ended") and Data.t("STATION_BY_NAME").has(at):
+		ctx.current = at
+		ctx.screen = "station"
+
+
 func snapshot() -> Dictionary:
 	return {"state": state, "ctx": ctx}
 
@@ -58,6 +68,7 @@ func go_station(name: String, notify := true) -> void:
 		state.heliTrips = Util.get_or(state, "heliTrips", 0) + 1
 	ctx.current = name
 	ctx.screen = "station"
+	Progress.prefs.atStation = name  # resume() brings you back here
 	state.visits += 1
 	state.rolledHere = false
 	Progress.record_play_day()
@@ -80,6 +91,7 @@ func go_map() -> void:
 		state.lastStation = ctx.current
 	ctx.screen = "map"
 	ctx.current = null
+	Progress.prefs.atStation = null
 	state.lastRoll = null
 	ctx.selectedMapStation = null
 	if int(state.visits) >= int(Data.t("MAX_VISITS")) and not state.ended:
