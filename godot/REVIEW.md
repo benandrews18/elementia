@@ -341,3 +341,31 @@ Numbered M6-n so they don't clash with the list above.
   saves). Leave it unless they change.
 
 Verdict (pass 1): fix M6-1 first. Lean: about -10 lines possible.
+
+## M6 review, pass 2: godot-prompter skills on steps 4-9 (2026-11-21)
+Skills: godot-code-review, save-load, responsive-ui, input-handling,
+godot-ui. Read: the same files as pass 1, plus layouts/collections .tscn
+widths, project.godot's stretch settings, ParchDialog._layout.
+Checked and fine: user data is JSON in user:// (a pasted snapshot can't
+run code, unlike a Resource file); the list rows' fixed 322 px fit every
+screen (stretch "expand" keeps the width at least 390, and the dark
+windows stop at 382 on tablets); taps go through Tap.tap on gui_input;
+the Dev Panel has one Theme at its root; awaits run on nodes that outlive
+them, and the clue gift's tweens die with their node.
+
+**Nice**
+- M6-8 **Restore and the backup copy ignore file errors** (`game/dev.gd`
+  restore, touch). If the rename fails (a file locked, disk full), the
+  window closes and the dev run reloads as if restored; a failed copy
+  means Restore is never offered. **Fix:** check the returned error,
+  `push_error` and stop (about 4 lines).
+- M6-9 **On a phone the on-screen keyboard covers the Dev Panel's text
+  fields** (item name, snapshot paste: the panel sits on the hub, the
+  keyboard takes the lower ~40%). Dev only. **Fix:** lift the panel above
+  `DisplayServer.virtual_keyboard_get_height()` while a field has focus;
+  or check it with the phone pass (M8, item 12).
+- M6-10 **The new files have no version number either** (snapshots, dev
+  history, the backup). Not new work: add them to item 5 (save upgrades,
+  M9).
+
+Verdict (pass 2): nothing must change before M7.
