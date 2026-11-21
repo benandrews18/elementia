@@ -13,12 +13,14 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 1, the card pop-up. Start every session with `git status`: the user may
+**Next task:** M6 step 2, the Items screen (then Item Info on the card). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
+  element card, opened by taps across the screens.
 - 2026-11-20: M5.5 review fixes: stations scale with the map width
   (tablets), YOU ARE HERE and the station colours editable, dead helpers
   gone, dim/scrim pieces, tools/recolour.py (a colour everywhere at once;
@@ -572,9 +574,15 @@ window is a scene from the start (M5.5 rules); each step gets shot states
 (`tests/shot_states.gd`) and, where it's tapped through, a play-test section;
 `tools/check.py fast` per change, `full` at the end of each step.
 Order (each makes the next useful):
-- [ ] 1. Card pop-up (`card-popup.js`): an item's card big, with its recipe
-      and where it's sold; an element's card. Opened by a tap on a card
-      anywhere (mat, Inventory, Market squares and capstones, To-Do List).
+- [x] 1. Card pop-up (`card-popup.js`): `ui/overlays/card_pop.tscn` (an
+      item's card; a capstone's landscape with its rule, grown to fit;
+      drill into a component, Back, 📌) and `element_card.tscn`. Opened from
+      station chips and crafted icons, the map card, owned Market squares
+      and capstones, To-Do rows (`App.show_card` / `show_element_card`).
+      Within ~3px of the HTML (compare shots cardpop, cardcap, elcard).
+      Later: Item Info (with step 2); the capstone celebration, the unlock
+      reveal and the after-craft mini card (craft moments, M8). Godot's
+      windows dim the hub too (the HTML's don't): kept, as for every window.
 - [ ] 2. Items screen (`reference.js`, the hub's Items button): every item,
       filter, tap for the card pop-up.
 - [ ] 3. Settings (`settings.js`, the gear): options, the rules pages (also
