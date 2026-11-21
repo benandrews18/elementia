@@ -33,7 +33,7 @@ static func restore() -> void:
 	if not has_backup():
 		return
 	DirAccess.rename_absolute(BACKUP_PATH, Progress.SAVE_PATH)
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.ctx = Game.fresh_ctx()
 	Progress.load_all()
 	Game.state_changed.emit()
 
@@ -45,7 +45,7 @@ static func clear_all() -> void:
 		if f.ends_with(".json") or f.ends_with(".tmp"):
 			DirAccess.remove_absolute("user://" + f)
 	Progress.prefs = Progress.DEFAULT_PREFS.duplicate(true)
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.ctx = Game.fresh_ctx()
 	App.current.get_tree().reload_current_scene()  # main.gd loads (nothing) and opens the title screen
 
 
@@ -206,7 +206,7 @@ static func snap_load(i: int) -> void:
 	st.merge(list[i].state.duplicate(true), true)
 	st.dev = true
 	Game.state = st
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.ctx = Game.fresh_ctx()
 	Game._changed()
 
 
@@ -239,7 +239,7 @@ static func _fresh() -> void:
 	st.visitedStations["The Ocean"] = true
 	Market.ensure_card(st)
 	Game.state = st
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.ctx = Game.fresh_ctx()
 
 
 ## Each sets the turn before filling the mat (the mat's size follows the turn).

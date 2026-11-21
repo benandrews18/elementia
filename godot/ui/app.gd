@@ -217,7 +217,7 @@ func _confetti() -> void:
 func new_game() -> void:
 	Progress.record_history()
 	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	Game.ctx = Game.fresh_ctx()
 	Progress.prefs.pinnedItems = []
 	close_panel()
 	Game._changed()
@@ -416,7 +416,8 @@ func open_combo_lab() -> void:
 	lab.bingoCenterChosen = true
 	lab.visits = 20
 	Game.state = lab
-	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false, "comboLab": true}
+	Game.ctx = Game.fresh_ctx()
+	Game.ctx.comboLab = true
 	_hub.visible = false
 	open_panel("drawer")
 	if is_instance_valid(_screen):

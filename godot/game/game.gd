@@ -10,8 +10,7 @@ extends Node
 signal state_changed
 
 var state: Dictionary = {}
-var ctx: Dictionary = {"current": null, "screen": "map", "travelPromptFor": null,
-	"selectedMapStation": null, "lockInCommitted": false}
+var ctx: Dictionary = fresh_ctx()
 
 func load_snapshot(s: Dictionary) -> void:
 	state = s.get("state", s).duplicate(true)
@@ -63,6 +62,12 @@ func feeds_tracked(name: String) -> bool:
 func _changed() -> void:
 	Progress.save_all()
 	state_changed.emit()
+
+
+## The globals outside the state at the start of a run (on the map, nothing
+## picked).
+static func fresh_ctx() -> Dictionary:
+	return {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
 
 
 ## freshState()
@@ -353,7 +358,7 @@ func confirm_final_lock_in() -> float:
 func start_run(capstone: String) -> void:
 	state = fresh_state()
 	Progress.prefs.pinnedItems = []
-	ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false}
+	ctx = fresh_ctx()
 	Market.set_center(state, capstone)
 	if not Progress.is_pinned(capstone):
 		Progress.toggle_pin(capstone)
