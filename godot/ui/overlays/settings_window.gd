@@ -1,8 +1,7 @@
 ## Settings (the gear; #settings): How to Play, Game Rules, Tutorial
-## Messages; Reset (a new run, after asking); the version. The layout is
-## ui/overlays/settings.tscn.
-## shortcut: no Home button until the welcome screen exists (M6 step 4), no
-## Dev Tools row until dev mode (step 9).
+## Messages; Home (the title screen; the run stays saved); Reset (a new run,
+## after asking); the version. The layout is ui/overlays/settings.tscn.
+## shortcut: no Dev Tools row until dev mode (M6 step 9).
 class_name SettingsWindow
 extends ParchDialog
 
@@ -37,6 +36,9 @@ func _on_pressed(button: String) -> void:
 		"Tuts":
 			close()
 			ParchDialog.open(app, TutorialMessages.SCENE)
+		"Home":
+			close()
+			app.show_welcome()
 		"Reset":
 			ConfirmDialog.ask(app, "Start a new run? Your inventory and visits will be cleared.", func():
 				close()

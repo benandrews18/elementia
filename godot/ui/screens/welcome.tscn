@@ -1,0 +1,146 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/welcome.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/tutorial/0.webp" id="bg"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+[ext_resource type="PackedScene" path="res://ui/pieces/gloss_button.tscn" id="gloss"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u25b6.png" id="play"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="Gradient" id="fade_g"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.6)
+
+[sub_resource type="GradientTexture2D" id="fade"]
+gradient = SubResource("fade_g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[node name="WelcomeScreen" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("1")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+
+[node name="Art" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="TextureRect" parent="."]
+layout_mode = 0
+offset_top = 577.0
+offset_right = 390.0
+offset_bottom = 844.0
+mouse_filter = 2
+texture = SubResource("fade")
+expand_mode = 1
+
+[node name="Actions" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 717.5
+offset_right = 370.0
+offset_bottom = 820.1
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Play" parent="Actions" instance=ExtResource("pill")]
+custom_minimum_size = Vector2(0, 44.3)
+layout_mode = 2
+mouse_filter = 0
+
+[node name="Text" parent="Actions/Play" index="0"]
+visible = false
+
+[node name="Row" type="HBoxContainer" parent="Actions/Play"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Actions/Play/Row"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("play")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Actions/Play/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 15
+text = "Play"
+vertical_alignment = 1
+
+[node name="Row1" type="HBoxContainer" parent="Actions"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="MiniGames" parent="Actions/Row1" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 48.3)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mini-Games"
+emoji = "🎮"
+radius = 11
+
+[node name="ComboLab" parent="Actions/Row1" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 48.3)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Combo Lab"
+emoji = "🧪"
+radius = 11
+
+[node name="Row2" type="HBoxContainer" parent="Actions"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Collections" parent="Actions/Row2" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 48.3)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Collections"
+emoji = "🏆"
+radius = 11
+
+[node name="Trophies" parent="Actions/Row2" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 48.3)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Trophies"
+emoji = "🎖️"
+radius = 11
+
+[node name="Settings" parent="Actions" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 48.3)
+layout_mode = 2
+text = "Settings"
+emoji = "⚙️"
+radius = 11

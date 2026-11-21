@@ -30,7 +30,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -384,6 +384,37 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## The title screen: Settings' Home and the end screen's Main Menu open it
+## over the run (which stays as it was); Play opens the Classic window;
+## Continue closes both.
+func _welcome(app: App) -> void:
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	await get_tree().process_frame
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	var visits: int = Game.state.visits
+	app.open_settings()
+	top.call(SettingsWindow)[0].get_node("Window/Content/Buttons/Home").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(WelcomeScreen).size() == 1 and top.call(SettingsWindow).is_empty() and Game.state.visits == visits, "Settings' Home: the title screen, the run untouched")
+	app.open_settings()  # Settings from the title screen, then Home: still one title screen
+	top.call(SettingsWindow)[0].get_node("Window/Content/Buttons/Home").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(WelcomeScreen).size() == 1, "Home over the title screen doesn't stack a second one")
+	top.call(WelcomeScreen)[0].get_node("Actions/Play").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(ClassicMode).size() == 1, "Play opens the Classic window")
+	top.call(ClassicMode)[0].get_node("Window/Content/Card/Body/Buttons/Continue").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(ClassicMode).is_empty() and top.call(WelcomeScreen).is_empty(), "Continue closes the window and the title screen")
+	app._show_end(false)
+	top.call(EndGame)[0].get_node("Window/Foot/MainMenu").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(WelcomeScreen).size() == 1 and top.call(EndGame).is_empty(), "the end screen's Main Menu: the title screen")
+	top.call(WelcomeScreen)[0].queue_free()
+	finished.welcome = true
 
 
 ## Settings and the rules: the gear opens Settings; Game Rules' switch is

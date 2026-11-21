@@ -208,6 +208,13 @@ func open_card(name: String) -> void:
 		_screen._redraw()
 
 
+## The title screen over everything (launch, Settings' Home, the end
+## screen's Main Menu); the run underneath is untouched.
+func show_welcome() -> void:
+	if not get_children().any(func(c): return c is WelcomeScreen and not c.is_queued_for_deletion()):  # Home from Settings opened over it
+		WelcomeScreen.show_on(self)
+
+
 ## An item's card, big (a tap on an item anywhere: CardPop).
 func show_card(name: String) -> void:
 	if Catalog.entry(name) != null:

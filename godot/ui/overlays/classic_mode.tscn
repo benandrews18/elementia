@@ -1,0 +1,131 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/classic_mode.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/gloss_button.tscn" id="gloss"]
+[ext_resource type="PackedScene" path="res://ui/pieces/setting_row.tscn" id="row"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f5fa.png" id="map"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="card"]
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+bg_color = Color(0.937255, 0.862745, 0.698039, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.788235, 0.647059, 0.443137, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="ClassicMode" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 48.0
+top_gap = 16.4
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 206.8
+offset_right = 370.0
+offset_bottom = 572.2
+title = "Elementia"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 75.4
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Card" type="PanelContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("card")
+
+[node name="Body" type="VBoxContainer" parent="Window/Content/Card"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Info" type="VBoxContainer" parent="Window/Content/Card/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Emoji" type="TextureRect" parent="Window/Content/Card/Body/Info"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("map")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="Window/Content/Card/Body/Info"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.141176, 0.0705882, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 17
+text = "Classic Mode"
+
+[node name="StatsWrap" type="MarginContainer" parent="Window/Content/Card/Body/Info"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 2
+
+[node name="Stats" type="Label" parent="Window/Content/Card/Body/Info/StatsWrap"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.658824, 0.45098, 0.0588235, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 12
+text = "New"
+
+[node name="Buttons" type="HBoxContainer" parent="Window/Content/Card/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Continue" parent="Window/Content/Card/Body/Buttons" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 44.9)
+layout_mode = 2
+size_flags_horizontal = 3
+metadata/button = true
+text = "Continue"
+font_size = 14
+top = Color(0.341176, 0.831373, 0.533333, 1)
+bottom = Color(0.247059, 0.705882, 0.423529, 1)
+edge = Color(0.0941176, 0.290196, 0.160784, 1)
+shine = Color(1, 1, 1, 0.4)
+ink = Color(0.0392157, 0.12549, 0.0823529, 1)
+ink_shadow = false
+
+[node name="NewGame" parent="Window/Content/Card/Body/Buttons" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(0, 44.9)
+layout_mode = 2
+size_flags_horizontal = 3
+metadata/button = true
+text = "New Game"
+font_size = 14
+
+[node name="History" parent="Window/Content" instance=ExtResource("row")]
+visible = false
+layout_mode = 2
+text = "History"
+sub = "See your past runs"
+emoji = "🕓"
+button_text = "View"

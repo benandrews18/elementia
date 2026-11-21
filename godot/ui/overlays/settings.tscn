@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/settings_window.gd" id="s"]
 [ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://ui/pieces/setting_row.tscn" id="r5"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="r6"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="r7"]
+[ext_resource type="PackedScene" path="res://ui/pieces/gloss_button.tscn" id="gb"]
 
 [sub_resource type="Gradient" id="red_g"]
 offsets = PackedFloat32Array(0, 0.65, 1)
@@ -125,6 +126,15 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 10
+
+[node name="Home" parent="Window/Content/Buttons" instance=ExtResource("gb")]
+custom_minimum_size = Vector2(0, 46.2)
+layout_mode = 2
+size_flags_horizontal = 3
+metadata/button = true
+text = "Home"
+emoji = "🏠"
+font_size = 14
 
 [node name="Reset" type="Control" parent="Window/Content/Buttons"]
 custom_minimum_size = Vector2(0, 46.2)

@@ -1,5 +1,6 @@
-## Startup: the app with the player's saved run, or, with no save, a new
-## run's opening.
+## Startup: the app with the player's saved run under the title screen
+## (every launch opens on it, like the HTML game; Play -> Continue / New
+## Game).
 extends Control
 
 
@@ -7,6 +8,4 @@ func _ready() -> void:
 	Progress.load_all()
 	var app := App.new()
 	add_child(app)
-	# Also a run still at visit 0: New Game saves before the capstone is chosen.
-	if not Progress.has_save() or int(Game.state.get("visits", 0)) == 0:
-		app.new_game.call_deferred()
+	app.show_welcome.call_deferred()  # after the app's own deferred end screen, so it's on top

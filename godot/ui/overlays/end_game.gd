@@ -191,6 +191,9 @@ func _foot(inner: float) -> Control:
 	review.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		App.current.open_panel("drawer"))
+	$Window/Foot/MainMenu.gui_input.connect(func(ev): if Tap.tap(ev):  # the run stays saved (Play continues it)
+		queue_free()
+		App.current.show_welcome())
 	var x := 0.0
 	var y := 0.0
 	for c: Control in foot.get_children().filter(func(c): return c.visible):
