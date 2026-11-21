@@ -13,8 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 5, Trophies and History (their screens; the title
-screen's Trophies button and the Classic window's History row). Start every session with `git status`: the user may
+**Next task:** M6 step 6, Pins: the tracked item (🔍 pill) (`pins.js`). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -24,7 +23,8 @@ Log (newest first, one line per session):
   safe saves, one save per action, low-processor mode, Items screen
   ~360 -> ~28 ms, Tap.tap (a drag isn't a tap), mid-visit resume (Godot
   only); checks stop re-shooting screens after a commit. Planet redesigned
-  (both games). M6 step 4: the title screen and the Classic window.
+  (both games). M6 step 4: the title screen and the Classic window. Step 5:
+  Trophies and History.
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -621,8 +621,13 @@ Order (each makes the next useful):
       the glossy wood/green button, colours in the Inspector. Mini-Games, Combo
       Lab, Collections, Trophies and the Classic window's History stay hidden
       until their steps. Skills: godot-ui, input-handling.
-- [ ] 5. Trophies and History (`trophies.js`, `history.js` screens; their
-      rules are ported). Skills: godot-ui.
+- [x] 5. Trophies and History (`trophies.js`, `history.js` screens):
+      `ui/overlays/trophies.tscn` (TrophyTile pieces, 5 to a row, scrolling;
+      `trophy_detail.tscn`, the banner under the icon as in the HTML) from the
+      title screen's Trophies; `history.tscn` (HistEntry rows, a tap opens the
+      turn log; ⧉ copies JSON) from the Classic window. History's 🕓 shows once
+      its image is fetched. Its intro wraps to 3 lines (2 in the HTML: Nunito
+      a touch wider). Skills: godot-ui.
 - [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`). Skills: hud-system,
       tween-animation.
 - [ ] 7. Hints and tips (`hints.js`, `tour.js`): one-time tips, the
