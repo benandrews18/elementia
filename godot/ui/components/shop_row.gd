@@ -52,7 +52,7 @@ func _ready() -> void:
 	for su in Data.t("ITEM_SUIT_COST_TABLE").get(e.name, []):
 		var k: int = seen.get(su, 0)
 		seen[su] = k + 1
-		var lit: bool = owned or (su == "any") or Game.suit_surplus(su, reserved) > k
+		var lit: bool = owned or Game.suit_surplus(su, reserved) > k
 		var b := Panel.new()
 		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su) if lit else Color("#8a94a6"), 11))
 		b.position = Vector2(x, 8.1)

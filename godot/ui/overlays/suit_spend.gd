@@ -51,7 +51,7 @@ func _reserved() -> Dictionary:
 func _picked_for(suit: String) -> int:
 	var n := 0
 	for sym in _picks:
-		if suit == "any" or Data.t("ELEMENT_SUIT").get(sym) == suit:
+		if Data.t("ELEMENT_SUIT").get(sym) == suit:
 			n += _picks[sym]
 	return n
 
@@ -60,8 +60,7 @@ func _build() -> void:
 	for c in _balloon.get_children():
 		c.queue_free()
 	var need := _need()
-	var order: Array = Data.t("ELEMENT_SUIT_LABEL").keys() + ["any"]
-	var suits := order.filter(func(s): return need.has(s))
+	var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys().filter(func(s): return need.has(s))
 	var rows: Array = suits.map(func(su): return Data.t("SUIT_CORE_ELEMENTS")[su])
 	var cols := 0
 	for r in rows:

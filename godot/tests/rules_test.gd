@@ -51,7 +51,7 @@ func _ready() -> void:
 	var item := ""
 	for n in Data.t("ITEM_SUIT_COST_TABLE"):
 		var e = Catalog.entry(n)
-		if e != null and Data.t("ITEM_SUIT_COST_TABLE")[n].size() == 1 and Data.t("ITEM_SUIT_COST_TABLE")[n][0] != "any":
+		if e != null and Data.t("ITEM_SUIT_COST_TABLE")[n].size() == 1:
 			item = n
 			break
 	check(item != "", "found an item with one suit cost")
@@ -158,9 +158,11 @@ func _ready() -> void:
 	s = fresh()
 	var costly := ""
 	for n in Data.t("ITEM_SUIT_COST_TABLE"):
-		if Catalog.entry(n) != null and Catalog.needs_of(Catalog.entry(n).reqs).items.is_empty():
+		if Catalog.entry(n) != null and not Data.t("ITEM_SUIT_COST_TABLE")[n].is_empty():
 			costly = n
 			break
+	for it in Catalog.needs_of(Catalog.entry(costly).reqs).items:  # its item components, owned
+		s.items.append(it.name)
 	for sym in Catalog.needs_of(Catalog.entry(costly).reqs).els:
 		s.elements[sym] = 5
 	for su in Game.suit_cost_need(costly):

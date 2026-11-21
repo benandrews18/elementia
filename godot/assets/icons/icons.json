@@ -109,6 +109,5 @@
  "suit:organic": "res://assets/icons/suit_organic.png",
  "suit:reactive": "res://assets/icons/suit_reactive.png",
  "suit:metal": "res://assets/icons/suit_metal.png",
- "suit:earth": "res://assets/icons/suit_earth.png",
- "suit:any": "res://assets/icons/suit_any.svg"
+ "suit:earth": "res://assets/icons/suit_earth.png"
 }

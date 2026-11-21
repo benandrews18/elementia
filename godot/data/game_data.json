@@ -15,7 +15,7 @@
  "CONVERT_RATE": 3,
  "DATA": {
   "take": 3,
-  "version": "2026.11.14f",
+  "version": "2026.11.21a",
   "suits": {
    "ocean": {
     "label": "OCEAN",
@@ -938,7 +938,7 @@
      [
       "🌎",
       "Planet",
-      "COMPONENT",
+      "CREATION",
       "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
       20
      ],
@@ -4743,7 +4743,7 @@
   {
    "name": "Planet",
    "points": 20,
-   "tier": "COMPONENT",
+   "tier": "CREATION",
    "emoji": "🌎",
    "station": "The Observatory",
    "stations": [
@@ -8112,7 +8112,7 @@
   "Planet": {
    "name": "Planet",
    "points": 20,
-   "tier": "COMPONENT",
+   "tier": "CREATION",
    "emoji": "🌎",
    "station": "The Observatory",
    "stations": [
@@ -9173,8 +9173,7 @@
   "organic": "#3aab6d",
   "reactive": "#e2543b",
   "earth": "#e2a83e",
-  "metal": "#4d7cf2",
-  "any": "conic-gradient(#3aab6d 0 25%, #e2a83e 0 50%, #4d7cf2 0 75%, #e2543b 0)"
+  "metal": "#4d7cf2"
  },
  "SUIT_CORE_ELEMENTS": {
   "organic": [
@@ -9200,24 +9199,14 @@
    "Fe",
    "Cu",
    "Ag"
-  ],
-  "any": [
-   "H",
-   "C",
-   "N",
-   "O",
-   "P",
-   "S",
-   "K",
-   "Ca",
-   "Si",
-   "Al",
-   "Mg",
-   "Ni",
-   "Fe",
-   "Ti",
-   "Cu",
-   "Ag"
+  ]
+ },
+ "MAT_PIPS_EXTRA": {
+  "Planet": [
+   "organic",
+   "reactive",
+   "earth",
+   "metal"
   ]
  },
  "ITEM_SUIT": {},
@@ -9471,9 +9460,6 @@
   "Library": [
    "earth",
    "earth"
-  ],
-  "Planet": [
-   "any"
   ],
   "Solar System": [
    "earth",
@@ -12551,7 +12537,7 @@
    "station": "The Observatory",
    "emoji": "🌎",
    "name": "Planet",
-   "tier": "COMPONENT",
+   "tier": "CREATION",
    "recipe": "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
    "points": 20,
    "reqs": [
@@ -12914,7 +12900,7 @@
   "Rainbow": "CREATION",
   "Rocket": "CREATION",
   "Space Station": "CAPSTONE",
-  "Planet": "COMPONENT",
+  "Planet": "CREATION",
   "Solar System": "CREATION",
   "University": "CREATION"
  },
@@ -13922,7 +13908,7 @@
     [
      "🌎",
      "Planet",
-     "COMPONENT",
+     "CREATION",
      "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
      20
     ],
