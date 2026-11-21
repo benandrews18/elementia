@@ -2,7 +2,7 @@
 after it's converted to a scene.
 
   python godot/tools/shot_diff.py shoot godot/build/before   # every state (tests/shot_states.gd)
-  python godot/tools/shot_diff.py shoot godot/build/after
+  python godot/tools/shot_diff.py shoot godot/build/after [state ...]
   python godot/tools/shot_diff.py diff godot/build/before godot/build/after
 
 diff prints each state's changed pixels (a pixel counts when a channel moves
@@ -32,9 +32,10 @@ def states():
     return re.findall(r'"([a-z_0-9]+)"', block)
 
 
-def shoot(out: Path):
+def shoot(out: Path, only=()):
+    out = out.resolve()  # Godot runs in godot/: a relative path would land there
     out.mkdir(parents=True, exist_ok=True)
-    for s in states():
+    for s in only or states():
         save = SAVES.get(s, "station_visit7")
         cmd = [GODOT, "--path", str(ROOT), "--quit-after", "3000", "res://tests/shot.tscn", "--",
                "--screen", "res://tests/shot_states.gd", "--state", s, "--save", f"tests/fixtures/{save}.json",
@@ -71,6 +72,6 @@ def diff(a: Path, b: Path) -> int:
 
 if __name__ == "__main__":
     if sys.argv[1] == "shoot":
-        shoot(Path(sys.argv[2]))
+        shoot(Path(sys.argv[2]), sys.argv[3:])  # optional: just these states
     else:
         sys.exit(diff(Path(sys.argv[2]), Path(sys.argv[3])))
