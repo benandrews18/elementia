@@ -260,9 +260,11 @@ to load at each step (and run godot-code-review at each step's end):
 save upgrades (5) as checklist lines.
 
 ## Status (2026-11-21)
-Fixed and committed: 1, 3, 13, 6, 4, 2 (Godot only). Decided (PLAN.md
+Fixed and committed: 1, 3, 13, 6, 4, 2 (Godot only), 11 (Items: ~360 ->
+~28 ms per change), 7 (Tap.tap; a simulated finger drag now scrolls
+without opening the row). Decided (PLAN.md
 decisions): 15 (tests stay in check.py), the plan review (skills per step,
-M7-M9 lines). Next: 11, then 7 (when the user says). Later: 12 (re-measure
+M7-M9 lines). Later: 12 (re-measure
 on a phone), 14, 8, 5 (before M9), 9.
 
 ## Merged list (ranked; pick by number)
