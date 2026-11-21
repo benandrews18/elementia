@@ -171,8 +171,7 @@ func pin_button(name: String, at: Vector2) -> Control:
 		ic.material = Tok.grey()
 	b.add_child(ic)
 	b.gui_input.connect(func(ev): if Tap.tap(ev):
-		Progress.toggle_pin(name)
-		Game._changed())
+		Game.toggle_pin(name))
 	return b
 
 

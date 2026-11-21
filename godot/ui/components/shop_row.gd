@@ -16,6 +16,7 @@ const H := 86.0
 @export var locked_color := Color("#7d8899")
 @export var pin_on: StyleBox
 @export var pin_off: StyleBox
+@export var needed_style: StyleBox  # in the pin's place: the tracked item's icon (it still needs this)
 
 var entry: Dictionary
 var on_craft: Callable
@@ -88,6 +89,13 @@ func _ready() -> void:
 	pin.modulate.a = 1.0 if pinned else 0.5
 	if not pinned:
 		$Pin/Icon.material = Tok.grey()
+	if Game.feeds_tracked(e.name):  # .item-pin-badge: the tracked item's icon; a tap: the To-Do List
+		pin.add_theme_stylebox_override("panel", needed_style)
+		pin.modulate.a = 1.0
+		$Pin/Icon.material = null
+		$Pin/Icon.texture = Data.icon(Catalog.entry(Game.ctx.tracked).emoji)
+		pin.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_panel("todo"))
+		return
 	pin.gui_input.connect(func(ev): if Tap.tap(ev): on_pin.call(e.name))
 
 

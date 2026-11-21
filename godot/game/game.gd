@@ -34,6 +34,32 @@ func snapshot() -> Dictionary:
 	return {"state": state, "ctx": ctx}
 
 
+## The tracked item (the HTML's selectedJobItem; ctx.tracked): the pill by
+## the 🔍 button, the badges and rings on what it still needs. Not saved,
+## like the HTML; a new run starts with its capstone tracked.
+func set_tracked(name: Variant) -> void:
+	ctx.tracked = name
+	state_changed.emit()
+
+
+## A 📌 tap anywhere: pins the item and tracks it, or unpins it (and stops
+## tracking it, if it was).
+func toggle_pin(name: String) -> void:
+	Progress.toggle_pin(name)
+	if Progress.is_pinned(name):
+		ctx.tracked = name
+	elif ctx.get("tracked") == name:
+		ctx.tracked = null
+	_changed()
+
+
+## pinSlotHTML()'s test: the tracked item still needs this one (and it
+## isn't the tracked item itself).
+func feeds_tracked(name: String) -> bool:
+	var t = ctx.get("tracked")
+	return t != null and t != name and Catalog.entry(t) != null and Catalog.still_needed(state, t).has(name)
+
+
 func _changed() -> void:
 	Progress.save_all()
 	state_changed.emit()
@@ -164,6 +190,8 @@ func craft_raw(name: String) -> bool:
 		Progress.prefs.capstonesEverCrafted.append(name)
 	if Progress.is_pinned(name):
 		Progress.toggle_pin(name)
+	if ctx.get("tracked") == name:  # crafting the tracked item stops tracking it
+		ctx.tracked = null
 	Market.check_lines(state)
 	_check_crafted_everything()
 	if state.get("visitLog"):
@@ -334,6 +362,7 @@ func start_run(capstone: String) -> void:
 	for d in dice:
 		state.elements[d] = Catalog.count(state, d) + 1
 	go_station(st, false)
+	ctx.tracked = capstone  # confirmCapstoneChoice()
 	for d in dice:  # the gift is part of what was collected on visit 1
 		state.visitLog[-1].elements[d] = state.visitLog[-1].elements.get(d, 0) + 1
 	_changed()

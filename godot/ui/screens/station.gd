@@ -121,8 +121,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	var bench := BenchPanel.new()
 	var craft := func(n, at: Rect2): _craft(n, at)
 	var pin := func(n):
-		Progress.toggle_pin(n)
-		Game._changed()  # saves, then redraws
+		Game.toggle_pin(n)  # saves, then redraws
 	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
@@ -248,7 +247,11 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	acts.position = Vector2(ax, ay)
 	acts.show_state(acts_w, act_h, Progress.is_pinned(e.name), can, owned)
 	var pin: Control = acts.get_node("Pin")
-	pin.gui_input.connect(_on_tap.bind(func(): Progress.toggle_pin(e.name); Game._changed()))  # saves, then redraws
+	if Game.feeds_tracked(e.name):  # the tracked item's icon instead; a tap: the To-Do List
+		acts.show_needed(Data.icon(Catalog.entry(Game.ctx.tracked).emoji))
+		pin.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.open_panel("todo")))
+	else:
+		pin.gui_input.connect(_on_tap.bind(_pin_tap.bind(e.name, page, pos, card_size)))
 	pin.set_meta("cmp", "st:pin:" + e.name)
 	var btn: Control = acts.get_node("Craft")
 	if can:
@@ -360,6 +363,15 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 			n += int(v) / int(Data.t("CONVERT_RATE"))
 		if n > 0:
 			conv.add_child(HubBar._badge(str(n), Vector2(58 + 7 - 24, -7)))
+
+
+## A card's 📌: pins and tracks it (saves, then redraws); tracked, its icon
+## flies from the card to the pill (flyItemToTracker()).
+func _pin_tap(item: String, page: Control, pos: Vector2, card_size: Vector2) -> void:
+	var from := Rect2(page.global_position + pos, Vector2(card_size.x, minf(card_size.x, 60)))
+	Game.toggle_pin(item)
+	if Game.ctx.get("tracked") == item and App.current:
+		App.current.fly_to_tracker(item, from)
 
 
 ## A tap (not a scroll) runs fn.

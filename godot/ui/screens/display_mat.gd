@@ -420,8 +420,7 @@ func _last() -> void:
 func _sel_bench(y: float) -> float:
 	var bench := BenchPanel.new()
 	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 36, func(_n, _r): pass, func(n):
-		Progress.toggle_pin(n)
-		Game._changed(), true))  # saves, then redraws; plain row (no have/missing marks)
+		Game.toggle_pin(n), true))  # saves, then redraws; plain row (no have/missing marks)
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(size.x, 30 + ShopRow.H + 18)
 	_body.add_child(bench)

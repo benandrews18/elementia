@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://ui/pieces/shop_acts.gd" id="1"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
@@ -15,6 +15,21 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="needed"]
+bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.247059, 0.705882, 0.423529, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 4
+shadow_offset = Vector2(0, 1)
 
 [sub_resource type="StyleBoxFlat" id="pin_off"]
 bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
@@ -61,6 +76,7 @@ mouse_filter = 2
 script = ExtResource("1")
 pin_on = SubResource("pin_on")
 pin_off = SubResource("pin_off")
+needed_style = SubResource("needed")
 can_style = SubResource("can")
 owned_style = SubResource("owned")
 locked_style = SubResource("locked")

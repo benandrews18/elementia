@@ -58,8 +58,7 @@ func fill(e: Dictionary, w: float, open: bool, tree: RefTree) -> float:
 	$Pin.modulate.a = 1.0 if pinned else 0.5
 	$Pin/Icon.material = null if pinned else Tok.grey()
 	$Pin.gui_input.connect(func(ev): if Tap.tap(ev):
-		Progress.toggle_pin(e.name)
-		Game._changed())
+		Game.toggle_pin(e.name))
 	var h := 103.7
 	if open:  # .ref-tree: the full row's width, under the body
 		var tr: Control = $Tree

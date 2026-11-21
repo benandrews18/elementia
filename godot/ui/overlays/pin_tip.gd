@@ -1,7 +1,7 @@
 ## The opening's pinning tip (#pinTip), over the To-Do List: a parchment
 ## window, Got it, and "✕ Hide" (never again).
 ## shortcut: the HTML tip also says "Track down a single item with 🔍" and
-## hints at tracking; Godot has no tracked item yet, so it says pinning.
+## its hint says tracking; that wording comes with the tips (M6 step 7).
 class_name PinTip
 extends Control
 

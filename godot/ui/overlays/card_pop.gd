@@ -36,8 +36,7 @@ func _ready() -> void:
 	for n in [$Dim, $Card, $Close]:
 		n.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	$Actions/Pin.gui_input.connect(func(ev): if Tap.tap(ev):
-		Progress.toggle_pin(entry.name)
-		Game._changed()
+		Game.toggle_pin(entry.name)
 		_show_pin())
 	$Actions/Back.mouse_filter = MOUSE_FILTER_STOP
 	$Actions/Back.gui_input.connect(func(ev): if Tap.tap(ev) and not _back.is_empty(): show_item(_back.pop_back().name, true))
@@ -54,6 +53,34 @@ func _ready() -> void:
 
 
 ## Shows an item's card; keep_back: drilling in or Back (the back stack stays).
+## Opened from the tracked pill: the 🔍 button's circle and a green pill
+## over the card, "You are tracking this item!" (.cp-celeb.cp-tracking).
+func show_tracking() -> void:
+	var card: Control = $Card
+	var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
+	pill.get_node("Row/Icon").visible = false
+	var nl: Label = pill.get_node("Row/Name")
+	nl.text = "You are tracking this item!"
+	nl.add_theme_font_override("font", load("res://ui/theme/fonts/nunito_900.tres"))
+	nl.add_theme_font_size_override("font_size", 14)
+	(pill.get_node("Row") as Control).offset_left = 24
+	(pill.get_node("Row") as Control).offset_right = -16
+	var tw := nl.get_theme_font("font").get_string_size(nl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	pill.size = Vector2(24 + tw + 16, 32)
+	var glass := TextureRect.new()
+	glass.texture = load("res://assets/ui/btn_search.webp")
+	glass.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glass.size = Vector2(46, 46)
+	var w := 46 - 16 + pill.size.x
+	var x := card.position.x + (card.size.x - w) / 2
+	var y := card.position.y - 10 - 46
+	glass.position = Vector2(x, y)
+	pill.position = Vector2(x + 30, y + 7)
+	for n: Control in [pill, glass]:
+		n.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(n)
+
+
 func show_item(name: String, keep_back := false) -> void:
 	if not keep_back:
 		_back.clear()

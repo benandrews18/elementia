@@ -14,6 +14,7 @@ var _screen: Control
 var _screen_name := ""
 var _panel_node: Control
 var _hub: HubBar
+var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 
 static var current: App  # the running app, for screens that need it (crafting)
 
@@ -21,11 +22,16 @@ static var current: App  # the running app, for screens that need it (crafting)
 func _ready() -> void:
 	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_floats = Control.new()
+	_floats.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_floats.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(_floats)
 	_hub = HubBar.make()
 	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_hub)
 	_hub.pressed.connect(_on_hub)
 	Game.state_changed.connect(_sync)
+	resized.connect(_sync_floats)  # they sit on the bottom edge
 	_sync()
 
 
@@ -40,6 +46,7 @@ func _sync() -> void:
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()
+	_sync_floats()
 	_market_check()
 	_maybe_end()
 
@@ -257,10 +264,10 @@ func show_element_card(sym: String) -> void:
 func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
-	if name in ["drawer", "convert", "market", "todo", "codex"]:
-		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen}[name].make()
+	if name in ["drawer", "convert", "market", "todo", "codex", "pins"]:
+		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
 		add_child(_panel_node)
-		move_child(_panel_node, _hub.get_index())  # under the hub
+		move_child(_panel_node, _floats.get_index())  # under the 🔍 button and the hub
 	_sync()
 
 
@@ -303,6 +310,99 @@ func can_travel_to(name) -> bool:
 	var s := Game.state
 	return name != null and name != s.get("lastStation") and not s.get("ended") \
 		and (Catalog.owns(s, "Helicopter") or Catalog.is_map_connected(s.get("lastStation"), name))
+
+
+## The 🔍 button (#pinsBtn: opens the pins tray) once anything is pinned,
+## "!" when nothing is tracked; the tracked pill beside it (a tap: its card).
+## On the map and the station, with no panel open but the pins tray (the
+## HTML hides them under the others).
+func _sync_floats() -> void:
+	for c in _floats.get_children():
+		c.queue_free()
+	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"]:
+		return
+	var y := size.y - HubBar.H - 14 - 58
+	var t = Game.ctx.get("tracked")
+	var e = Catalog.entry(t) if t else null
+	if e != null:
+		var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
+		pill.get_node("Row/Icon").texture = Data.icon(e.emoji)
+		var nl: Label = pill.get_node("Row/Name")
+		nl.text = t
+		var tw := nl.get_theme_font("font").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, nl.get_theme_font_size("font_size")).x
+		pill.size = Vector2(minf(22 + 16 + 6 + tw + 14, size.x - 140), 34)
+		pill.position = Vector2(56, y + 58 - 34)
+		pill.set_meta("cmp", "tracked")
+		var item: String = t
+		pill.gui_input.connect(func(ev): if Tap.tap(ev): CardPop.open(self, item).show_tracking())
+		_floats.add_child(pill)
+	if panel == "pins":  # .floatbtn.active: a green glow ring
+		var ring := Panel.new()
+		ring.add_theme_stylebox_override("panel", Tok.box(Color(0, 0, 0, 0), 32, 3, Tok.OK, 14, 0, Tok.OK))
+		ring.position = Vector2(16, y)
+		ring.size = Vector2(58, 58)
+		ring.mouse_filter = MOUSE_FILTER_IGNORE
+		_floats.add_child(ring)
+	var b := TextureRect.new()
+	b.texture = load("res://assets/ui/btn_search.webp")
+	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	b.position = Vector2(16, y)
+	b.size = Vector2(58, 58)
+	b.set_meta("cmp", "pins")
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
+		if panel == "pins":
+			close_panel()
+		else:
+			open_panel("pins"))
+	if t == null:
+		b.add_child(HubBar._badge("!", Vector2(58 + 7 - 24, -7)))
+	_floats.add_child(b)
+
+
+## flyItemToTracker(): the item's icon, in a gold-ringed circle, hops up from
+## `from` and flies into the tracked pill (0.72s), then the pill pulses.
+func fly_to_tracker(name: String, from: Rect2) -> void:
+	var pills := _floats.get_children().filter(func(c): return c.get_meta("cmp", "") == "tracked" and not c.is_queued_for_deletion())
+	var e = Catalog.entry(name)
+	if pills.is_empty() or e == null:
+		return
+	var pill: Control = pills[0]
+	var icon: Control = pill.get_node("Row/Icon")
+	icon.modulate.a = 0  # shown again as the circle lands
+	var d := clampf(from.size.y, 36, 60)
+	var c := Panel.new()
+	c.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, d / 2, 2.5, Tok.GOLD, 16, 6, Color(0, 0, 0, 0.4)))
+	c.size = Vector2(d, d)
+	c.pivot_offset = c.size / 2
+	c.mouse_filter = MOUSE_FILTER_IGNORE
+	var ic := Tok.icon(e.emoji, d * 0.58)
+	ic.position = (c.size - ic.size) / 2
+	c.add_child(ic)
+	var start := from.get_center() - global_position - c.size / 2
+	var target := pill.position + Vector2(22 + 8, 17) - c.size / 2
+	var dv := target - start
+	c.position = start
+	c.scale = Vector2(0.6, 0.6)
+	c.modulate.a = 0
+	add_child(c)
+	var end := 22.0 / d
+	var tw := c.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(c, "position", start + Vector2(dv.x * 0.1, dv.y * 0.1 - 30), 0.18)
+	tw.parallel().tween_property(c, "scale", Vector2(1.1, 1.1), 0.18)
+	tw.parallel().tween_property(c, "modulate:a", 1.0, 0.18)
+	tw.tween_property(c, "position", target, 0.47)
+	tw.parallel().tween_property(c, "scale", Vector2(end, end), 0.47)
+	tw.tween_property(c, "scale", Vector2(end, end) * 0.6, 0.07)
+	tw.parallel().tween_property(c, "modulate:a", 0.0, 0.07)
+	tw.tween_callback(func():
+		c.queue_free()
+		if is_instance_valid(pill):
+			icon.modulate.a = 1
+			pill.pivot_offset = pill.size / 2
+			var p := pill.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			p.tween_property(pill, "scale", Vector2(1.15, 1.15), 0.17)
+			p.tween_property(pill, "scale", Vector2.ONE, 0.17))
 
 
 func _sync_hub() -> void:

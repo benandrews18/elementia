@@ -58,6 +58,7 @@ func _redraw() -> void:
 		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
 	$Area/Paths.queue_redraw()
+	_badges(k)
 	if checked:
 		var qt := QuarkTopBar.make()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
@@ -65,6 +66,45 @@ func _redraw() -> void:
 	StationScreen.corner_buttons($Dynamic, false)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
 		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
+
+
+## The tracked item's marks behind the station circles (renderMap()): its
+## own station gets a gold badge with its icon (top-left), stations selling
+## anything it still needs a small 🔍 (top-right). None on the first pick.
+func _badges(k: float) -> void:
+	var holder: Control = $Area/Badges
+	for c in holder.get_children():
+		c.queue_free()
+	var t = Game.ctx.get("tracked")
+	var e = Catalog.entry(t) if t else null
+	if e == null or Game.state.get("lastStation") == null:
+		return
+	var comps := {}
+	for n in Catalog.still_needed(Game.state, t):
+		for x in Data.t("ENTRIES"):
+			if x.name == n:
+				comps[x.station] = true
+	var off: float = $Area.size.x * 0.066  # margin-left/top:-6.6% (of the map's width)
+	for n: MapNode in _nodes():
+		var c := n.position + n.size / 2
+		if n.station == e.station:
+			var b := Panel.new()
+			b.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 18, 2.5, Tok.GOLD, 4, 1))
+			b.size = Vector2(36, 36) * k
+			b.position = c + Vector2(-off, -off) - b.size / 2
+			var ic := Tok.icon(e.emoji, 21 * k)
+			ic.position = (b.size - ic.size) / 2
+			b.add_child(ic)
+			holder.add_child(b)
+		if comps.has(n.station):
+			var g := TextureRect.new()
+			g.texture = load("res://assets/ui/btn_search.webp")
+			g.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			g.size = Vector2(28, 28) * k
+			g.position = c + Vector2(off, -off) - g.size / 2
+			holder.add_child(g)
+	for c in holder.get_children():
+		c.mouse_filter = MOUSE_FILTER_IGNORE
 
 
 ## Dashed paths between the stations (MAP_EDGES), wherever their nodes sit:
@@ -113,6 +153,15 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	var h2 := Tok.label(name, 19, Color("#fff7e0"), 800)
 	h2.position = Vector2(61, y + 1)
 	card.add_child(h2)
+	var tname = Game.ctx.get("tracked")
+	var tracked = Catalog.entry(tname) if tname else null
+	if tracked != null:  # .mc-tracked-wrap: the 🔍 circle and a gold pill naming it, top right
+		card.add_child(_tracked_tag(tracked, w, y))
+	var job := {}  # the tracked item and what it still needs: gold rings below
+	if tracked != null:
+		job[tname] = true
+		for n in Catalog.still_needed(Game.state, tname):
+			job[n] = true
 	y += 32.6 + 11
 	var dice := Catalog.sorted_dice(st)
 	var cw := (w - 38 - 4 * 5) / 6
@@ -132,6 +181,8 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		var owned := Catalog.owns(Game.state, e.name)
 		var box := Panel.new()
 		box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if owned else Color.TRANSPARENT, 7))
+		if job.has(e.name):  # .station-item-icon.job-highlight
+			box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT, 7, 3, Tok.GOLD, 10, 0, Color(0.886, 0.698, 0.353, 0.55)))
 		box.position = Vector2(x0 + i * (slot + 5), y + 9)
 		box.size = Vector2(slot, slot)
 		_opens(box, e.name)
@@ -179,6 +230,37 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 
 
 ## A tap on c opens an item's card (or an element's).
+## The tracked item on the station card's top row: the 🔍 button's circle
+## overlapping a gold pill with its icon and name (at most half the card).
+static func _tracked_tag(e: Dictionary, w: float, y: float) -> Control:
+	var tag := Control.new()
+	tag.mouse_filter = MOUSE_FILTER_IGNORE
+	var name_l := Tok.label(e.name, 12.5, Tok.INK, 800)
+	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	var full := name_l.get_theme_font("font").get_string_size(e.name, HORIZONTAL_ALIGNMENT_LEFT, -1, name_l.get_theme_font_size("font_size")).x
+	var nw := minf(full, w / 2 - 34 + 12 - 16 - 15 - 6 - 10 - 6)
+	var pill := Panel.new()
+	pill.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT, 14, 3, Tok.GOLD))
+	pill.size = Vector2(16 + 15 + 6 + nw + 10, 28)
+	pill.position = Vector2(34 - 12, 3)
+	var ic := Tok.icon(e.emoji, 15)
+	ic.position = Vector2(16, (28 - 15) / 2.0)
+	pill.add_child(ic)
+	name_l.size = Vector2(nw, 28)
+	name_l.position = Vector2(16 + 15 + 6, 0)
+	name_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	pill.add_child(name_l)
+	tag.add_child(pill)
+	var glass := TextureRect.new()
+	glass.texture = load("res://assets/ui/btn_search.webp")
+	glass.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glass.size = Vector2(34, 34)
+	tag.add_child(glass)
+	tag.size = Vector2(pill.position.x + pill.size.x, 34)
+	tag.position = Vector2(w - 19 - tag.size.x, y)
+	return tag
+
+
 static func _opens(c: Control, item: String, element := "") -> void:
 	c.mouse_filter = MOUSE_FILTER_STOP
 	c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:

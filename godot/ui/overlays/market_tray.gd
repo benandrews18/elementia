@@ -177,8 +177,7 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 		pic.material = Tok.grey()
 	pin.add_child(pic)
 	pin.gui_input.connect(func(ev): if Tap.tap(ev):
-		Progress.toggle_pin(name)
-		Game._changed())
+		Game.toggle_pin(name))
 	c.add_child(pin)
 	if e != null:  # not yet owned: craft it from here; else its card
 		c.gui_input.connect(func(ev): if Tap.tap(ev):

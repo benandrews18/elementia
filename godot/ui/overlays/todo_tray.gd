@@ -3,8 +3,8 @@
 ## pinned items. Each row: icon (suit costs under it), name, points, where
 ## it's made, "Full breakdown" opening its recipe tree (items expand in
 ## turn, elements show where they're rolled), and its pin. "Get a Hint"
-## suggests what to craft next and lights it up in the trees.
-## shortcut: no 🔍 "tracked" badge (Godot has no tracked item yet).
+## suggests what to craft next and lights it up in the trees. The tracked
+## item leads, gold-ringed, with a 🔍 badge.
 class_name TodoTray
 extends Control
 
@@ -42,6 +42,10 @@ func _redraw() -> void:
 		c.queue_free()
 	var w := _scroll.size.x - 40
 	var names: Array = Progress.prefs.pinnedItems.filter(func(n): return Catalog.entry(n) != null)
+	var t = Game.ctx.get("tracked")
+	if names.has(t):  # the tracked item leads
+		names.erase(t)
+		names.push_front(t)
 	var y := 20.0
 	$Tray/Scroll/List/Pin.visible = not names.is_empty()
 	$Tray/Scroll/List/Pinned.visible = not names.is_empty()
@@ -181,6 +185,21 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 		Color("#4fbf7a") if owned else Color("#c9a571"), 4, 2, Color(0, 0, 0, 0.3)))
 	card.position = at
 	card.mouse_filter = MOUSE_FILTER_PASS
+	if e.name == Game.ctx.get("tracked"):  # .refrow.tracked: gold-ringed, a 🔍 badge off its top-right corner
+		card.add_theme_stylebox_override("panel", Tok.box(Color("#dff2e2") if owned else Color("#f3e6c8"), 14, 4, Tok.GOLD, 4, 2, Color(0, 0, 0, 0.3)))
+		var badge := Panel.new()
+		badge.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, 17, 2, Color.BLACK, 3, 2, Color(0, 0, 0, 0.4)))
+		badge.anchor_left = 1
+		badge.anchor_right = 1
+		badge.offset_left = -24
+		badge.offset_right = 10
+		badge.offset_top = -12
+		badge.offset_bottom = 22
+		badge.mouse_filter = MOUSE_FILTER_IGNORE
+		var gl := Tok.icon("🔍", 18)
+		gl.position = Vector2(8, 8)
+		badge.add_child(gl)
+		card.add_child(badge)
 	card.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(e.name))  # its card
 	_list.add_child(card)
 	var tack := Panel.new()  # the red pushpin at the top
@@ -262,8 +281,7 @@ func _pin_button(name: String, at: Vector2) -> Control:
 		ic.material = Tok.grey()
 	b.add_child(ic)
 	b.gui_input.connect(func(ev): if Tap.tap(ev):
-		Progress.toggle_pin(name)
-		Game._changed())
+		Game.toggle_pin(name))
 	return b
 
 

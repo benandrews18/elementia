@@ -8,6 +8,7 @@ const SCENE := "res://ui/pieces/shop_acts.tscn"
 
 @export var pin_on: StyleBox
 @export var pin_off: StyleBox
+@export var needed_style: StyleBox  # in the pin's place: the tracked item's icon (it still needs this)
 @export var can_style: StyleBox
 @export var owned_style: StyleBox
 @export var locked_style: StyleBox
@@ -43,3 +44,12 @@ func show_state(w: float, h: float, pinned: bool, can: bool, owned: bool) -> voi
 		var tk := Tok.tick(owned_color, 13)
 		tk.position = Vector2(4, 11)
 		btn.add_child(tk)
+
+
+## The tracked item still needs this card (pinSlotHTML()): its icon in the
+## pin's place, green-ringed.
+func show_needed(icon: Texture2D) -> void:
+	$Pin.add_theme_stylebox_override("panel", needed_style)
+	$Pin.modulate.a = 1.0
+	$Pin/Icon.material = null
+	$Pin/Icon.texture = icon

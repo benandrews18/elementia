@@ -1,0 +1,78 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/pieces/pin_chip.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f50d.png" id="glass"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+
+[sub_resource type="StyleBoxFlat" id="off"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.164706, 0.352941, 0.447059, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="on"]
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+bg_color = Color(0.0862745, 0.188235, 0.121569, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.172549, 0.360784, 0.235294, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[node name="PinChip" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 31.5)
+offset_right = 114.0
+offset_bottom = 31.5
+mouse_filter = 0
+theme_override_styles/panel = SubResource("off")
+script = ExtResource("1")
+on_style = SubResource("on")
+off_style = SubResource("off")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Glass" type="TextureRect" parent="Row"]
+visible = false
+custom_minimum_size = Vector2(13, 13)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("glass")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Icon" type="TextureRect" parent="Row"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.909804, 0.929412, 0.956863, 1)
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 13
+text = "Item"
+vertical_alignment = 1

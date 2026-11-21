@@ -30,7 +30,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -384,6 +384,48 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## Tracking: a 📌 on an Items row tracks it (the pill shows it); the 🔍
+## button opens the pins tray, a chip there stops (and restarts) tracking; the
+## pill opens the item's card with its tracking banner.
+func _pins(app: App) -> void:
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	await get_tree().process_frame
+	check(Game.ctx.tracked == "Coral Reef", "a new run tracks its capstone")
+	var floats := func(): return app._floats.get_children().filter(func(c): return not c.is_queued_for_deletion())
+	var btn = func(): return floats.call().filter(func(c): return c.get_meta("cmp", "") == "pins").front()
+	check(floats.call().size() == 2, "the 🔍 button and the tracked pill")
+	app.open_items("")
+	var row: RefRow = app._panel_node._rows.filter(func(r): return r.item == "Steel")[0]
+	row.get_node("Pin").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(Game.ctx.tracked == "Steel" and Progress.is_pinned("Steel"), "a 📌 tap pins and tracks")
+	app.close_panel()
+	await get_tree().process_frame
+	btn.call().gui_input.emit(_release())
+	check(app.panel == "pins" and app._panel_node is PinsTray, "🔍 opens the pins tray")
+	await get_tree().process_frame
+	var chips: Array = app._panel_node.get_node("Tray/Body/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	var steel: PinChip = chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0]
+	steel.gui_input.emit(_release())
+	check(Game.ctx.tracked == null, "the tracked chip stops tracking")
+	await get_tree().process_frame
+	check(btn.call().get_child_count() == 1, "nothing tracked: \"!\" on the 🔍 button")
+	chips = app._panel_node.get_node("Tray/Body/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0].gui_input.emit(_release())
+	check(Game.ctx.tracked == "Steel", "a chip tracks it again")
+	btn.call().gui_input.emit(_release())
+	check(app.panel == "", "🔍 again closes the tray")
+	await get_tree().process_frame
+	var pill: Control = floats.call().filter(func(c): return c.get_meta("cmp", "") != "pins")[0]
+	pill.gui_input.emit(_release())
+	var pops: Array = app.get_children().filter(func(c): return c is CardPop)
+	check(pops.size() == 1 and pops[0].get_children().any(func(c): return c is TextureRect and c.texture != null and c.texture.resource_path.ends_with("btn_search.webp")), "the pill opens its card with the tracking banner")
+	pops[0].queue_free()
+	Progress.toggle_pin("Steel")
+	finished.pins = true
 
 
 ## The title screen: Settings' Home and the end screen's Main Menu open it

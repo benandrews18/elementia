@@ -12,7 +12,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
-	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open"]
+	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
+	"pins", "tracked_card", "tracked_map", "tracked_station"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -174,6 +175,18 @@ func _ready() -> void:
 				if state == "history_open":
 					hw._open[0] = true
 					hw._build()
+		"tracked_map", "tracked_station":  # Metropolis tracked: the map's badges and card (The City), the shop's badges
+			Game.ctx.tracked = "Metropolis"
+			if state == "tracked_map":
+				Game.ctx.selectedMapStation = "The City"
+			Game.state_changed.emit()
+		"pins", "tracked_card":  # Metropolis tracked: the pins tray open; its card from the pill
+			Game.ctx.tracked = "Metropolis"
+			if state == "pins":
+				app.open_panel("pins")
+			else:
+				app.show_card("Metropolis")
+				(app.get_children().filter(func(c): return c is CardPop)[0] as CardPop).show_tracking()
 		"welcome", "classic_mode":  # the title screen; Play's Classic window over it
 			app.show_welcome()
 			if state == "classic_mode":
