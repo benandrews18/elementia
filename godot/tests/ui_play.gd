@@ -734,6 +734,10 @@ func _dev(app: App) -> void:
 	dp.get_node("V/Scroll/Body").get_child(0).get_child(2).pressed.emit()  # Set
 	check(int(Game.state.visits) == 9 and Game.state.dev and (dp.get_node("V/Head/Flag") as Label).text == "dev run", "Jump's Set: turn 9, a dev run")
 	dp.hide()
+	app.open_combo_lab()
+	var lab_hides: bool = not (app.get_node("Dev") as CanvasLayer).visible
+	app.close_combo_lab()
+	check(lab_hides and (app.get_node("Dev") as CanvasLayer).visible, "Combo Lab hides the 🛠 button (its panel could save over the real run); Exit brings it back")
 	app.open_settings()
 	sw = top.call(SettingsWindow)[0]
 	for i in 5:

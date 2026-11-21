@@ -419,6 +419,7 @@ func open_combo_lab() -> void:
 	Game.ctx = Game.fresh_ctx()
 	Game.ctx.comboLab = true
 	_hub.visible = false
+	_dev_shown(false)  # the Dev Panel would replace the lab's run and save it over the real one
 	open_panel("drawer")
 	if is_instance_valid(_screen):
 		_screen.visible = false
@@ -436,6 +437,7 @@ func close_combo_lab() -> void:
 	Game.ctx = _real[1]
 	_real = []
 	_hub.visible = true
+	_dev_shown(true)
 	var bar := get_node_or_null("LabBar")
 	if bar:
 		bar.queue_free()
@@ -443,6 +445,12 @@ func close_combo_lab() -> void:
 	if is_instance_valid(_screen):
 		_screen.visible = true
 	Game.state_changed.emit()
+
+
+func _dev_shown(on: bool) -> void:
+	var dev := get_node_or_null("Dev") as CanvasLayer
+	if dev:
+		dev.visible = on
 
 
 ## The title screen over everything (launch, Settings' Home, the end
