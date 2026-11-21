@@ -3,7 +3,7 @@
 ## station, travel (locking in on check turns), until the run is over.
 ## Checks the screens follow and nothing errors. Then the Final Score, the
 ## Market and the To-Do List, each from a fresh run.
-##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo|cards|items]
+##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo|cards|items|settings]
 ## Headless runs at a fixed frame rate, as fast as the PC allows (no window).
 extends Node
 
@@ -11,6 +11,7 @@ var fails := 0
 var balloon_done := false
 var expansions := 0
 var convert_done := false
+var saw_rules := false
 var finished := {}  # section -> true once it ran to its end (a script error stops one quietly)
 
 
@@ -22,13 +23,14 @@ func check(ok: bool, what: String) -> void:
 
 func _ready() -> void:
 	Progress.autosave = false
+	Progress.prefs.erase("sawMatCheckTutorial")  # a first board check ever
 	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -87,6 +89,11 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # travel
 		if check_turn:
 			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn %d: the shutter opens the mat" % turns)
+			for c in app.get_children():  # the very first board check ever: the Display Mat rules first
+				if c is MatRules and not c.is_queued_for_deletion():
+					check(not saw_rules, "turn %d: the Display Mat rules open at the first board check only" % turns)
+					saw_rules = true
+					c.close()
 			if Orders.current(Game.state) != null:
 				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
 			_dismiss(app)
@@ -111,6 +118,7 @@ func _run(app: App) -> void:
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
 	check(balloon_done, "crafted something through the suit-spend balloon")
 	check(convert_done, "converted through the Convert tray")
+	check(saw_rules, "the first board check opened the Display Mat rules")
 	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame)), "the end screen shows")
 	# "Review my collection", then closing the mat: the end screen comes back.
@@ -364,6 +372,74 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## Settings and the rules: the gear opens Settings; Game Rules' switch is
+## saved by Save (turning tips back on restores the hidden ones); Tutorial
+## Messages opens each tip window and ✕ goes back to Settings; Reset asks
+## first; the mat's "?" opens the rules (Next: Quark Combos, Got it closes).
+func _settings(app: App) -> void:
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	await get_tree().process_frame
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	var gear: Control = app._screen.get_node("Top").get_children().filter(func(c): return c.get_meta("cmp", "") == "settings")[0]
+	gear.gui_input.emit(_release())
+	check(top.call(SettingsWindow).size() == 1, "the gear opens Settings")
+	var sw: SettingsWindow = top.call(SettingsWindow)[0]
+	Progress.prefs.guidedTutorialEnabled = false  # tips off, one hidden
+	Progress.prefs.hiddenTips = ["classicTut"]
+	sw.get_node("Window/Content/Rules").pressed.emit()
+	await get_tree().process_frame
+	check(top.call(GameRules).size() == 1 and top.call(SettingsWindow).is_empty(), "Game Rules opens in its place")
+	var gr: GameRules = top.call(GameRules)[0]
+	var tips: SettingRow = gr.get_node("Window/Content/Tips")
+	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())  # unchanged: stays off
+	check(Progress.prefs.guidedTutorialEnabled == false and Progress.prefs.hiddenTips == ["classicTut"], "Save keeps a switch as it is")
+	await get_tree().process_frame
+	app.open_settings("rules")
+	gr = top.call(GameRules)[0]
+	tips = gr.get_node("Window/Content/Tips")
+	tips.gui_input.emit(_release())
+	check(tips.on, "a tap flips the switch")
+	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())
+	check(Progress.prefs.guidedTutorialEnabled == true and Progress.prefs.hiddenTips.is_empty(), "tips back on: saved, and the hidden tips come back")
+	await get_tree().process_frame
+	check(top.call(GameRules).is_empty(), "Save closes Game Rules")
+	app.open_settings("tuts")
+	var wins := {"HowToPlay": HowToPlay, "PinTip": PinTip, "BoardChecks": MatRules, "Challenges": ParchDialog, "Unknown": UnknownTip}
+	for row in wins:
+		var tm: TutorialMessages = top.call(TutorialMessages)[0]
+		tm.get_node("Window/Content/" + row).pressed.emit()
+		await get_tree().process_frame
+		var shown: Array = top.call(wins[row])
+		check(top.call(TutorialMessages).is_empty() and not shown.is_empty(), "Tutorial Messages: %s opens its window" % row)
+		for c in shown:
+			c.queue_free()
+		await get_tree().process_frame
+		app.open_settings("tuts")
+	var tm2: TutorialMessages = top.call(TutorialMessages)[0]
+	tm2.get_node("Window/Back").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(top.call(SettingsWindow).size() == 1, "✕ on Tutorial Messages goes back to Settings")
+	top.call(SettingsWindow)[0].get_node("Window/Content/Buttons/Reset").gui_input.emit(_release())
+	check(top.call(ConfirmDialog).size() == 1, "Reset asks first")
+	for c in top.call(ConfirmDialog) + top.call(SettingsWindow):
+		c.queue_free()
+	app.open_panel("drawer")
+	await get_tree().process_frame
+	var help: Control = app._panel_node.get_node("Body").get_children().filter(func(c): return c.get_meta("cmp", "") == "btn:rules")[0]
+	help.gui_input.emit(_release())
+	var mr: Array = top.call(MatRules)
+	check(mr.size() == 1, "the mat's \"?\" opens the Display Mat rules")
+	if not mr.is_empty():
+		mr[0].get_node("Window/Content/Page1/NextRow/Next").gui_input.emit(_release())
+		check(mr[0].get_node("Window/Content/Page2").visible and mr[0].get_node("Window").title == "Quark Combos", "Next turns to Quark Combos")
+		mr[0].get_node("Window/Content/Page2/OkRow/Ok").gui_input.emit(_release())
+		await get_tree().process_frame
+		check(top.call(MatRules).is_empty(), "Got it closes them")
+	app.close_panel()
+	finished.settings = true
 
 
 func _release() -> InputEventMouseButton:

@@ -10,7 +10,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "station_fold",
-	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search"]
+	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
+	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -157,3 +158,7 @@ func _ready() -> void:
 		"items", "items_open", "items_search":  # the Items screen; Bridge's breakdown open; searching "steel"
 			ItemsScreen.query = "steel" if state == "items_search" else ""
 			app.open_items("Bridge" if state == "items_open" else "")
+		"settings", "game_rules", "tutorial_messages":
+			app.open_settings({"settings": "", "game_rules": "rules", "tutorial_messages": "tuts"}[state])
+		"mat_rules", "mat_rules2", "order_tip", "unknown_tip":
+			app.show_tip({"mat_rules": "mat_rules", "mat_rules2": "mat_rules2", "order_tip": "order", "unknown_tip": "unknown"}[state])

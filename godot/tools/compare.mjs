@@ -115,6 +115,34 @@ const SHOTS = [
   { name: "codex_open", note: "The Items screen with Bridge's breakdown open (Item Info from its card)", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
     open: `(() => { goToRefItem("Bridge"); })()`,
     godot: ["--screen", "res://ui/app.gd", "--call", "open_items:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "settings", keep: ["settings"], note: "Step 3 window: settings", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openSettings(); const b = document.querySelector("#settings .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#settings h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#settings .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#settings .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_settings", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "rules", keep: ["settingsRules"], note: "Step 3 window: rules", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openSettingsRules(); const b = document.querySelector("#settingsRules .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#settingsRules h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#settingsRules .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#settingsRules .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_settings:rules", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "tuts", keep: ["settingsTuts"], note: "Step 3 window: tuts", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openSettingsScreen("settingsTuts"); const b = document.querySelector("#settingsTuts .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#settingsTuts h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#settingsTuts .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#settingsTuts .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_settings:tuts", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "matrules", keep: ["matRulesOverlay"], note: "Step 3 window: matrules", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openMatRules(); const b = document.querySelector("#matRulesOverlay .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#matRulesOverlay h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#matRulesOverlay .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#matRulesOverlay .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_tip:mat_rules", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "matrules2", keep: ["matRulesOverlay"], note: "Step 3 window: matrules2", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openMatRules(); document.getElementById("matRulesNext").click(); const b = document.querySelector("#matRulesOverlay .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#matRulesOverlay h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#matRulesOverlay .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#matRulesOverlay .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_tip:mat_rules2", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "ordertip", keep: ["orderTip"], note: "Step 3 window: ordertip", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { openOrderTip(); const b = document.querySelector("#orderTip .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#orderTip h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#orderTip .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#orderTip .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_tip:order", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "eltip", keep: ["emptyElTip"], note: "Step 3 window: eltip", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { showEmptyElTip(); const b = document.querySelector("#emptyElTip .sheetbox"); if (b) b.dataset.cmp = "win"; document.querySelectorAll("#emptyElTip h2").forEach(h => { if (h.offsetParent) h.dataset.cmp = "win:title"; });
+      document.querySelectorAll("#emptyElTip .setting-row").forEach((r, i) => r.dataset.cmp = "row" + i); document.querySelectorAll("#emptyElTip .bigbtn").forEach((r, i) => { if (r.offsetParent) r.dataset.cmp = "btn" + i; }); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "show_tip:unknown", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
   { name: "cardpop", keep: ["cardPop"], note: "Bridge's card pop-up (tapped at The City, turn 7)", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
     open: `(() => {
       showCardPop(ENTRIES.find(e => e.name === "Bridge"), false);
