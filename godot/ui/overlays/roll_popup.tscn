@@ -1,0 +1,92 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/roll_popup.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="2"]
+[ext_resource type="FontFile" path="res://assets/fonts/Nunito-VariableFont_wght.ttf" id="nunito"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f3b2.png" id="die"]
+
+[sub_resource type="StyleBoxFlat" id="card"]
+bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.164706, 0.352941, 0.447059, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 20
+shadow_offset = Vector2(0, 16)
+
+[sub_resource type="FontVariation" id="title_font"]
+base_font = ExtResource("nunito")
+variation_opentype = {2003265652: 800}
+spacing_glyph = 1
+
+[node name="RollPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0235294, 0.054902, 0.0784314, 0.62)
+
+[node name="Box" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 250.0
+offset_right = 374.0
+offset_bottom = 594.0
+theme_override_styles/panel = SubResource("card")
+
+[node name="Title" type="HBoxContainer" parent="Box"]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 18.0
+offset_right = 230.0
+offset_bottom = 39.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="Box/Title"]
+custom_minimum_size = Vector2(17, 17)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("die")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Box/Title"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.701961, 0.745098, 0.803922, 1)
+theme_override_fonts/font = SubResource("title_font")
+theme_override_font_sizes/font_size = 15
+text = "GATHERING"
+
+[node name="Chips" type="Control" parent="Box"]
+anchors_preset = 0
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Collect" parent="Box" instance=ExtResource("2")]
+visible = false
+modulate = Color(1, 1, 1, 0)
+layout_mode = 0
+offset_left = 72.0
+offset_top = 282.0
+offset_right = 286.0
+offset_bottom = 328.0
+
+[node name="Text" parent="Box/Collect" index="0"]
+text = "Collect"

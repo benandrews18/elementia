@@ -277,7 +277,7 @@ func _roll() -> void:
 	var out := Game.do_roll()
 	if out.is_empty():
 		return
-	var pop := RollPopup.new()
+	var pop := RollPopup.make()
 	pop.roll = out
 	pop.fly_to = _hub.button_center("inv")
 	pop.size = size

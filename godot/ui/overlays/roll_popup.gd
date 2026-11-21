@@ -15,49 +15,42 @@ const PAUSE := 0.35
 const PIP := Color("#c9d3e0")
 const PIPS := {1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]}
 
+## The layout is ui/overlays/roll_popup.tscn (the card, its title, Collect);
+## this lays out the rolled chips and plays the reveal.
+const SCENE := "res://ui/overlays/roll_popup.tscn"
+
 var roll: Array  # [{face, sym}]
 var fly_to := Vector2.ZERO  # the Inventory button's centre
 var _chips: Array[Control] = []
-var _collect: Control
-var _box: Panel
+@onready var _collect: Control = $Box/Collect
+@onready var _box: Panel = $Box
+
+
+static func make() -> RollPopup:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var dim := ColorRect.new()
-	dim.color = Color(6 / 255.0, 14 / 255.0, 20 / 255.0, 0.62)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(dim)
 	var cols := mini(3, roll.size())
 	var rows := ceili(roll.size() / 3.0)
 	var row_w := cols * CHIP + (cols - 1) * 16
 	var row_h := rows * (CHIP + 6 + 11) + (rows - 1) * 14
 	var bw := minf(440, size.x - 32)
 	var bh := 18 + 19 + 16 + row_h + 16 + 46 + 16
-	_box = Panel.new()
-	_box.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 18, 2, Tok.LINE, 20, 16, Color(0, 0, 0, 0.5)))
 	_box.size = Vector2(bw, bh)
 	_box.position = (size - _box.size) / 2
-	add_child(_box)
-	var title := HBoxContainer.new()
-	title.add_theme_constant_override("separation", 6)
-	title.add_child(Tok.icon("🎲", 17))
-	title.add_child(Tok.label("GATHERING", 15, Tok.INK2, 800))
-	title.get_child(1).add_theme_font_override("font", Tok.font(800, 1))
+	var title: Control = $Box/Title
 	title.size = title.get_combined_minimum_size()
-	title.position = Vector2((bw - title.size.x) / 2, 18)
-	_box.add_child(title)
+	title.position.x = (bw - title.size.x) / 2
 	for i in roll.size():
 		var c := _chip(roll[i])
 		c.position = Vector2((bw - row_w) / 2 + (i % 3) * (CHIP + 16), 18 + 19 + 16 + (i / 3) * (CHIP + 17 + 14))
-		_box.add_child(c)
+		$Box/Chips.add_child(c)
 		_chips.append(c)
-	_collect = _pill_button("Collect", Vector2(maxf(bw * 0.6, 120), 46))
+	_collect.size = Vector2(maxf(bw * 0.6, 120), 46)
 	_collect.position = Vector2((bw - _collect.size.x) / 2, bh - 16 - 46)
-	_collect.modulate.a = 0
-	_collect.visible = false
 	_collect.gui_input.connect(_on_collect)
-	_box.add_child(_collect)
 	modulate.a = 0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.22)
 	# Each die tumbles, holds on its face, then fades off the element.

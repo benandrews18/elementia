@@ -125,7 +125,7 @@ func _ready() -> void:
 			d.get_node("Window/Hint").visible = true
 			d._layout()
 		"roll":  # 4 dice, already revealed (the tweens run to their end)
-			var pop := RollPopup.new()
+			var pop := RollPopup.make()
 			pop.roll = [{"face": 3, "sym": "C"}, {"face": 5, "sym": "O"}, {"face": 1, "sym": "Fe"}, {"face": 6, "sym": "Si"}]
 			pop.size = app.size
 			app.add_child(pop)
