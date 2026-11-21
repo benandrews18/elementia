@@ -207,5 +207,19 @@ func _ready() -> void:
 	Game.state.items.append("Glass")
 	check(Game.todo_hint() == null, "no hint once everything pinned is owned")
 
+	# Saving: the temp file is swapped in over the old save; a write cut off
+	# half-way (only the temp file) leaves the last good save; a file of the
+	# wrong kind reads as the default.
+	var path := "user://rules_test_save.json"
+	Progress._write(path, {"visits": 3})
+	Progress._write(path, {"visits": 4})
+	check(Progress._read(path, null) == {"visits": 4.0} and not FileAccess.file_exists(path + ".tmp"), "a save replaces the last one")
+	FileAccess.open(path + ".tmp", FileAccess.WRITE).store_string("{\"visi")
+	check(Progress._read(path, null) == {"visits": 4.0}, "a cut-off write keeps the last good save")
+	FileAccess.open(path, FileAccess.WRITE).store_string("[1]")
+	check(Progress._read(path, {}) == {} and Progress._read(path, null) == null, "a file of the wrong kind reads as the default")
+	DirAccess.remove_absolute(path)
+	DirAccess.remove_absolute(path + ".tmp")
+
 	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)

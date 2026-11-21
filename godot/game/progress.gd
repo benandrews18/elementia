@@ -66,17 +66,29 @@ var trophies: Dictionary = {}
 var history: Array = []
 
 
+## The file's JSON, or default when it's missing, unreadable or the wrong
+## kind (default null: any object).
 static func _read(path: String, default: Variant) -> Variant:
 	if not FileAccess.file_exists(path):
 		return default
 	var v = JSON.parse_string(FileAccess.get_file_as_string(path))
-	return default if v == null else v
+	var want := TYPE_DICTIONARY if default == null else typeof(default)
+	return v if typeof(v) == want else default
 
 
+## Writes a temporary file, then swaps it in: an app killed mid-write leaves
+## the last good save, never an empty one.
 static func _write(path: String, value: Variant) -> void:
-	var f := FileAccess.open(path, FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(value))
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null:
+		push_error("Can't save %s: %s" % [path, error_string(FileAccess.get_open_error())])
+		return
+	f.store_string(JSON.stringify(value))
+	f.close()
+	var err := DirAccess.rename_absolute(tmp, path)
+	if err != OK:
+		push_error("Can't save %s: %s" % [path, error_string(err)])
 
 
 ## loadAll(): the saved run (if any), prefs, trophies and history.
