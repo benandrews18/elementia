@@ -208,9 +208,10 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   parity tests and a later simulator possible.
 - **Same save format.** The Godot save is the same JSON shape as the HTML
   game's `state` object, so the same save loads in both. That powers the
-  tests and screenshots. Old-save upgrades (`loadAll()`'s migrations) are
-  not ported: app players start fresh. Add an importer only if carrying
-  runs across becomes a real feature.
+  tests and screenshots. HTML saves aren't carried into the app (app
+  players start fresh; an importer only if that becomes a real feature).
+  The app's own saves do get upgraded: a save version and the `loadAll()`
+  clean-ups, before M9 (review finding 5, 2026-11-21).
 - **One commit per logical change, on `master`**, as for the HTML game.
   Godot work doesn't trigger the HTML publish steps in `CLAUDE.md`.
 
@@ -729,7 +730,7 @@ Recorded so they aren't re-argued. Add new ones with the date.
   and data stay in code. The HTML comparison still runs on every converted
   screen while the HTML reference exists.
 - 2026-11-15 (plan review): goldens come from the simulator; rule tables
-  are exported from the running game, never copied; no old-save migration;
+  are exported from the running game, never copied; no HTML-save import (app saves are upgraded: see Same save format);
   no pixel-difference overlay; comparison page built in M2.
 
 ## Open questions (for the user, when they come up)
