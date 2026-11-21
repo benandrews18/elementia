@@ -1,7 +1,5 @@
 ## The opening's pinning tip (#pinTip), over the To-Do List: a parchment
 ## window, Got it, and "✕ Hide" (never again).
-## shortcut: the HTML tip also says "Track down a single item with 🔍" and
-## its hint says tracking; that wording comes with the tips (M6 step 7).
 class_name PinTip
 extends Control
 
@@ -31,6 +29,10 @@ func _ready() -> void:
 	var tw := line.get_theme_font("font").get_string_size(line.text, HORIZONTAL_ALIGNMENT_LEFT, -1, line.get_theme_font_size("font_size")).x
 	line.position.x = (w - tw - 24) / 2
 	$Window/Pin.position.x = line.position.x + tw + 6
+	var line2: Label = $Window/Line2  # ...and the second, with its 🔍
+	var tw2 := line2.get_theme_font("font").get_string_size(line2.text, HORIZONTAL_ALIGNMENT_LEFT, -1, line2.get_theme_font_size("font_size")).x
+	line2.position.x = (w - tw2 - 24) / 2
+	$Window/Glass.position.x = line2.position.x + tw2 + 6
 	$Window/Hint.size.x = w - 2 * $Window/Hint.position.x
 	var ok: Control = $Window/GotIt
 	var ot: Label = ok.get_node("Text")

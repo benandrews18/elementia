@@ -13,7 +13,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
-	"pins", "tracked_card", "tracked_map", "tracked_station"]
+	"pins", "tracked_card", "tracked_map", "tracked_station",
+	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -24,6 +25,8 @@ func _ready() -> void:
 		state = load("res://tests/shot.gd")._args().get("state", "map")
 	Progress.prefs.pinnedItems = ["Metropolis", "Plastic"]
 	Progress.prefs.hiddenTips = []
+	Progress.prefs.guidedTutorialEnabled = false  # no Professor Mouse popping up on his own (the mouse_* states show him)
+	Progress.prefs.sawEmptyElTip = true
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -161,6 +164,7 @@ func _ready() -> void:
 			ItemsScreen.query = "steel" if state == "items_search" else ""
 			app.open_items("Bridge" if state == "items_open" else "")
 		"settings", "game_rules", "tutorial_messages":
+			Progress.prefs.guidedTutorialEnabled = true  # Game Rules' Tutorial tips switch shows on (a window is open: no tip pops up)
 			app.open_settings({"settings": "", "game_rules": "rules", "tutorial_messages": "tuts"}[state])
 		"trophies", "trophy_detail", "history", "history_open":  # with tests/fixtures/trophies_history.json
 			var fx: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/trophies_history.json"))
@@ -180,6 +184,20 @@ func _ready() -> void:
 			if state == "tracked_map":
 				Game.ctx.selectedMapStation = "The City"
 			Game.state_changed.emit()
+		"mouse_bl", "mouse_tl", "mouse_c", "mouse_br":  # Professor Mouse in each corner (the HTML's tips)
+			await get_tree().process_frame
+			match state:
+				"mouse_bl": app.mouse.show_tip(3, "Tap [b]Roll[/b] to get elements!", "bottom-left", app._hub.button("home"), 14)
+				"mouse_tl": app.mouse.show_tip(7, "Tap [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
+				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app._hub.button("home"))
+				"mouse_br": app.mouse.show_tip(7, "Your tracked item needs this one!", "bottom-right")
+		"tut_intro", "tut_elements", "coach1":  # How to Play: its two windows; the walkthrough's first step
+			app.start_coach()
+			if state != "tut_intro":
+				app.get_children().filter(func(c): return c is ParchDialog)[0].pressed.emit("Next")
+				await get_tree().process_frame
+			if state == "coach1":
+				app.get_children().filter(func(c): return c is TutElements)[0].pressed.emit("Next")
 		"pins", "tracked_card":  # Metropolis tracked: the pins tray open; its card from the pill
 			Game.ctx.tracked = "Metropolis"
 			if state == "pins":

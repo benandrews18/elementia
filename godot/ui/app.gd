@@ -15,6 +15,7 @@ var _screen_name := ""
 var _panel_node: Control
 var _hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
+var mouse: MouseTip  # Professor Mouse, on a layer above everything
 
 static var current: App  # the running app, for screens that need it (crafting)
 
@@ -30,6 +31,11 @@ func _ready() -> void:
 	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_hub)
 	_hub.pressed.connect(_on_hub)
+	var layer := CanvasLayer.new()
+	layer.layer = 2
+	add_child(layer)
+	mouse = MouseTip.make()
+	layer.add_child(mouse)
 	Game.state_changed.connect(_sync)
 	resized.connect(_sync_floats)  # they sit on the bottom edge
 	_sync()
@@ -49,6 +55,8 @@ func _sync() -> void:
 	_sync_floats()
 	_market_check()
 	_maybe_end()
+	_walkthrough.call_deferred()  # after this change's own windows have opened
+	_unknown_tip.call_deferred()
 
 
 ## runBingoSequence(): a craft that owns a new Market square or finishes a
@@ -215,6 +223,124 @@ func open_card(name: String) -> void:
 		_screen._redraw()
 
 
+## showTutorialHintOnce(): a Professor Mouse tip once ever (its id goes in
+## prefs.tutorialHintsSeen), unless the tips are off (Game Rules). Returns
+## whether it showed. queued: behind the tip showing (queueTutorialHintOnce()).
+func tip_once(id: String, pose: int, text: String, anchor := "bottom-left", target: Control = null, px := 19, queued := false, bottom := -1.0) -> bool:
+	var seen: Array = Util.get_or(Progress.prefs, "tutorialHintsSeen", [])
+	if Progress.prefs.get("guidedTutorialEnabled") == false or seen.has(id):
+		return false
+	Progress.prefs.tutorialHintsSeen = seen + [id]
+	Progress.save_all()
+	if queued:
+		mouse.queue_tip(pose, text, anchor, target, px)
+	else:
+		mouse.show_tip(pose, text, anchor, target, px, bottom)
+	return true
+
+
+## maybeShowEmptyElTip(): the first time a player ever holds a "?", what it
+## is, once whatever handed it over has finished (nothing open, run going).
+func _unknown_tip() -> void:
+	var s := Game.state
+	if Progress.prefs.get("sawEmptyElTip") or int(Util.get_or(s, "emptyElements", 0)) <= 0 or s.get("ended") or _market_playing:
+		return
+	if get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion()):
+		return  # a window is open; the next change tries again
+	Progress.prefs.sawEmptyElTip = true
+	Progress.save_all()
+	ParchDialog.open(self, UnknownTip.SCENE)
+
+
+## walkthroughIdle(): nothing over the screen (no window, panel, roll or
+## opening), no tip showing or waiting.
+func _idle() -> bool:
+	return panel == "" and not mouse.showing and mouse._queue.is_empty() 		and not get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
+
+
+## maybeShowWalkthroughTip(): the new player's first presses, each once ever,
+## on an idle station: Roll, Craft, Convert (then where to tap a missing
+## element), the Map; later the tracked item's badge on a shop card.
+func _walkthrough() -> void:
+	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle():
+		return
+	var s := Game.state
+	if Game.ctx.screen == "map":
+		if int(s.get("visits", 0)) >= 1 and not s.get("marketVisited"):  # travel.js: back on the map, Market never opened
+			tip_once("checkmarket", 1, "Check out the Market!", "bottom-right", _hub.button("market"), 16)
+		return
+	if Game.ctx.screen != "station" or not Game.ctx.get("current") or not _screen is StationScreen:
+		return
+	if not s.get("rolledHere"):
+		tip_once("firstroll", 3, "Tap [b]Roll[/b] to get elements!", "bottom-left", _hub.button("home"), 14)
+		return
+	var craftable: Control = _screen.find_tagged("st:craft:", true)
+	if craftable != null:
+		tip_once("firstcraft", 7, "Tap [b]Craft[/b]!", "top-left", craftable)
+		return
+	var n := 0
+	for v in s.elements.values():
+		n += int(v) / int(Data.t("CONVERT_RATE"))
+	if n > 0 and tip_once("firstconvert", 5, "Convert Elements! [b]3:1[/b]", "center", _screen.find_tagged("convert")):
+		tip_once("converttapmissing", 7, "Tap to craft missing elements", "bottom-left", null, 12, true)
+		return
+	if tip_once("gomap", 12, "Onto the next station!
+Tap the [b]Map[/b].", "bottom-left", _hub.button("home"), 15):
+		return
+	var badge: Control = _screen.find_tagged("st:needed:", true)
+	if badge != null:
+		tip_once("pintrackshop", 7, "Your tracked item needs this one!", "bottom-right", badge)
+
+
+## How to Play (Settings; startNewTutorial()): "The Periodic Table", "The 16
+## Elements", then Professor Mouse walks through the hub's buttons and the
+## gear, each spotlit (tutCoachSteps()).
+func start_coach() -> void:
+	var intro := ParchDialog.open(self, "res://ui/overlays/tut_intro.tscn")
+	intro.pressed.connect(func(b): if b == "Next":
+		intro.close()
+		var els := ParchDialog.open(self, TutElements.SCENE)
+		els.pressed.connect(func(b2): if b2 == "Next":
+			els.close()
+			_coach_step(0)))
+
+
+func _coach_steps() -> Array:
+	return [
+		["home", 10, "bottom-left", "The home button keeps the game going!
+Collect elements,
+and travel the map.", 15],
+		["jobs", 2, "bottom-left", "To-Do List: the items you're tracking.", 19],
+		["inv", 12, "bottom-left", "Inventory: all you've collected.", 19],
+		["codex", 1, "bottom-right", "Look up any item's recipe here.", 19],
+		["market", 2, "bottom-right", "The Market: craft items and capstones from anywhere.", 19],
+		["settings", 2, "top-right", "Settings: adjust rules or go to Main Menu.", 19],
+		["", 3, "top-right", "You're ready! {🎯} Go build!", 19]]
+
+
+var _coach_cb := Callable()  # the walkthrough's Next, bound to its next step
+
+
+func _coach_step(i: int) -> void:
+	var steps := _coach_steps()
+	if _coach_cb.is_valid() and mouse.next_step.is_connected(_coach_cb):
+		mouse.next_step.disconnect(_coach_cb)
+	if i >= steps.size():  # endTutCoach()
+		mouse.coaching = false
+		mouse.hide_tip()
+		return
+	var st: Array = steps[i]
+	var target: Control = null
+	if st[0] == "settings":
+		target = (_screen as Control).call("find_tagged", "settings") if _screen.has_method("find_tagged") else null
+	elif st[0] != "":
+		target = _hub.button(st[0])
+	mouse.coaching = true
+	mouse.show_tip(st[1], st[3], st[2], target, st[4], -1.0, "%d / %d" % [i + 1, steps.size()], i == steps.size() - 1)
+	_coach_cb = _coach_step.bind(i + 1)
+	mouse.next_step.connect(_coach_cb)
+
+
 ## The title screen over everything (launch, Settings' Home, the end
 ## screen's Main Menu); the run underneath is untouched.
 func show_welcome() -> void:
@@ -354,7 +480,9 @@ func _sync_floats() -> void:
 		if panel == "pins":
 			close_panel()
 		else:
-			open_panel("pins"))
+			open_panel("pins")
+			# openPinsTray(): once there's a pin to tap; on the tray's top edge (bottom:45vh)
+			tip_once("pinselect", 10, "Tap to start tracking!", "bottom-left", null, 17, false, size.y * 0.45))
 	if t == null:
 		b.add_child(HubBar._badge("!", Vector2(58 + 7 - 24, -7)))
 	_floats.add_child(b)
@@ -493,9 +621,18 @@ func _check_intro() -> void:
 
 
 func _challenge() -> void:
-	var o = Orders.current(Game.state)
-	if o != null and int(o.round) == int(Game.state.visits):
-		OrderInfo.open(self)
+	var s := Game.state
+	var o = Orders.current(s)
+	if o == null or int(o.round) != int(s.visits):
+		return
+	# maybeShowOrderTip(): the challenges explained, the first check of a run
+	# that has one (unless hidden for good with its ✕ Hide), then this one.
+	if not s.get("sawOrderTip") and not Progress.tip_hidden("orderTip"):
+		s.sawOrderTip = true
+		Progress.save_all()
+		MatRules.order_tip(self).closed.connect(func(): OrderInfo.open(self))
+		return
+	OrderInfo.open(self)
 
 
 ## Back on the map after turn 24's shopping: the "Final Score!" shutter and

@@ -48,6 +48,17 @@ func _ready() -> void:
 	_build()
 
 
+## A button by id ("home", or a side one: inv, jobs, market, codex), e.g. for
+## a tip's spotlight.
+func button(id: String) -> Control:
+	if id == "home":
+		return $Home
+	for s in SIDES:
+		if s[0] == id:
+			return get_node(s[1])
+	return null
+
+
 ## Where a side button's centre is (in this bar's coordinates), e.g. for
 ## things flying into the Inventory.
 func button_center(id: String) -> Vector2:

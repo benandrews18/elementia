@@ -110,3 +110,7 @@ func _layout() -> void:
 	var h := content.position.y + content.get_combined_minimum_size().y + bottom_pad
 	win.size.y = h
 	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
+	var spot := content.get_node_or_null("BannerSpot") as Control
+	if spot != null:  # the title's banner sits there, under an icon (h2 after the icon in the HTML)
+		var banner: Control = $Window/Banner
+		banner.position.y = content.position.y + spot.position.y + (spot.size.y - banner.size.y) / 2

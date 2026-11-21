@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/tut_elements.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+
+[node name="TutElements" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 36.0
+top_gap = 12.4
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 100.0
+offset_right = 370.0
+offset_bottom = 700.0
+title = "The 16 Elements"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.4
+offset_right = 312.0
+offset_bottom = 600.0
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Scroll" type="ScrollContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 1
+horizontal_scroll_mode = 0
+
+[node name="Grid" type="GridContainer" parent="Window/Content/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 2
+
+[node name="Next" parent="Window/Content" instance=ExtResource("pill")]
+custom_minimum_size = Vector2(80, 44.3)
+layout_mode = 2
+size_flags_horizontal = 0
+metadata/button = true
+
+[node name="Text" parent="Window/Content/Next" index="0"]
+text = "Next"

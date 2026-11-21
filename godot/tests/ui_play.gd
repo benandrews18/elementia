@@ -12,6 +12,7 @@ var balloon_done := false
 var expansions := 0
 var convert_done := false
 var saw_rules := false
+var saw_order_tip := false  # the challenge tip, once a run
 var finished := {}  # section -> true once it ran to its end (a script error stops one quietly)
 
 
@@ -24,13 +25,15 @@ func check(ok: bool, what: String) -> void:
 func _ready() -> void:
 	Progress.autosave = false
 	Progress.prefs.erase("sawMatCheckTutorial")  # a first board check ever
+	Progress.prefs.guidedTutorialEnabled = false  # Professor Mouse off (the tips section turns him on)
+	Progress.prefs.sawEmptyElTip = true
 	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -95,6 +98,13 @@ func _run(app: App) -> void:
 					saw_rules = true
 					c.close()
 			if Orders.current(Game.state) != null:
+				# The run's first check with a challenge: the challenges explained first (maybeShowOrderTip()).
+				var is_tip := func(c): return c is ParchDialog and c.tip_id == "orderTip" and not c.is_queued_for_deletion()
+				await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand or is_tip.call(c)))
+				for c in app.get_children().filter(is_tip):
+					check(not saw_order_tip, "turn %d: the challenge tip shows once a run" % turns)
+					saw_order_tip = true
+					c.close()
 				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
 			_dismiss(app)
 		if app.panel == "drawer":
@@ -146,6 +156,7 @@ func _run(app: App) -> void:
 ## The run's last turn (24): leaving the station plays the "Final Score!"
 ## shutter and opens the mat; Home counts it and the run is complete.
 func _final_score(app: App) -> void:
+	saw_order_tip = false  # a new run: its first challenge brings the tip again
 	Game.start_run("Coral Reef")
 	await get_tree().process_frame
 	Game.state.visits = int(Data.t("RUN_COMPLETE_VISIT"))
@@ -155,7 +166,11 @@ func _final_score(app: App) -> void:
 	app._on_hub("home")
 	check(Game.state.get("finalCheckPending") == true, "turn 24: the final check is pending")
 	check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn 24: the shutter opens the mat")
-	check(app.get_children().any(func(c): return c is OrderInfo), "turn 24: the Grand Exhibition shows")
+	for c in app.get_children().filter(func(c): return c is ParchDialog and c.tip_id == "orderTip" and not c.is_queued_for_deletion()):
+		check(not saw_order_tip, "turn 24: the challenge tip, if no check showed it yet")  # the run's first challenge can be the final one
+		saw_order_tip = true
+		c.close()
+	check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo)), "turn 24: the Grand Exhibition shows")
 	_dismiss(app)
 	check(app.home_face() == "final", "turn 24: Home says Final Score")
 	app._on_hub("home")
@@ -384,6 +399,61 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## Professor Mouse and the tips: the first walkthrough tip (Roll) shows once,
+## ✕ closes it, "✕ Hide" turns the tips off; the first "?" ever held brings
+## the Unknown Element tip; How to Play runs its two windows and 7 steps.
+func _tips(app: App) -> void:
+	# A clean screen: earlier sections jump between states mid-animation and
+	# can leave a pop-up or an input block behind (a player can't).
+	for c in app.get_children().slice(app._hub.get_index() + 1):
+		if c is Control:
+			c.queue_free()
+	app.mouse._queue.clear()  # and no tip from an earlier section (Settings turns the tips back on)
+	app.mouse.hide_tip()
+	Progress.prefs.guidedTutorialEnabled = true
+	Progress.prefs.tutorialHintsSeen = []
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	for i in 3:
+		await get_tree().process_frame
+	check(app.mouse.showing and app.mouse.get_node("Bubble/Text").text.contains("Roll"), "the first tip: Roll (showing: '%s')" % app.mouse.get_node("Bubble/Text").text)
+	app.mouse.get_node("Bubble/Close").gui_input.emit(_release())
+	check(not app.mouse.showing and Progress.prefs.tutorialHintsSeen.has("firstroll"), "✕ closes it; it's seen")
+	Game._changed()
+	for i in 2:
+		await get_tree().process_frame
+	check(not app.mouse.showing, "a seen tip doesn't come back")
+	Progress.prefs.tutorialHintsSeen = []
+	Game._changed()
+	for i in 2:
+		await get_tree().process_frame
+	app.mouse.get_node("Bubble/Hide").gui_input.emit(_release())
+	check(not app.mouse.showing and Progress.prefs.guidedTutorialEnabled == false, "✕ Hide turns the tips off")
+	Progress.prefs.sawEmptyElTip = false
+	Game.state.emptyElements = 1
+	Game._changed()
+	for i in 2:
+		await get_tree().process_frame
+	var tips: Array = app.get_children().filter(func(c): return c is UnknownTip and not c.is_queued_for_deletion())
+	check(tips.size() == 1 and Progress.prefs.sawEmptyElTip, "the first \"?\" held: the Unknown Element tip")
+	if not tips.is_empty():
+		tips[0].close()
+	app.start_coach()
+	var dialogs := func(): return app.get_children().filter(func(c): return c is ParchDialog and not c.is_queued_for_deletion())
+	check(dialogs.call().size() == 1, "How to Play: the periodic table")
+	dialogs.call()[0].pressed.emit("Next")
+	await get_tree().process_frame
+	var els: Array = dialogs.call().filter(func(c): return c is TutElements)
+	check(els.size() == 1 and els[0].get_node("Window/Content/Scroll/Grid").get_child_count() == 16, "then the 16 elements")
+	els[0].pressed.emit("Next")
+	await get_tree().process_frame
+	check(app.mouse.coaching and app.mouse.get_node("Bubble/Tour/Step").text == "1 / 7", "then the walkthrough, step 1 of 7")
+	for i in 7:
+		app.mouse.get_node("Bubble/Tour/Next").gui_input.emit(_release())
+	check(not app.mouse.coaching and not app.mouse.showing, "Next through all 7 ends it")
+	finished.tips = true
 
 
 ## Tracking: a 📌 on an Items row tracks it (the pill shows it); the 🔍

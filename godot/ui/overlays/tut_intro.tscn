@@ -1,0 +1,89 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/parch_dialog.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[node name="TutIntro" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 36.0
+top_gap = -15.0
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 222.0
+offset_right = 370.0
+offset_bottom = 557.0
+title = "The Periodic Table"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 44.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="RichTextLabel" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+bbcode_enabled = true
+text = "[center]{🔬}[/center]"
+fit_content = true
+scroll_active = false
+theme_override_font_sizes/normal_font_size = 52
+
+[node name="Gap1" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BannerSpot" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 41.3)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Gap2" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Text" type="RichTextLabel" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 4
+theme_override_fonts/normal_font = ExtResource("f4")
+theme_override_fonts/bold_font = ExtResource("f8")
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
+bbcode_enabled = true
+text = "[center]The periodic table lists every element in the universe. Just [b]16[/b] of them make up nearly everything you'll see and craft in Elementia.[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="Gap3" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Next" parent="Window/Content" instance=ExtResource("pill")]
+custom_minimum_size = Vector2(80, 44.3)
+layout_mode = 2
+size_flags_horizontal = 0
+metadata/button = true
+
+[node name="Text" parent="Window/Content/Next" index="0"]
+text = "Next"

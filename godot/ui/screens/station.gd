@@ -249,6 +249,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	var pin: Control = acts.get_node("Pin")
 	if Game.feeds_tracked(e.name):  # the tracked item's icon instead; a tap: the To-Do List
 		acts.show_needed(Data.icon(Catalog.entry(Game.ctx.tracked).emoji))
+		pin.set_meta("tip", "st:needed:" + e.name)
 		pin.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.open_panel("todo")))
 	else:
 		pin.gui_input.connect(_on_tap.bind(_pin_tap.bind(e.name, page, pos, card_size)))
@@ -257,6 +258,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	if can:
 		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
 	btn.set_meta("cmp", "st:craft:" + e.name)
+	if can:
+		btn.set_meta("tip", "st:craft:" + e.name)
 	page.add_child(acts)
 
 
@@ -363,6 +366,21 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 			n += int(v) / int(Data.t("CONVERT_RATE"))
 		if n > 0:
 			conv.add_child(HubBar._badge(str(n), Vector2(58 + 7 - 24, -7)))
+
+
+## The first control here (in tree order) whose "tip" or "cmp" tag starts
+## with prefix: a tip's target (a craftable Craft button, a needed badge,
+## the Convert button).
+func find_tagged(prefix: String, tip_only := false) -> Control:
+	var stack: Array = [self]
+	while not stack.is_empty():
+		var n: Node = stack.pop_front()
+		if n is Control and not n.is_queued_for_deletion() and n.is_visible_in_tree():
+			var tag: String = n.get_meta("tip", "") if tip_only else n.get_meta("tip", n.get_meta("cmp", ""))
+			if tag.begins_with(prefix):
+				return n
+		stack.append_array(n.get_children())
+	return null
 
 
 ## A card's 📌: pins and tracks it (saves, then redraws); tracked, its icon

@@ -30,11 +30,3 @@ func _ready() -> void:
 	$Window/Content/At.text = "Not earned yet" if got == null else (
 		"Earned %d times · first %s · latest %s" % [n, got.at, got.last] if n > 1 else "Earned %s" % got.at)
 	super()
-
-
-## The banner over BannerSpot, under the icon.
-func _layout() -> void:
-	super()
-	var spot: Control = $Window/Content/BannerSpot
-	var banner: Control = $Window/Banner
-	banner.position.y = $Window/Content.position.y + spot.position.y + (spot.size.y - banner.size.y) / 2
