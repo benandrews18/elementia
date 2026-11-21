@@ -13,7 +13,8 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** the godot-prompter review (see its section, before M7), then
+**Next task:** the review's fixes 11 (Items screen speed) and 7 (tap vs drag;
+confirm on a phone first), see godot/REVIEW.md; then
 M6 step 4, Welcome (Continue / New Game; Settings' Home; the end screen's
 Main Menu). Start every session with `git status`: the user may
 have edited scenes in the editor.

@@ -259,6 +259,12 @@ to load at each step (and run godot-code-review at each step's end):
 (finding 16); M9 gets the Back button (14), the safe area (8) and the app
 save upgrades (5) as checklist lines.
 
+## Status (2026-11-21)
+Fixed and committed: 1, 3, 13, 6, 4, 2 (Godot only). Decided (PLAN.md
+decisions): 15 (tests stay in check.py), the plan review (skills per step,
+M7-M9 lines). Next: 11, then 7 (when the user says). Later: 12 (re-measure
+on a phone), 14, 8, 5 (before M9), 9.
+
 ## Merged list (ranked; pick by number)
 **Must**
 - 1 A crash mid-save wipes everything (temp file + rename). Small.
