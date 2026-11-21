@@ -13,8 +13,8 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 7, Hints and tips (`hints.js`, `tour.js`): one-time tips,
-the challenge tip, the coach; the pin tip's tracking wording. Start every session with `git status`: the user may
+**Next task:** M6 step 8, Saved layouts, collections list, Combo Lab
+(`mat-layouts.js`, `combo-lab.js`): the mat's Layouts button. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -25,7 +25,8 @@ Log (newest first, one line per session):
   ~360 -> ~28 ms, Tap.tap (a drag isn't a tap), mid-visit resume (Godot
   only); checks stop re-shooting screens after a commit. Planet redesigned
   (both games). M6 step 4: the title screen and the Classic window. Step 5:
-  Trophies and History. Step 6: the tracked item.
+  Trophies and History. Step 6: the tracked item. Step 7: Professor Mouse,
+  the tips and How to Play.
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -637,8 +638,14 @@ Order (each makes the next useful):
       "needed for" badge (opens the To-Do List; shortcut: not scrolled to the
       item); the To-Do List leads with it. A 📌 unpin stops tracking
       everywhere (the HTML only does so from shop cards). Skills: hud-system.
-- [ ] 7. Hints and tips (`hints.js`, `tour.js`): one-time tips, the
-      challenge tip, the coach. Skills: hud-system, tween-animation.
+- [x] 7. Hints and tips (`hints.js`, `tour.js`): Professor Mouse
+      (`ui/overlays/mouse_tip.tscn`, the spotlight a shader), the walkthrough
+      tips (prefs.tutorialHintsSeen; off with Game Rules' switch or ✕ Hide),
+      the challenge tip (once a run) and the Unknown Element tip (once ever),
+      How to Play from Settings as the HTML's (`tut_intro`, `tut_elements`,
+      7 coach steps). The pin tip says tracking. Tests and shots turn the tips
+      off (prefs.guidedTutorialEnabled) except where they test them. The
+      intro's 🔬 shows once its image is fetched. Skills: hud-system.
 - [ ] 8. Saved layouts, collections list, Combo Lab (`mat-layouts.js`,
       `combo-lab.js`): the mat's Layouts button. Skills: godot-ui,
       input-handling.
