@@ -1,8 +1,10 @@
 ## Plays a whole run through the screens (App and its hub), the way a player
 ## taps: roll, craft what's craftable, go to the map, pick a reachable
 ## station, travel (locking in on check turns), until the run is over.
-## Checks the screens follow and nothing errors.
-##   G --path godot --quit-after 3000 res://tests/ui_play.tscn
+## Checks the screens follow and nothing errors. Then the Final Score, the
+## Market and the To-Do List, each from a fresh run.
+##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo]
+## Headless runs at a fixed frame rate, as fast as the PC allows (no window).
 extends Node
 
 var fails := 0
@@ -25,6 +27,18 @@ func _ready() -> void:
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var only: String = load("res://tests/shot.gd")._args().get("only", "")
+	var parts: Array = ["run", "final_score", "market", "todo"] if only == "" else [only]
+	for part in parts:
+		await call("_" + part, app)
+	for part in parts:
+		check(finished.has(part), "the %s section ran to its end (else a script error stopped it)" % part)
+	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
+	get_tree().quit(0 if fails == 0 else 1)
+
+
+## The opening, then a whole run turn by turn, then the end screen.
+func _run(app: App) -> void:
 	# The opening: New Game, pick Coral Reef, confirm; the gift flies in and
 	# the run starts at its station.
 	Progress.prefs.hiddenTips = []
@@ -118,13 +132,7 @@ func _ready() -> void:
 	for c in app.get_children():
 		if c is CapstoneChoice:
 			c.queue_free()
-	await _final_score(app)
-	await _market(app)
-	await _todo(app)
-	for part in ["final_score", "market", "todo"]:
-		check(finished.has(part), "the %s section ran to its end (else a script error stopped it)" % part)
-	print("ui_play: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
-	get_tree().quit(0 if fails == 0 else 1)
+	finished.run = true
 
 
 ## The run's last turn (24): leaving the station plays the "Final Score!"
@@ -246,6 +254,8 @@ func _market(app: App) -> void:
 ## The To-Do List: the hub button opens it (Home reads Close); the hint
 ## opens the breakdowns down to its suggestion; a pin in a tree pins.
 func _todo(app: App) -> void:
+	Game.start_run("Coral Reef")
+	await get_tree().process_frame
 	Progress.prefs.pinnedItems = ["Metropolis"]
 	TodoTray.expanded.clear()
 	TodoTray.hint_open = false
