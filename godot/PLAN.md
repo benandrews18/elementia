@@ -595,7 +595,7 @@ Order (each makes the next useful):
       Quark bar; a row opens its breakdown. The tree is shared with the To-Do
       List (`ui/components/ref_tree.gd`, a parchment or dark look). Item Info
       on a card opens the screen at that item. Matches the HTML within ~4px.
-      Open: the title's 📖 (no Noto image yet; ask before downloading).
+      Noto's PNGs moved to `2D/png/128/` (fetch_noto_icons.py fixed).
 - [ ] 3. Settings (`settings.js`, the gear): options, the rules pages (also
       the first check's rules and the mat's "?"), clear all data.
 - [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
