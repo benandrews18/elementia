@@ -1,12 +1,19 @@
 ## Spending an Unknown Element (openEmptyElPicker(), #emptyElPick): "Pick an
 ## element" with the "?" square on the banner, this station's elements in a
 ## row; a tap turns one "?" into that element. A tap outside closes it.
+## The layout is ui/overlays/unknown_pick.tscn; this fills in the station.
 class_name UnknownPick
 extends Control
 
+const SCENE := "res://ui/overlays/unknown_pick.tscn"
+
+## The element chips: their biggest size and the gap between them.
+@export var chip_max := 44.0
+@export var chip_gap := 4.0
+
 
 static func open(on: Control) -> UnknownPick:
-	var p := UnknownPick.new()
+	var p: UnknownPick = load(SCENE).instantiate()
 	p.size = on.size
 	on.add_child(p)
 	return p
@@ -14,7 +21,7 @@ static func open(on: Control) -> UnknownPick:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self, queue_free)
+	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: queue_free())
 	var at = Game.ctx.current if Game.ctx.current else Game.state.get("lastStation")
 	if not at:
 		queue_free()
@@ -23,30 +30,31 @@ func _ready() -> void:
 	var dice := Catalog.sorted_dice(st)
 	var w := minf(360, size.x - 40)
 	var inner := w - 2 * 30
-	var cw := minf(44, (inner - 4 * (dice.size() - 1)) / dice.size())
-	var h := 59 + 34 + cw + 14 + 30
-	var title := "    Pick an element"  # room for the "?" square on the banner
-	var box := ConfirmDialog.window(Vector2(w, h), title)
-	box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	add_child(box)
-	var banner: Control = box.get_child(0)
-	var sq := LockInReward.unknown_square(24)
+	var cw := minf(chip_max, (inner - chip_gap * (dice.size() - 1)) / dice.size())
+	var chips: Control = $Window/Chips
+	var h := chips.position.y + cw + 14 + 30
+	var win: Control = $Window
+	win.size = Vector2(w, h)
+	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
+	var banner: Control = $Window/Banner
+	var sq := LockInReward.unknown_square(24)  # room for it: the title starts with spaces
 	sq.position = Vector2(26, (banner.size.y - 24) / 2 - 1)
 	banner.add_child(sq)
-	var name_w := Tok.font(800).get_string_size(at, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-	var em := Tok.icon(st.emoji, 26)
-	em.position = Vector2((w - name_w - 32) / 2, 59)
-	box.add_child(em)
-	var nl := Tok.label(at, 18, Color("#3b2412"), 800)
-	nl.position = Vector2(em.position.x + 32, 59 + 1)
-	box.add_child(nl)
-	var x0 := (w - (dice.size() * cw + (dice.size() - 1) * 4)) / 2
+	# The station's emoji and name, centred together.
+	var em: TextureRect = $Window/Emoji
+	var nl: Label = $Window/Name
+	em.texture = Data.icon(st.emoji)
+	nl.text = at
+	var name_w := nl.get_theme_font("font").get_string_size(at, HORIZONTAL_ALIGNMENT_LEFT, -1, nl.get_theme_font_size("font_size")).x
+	em.position.x = (w - name_w - 32) / 2
+	nl.position.x = em.position.x + 32
+	var x0 := (w - (dice.size() * cw + (dice.size() - 1) * chip_gap)) / 2
 	for i in dice.size():
 		var sym: String = dice[i]
 		var c := StationScreen.element_chip(sym, cw)
-		c.position = Vector2(x0 + i * (cw + 4), 59 + 34)
+		c.position = Vector2(x0 + i * (cw + chip_gap), 0)
 		c.mouse_filter = MOUSE_FILTER_STOP
 		c.gui_input.connect(func(ev): if ConvertTray._tap(ev):
 			queue_free()
 			Game.spend_unknown(sym))
-		box.add_child(c)
+		chips.add_child(c)
