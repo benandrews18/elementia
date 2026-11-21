@@ -13,13 +13,18 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 4, Welcome (Continue / New Game; Settings' Home; the end screen's
-Main Menu). Start every session with `git status`: the user may
+**Next task:** M6 step 5, Trophies and History (their screens; the title
+screen's Trophies button and the Classic window's History row). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
+  safe saves, one save per action, low-processor mode, Items screen
+  ~360 -> ~28 ms, Tap.tap (a drag isn't a tap), mid-visit resume (Godot
+  only); checks stop re-shooting screens after a commit. Planet redesigned
+  (both games). M6 step 4: the title screen and the Classic window.
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -608,8 +613,14 @@ Order (each makes the next useful):
       `SettingRow` pieces. Later: Home (step 4), Dev Tools and Clear Cache
       (step 9), the Mini-games / Auto card / Low motion / 5x5 switches (with
       their features), the once-a-run challenge and Unknown tips (step 7).
-- [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
-      screen's Main Menu. Skills: godot-ui, input-handling.
+- [x] 4. Welcome (`welcome.js`, `tour.js` showWelcomeSlide()): the title
+      screen at every launch (`ui/screens/welcome.tscn`: Play, Settings), Play's
+      Classic window (`ui/overlays/classic_mode.tscn`: the save's visits and
+      points, Continue, New Game asking first), Settings' Home and the end
+      screen's Main Menu (the run stays saved). `ui/pieces/gloss_button.tscn`:
+      the glossy wood/green button, colours in the Inspector. Mini-Games, Combo
+      Lab, Collections, Trophies and the Classic window's History stay hidden
+      until their steps. Skills: godot-ui, input-handling.
 - [ ] 5. Trophies and History (`trophies.js`, `history.js` screens; their
       rules are ported). Skills: godot-ui.
 - [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`). Skills: hud-system,
@@ -761,6 +772,9 @@ Recorded so they aren't re-argued. Add new ones with the date.
   visit, in Godot only** (the HTML game keeps its behaviour; a deliberate
   parity exception). Low-processor mode on (the screenshot tools turn it
   off to draw every frame).
+- 2026-11-21: Settings switches and title-screen buttons for features that
+  don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
+  Combo Lab, Collections, Trophies) stay hidden until their features land.
 
 ## Open questions (for the user, when they come up)
 
