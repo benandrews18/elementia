@@ -8,13 +8,23 @@ class_name EndGame
 extends Control
 
 const INK := Color("#3b2412")
-const INK2 := Color("#5e4026")
-const MUTE := Color("#8a6a48")
-const LINE := Color("#c9a571")
 const GOLD_SOFT := Color("#f6dd9c")  # --gold-soft on parchment
 const GOLD_LINE := Color("#c9a24a")
 
+
+## The layout is ui/overlays/end_game.tscn (every section, its icon, title
+## and style, the buttons); this fills in the run and hides what's empty.
+const SCENE := "res://ui/overlays/end_game.tscn"
+
+## The trophy section's title with one trophy, and with none but Stars (⭐).
+@export var one_trophy_title := "New Trophy"
+@export var stars_title := "Stars Earned"
+
 var _completing := false
+
+
+static func make() -> EndGame:
+	return load(SCENE).instantiate()
 
 
 static func title_text() -> String:
@@ -45,127 +55,102 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var s := Game.state
 	_completing = s.get("runComplete") == true and not s.ended
-	ConfirmDialog.dim(self)
 	var w := minf(420, size.x - 24)
 	var inner := w - 2 * 38
 	var won: Array = Progress.award_trophies()
-	# The body, top to bottom, in a VBox (it scrolls inside the window).
-	var body := VBoxContainer.new()
-	body.add_theme_constant_override("separation", 10)
+	var body: VBoxContainer = $Window/Scroll/Body
 	body.custom_minimum_size.x = inner
-	var sub := sub_text()
-	if sub != "":
-		var l := Tok.label(sub, 13, INK2, 600)
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		l.custom_minimum_size.x = inner
-		body.add_child(l)
-	body.add_child(_stats(inner))
+	var sub: Label = $Window/Scroll/Body/Sub
+	sub.text = sub_text()
+	sub.visible = sub.text != ""
+	sub.custom_minimum_size.x = inner
+	_stats()
 	var caps: Array = Trophies.run_caps(s)
-	if caps.is_empty():
-		var none := Tok.label("None this time -- plan a route through several stations next run!", 13, INK2, 600)
-		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		none.custom_minimum_size.x = inner
-		body.add_child(_section("🏆", "Capstones Completed", none))
-	else:
-		body.add_child(_section("🏆", "Capstones Completed", _flow(caps.map(_cap_pill), inner)))
+	var none: Label = $Window/Scroll/Body/Capstones/None
+	none.visible = caps.is_empty()
+	none.custom_minimum_size.x = inner
+	for n in caps:
+		$Window/Scroll/Body/Capstones/Pills.add_child(_cap_pill(n))
 	var turn := _biggest_turn()
+	$Window/Scroll/Body/BiggestTurn.visible = not turn.is_empty()
 	if not turn.is_empty():
-		var v := VBoxContainer.new()
-		v.add_child(_station_line(turn.station, "+%s pts" % Util.thousands(int(turn.points)), inner))
-		v.add_child(_flow(turn.items.map(func(n): return Tok.icon(Data.t("ITEM_EMOJI").get(n, ""), 28)), inner))
-		body.add_child(_section("💥", "Biggest Turn", v))
+		_station_line($Window/Scroll/Body/BiggestTurn/Content/Line, turn.station, "+%s pts" % Util.thousands(int(turn.points)))
+		for n in turn.items:
+			$Window/Scroll/Body/BiggestTurn/Content/Items.add_child(Tok.icon(Data.t("ITEM_EMOJI").get(n, ""), 28))
 	var top := _top_station()
+	$Window/Scroll/Body/MostVisited.visible = not top.is_empty()
 	if not top.is_empty():
-		body.add_child(_section("🧭", "Station Most Visited", _station_line(top.name, "%d×" % top.count, inner)))
-	var stars: int = int(Util.get_or(s, "starsEarned", 0)) if _completing else 0
-	if not won.is_empty():
-		body.add_child(_section("🎖️", "New Trophy" if won.size() == 1 else "New Trophies", _trophies(won, inner), stars))
-	elif stars > 0:
-		body.add_child(_section("⭐", "Stars Earned", null, stars))
+		_station_line($Window/Scroll/Body/MostVisited/Line, top.name, "%d×" % top.count)
+	_trophy_section(won, int(Util.get_or(s, "starsEarned", 0)) if _completing else 0, inner)
 	# Laid out at full height first; sized to its content a frame later
 	# (wrapped text only knows its height then), up to the screen's.
 	var foot := _foot(inner)
+	var box: ParchmentWindow = $Window
+	var scroll: ScrollContainer = $Window/Scroll
 	var h := size.y - 40
-	var box := ConfirmDialog.window(Vector2(w, h), title_text())
+	box.title = title_text()
+	box.size = Vector2(w, h)
 	box.position = Vector2((size.x - w) / 2, (size.y - h) / 2)
-	add_child(box)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.position = Vector2(38, 59)
-	scroll.size = Vector2(inner, h - 59 - 10 - foot.size.y - 24)
-	scroll.add_child(body)
-	box.add_child(scroll)
-	foot.position = Vector2(38, h - 24 - foot.size.y)
-	box.add_child(foot)
+	scroll.size = Vector2(inner, h - scroll.position.y - 10 - foot.size.y - 24)
+	foot.position = Vector2(scroll.position.x, h - 24 - foot.size.y)
 	await get_tree().process_frame
-	h = minf(59 + body.size.y + 10 + foot.size.y + 24, size.y - 40)
+	h = minf(scroll.position.y + body.size.y + 10 + foot.size.y + 24, size.y - 40)
 	box.size.y = h
 	box.position.y = (size.y - h) / 2
-	scroll.size.y = h - 59 - 10 - foot.size.y - 24
+	scroll.size.y = h - scroll.position.y - 10 - foot.size.y - 24
 	foot.position.y = h - 24 - foot.size.y
 	box.queue_redraw()
 
 
 ## The scores in a row: small titles over the numbers.
-func _stats(inner: float) -> Control:
+func _stats() -> void:
 	var s := Game.state
 	var pts: Dictionary = Data.t("ITEM_POINTS")
 	var item_score := 0.0
 	for n in s.items:
 		item_score += pts.get(n, 0)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 4)
-	var caps := "%d/%d" % [Trophies.run_caps(s).size(), Data.t("CAPSTONES").size()]
-	for st in [["⚛️", "Quarks", Util.thousands(Util.js_round(Util.get_or(s, "bestMatScore", 0)))], ["💯", "Item Score", Util.thousands(int(item_score))],
-			["🛠️", "Items", str(s.items.size())], ["🏆", "Capstones", caps]]:
-		var col := VBoxContainer.new()
-		col.size_flags_horizontal = SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 0)
-		var head := HBoxContainer.new()
-		head.alignment = BoxContainer.ALIGNMENT_CENTER
-		head.add_theme_constant_override("separation", 3)
-		head.add_child(Tok.icon(st[0], 12))
-		head.add_child(Tok.label(st[1], 10, MUTE, 800))
-		col.add_child(head)
-		var n := Tok.label(st[2], 21, INK, 900)
+	var row := "Window/Scroll/Body/Stats/"
+	get_node(row + "Quarks/Value").text = Util.thousands(Util.js_round(Util.get_or(s, "bestMatScore", 0)))
+	get_node(row + "ItemScore/Value").text = Util.thousands(int(item_score))
+	get_node(row + "Items/Value").text = str(s.items.size())
+	get_node(row + "Capstones/Value").text = "%d/%d" % [Trophies.run_caps(s).size(), Data.t("CAPSTONES").size()]
+
+
+## New Trophies (the tiles, 4 to a row), with the run's Stars as a pill at
+## the right of the title; just the Stars when no trophy was won.
+func _trophy_section(won: Array, stars: int, inner: float) -> void:
+	var sec := $Window/Scroll/Body/Trophies
+	sec.visible = not won.is_empty() or stars > 0
+	var pill: Control = $Window/Scroll/Body/Trophies/Head/Stars
+	pill.visible = stars > 0
+	pill.get_node("Row/Text").text = "+%d" % stars
+	var star := Tok.star(Color("#f5b400"), 13)  # drawn: Nunito has no ★
+	star.size_flags_vertical = SIZE_SHRINK_CENTER
+	pill.get_node("Row").add_child(star)
+	var title: Label = $Window/Scroll/Body/Trophies/Head/Title
+	if won.is_empty():
+		$Window/Scroll/Body/Trophies/Head/Icon.texture = Data.icon("⭐")
+		title.text = stars_title.to_upper()
+		$Window/Scroll/Body/Trophies/Grid.visible = false
+	elif won.size() == 1:
+		title.text = one_trophy_title.to_upper()
+	var tw := (inner - 18) / 4
+	for t in won:  # trophyTileHTML(), earned
+		var p := PanelContainer.new()
+		p.add_theme_stylebox_override("panel", Shutter._pad(Tok.box(GOLD_SOFT, 12, 1.5, Tok.GOLD), 4, 6))
+		p.custom_minimum_size.x = tw
+		var v := VBoxContainer.new()
+		v.add_theme_constant_override("separation", 2)
+		var ic := Tok.icon(t.icon, 26)
+		ic.size_flags_horizontal = SIZE_SHRINK_CENTER
+		v.add_child(ic)
+		var n := Tok.label(t.name + (" ×%d" % t.again if t.has("again") else ""), 10.5, INK, 800)
 		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		col.add_child(n)
-		row.add_child(col)
-	row.custom_minimum_size.x = inner
-	return row
-
-
-## .end-sec: an icon and an upper-case title over a line, then the content;
-## the run's Stars as a pill at the right of the title.
-func _section(icon: String, title: String, content, stars := 0) -> Control:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 6)
-	var head := HBoxContainer.new()
-	head.add_theme_constant_override("separation", 6)
-	head.add_child(Tok.icon(icon, 15))
-	var t := Tok.label(title.to_upper(), 12, INK2, 900)
-	t.size_flags_horizontal = SIZE_EXPAND_FILL
-	head.add_child(t)
-	if stars > 0:
-		var pill := PanelContainer.new()  # "+n ★" (the star drawn: not in Nunito)
-		pill.add_theme_stylebox_override("panel", Shutter._pad(Tok.box(GOLD_SOFT, 999, 1.5, Tok.GOLD), 9, 2))
-		var ph := HBoxContainer.new()
-		ph.add_theme_constant_override("separation", 3)
-		ph.add_child(Tok.label("+%d" % stars, 12, INK, 900))
-		var star := Tok.star(Color("#f5b400"), 13)
-		star.size_flags_vertical = SIZE_SHRINK_CENTER
-		ph.add_child(star)
-		pill.add_child(ph)
-		head.add_child(pill)
-	v.add_child(head)
-	var rule := ColorRect.new()
-	rule.color = Color(LINE, 0.6)
-	rule.custom_minimum_size = Vector2(0, 1.5)
-	v.add_child(rule)
-	if content != null:
-		v.add_child(content)
-	return v
+		n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		n.custom_minimum_size.x = tw - 8
+		v.add_child(n)
+		p.add_child(v)
+		$Window/Scroll/Body/Trophies/Grid.add_child(p)
 
 
 func _cap_pill(n: String) -> Control:
@@ -181,88 +166,37 @@ func _cap_pill(n: String) -> Control:
 	return p
 
 
-func _station_line(name: String, right: String, inner: float) -> Control:
-	var h := HBoxContainer.new()
-	h.add_theme_constant_override("separation", 7)
+## A station's icon and name, and a number at the right.
+func _station_line(line: Control, name: String, right: String) -> void:
 	var st = Catalog.station(name)
+	line.get_node("Icon").visible = st != null
 	if st != null:
-		h.add_child(Tok.icon(st.emoji, 28))
-	var n := Tok.label(name, 15, INK, 800)
-	n.size_flags_horizontal = SIZE_EXPAND_FILL
-	n.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(n)
-	var r := Tok.label(right, 15, Color("#b7791f"), 900)
-	r.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(r)
-	h.custom_minimum_size.x = inner
-	return h
-
-
-func _flow(items: Array, inner: float) -> Control:
-	var f := HFlowContainer.new()
-	f.add_theme_constant_override("h_separation", 6)
-	f.add_theme_constant_override("v_separation", 6)
-	f.custom_minimum_size.x = inner
-	for c in items:
-		f.add_child(c)
-	return f
-
-
-## The trophy tiles, 4 to a row (trophyTileHTML(), earned).
-func _trophies(won: Array, inner: float) -> Control:
-	var g := GridContainer.new()
-	g.columns = 4
-	g.add_theme_constant_override("h_separation", 6)
-	g.add_theme_constant_override("v_separation", 6)
-	var tw := (inner - 18) / 4
-	for t in won:
-		var p := PanelContainer.new()
-		p.add_theme_stylebox_override("panel", Shutter._pad(Tok.box(GOLD_SOFT, 12, 1.5, Tok.GOLD), 4, 6))
-		p.custom_minimum_size.x = tw
-		var v := VBoxContainer.new()
-		v.add_theme_constant_override("separation", 2)
-		var ic := Tok.icon(t.icon, 26)
-		ic.size_flags_horizontal = SIZE_SHRINK_CENTER
-		v.add_child(ic)
-		var n := Tok.label(t.name + (" ×%d" % t.again if t.has("again") else ""), 10.5, INK, 800)
-		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		n.custom_minimum_size.x = tw - 8
-		v.add_child(n)
-		p.add_child(v)
-		g.add_child(p)
-	return g
+		line.get_node("Icon").texture = Data.icon(st.emoji)
+	line.get_node("Name").text = name
+	line.get_node("Right").text = right
 
 
 ## The buttons, two to a row; Continue in Overtime spans the first row.
 func _foot(inner: float) -> Control:
-	var foot := Control.new()
+	var foot: Control = $Window/Foot
 	var half := (inner - 8) / 2
-	var btns := []
-	if _completing:
-		btns.append(["Continue in Overtime", true, func(): queue_free()])
-	btns.append(["New Game", false, func():
+	var go_on: Control = $Window/Foot/Continue
+	var review: Control = $Window/Foot/Review
+	go_on.visible = _completing
+	review.visible = not _completing
+	go_on.gui_input.connect(func(ev): if LockInReward._tap(ev): queue_free())
+	$Window/Foot/NewGame.gui_input.connect(func(ev): if LockInReward._tap(ev):
 		queue_free()
-		App.current.new_game()])
-	if not _completing:
-		btns.append(["Review my collection", false, func():
-			queue_free()
-			App.current.open_panel("drawer")])
+		App.current.new_game())
+	review.gui_input.connect(func(ev): if LockInReward._tap(ev):
+		queue_free()
+		App.current.open_panel("drawer"))
 	var x := 0.0
 	var y := 0.0
-	for i in btns.size():
-		var b: Array = btns[i]
-		var wide: bool = b[1]
-		var bw := inner if wide else half
-		var c: Control
-		if wide:
-			c = RollPopup._pill_button(b[0], Vector2(bw, 46))
-		else:
-			c = Tok.parch_button(b[0], Vector2(bw, 46), 13.5)
+	for c: Control in foot.get_children().filter(func(c): return c.visible):
+		var wide := c == go_on
+		c.size = Vector2(inner, 46) if wide else Vector2(half, 46).max(c.get_combined_minimum_size())  # never narrower than its text
 		c.position = Vector2(x, y)
-		var act: Callable = b[2]
-		c.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: act.call())
-		foot.add_child(c)
 		if wide or x > 0:
 			x = 0
 			y += 46 + 8

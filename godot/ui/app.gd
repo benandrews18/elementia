@@ -127,7 +127,7 @@ func _maybe_end() -> void:
 
 
 func _show_end(party: bool) -> void:
-	var e := EndGame.new()
+	var e := EndGame.make()
 	e.size = size
 	add_child(e)
 	if party:

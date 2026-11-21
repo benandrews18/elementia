@@ -84,7 +84,7 @@ func _ready() -> void:
 				Game.state.runComplete = true
 				Game.state.starsEarned = 7
 			Game.ctx.endShown = "ended" if state == "end_over" else "complete"  # no confetti
-			var e := EndGame.new()
+			var e := EndGame.make()
 			e.size = app.size
 			app.add_child(e)
 		"howto0", "howto1", "howto2":
