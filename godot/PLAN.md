@@ -12,7 +12,7 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 step 7 (trays, hub bar, top bar), then step 8, then the
+**Next task:** M5.5 step 8 (EDITING.md), then the
 full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
@@ -22,7 +22,9 @@ Log (newest first, one line per session):
 - 2026-11-20: M5.5 step 4 done: the other 10 windows are scenes; new shot
   states (reward_open, roll, order_restrict, order_grand); shot_diff takes
   state names and drops stale shots. Step 5 done (station, item card,
-  shop row, pin/Craft piece). Step 6 done (mat, element chip).
+  shop row, pin/Craft piece). Step 6 done (mat, element chip). Step 7
+  done (trays, hub, Quark bar). Pattern found: labels sized before they're
+  in the tree kept their text's size (off-centre); scenes fix that.
 - 2026-11-17: M5.5 step 3: the map is a scene (map.tscn, MapNode pieces with
   @tool so the editor shows their icons; Map.make()). Over to the user.
 - 2026-11-17: M5.5 steps 0-1 (before/after check; colours in tokens.tres).
@@ -528,7 +530,12 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
       element chip is a piece (`ui/pieces/element_chip.tscn`). Pixel-
       identical except long chip captions, now centred under their chip.
       Still code: the combo chips and the Quark Meter (drawn).
-- [ ] 7. Trays and shell: Market, To-Do List, Convert, the hub bar, the top bar.
+- [x] 7. Trays and shell: `ui/overlays/{market,todo,convert}_tray.tscn`,
+      `ui/components/hub_bar.tscn` (side buttons, Home, faces and frames in
+      the Inspector; `HubWood` its own script) and `quark_top_bar.tscn`.
+      Intended changes: the hub's side labels fill their buttons (were
+      3px low, off-centre; now within 1px of the HTML); the Market footer is
+      centred. Still code: the To-Do trees, Market squares, Quark Meter.
 - [ ] 8. A short "Editing Elementia in Godot" guide (`godot/EDITING.md`): how
       to open it, which scene is which screen, what's safe to change, what
       lives in the data instead, and the commit-before-a-session rule.
