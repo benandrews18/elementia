@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 10, the M6 review (`check.py full --compare`). Start every session with `git status`: the user may
+**Next task:** M7, decide which mini-games to keep (godot-grill first). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -26,7 +26,8 @@ Log (newest first, one line per session):
   (both games). M6 step 4: the title screen and the Classic window. Step 5:
   Trophies and History. Step 6: the tracked item. Step 7: Professor Mouse,
   the tips and How to Play. Step 8: Saved Layouts, Collections, Combo Lab.
-  Step 9: dev mode.
+  Step 9: dev mode. Step 10: the M6 review (ponytail-review and five
+  godot-prompter skills; 6 small fixes; M6 done).
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -666,7 +667,14 @@ Order (each makes the next useful):
       a dev run (no Stars, trophies; History's Dev runs tab, its own file).
       Data.icon finds keys written with FE0F. Shortcut: the HTML panel's
       Board and Events tabs aren't ported. Skills: godot-debugging.
-- [ ] 10. M6 review.
+- [x] 10. M6 review (2026-11-21): no --compare (every screen was compared
+      as it was built); ponytail-review, then godot-code-review, save-load,
+      responsive-ui, input-handling, godot-ui on steps 4-9. Fixed: Combo
+      Lab hides the 🛠 button (its panel could save a dev run over the real
+      one), one Game.fresh_ctx(), dev Grant/Remove that change nothing keep
+      a real run, Restore checks file errors, one _window_open(), a stale
+      comment. Left: two copies of the dark lists' sizing, no test for
+      Restore / Clear Cache (dev only); the rest moved to M8 and M9.
 
 ### Review with the godot-prompter plugin (planned 2026-11-21, redone the same day)
 **Why:** the user installed godot-prompter (59 skills, 9 agents) and wants
@@ -747,6 +755,9 @@ alongside ponytail-review; no agents unless the user asks.
   volume switches in Settings. (Skill: audio-system.)
 - Performance on a real phone (godot-optimization): re-measure the station
   and the mat (review 12); `tests/tmp/bench.gd`-style timing.
+- On the phone too: bigger invisible tap areas for small buttons (review
+  9); the on-screen keyboard mustn't cover the Dev Panel's text fields
+  (review M6-9).
 - Haptics: mobile-development.
 
 ### M9 Release and cutover (~2-3 sessions plus store review time)
@@ -754,7 +765,8 @@ alongside ponytail-review; no agents unless the user asks.
 - [ ] Before any store build: the Back button closes the top window, never
       quits (review 14); the safe area keeps the bars clear of notches and
       the home bar (review 8, responsive-ui); app saves get a version and the
-      `loadAll()` clean-ups (review 5).
+      `loadAll()` clean-ups (review 5; the dev snapshots, dev history and
+      backup files too, M6-10).
 - Skills: export-pipeline, mobile-development, web-export, assets-pipeline.
 - [ ] iOS: a Mac, Apple developer account, Xcode export, TestFlight
 - [ ] Store rules for a children's game: Apple Kids category and Google
