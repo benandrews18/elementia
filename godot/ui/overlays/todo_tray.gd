@@ -15,50 +15,39 @@ const ROW := 50.0  # a tree row's height
 static var expanded := {}  # "refroot/<item>" and "ref/<root>/.../<item>" paths shown open
 static var hint_open := false
 
-var _body: Control
-var _scroll: ScrollContainer
-var _list: Control
+## The layout is ui/overlays/todo_tray.tscn (the tray, the "Pinned" heading);
+## this builds the pinned items' trees.
+const SCENE := "res://ui/overlays/todo_tray.tscn"
+
+@onready var _scroll: ScrollContainer = $Tray/Scroll
+@onready var _list: Control = $Tray/Scroll/List/Items  # what's rebuilt (the heading stays)
 var _hint_name := ""
+
+
+static func make() -> TodoTray:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.scrim(self)
+	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
 	var w := minf(400, size.x * 0.92)
-	var tray := Panel.new()
-	var sb := Tok.box(Tok.CARD, 0, 0)
-	sb.border_width_right = 3
-	sb.border_width_bottom = 3
-	sb.border_color = Tok.GOLD
-	sb.corner_radius_bottom_right = 14
-	tray.add_theme_stylebox_override("panel", sb)
-	tray.size = Vector2(w, size.y - HubBar.H)
-	tray.mouse_filter = MOUSE_FILTER_STOP
-	add_child(tray)
-	_scroll = ScrollContainer.new()
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.size = tray.size - Vector2(3, 3)
-	tray.add_child(_scroll)
+	$Tray.size = Vector2(w, size.y - HubBar.H)
+	_scroll.size = $Tray.size - Vector2(3, 3)
 	Game.state_changed.connect(_redraw)
 	_redraw()
 
 
 func _redraw() -> void:
 	var keep := _scroll.scroll_vertical
-	if is_instance_valid(_list):
-		_list.queue_free()
-	_list = Control.new()
-	_list.mouse_filter = MOUSE_FILTER_PASS
+	for c in _list.get_children():
+		c.queue_free()
 	var w := _scroll.size.x - 40
 	var names: Array = Progress.prefs.pinnedItems.filter(func(n): return Catalog.entry(n) != null)
 	var y := 20.0
+	$Tray/Scroll/List/Pin.visible = not names.is_empty()
+	$Tray/Scroll/List/Pinned.visible = not names.is_empty()
 	if not names.is_empty():
-		var pin := Tok.icon("📌", 15)
-		pin.position = Vector2(20, y)
-		_list.add_child(pin)
-		var head := Tok.label("Pinned", 13, Tok.GOLD, 800)
-		head.position = Vector2(40, y - 2)
-		_list.add_child(head)
 		y += 26
 		var hint = Game.todo_hint() if hint_open else null
 		_hint_name = hint.name if hint != null else ""
@@ -67,8 +56,7 @@ func _redraw() -> void:
 			y = _hint_card(hint, y, w) + 16
 		for n in names:
 			y = _row(Catalog.entry(n), Vector2(20, y + 6), w) + 14
-	_list.custom_minimum_size = Vector2(_scroll.size.x, y + 20)
-	_scroll.add_child(_list)
+	$Tray/Scroll/List.custom_minimum_size = Vector2(_scroll.size.x, y + 20)
 	_scroll.set_deferred("scroll_vertical", keep)
 
 
