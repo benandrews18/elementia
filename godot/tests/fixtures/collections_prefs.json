@@ -1,0 +1,36 @@
+{
+ "savedMatLayouts": [
+  {
+   "name": "Metal rush",
+   "items": [
+    "Steel",
+    "Aluminum Alloy",
+    "Stainless Steel",
+    "Furnace",
+    "Clock",
+    "Diamond"
+   ]
+  },
+  {
+   "name": "Bones",
+   "items": [
+    "Fossil",
+    "Bone",
+    "Diamond",
+    "Clay",
+    "Soil"
+   ]
+  }
+ ],
+ "everUnlockedMatCollections": [
+  "alloys",
+  "bedrock",
+  "fruits"
+ ],
+ "collectionClues": {
+  "people-power": [
+   "Canoe"
+  ]
+ },
+ "stars": 7
+}
