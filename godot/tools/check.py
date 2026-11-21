@@ -24,13 +24,19 @@ from pathlib import Path
 GODOT = r"C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe"
 ROOT = Path(__file__).resolve().parents[1]
 BEFORE, AFTER = ROOT / "build/before", ROOT / "build/after"
-STAMP = ROOT / "build/screens_ok"  # the commit the screens last passed at
+STAMP = ROOT / "build/screens_ok"  # the exact files the screens last passed with (a commit, or a stash-like snapshot of uncommitted work)
 # What can't change a screen: docs, tools, and the tests that aren't screenshots.
-NOT_VISUAL = re.compile(r"^godot/(tools/|.*\.md$|tests/(ui_play|rules_test|parity)\.|tests/goldens/)|^(?!godot/)")
+NOT_VISUAL = re.compile(r"^godot/(tools/|.*\.md$|tests/(ui_play|rules_test|parity)\.|tests/goldens/|tests/tmp/)|^(?!godot/)")
 
 
 def git(*args) -> str:
     return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True).stdout
+
+
+def snapshot() -> str:
+    """The files as they are now: HEAD, or a snapshot commit of the uncommitted
+    changes (so committing them afterwards doesn't count as a change)."""
+    return git("stash", "create").strip() or git("rev-parse", "HEAD").strip()
 
 
 def screens_needed() -> str:
@@ -69,7 +75,7 @@ def screens() -> bool:
     ok = shot.returncode == 0 and diff.returncode == 0
     print(f"{'PASS' if ok else 'FAIL'}  screens vs build/before  ({time.time() - t:.0f}s)")
     if ok:
-        STAMP.write_text(git("rev-parse", "HEAD").strip())
+        STAMP.write_text(snapshot())
     if not ok:
         for l in (shot.stdout + diff.stdout).splitlines():
             if "FAILED" in l or "differ" in l or "missing" in l or "size" in l or "cleanly" in l:
@@ -87,7 +93,7 @@ def main() -> int:
             if not p.name.startswith("diff_"):
                 shutil.copy2(p, BEFORE / p.name)
                 n += 1
-        STAMP.write_text(git("rev-parse", "HEAD").strip())
+        STAMP.write_text(snapshot())
         print(f"{n} screens are the new before")
         return 0
     if mode not in ("fast", "full"):
