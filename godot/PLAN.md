@@ -12,15 +12,16 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 step 4, the remaining windows (Lock-In reward,
-challenge, how-to-play, capstone choice, end game, "?" pick, element picker,
-Market craft, roll pop-up, suit-spend balloon); then steps 5-8, then the
+**Next task:** M5.5 step 5 (the station), then steps 6-8, then the
 full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-20: M5.5 step 4 done: the other 10 windows are scenes; new shot
+  states (reward_open, roll, order_restrict, order_grand); shot_diff takes
+  state names and drops stale shots.
 - 2026-11-17: M5.5 step 3: the map is a scene (map.tscn, MapNode pieces with
   @tool so the editor shows their icons; Map.make()). Over to the user.
 - 2026-11-17: M5.5 steps 0-1 (before/after check; colours in tokens.tres).
@@ -503,15 +504,15 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
       and the capstone choice uses it): with the station screen (step 5).
       **Stop here: the user opens it in the editor and tries it** (drag a
       node, change a colour, press play). Go / adjust / stop.
-- [ ] 4. Windows: confirm, end game, Lock-In reward, challenge, how-to-play,
+- [x] 4. Windows: confirm, end game, Lock-In reward, challenge, how-to-play,
       pin tip, capstone choice, row reward, "?" pick, element picker,
-      roll pop-up, suit-spend balloon, Market craft.
-      Done (scene + script that only fills it, pixel-identical): confirm,
-      pin tip, row reward. Every window's frame, banner and buttons are
-      already scenes (step 2). Pattern: the scene holds every node and its
-      style; the script sets data-driven text and centres what depends on
-      text width; window heights come from the scene unless the content
-      wraps.
+      roll pop-up, suit-spend balloon, Market craft. Each is
+      `ui/overlays/<name>.tscn` + a script that only fills it (`X.make()` /
+      `X.open()`; never `X.new()`, which skips the scene). Pixel-identical
+      except three intended fixes, centred like the HTML: the Lock-In "?"
+      lines (sat up to 18px right), the roll pop-up's "GATHERING" (4px).
+      Texts that depend on the data are `@export` strings on the root.
+      Still code: the shutter and the mat-expand animation (M8).
 - [ ] 5. Station: frame scene, shop card and shop row scenes, the packing
       numbers in the Inspector.
 - [ ] 6. Display Mat / inventory: frame scene, the mat's layout numbers in
