@@ -11,6 +11,12 @@ extends NineSlice
 		title = v
 		if is_node_ready():
 			_fit()
+## An icon before the title (⚙️ Settings); none: the title alone.
+@export var icon: Texture2D:
+	set(v):
+		icon = v
+		if is_node_ready():
+			_fit()
 
 
 func _ready() -> void:
@@ -24,5 +30,11 @@ func _fit() -> void:
 	t.text = title
 	banner.visible = title != ""
 	var tw := t.get_theme_font("font").get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, t.get_theme_font_size("font_size")).x
-	banner.size.x = tw + 60
+	var ic: TextureRect = $Banner/Icon
+	ic.texture = icon
+	ic.visible = icon != null
+	var iw := ic.size.x + 8 if icon else 0.0  # the icon and its gap
+	banner.size.x = tw + 60 + iw
 	banner.position.x = (size.x - banner.size.x) / 2
+	t.offset_left = iw  # the title centred in what's left of the icon
+	ic.position = Vector2((banner.size.x - tw - iw) / 2, (banner.size.y - ic.size.y) / 2 - 1)
