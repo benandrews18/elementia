@@ -524,8 +524,17 @@ func _show_toast(msg: String) -> void:
 ## The combo row: the challenge in force, capstone effects, station / suit /
 ## component groups, then the collections star. Returns its height.
 func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
+	var chips := combo_chips(sc)
+	# Wrap into rows (gap 8px between rows, 10px between chips).
+	return _place_chips(chips, at, w)
+
+
+## matComboChipsHTML(): the mat's combo chips, in order: the challenge (live:
+## only on the mat itself), the signature cards, station, suit and component
+## combos, the collections star, and "!" for an undiscovered collection.
+static func combo_chips(sc: Dictionary, live := true) -> Array:
 	var chips := []
-	var o = Orders.current(Game.state)
+	var o = Orders.current(Game.state) if live else null
 	if o != null:
 		chips.append(_order_chip(o, sc))
 		chips[-1].set_meta("combo", "order")
@@ -554,7 +563,11 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 	if sc.cols.any(func(c): return not found.has(c.id)):
 		chips.append(_chip(_text_circle("!", 18, Color.WHITE, Tok.BAD, Color.WHITE, 2), "", 0))
 		chips[-1].set_meta("combo", "new")
-	# Wrap into rows (gap 8px between rows, 10px between chips).
+	return chips
+
+
+## Lays chips out in wrapping rows under at, w wide; returns their height.
+func _place_chips(chips: Array, at: Vector2, w: float) -> float:
 	var x := 0.0
 	var y := 0.0
 	var row_h := 0.0
@@ -589,7 +602,7 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 
 ## .mm-combo: icon circle on top, an optional bold label under it, padding
 ## 6px 7px 2px 3px.
-func _chip(circle: Control, label: String, size_px: float, alpha := 1.0, color := Tok.GOLD) -> Control:
+static func _chip(circle: Control, label: String, size_px: float, alpha := 1.0, color := Tok.GOLD) -> Control:
 	var c := Control.new()
 	c.mouse_filter = MOUSE_FILTER_PASS
 	circle.position = Vector2(3, 6)
@@ -614,7 +627,7 @@ func _chip(circle: Control, label: String, size_px: float, alpha := 1.0, color :
 
 
 ## A chip whose icon carries a count badge on its top-right corner (.mm-ccount).
-func _counted(circle: Control, n: int, bg := Tok.GOLD, ink := Tok.CARD_INK) -> Control:
+static func _counted(circle: Control, n: int, bg := Tok.GOLD, ink := Tok.CARD_INK) -> Control:
 	var num := Tok.label(str(n), 10.5, ink, 900)
 	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -626,7 +639,7 @@ func _counted(circle: Control, n: int, bg := Tok.GOLD, ink := Tok.CARD_INK) -> C
 	return _chip(circle, "", 0)
 
 
-func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
+static func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 	var grand: bool = o.id == "grand"
 	var kind = null if grand else Orders.KINDS[o.id][0]
 	var ok := Orders.met(o, Mat.on_mat(Game.state), sc.total, Game.state)
@@ -669,7 +682,7 @@ static func _num(x: float) -> String:
 
 ## A 27px circle holding an icon (.mm-cico). outline: the dark icon edge
 ## used on station and item icons.
-func _icon_circle(key: String, bg: Color, border := Color.TRANSPARENT, bw := 0.0, outline := false) -> Panel:
+static func _icon_circle(key: String, bg: Color, border := Color.TRANSPARENT, bw := 0.0, outline := false) -> Panel:
 	var p := Panel.new()
 	var sb := Tok.box(bg, 13.5, bw, border)
 	p.add_theme_stylebox_override("panel", sb)
@@ -685,7 +698,7 @@ func _icon_circle(key: String, bg: Color, border := Color.TRANSPARENT, bw := 0.0
 	return p
 
 
-func _text_circle(text: String, px: float, ink: Color, bg: Color, border: Color, bw: float) -> Panel:
+static func _text_circle(text: String, px: float, ink: Color, bg: Color, border: Color, bw: float) -> Panel:
 	var p := _icon_circle("", bg, border, bw)
 	var l := Tok.label(text, px, ink, 900)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
