@@ -1,0 +1,74 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/dev_tools.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
+[ext_resource type="Texture2D" path="res://assets/icons/u1f6e0.png" id="r2"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="r3"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="r4"]
+[ext_resource type="PackedScene" path="res://ui/pieces/setting_row.tscn" id="r5"]
+
+[node name="DevTools" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+
+[node name="Dim" parent="." instance=ExtResource("r1")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("r3")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Dev Tools"
+icon = ExtResource("r2")
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Close" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -44.0
+offset_right = 0.0
+offset_bottom = 44.0
+texture = ExtResource("r4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DevMode" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Developer mode"
+sub = "Shows the Dev Panel button. Runs you change with it are kept out of History, trophies and Stars."
+emoji = "🧪"
+is_switch = true
+
+[node name="Restore" parent="Window/Content" instance=ExtResource("r5")]
+visible = false
+layout_mode = 2
+text = "Restore my real save"
+sub = "The save from just before the Dev Panel first changed this run."
+emoji = "↩️"
+button_text = "Restore"
+
+[node name="ClearCache" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Clear Cache"
+emoji = "🧹"
+button_text = "Clear"
+
+[node name="History" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "History"
+emoji = "🕓"
+button_text = "View"

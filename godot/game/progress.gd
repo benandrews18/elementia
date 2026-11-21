@@ -5,8 +5,9 @@
 extends Node
 
 ## Kept across runs (the HTML game's prefs); not part of parity.
-var prefs: Dictionary = {"pinnedItems": [], "capstonesEverCrafted": [], "playDays": [], "stars": 0,
+const DEFAULT_PREFS := {"pinnedItems": [], "capstonesEverCrafted": [], "playDays": [], "stars": 0,
 	"minigamesEnabled": false}
+var prefs: Dictionary = DEFAULT_PREFS.duplicate(true)
 
 
 # ---- pins (prefs)
@@ -57,6 +58,7 @@ const SAVE_PATH := "user://save.json"
 const PREFS_PATH := "user://prefs.json"
 const TROPHY_PATH := "user://trophies.json"
 const HISTORY_PATH := "user://history.json"
+const DEV_HISTORY_PATH := "user://history_dev.json"  # runs changed with the Dev Panel (dev.gd)
 
 ## Off in tests, so they never touch the player's files.
 var autosave := true
@@ -64,6 +66,8 @@ var autosave := true
 var trophies: Dictionary = {}
 ## Finished runs, newest first (HISTORY_MAX kept).
 var history: Array = []
+## Dev runs (state.dev), kept apart so testing never mixes into History.
+var dev_history: Array = []
 
 
 ## The file's JSON, or default when it's missing, unreadable or the wrong
@@ -96,6 +100,7 @@ func load_all() -> void:
 	prefs.merge(_read(PREFS_PATH, {}), true)
 	trophies = _read(TROPHY_PATH, {})
 	history = _read(HISTORY_PATH, [])
+	dev_history = _read(DEV_HISTORY_PATH, [])
 	var saved = _read(SAVE_PATH, null)
 	Game.state = Game.fresh_state()
 	if saved is Dictionary:
@@ -164,15 +169,19 @@ func record_history() -> void:
 	var item_score := 0.0
 	for n in Game.state.items:
 		item_score += pts.get(n, 0)
-	history.push_front({"mode": Game.state.get("mode"), "date": Time.get_datetime_string_from_system(true) + "Z",
+	var dev: bool = Game.state.get("dev") == true
+	var list := dev_history if dev else history
+	list.push_front({"mode": Game.state.get("mode"), "date": Time.get_datetime_string_from_system(true) + "Z",
 		"visits": Game.state.visits, "score": Util.js_round(Util.get_or(Game.state, "bestMatScore", 0)), "itemScore": item_score,
 		"checks": Util.get_or(Game.state, "checkLog", []).duplicate(true), "capstones": Trophies.run_caps(Game.state),
 		"visitLog": Util.get_or(Game.state, "visitLog", []).duplicate(true),
 		"bingoCard": Game.state.bingoCard.duplicate() if Game.state.get("bingoCard") != null else null,
-		"bingoLinesCompleted": Util.get_or(Game.state, "bingoLinesCompleted", []).duplicate(), "dev": Game.state.get("dev") == true})
-	history = history.slice(0, int(Data.t("HISTORY_MAX")))
+		"bingoLinesCompleted": Util.get_or(Game.state, "bingoLinesCompleted", []).duplicate()})
+	if dev:
+		list[0].dev = true
+	list.resize(mini(list.size(), int(Data.t("HISTORY_MAX"))))
 	if autosave:
-		_write(HISTORY_PATH, history)
+		_write(DEV_HISTORY_PATH if dev else HISTORY_PATH, list)
 
 
 

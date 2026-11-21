@@ -33,7 +33,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts", "collections"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts", "collections", "dev"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -702,6 +702,46 @@ func _settings(app: App) -> void:
 		check(top.call(MatRules).is_empty(), "Got it closes them")
 	app.close_panel()
 	finished.settings = true
+
+
+## Dev mode: five taps on Settings' version show Dev Tools; its switch
+## shows the 🛠 button; the panel's Jump sets the turn and marks the run;
+## five more taps hide it all again.
+func _dev(app: App) -> void:
+	Game.start_run("Coral Reef")
+	await get_tree().process_frame
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	app.open_settings()
+	var sw: SettingsWindow = top.call(SettingsWindow)[0]
+	var ver: Control = sw.get_node("Window/Content/Version")
+	for i in 4:
+		ver.gui_input.emit(_release())
+	check(not sw.get_node("Window/Content/DevTools").visible, "four taps on the version: nothing yet")
+	ver.gui_input.emit(_release())
+	check(sw.get_node("Window/Content/DevTools").visible and Progress.prefs.devUnlocked, "the fifth shows Dev Tools")
+	sw.get_node("Window/Content/DevTools").pressed.emit()
+	await get_tree().process_frame
+	var dt: DevTools = top.call(DevTools)[0]
+	dt.get_node("Window/Content/DevMode").gui_input.emit(_release())
+	var fab: Button = app.get_node("Dev/Fab")
+	check(Progress.prefs.devMode and fab != null, "Developer mode shows the 🛠 button")
+	dt.close()
+	fab.pressed.emit()
+	var dp: DevPanel = app.get_node("Dev").get_child(1)
+	check(dp.visible and not Game.state.get("dev"), "🛠 opens the Dev Panel; the run isn't a dev run yet")
+	var turn: SpinBox = dp.get_node("V/Scroll/Body").get_child(0).get_child(1)
+	turn.value = 9
+	dp.get_node("V/Scroll/Body").get_child(0).get_child(2).pressed.emit()  # Set
+	check(int(Game.state.visits) == 9 and Game.state.dev and (dp.get_node("V/Head/Flag") as Label).text == "dev run", "Jump's Set: turn 9, a dev run")
+	dp.hide()
+	app.open_settings()
+	sw = top.call(SettingsWindow)[0]
+	for i in 5:
+		sw.get_node("Window/Content/Version").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(not Progress.prefs.devUnlocked and not Progress.prefs.devMode and app.get_node_or_null("Dev") == null, "five more taps hide Dev Tools and the button")
+	sw.close()
+	finished.dev = true
 
 
 func _release(at := Vector2.ZERO) -> InputEventMouseButton:

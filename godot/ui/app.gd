@@ -42,6 +42,45 @@ func _ready() -> void:
 	Game.state_changed.connect(_sync)
 	resized.connect(_sync_floats)  # they sit on the bottom edge
 	_sync()
+	sync_dev()
+
+
+## Developer mode (prefs.devMode): the 🛠 button and its Dev Panel, on a
+## layer above everything (they're used over the end screens too).
+func sync_dev() -> void:
+	var layer := get_node_or_null("Dev")
+	if Progress.prefs.get("devMode") != true:
+		if layer:
+			layer.queue_free()
+			layer.name = "DevGone"
+		return
+	if layer:
+		return
+	layer = CanvasLayer.new()
+	layer.name = "Dev"
+	layer.layer = 3
+	add_child(layer)
+	var panel := DevPanel.make()
+	panel.visible = false
+	var fab := Button.new()  # .dev-fab
+	fab.name = "Fab"
+	fab.icon = Data.icon("🛠")
+	fab.expand_icon = true
+	fab.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var box := Tok.box(Color("#2b1d0e"), 21, 2, Color("#e2b25a"))
+	box.set_content_margin_all(9)
+	for st in ["normal", "hover", "pressed", "focus"]:
+		fab.add_theme_stylebox_override(st, box)
+	fab.anchor_top = 0.42  # follows the screen's height (a CanvasLayer's controls anchor to the window)
+	fab.anchor_bottom = 0.42
+	fab.offset_left = 6
+	fab.offset_right = 48
+	fab.offset_bottom = 42
+	fab.pressed.connect(func():
+		panel.visible = not panel.visible
+		panel.place(size))
+	layer.add_child(fab)
+	layer.add_child(panel)
 
 
 ## The screen follows Game.ctx.screen; the hub follows everything.

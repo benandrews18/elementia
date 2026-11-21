@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 9, Dev mode (`dev.js`): jump turns, grant items, snapshots. Start every session with `git status`: the user may
+**Next task:** M6 step 10, the M6 review (`check.py full --compare`). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -26,6 +26,7 @@ Log (newest first, one line per session):
   (both games). M6 step 4: the title screen and the Classic window. Step 5:
   Trophies and History. Step 6: the tracked item. Step 7: Professor Mouse,
   the tips and How to Play. Step 8: Saved Layouts, Collections, Combo Lab.
+  Step 9: dev mode.
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -655,8 +656,16 @@ Order (each makes the next useful):
       The mat's empty-combo hint added. Shortcuts: no in-run way into
       Collections yet (the HTML's is the Inventory filter bar, not ported);
       no "⭐ n" on the title's Collections button. Skills: godot-ui.
-- [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots. Skills:
-      godot-debugging.
+- [x] 9. Dev mode (`dev.js`): 5 taps on Settings' version show Dev Tools
+      (`ui/overlays/dev_tools.tscn`: the Developer mode switch, Restore my
+      real save, Clear Cache, History); the switch shows the 🛠 button (App's
+      "Dev" layer, above everything) and its Dev Panel
+      (`ui/overlays/dev_panel.tscn`, Godot's own controls in one dark theme,
+      no parity with the HTML's look): Jump, Inventory, Snapshots (with the
+      ready-made scenarios). The actions are `game/dev.gd`; a changed run is
+      a dev run (no Stars, trophies; History's Dev runs tab, its own file).
+      Data.icon finds keys written with FE0F. Shortcut: the HTML panel's
+      Board and Events tabs aren't ported. Skills: godot-debugging.
 - [ ] 10. M6 review.
 
 ### Review with the godot-prompter plugin (planned 2026-11-21, redone the same day)

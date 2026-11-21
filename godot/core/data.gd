@@ -20,6 +20,8 @@ func t(name: String) -> Variant:
 func icon(key: String) -> Texture2D:
 	if icons.has(key):
 		return load(icons[key])
+	if icons.has(key + char(0xfe0f)):  # the item tables write some emoji with the variation selector
+		return load(icons[key + char(0xfe0f)])
 	var cps := []
 	for c in key:
 		if c.unicode_at(0) != 0xfe0f:

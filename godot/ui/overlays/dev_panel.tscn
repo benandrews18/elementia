@@ -1,0 +1,170 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/dev_panel.gd" id="s"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(0.06275, 0.1412, 0.1843, 1.0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8863, 0.698, 0.3529, 1.0)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+bg_color = Color(0.08627, 0.2078, 0.2667, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1647, 0.3529, 0.4471, 1.0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="btn_down"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+bg_color = Color(0.1647, 0.3529, 0.4471, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1647, 0.3529, 0.4471, 1.0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="field"]
+content_margin_left = 9.0
+content_margin_top = 6.0
+content_margin_right = 9.0
+content_margin_bottom = 6.0
+bg_color = Color(0.08627, 0.2078, 0.2667, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.1647, 0.3529, 0.4471, 1.0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="tab_on"]
+content_margin_left = 4.0
+content_margin_top = 6.0
+content_margin_right = 4.0
+content_margin_bottom = 6.0
+bg_color = Color(0.8863, 0.698, 0.3529, 1.0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.8863, 0.698, 0.3529, 1.0)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="Theme" id="theme"]
+default_font = ExtResource("f7")
+default_font_size = 13
+Button/colors/font_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+Button/colors/font_hover_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+Button/colors/font_pressed_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+Button/colors/font_focus_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+Button/fonts/font = ExtResource("f8")
+Button/styles/normal = SubResource("btn")
+Button/styles/hover = SubResource("btn")
+Button/styles/pressed = SubResource("btn_down")
+Button/styles/focus = SubResource("btn")
+Label/colors/font_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+LineEdit/colors/font_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+LineEdit/colors/font_placeholder_color = Color(0.4902, 0.5333, 0.6, 1.0)
+LineEdit/styles/normal = SubResource("field")
+LineEdit/styles/focus = SubResource("field")
+TextEdit/colors/font_color = Color(0.9098, 0.9294, 0.9569, 1.0)
+TextEdit/colors/font_placeholder_color = Color(0.4902, 0.5333, 0.6, 1.0)
+TextEdit/styles/normal = SubResource("field")
+TextEdit/styles/focus = SubResource("field")
+OptionButton/styles/normal = SubResource("btn")
+OptionButton/styles/hover = SubResource("btn")
+OptionButton/styles/pressed = SubResource("btn_down")
+OptionButton/styles/focus = SubResource("btn")
+SpinBox/styles/field_and_buttons_separator = SubResource("field")
+
+[node name="DevPanel" type="PanelContainer"]
+offset_left = 8.0
+offset_top = 300.0
+offset_right = 382.0
+offset_bottom = 760.0
+theme = SubResource("theme")
+theme_override_styles/panel = SubResource("panel")
+script = ExtResource("s")
+tab_on = SubResource("tab_on")
+mute = Color(0.4902, 0.5333, 0.6, 1.0)
+ok = Color(0.2471, 0.7059, 0.4235, 1.0)
+bad = Color(0.9412, 0.4039, 0.298, 1.0)
+
+[node name="V" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Head" type="HBoxContainer" parent="V"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="V/Head"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 14
+text = "Dev Panel"
+
+[node name="Flag" type="Label" parent="V/Head"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "real run"
+
+[node name="Spacer" type="Control" parent="V/Head"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="X" type="Button" parent="V/Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.702, 0.7451, 0.8039, 1.0)
+theme_override_font_sizes/font_size = 16
+flat = true
+text = "×"
+
+[node name="Tabs" type="HBoxContainer" parent="V"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Scroll" type="ScrollContainer" parent="V"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="V/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8

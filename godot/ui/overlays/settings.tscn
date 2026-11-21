@@ -117,6 +117,19 @@ text = "Tutorial Messages"
 emoji = "📖"
 button_text = "Open"
 
+[node name="DevGap" type="Control" parent="Window/Content"]
+visible = false
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="DevTools" parent="Window/Content" instance=ExtResource("r5")]
+visible = false
+layout_mode = 2
+text = "Dev Tools"
+emoji = "🛠"
+button_text = "Open"
+
 [node name="Gap3" type="Control" parent="Window/Content"]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
@@ -198,6 +211,8 @@ mouse_filter = 2
 
 [node name="Version" type="Label" parent="Window/Content"]
 layout_mode = 2
+mouse_filter = 0
+metadata/button = true
 theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
 theme_override_fonts/font = ExtResource("r7")
 theme_override_font_sizes/font_size = 15

@@ -256,5 +256,29 @@ func _ready() -> void:
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path + ".tmp")
 
+	# Dev mode (dev.js): a jump marks the run; its clock, check round and
+	# challenge follow the turn; grants skip the cost; snapshots round-trip;
+	# a dev run's History entry goes to its own list.
+	s = fresh()
+	Dev.grant_tree("Robot")
+	check(Catalog.owns(s, "Robot") and Catalog.component_closure("Robot").all(func(n): return Catalog.owns(s, n)), "dev: an item granted with its tree")
+	Dev.set_turn(7)
+	check(s.dev and int(s.visits) == 7 and s.matChecked and int(s.checkRound) == 6 and int(s.order.round) == 6, "dev: turn 7 is after the turn-6 check, with its challenge")
+	Dev.set_turn(2)
+	check(s.checkRound == null and s.order == null and not s.matChecked, "dev: turn 2 is before any check")
+	Dev.element("H", 2)
+	Dev.element("H", -5)
+	check(not s.elements.has("H"), "dev: an element never goes below 0")
+	Dev.snap_path = "user://rules_test_snaps.json"
+	Dev.snap_save("t")
+	check(not Dev.snap_import("{\"x\": 1}") and Dev.snap_import(JSON.stringify({"items": ["Water"], "visits": 3})), "dev: import takes a snapshot or a bare state")
+	Dev.snap_load(1)  # "t": the run as saved
+	check(Game.state.items.has("Robot") and Game.state.dev and Game.ctx.screen == "map", "dev: a snapshot loads on the map")
+	DirAccess.remove_absolute("user://rules_test_snaps.json")
+	Progress.history = []
+	Progress.dev_history = []
+	Progress.record_history()
+	check(Progress.history.is_empty() and Progress.dev_history.size() == 1 and Progress.dev_history[0].dev, "dev: the run goes to Dev runs, not History")
+
 	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)

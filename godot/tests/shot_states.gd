@@ -15,7 +15,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab"]
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab",
+	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -180,6 +181,23 @@ func _ready() -> void:
 				if state == "history_open":
 					hw._open[0] = true
 					hw._build()
+		"dev_tools":  # Settings' Dev Tools, Developer mode on
+			Progress.prefs.devMode = true
+			app.sync_dev()
+			ParchDialog.open(app, DevTools.SCENE)
+		"dev_jump", "dev_inv", "dev_snaps":  # the Dev Panel's tabs (no snapshots kept)
+			Dev.snap_path = "user://_shot_no_snaps.json"
+			Progress.prefs.devMode = true
+			app.sync_dev()
+			var dp: DevPanel = app.get_node("Dev").get_child(1)
+			dp.tab = {"dev_jump": "jump", "dev_inv": "inv", "dev_snaps": "snaps"}[state]
+			dp.visible = true
+			dp.place(app.size)
+		"history_dev":  # Developer mode: History's Runs / Dev runs tabs, Dev runs open (none yet)
+			Progress.prefs.devMode = true
+			HistoryWindow.dev_tab = true
+			HistoryWindow.show_on(app)
+			HistoryWindow.dev_tab = false
 		"tracked_map", "tracked_station":  # Metropolis tracked: the map's badges and card (The City), the shop's badges
 			Game.ctx.tracked = "Metropolis"
 			if state == "tracked_map":
