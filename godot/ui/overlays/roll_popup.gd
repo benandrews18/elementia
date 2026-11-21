@@ -126,14 +126,6 @@ func _chip(r: Dictionary) -> Control:
 	return c
 
 
-## The green pill button (.bigbtn on pill_long.webp, 46 / 14px).
-static func _pill_button(text: String, sz: Vector2) -> Control:
-	var b: Control = load("res://ui/pieces/pill_button.tscn").instantiate()  # its Label is child 0
-	b.size = sz
-	b.get_node("Text").text = text
-	return b
-
-
 ## Collect: each chip flies to the Inventory button, shrinking into it; the
 ## card fades away underneath.
 func _on_collect(ev: InputEvent) -> void:

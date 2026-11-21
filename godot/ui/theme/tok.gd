@@ -67,20 +67,6 @@ static func box(bg: Color, radius: float, border := 0.0, border_color := Color.B
 	return s
 
 
-## .bigbtn.sec on parchment: a sunken tan face with a darker edge.
-static func parch_box() -> StyleBoxFlat:
-	return box(Color("#e6cf9f"), 11, 1.5, Color("#c9a571"))
-
-
-## A parchment window's secondary button (Cancel, Back, New Game...).
-static func parch_button(text: String, sz: Vector2, px := 15.0) -> Label:
-	var l: Label = load("res://ui/pieces/parch_button.tscn").instantiate()  # its look: ui/pieces/parch_button.tscn
-	l.text = text
-	l.add_theme_font_size_override("font_size", int(round(px)))
-	l.size = sz.max(l.get_combined_minimum_size())  # never narrower than its text
-	return l
-
-
 ## A label in the game's font.
 static func label(text: String, size: float, color: Color, weight := 400) -> Label:
 	var l := Label.new()

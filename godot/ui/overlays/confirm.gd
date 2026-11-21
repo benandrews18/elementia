@@ -26,47 +26,6 @@ static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
 	return d
 
 
-## .sheetbox.parch: the parchment window with its title on a wooden banner
-## (ui/pieces/parchment_window.tscn). Content starts at y 59.
-static func window(sz: Vector2, title_text: String) -> Control:
-	var box: ParchmentWindow = load("res://ui/pieces/parchment_window.tscn").instantiate()
-	box.size = sz
-	box.title = title_text
-	return box
-
-
-## The dark backdrop behind a window, filling `on`; a tap on it calls
-## on_tap (none: it only blocks taps).
-static func dim(on: Control, on_tap := Callable()) -> ColorRect:
-	var d := ColorRect.new()
-	d.color = Color(10 / 255.0, 14 / 255.0, 20 / 255.0, 0.72)
-	d.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	if on_tap.is_valid():
-		d.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_tap.call())
-	on.add_child(d)
-	return d
-
-
-## A tray's backdrop: a lighter dim; a tap on it closes the open panel.
-static func scrim(on: Control) -> ColorRect:
-	var d := dim(on, func(): if App.current: App.current.close_panel())
-	d.color = Color(0, 0, 0, 0.35)
-	return d
-
-
-## A window's ✕, on its top-right corner.
-static func close_x(box: Control, on_close: Callable) -> TextureRect:
-	var x := TextureRect.new()
-	x.texture = load("res://assets/ui/btn_close.webp")
-	x.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	x.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	x.size = Vector2(38, 38)
-	x.position = Vector2(box.size.x - 26, -12)
-	x.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_close.call())
-	box.add_child(x)
-	return x
-
-
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Dim.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
