@@ -10,71 +10,48 @@ class_name MarketTray
 extends Control
 
 
+## The layout is ui/overlays/market_tray.tscn (the tray, the Market's frame
+## and its texts, the Capstones heading); this fills in the rows and squares.
+const SCENE := "res://ui/overlays/market_tray.tscn"
+
 var cells := {}  # card index -> its square (the row sequence bounces them)
-var _body: Control
-var _scroll: ScrollContainer
-var _tray: Control  # the content, at most 420 wide, centred (it scrolls when tall)
+@onready var _scroll: ScrollContainer = $Bg/Scroll
+@onready var _tray: Control = $Bg/Scroll/Content/Tray  # at most 420 wide, centred (it scrolls when tall)
+
+
+static func make() -> MarketTray:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.scrim(self)
-	_body = Control.new()
-	add_child(_body)
+	$Scrim.gui_input.connect(func(ev): if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed and App.current: App.current.close_panel())
 	Game.state_changed.connect(_redraw)
 	_redraw()
 
 
 func _redraw() -> void:
-	var keep := _scroll.scroll_vertical if is_instance_valid(_scroll) else 0
-	for c in _body.get_children():
-		c.queue_free()
+	var keep := _scroll.scroll_vertical
+	for holder in [$Bg/Scroll/Content/Tray/Stations, $Bg/Scroll/Content/Tray/Market/Rows, $Bg/Scroll/Content/Tray/Caps]:
+		for c in holder.get_children():
+			c.queue_free()
 	cells.clear()
 	var s := Game.state
 	Market.ensure_card(s)
 	var full := size.x
 	var w := minf(420, full)  # a tablet's wider screen keeps phone-sized squares
-	var bg := Panel.new()
-	var sb := Tok.box(Tok.CARD, 14, 0)
-	sb.border_width_bottom = 3
-	sb.border_color = Tok.GOLD
-	sb.corner_radius_top_left = 0
-	sb.corner_radius_top_right = 0
-	bg.add_theme_stylebox_override("panel", sb)
-	bg.mouse_filter = MOUSE_FILTER_STOP
-	_body.add_child(bg)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	bg.add_child(scroll)
-	_scroll = scroll
+	var bg: Control = $Bg
+	var scroll := _scroll
 	scroll.set_deferred("scroll_vertical", keep)  # a pin's redraw keeps your place
-	var content := Control.new()
-	content.mouse_filter = MOUSE_FILTER_PASS
-	scroll.add_child(content)
-	_tray = Control.new()
-	_tray.mouse_filter = MOUSE_FILTER_PASS
+	var content: Control = $Bg/Scroll/Content
 	_tray.position.x = (full - w) / 2
-	content.add_child(_tray)
 	var y := 14.0 + _stations(Vector2(16, 14), w - 32) + 12
 	# The Market: brass-framed wood with its rows.
-	var panel := Frame9.new()
+	var panel: Control = $Bg/Scroll/Content/Tray/Market
 	panel.position = Vector2(16, y)
-	_tray.add_child(panel)
 	var pw := w - 32
-	var head := Tok.label("Market", 16, Color.WHITE, 900)
-	head.position = Vector2(14 + 22, 12)
-	panel.add_child(head)
-	var cart := Tok.icon("🛒", 18)
-	cart.position = Vector2(14, 14)
-	panel.add_child(cart)
-	var hint := Tok.label("Complete a market row to earn a reward!", 11, Color("#b3becd"), 700)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.position = Vector2(14 + 22 + 68, 10)
-	hint.size = Vector2(pw - 14 - 22 - 68 - 46, 28)
-	panel.add_child(hint)
-	var gift := Tok.icon("🎁", 20)
-	gift.position = Vector2(pw - 14 - 25, 12)
-	panel.add_child(gift)
+	panel.size.x = pw
+	var rows_at: Control = $Bg/Scroll/Content/Tray/Market/Rows
 	var ry := 42.0
 	var card: Array = s.bingoCard
 	var lines := Market.lines()
@@ -86,7 +63,7 @@ func _redraw() -> void:
 		row.position = Vector2(14, ry)
 		row.size = Vector2(pw - 28, cell + 6 + 4)
 		row.mouse_filter = MOUSE_FILTER_PASS
-		panel.add_child(row)
+		rows_at.add_child(row)
 		for k in lines[r].size():
 			var idx: int = lines[r][k]
 			var c := _cell(card[idx], cell, false)
@@ -101,31 +78,21 @@ func _redraw() -> void:
 		rw.position = Vector2(row.size.x - 3 - 15 - rw.size.x / 2, (row.size.y - rw.size.y) / 2)
 		row.add_child(rw)
 		ry += row.size.y + 4
-	var foot := Tok.label("Tap on an item to craft it directly from the market!", 11.5, Color("#ffe08a"), 800)
-	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	foot.position = Vector2(0, ry)
-	foot.size = Vector2(pw, 16)
-	panel.add_child(foot)
+	$Bg/Scroll/Content/Tray/Market/Foot.position.y = ry
 	panel.size = Vector2(pw, ry + 16 + 10)
 	y += panel.size.y + 12
 	# Capstones: a reference list, pinnable.
-	var ch := Tok.label("Capstones", 16, Color("#7d8899"), 900)
-	ch.position = Vector2(16 + 24, y)
-	_tray.add_child(ch)
-	var trophy := Tok.icon("🏆", 18)
-	trophy.position = Vector2(16, y + 2)
-	_tray.add_child(trophy)
+	$Bg/Scroll/Content/Tray/CapsHead.position.y = y
+	$Bg/Scroll/Content/Tray/Trophy.position.y = y + 2
 	y += 22
-	var sub := Tok.label("Capstones must be crafted at their own station", 11.5, Color("#b3becd"), 400)
-	sub.position = Vector2(16, y)
-	_tray.add_child(sub)
+	$Bg/Scroll/Content/Tray/CapsSub.position.y = y
 	y += 22
 	var caps := Market.capstone_choices()
 	var cw := (w - 32 - 44 - 3 * 8) / 4
 	for i in caps.size():
 		var c := _cell(caps[i], cw, true)
 		c.position = Vector2(16 + 22 + (i % 4) * (cw + 8), y + (i / 4) * (cw + 10))
-		_tray.add_child(c)
+		$Bg/Scroll/Content/Tray/Caps.add_child(c)
 	y += ceili(caps.size() / 4.0) * (cw + 10) + 8
 	_tray.size = Vector2(w, y)
 	content.custom_minimum_size = Vector2(full, y)
@@ -142,7 +109,7 @@ func _stations(at: Vector2, w: float) -> float:
 	var n := ORDER.filter(func(st): return visited.has(st)).size()
 	var l := Tok.label("%d/%d STATIONS VISITED" % [n, ORDER.size()], 11, Color(1, 1, 1, 0.75), 800)
 	l.position = at
-	_tray.add_child(l)
+	$Bg/Scroll/Content/Tray/Stations.add_child(l)
 	var d := minf(32, (w - 30 - 8 - 7 * 5) / 8)
 	for i in ORDER.size():
 		var v: bool = visited.has(ORDER[i])
@@ -157,10 +124,10 @@ func _stations(at: Vector2, w: float) -> float:
 			var t := Tok.tick(Color.WHITE, 13, Tok.OK, Tok.CARD)
 			t.position = Vector2(d - 9, -4)
 			c.add_child(t)
-		_tray.add_child(c)
+		$Bg/Scroll/Content/Tray/Stations.add_child(c)
 	var r: Control = Tok.tick(Color("#4fe583"), 22) if s.get("allStationsPaid") else LockInReward.unknown_square(26)
 	r.position = at + Vector2(w - r.size.x - 2, 20 + (d - r.size.y) / 2)
-	_tray.add_child(r)
+	$Bg/Scroll/Content/Tray/Stations.add_child(r)
 	return 20 + d
 
 
