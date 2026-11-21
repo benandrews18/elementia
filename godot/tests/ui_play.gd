@@ -3,7 +3,7 @@
 ## station, travel (locking in on check turns), until the run is over.
 ## Checks the screens follow and nothing errors. Then the Final Score, the
 ## Market and the To-Do List, each from a fresh run.
-##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo]
+##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo|cards]
 ## Headless runs at a fixed frame rate, as fast as the PC allows (no window).
 extends Node
 
@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -273,6 +273,53 @@ func _todo(app: App) -> void:
 	check(app.panel == "", "the To-Do List button closes it again")
 	TodoTray.hint_open = false
 	finished.todo = true
+
+
+## Card pop-ups: a station's element chip opens the element card; an item's
+## card drills into a component (Back returns), pins, and an element part
+## swaps to the element card; a tap closes each.
+func _cards(app: App) -> void:
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	await get_tree().process_frame
+	var open := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	var chip: Control = app._screen.get_node("Scroll/Page/Chips").get_child(0)
+	var press := _release()
+	press.pressed = true
+	chip.gui_input.emit(press)
+	chip.gui_input.emit(_release())
+	check(open.call(ElementCard).size() == 1, "a station's element chip opens its element card")
+	open.call(ElementCard)[0].get_node("Card").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(open.call(ElementCard).is_empty(), "a tap closes the element card")
+	app.show_card("Bridge")
+	var pop: CardPop = open.call(CardPop)[0]
+	check(not pop.get_node("Actions/Back").visible, "a fresh card has no Back")
+	var item_part = pop.get_node("Card/Parts").get_children().filter(func(c): return c.has_meta("cmp") and not c is Label).front()
+	check(item_part != null, "Bridge shows an item among its components")
+	if item_part != null:
+		item_part.gui_input.emit(_release())
+		check(pop.entry.name != "Bridge" and pop.get_node("Actions/Back").visible, "a component opens its card, with Back")
+		pop.get_node("Actions/Back").gui_input.emit(_release())
+		check(pop.entry.name == "Bridge" and not pop.get_node("Actions/Back").visible, "Back returns to Bridge")
+	var was := Progress.is_pinned("Bridge")
+	pop.get_node("Actions/Pin").gui_input.emit(_release())
+	check(Progress.is_pinned("Bridge") != was, "📌 on the card pins it")
+	pop.get_node("Actions/Pin").gui_input.emit(_release())
+	pop.get_node("Card").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(open.call(CardPop).is_empty(), "a tap closes the card")
+	app.show_card("Steel")  # elements and an item
+	pop = open.call(CardPop)[0]
+	var el_part = pop.get_node("Card/Parts").get_children().filter(func(c): return c is Label and c.has_meta("cmp")).front()
+	check(el_part != null, "Steel shows an element among its components")
+	if el_part != null:
+		el_part.gui_input.emit(_release())
+		await get_tree().process_frame
+		check(open.call(CardPop).is_empty() and open.call(ElementCard).size() == 1, "an element component swaps to its element card")
+	for c in open.call(ElementCard) + open.call(CardPop):
+		c.queue_free()
+	finished.cards = true
 
 
 func _release() -> InputEventMouseButton:

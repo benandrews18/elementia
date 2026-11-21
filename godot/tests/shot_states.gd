@@ -9,7 +9,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
-	"order_restrict", "order_grand", "station_fold"]
+	"order_restrict", "order_grand", "station_fold",
+	"card_pop", "card_pop_cap", "card_pop_back", "element_card"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -144,3 +145,12 @@ func _ready() -> void:
 			app.add_child(pop)
 			for t in get_tree().get_processed_tweens():
 				t.custom_step(10)
+		"card_pop", "card_pop_cap":  # an item's card; a capstone's (landscape, with its rule)
+			app.show_card("Bridge" if state == "card_pop" else "Robot")
+		"card_pop_back":  # drilled into a component: Back shows where from
+			app.show_card("Bridge")
+			var pop: CardPop = app.get_children().back()
+			pop._back.append(pop.entry)
+			pop.show_item("Steel", true)
+		"element_card":
+			app.show_element_card("Fe")
