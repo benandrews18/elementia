@@ -31,7 +31,7 @@ func _ready() -> void:
 ## As many columns as fit at min_card wide; the list at most max_list tall.
 func _layout() -> void:
 	var grid: GridContainer = $Window/Content/Scroll/Grid
-	var w: float = minf(max_width, size.x - 40) - 76
+	var w: float = minf(max_width, size.x - side_margin * 2) - 76
 	grid.columns = maxi(1, floori((w + 10) / (min_card + 10)))
 	var scroll: ScrollContainer = $Window/Content/Scroll
 	scroll.custom_minimum_size.y = minf(grid.get_combined_minimum_size().y, size.y * max_list)

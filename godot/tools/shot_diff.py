@@ -24,7 +24,7 @@ FIX = "res://tests/fixtures/"
 SAVES = {"map": "map_visit7", "map_card": "map_visit7", "drawer": "mat_visit18", "drawer_elements": "mat_visit18",
          "drawer_selected": "mat_visit18", "reward": "mat_visit18", "order": "mat_visit18", "end_over": "mat_visit18",
          "end_done": "mat_visit18", "order_restrict": "mat_visit18", "order_grand": "mat_visit18", "expand": "mat_visit18", "pin_tip": "map_visit7",
-         "tracked_map": "map_visit7"}
+         "tracked_map": "map_visit7", "layouts": "mat_visit18"}
 THRESHOLD = 8
 
 

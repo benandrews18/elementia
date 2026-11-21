@@ -224,7 +224,6 @@ static func bounce(c) -> void:
 
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
 ## rules "?" riding its lower-right edge (renderMatTop()).
-## shortcut: Layouts opens nothing yet (saved layouts come with M6 step 8).
 func _page_controls(page: Control) -> void:
 	var bottom := page.position.y + page.size.y
 	var x := page.position.x + 4
@@ -269,7 +268,7 @@ func _page_controls(page: Control) -> void:
 	var x2 := right - 30
 	if view != "mat":
 		return
-	var btns := [["💾", 30.0, func(): pass], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
+	var btns := [["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
 	for b in btns:
 		var text: String = b[0]
 		var is_text: bool = b[1] == 0.0

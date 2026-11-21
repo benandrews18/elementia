@@ -33,7 +33,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -399,6 +399,40 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## Saved Layouts: the mat's 💾 opens it; a name and 💾 save the mat; a
+## tap on its row puts it back; 🗑 asks, then deletes it.
+func _layouts(app: App) -> void:
+	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
+	Progress.prefs.savedMatLayouts = []
+	app.close_panel()
+	app.open_panel("drawer")
+	await get_tree().process_frame
+	var mat_before: Array = Game.state.mat.duplicate()
+	var save_btn: Button = app._panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:💾")[0]
+	save_btn.pressed.emit()
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	check(top.call(LayoutsWindow).size() == 1, "the mat's 💾 opens Saved Layouts")
+	var lw: LayoutsWindow = top.call(LayoutsWindow)[0]
+	lw.get_node("Window/Content/SaveRow/Row/Name").text = "Test mat"
+	lw.get_node("Window/Content/SaveRow/Row/Save").gui_input.emit(_release())
+	check(Progress.prefs.savedMatLayouts.size() == 1 and Progress.prefs.savedMatLayouts[0].items == mat_before, "💾 saves the mat under its name")
+	await get_tree().process_frame
+	Game.clear_mat()
+	var rows := func(): return lw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())
+	rows.call()[0].load_pressed.emit()
+	check(Game.state.mat == mat_before and top.call(LayoutsWindow).is_empty(), "a row puts its layout back on the mat, and closes")
+	LayoutsWindow.show_on(app)
+	lw = top.call(LayoutsWindow)[0]
+	rows.call()[0].delete_pressed.emit()
+	var ask: Array = top.call(ConfirmDialog)
+	check(ask.size() == 1, "🗑 asks first")
+	ask[0].get_node("Window/Content/Buttons/Yes").gui_input.emit(_release())
+	check(Progress.prefs.savedMatLayouts.is_empty(), "then deletes it")
+	lw.close()
+	app.close_panel()
+	finished.layouts = true
 
 
 ## Professor Mouse and the tips: the first walkthrough tip (Roll) shows once,

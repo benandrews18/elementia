@@ -14,7 +14,8 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station",
-	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1"]
+	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
+	"layouts"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -198,6 +199,10 @@ func _ready() -> void:
 				await get_tree().process_frame
 			if state == "coach1":
 				app.get_children().filter(func(c): return c is TutElements)[0].pressed.emit("Next")
+		"layouts":  # Saved Layouts over the mat, from tests/fixtures/collections_prefs.json
+			Progress.prefs.merge(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/collections_prefs.json")), true)
+			app.open_panel("drawer")
+			LayoutsWindow.show_on(app)
 		"pins", "tracked_card":  # Metropolis tracked: the pins tray open; its card from the pill
 			Game.ctx.tracked = "Metropolis"
 			if state == "pins":

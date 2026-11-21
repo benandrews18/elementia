@@ -24,6 +24,7 @@ signal closed
 ## A tap on the dim closes it.
 @export var dim_closes := false
 @export var max_width := 420.0
+@export var side_margin := 20.0  # from the screen's sides (the wide dark windows: 4)
 
 
 var values := {}
@@ -99,7 +100,7 @@ func close() -> void:
 func _layout() -> void:
 	var win: ParchmentWindow = $Window
 	var content: VBoxContainer = $Window/Content
-	var w := minf(max_width, size.x - 40)
+	var w := minf(max_width, size.x - side_margin * 2)
 	win.size.x = w
 	content.size.x = w - 2 * content.position.x
 	for c in content.get_children():  # wrapped texts measure at the content's width

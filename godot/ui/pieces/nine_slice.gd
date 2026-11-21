@@ -23,6 +23,13 @@ extends Control
 		margin_y = v
 		_sb = null
 		queue_redraw()
+## Draw the middle too (CSS border-image "fill"); off: only the frame (the
+## dark windows put their own body inside).
+@export var fill := true:
+	set(v):
+		fill = v
+		_sb = null
+		queue_redraw()
 ## The top edge's height on screen.
 @export var corner := 30.0:
 	set(v):
@@ -42,6 +49,7 @@ func _draw() -> void:
 		_sb.texture_margin_right = margin_x
 		_sb.texture_margin_top = margin_y
 		_sb.texture_margin_bottom = margin_y
+		_sb.draw_center = fill
 	var k := corner / margin_y
 	draw_set_transform(Vector2.ZERO, 0, Vector2(k, k))
 	draw_style_box(_sb, Rect2(Vector2.ZERO, size / k))
