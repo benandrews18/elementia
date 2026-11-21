@@ -13,14 +13,15 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 2, the Items screen (then Item Info on the card). Start every session with `git status`: the user may
+**Next task:** M6 step 3, Settings (the gear), the rules pages, clear all data. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
-  element card, opened by taps across the screens.
+  element card, opened by taps across the screens. Step 2: the Items
+  screen. Checks skip the screenshots when nothing visual changed.
 - 2026-11-20: M5.5 review fixes: stations scale with the map width
   (tablets), YOU ARE HERE and the station colours editable, dead helpers
   gone, dim/scrim pieces, tools/recolour.py (a colour everywhere at once;
@@ -587,8 +588,14 @@ Order (each makes the next useful):
       Later: Item Info (with step 2); the capstone celebration, the unlock
       reveal and the after-craft mini card (craft moments, M8). Godot's
       windows dim the hub too (the HTML's don't): kept, as for every window.
-- [ ] 2. Items screen (`reference.js`, the hub's Items button): every item,
-      filter, tap for the card pop-up.
+- [x] 2. Items screen (`reference.js`): `ui/screens/items_screen.tscn`, a
+      panel ("codex") from the hub's Items (Home reads Close); a
+      `ui/pieces/ref_row.tscn` per open item, pinned ones in their own table;
+      search (name, tier, station, recipe), sort; the bar sticks under the
+      Quark bar; a row opens its breakdown. The tree is shared with the To-Do
+      List (`ui/components/ref_tree.gd`, a parchment or dark look). Item Info
+      on a card opens the screen at that item. Matches the HTML within ~4px.
+      Open: the title's 📖 (no Noto image yet; ask before downloading).
 - [ ] 3. Settings (`settings.js`, the gear): options, the rules pages (also
       the first check's rules and the mat's "?"), clear all data.
 - [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
