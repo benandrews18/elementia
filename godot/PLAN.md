@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 3, Settings (the gear), the rules pages, clear all data. Start every session with `git status`: the user may
+**Next task:** M6 step 4, Welcome (Continue / New Game; Settings' Home; the end screen's Main Menu). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -21,7 +21,8 @@ Republish the preview: export Web, copy build/web/* to
 Log (newest first, one line per session):
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
-  screen. Checks skip the screenshots when nothing visual changed.
+  screen. Checks skip the screenshots when nothing visual changed. Step 3:
+  Settings and the rules windows.
 - 2026-11-20: M5.5 review fixes: stations scale with the map width
   (tablets), YOU ARE HERE and the station colours editable, dead helpers
   gone, dim/scrim pieces, tools/recolour.py (a colour everywhere at once;
@@ -596,8 +597,15 @@ Order (each makes the next useful):
       List (`ui/components/ref_tree.gd`, a parchment or dark look). Item Info
       on a card opens the screen at that item. Matches the HTML within ~4px.
       Noto's PNGs moved to `2D/png/128/` (fetch_noto_icons.py fixed).
-- [ ] 3. Settings (`settings.js`, the gear): options, the rules pages (also
-      the first check's rules and the mat's "?"), clear all data.
+- [x] 3. Settings (`settings.js`): the gear opens `ui/overlays/settings.tscn`
+      (How to Play, Game Rules, Tutorial Messages, Reset); Game Rules has
+      Tutorial tips (on again restores hidden tips); Tutorial Messages opens
+      every tip window; the Display Mat rules (two pages: the mat's "?", the
+      first check ever), the challenge and Unknown Element tips. All are
+      `ParchDialog` scenes (content all in the scene, `{🕒}` emoji tokens) with
+      `SettingRow` pieces. Later: Home (step 4), Dev Tools and Clear Cache
+      (step 9), the Mini-games / Auto card / Low motion / 5x5 switches (with
+      their features), the once-a-run challenge and Unknown tips (step 7).
 - [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
       screen's Main Menu.
 - [ ] 5. Trophies and History (`trophies.js`, `history.js` screens; their
