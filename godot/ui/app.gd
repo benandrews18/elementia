@@ -36,7 +36,7 @@ func _sync() -> void:
 		_screen_name = want
 		if is_instance_valid(_screen):
 			_screen.queue_free()
-		_screen = StationScreen.new() if want == "station" else MapScreen.make()
+		_screen = StationScreen.make() if want == "station" else MapScreen.make()
 		add_child(_screen)
 		move_child(_screen, 0)
 	_sync_hub()

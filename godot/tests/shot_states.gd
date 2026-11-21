@@ -8,7 +8,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
-	"order_restrict", "order_grand"]
+	"order_restrict", "order_grand", "station_fold"]
 
 
 func _ready() -> void:
@@ -22,6 +22,9 @@ func _ready() -> void:
 	match state:
 		"map", "station":
 			pass
+		"station_fold":  # crafted items folded into the header's bar
+			Game.state.collapseCraftedItems = true
+			Game.state_changed.emit()
 		"map_card":
 			Game.ctx.selectedMapStation = "The Ocean"
 			Game.state_changed.emit()

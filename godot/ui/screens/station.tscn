@@ -1,0 +1,224 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://ui/screens/station.gd" id="1"]
+[ext_resource type="FontFile" path="res://assets/fonts/Nunito-VariableFont_wght.ttf" id="nunito"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="Gradient" id="head_grad"]
+offsets = PackedFloat32Array(0, 1)
+colors = PackedColorArray(0.0980392, 0.231373, 0.298039, 1, 0.0705882, 0.180392, 0.235294, 1)
+
+[sub_resource type="GradientTexture2D" id="head_tex"]
+gradient = SubResource("head_grad")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[sub_resource type="StyleBoxTexture" id="head"]
+texture = SubResource("head_tex")
+
+[sub_resource type="FontVariation" id="caps"]
+base_font = ExtResource("nunito")
+variation_opentype = {2003265652: 800}
+spacing_glyph = 2
+
+[sub_resource type="FontVariation" id="caps_shop"]
+base_font = ExtResource("nunito")
+variation_opentype = {2003265652: 800}
+spacing_glyph = 1
+
+[sub_resource type="StyleBoxFlat" id="bar"]
+bg_color = Color(1, 1, 1, 0.08)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.18)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="Station" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Bg" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0588235, 0.152941, 0.2, 1)
+
+[node name="Art" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 390.0
+offset_bottom = 520.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Wash" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 390.0
+offset_bottom = 520.0
+mouse_filter = 2
+color = Color(0.0705882, 0.0901961, 0.121569, 0.42)
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_top = 44.0
+offset_right = 390.0
+offset_bottom = 844.0
+horizontal_scroll_mode = 0
+
+[node name="Page" type="Control" parent="Scroll"]
+custom_minimum_size = Vector2(390, 1200)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="Head" type="Panel" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 243.8
+mouse_filter = 2
+theme_override_styles/panel = SubResource("head")
+metadata/cmp = "st:head"
+
+[node name="Icon" type="TextureRect" parent="Scroll/Page"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.6
+offset_right = 60.0
+offset_bottom = 60.6
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Scroll/Page"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 16.4
+offset_right = 76.0
+offset_bottom = 16.4
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 31
+text = "The City"
+metadata/cmp = "st:title"
+
+[node name="ElementsLabel" type="Label" parent="Scroll/Page"]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 70.6
+offset_right = 26.0
+offset_bottom = 70.6
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("caps")
+theme_override_font_sizes/font_size = 12
+text = "ELEMENTS FOUND HERE:"
+
+[node name="Chips" type="Control" parent="Scroll/Page"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="CraftedLabel" type="Label" parent="Scroll/Page"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 176.9
+offset_right = 16.0
+offset_bottom = 176.9
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("caps")
+theme_override_font_sizes/font_size = 12
+text = "CRAFTED ITEMS:"
+
+[node name="Fold" type="Control" parent="Scroll/Page"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 199.4
+offset_right = 42.0
+offset_bottom = 229.4
+mouse_filter = 1
+
+[node name="Bar" type="Panel" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 48.0
+offset_top = 197.1
+offset_right = -48.0
+offset_bottom = 231.8
+mouse_filter = 2
+theme_override_styles/panel = SubResource("bar")
+
+[node name="Crafted" type="Control" parent="Scroll/Page"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="View" type="Control" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -42.0
+offset_top = 199.4
+offset_right = -12.0
+offset_bottom = 229.4
+mouse_filter = 1
+
+[node name="Bench" type="Control" parent="Scroll/Page"]
+layout_mode = 0
+mouse_filter = 1
+
+[node name="ShopLabel" type="Label" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 261.8
+offset_right = -6.0
+offset_bottom = 278.8
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = SubResource("caps_shop")
+theme_override_font_sizes/font_size = 13
+text = "ITEM SHOP – TAP TO CRAFT"
+horizontal_alignment = 1
+
+[node name="ShopLine" type="ColorRect" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 285.3
+offset_right = -6.0
+offset_bottom = 287.3
+mouse_filter = 2
+color = Color(0.109804, 0.258824, 0.341176, 1)
+
+[node name="Shop" type="Control" parent="Scroll/Page"]
+layout_mode = 0
+mouse_filter = 1
+
+[node name="Top" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2

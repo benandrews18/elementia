@@ -5,13 +5,27 @@
 class_name StationScreen
 extends Control
 
+## The layout is ui/screens/station.tscn: the art and its wash, the header
+## (icon, title, labels, the crafted bar), the shop's heading. This fills
+## them in from the station and packs the shop with the numbers below.
+const SCENE := "res://ui/screens/station.tscn"
 const TOP := QuarkTopBar.H
-const GAP := 8.0
-const ACT_H := 35.0
 
-var _scroll: ScrollContainer
+## The shop: columns, the gap between cards, a card's height to its width,
+## and the pin / Craft row's height under each card.
+@export var columns := 4
+@export var gap := 8.0
+@export var card_ratio := 1.4
+@export var act_h := 35.0
+
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen)
 var _press_at := Vector2.ZERO
+@onready var _scroll: ScrollContainer = $Scroll
+@onready var _page: Control = $Scroll/Page
+
+
+static func make() -> StationScreen:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
@@ -24,69 +38,38 @@ func _ready() -> void:
 func _redraw() -> void:
 	if is_queued_for_deletion() or not Game.ctx.get("current"):
 		return  # leaving the station: the app is swapping this screen out
-	var keep := 0
-	if is_instance_valid(_scroll):
-		keep = _scroll.scroll_vertical
-	for c in get_children():
-		c.queue_free()
+	var keep := _scroll.scroll_vertical
+	for holder in [$Scroll/Page/Chips, $Scroll/Page/Fold, $Scroll/Page/Crafted, $Scroll/Page/View, $Scroll/Page/Bench, $Scroll/Page/Shop, $Top]:
+		for c in holder.get_children():
+			c.queue_free()
 	var name: String = Game.ctx.current
 	var st := Catalog.station(name)
 	var w := size.x
-	var bg := ColorRect.new()
-	bg.color = Tok.BG
-	bg.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(bg)
 	# The station's art, full width from the top, fixed behind the page.
-	var art := TextureRect.new()
+	var art: TextureRect = $Art
 	art.texture = load("res://assets/" + Data.t("STATION_BG")[name])
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_SCALE
 	art.size = Vector2(w, w * art.texture.get_height() / art.texture.get_width())
-	art.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(art)
-	var wash := ColorRect.new()  # --backdrop-wash over the art
-	wash.color = Color(18 / 255.0, 23 / 255.0, 31 / 255.0, 0.42)
-	wash.size = art.size
-	wash.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(wash)
-	_scroll = ScrollContainer.new()
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	$Wash.size = art.size
 	_scroll.position = Vector2(0, TOP)
 	_scroll.size = Vector2(w, size.y - TOP)
-	add_child(_scroll)
-	var page := Control.new()
-	page.mouse_filter = MOUSE_FILTER_PASS
-	_scroll.add_child(page)
-	var y := _header(page, st, w)
+	var y := _header(_page, st, w)
 	if open_card != "":
-		y = _bench(page, w, y)
-	y = _shop(page, name, w, y)
-	page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
+		y = _bench(_page, w, y)
+	y = _shop(_page, name, w, y)
+	_page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
 	_scroll.set_deferred("scroll_vertical", keep)
 	if Game.state.get("matChecked"):
 		var qt := QuarkTopBar.new()
 		qt.size = Vector2(w, TOP)
-		add_child(qt)
-	corner_buttons(self, true)
+		$Top.add_child(qt)
+	corner_buttons($Top, true)
 
 
 ## The dark header: icon and name, the element chips, the crafted-items bar.
 ## Returns where the shop starts (page coordinates).
 func _header(page: Control, st: Dictionary, w: float) -> float:
-	var head := Panel.new()
-	head.add_theme_stylebox_override("panel", _vgrad_box(Color("#193b4c"), Color("#122e3c")))
-	head.size = Vector2(w, 243.8)
-	head.mouse_filter = MOUSE_FILTER_IGNORE
-	head.set_meta("cmp", "st:head")
-	page.add_child(head)
-	var ic := Tok.icon(st.emoji, 44)
-	ic.position = Vector2(16, 16.6)
-	page.add_child(ic)
-	var title := Tok.label(st.name, 31, Color.WHITE, 800)
-	title.position = Vector2(76, 16.4)
-	title.set_meta("cmp", "st:title")
-	page.add_child(title)
-	page.add_child(_caps_label("ELEMENTS FOUND HERE:", Vector2(26, 70.6)))
+	$Scroll/Page/Icon.texture = Data.icon(st.emoji)
+	$Scroll/Page/Title.text = st.name
 	# Six chips in a row, centred, 4px apart (.gather / .gchip).
 	var dice := Catalog.sorted_dice(st)
 	var cw := (w - 44 - 4 * (dice.size() - 1)) / dice.size()
@@ -94,32 +77,24 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 		var chip := element_chip(dice[i], cw)
 		chip.position = Vector2(22 + i * (cw + 4), 98.8)
 		chip.get_child(0).set_meta("cmp", "st:chip%d" % i)
-		page.add_child(chip)
-	page.add_child(_caps_label("CRAFTED ITEMS:", Vector2(16, 176.9)))
-	# The fold button, the crafted icons bar, the list/cards switch.
-	var row_y := 197.1
-	page.add_child(_round_btn(Vector2(12, row_y + 2.3), true))
-	var bar := Panel.new()
-	var sb := Tok.box(Color(1, 1, 1, 0.08), 12, 1.5, Color(1, 1, 1, 0.18))
-	bar.add_theme_stylebox_override("panel", sb)
-	bar.position = Vector2(48, row_y)
-	bar.size = Vector2(w - 48 - 48, 34.7)
-	bar.mouse_filter = MOUSE_FILTER_IGNORE
-	page.add_child(bar)
+		$Scroll/Page/Chips.add_child(chip)
+	# The fold button, the crafted icons in the bar, the list/cards switch.
+	var bar: Control = $Scroll/Page/Bar
+	var row_y := bar.position.y
+	$Scroll/Page/Fold.add_child(_round_btn(Vector2.ZERO, true))
 	if Game.state.get("collapseCraftedItems"):
-		var x := 57.0
+		var x := bar.position.x + 9
 		for e in _sorted(shop_entries(st.name)):
 			if Catalog.owns(Game.state, e.name) and e.tier != "CAPSTONE":
 				var i2 := Tok.icon(e.emoji, 18)
 				i2.position = Vector2(x + 3, row_y + 8.3)
-				page.add_child(i2)
+				$Scroll/Page/Crafted.add_child(i2)
 				var t := Tok.tick(Color.WHITE, 14, Tok.OK, Tok.CARD)  # .station-item-icon.owned::after
 				t.position = Vector2(x + 24 - 9, row_y + 5 - 5)
-				page.add_child(t)
+				$Scroll/Page/Crafted.add_child(t)
 				x += 29
-	var view := _round_btn(Vector2(w - 42, row_y + 2.3), false)
-	page.add_child(view)
-	return 243.8
+	$Scroll/Page/View.add_child(_round_btn(Vector2.ZERO, false))
+	return $Scroll/Page/Head.size.y
 
 
 ## Craft through the app (it asks which elements pay a suit cost); alone
@@ -145,6 +120,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
+	page = $Scroll/Page/Bench
 	page.add_child(bench)
 	var close := TextureRect.new()
 	close.texture = load("res://assets/ui/btn_close.webp")
@@ -181,20 +157,14 @@ static func shop_entries(station: String) -> Array:
 func _shop(page: Control, station: String, w: float, y: float) -> float:
 	var s := Game.state
 	y += 18
-	var label := _caps_label("ITEM SHOP – TAP TO CRAFT", Vector2(6, y), 13, 1.0)
-	label.size = Vector2(w - 12, 17)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	page.add_child(label)
-	var line := ColorRect.new()
-	line.color = Tok.LINE2
-	line.position = Vector2(6, y + 23.5)
-	line.size = Vector2(w - 12, 2)
-	page.add_child(line)
+	$Scroll/Page/ShopLabel.position.y = y
+	$Scroll/Page/ShopLine.position.y = y + 23.5
 	y += 25.5 + 10
+	page = $Scroll/Page/Shop
 	var fold: bool = s.get("collapseCraftedItems", false)
 	var shown := shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
-	var col_w := (w - 12 - 3 * GAP) / 4
-	var row_h := col_w * 1.4
+	var col_w := (w - 12 - (columns - 1) * gap) / columns
+	var row_h := col_w * card_ratio
 	var groups := [shown.filter(func(e): return e.tier == "MATERIAL"),
 		shown.filter(func(e): return e.tier == "COMPONENT") + shown.filter(func(e): return e.tier == "CREATION") + shown.filter(func(e): return e.tier == "CAPSTONE")]
 	for gi in 2:
@@ -202,25 +172,25 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		if items.is_empty():
 			continue
 		var card_h := (row_h - 2) / 2 if gi == 0 else row_h
-		var cell_h := card_h + 3 + ACT_H
+		var cell_h := card_h + 3 + act_h
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
 		for e in items:
 			var span := 2 if e.tier == "CAPSTONE" else 1
-			var at := _first_free(taken, span)
+			var at := _first_free(taken, span, columns)
 			for k in span:
 				taken["%d,%d" % [at.x, at.y + k]] = true
 			rows = maxi(rows, at.x + 1)
-			var pos := Vector2(6 + at.y * (col_w + GAP), y + at.x * (cell_h + GAP))
-			_cell(page, e, pos, Vector2(col_w * span + GAP * (span - 1), card_h), gi == 0)
-		y += rows * cell_h + (rows - 1) * GAP + 12
+			var pos := Vector2(6 + at.y * (col_w + gap), y + at.x * (cell_h + gap))
+			_cell(page, e, pos, Vector2(col_w * span + gap * (span - 1), card_h), gi == 0)
+		y += rows * cell_h + (rows - 1) * gap + 12
 	return y
 
 
-static func _first_free(taken: Dictionary, span: int) -> Vector2i:
+static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:
 	var r := 0
 	while true:
-		for c in range(0, 5 - span):
+		for c in range(0, columns + 1 - span):
 			var ok := true
 			for k in span:
 				if taken.has("%d,%d" % [r, c + k]):
@@ -266,14 +236,14 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		page.add_child(tick)
 	var ay := pos.y + card_size.y + 3
 	# Pin and Craft (60px, shrinking to fit) centred under the card (.st-acts).
-	var acts_w := minf(card_size.x, ACT_H + 3 + 60)
+	var acts_w := minf(card_size.x, act_h + 3 + 60)
 	var ax := pos.x + (card_size.x - acts_w) / 2
 	var pinned := Progress.is_pinned(e.name)
 	var pin := Panel.new()
 	pin.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if pinned else Tok.CARD, 10, 2,
 		Tok.GOLD if pinned else Color(1, 1, 1, 0.4), 0, 0))
 	pin.position = Vector2(ax, ay)
-	pin.size = Vector2(ACT_H, ACT_H)
+	pin.size = Vector2(act_h, act_h)
 	pin.modulate.a = 1.0 if pinned else 0.5
 	var pic := Tok.icon("📌", 17)
 	pic.position = Vector2(9, 9)
@@ -290,8 +260,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 	btn.add_theme_font_size_override("font_size", 13)
 	btn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	btn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	btn.position = Vector2(ax + ACT_H + 3, ay)
-	btn.size = Vector2(acts_w - ACT_H - 3, 34.9)
+	btn.position = Vector2(ax + act_h + 3, ay)
+	btn.size = Vector2(acts_w - act_h - 3, 34.9)
 	if can:
 		btn.add_theme_color_override("font_color", Color.WHITE)
 		btn.add_theme_color_override("font_shadow_color", Color(0.47, 0.24, 0, 0.4))
@@ -386,15 +356,6 @@ func _round_btn(at: Vector2, fold: bool) -> Control:
 	return b
 
 
-func _caps_label(text: String, at: Vector2, px := 12.0, spacing := 1.5) -> Label:
-	var l := Tok.label(text, px, Color.WHITE, 800)
-	l.add_theme_font_override("font", Tok.font(800, int(round(spacing))))
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
-	l.add_theme_constant_override("shadow_offset_y", 1)
-	l.position = at
-	return l
-
-
 ## Settings (top right; not on the map, under its card) and Convert (bottom
 ## right, once any element is held), on screen `on`.
 static func corner_buttons(on: Control, settings: bool) -> void:
@@ -430,20 +391,6 @@ static func corner_buttons(on: Control, settings: bool) -> void:
 			n += int(v) / int(Data.t("CONVERT_RATE"))
 		if n > 0:
 			conv.add_child(HubBar._badge(str(n), Vector2(58 + 7 - 24, -7)))
-
-
-static func _vgrad_box(top: Color, bottom: Color, radius := 0.0) -> StyleBoxTexture:
-	var g := Gradient.new()
-	g.colors = PackedColorArray([top, bottom])
-	var t := GradientTexture2D.new()
-	t.gradient = g
-	t.fill_from = Vector2(0, 0)
-	t.fill_to = Vector2(0, 1)
-	t.width = 4
-	t.height = 64
-	var sb := StyleBoxTexture.new()
-	sb.texture = t
-	return sb
 
 
 ## A tap (not a scroll) runs fn.
