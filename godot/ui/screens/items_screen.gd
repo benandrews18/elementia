@@ -5,7 +5,6 @@
 ## The search bar sticks under the Quark bar as the list scrolls. A row opens
 ## its breakdown (RefTree, dark). Item Info on a card jumps here (jump_to).
 ## The layout is ui/screens/items_screen.tscn.
-## shortcut: the title's 📖 has no Noto image yet (it shows without it).
 class_name ItemsScreen
 extends Control
 

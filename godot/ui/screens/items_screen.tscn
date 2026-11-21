@@ -94,12 +94,12 @@ mouse_filter = 1
 
 [node name="Title" type="HBoxContainer" parent="Scroll/Page"]
 layout_mode = 0
-offset_left = 12.0
+offset_left = 16.0
 offset_top = 4.0
 offset_right = 300.0
 offset_bottom = 44.5
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 
 [node name="Icon" type="TextureRect" parent="Scroll/Page/Title"]
 custom_minimum_size = Vector2(32, 32)
