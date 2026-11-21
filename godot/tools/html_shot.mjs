@@ -27,7 +27,8 @@ export async function htmlShot(snap, open, { rectsJS = "({})", http = 8797, cdp 
     await evalJS(`document.querySelectorAll(".overlay.open").forEach(o => { if (!${JSON.stringify(keep)}.includes(o.id)) closeOverlay(o.id); })`);
     await wait(400);
     const rects = await evalJS(rectsJS);
-    const png = Buffer.from((await send("Page.captureScreenshot", { format: "png", clip: { x: 0, y: 0, width: 390, height: 844, scale: 1 } })).result.data, "base64");
+    const [sx, sy] = await evalJS("[window.scrollX, window.scrollY]");  // a shot may scroll (e.g. to an item)
+    const png = Buffer.from((await send("Page.captureScreenshot", { format: "png", clip: { x: sx, y: sy, width: 390, height: 844, scale: 1 } })).result.data, "base64");
     return { png, rects, errs };
   }, { http, cdp });
 }

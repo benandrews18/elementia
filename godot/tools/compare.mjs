@@ -101,6 +101,20 @@ const SHOTS = [
       ${TAG_CARDS}(document.querySelector(".st-cards"), "st:");
     })()`,
     godot: ["--screen", "res://ui/app.gd", "--call", "open_card:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "codex", note: "The Items screen (Item Reference) at turn 7 of a recorded run", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => {
+      screen = "codex"; current = null; render(true); window.scrollTo(0, 0);
+      const t = (sel, k) => { const e = document.querySelector(sel); if (e) e.dataset.cmp = k; };
+      t(".map-head h1", "ref:title"); t("#refFilter", "ref:search"); t("#refSort", "ref:sort");
+      t(".ref-pinned-heading", "ref:pinhead");
+      document.querySelectorAll(".refrow").forEach((r, i) => { if (i > 5) return; const k = "ref:row" + i; r.dataset.cmp = k;
+        const q = (sel, n) => { const e = r.querySelector(sel); if (e) e.dataset.cmp = k + ":" + n; };
+        q(".refem", "icon"); q(".refname", "name"); q(".refpts", "pts"); q(".refwhere", "where"); q(".refexpand", "expand"); q(".refpin", "pin"); q(".refsuits", "suits"); });
+    })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_items", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
+  { name: "codex_open", note: "The Items screen with Bridge's breakdown open (Item Info from its card)", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
+    open: `(() => { goToRefItem("Bridge"); })()`,
+    godot: ["--screen", "res://ui/app.gd", "--call", "open_items:Bridge", "--save", join(GODOT_DIR, "tests", "fixtures", "station_visit7.json")] },
   { name: "cardpop", keep: ["cardPop"], note: "Bridge's card pop-up (tapped at The City, turn 7)", snap: join(GODOT_DIR, "tests", "fixtures", "station_visit7.json"),
     open: `(() => {
       showCardPop(ENTRIES.find(e => e.name === "Bridge"), false);

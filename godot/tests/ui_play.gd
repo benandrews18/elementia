@@ -267,7 +267,7 @@ func _todo(app: App) -> void:
 	var hint = Game.todo_hint()
 	check(hint != null and TodoTray.expanded.has("refroot/Metropolis"), "the hint opens the breakdown it's in (%s)" % [hint.name if hint else null])
 	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items[0].name
-	tray._pin_button(comp, Vector2.ZERO, false).gui_input.emit(_release())
+	RefTree.new(RefTree.PARCHMENT, func(_p): pass).pin_button(comp, Vector2.ZERO).gui_input.emit(_release())  # a tree row's pin
 	check(Progress.is_pinned(comp), "a pin in the tree pins " + comp)
 	app._on_hub("jobs")
 	check(app.panel == "", "the To-Do List button closes it again")
