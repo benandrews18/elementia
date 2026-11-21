@@ -135,11 +135,12 @@ static func unknown(d: int) -> void:
 
 ## devGrant(): straight to the inventory: nothing spent, no reveal.
 static func grant(names: Array) -> void:
-	touch()
 	var core: Array = Data.t("CORE_ITEM_NAMES")
-	for n in names:
-		if core.has(n) and not Catalog.owns(Game.state, n):
-			Game.state.items.append(n)
+	var add := names.filter(func(n): return core.has(n) and not Catalog.owns(Game.state, n))
+	if add.is_empty():  # nothing to give: the run stays as it was (not marked dev)
+		return
+	touch()
+	Game.state.items.append_array(add)
 	Game._changed()
 
 
@@ -149,6 +150,8 @@ static func grant_tree(name: String) -> void:
 
 
 static func remove(name: String) -> void:
+	if not Catalog.owns(Game.state, name):
+		return
 	touch()
 	Game.state.items.erase(name)
 	Game.state.mat.erase(name)

@@ -260,6 +260,10 @@ func _ready() -> void:
 	# challenge follow the turn; grants skip the cost; snapshots round-trip;
 	# a dev run's History entry goes to its own list.
 	s = fresh()
+	Dev.grant([""])
+	Dev.grant_tree("")
+	Dev.remove("Robot")
+	check(not s.get("dev"), "dev: a grant or remove that changes nothing leaves a real run")
 	Dev.grant_tree("Robot")
 	check(Catalog.owns(s, "Robot") and Catalog.component_closure("Robot").all(func(n): return Catalog.owns(s, n)), "dev: an item granted with its tree")
 	Dev.set_turn(7)
