@@ -25,6 +25,8 @@ func _ready() -> void:
 		Game.ctx = ctx.duplicate(true)
 		TodoTray.expanded = {}
 		TodoTray.hint_open = false
+		ItemsScreen.query = ""
+		ItemsScreen.sort_mode = 0
 		Engine.time_scale = 1.0
 		Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string(job.save)))
 		var screen: Control = load("res://tests/shot_states.gd").new()

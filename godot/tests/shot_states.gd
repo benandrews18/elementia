@@ -10,7 +10,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "station_fold",
-	"card_pop", "card_pop_cap", "card_pop_back", "element_card"]
+	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -154,3 +154,6 @@ func _ready() -> void:
 			pop.show_item("Steel", true)
 		"element_card":
 			app.show_element_card("Fe")
+		"items", "items_open", "items_search":  # the Items screen; Bridge's breakdown open; searching "steel"
+			ItemsScreen.query = "steel" if state == "items_search" else ""
+			app.open_items("Bridge" if state == "items_open" else "")

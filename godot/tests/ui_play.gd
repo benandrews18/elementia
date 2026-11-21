@@ -3,7 +3,7 @@
 ## station, travel (locking in on check turns), until the run is over.
 ## Checks the screens follow and nothing errors. Then the Final Score, the
 ## Market and the To-Do List, each from a fresh run.
-##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo|cards]
+##   G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only run|final_score|market|todo|cards|items]
 ## Headless runs at a fixed frame rate, as fast as the PC allows (no window).
 extends Node
 
@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -320,6 +320,50 @@ func _cards(app: App) -> void:
 	for c in open.call(ElementCard) + open.call(CardPop):
 		c.queue_free()
 	finished.cards = true
+
+
+## The Items screen: the hub's Items opens it (Home reads Close); search
+## keeps only matches; a row opens its breakdown; 📌 on a row pins; Item
+## Info on a card opens the screen at that item; Items again closes it.
+func _items(app: App) -> void:
+	Game.start_run("Coral Reef")
+	app.close_panel()
+	await get_tree().process_frame
+	app._on_hub("codex")
+	check(app.panel == "codex" and app.home_face() == "close", "the hub's Items opens the Items screen (Home reads Close)")
+	var scr: ItemsScreen = app._panel_node
+	var rows := func(): return scr._rows.filter(func(r): return is_instance_valid(r) and not r.is_queued_for_deletion())
+	var open_items: Array = Data.t("ENTRIES").map(func(e): return e.name).filter(func(n): return Catalog.item_open(Game.state, n))
+	var uniq := {}
+	for n in open_items:
+		uniq[n] = true
+	check(rows.call().size() == uniq.size(), "one row per open item (%d)" % uniq.size())
+	scr.get_node("Bar/Search").text_changed.emit("steel")
+	var shown: Array = rows.call().filter(func(r): return r.visible)
+	check(not shown.is_empty() and shown.all(func(r): return String(r.get_meta("search")).contains("steel")), "searching keeps only the matches")
+	scr.get_node("Bar/Search").text_changed.emit("")
+	var row: RefRow = rows.call().filter(func(r): return r.item == "Bridge")[0]
+	row.gui_input.emit(_release())
+	await get_tree().process_frame
+	check(TodoTray.expanded.has("refroot/Bridge"), "a tap on a row opens its breakdown")
+	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
+	check(row.get_node("Tree").get_child_count() > 0, "the breakdown shows under the row")
+	var was := Progress.is_pinned("Banana")
+	rows.call().filter(func(r): return r.item == "Banana")[0].get_node("Pin").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(Progress.is_pinned("Banana") != was and (rows.call().filter(func(r): return r.item == "Banana")[0].get_parent().name == "PinTable") == Progress.is_pinned("Banana"),
+		"📌 on a row pins it (into the Pinned table)")
+	if Progress.is_pinned("Banana") != was:
+		Progress.toggle_pin("Banana")
+	app._on_hub("codex")
+	check(app.panel == "", "Items again closes it")
+	app.show_card("Steel")
+	var pop: CardPop = app.get_children().filter(func(c): return c is CardPop).back()
+	pop.get_node("Actions/Info").gui_input.emit(_release())
+	await get_tree().process_frame
+	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
+	app.close_panel()
+	finished.items = true
 
 
 func _release() -> InputEventMouseButton:
