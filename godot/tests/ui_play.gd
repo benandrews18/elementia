@@ -356,11 +356,16 @@ func _items(app: App) -> void:
 	check(TodoTray.expanded.has("refroot/Bridge"), "a tap on a row opens its breakdown")
 	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
 	check(row.get_node("Tree").get_child_count() > 0, "the breakdown shows under the row")
+	var apple: RefRow = rows.call().filter(func(r): return r.item == "Apple")[0]
+	var banana: RefRow = rows.call().filter(func(r): return r.item == "Banana")[0]
+	Game._changed()
+	check(rows.call().has(apple) and rows.call().has(banana) and rows.call().size() == uniq.size(), "a change keeps the rows it doesn't touch (not rebuilt)")
 	var was := Progress.is_pinned("Banana")
-	rows.call().filter(func(r): return r.item == "Banana")[0].get_node("Pin").gui_input.emit(_release())
+	banana.get_node("Pin").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(Progress.is_pinned("Banana") != was and (rows.call().filter(func(r): return r.item == "Banana")[0].get_parent().name == "PinTable") == Progress.is_pinned("Banana"),
 		"📌 on a row pins it (into the Pinned table)")
+	check(rows.call().has(apple) and not rows.call().has(banana), "pinning makes only that row again")
 	if Progress.is_pinned("Banana") != was:
 		Progress.toggle_pin("Banana")
 	app._on_hub("codex")

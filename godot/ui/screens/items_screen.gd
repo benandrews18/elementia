@@ -17,6 +17,7 @@ static var query := ""  # the search (refFilterQuery)
 @export var pinned_gap := 20.0
 
 var _rows: Array[RefRow] = []
+var _kept := {}  # item -> [its row, what it was filled with]: unchanged rows are kept
 var _jump := ""
 @onready var _scroll: ScrollContainer = $Scroll
 @onready var _page: Control = $Scroll/Page
@@ -79,9 +80,9 @@ func _redraw() -> void:
 		1: items = Util.stable_sort(items, func(a, b): return int(a.points - b.points) if a.points != b.points else by_name.call(a, b))
 		2: items = Util.stable_sort(items, func(a, b): return int(b.points - a.points) if a.points != b.points else by_name.call(a, b))
 		_: items = Util.stable_sort(items, by_name)
-	for t in [$Scroll/Page/PinTable, $Scroll/Page/Table]:
-		for c in t.get_children():
-			c.queue_free()
+	# A row is made again only when what it shows changed (rebuilding all
+	# ~99 took ~360 ms per change: review 11). An open row always is: its
+	# breakdown shows what else is owned.
 	_rows.clear()
 	var w: float = size.x - 24 - 2
 	var tree := RefTree.new(RefTree.DARK, func(path):
@@ -90,15 +91,36 @@ func _redraw() -> void:
 		else:
 			TodoTray.expanded[path] = true
 		_redraw())
+	var kept := {}
+	var at := {$Scroll/Page/PinTable: 0, $Scroll/Page/Table: 0}
 	for e in items:
-		var row := RefRow.make()
 		var path: String = "refroot/" + e.name
-		row.fill(e, w, TodoTray.expanded.has(path), tree)
-		row.set_meta("search", RefRow.search_text(e))
-		row.set_meta("pinned", Progress.is_pinned(e.name))
-		row.gui_input.connect(func(ev): if ConvertTray._tap(ev): tree.on_toggle.call(path))
-		(($Scroll/Page/PinTable if row.get_meta("pinned") else $Scroll/Page/Table) as Control).add_child(row)
+		var open := TodoTray.expanded.has(path)
+		var pinned := Progress.is_pinned(e.name)
+		var sig := [Catalog.owns(s, e.name), pinned, w]
+		var old: Array = _kept.get(e.name, [])
+		var row: RefRow
+		if not open and not old.is_empty() and old[1] == sig:
+			row = old[0]
+			_kept.erase(e.name)
+		else:
+			row = RefRow.make()
+			row.fill(e, w, open, tree)
+			row.set_meta("search", RefRow.search_text(e))
+			row.gui_input.connect(func(ev): if ConvertTray._tap(ev): tree.on_toggle.call(path))
+		kept[e.name] = [row, sig if not open else []]
+		var table: Control = $Scroll/Page/PinTable if pinned else $Scroll/Page/Table
+		if row.get_parent() != table:
+			if row.get_parent():
+				row.reparent(table, false)
+			else:
+				table.add_child(row)
+		table.move_child(row, at[table])
+		at[table] += 1
 		_rows.append(row)
+	for left in _kept.values():  # rows no longer shown, or made again
+		left[0].queue_free()
+	_kept = kept
 	_layout()
 	var i := 0
 	for t in [$Scroll/Page/PinTable, $Scroll/Page/Table]:  # tagged for tools/compare.mjs, in page order
