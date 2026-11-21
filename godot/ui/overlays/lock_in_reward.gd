@@ -6,20 +6,65 @@
 class_name LockInReward
 extends Control
 
+## The layout is ui/overlays/lock_in_reward.tscn (texts, styles, the "?"
+## corner); this fills in the dice and stacks the lines that are showing.
+const SCENE := "res://ui/overlays/lock_in_reward.tscn"
+
+## Where the first line starts, and the parchment under Nice.
+@export var top := 72.0
+@export var bottom_pad := 30.0
+## The corner "?" line's texts (%s: the Quarks; %d: the dice).
+@export_multiline var why_none := "%s Quarks: below the first breakpoint\nNo bonus dice this time"
+@export_multiline var why_dice := "%s Quarks: +%d dice at every station\nuntil the next board check"
+
 var dice := 0
 var unknown := false  # the top breakpoint's "?" element
 var quarks := 0.0
 var on_done: Callable
-var _why := false
-var _hint := false
-var _box: Control
-var _popped := false
+
+
+static func make() -> LockInReward:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self, _done)
-	_build()
+	$Dim.gui_input.connect(func(ev): if _tap(ev): _done())
+	$Window/Nice.gui_input.connect(func(ev): if _tap(ev): _done())
+	$Window/Help.gui_input.connect(func(ev): if _tap(ev):
+		$Window/Why.visible = not $Window/Why.visible
+		_layout())
+	var w := minf(420, size.x - 40)
+	var inner := w - 2 * 38
+	$Window.size.x = w
+	_dice_row(inner)
+	var q := Util.thousands(int(quarks))
+	$Window/Why.text = why_none % q if dice == 0 else why_dice % [q, dice]
+	$Window/Why.visible = false
+	$Window/Hint.visible = false
+	$Window/Unknown.visible = unknown
+	if unknown:  # "+1 Unknown Element" and its "?" square, centred together
+		var t: Label = $Window/Unknown/Text
+		var tw := t.get_theme_font("font").get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, t.get_theme_font_size("font_size")).x
+		var lx := (inner - tw - 10 - 34) / 2
+		t.position.x = lx
+		t.size.x = tw
+		var sq := unknown_square(34)
+		sq.position = Vector2(lx + tw + 10, 0)
+		sq.mouse_filter = MOUSE_FILTER_STOP
+		sq.gui_input.connect(func(ev): if _tap(ev):
+			$Window/Hint.visible = not $Window/Hint.visible
+			_layout())
+		$Window/Unknown.add_child(sq)
+	var nice: Control = $Window/Nice
+	var nt: Label = nice.get_node("Text")
+	nice.size.x = nt.get_theme_font("font").get_string_size(nt.text, HORIZONTAL_ALIGNMENT_LEFT, -1, nt.get_theme_font_size("font_size")).x + 44
+	nice.position.x = (w - nice.size.x) / 2
+	_layout()
+
+
+static func _tap(ev: InputEvent) -> bool:
+	return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
 
 
 func _done() -> void:
@@ -27,104 +72,55 @@ func _done() -> void:
 	on_done.call()
 
 
-## Rebuilt when a "?" opens or closes its line (the window grows).
-func _build() -> void:
-	if is_instance_valid(_box):
-		_box.queue_free()
-	var w := minf(420, size.x - 40)
-	var inner := w - 2 * 38
-	var parts := []  # [control, height, gap above]
-	var row := Control.new()  # .lockin-reward-dice: centred, gap 14, min height 44
+## "+" and the dice popping in left to right, centred (bounceIn, 150ms
+## apart); or "No bonus dice this time".
+func _dice_row(inner: float) -> void:
+	var row: Control = $Window/Dice
+	var plus: Label = $Window/Dice/Plus
+	$Window/Dice/None.visible = dice == 0
+	plus.visible = dice > 0
 	if dice == 0:
-		var none := _center(Tok.label("No bonus dice this time", 15, Color("#7a5a3a"), 800), inner, 44)
-		row.add_child(none)
-	else:
-		var items := [Tok.label("+", 36, Color("#3b2412"), 900)]
-		for i in dice:
-			items.append(Tok.icon("🎲", 36))
-		var widths := items.map(func(c): return Tok.font(900).get_string_size("+", HORIZONTAL_ALIGNMENT_LEFT, -1, 36).x if c is Label else 36.0)
-		var total := 0.0
-		for x in widths:
-			total += x
-		total += 14 * (items.size() - 1)
-		var x := (inner - total) / 2
-		for i in items.size():
-			var c: Control = items[i]
-			c.size = Vector2(widths[i], 44 if c is Label else 36)
-			c.position = Vector2(x, (44 - c.size.y) / 2)
-			c.pivot_offset = c.size / 2
-			if c is Label:
-				c.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			elif not _popped:  # bounceIn, 150ms apart
-				c.modulate.a = 0
-				var tw := c.create_tween()
-				tw.tween_interval((i - 1) * 0.15)
-				tw.tween_property(c, "modulate:a", 1.0, 0.1)
-				c.scale = Vector2(0.82, 0.82)
-				tw.parallel().tween_property(c, "scale", Vector2(1.05, 1.05), 0.22)
-				tw.tween_property(c, "scale", Vector2.ONE, 0.18)
-			row.add_child(c)
-			x += widths[i] + 14
-	_popped = true
-	parts.append([row, 44.0, 0.0])
-	if _why:
-		var q := Util.thousands(int(quarks))
-		var txt := ("%s Quarks: below the first breakpoint\nNo bonus dice this time" % q if dice == 0
-			else "%s Quarks: +%d dice at every station\nuntil the next board check" % [q, dice])
-		parts.append([_hint_label(txt, inner), 13 * 1.4 * 2, 8.0 + 8])
+		return
+	var pw := plus.get_theme_font("font").get_string_size("+", HORIZONTAL_ALIGNMENT_LEFT, -1, plus.get_theme_font_size("font_size")).x
+	var x := (inner - (pw + dice * 36 + 14 * dice)) / 2
+	plus.position.x = x
+	plus.size.x = pw
+	x += pw + 14
+	for i in dice:
+		var c := Tok.icon("🎲", 36)
+		c.position = Vector2(x, 4)
+		c.pivot_offset = c.size / 2
+		c.modulate.a = 0
+		c.scale = Vector2(0.82, 0.82)
+		var tw := c.create_tween()
+		tw.tween_interval(i * 0.15)
+		tw.tween_property(c, "modulate:a", 1.0, 0.1)
+		tw.parallel().tween_property(c, "scale", Vector2(1.05, 1.05), 0.22)
+		tw.tween_property(c, "scale", Vector2.ONE, 0.18)
+		row.add_child(c)
+		x += 36 + 14
+
+
+## Stacks the lines that are showing (a "?" opens or closes one), then sizes
+## and centres the window to them.
+func _layout() -> void:
+	var why: bool = $Window/Why.visible
+	var y := top + 44.0
+	if why:
+		$Window/Why.position.y = y + 16
+		y += 16 + 13 * 1.4 * 2
 	if unknown:
-		var line := Control.new()
-		var t := Tok.label("+1 Unknown Element", 18, Color("#3b2412"), 900)
-		var tw := Tok.font(900).get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-		var lx := (inner - tw - 10 - 34) / 2
-		t.position = Vector2(lx, 0)
-		t.size = Vector2(tw, 34)
-		t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		line.add_child(t)
-		var sq := unknown_square(34)
-		sq.position = Vector2(lx + tw + 10, 0)
-		sq.mouse_filter = MOUSE_FILTER_STOP
-		sq.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
-			_hint = not _hint
-			_build())
-		line.add_child(sq)
-		parts.append([line, 34.0, 4.0 + (0.0 if _why else 8.0)])
-		if _hint:
-			parts.append([_hint_label("Becomes any element at your station\nUse it from the Convert menu", inner), 13 * 1.4 * 2, 8.0])
-	var nice := RollPopup._pill_button("Nice", Vector2(Tok.font(800).get_string_size("Nice", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
-	nice.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: _done())
-	parts.append([nice, 46.0, 12.0 + 4])
-	var y := 72.0
-	for p in parts:
-		y += p[2]
-		var c: Control = p[0]
-		c.position = Vector2(38 + ((inner - c.size.x) / 2 if c == nice else 0.0), y)
-		if c != nice:
-			c.size = Vector2(inner, p[1])
-		y += p[1]
-	var h := y + 30
-	_box = ConfirmDialog.window(Vector2(w, h), "Bonus Dice")
-	_box.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	add_child(_box)
-	for p in parts:
-		_box.add_child(p[0])
-	var why := TextureRect.new()  # the mat's help sprite, lower-right corner
-	why.texture = load("res://assets/ui/btn_help.webp")
-	why.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	why.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	why.size = Vector2(34, 34)
-	why.position = Vector2(w + 14 - 34, h + 14 - 34)
-	why.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed:
-		_why = not _why
-		_build())
-	_box.add_child(why)
-
-
-func _hint_label(text: String, inner: float) -> Label:
-	var l := Tok.label(text, 13, Color("#7a5a3a"), 700)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.size = Vector2(inner, 13 * 1.4 * 2)
-	return l
+		y += 4.0 + (0.0 if why else 8.0)
+		$Window/Unknown.position.y = y
+		y += 34
+		if $Window/Hint.visible:
+			$Window/Hint.position.y = y + 8
+			y += 8 + 13 * 1.4 * 2
+	$Window/Nice.position.y = y + 16
+	var h := y + 16 + 46 + bottom_pad
+	var win: Control = $Window
+	win.size.y = h
+	win.position = Vector2((size.x - win.size.x) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
 
 
 static func _center(l: Label, w: float, h: float) -> Label:

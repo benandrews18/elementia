@@ -7,7 +7,7 @@ extends Control
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
-	"suit_spend", "expand"]
+	"suit_spend", "expand", "reward_open"]
 
 
 func _ready() -> void:
@@ -68,7 +68,7 @@ func _ready() -> void:
 			ConfirmDialog.ask(app, "Reset the Display Mat to your last locked-in layout?", func(): pass)
 		"reward":
 			app.open_panel("drawer")
-			var d := LockInReward.new()
+			var d := LockInReward.make()
 			d.dice = 3
 			d.unknown = true
 			d.quarks = 1234
@@ -114,3 +114,13 @@ func _ready() -> void:
 			mx.on_done = func(): pass
 			mx.size = app.size
 			app.add_child(mx)
+		"reward_open":  # no dice, both "?" lines open
+			var d := LockInReward.make()
+			d.unknown = true
+			d.quarks = 1234
+			d.size = app.size
+			d.on_done = func(): pass
+			app.add_child(d)
+			d.get_node("Window/Why").visible = true
+			d.get_node("Window/Hint").visible = true
+			d._layout()

@@ -317,7 +317,7 @@ Are you sure?", func():
 		return
 	var reward := Game.reward_of(Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state)))
 	_count_then(func():
-		var dlg := LockInReward.new()
+		var dlg := LockInReward.make()
 		dlg.dice = reward.dice
 		dlg.unknown = reward.unknown
 		dlg.quarks = Game.mat_score().total
