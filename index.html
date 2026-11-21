@@ -4880,7 +4880,7 @@ const BRASS_BAR_SVG = '<svg viewBox="0 0 128 128" class="brassbar" xmlns="http:/
    ===================================================================== */
 const DATA = /*__GAME_DATA_START__*/{
  "take": 3,
- "version": "2026.11.14f",
+ "version": "2026.11.21a",
  "suits": {
   "ocean": {
    "label": "OCEAN",
@@ -5803,7 +5803,7 @@ const DATA = /*__GAME_DATA_START__*/{
     [
      "🌎",
      "Planet",
-     "COMPONENT",
+     "CREATION",
      "C + H + N + O + S + K + Ca + Si + Al + Mg + P + Fe + Ti + Cu + Ag + Ni",
      20
     ],
@@ -5916,12 +5916,10 @@ const SUIT_CORE_ELEMENTS = {};
 Object.keys(ELEMENT_SUIT_LABEL).forEach(suit => {
   SUIT_CORE_ELEMENTS[suit] = CORE_ELEMENT_SYMS.filter(sym => ELEMENT_SUIT[sym] === suit);
 });
-/* "any" -- Planet's tag: paid with any core element, and on the Display
-   Mat it counts as all four suits (MAT_CARDS' pips). Non-enumerable on the
-   label table so Object.keys() loops still see only the four real suits. */
-Object.defineProperty(ELEMENT_SUIT_LABEL, "any", {value: "ANY SUIT", enumerable: false});
-SUIT_COLOR.any = "conic-gradient(#3aab6d 0 25%, #e2a83e 0 50%, #4d7cf2 0 75%, #e2543b 0)";
-SUIT_CORE_ELEMENTS.any = [...CORE_ELEMENT_SYMS];
+/* Planet (tier 3) is the one card whose suits aren't a suit cost: it costs
+   one of every element and no element tax, yet its card shows all four
+   suits, and they count on the Display Mat (MAT_CARDS' pips). */
+const MAT_PIPS_EXTRA = {"Planet": Object.keys(ELEMENT_SUIT_LABEL)};
 /* Each item's single suit, derived from its recipe: tally the suits of its
    raw elements (item ingredients recurse into their own suit, memoized)
    and take the most common. Lazy, so it runs after ENTRIES is built. */
@@ -5980,8 +5978,8 @@ const ITEM_SUIT_COST_TABLE = {
   "Fruit Cake": ["organic", "organic", "reactive"], Ecosystem: ["earth", "earth", "organic"],
   Metropolis: ["metal", "earth", "reactive"], "Space Station": ["metal", "reactive", "organic"],
 
-  // Capstone-unlocked items (data.js "unlock"). Planet's "any" counts as all four suits.
-  "Sailboat": ["earth"], "Biofuel": ["organic"], "Sunflower": ["organic", "organic"], "Cow": ["organic"], "Volcano": ["reactive", "reactive"], "Dinosaur": ["organic", "earth"], "Milk": ["organic"], "Chocolate": ["reactive"], "Pretzel": ["reactive", "reactive"], "Éclair": ["organic", "reactive"], "Trumpet": ["metal"], "Motorcycle": ["metal", "reactive"], "Book": ["earth"], "Library": ["earth", "earth"], "Planet": ["any"], "Solar System": ["earth", "reactive"], "University": ["metal", "earth"],
+  // Capstone-unlocked items (data.js "unlock"). Planet has none (MAT_PIPS_EXTRA).
+  "Sailboat": ["earth"], "Biofuel": ["organic"], "Sunflower": ["organic", "organic"], "Cow": ["organic"], "Volcano": ["reactive", "reactive"], "Dinosaur": ["organic", "earth"], "Milk": ["organic"], "Chocolate": ["reactive"], "Pretzel": ["reactive", "reactive"], "Éclair": ["organic", "reactive"], "Trumpet": ["metal"], "Motorcycle": ["metal", "reactive"], "Book": ["earth"], "Library": ["earth", "earth"], "Solar System": ["earth", "reactive"], "University": ["metal", "earth"],
 };
 const NO_SUIT_COST = [];
 function itemSuitCosts(name){
@@ -6043,13 +6041,11 @@ function elSuitBadgeHTML(sym){
 }
 /* Small black glyph per suit (leaf/flame/anvil/mountain), used as the two
    icon corner-bubbles on the element-card popup -- see showElCardPop(). */
-const ANY_SUIT_SVG = "data:image/svg+xml;base64," + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 1l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/></svg>');
 const SUIT_ICON = {
   organic: `<img src="data:image/png;base64,${ORGANIC_ICON_B64}" alt="">`,
   reactive: `<img src="data:image/png;base64,${REACTIVE_ICON_B64}" alt="">`,
   metal: `<img src="data:image/png;base64,${METAL_ICON_B64}" alt="">`,
   earth: `<img src="data:image/png;base64,${EARTH_ICON_B64}" alt="">`,
-  any: `<img src="${ANY_SUIT_SVG}" alt="">`,
 };
 // Raw base64, for tinting the glyph with CSS mask-image (.refsuit).
 const SUIT_ICON_B64 = { organic: ORGANIC_ICON_B64, reactive: REACTIVE_ICON_B64, metal: METAL_ICON_B64, earth: EARTH_ICON_B64 };
@@ -6215,7 +6211,7 @@ const MAT_CARDS = [...CORE_ITEM_NAMES].map(name => {
     emoji: ITEM_EMOJI[name],
     station,
     stations,
-    pips: itemSuitCosts(name).flatMap(s => s === "any" ? Object.keys(ELEMENT_SUIT_LABEL) : [s]),
+    pips: MAT_PIPS_EXTRA[name] || itemSuitCosts(name),
     components: entry ? entry.reqs : [],
   };
 });
@@ -8742,7 +8738,7 @@ function refSuitsHTML(name){
   // Tinted with CSS mask-image (.refsuit): the SUIT_ICON art is a black
   // glyph CSS colour can't reach.
   return `<div class="refsuits">${suits.map(s =>
-    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(${s === "any" ? ANY_SUIT_SVG : "data:image/png;base64," + SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
+    `<span class="refsuit" style="--suit:${SUIT_COLOR[s]};--suit-mask:url(data:image/png;base64,${SUIT_ICON_B64[s]})" title="${esc(ELEMENT_SUIT_LABEL[s])}"></span>`).join("")}</div>`;
 }
 
 function refExpandHTML(entry){
@@ -10307,8 +10303,7 @@ let suitSpendEntry = null, suitSpendPicks = {}, suitSpendAnchor = null;
 // goes through (e.g. openBingoCraftOverlay()). null for the shop.
 let suitSpendOnCraft = null;
 function suitSpendPickedForSuit(suit){
-  // shortcut: "any" counts every pick -- right while Planet (the only "any" item) has no other tag; revisit if one ever mixes them.
-  return Object.keys(suitSpendPicks).filter(sym => suit === "any" || ELEMENT_SUIT[sym] === suit)
+  return Object.keys(suitSpendPicks).filter(sym => ELEMENT_SUIT[sym] === suit)
     .reduce((sum, sym) => sum + suitSpendPicks[sym], 0);
 }
 function closeSuitSpendBalloon(){
@@ -10366,8 +10361,7 @@ function renderSuitSpendBalloon(){
   const entry = suitSpendEntry;
   const need = suitCostNeed(entry);
   const {els: reserved} = needsOf(entry.reqs);
-  const SUIT_ORDER = [...Object.keys(ELEMENT_SUIT_LABEL), "any"];
-  document.getElementById("suitSpendRows").innerHTML = SUIT_ORDER.filter(s => need[s]).map(suit => {
+  document.getElementById("suitSpendRows").innerHTML = Object.keys(ELEMENT_SUIT_LABEL).filter(s => need[s]).map(suit => {
     const row = SUIT_CORE_ELEMENTS[suit].map(sym => {
       const avail = Math.max(0, count(sym) - (reserved[sym] || 0));
       const have = suitSpendPicks[sym] || 0;
