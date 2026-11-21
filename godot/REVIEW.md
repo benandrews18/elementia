@@ -192,3 +192,96 @@ tint colour, one grey), so they don't break batching.
    notice; check. No conflict.
 
 **Kept (good as is):** no per-frame scripts; shared materials; small saves.
+
+## Pass 5: editor tools, shaders, animation, readiness (2026-11-21)
+Skills loaded: mobile-development. Judged without loading (each is loaded
+later, at the step that builds its thing: see the plan review below):
+addon-development, shader-basics, rendering-pipeline, animation-system,
+tween-animation, godot-testing, export-pipeline, web-export,
+assets-pipeline, audio-system, math-essentials.
+Read: the 6 @tool scripts, the 3 shaders + the grey one, the 15 tweens,
+export_presets.cfg, project.godot import defaults, tests/.
+
+**Should (before M9)**
+14. **Android's Back button quits the game outright** (nothing handles it;
+   Godot's default is to quit). Case: a child presses Back to close the
+   Items screen or a window, and the whole game closes. **Fix:** turn off
+   `application/config/quit_on_go_back` and handle
+   `NOTIFICATION_WM_GO_BACK_REQUEST` in App: close the top window or panel,
+   or Home-to-map, never quit. ~15 lines. No conflict.
+
+**Tests**
+15. **Missing tests for the risky fixes above:** a save round trip (write,
+   kill mid-write, reload) with finding 1, and a drag-then-lift on a card
+   with finding 7. Add them to rules_test / ui_play with those fixes.
+   **GUT / gdUnit4:** not worth adding. check.py already covers rules
+   parity (3604 recorded steps), rule tests, a played run and every screen
+   state; a test framework would be third-party code for little gain.
+   (Your call; recorded as a decision if you agree.)
+
+**For M8 (no change now)**
+16. **Animation:** all 15 tweens belong to their node (they stop when it
+   goes; no stacking found). The plan says animations move to
+   AnimationPlayer timelines so you can tune them in the editor. Refine:
+   fixed motions (bounce, the logo, the shutter, Lock-In count) go to
+   AnimationPlayer; motions aimed at a place known only while playing
+   (dice flying to the Inventory button, confetti) stay tweens, with their
+   timings as Inspector numbers. Low motion (already planned) then only has
+   to shorten or skip both kinds.
+17. **Sound:** an audio bus layout (Music, SFX) and one small Sound helper,
+   driven by the named Game signals from finding 6; volume switches in
+   Settings.
+
+**Kept (good as is):** @tool scripts don't call game-only code in the
+editor; no editor plugin needed (Inspector numbers + EDITING.md suit a
+designer); the shaders are small, correct on Compatibility/WebGL2 and
+shared; the Web export uses no threads (works on GitHub Pages with no special
+headers); images import as compressed WebP with mipmaps (small downloads,
+clean when scaled); saving on every change already covers apps being paused
+or killed (once finding 1 makes writes safe).
+
+## Plan review (M6 steps 4-10, M7-M9) against the plugin
+The plan's steps already fit the project; what the plugin adds is which skill
+to load at each step (and run godot-code-review at each step's end):
+- M6 4 Welcome, 5 Trophies/History, 8 Layouts/Combo Lab: godot-ui
+  (within our decisions), input-handling for the new taps.
+- M6 6 Pins/tracked item, 7 Hints and tips: hud-system (the pill, the
+  coach), tween-animation for their motions.
+- M6 9 Dev mode: godot-debugging.
+- M7 Mini-games: godot-grill first (decide which 8 to keep, a new system),
+  then input-handling, tween-animation, math-essentials as each needs.
+- M8 Polish: animation-system + tween-animation (finding 16), audio-system
+  (finding 17), godot-optimization on a real phone (findings 11-13),
+  mobile-development (haptics).
+- M9 Release: export-pipeline, mobile-development, web-export,
+  assets-pipeline; responsive-ui for the safe area (finding 8).
+**Two plan additions:** M8 refines "animations move to AnimationPlayer"
+(finding 16); M9 gets the Back button (14), the safe area (8) and the app
+save upgrades (5) as checklist lines.
+
+## Merged list (ranked; pick by number)
+**Must**
+- 1 A crash mid-save wipes everything (temp file + rename). Small.
+- 11 Items screen: 361 ms per change (reuse rows). Medium; measure first.
+- 7 Tap fires after a drag (one tap helper, 22 files). Medium; confirm on a
+  phone first.
+
+**Should**
+- 3 One action = 2-3 saves and redraws (one change per action). Small.
+- 13 Low-processor mode (battery). 1 line.
+- 12 Station/mat redraw cost: re-measure after 3; maybe nothing.
+- 14 Android Back quits (before M9). Small.
+- 8 Safe area for notches (before M9). Small.
+- 5 App save version + upgrades (before M9). Small.
+
+**Nice**
+- 6 `_changed` re-fired inside its own handler (1 line).
+- 4 Poll loop -> `await rw.tree_exited` (1 line).
+- 9 Bigger invisible tap areas for small buttons. Small.
+
+**Decisions for you**
+- 2 Mid-visit quit loses the visit: fix in both games, or keep parity?
+- 15 No GUT/gdUnit4 (tests stay in check.py)?
+- 16/17 and the plan review: add the skill-per-step list and the M8/M9
+  lines to PLAN.md?
+- 10 Translation: no action (size noted).
