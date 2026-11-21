@@ -1,0 +1,90 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/element_picker.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="2"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_600.tres" id="f6"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_900.tres" id="f9"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="x"]
+
+[node name="ElementPicker" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0392157, 0.054902, 0.0784314, 0.72)
+
+[node name="Window" parent="." instance=ExtResource("2")]
+layout_mode = 1
+offset_left = 30.0
+offset_top = 250.0
+offset_right = 360.0
+offset_bottom = 470.0
+title = ""
+
+[node name="Kicker" type="Label" parent="Window"]
+layout_mode = 1
+offset_left = 28.0
+offset_top = 30.0
+offset_right = 28.0
+offset_bottom = 30.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f9")
+theme_override_font_sizes/font_size = 12
+text = "INVENTORY"
+
+[node name="Sub" type="Label" parent="Window"]
+layout_mode = 1
+offset_left = 28.0
+offset_top = 48.0
+offset_right = 28.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 14
+text = "Elements with 3 or more can be converted."
+
+[node name="None" type="Label" parent="Window"]
+visible = false
+layout_mode = 1
+offset_left = 28.0
+offset_top = 84.0
+offset_right = 28.0
+offset_bottom = 84.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f6")
+theme_override_font_sizes/font_size = 14
+text = "You don't have any elements yet."
+
+[node name="Grid" type="Control" parent="Window"]
+layout_mode = 1
+offset_left = 28.0
+offset_top = 84.0
+offset_right = 28.0
+offset_bottom = 84.0
+mouse_filter = 2
+
+[node name="Close" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -26.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 26.0
+texture = ExtResource("x")
+expand_mode = 1
+stretch_mode = 5

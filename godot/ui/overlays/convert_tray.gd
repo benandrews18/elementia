@@ -186,7 +186,7 @@ func _unknown_badge(at: Vector2) -> Control:
 
 ## The picker window for FROM (what's held, 3+ only) or TO (every element).
 func _pick(side: String) -> void:
-	var p := ElementPicker.new()
+	var p := ElementPicker.make()
 	p.side = side
 	p.other = to if side == "from" else from
 	p.on_pick = func(sym):
