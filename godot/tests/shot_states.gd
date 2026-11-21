@@ -7,7 +7,8 @@ extends Control
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
-	"suit_spend", "expand", "reward_open", "roll"]
+	"suit_spend", "expand", "reward_open", "roll",
+	"order_restrict", "order_grand"]
 
 
 func _ready() -> void:
@@ -76,6 +77,10 @@ func _ready() -> void:
 			d.on_done = func(): pass
 			app.add_child(d)
 		"order":
+			OrderInfo.open(app)
+		"order_restrict", "order_grand":  # a restriction that wraps (two suits), and the last round's
+			var su: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
+			Game.state.order = {"id": "doubleDrought", "p": su[0] + "|" + su[1], "round": Game.state.visits} if state == "order_restrict" 				else {"id": "grand", "p": null, "round": Game.state.visits}
 			OrderInfo.open(app)
 		"end_over", "end_done":
 			if state == "end_over":

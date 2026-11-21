@@ -50,108 +50,118 @@ static func shutter_line(o) -> String:
 	return "%s: %s (%s)" % ["Request" if is_request(o) else "Restriction", WORDS[o.id][0], mult_label(o)]
 
 
+## The layout is ui/overlays/order_info.tscn (the window, the text's style,
+## the swap and OK buttons); this fills in the challenge.
+const SCENE := "res://ui/overlays/order_info.tscn"
+
+
 static func open(on: Control) -> OrderInfo:
-	var w := OrderInfo.new()
+	var w: OrderInfo = load(SCENE).instantiate()
 	w.size = on.size
 	on.add_child(w)
 	return w
 
 
-var _box: Control
+var _can_swap := false
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	ConfirmDialog.dim(self, queue_free)
+	var tap := func(ev): return ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed
+	$Dim.gui_input.connect(func(ev): if tap.call(ev): queue_free())
+	$Window/Close.gui_input.connect(func(ev): if tap.call(ev): queue_free())
+	$Window/OK.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
+	# The swap: ↻ and a "?" square (one Unknown Element for another challenge).
+	var sw: Control = $Window/Swap
+	var arrow := Tok.loop_arrow(Color("#3b2412"), 28, true)
+	arrow.position = Vector2(22, 9)
+	sw.add_child(arrow)
+	var sq := LockInReward.unknown_square(22)
+	sq.position = Vector2(22 + 28 + 8, 12)
+	sq.mouse_filter = MOUSE_FILTER_IGNORE
+	sw.add_child(sq)
+	sw.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and _can_swap and Game.reroll_order(): _build())
 	_build()
 
 
 func _build() -> void:
-	if is_instance_valid(_box):
-		_box.queue_free()
 	var o = Orders.current(Game.state)
 	if o == null:
 		queue_free()
 		return
 	var grand: bool = o.id == "grand"
-	var title := "Grand Exhibition!" if grand else "%s %s!" % [o.p if o.id == "stationWeek" else WORDS[o.id][0], "Request" if is_request(o) else "Restriction"]
+	var win: ParchmentWindow = $Window
+	win.title = "Grand Exhibition!" if grand else "%s %s!" % [o.p if o.id == "stationWeek" else WORDS[o.id][0], "Request" if is_request(o) else "Restriction"]
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * 38
 	var text := ("Reach %s ⚛ at the final check" % mult_label(o)) if grand else "%s: %s⚛%s" % [desc(o), mult_label(o), "" if is_request(o) else " if broken"]
-	var d := Tok.label(text.replace("⚛", ""), 15, Color("#5e4026"), 800)
+	var d: Label = $Window/Desc
+	var f := d.get_theme_font("font")
+	var px := d.get_theme_font_size("font_size")
+	d.text = text.replace("⚛", "")
 	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	d.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var lines := Tok.font(800).get_multiline_string_size(d.text + "  ", HORIZONTAL_ALIGNMENT_LEFT, inner - 24, 15).y / Tok.font(800).get_height(15)
-	var dh := roundf(lines) * 15 * 1.5
+	var lines := f.get_multiline_string_size(d.text + "  ", HORIZONTAL_ALIGNMENT_LEFT, inner - 24, px).y / f.get_height(px)
+	var dh := roundf(lines) * px * 1.5
 	d.size = Vector2(inner, dh)
-	d.position = Vector2(38, 59)
-	var rule := _rule(o)
-	rule.position = Vector2(38 + (inner - rule.size.x) / 2, 59 + dh + 6 + 4)
+	d.position.x = 38
+	var rule: Control = $Window/Rule
+	for c in rule.get_children():
+		c.queue_free()
+	_rule(o, rule)
+	rule.position = Vector2(38 + (inner - rule.size.x) / 2, d.position.y + dh + 6 + 4)
 	var by := rule.position.y + rule.size.y + 12 + 18
 	var h := by + 46 + 30
-	_box = ConfirmDialog.window(Vector2(w, h), title)
-	_box.position = Vector2((size.x - w) / 2, maxf(40, (size.y - HubBar.H - h) / 2))
-	add_child(_box)
-	_box.add_child(d)
-	# The multiplier's atom, after the text (a Noto image: not in Nunito).
-	var atom := Tok.icon("⚛️", 16)
-	var tw := Tok.font(800).get_string_size(d.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-	if tw < inner - 20:
-		var mx := Tok.font(800).get_string_size(text.get_slice("⚛", 0), HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		var after := Tok.font(800).get_string_size(text.get_slice("⚛", 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+	win.size = Vector2(w, h)
+	win.position = Vector2((size.x - w) / 2, maxf(40, (size.y - HubBar.H - h) / 2))
+	# The multiplier's atom, after the text (a Noto image: not in Nunito),
+	# when it all fits on one line.
+	var atom: Control = $Window/Atom
+	var rest: Label = $Window/Rest
+	var tw := f.get_string_size(d.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	atom.visible = tw < inner - 20
+	rest.visible = false
+	if atom.visible:
+		var mx := f.get_string_size(text.get_slice("⚛", 0), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		var after := f.get_string_size(text.get_slice("⚛", 1), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 		d.text = text.get_slice("⚛", 0)
 		d.autowrap_mode = TextServer.AUTOWRAP_OFF
 		var x0 := 38 + (inner - (mx + 18 + after)) / 2
 		d.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		d.position.x = x0
 		atom.position = Vector2(x0 + mx + 1, d.position.y + (dh - 16) / 2)
-		_box.add_child(atom)
 		if after > 0:
-			var rest := Tok.label(text.get_slice("⚛", 1), 15, Color("#5e4026"), 800)
+			rest.visible = true
+			rest.text = text.get_slice("⚛", 1)
 			rest.position = Vector2(x0 + mx + 18, d.position.y)
 			rest.size = Vector2(after + 4, dh)
-			rest.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			_box.add_child(rest)
 		d.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_box.add_child(rule)
-	ConfirmDialog.close_x(_box, queue_free)
-	var clock := _clock(int(o.round))
-	clock.position = Vector2(-22, -22)
-	_box.add_child(clock)
-	# Buttons: the swap (sunken; ↻ and a "?" square) and OK, centred.
-	var ok := RollPopup._pill_button("OK", Vector2(Tok.font(800).get_string_size("OK", HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 44, 46))
-	ok.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed: queue_free())
-	var btns: Array[Control] = [ok]
-	if not grand:
-		var can: bool = Util.get_or(Game.state, "emptyElements", 0) > 0 and not Game.ctx.lockInCommitted \
-			and Orders.draw(Game.state, int(o.round), o) != null
-		var sw := Panel.new()
-		sw.add_theme_stylebox_override("panel", Tok.parch_box())
-		sw.size = Vector2(22 + 8 + 28 + 44, 46)
-		var arrow := Tok.loop_arrow(Color("#3b2412"), 28, true)
-		arrow.position = Vector2(22, 9)
-		sw.add_child(arrow)
-		var sq := LockInReward.unknown_square(22)
-		sq.position = Vector2(22 + 28 + 8, 12)
-		sq.mouse_filter = MOUSE_FILTER_IGNORE
-		sw.add_child(sq)
-		if can:
-			sw.gui_input.connect(func(ev): if ev is InputEventMouseButton and not ev.pressed and Game.reroll_order(): _build())
-		else:
-			sw.modulate.a = 0.45
-		btns.push_front(sw)
+	var clock: Control = $Window/Clock
+	for c in clock.get_children():
+		c.queue_free()
+	clock.add_child(_clock(int(o.round)))
+	# Buttons: the swap (not for the Grand Exhibition) and OK, centred.
+	var ok: Control = $Window/OK
+	var ot: Label = ok.get_node("Text")
+	ok.size.x = f.get_string_size(ot.text, HORIZONTAL_ALIGNMENT_LEFT, -1, ot.get_theme_font_size("font_size")).x + 44
+	var sw: Control = $Window/Swap
+	sw.visible = not grand
+	_can_swap = not grand and Util.get_or(Game.state, "emptyElements", 0) > 0 and not Game.ctx.lockInCommitted \
+		and Orders.draw(Game.state, int(o.round), o) != null
+	sw.modulate.a = 1.0 if _can_swap else 0.45
+	var btns: Array = [sw, ok] if sw.visible else [ok]
 	var total := -10.0
 	for b in btns:
 		total += b.size.x + 10
 	var x := 38 + (inner - total) / 2
 	for b in btns:
 		b.position = Vector2(x, by)
-		_box.add_child(b)
 		x += b.size.x + 10
 
 
 ## .ord-rule: the rule in icons and figures, 30px, 8px apart.
-func _rule(o: Dictionary) -> Control:
+func _rule(o: Dictionary, row: Control) -> void:
 	var parts: Array[Control] = []
 	var p = o.p
 	var st := func(): return Tok.icon(Catalog.station(p).emoji, 34)
@@ -174,7 +184,6 @@ func _rule(o: Dictionary) -> Control:
 			for su in String(p).split("|"):
 				parts.append(_suit(su))
 		"spreadOut": parts = [Tok.icon("🚫", 34), txt.call("4+"), Tok.icon("🏠", 34)]
-	var row := Control.new()
 	var x := 0.0
 	for c in parts:
 		var sz := Vector2(Tok.font(900).get_string_size(c.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 30).x, 41) if c is Label else c.size
@@ -185,7 +194,6 @@ func _rule(o: Dictionary) -> Control:
 		row.add_child(c)
 		x += sz.x + 8
 	row.size = Vector2(x - 8, 41)
-	return row
 
 
 ## .ord-suit: a 38px circle in the suit's colour with its white icon.
