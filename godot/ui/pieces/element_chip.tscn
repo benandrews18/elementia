@@ -1,0 +1,96 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="chip"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.541176, 0.580392, 0.65098, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
+[sub_resource type="StyleBoxFlat" id="badge"]
+bg_color = Color(0.541176, 0.580392, 0.65098, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 2
+shadow_offset = Vector2(0, 1)
+
+[node name="ElementChip" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 52.0
+offset_bottom = 65.8
+mouse_filter = 2
+
+[node name="Chip" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 52.0
+offset_bottom = 52.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("chip")
+
+[node name="Sym" type="Label" parent="."]
+layout_mode = 0
+offset_right = 52.0
+offset_bottom = 52.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.133333, 0.121569, 0.101961, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 29
+text = "Fe"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Num" type="Label" parent="."]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 5.0
+offset_right = 9.0
+offset_bottom = 5.0
+mouse_filter = 2
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 9
+text = "26"
+
+[node name="Badge" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 1.0
+offset_right = 51.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("badge")
+
+[node name="Glyph" type="TextureRect" parent="Badge"]
+custom_minimum_size = Vector2(9, 9)
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 11.0
+offset_bottom = 11.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Name" type="Label" parent="."]
+layout_mode = 0
+offset_left = -8.0
+offset_top = 55.0
+offset_right = 60.0
+offset_bottom = 65.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.701961, 0.745098, 0.803922, 1)
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 9
+text = "Iron"
+horizontal_alignment = 1

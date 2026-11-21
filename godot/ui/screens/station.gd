@@ -252,42 +252,40 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 
 
 ## A white element chip with its suit-coloured border, atomic number, the
-## suit badge in the corner and the name under it (.gchip, .gname).
+## suit badge in the corner and the name under it (.gchip, .gname). Its look
+## is ui/pieces/element_chip.tscn; the colours and sizes come from the element
+## and w. The name stays the last child (callers recaption or hide it).
 static func element_chip(sym: String, w: float) -> Control:
-	var col := Control.new()
+	var col: Control = load("res://ui/pieces/element_chip.tscn").instantiate()
 	col.size = Vector2(w, w + 13.8)
-	col.mouse_filter = MOUSE_FILTER_IGNORE
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
-	var chip := Panel.new()
-	chip.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 9, 5, color))
+	var chip: Panel = col.get_node("Chip")
+	var sb: StyleBoxFlat = chip.get_theme_stylebox("panel").duplicate()
+	sb.border_color = color
+	chip.add_theme_stylebox_override("panel", sb)
 	chip.size = Vector2(w, w)
-	chip.mouse_filter = MOUSE_FILTER_IGNORE
-	col.add_child(chip)
-	var px := minf(32, 0.55 * w)
-	var sym_l := Tok.label(sym, px, Color("#221f1a"), 800)
-	sym_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sym_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var sym_l: Label = col.get_node("Sym")
+	sym_l.text = sym
+	sym_l.add_theme_font_size_override("font_size", int(round(minf(32, 0.55 * w))))
 	sym_l.size = Vector2(w, w)
-	col.add_child(sym_l)
-	var num := Tok.label(str(int(Data.t("ATOMIC_NUMBER").get(sym, 0))), 9, color, 800)
-	num.position = Vector2(9, 5)
-	col.add_child(num)
+	var num: Label = col.get_node("Num")
+	num.text = str(int(Data.t("ATOMIC_NUMBER").get(sym, 0)))
+	num.add_theme_color_override("font_color", color)
+	var b: Panel = col.get_node("Badge")
+	b.visible = suit != ""
 	if suit != "":
-		var b := Panel.new()
-		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(suit), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
+		var bsb: StyleBoxFlat = b.get_theme_stylebox("panel").duplicate()
+		bsb.bg_color = Tok.suit_color(suit)
+		b.add_theme_stylebox_override("panel", bsb)
 		b.position = Vector2(w - 14, 1)  # top/right -4px from inside the 5px border
-		b.size = Vector2(13, 13)
-		var g := Tok.icon("suit:" + suit, 9)
-		g.position = Vector2(2, 2)
+		var g: TextureRect = b.get_node("Glyph")
+		g.texture = Data.icon("suit:" + suit)
 		g.material = Tok.white()
-		b.add_child(g)
-		col.add_child(b)
-	var nm := Tok.label(Data.t("ELEMENT_NAMES").get(sym, sym), 8.5, Tok.INK2, 700)
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var nm: Label = col.get_node("Name")
+	nm.text = Data.t("ELEMENT_NAMES").get(sym, sym)
 	nm.position = Vector2(-8, w + 3)
 	nm.size = Vector2(w + 16, 10)
-	col.add_child(nm)
 	return col
 
 
