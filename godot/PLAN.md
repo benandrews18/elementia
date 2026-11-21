@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M8 Polish: pick where to start (animations, sound, the phone pass). Start every session with `git status`: the user may
+**Next task:** M8 Polish, starting with the phone pass (the user chose it; it needs a build on their phone): speed of the station and mat (review 12), bigger tap areas (9), the keyboard over the Dev Panel (M6-9). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
