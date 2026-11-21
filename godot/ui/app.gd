@@ -214,7 +214,7 @@ func open_panel(name: String) -> void:
 	close_panel()
 	panel = name
 	if name in ["drawer", "convert", "market", "todo"]:
-		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray}[name].new()
+		_panel_node = DisplayMatScreen.make() if name == "drawer" else {"convert": ConvertTray, "market": MarketTray, "todo": TodoTray}[name].new()
 		add_child(_panel_node)
 		move_child(_panel_node, _hub.get_index())  # under the hub
 	_sync()

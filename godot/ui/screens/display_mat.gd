@@ -5,18 +5,28 @@
 class_name DisplayMatScreen
 extends Control
 
-const SIDE := 6.0  # #drawerTop padding 10px 6px 0
-const TOP := 12.0  # the drawer's 2px top edge + #drawerTop's 10px
-const COLS_GAP := 5.0
-const PAGE_PAD := 5.0  # .mat-zone-page padding + border (2px) are inside the 14px
-const CHIP_GAP := 6.0  # .mat-combos gap (rows and columns)
-
+## The layout is ui/screens/display_mat.tscn (the drawer, the mat page's two
+## looks, the fold button); these numbers lay out what's built from the run.
+const SCENE := "res://ui/screens/display_mat.tscn"
 const HUB_H := HubBar.H  # the drawer ends at the hub bar's top
 const GOLD_LINE := Color("#e2b25a")
 
-var _drawer: Panel
-var _scroll: ScrollContainer
-var _body: Control  # the mat half, rebuilt on every change (drawn over the list)
+## Page sides, the top, the gap between mat columns, the mat page's padding,
+## the gap between combo chips, a card's height to its width.
+@export var side := 6.0  # #drawerTop padding 10px 6px 0
+@export var top := 12.0  # the drawer's 2px top edge + #drawerTop's 10px
+@export var cols_gap := 5.0
+@export var page_pad := 5.0  # .mat-zone-page padding + border (2px) are inside the 14px
+@export var chip_gap := 6.0  # .mat-combos gap (rows and columns)
+@export var card_ratio := 1.4
+@export var line_color := Color("#e2b25a")  # the line between the mat and the list
+@export var mat_page: StyleBox
+@export var elements_page: StyleBox
+@export var fold_style: StyleBox
+
+@onready var _drawer: Panel = $Drawer
+@onready var _scroll: ScrollContainer = $Scroll
+@onready var _body: Control = $Body  # the mat half, rebuilt on every change (drawn over the list)
 var _inv_cards := {}  # item name -> its card in the list, to dim it in place
 var _inv_ring: Panel  # the selected card's green ring in the list
 var _inv_key := ""  # what the list was built for: item count and width
@@ -30,29 +40,12 @@ var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 
 
+static func make() -> DisplayMatScreen:
+	return load(SCENE).instantiate()
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var bg := ColorRect.new()
-	bg.color = Tok.BG
-	bg.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(bg)
-	# The drawer: card blue, gold top edge, rounded top, above the hub.
-	_drawer = Panel.new()
-	var dsb := Tok.box(Tok.CARD, 16, 0)
-	dsb.border_width_top = 3
-	dsb.border_color = GOLD_LINE
-	dsb.corner_radius_bottom_left = 0
-	dsb.corner_radius_bottom_right = 0
-	_drawer.add_theme_stylebox_override("panel", dsb)
-	_drawer.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(_drawer)
-	_scroll = ScrollContainer.new()
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(_scroll)
-	_body = Control.new()
-	_body.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	_body.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(_body)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)  # e.g. Safari's bar collapsing makes the screen wider
 	_redraw()
@@ -73,31 +66,29 @@ func _redraw() -> void:
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
 	_drawer.size = Vector2(size.x, size.y - HUB_H)
-	var w := size.x - 2 * SIDE
-	var y := TOP
+	var w := size.x - 2 * side
+	var y := top
 	# Quark Meter line.
 	var qm := QuarkMeter.new()
-	qm.position = Vector2(SIDE, y)
+	qm.position = Vector2(side, y)
 	qm.size = Vector2(w, qm.custom_minimum_size.y)
 	_body.add_child(qm)
 	_qm = qm
 	qm.show_score(sc.total, Orders.tiers(Orders.check_round(s)))
 	y += qm.size.y + 4
 	# Combo chips (min height 40, wrapping rows).
-	y += _chips(sc, Vector2(SIDE, y), w) + 6
+	y += _chips(sc, Vector2(side, y), w) + 6
 	# The mat page: as many columns as are open, and one row, a row and a
 	# half-height strip, or two, as the mat has grown.
 	var st := Mat.stage(s)
 	var L := Mat.layout(cards, st)
 	var open: int = L.kinds.slice(0, L.cols).filter(func(k): return k != "locked").size()
-	var row_h := ((w - 14 - (open - 1) * COLS_GAP) / open) * 1.4
-	var mat_h: float = row_h if st < 2 else (row_h * 1.5 + 4 if st == 2 else row_h * 2 + COLS_GAP)
+	var row_h := ((w - 14 - (open - 1) * cols_gap) / open) * card_ratio
+	var mat_h: float = row_h if st < 2 else (row_h * 1.5 + 4 if st == 2 else row_h * 2 + cols_gap)
 	var page := Panel.new()
 	var elements := view == "elements"
-	var sb := Tok.box(Color("#f2e6cc") if elements else Color("#cda874"), 14, 2, Color("#c3a06a") if elements else Color("#a67c4a"))
-	sb.corner_radius_bottom_left = 4
-	page.add_theme_stylebox_override("panel", sb)
-	page.position = Vector2(SIDE, y)
+	page.add_theme_stylebox_override("panel", elements_page if elements else mat_page)
+	page.position = Vector2(side, y)
 	page.size = Vector2(w, mat_h + 14)
 	page.clip_contents = elements
 	page.set_meta("cmp", "mat:page")
@@ -110,7 +101,7 @@ func _redraw() -> void:
 	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
 	# The gold line between the mat and the item list, with the fold button.
 	var line := ColorRect.new()
-	line.color = GOLD_LINE
+	line.color = line_color
 	line.position = Vector2(0, y)
 	line.size = Vector2(size.x, 2)
 	_body.add_child(line)
@@ -142,7 +133,7 @@ func _redraw() -> void:
 			_inv_ring.position = c.position - Vector2(6, 6)
 			_inv_ring.size = c.size + Vector2(12, 12)
 	var fold := Panel.new()
-	fold.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 2, GOLD_LINE, 3, 2))
+	fold.add_theme_stylebox_override("panel", fold_style)
 	fold.size = Vector2(38, 20)
 	fold.position = Vector2((size.x - 38) / 2, line_y + 1 - 10)
 	fold.add_child(_chevron())
@@ -358,7 +349,7 @@ func _inventory(width: float) -> Control:
 	var inv: Array = Game.state.items.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
 	inv = Util.stable_sort(inv, func(a, b): return b.points - a.points if b.points != a.points else a.name.nocasecmp_to(b.name))
 	var col_w := (w - 3 * 8) / 4
-	var row_h := col_w * 1.4
+	var row_h := col_w * card_ratio
 	for band in Data.t("MAT_TIER_BANDS"):
 		var items := inv.filter(func(c): return c.tier == band.tier)
 		if items.is_empty():
@@ -369,11 +360,11 @@ func _inventory(width: float) -> Control:
 		head.position = Vector2(pad + (w - hw) / 2, y + 6)
 		head.set_meta("cmp", "inv:head:" + band.key)
 		list.add_child(head)
-		for side in 2:
+		for k in 2:
 			var ln := ColorRect.new()
 			ln.color = Tok.LINE2
 			ln.size = Vector2((w - hw) / 2 - 8, 2)
-			ln.position = Vector2(pad + side * ((w + hw) / 2 + 8), y + 6 + 9)
+			ln.position = Vector2(pad + k * ((w + hw) / 2 + 8), y + 6 + 9)
 			list.add_child(ln)
 		y += 6 + 18 + 6 + 10
 		var t1: bool = band.tier == "MATERIAL"
@@ -573,7 +564,7 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 		var sz := c.custom_minimum_size
 		if x > 0 and x + sz.x > w:
 			x = 0
-			y += row_h + CHIP_GAP
+			y += row_h + chip_gap
 			row_h = 0
 		c.position = at + Vector2(x, y + 0)
 		c.size = sz
@@ -581,7 +572,7 @@ func _chips(sc: Dictionary, at: Vector2, w: float) -> float:
 		_body.add_child(c)
 		if c.has_meta("combo"):
 			_chip_nodes[c.get_meta("combo")] = c
-		x += sz.x + CHIP_GAP
+		x += sz.x + chip_gap
 		row_h = maxf(row_h, sz.y)
 	# Chips in a row stretch to its tallest (flex align-items:stretch).
 	var tallest := {}
@@ -712,8 +703,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var pack := Mat.pack(cards, st)
 	var L: Dictionary = pack.L
 	var cols: int = L.cols
-	var inner := page.size.x - 2 * (PAGE_PAD + 2)
-	var col_w := (inner - (open - 1) * COLS_GAP) / open  # open columns share the width
+	var inner := page.size.x - 2 * (page_pad + 2)
+	var col_w := (inner - (open - 1) * cols_gap) / open  # open columns share the width
 	var lit_suits: Array = sc.combos.suit.map(func(g): return g.name)
 	var lit_st: Array = sc.combos.station.map(func(g): return g.name)
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
@@ -724,16 +715,16 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 			continue
 		var r: int = i / cols
 		var c: int = i % cols
-		var pos := Vector2(PAGE_PAD + 2 + c * (col_w + COLS_GAP), PAGE_PAD + 2 + r * (row_h + COLS_GAP))
+		var pos := Vector2(page_pad + 2 + c * (col_w + cols_gap), page_pad + 2 + r * (row_h + cols_gap))
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
-		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + COLS_GAP * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") or sl.kind == "top" else h))
+		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + cols_gap * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") or sl.kind == "top" else h))
 		if sl.has("card"):
 			if sl.card.name == selected:
-				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)))
+				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)))
 			var card := ItemCard.make(sl.card.name, card_opts.call(sl.card, false))
 			card.gui_input.connect(_on_card_input.bind(sl.card.name))
 			card.position = pos
-			card.size = Vector2(col_w * sl.w + COLS_GAP * (sl.w - 1), row_h)
+			card.size = Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)
 			page.add_child(card)
 			_mat_nodes[sl.card.name] = card
 		elif sl.has("stack") or sl.kind == "top":
