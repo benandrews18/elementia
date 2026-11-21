@@ -19,6 +19,10 @@ Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
 
 Log (newest first, one line per session):
+- 2026-11-20: Faster, stricter checks: tools/check.py (PASS needs the pass
+  line), ui_play headless (~15s, was ~2.5min) with --only sections, every
+  screen state shot in one Godot run (~35s, was ~3min), scene roots no longer
+  anchored (35 size warnings gone).
 - 2026-11-20: M5.5 step 4 done: the other 10 windows are scenes; new shot
   states (reward_open, roll, order_restrict, order_grand); shot_diff takes
   state names and drops stale shots. Step 5 done (station, item card,
@@ -215,7 +219,17 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   renderer. A window flashes for about 2 seconds.
 - Export templates (web, Android, iOS) are not installed yet. Needed from M3.
 - **Always pass `--quit-after <frames>`** to test runs: a script error
-  doesn't quit Godot, it just sits there forever.
+  doesn't quit Godot, it just sits there forever. A run cut off there exits
+  0 with no pass line, so never trust an exit code or a grep: run checks
+  through `tools/check.py`, which needs the pass line too.
+- **Which check when** (decided 2026-11-20):
+  - after each change: `python godot/tools/check.py fast`, plus
+    `--only <section>` when a play-test section covers what changed (`run`,
+    `final_score`, `market`, `todo`). About a minute.
+  - before a review, a milestone or a publish: `check.py full` (adds the
+    whole play test, ~15s headless, and the HTML comparison report).
+  - an intended visual change: look at `build/after/diff_<state>.png`, then
+    `check.py accept`. The screen states are `tests/shot_states.gd`.
 - Tests run as scenes (`res://tests/x.tscn`), not `-s` scripts, so the
   autoloads (Data, Rng, Game) are there.
 - After adding a new `class_name` script, run the import once
@@ -232,13 +246,14 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Re-export data, icons, art from `game/` | `node godot/tools/export_from_game.mjs` |
 | Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 24]` |
 | Import assets (after new art) | `G --headless --path godot --import` |
+| Every check, with a clear PASS/FAIL | `python godot/tools/check.py fast [--only market]` / `full` / `accept` |
 | Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
-| A whole run through the screens | `G --path godot --quit-after 3000 res://tests/ui_play.tscn` |
+| The play test (or one section) | `G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only market]` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 | HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |
-| Before/after (M5.5) | `python godot/tools/shot_diff.py shoot godot/build/after` then `... diff godot/build/before godot/build/after` |
+| Before/after screens | `python godot/tools/shot_diff.py shoot godot/build/after [state ...]` (one Godot run) then `... diff godot/build/before godot/build/after` |
 
 ---
 
