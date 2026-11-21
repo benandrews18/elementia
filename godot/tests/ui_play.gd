@@ -33,7 +33,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts", "collections"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -399,6 +399,53 @@ func _items(app: App) -> void:
 	check(app.panel == "codex" and TodoTray.expanded.keys() == ["refroot/Steel"], "Item Info opens the Items screen at that item, its breakdown open")
 	app.close_panel()
 	finished.items = true
+
+
+## Collections: a collection complete on the mat brings "New collection!"
+## (Add: found, a Star); its switch takes it off the mat and puts it back;
+## from the title screen a clue costs Stars and opens as a gift; Combo Lab
+## swaps in a sandbox run and Exit puts the real one back, unsaved.
+func _collections(app: App) -> void:
+	for c in app.get_children().slice(app._hub.get_index() + 1):
+		if c is Control:
+			c.queue_free()
+	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
+	Progress.prefs.everUnlockedMatCollections = ["bedrock", "fruits"]
+	Progress.prefs.collectionClues = {}
+	Progress.prefs.stars = 7
+	app.close_panel()
+	for i in 2:
+		await get_tree().process_frame
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	check(top.call(CollectionFound).size() == 1 and top.call(CollectionFound)[0].collection.id == "alloys", "Alloys complete on the mat: New collection!")
+	top.call(CollectionFound)[0].get_node("Window/Content/Add").gui_input.emit(_release())
+	check(Progress.prefs.everUnlockedMatCollections.has("alloys") and Progress.prefs.stars == 8, "Add: found for good, and a Star")
+	await get_tree().process_frame
+	var cw := CollectionsWindow.show_on(app)
+	await get_tree().process_frame
+	var row = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())[0]
+	row.toggled.emit(false)
+	check(not Game.state.mat.has("Steel"), "its switch takes Alloys off the mat")
+	row = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())[0]
+	row.toggled.emit(true)
+	check(Game.state.mat.has("Steel") and Game.state.mat.has("Stainless Steel"), "and puts it all back")
+	cw.close()
+	cw = CollectionsWindow.show_on(app, true)
+	cw.get_node("Window/Content/Shop/One").gui_input.emit(_release())
+	check(Progress.prefs.stars == 8 - int(Data.t("CLUE_COST")) and top.call(ClueOpen).size() == 1, "one clue: its Stars spent, a gift to open")
+	var gift: ClueOpen = top.call(ClueOpen)[0]
+	gift._card()
+	check(gift.get_node("Window/Content/CardHolder").get_child_count() == 1 and gift.get_node("Window/Content/Next/Text").text == "Done", "the gift opens to its clue card")
+	gift.get_node("Window/Content/Next").gui_input.emit(_release())
+	check(top.call(ClueOpen).is_empty(), "Done closes it")
+	cw.close()
+	var real := Game.state
+	app.open_combo_lab()
+	check(Game.ctx.get("comboLab") == true and Game.state != real and Game.state.items.size() > real.items.size() and not app._hub.visible, "Combo Lab: a sandbox run, every item, no hub")
+	Game.toggle_mat_card(Game.state.items[0])
+	app.close_combo_lab()
+	check(Game.state == real and app._hub.visible and not Game.ctx.get("comboLab", false), "Exit puts the real run back")
+	finished.collections = true
 
 
 ## Saved Layouts: the mat's 💾 opens it; a name and 💾 save the mat; a

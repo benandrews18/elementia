@@ -1,0 +1,148 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/pieces/collection_row.gd" id="1"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="row"]
+bg_color = Color(0.0705882, 0.180392, 0.235294, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.164706, 0.352941, 0.447059, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="owned"]
+bg_color = Color(0.0705882, 0.180392, 0.235294, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.172549, 0.360784, 0.235294, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="check"]
+bg_color = Color(0.247059, 0.705882, 0.423529, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="CollectionRow" type="Panel"]
+offset_right = 322.0
+offset_bottom = 88.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("row")
+script = ExtResource("1")
+owned_style = SubResource("owned")
+
+[node name="Main" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 11.0
+offset_right = 268.0
+offset_bottom = 77.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Line1" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="Main/Line1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.662745, 0.541176, 0.941176, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 13
+text = "Collection"
+vertical_alignment = 1
+
+[node name="Bonus" type="Label" parent="Main/Line1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.886275, 0.698039, 0.352941, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 12
+text = "+5"
+vertical_alignment = 1
+
+[node name="Gap" type="Control" parent="Main/Line1"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Clue" type="HBoxContainer" parent="Main/Line1"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Icon" type="TextureRect" parent="Main/Line1/Clue"]
+custom_minimum_size = Vector2(11, 11)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Main/Line1/Clue"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.490196, 0.533333, 0.6, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 11
+text = "clue"
+vertical_alignment = 1
+
+[node name="Icons" type="HFlowContainer" parent="Main"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Toggle" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -54.0
+offset_top = 30.4
+offset_right = -14.0
+offset_bottom = 71.6
+mouse_filter = 0
+
+[node name="Switch" type="Control" parent="Toggle"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Toggle"]
+layout_mode = 0
+offset_left = -10.0
+offset_top = 27.0
+offset_right = 50.0
+offset_bottom = 41.0
+theme_override_colors/font_color = Color(0.701961, 0.745098, 0.803922, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 10
+text = "Off"
+horizontal_alignment = 1
+
+[node name="Check" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -27.0
+offset_top = 7.0
+offset_right = -7.0
+offset_bottom = 27.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("check")

@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="Gradient" id="g"]
+colors = PackedColorArray(0.0980392, 0.231373, 0.298039, 1, 0.0705882, 0.180392, 0.235294, 1)
+
+[sub_resource type="GradientTexture2D" id="gt"]
+gradient = SubResource("g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[node name="LabBar" type="TextureRect"]
+offset_right = 390.0
+offset_bottom = 52.0
+texture = SubResource("gt")
+expand_mode = 1
+
+[node name="Text" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 14
+text = "✕  Exit Combo Lab"
+horizontal_alignment = 1
+vertical_alignment = 1

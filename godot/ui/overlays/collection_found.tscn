@@ -1,0 +1,78 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/collection_found.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[node name="CollectionFound" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 36.0
+top_gap = -15.0
+max_width = 340.0
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 25.0
+offset_top = 250.0
+offset_right = 365.0
+offset_bottom = 520.0
+title = ""
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 44.0
+offset_right = 302.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="CardHolder" type="MarginContainer" parent="Window/Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 14
+
+[node name="Add" parent="Window/Content" instance=ExtResource("pill")]
+custom_minimum_size = Vector2(210, 44.3)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Text" parent="Window/Content/Add" index="0"]
+visible = false
+
+[node name="Row" type="HBoxContainer" parent="Window/Content/Add"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/separation = 7
+alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Window/Content/Add/Row"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Window/Content/Add/Row"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 15
+text = "Add to Collections"
+vertical_alignment = 1

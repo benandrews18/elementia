@@ -106,7 +106,7 @@ func load_all() -> void:
 func save_all() -> void:
 	if not autosave:
 		return
-	if Game.state.get("mode"):
+	if Game.state.get("mode") and not Game.ctx.get("comboLab"):  # Combo Lab's throwaway run is never saved
 		_write(SAVE_PATH, Game.state)
 	_write(PREFS_PATH, prefs)
 

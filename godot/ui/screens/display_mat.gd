@@ -35,6 +35,7 @@ var view := "mat"  # which page under the score card: "mat" or "elements" (matDr
 var selected := ""  # the card on the Crafting Bench (matListOpen)
 var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
+var _hub_h := HUB_H
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
 var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
@@ -65,9 +66,11 @@ func _redraw() -> void:
 	var s := Game.state
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
-	_drawer.size = Vector2(size.x, size.y - HUB_H)
+	var lab: bool = Game.ctx.get("comboLab", false)  # Combo Lab: the whole screen, under its exit bar
+	_hub_h = 0.0 if lab else HUB_H
+	_drawer.size = Vector2(size.x, size.y - _hub_h)
 	var w := size.x - 2 * side
-	var y := top
+	var y := maxf(top, App.LAB_TOP) if lab else top  # [data-combo-lab] #drawerTop: padding-top 52px
 	# Quark Meter line.
 	var qm := QuarkMeter.new()
 	qm.position = Vector2(side, y)
@@ -112,7 +115,7 @@ func _redraw() -> void:
 		y = _sel_bench(y)
 	# The item list: search bar, then the owned cards by tier.
 	_scroll.position = Vector2(0, y)
-	_scroll.size = Vector2(size.x, size.y - HUB_H - y)
+	_scroll.size = Vector2(size.x, size.y - _hub_h - y)
 	if selected != "" and _body.has_meta("acts"):
 		_body.move_child(_body.get_meta("acts"), -1)
 	var key := "%d|%d" % [s.items.size(), int(size.x)]
@@ -515,7 +518,7 @@ func _show_toast(msg: String) -> void:
 	sb.content_margin_bottom = 8
 	t.add_theme_stylebox_override("normal", sb)
 	t.size = t.get_minimum_size()
-	t.position = Vector2((size.x - t.size.x) / 2, size.y - HUB_H - 16 - t.size.y)
+	t.position = Vector2((size.x - t.size.x) / 2, size.y - _hub_h - 16 - t.size.y)
 	add_child(t)
 	get_tree().create_timer(2.0).timeout.connect(t.queue_free)
 

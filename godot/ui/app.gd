@@ -16,6 +16,9 @@ var _panel_node: Control
 var _hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
+const LAB_BAR := 40.0  # Combo Lab's exit bar
+const LAB_TOP := 52.0  # where the lab's mat starts, under it
+var _real: Array = []  # Combo Lab: the real run and its context, put back on exit
 
 static var current: App  # the running app, for screens that need it (crafting)
 
@@ -57,6 +60,7 @@ func _sync() -> void:
 	_maybe_end()
 	_walkthrough.call_deferred()  # after this change's own windows have opened
 	_unknown_tip.call_deferred()
+	_collection_found.call_deferred()
 
 
 ## runBingoSequence(): a craft that owns a new Market square or finishes a
@@ -252,6 +256,19 @@ func _unknown_tip() -> void:
 	ParchDialog.open(self, UnknownTip.SCENE)
 
 
+## maybeShowCollectionFound(): a named collection complete on the mat that
+## was never found: "New collection!", once nothing else is on screen (not
+## during a Lock-In or the Market's moment); the next one after it's added.
+func _collection_found() -> void:
+	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or _market_playing or Game.ctx.get("comboLab"):
+		return
+	if get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion()):
+		return  # something's open; the next change tries again
+	var c = Progress.undiscovered_on_mat()
+	if c != null:
+		CollectionFound.show_on(self, c)
+
+
 ## walkthroughIdle(): nothing over the screen (no window, panel, roll or
 ## opening), no tip showing or waiting.
 func _idle() -> bool:
@@ -262,7 +279,7 @@ func _idle() -> bool:
 ## on an idle station: Roll, Craft, Convert (then where to tap a missing
 ## element), the Map; later the tracked item's badge on a shop card.
 func _walkthrough() -> void:
-	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle():
+	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle() or Game.ctx.get("comboLab"):
 		return
 	var s := Game.state
 	if Game.ctx.screen == "map":
@@ -339,6 +356,53 @@ func _coach_step(i: int) -> void:
 	mouse.show_tip(st[1], st[3], st[2], target, st[4], -1.0, "%d / %d" % [i + 1, steps.size()], i == steps.size() - 1)
 	_coach_cb = _coach_step.bind(i + 1)
 	mouse.next_step.connect(_coach_cb)
+
+
+## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
+## is put aside and a throwaway one takes its place: every item owned (but
+## a capstone's unlocks this player has never seen), visit 20 so the Quark
+## Meter has room, never saved. The mat fills the screen under "✕ Exit Combo
+## Lab"; the hub, the screen and the floating buttons are hidden.
+func open_combo_lab() -> void:
+	_real = [Game.state, Game.ctx]
+	var seen := {}
+	for n in Util.get_or(Progress.prefs, "capstonesEverCrafted", []) + Game.state.get("items", []):
+		seen[n] = true
+	for h in Progress.history:
+		for n in h.get("capstones", []):
+			seen[n] = true
+	var unlocked: Dictionary = Data.t("UNLOCKED_BY")
+	var lab := Game.fresh_state()
+	lab.items = Data.t("CORE_ITEM_NAMES").filter(func(n): return not unlocked.has(n) or seen.has(unlocked[n]))
+	lab.bingoCenterChosen = true
+	lab.visits = 20
+	Game.state = lab
+	Game.ctx = {"current": null, "screen": "map", "travelPromptFor": null, "selectedMapStation": null, "lockInCommitted": false, "comboLab": true}
+	_hub.visible = false
+	open_panel("drawer")
+	if is_instance_valid(_screen):
+		_screen.visible = false
+	var bar := load("res://ui/pieces/lab_bar.tscn").instantiate() as Control
+	bar.name = "LabBar"
+	bar.size = Vector2(size.x, LAB_BAR)
+	bar.gui_input.connect(func(ev): if Tap.tap(ev): close_combo_lab())
+	add_child(bar)
+
+
+func close_combo_lab() -> void:
+	if _real.is_empty():
+		return
+	Game.state = _real[0]
+	Game.ctx = _real[1]
+	_real = []
+	_hub.visible = true
+	var bar := get_node_or_null("LabBar")
+	if bar:
+		bar.queue_free()
+	close_panel()
+	if is_instance_valid(_screen):
+		_screen.visible = true
+	Game.state_changed.emit()
 
 
 ## The title screen over everything (launch, Settings' Home, the end
@@ -445,7 +509,7 @@ func can_travel_to(name) -> bool:
 func _sync_floats() -> void:
 	for c in _floats.get_children():
 		c.queue_free()
-	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"]:
+	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab"):
 		return
 	var y := size.y - HubBar.H - 14 - 58
 	var t = Game.ctx.get("tracked")
