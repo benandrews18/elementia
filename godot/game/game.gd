@@ -45,7 +45,8 @@ func fresh_state() -> Dictionary:
 
 ## Arriving at a station. The screen then starts the visit's roll (the JS
 ## launchMinigame(): with mini-games off it sets state.pendingRoll = TAKE).
-func go_station(name: String) -> void:
+## notify false: the caller saves and redraws once, after its own changes.
+func go_station(name: String, notify := true) -> void:
 	ctx.lockInCommitted = false
 	if state.ended:
 		return
@@ -69,7 +70,8 @@ func go_station(name: String) -> void:
 	if not state.get("allStationsPaid") and Data.t("DATA").stations.all(func(st): return state.visitedStations.has(st.name)):
 		state.allStationsPaid = true
 		state.emptyElements = Util.get_or(state, "emptyElements", 0) + 1
-	_changed()
+	if notify:
+		_changed()
 
 
 func go_map() -> void:
@@ -182,12 +184,12 @@ func mat_score() -> Dictionary:
 
 
 ## Every trip that isn't a board check: the mat sets this trip's dice.
+## No save here: the trip's go_station() right after saves once.
 func quiet_check() -> void:
 	if not state.get("matChecked"):
 		return
 	var quiet: int = reward_of(Orders.reward_for(mat_score().total, int(state.visits))).dice
 	state.tripDice = maxi(int(Util.get_or(state, "matBonusDice", 0)), quiet)
-	_changed()
 
 
 ## A board check's shutter: draw its challenge once.
@@ -319,7 +321,7 @@ func start_run(capstone: String) -> void:
 	var dice := Catalog.sorted_dice(Catalog.station(st))
 	for d in dice:
 		state.elements[d] = Catalog.count(state, d) + 1
-	go_station(st)
+	go_station(st, false)
 	for d in dice:  # the gift is part of what was collected on visit 1
 		state.visitLog[-1].elements[d] = state.visitLog[-1].elements.get(d, 0) + 1
 	_changed()
