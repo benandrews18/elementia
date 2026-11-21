@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M7, decide which mini-games to keep (godot-grill first). Start every session with `git status`: the user may
+**Next task:** M8 Polish: pick where to start (animations, sound, the phone pass). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -737,6 +737,9 @@ new screen) and the godot-code-review skill at the end of each step,
 alongside ponytail-review; no agents unless the user asks.
 
 ### M7 Mini-games (size unknown; decide first)
+Deferred (the user, 2026-11-21): skipped for now, maybe later. The game
+plays without them (each visit rolls straight away, as with the HTML's
+Mini-games switch off); their switch and title-screen button stay hidden.
 - [ ] Decide which of the 8 to keep (godot-grill first: a new system with
       open questions). Then port them one at a time (input-handling,
       tween-animation, math-essentials as each needs).
