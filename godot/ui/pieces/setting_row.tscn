@@ -1,0 +1,261 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://ui/pieces/setting_row.gd" id="1"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="ledge"]
+bg_color = Color(0.231373, 0.141176, 0.0705882, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 5
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="mask"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="edge"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.231373, 0.141176, 0.0705882, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="tile"]
+bg_color = Color(0, 0, 0, 0.25)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.14)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="bmask"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="bedge"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.352941, 0.227451, 0.0627451, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="bledge"]
+bg_color = Color(0.352941, 0.227451, 0.0627451, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="Gradient" id="wood_g"]
+offsets = PackedFloat32Array(0, 0.62, 1)
+colors = PackedColorArray(0.603922, 0.396078, 0.203922, 1, 0.419608, 0.247059, 0.109804, 1, 0.419608, 0.247059, 0.109804, 1)
+
+[sub_resource type="GradientTexture2D" id="wood"]
+gradient = SubResource("wood_g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Gradient" id="gold_g"]
+offsets = PackedFloat32Array(0, 0.65, 1)
+colors = PackedColorArray(0.941176, 0.827451, 0.541176, 1, 0.788235, 0.603922, 0.235294, 1, 0.788235, 0.603922, 0.235294, 1)
+
+[sub_resource type="GradientTexture2D" id="gold"]
+gradient = SubResource("gold_g")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
+[node name="SettingRow" type="Control"]
+layout_mode = 3
+offset_left = 0
+offset_top = 0
+offset_right = 274
+offset_bottom = 68
+script = ExtResource("1")
+pad = 15.0
+right_pad = 16.0
+
+[node name="Ledge" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+offset_bottom = 4.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("ledge")
+
+[node name="Face" type="Panel" parent="."]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("mask")
+
+[node name="Grad" type="TextureRect" parent="Face"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource("wood")
+expand_mode = 1
+
+[node name="Gloss" type="ColorRect" parent="Face"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 2.0
+offset_bottom = 3.0
+mouse_filter = 2
+color = Color(1, 0.862745, 0.627451, 0.35)
+
+[node name="Edge" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("edge")
+
+[node name="Tile" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 16
+offset_top = 15
+offset_right = 54
+offset_bottom = 53
+mouse_filter = 2
+theme_override_styles/panel = SubResource("tile")
+
+[node name="Icon" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 25.5
+offset_top = 24.5
+offset_right = 44.5
+offset_bottom = 43.5
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Body" type="Control" parent="."]
+layout_mode = 0
+offset_left = 66
+offset_top = 15
+offset_right = 206
+offset_bottom = 53
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Body"]
+layout_mode = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.968627, 0.878431, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.45)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 15
+text = "Label"
+autowrap_mode = 3
+
+[node name="Sub" type="Label" parent="Body"]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.941176, 0.85098, 0.690196, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="Button" type="Control" parent="."]
+layout_mode = 0
+offset_left = 212
+offset_top = 17.25
+offset_right = 258
+offset_bottom = 50.75
+mouse_filter = 2
+
+[node name="Ledge" type="Panel" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_bottom = 2.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("bledge")
+
+[node name="Face" type="Panel" parent="Button"]
+clip_children = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("bmask")
+
+[node name="Grad" type="TextureRect" parent="Button/Face"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource("gold")
+expand_mode = 1
+
+[node name="Edge" type="Panel" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("bedge")
+
+[node name="Text" type="Label" parent="Button"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.231373, 0.141176, 0.0705882, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 13
+text = "Open"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Switch" type="Control" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 218
+offset_top = 22.5
+offset_right = 258
+offset_bottom = 45.5
+mouse_filter = 2
