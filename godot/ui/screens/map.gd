@@ -10,6 +10,7 @@ class_name MapScreen
 extends Control
 
 const SCENE := "res://ui/screens/map.tscn"
+const AREA_W := 402.0  # the map area's width on the 390px phone (it overhangs 6px each side)
 
 static var _grey: ShaderMaterial
 
@@ -47,7 +48,12 @@ func _redraw() -> void:
 	$Art.offset_top = top
 	$Area.offset_top = top + 1
 	var app := _app()
+	# A station is 19.5% of the map's width (.map-node): the scene's size is for
+	# the phone's 402px, so a wider screen (a tablet) scales them up.
+	var k: float = $Area.size.x / AREA_W
 	for n in _nodes():
+		n.pivot_offset = n.size / 2
+		n.scale = Vector2(k, k)
 		var here: bool = n.station == s.get("lastStation")
 		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
