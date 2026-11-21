@@ -5,15 +5,14 @@ class_name QuarkTopBar
 extends Control
 
 const H := 46.0
+const SCENE := "res://ui/components/quark_top_bar.tscn"  # its wood (HubWood, flipped)
+
+
+static func make() -> QuarkTopBar:
+	return load(SCENE).instantiate()
 
 
 func _ready() -> void:
-	mouse_filter = MOUSE_FILTER_STOP
-	var wood := HubWood.new()
-	wood.flip = true
-	wood.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	wood.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(wood)
 	var qm := QuarkMeter.new()
 	qm.position = Vector2(14, 8)
 	qm.size = Vector2(size.x - 28, qm.custom_minimum_size.y)
@@ -23,4 +22,3 @@ func _ready() -> void:
 			c.set_meta("cmp", "qtop:" + c.get_meta("cmp"))
 	var s := Game.state
 	qm.show_score(Mat.score(Mat.on_mat(s), s, Game.ctx).total, Orders.tiers(Orders.check_round(s)))
-	set_meta("cmp", "qtop")

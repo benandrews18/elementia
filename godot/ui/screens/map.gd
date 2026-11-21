@@ -53,7 +53,7 @@ func _redraw() -> void:
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
 	$Area/Paths.queue_redraw()
 	if checked:
-		var qt := QuarkTopBar.new()
+		var qt := QuarkTopBar.make()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
 		$Dynamic.add_child(qt)
 	StationScreen.corner_buttons($Dynamic, false)

@@ -59,7 +59,7 @@ func _redraw() -> void:
 	_page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
 	_scroll.set_deferred("scroll_vertical", keep)
 	if Game.state.get("matChecked"):
-		var qt := QuarkTopBar.new()
+		var qt := QuarkTopBar.make()
 		qt.size = Vector2(w, TOP)
 		$Top.add_child(qt)
 	corner_buttons($Top, true)
