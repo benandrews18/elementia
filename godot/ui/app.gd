@@ -96,8 +96,7 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		var rw := RowReward.make(lines.size(), func(): pass)
 		rw.size = size
 		add_child(rw)
-		while is_instance_valid(rw) and not rw.is_queued_for_deletion():  # until Nice
-			await get_tree().process_frame
+		await rw.tree_exited  # until Nice
 		_market_playing = false
 		Game.collect_market_rewards()
 	else:
@@ -122,7 +121,7 @@ func _maybe_end() -> void:
 	var party: bool = key == "complete" or (s.get("craftedEverything") and not s.get("ended"))
 	if s.get("craftedEverything") and not s.get("ended"):
 		s.ended = true
-		Game._changed()
+		Game._changed.call_deferred()  # not inside this state_changed handler
 	_show_end.call_deferred(party)
 
 
