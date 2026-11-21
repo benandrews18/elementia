@@ -1,0 +1,334 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/card_pop.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+[ext_resource type="FontFile" path="res://assets/fonts/Nunito-VariableFont_wght.ttf" id="nunito"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="x"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f4cc.png" id="pin"]
+
+[sub_resource type="StyleBoxFlat" id="card"]
+bg_color = Color(0.968627, 0.960784, 0.941176, 1)
+border_width_left = 16
+border_width_top = 16
+border_width_right = 16
+border_width_bottom = 16
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 25
+shadow_offset = Vector2(0, 18)
+
+[sub_resource type="StyleBoxFlat" id="pts"]
+bg_color = Color(0.964706, 0.8, 0.301961, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 3
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="station"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 30
+corner_radius_top_right = 30
+corner_radius_bottom_right = 30
+corner_radius_bottom_left = 30
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 3
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="info"]
+content_margin_left = 22.0
+content_margin_right = 22.0
+bg_color = Color(0.247059, 0.705882, 0.423529, 1)
+border_width_bottom = 3
+border_color = Color(0.141176, 0.466667, 0.290196, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+expand_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="pin_off"]
+bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.164706, 0.352941, 0.447059, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 1
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="pin_on"]
+bg_color = Color(0.227451, 0.180392, 0.0784314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.886275, 0.698039, 0.352941, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+shadow_color = Color(0, 0, 0, 0.25)
+shadow_size = 1
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="FontVariation" id="label_font"]
+base_font = ExtResource("nunito")
+variation_opentype = {2003265652: 800}
+spacing_glyph = 1
+
+[sub_resource type="StyleBoxFlat" id="sig"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(1, 0.952941, 0.839216, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.780392, 0.603922, 0.180392, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="CardPop" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("1")
+pin_on = SubResource("pin_on")
+pin_off = SubResource("pin_off")
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Card" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 156.0
+offset_right = 345.0
+offset_bottom = 576.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("card")
+metadata/cmp = "cp:card"
+
+[node name="Icon" type="TextureRect" parent="Card"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 77.0
+offset_right = 200.0
+offset_bottom = 177.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+metadata/cmp = "cp:icon"
+
+[node name="Name" type="Label" parent="Card"]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 218.0
+offset_right = 192.0
+offset_bottom = 245.6
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.0941176, 0.0862745, 0.0784314, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 24
+text = "Bridge"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+metadata/cmp = "cp:name"
+
+[node name="Divider" type="ColorRect" parent="Card"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 255.6
+offset_right = 264.0
+offset_bottom = 257.1
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+metadata/cmp = "cp:divider"
+
+[node name="Components" type="Label" parent="Card"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 266.6
+offset_right = 264.0
+offset_bottom = 281.4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.352941, 0.333333, 0.282353, 1)
+theme_override_fonts/font = SubResource("label_font")
+theme_override_font_sizes/font_size = 11
+text = "Components:"
+vertical_alignment = 1
+metadata/cmp = "cp:label"
+
+[node name="Parts" type="Control" parent="Card"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 290.5
+offset_right = 264.0
+offset_bottom = 322.5
+mouse_filter = 2
+
+[node name="Sig" type="Label" parent="Card"]
+visible = false
+layout_mode = 0
+offset_left = 36.0
+offset_top = 330.0
+offset_right = 264.0
+offset_bottom = 360.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.227451, 0.164706, 0.0313726, 1)
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("sig")
+autowrap_mode = 3
+metadata/cmp = "cp:sig"
+
+[node name="Pts" type="Panel" parent="Card"]
+layout_mode = 0
+offset_right = 60.0
+offset_bottom = 60.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("pts")
+metadata/cmp = "cp:pts"
+
+[node name="Num" type="Label" parent="Card/Pts"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_colors/font_color = Color(0.0941176, 0.0862745, 0.0784314, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 30
+text = "12"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Costs" type="VBoxContainer" parent="Card"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -60.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Station" type="Panel" parent="Card"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -60.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("station")
+metadata/cmp = "cp:station"
+
+[node name="Icon" type="TextureRect" parent="Card/Station"]
+layout_mode = 0
+offset_left = 8.7
+offset_top = 8.7
+offset_right = 51.3
+offset_bottom = 51.3
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Actions" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 588.0
+offset_right = 345.0
+offset_bottom = 622.9
+mouse_filter = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Back" type="HBoxContainer" parent="Actions"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Arrow" type="Control" parent="Actions/Back"]
+custom_minimum_size = Vector2(24, 34)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Prev" type="Panel" parent="Actions/Back"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Info" type="Label" parent="Actions"]
+custom_minimum_size = Vector2(0, 34.9)
+layout_mode = 2
+mouse_filter = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("info")
+text = "Item Info"
+horizontal_alignment = 1
+vertical_alignment = 1
+metadata/cmp = "cp:info"
+
+[node name="Pin" type="Panel" parent="Actions"]
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("pin_off")
+metadata/cmp = "cp:pin"
+
+[node name="Icon" type="TextureRect" parent="Actions/Pin"]
+layout_mode = 0
+offset_left = 9.5
+offset_top = 9.5
+offset_right = 24.5
+offset_bottom = 24.5
+mouse_filter = 2
+texture = ExtResource("pin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Close" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -54.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 54.0
+texture = ExtResource("x")
+expand_mode = 1
+stretch_mode = 5
+metadata/cmp = "cp:close"

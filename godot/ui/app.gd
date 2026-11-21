@@ -209,6 +209,17 @@ func open_card(name: String) -> void:
 		_screen._redraw()
 
 
+## An item's card, big (a tap on an item anywhere: CardPop).
+func show_card(name: String) -> void:
+	if Catalog.entry(name) != null:
+		CardPop.open(self, name)
+
+
+## An element's card (a tap on an element anywhere: ElementCard).
+func show_element_card(sym: String) -> void:
+	ElementCard.open(self, sym)
+
+
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
 	close_panel()
