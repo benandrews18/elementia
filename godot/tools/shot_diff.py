@@ -43,7 +43,8 @@ def shoot(out: Path, only=()):
         plan.append({"state": s, "save": FIX + SAVES.get(s, "station_visit7") + ".json", "out": str(out / f"{s}.png")})
     plan_file = out / "_plan.json"
     plan_file.write_text(json.dumps(plan), encoding="utf-8")
-    cmd = [GODOT, "--path", str(ROOT), "--fixed-fps", "60", "--disable-vsync", "--quit-after", str(400 * len(plan) + 600),
+    cmd = [GODOT, "--path", str(ROOT), "--position", "-20000,-20000",  # drawn off-screen, out of the way
+           "--fixed-fps", "60", "--disable-vsync", "--quit-after", str(400 * len(plan) + 600),
            "res://tests/shot_batch.tscn", "--", "--plan", str(plan_file)]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     lines = r.stdout.splitlines() + r.stderr.splitlines()

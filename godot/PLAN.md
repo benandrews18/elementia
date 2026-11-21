@@ -231,9 +231,13 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
 - **Which check when** (decided 2026-11-20):
   - after each change: `python godot/tools/check.py fast`, plus
     `--only <section>` when a play-test section covers what changed (`run`,
-    `final_score`, `market`, `todo`). About a minute.
-  - before a review, a milestone or a publish: `check.py full` (adds the
-    whole play test, ~15s headless, and the HTML comparison report).
+    `final_score`, `market`, `todo`, `cards`). Its screenshot part runs only
+    when something that can change a screen changed since the screens last
+    passed (`build/screens_ok`; `--screens` forces it). The screenshot
+    window opens off-screen.
+  - at the end of each step, and before a review, a milestone or a publish:
+    `check.py full` (everything, the whole play test, the HTML comparison
+    report). Not after every small change.
   - an intended visual change: look at `build/after/diff_<state>.png`, then
     `check.py accept`. The screen states are `tests/shot_states.gd`.
 - Tests run as scenes (`res://tests/x.tscn`), not `-s` scripts, so the

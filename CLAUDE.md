@@ -13,8 +13,9 @@ its log when done. Until cutover, `game/` stays the reference for every rule
 and screen, and content and rule tables are edited only in `game/js/`
 (Godot's copy is exported from the running game, never hand-copied).
 Check Godot work with `python godot/tools/check.py fast` (add
-`--only <section>` for the play-test part that changed) and `full` before a
-review, milestone or publish; it must print `ALL PASSED`.
+`--only <section>` for the play-test part that changed; it skips the
+screenshots when nothing visual changed) and `full` at the end of a step and
+before a review, milestone or publish; it must print `ALL PASSED`.
 
 ## Source of truth
 
