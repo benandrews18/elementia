@@ -20,7 +20,9 @@ static func touch() -> void:
 		return
 	Progress.save_all()
 	if Progress.autosave and FileAccess.file_exists(Progress.SAVE_PATH):
-		DirAccess.copy_absolute(Progress.SAVE_PATH, BACKUP_PATH)
+		var err := DirAccess.copy_absolute(Progress.SAVE_PATH, BACKUP_PATH)
+		if err != OK:
+			push_error("Can't keep the real save for Restore: %s" % error_string(err))
 	Game.state.dev = true
 
 
@@ -32,7 +34,10 @@ static func has_backup() -> bool:
 static func restore() -> void:
 	if not has_backup():
 		return
-	DirAccess.rename_absolute(BACKUP_PATH, Progress.SAVE_PATH)
+	var err := DirAccess.rename_absolute(BACKUP_PATH, Progress.SAVE_PATH)
+	if err != OK:  # the dev run stays; the backup is still there to try again
+		push_error("Can't restore the real save: %s" % error_string(err))
+		return
 	Game.ctx = Game.fresh_ctx()
 	Progress.load_all()
 	Game.state_changed.emit()
