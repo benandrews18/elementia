@@ -7,8 +7,10 @@ cut short by --quit-after prints nothing and must never count.
       --only), and every screen against build/before (one Godot run, drawn
       off-screen) -- skipped when nothing that can change a screen has
       changed since the screens last passed; --screens forces them
-  python godot/tools/check.py full
-      all of fast, the whole play test, and the HTML comparison (a report)
+  python godot/tools/check.py full [--compare]
+      all of fast and the whole play test (screens still skipped when nothing
+      visual changed); --compare adds the HTML comparison report (for a
+      milestone review: slow, and costly to read)
   python godot/tools/check.py accept
       the screens now are the new "before" (after an intended visual change)
 
@@ -102,7 +104,7 @@ def main() -> int:
     only = sys.argv[sys.argv.index("--only") + 1] if "--only" in sys.argv else ""
     ok = godot_test("rules parity", "res://tests/parity.tscn", r"^parity: (\d+)/\1 steps match, 0 differ", 600)
     ok &= godot_test("rule tests", "res://tests/rules_test.tscn", r"^rules_test: PASS", 600)
-    why = "full check" if mode == "full" else "--screens" if "--screens" in sys.argv else screens_needed()
+    why = "--screens" if "--screens" in sys.argv else screens_needed()
     if why:
         print(f"      (screens: {why})")
         ok &= screens()
@@ -112,7 +114,7 @@ def main() -> int:
         label = "play test" + (f" ({only})" if only and mode == "fast" else "")
         ok &= godot_test(label, "res://tests/ui_play.tscn", r"^ui_play: PASS", 20000,
                          ["--", "--only", only] if only and mode == "fast" else [])
-    if mode == "full":  # a report of layout differences against the HTML game, not a pass/fail
+    if mode == "full" and "--compare" in sys.argv:  # a report of layout differences against the HTML game, not a pass/fail
         r = subprocess.run(["node", str(ROOT / "tools/compare.mjs")], capture_output=True, text=True, timeout=900)
         print("INFO  HTML comparison (godot/build/compare.html):")
         for l in r.stdout.splitlines():
