@@ -13,7 +13,9 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 4, Welcome (Continue / New Game; Settings' Home; the end screen's Main Menu). Start every session with `git status`: the user may
+**Next task:** the godot-prompter review (see its section, before M7), then
+M6 step 4, Welcome (Continue / New Game; Settings' Home; the end screen's
+Main Menu). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -617,6 +619,56 @@ Order (each makes the next useful):
       `combo-lab.js`): the mat's Layouts button.
 - [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots.
 - [ ] 10. M6 review.
+
+### Review with the godot-prompter plugin (planned 2026-11-21, before M6 step 4)
+**Why:** the user installed godot-prompter (59 skills, 9 agents) and wants
+the project measured against it once, then its skills and agents used as we
+build the rest. **Report first, change nothing**; the user picks the fixes.
+
+**Passes** (one agent each, run in parallel, read-only), with the skills
+each one loads and what it looks at:
+1. `godot-game-architect`: scene-organization, dependency-injection,
+   event-bus, resource-pattern, state-machine, save-load. The autoloads
+   (Data, Rng, Progress, Game), App's panels and flow, saves and old-save
+   loading, core/ vs game/ vs ui/.
+2. `godot-code-reviewer`: godot-code-review, gdscript-patterns,
+   gdscript-advanced, godot-debugging. Every script in core/, game/, ui/.
+3. `godot-ui-designer`: godot-ui, responsive-ui, hud-system, input-handling,
+   localization. The scenes and pieces, touch input, tablets, and how
+   hard translating the text later would be.
+4. `godot-performance-profiler`: godot-optimization, 2d-essentials (custom
+   drawing), multithreading. The Display Mat redraw, a card per scene,
+   the Items screen's 99 rows, startup.
+5. `godot-tools-engineer`: addon-development, gdscript-advanced (@tool).
+   The @tool pieces (NineSlice, MapNode, SettingRow, Frame9, HubWood),
+   editing in the editor, EDITING.md.
+6. `godot-shader-author`: shader-basics, rendering-pipeline. Our shaders
+   (tint, ball, icon outline, the grey ones) and the Compatibility renderer.
+7. `godot-animator`: animation-system, tween-animation. Today's tweens
+   (roll, Lock-In count, shutter, fly-ins), as input to M8.
+8. `godot-game-dev`: godot-testing, export-pipeline, web-export,
+   mobile-development, assets-pipeline, audio-system, math-essentials.
+   Our tests vs GUT/gdUnit4; readiness for M8 (sound) and M9 (stores, web).
+
+**Left out (don't apply to a 2D card game in GDScript):** 3d-essentials,
+physics-system, player-controller, camera-system, ai-navigation, beehave,
+limboai, phantom-camera, multiplayer-basics/sync, dedicated-server,
+xr-development, csharp-godot/signals and godot-csharp-engineer,
+gdextension, dialogue-system/manager, popochiu, procedural-generation,
+inventory-system and ability-system (ours exist and match the HTML),
+particles-vfx (with M8 if confetti moves to particles), web-services.
+
+**Each finding:** where, the problem, a concrete case, the fix, its size,
+and **whether it conflicts with a decision in this plan** (pixel parity with
+the HTML, hand placement, no project Theme, rules only in game/js...).
+Conflicts go to the user as decisions, never fixed silently.
+
+**Then:** one merged, ranked list (must / should / nice; plan conflicts
+apart). The user picks; fixes follow the M5.5 care rules (one change per
+commit, `check.py`, pixel-identical unless intended). What we adopt or
+reject is recorded here as decisions. From then on: the matching skill is
+loaded before each step (e.g. godot-ui for a new screen), and
+godot-code-reviewer runs at the end of each step alongside ponytail-review.
 
 ### M7 Mini-games (size unknown; decide first)
 - [ ] Decide which of the 8 to keep. Then port them one at a time.
