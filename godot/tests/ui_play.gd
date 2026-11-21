@@ -230,7 +230,7 @@ func _market(app: App) -> void:
 	if app.panel != "market":  # the row's own tray may still be open (the button would close it)
 		app._on_hub("market")
 	var bench := MarketCraft.open(app, name)
-	var shop_row: ShopRow = bench._bench.get_children().filter(func(c): return c is ShopRow)[0]
+	var shop_row: ShopRow = bench.get_node("Bench").get_children().filter(func(c): return c is ShopRow)[0]
 	var plays := app.market_plays
 	shop_row.on_craft.call(name, Rect2(100, 400, 60, 35))  # its Craft button
 	if not Game.suit_cost_need(name).is_empty():
