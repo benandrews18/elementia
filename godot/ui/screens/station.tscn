@@ -41,11 +41,8 @@ corner_radius_bottom_left = 12
 
 [node name="Station" type="Control"]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 390.0
+offset_bottom = 844.0
 script = ExtResource("1")
 
 [node name="Bg" type="ColorRect" parent="."]
