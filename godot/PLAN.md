@@ -12,7 +12,7 @@ reference for every rule and screen until the Godot version replaces it.
 ## Where we are
 
 **Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 step 5 (the station), then steps 6-8, then the
+**Next task:** M5.5 step 6 (the Display Mat), then steps 7-8, then the
 full M5.5 review (its first review's 4 findings are still open). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
@@ -21,7 +21,8 @@ Republish the preview: export Web, copy build/web/* to
 Log (newest first, one line per session):
 - 2026-11-20: M5.5 step 4 done: the other 10 windows are scenes; new shot
   states (reward_open, roll, order_restrict, order_grand); shot_diff takes
-  state names and drops stale shots.
+  state names and drops stale shots. Step 5 done (station, item card,
+  shop row, pin/Craft piece).
 - 2026-11-17: M5.5 step 3: the map is a scene (map.tscn, MapNode pieces with
   @tool so the editor shows their icons; Map.make()). Over to the user.
 - 2026-11-17: M5.5 steps 0-1 (before/after check; colours in tokens.tres).
@@ -513,8 +514,14 @@ way and M8's polish can happen in the editor. Decided 2026-11-17.
       lines (sat up to 18px right), the roll pop-up's "GATHERING" (4px).
       Texts that depend on the data are `@export` strings on the root.
       Still code: the shutter and the mat-expand animation (M8).
-- [ ] 5. Station: frame scene, shop card and shop row scenes, the packing
-      numbers in the Inspector.
+- [x] 5. Station: frame scene (`ui/screens/station.tscn`: art, header,
+      labels, crafted bar, shop heading; columns, gap, card ratio and the
+      pin/Craft row's height on its root), the item card
+      (`ui/components/item_card.tscn`, every card in the game), the shop
+      row (`ui/components/shop_row.tscn`) and the pin/Craft piece
+      (`ui/pieces/shop_acts.tscn`). Pixel-identical. Still code: the
+      element chip (shared by six screens; with step 6) and the round
+      header buttons.
 - [ ] 6. Display Mat / inventory: frame scene, the mat's layout numbers in
       the Inspector, the inventory list's card scene.
 - [ ] 7. Trays and shell: Market, To-Do List, Convert, the hub bar, the top bar.
