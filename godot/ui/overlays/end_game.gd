@@ -3,7 +3,6 @@
 ## made, the biggest turn and most-visited station, the trophies won; the
 ## buttons pinned at the bottom. Also the Run Complete moment at turn 24
 ## (Continue in Overtime). The stats scroll if they must.
-## shortcut: no Main Menu button until the welcome screen exists (M6).
 class_name EndGame
 extends Control
 
