@@ -293,3 +293,51 @@ on a phone), 14, 8, 5 (before M9), 9.
 - 16/17 and the plan review: add the skill-per-step list and the M8/M9
   lines to PLAN.md?
 - 10 Translation: no action (size noted).
+
+## M6 review, pass 1: ponytail-review of steps 4-9 (2026-11-21)
+Read: the diff since ccd5683^ (49 .gd files, ~3,000 lines): game.gd,
+progress.gd, main.gd, dev.gd and app.gd in full; the new windows
+(Classic, title screen, Collections, clue gifts, Saved Layouts, pins tray,
+Professor Mouse, Dev Panel/Tools, History); a grep across them for signal
+hookups, awaits and timers. Load assumed: one player, one device.
+Checked and fine: queued Mouse tips drop a freed target; timers check
+their label is still there; Collections' switches from the title screen and
+the Clear Cache wipe match the HTML; signal hookups end with their nodes.
+Numbered M6-n so they don't clash with the list above.
+
+**Must:** none.
+
+**Should**
+- M6-1 **The Dev Panel works inside Combo Lab and can overwrite the real
+  save** (`ui/app.gd` sync_dev / open_combo_lab, `game/dev.gd` snap_load,
+  _fresh). The 🛠 layer stays up in the lab. Loading a snapshot or a
+  scenario there replaces `Game.ctx`, so the lab flag is gone and the next
+  save writes the dev run over `save.json`; Exit then puts the real run
+  back in memory only. Quit before the next action and the next launch
+  opens the dev run (the backup can still restore it). **Fix:** hide the
+  Dev layer while the lab is open (2 lines in open/close_combo_lab).
+- M6-2 **The fresh context is written out 8 times** (`game.gd:13,356`,
+  `app.gd:220,419`, `dev.gd:36,48,209,242`). A new ctx key has to be added
+  in all 8; miss one and that path starts with the key missing.
+  **Fix:** `Game.fresh_ctx()` and use it everywhere (the lab adds
+  comboLab). About -6 lines.
+
+**Nice**
+- M6-3 **Grant / Remove with an empty or unknown name still marks the run
+  as a dev run** (`dev.gd` grant, remove). Nothing changes, but the run
+  loses its Stars and trophies. The HTML does the same. **Fix:** return
+  early when the name is "" (2 lines).
+- M6-4 **"Is a window open?" is written 3 times** (`app.gd:291,304,314`).
+  **Fix:** one `_window_open()` helper. -2 lines.
+- M6-5 **Collections and Saved Layouts have the same 7-line list sizing**
+  (`collections_window.gd` and `layouts_window.gd` `_layout`). **Fix:**
+  one shared function, or leave it (two copies, both dark list windows).
+- M6-6 **A stale shortcut comment** (`ui/overlays/end_game.gd:6`: "no Main
+  Menu button until the welcome screen exists"; it exists). Delete it.
+- M6-7 **Restore and Clear Cache have no test** (`dev.gd` restore,
+  clear_all). Both overwrite or delete files, so a bug there loses saves.
+  A test would need the save path settable; the risk is small (dev mode
+  only, behind a confirm, and the rename is the one already tested for
+  saves). Leave it unless they change.
+
+Verdict (pass 1): fix M6-1 first. Lean: about -10 lines possible.
