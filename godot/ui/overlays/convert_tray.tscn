@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/convert_tray.gd" id="1"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_900.tres" id="f9"]
+[ext_resource type="PackedScene" path="res://ui/pieces/scrim.tscn" id="scrim"]
 
 [sub_resource type="StyleBoxFlat" id="tray"]
 bg_color = Color(0.105882, 0.203922, 0.27451, 1)
@@ -43,12 +44,8 @@ script = ExtResource("1")
 arrow_on = SubResource("arrow_on")
 arrow_off = SubResource("arrow_off")
 
-[node name="Scrim" type="ColorRect" parent="."]
+[node name="Scrim" parent="." instance=ExtResource("scrim")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0, 0, 0, 0.35)
 
 [node name="Tray" type="Panel" parent="."]
 layout_mode = 0

@@ -65,13 +65,20 @@ How to change how the game looks in the Godot editor, without code.
 | The Crafting Bench's row | `ui/components/shop_row.tscn` |
 | Pin + Craft under a shop card | `ui/pieces/shop_acts.tscn` |
 | An element chip | `ui/pieces/element_chip.tscn` |
-| A map station | `ui/pieces/map_node.tscn` |
+| A map station (its disc and ring colours on the top node) | `ui/pieces/map_node.tscn` |
 | Every window's frame and title banner | `ui/pieces/parchment_window.tscn` |
 | Green button | `ui/pieces/pill_button.tscn` |
 | Tan button | `ui/pieces/parch_button.tscn` |
 
 **Colours and fonts:**
-- **Colours:** `ui/theme/tokens.tres` has the base colours, each with a colour picker. They apply when the game starts, so press F5 to see them.
+- **A colour in one place:** select the node and change it in the Inspector (a label's Theme Overrides, a panel's style).
+- **The dim behind every window**, and the lighter one behind the trays: `ui/pieces/dim.tscn` and `ui/pieces/scrim.tscn`. One edit changes them all.
+- **A colour everywhere at once** (every scene and the code), e.g. the gold:
+  ```
+  python godot/tools/recolour.py "#e2b25a" "#f0c060" --dry-run
+  ```
+  This lists every file that uses it. Run it again without `--dry-run` to change them. Each copy keeps its own transparency. Re-open scenes in the editor afterwards.
+- `ui/theme/tokens.tres`: the base colours the code draws with (rings, ticks, chips). They apply when the game starts, so press F5. To change one of them in the scenes too, use `recolour.py`.
 - **Fonts:** `ui/theme/fonts/` has the Nunito weights.
 
 ## What's safe to change
