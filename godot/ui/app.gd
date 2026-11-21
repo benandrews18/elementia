@@ -288,7 +288,7 @@ func _unknown_tip() -> void:
 	var s := Game.state
 	if Progress.prefs.get("sawEmptyElTip") or int(Util.get_or(s, "emptyElements", 0)) <= 0 or s.get("ended") or _market_playing:
 		return
-	if get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion()):
+	if _window_open():
 		return  # a window is open; the next change tries again
 	Progress.prefs.sawEmptyElTip = true
 	Progress.save_all()
@@ -301,17 +301,22 @@ func _unknown_tip() -> void:
 func _collection_found() -> void:
 	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or _market_playing or Game.ctx.get("comboLab"):
 		return
-	if get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion()):
+	if _window_open():
 		return  # something's open; the next change tries again
 	var c = Progress.undiscovered_on_mat()
 	if c != null:
 		CollectionFound.show_on(self, c)
 
 
+## A window open over the screen (anything added after the hub).
+func _window_open() -> bool:
+	return get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
+
+
 ## walkthroughIdle(): nothing over the screen (no window, panel, roll or
 ## opening), no tip showing or waiting.
 func _idle() -> bool:
-	return panel == "" and not mouse.showing and mouse._queue.is_empty() 		and not get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
+	return panel == "" and not mouse.showing and mouse._queue.is_empty() 		and not _window_open()
 
 
 ## maybeShowWalkthroughTip(): the new player's first presses, each once ever,
