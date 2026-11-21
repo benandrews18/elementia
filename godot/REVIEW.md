@@ -147,3 +147,48 @@ scroll areas, ref_row.tscn and hub_bar.gd sizes.
 skill's choice for a UI game like this), portrait locked, wide screens
 handled (the Market keeps phone-sized squares, the map scales with its
 width).
+
+## Pass 4: performance (2026-11-21)
+Skills loaded: godot-optimization. Judged without loading: multithreading
+(no long work to move off the main thread; saves take 2-4 ms), 2d-essentials
+(our custom drawing is small pieces drawn once, not per frame).
+**Measured** (not guessed): `tests/tmp/bench.gd` (temporary, not committed)
+loads build/late.json (a late run: most items owned), opens each panel and
+times one `Game._changed()`, best of 5, on this PC. A phone is several times
+slower; the web slower again.
+
+| Open | One change | Nodes |
+|---|---|---|
+| map | 5.6 ms | 357 |
+| To-Do | 6.8 ms | 370 |
+| Market | 17.9 ms | 542 |
+| Display Mat | 30.6 ms | 1342 |
+| station | 45.9 ms | 675 |
+| Items | **360.6 ms** | 2279 |
+
+Saving: 2-4 ms. No script runs every frame. Materials are shared (one per
+tint colour, one grey), so they don't break batching.
+
+**Must**
+11. **The Items screen rebuilds all its rows on every change**
+   (`ui/screens/items_screen.gd:42,55`). ~99 rows, 2279 nodes, 360 ms here.
+   Case: tapping 📌 on a row (or crafting while it's open) freezes the game
+   for a second or more on a phone. **Fix:** first time where the 360 ms
+   goes (making the rows vs the breakdown trees vs layout), then: reuse the
+   rows and refill them in place, or build only the rows in view. Medium.
+   No conflict (same pixels).
+
+**Should**
+12. **A craft at the station costs ~46 ms here, the open mat ~31 ms**, per
+   change, and an action makes 2-3 changes (finding 3). Case: on a phone a
+   craft could hitch a few tenths of a second. **Fix:** finding 3 first
+   (one change per action), then measure on a phone before doing more.
+13. **The game draws 60 frames a second even when nothing moves**
+   (project.godot has no low-processor mode). Case: a card game left open on
+   the station screen keeps the phone's GPU busy: battery and heat for
+   nothing. **Fix:** `application/run/low_processor_mode=true` (1 line;
+   animations still play, the screen just isn't redrawn when nothing
+   changes). The screenshot tests use fixed frames, so they shouldn't
+   notice; check. No conflict.
+
+**Kept (good as is):** no per-frame scripts; shared materials; small saves.
