@@ -13,7 +13,8 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** M6 Everything around the run (M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M6 step 6, Pins: the tracked item (🔍 pill) (`pins.js`). Start every session with `git status`: the user may
+**Next task:** M6 step 7, Hints and tips (`hints.js`, `tour.js`): one-time tips,
+the challenge tip, the coach; the pin tip's tracking wording. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -24,7 +25,7 @@ Log (newest first, one line per session):
   ~360 -> ~28 ms, Tap.tap (a drag isn't a tap), mid-visit resume (Godot
   only); checks stop re-shooting screens after a commit. Planet redesigned
   (both games). M6 step 4: the title screen and the Classic window. Step 5:
-  Trophies and History.
+  Trophies and History. Step 6: the tracked item.
 - 2026-11-20: M6 planned (10 steps); step 1 done: the card pop-up and the
   element card, opened by taps across the screens. Step 2: the Items
   screen. Checks skip the screenshots when nothing visual changed. Step 3:
@@ -628,8 +629,14 @@ Order (each makes the next useful):
       turn log; ⧉ copies JSON) from the Classic window. History's 🕓 shows once
       its image is fetched. Its intro wraps to 3 lines (2 in the HTML: Nunito
       a touch wider). Skills: godot-ui.
-- [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`). Skills: hud-system,
-      tween-animation.
+- [x] 6. Pins: the tracked item (`pins.js`; ctx.tracked, not saved, like
+      the HTML): Game.toggle_pin (pin = track), the 🔍 button and the tracked
+      pill (App's floats layer, over the panels), the pins tray
+      (`ui/overlays/pins_tray.tscn`, PinChip), the card's tracking banner, the
+      fly-in from a shop card; the map's badges, rings and tag; the shop's
+      "needed for" badge (opens the To-Do List; shortcut: not scrolled to the
+      item); the To-Do List leads with it. A 📌 unpin stops tracking
+      everywhere (the HTML only does so from shop cards). Skills: hud-system.
 - [ ] 7. Hints and tips (`hints.js`, `tour.js`): one-time tips, the
       challenge tip, the coach. Skills: hud-system, tween-animation.
 - [ ] 8. Saved layouts, collections list, Combo Lab (`mat-layouts.js`,
