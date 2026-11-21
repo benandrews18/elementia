@@ -620,35 +620,43 @@ Order (each makes the next useful):
 - [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots.
 - [ ] 10. M6 review.
 
-### Review with the godot-prompter plugin (planned 2026-11-21, before M6 step 4)
+### Review with the godot-prompter plugin (planned 2026-11-21, redone the same day)
 **Why:** the user installed godot-prompter (59 skills, 9 agents) and wants
-the project measured against it once, then its skills and agents used as we
-build the rest. **Report first, change nothing**; the user picks the fixes.
+the project measured against it once, using every skill that applies, then
+its skills used as we build the rest. **Report first, change nothing**; the
+user picks the fixes.
 
-**Passes** (one agent each, run in parallel, read-only), with the skills
-each one loads and what it looks at:
-1. `godot-game-architect`: scene-organization, dependency-injection,
-   event-bus, resource-pattern, state-machine, save-load. The autoloads
-   (Data, Rng, Progress, Game), App's panels and flow, saves and old-save
-   loading, core/ vs game/ vs ui/.
-2. `godot-code-reviewer`: godot-code-review, gdscript-patterns,
-   gdscript-advanced, godot-debugging. Every script in core/, game/, ui/.
-3. `godot-ui-designer`: godot-ui, responsive-ui, hud-system, input-handling,
-   localization. The scenes and pieces, touch input, tablets, and how
-   hard translating the text later would be.
-4. `godot-performance-profiler`: godot-optimization, 2d-essentials (custom
-   drawing), multithreading. The Display Mat redraw, a card per scene,
-   the Items screen's 99 rows, startup.
-5. `godot-tools-engineer`: addon-development, gdscript-advanced (@tool).
-   The @tool pieces (NineSlice, MapNode, SettingRow, Frame9, HubWood),
-   editing in the editor, EDITING.md.
-6. `godot-shader-author`: shader-basics, rendering-pipeline. Our shaders
-   (tint, ball, icon outline, the grey ones) and the Compatibility renderer.
-7. `godot-animator`: animation-system, tween-animation. Today's tweens
-   (roll, Lock-In count, shutter, fly-ins), as input to M8.
-8. `godot-game-dev`: godot-testing, export-pipeline, web-export,
-   mobile-development, assets-pipeline, audio-system, math-essentials.
-   Our tests vs GUT/gdUnit4; readiness for M8 (sound) and M9 (stores, web).
+**First try failed (2026-11-21):** 8 agents in parallel. Each started cold
+and re-read the plan and the code, so the work was paid 8 times over; they
+used up the user's 5-hour limit before any of them reported. **Rule from
+this: no parallel agent fan-outs. Skills are loaded by Claude in the main
+session; an agent only when the user asks, one at a time.**
+
+**How:** Claude runs the passes itself, one at a time, loading each pass's
+skills with the Skill tool (a skill is instructions, cheap; the code is read
+once and reused across passes). Each pass reads only the files it names.
+After each pass its findings are appended to `godot/REVIEW.md` and
+committed, so a usage limit or a compaction loses nothing, and the user
+gets a short summary and says "next" (or stops, or reorders). Biggest value
+first:
+1. **Code** (godot-code-review, gdscript-patterns, gdscript-advanced,
+   godot-debugging): game/ and core/ (rules, state, saves), then the ui/
+   scripts with logic (app, game flow, trays, dialogs).
+2. **Architecture** (scene-organization, dependency-injection, event-bus,
+   resource-pattern, state-machine, save-load): autoloads, App's panels and
+   flow, Game._changed, saves and old-save loading.
+3. **UI and touch** (godot-ui, responsive-ui, hud-system, input-handling,
+   localization): project.godot input/stretch, taps vs scrolls, target
+   sizes, tablets, safe areas, the cost of translating later.
+4. **Performance** (godot-optimization, 2d-essentials, multithreading): the
+   mat rebuild on each change, the Items screen's rows, per-node
+   materials, load() in loops, startup.
+5. **The small four, one pass**: editor tooling (addon-development; the
+   @tool pieces, EDITING.md), shaders/renderer (shader-basics,
+   rendering-pipeline), animation (animation-system, tween-animation; today's
+   tweens, for M8), readiness (godot-testing, export-pipeline, web-export,
+   mobile-development, assets-pipeline, audio-system, math-essentials; for
+   M8/M9).
 
 **Left out (don't apply to a 2D card game in GDScript):** 3d-essentials,
 physics-system, player-controller, camera-system, ai-navigation, beehave,
@@ -657,6 +665,7 @@ xr-development, csharp-godot/signals and godot-csharp-engineer,
 gdextension, dialogue-system/manager, popochiu, procedural-generation,
 inventory-system and ability-system (ours exist and match the HTML),
 particles-vfx (with M8 if confetti moves to particles), web-services.
+The 9 agents are the same skills with a cold start; not used for this.
 
 **Each finding:** where, the problem, a concrete case, the fix, its size,
 and **whether it conflicts with a decision in this plan** (pixel parity with
@@ -666,9 +675,10 @@ Conflicts go to the user as decisions, never fixed silently.
 **Then:** one merged, ranked list (must / should / nice; plan conflicts
 apart). The user picks; fixes follow the M5.5 care rules (one change per
 commit, `check.py`, pixel-identical unless intended). What we adopt or
-reject is recorded here as decisions. From then on: the matching skill is
-loaded before each step (e.g. godot-ui for a new screen), and
-godot-code-reviewer runs at the end of each step alongside ponytail-review.
+reject is recorded here as decisions and REVIEW.md is deleted. From then
+on: Claude loads the matching skill before each step (e.g. godot-ui for a
+new screen) and the godot-code-review skill at the end of each step,
+alongside ponytail-review; no agents unless the user asks.
 
 ### M7 Mini-games (size unknown; decide first)
 - [ ] Decide which of the 8 to keep. Then port them one at a time.
