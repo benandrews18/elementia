@@ -102,3 +102,48 @@ one); rules (Game), what's kept across runs (Progress) and the screens are
 cleanly apart; core/ is pure functions of the state, which is why the
 parity test works; screens are worked out from the state rather than kept
 in a separate state machine.
+
+## Pass 3: UI and touch (2026-11-21)
+Skills loaded: input-handling, responsive-ui. Judged without loading:
+godot-ui and hud-system (their core advice, containers and a project
+Theme, is what the plan decided against for pixel parity; the hub is
+already a scene), localization (only its cost is asked, counted below).
+Read: project.godot (display, input), the tap checks across ui/, the
+scroll areas, ref_row.tscn and hub_bar.gd sizes.
+
+**Must**
+7. **A tap fires on finger-up even after a drag** (64 tap checks in 22
+   files, e.g. `ui/overlays/convert_tray.gd:97-98`). A tap is "left button
+   released", nothing more. On a phone, touches arrive as mouse events
+   (Godot's default). Case: on the Items screen, a To-Do list or the
+   station's shop, a finger that lands on a card and drags to scroll either
+   doesn't scroll (the card keeps the touch) or opens that card when the
+   finger lifts. **First:** confirm on a touch device (the web preview on a
+   phone). **Fix:** one shared tap helper that remembers where the press
+   started and ignores the release if the finger moved more than ~10px,
+   used by all 22 files; tappables inside scroll areas let the drag through
+   to the scroll (mouse filter Pass). Mechanical, 22 files. No conflict.
+
+**Should (before M9)**
+8. **Notches and home bars aren't avoided** (nothing reads the safe area).
+   Case: in the iPhone app, the Quark bar sits under the notch and the hub
+   buttons under the home-swipe bar (swiping up to Home closes the game
+   instead of pressing Home). The web preview is fine (the browser keeps
+   clear). **Fix:** at start, read `DisplayServer.get_display_safe_area()`
+   and inset App top and bottom; every screen is inside App. ~10 lines.
+   No conflict (no change on screens without a notch).
+
+**Nice**
+9. **Small tap targets for small fingers** (e.g. the 📌 on Items rows,
+   34x34, `ui/pieces/ref_row.tscn:167-175`; the HTML's size). Platform
+   guides say 44 or more. **Fix:** grow the invisible tap area, not the
+   look. No conflict that way.
+10. **Translating later would be its own milestone.** 44 text lines in
+   scripts plus the scene texts, and 51 places that measure text to place
+   things (each would need checking per language). Not planned; no action,
+   just the size.
+
+**Kept (good as is):** one design size with canvas_items + expand (the
+skill's choice for a UI game like this), portrait locked, wide screens
+handled (the Market keeps phone-sized squares, the map scales with its
+width).
