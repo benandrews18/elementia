@@ -1,9 +1,9 @@
 ## The title screen (showWelcomeSlide(), tutorial/0.webp): at every launch,
 ## from Settings' Home and the end screen's Main Menu. The run underneath is
 ## untouched; Play opens the Classic window (ClassicMode: Continue / New
-## Game). The layout is ui/screens/welcome.tscn: the buttons stack at the
-## bottom over a dark fade; Mini-Games, Combo Lab, Collections and Trophies
-## stay hidden until their features exist (M7, M6 steps 5 and 8).
+## Game), Trophies its window. The layout is ui/screens/welcome.tscn: the
+## buttons stack at the bottom over a dark fade; Mini-Games, Combo Lab and
+## Collections stay hidden until their features exist (M7, M6 step 8).
 class_name WelcomeScreen
 extends Control
 
@@ -24,6 +24,7 @@ static func show_on(on: Control) -> WelcomeScreen:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Actions/Play.gui_input.connect(func(ev): if Tap.tap(ev): ClassicMode.show_on(get_parent(), self))
+	$Actions/Row2/Trophies.gui_input.connect(func(ev): if Tap.tap(ev): TrophiesWindow.show_on(get_parent()))
 	$Actions/Settings.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_settings())
 	resized.connect(_layout)
 	_layout()

@@ -16,6 +16,8 @@ func _ready() -> void:
 	Progress.prefs.everUnlockedMatCollections = Mat.collections().map(func(c): return c.id)
 	var prefs: Dictionary = Progress.prefs.duplicate(true)
 	var ctx: Dictionary = Game.ctx.duplicate(true)
+	var trophies: Dictionary = Progress.trophies.duplicate(true)
+	var history: Array = Progress.history.duplicate(true)
 	get_window().size = Vector2i(390, 844)
 	var plan: Array = JSON.parse_string(FileAccess.get_file_as_string(load("res://tests/shot.gd")._args().plan))
 	var n := 0
@@ -24,6 +26,8 @@ func _ready() -> void:
 		# A clean start: what one state leaves behind must not reach the next.
 		Progress.prefs = prefs.duplicate(true)
 		Game.ctx = ctx.duplicate(true)
+		Progress.trophies = trophies.duplicate(true)
+		Progress.history = history.duplicate(true)
 		TodoTray.expanded = {}
 		TodoTray.hint_open = false
 		ItemsScreen.query = ""

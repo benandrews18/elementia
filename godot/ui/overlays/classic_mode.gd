@@ -3,7 +3,7 @@
 ## or a new run's opening when there's none) and New Game (asks first when
 ## there's a save). Either one also closes the title screen under it.
 ## The layout is ui/overlays/classic_mode.tscn.
-## shortcut: its History row stays hidden until History exists (M6 step 5).
+## Its History row opens History (HistoryWindow).
 class_name ClassicMode
 extends ParchDialog
 
@@ -36,6 +36,8 @@ func _on_pressed(button: String) -> void:
 			_done()
 			if not Progress.has_save() or int(Game.state.get("visits", 0)) == 0:
 				app.new_game()
+		"History":
+			HistoryWindow.show_on(app)
 		"NewGame":
 			if not Progress.has_save():
 				_done()

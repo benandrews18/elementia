@@ -1,0 +1,131 @@
+{
+ "trophies": {
+  "first-run": {
+   "at": "2026-11-10",
+   "last": "2026-11-20",
+   "n": 3
+  },
+  "cap-robot": {
+   "at": "2026-11-12",
+   "last": "2026-11-12",
+   "n": 1
+  },
+  "items-40": {
+   "at": "2026-11-15",
+   "last": "2026-11-18",
+   "n": 2
+  },
+  "quarks-1000": {
+   "at": "2026-11-15",
+   "last": "2026-11-15",
+   "n": 1
+  },
+  "explorer": {
+   "at": "2026-11-18",
+   "last": "2026-11-18",
+   "n": 1
+  }
+ },
+ "history": [
+  {
+   "mode": "classic",
+   "date": "2026-11-20T18:02:11.000Z",
+   "visits": 24,
+   "score": 4210,
+   "itemScore": 512,
+   "checks": [],
+   "capstones": [
+    "Robot",
+    "Metropolis"
+   ],
+   "visitLog": [
+    {
+     "station": "The Power Plant",
+     "items": [
+      "Wire",
+      "Battery"
+     ],
+     "elements": {
+      "Al": 1,
+      "Si": 1,
+      "S": 2,
+      "K": 2,
+      "Ni": 2,
+      "Cu": 2
+     }
+    },
+    {
+     "station": "Deep Mine",
+     "items": [],
+     "elements": {
+      "H": 1,
+      "Ti": 2,
+      "Al": 1
+     }
+    },
+    {
+     "station": "The Ocean",
+     "items": [
+      "Sand"
+     ],
+     "elements": {
+      "N": 2,
+      "O": 1,
+      "H": 1
+     }
+    },
+    {
+     "station": "Deep Mine",
+     "items": [
+      "Natural Gas",
+      "Tools"
+     ],
+     "elements": {
+      "C": 1,
+      "Fe": 2,
+      "H": 1
+     }
+    }
+   ],
+   "bingoCard": null,
+   "bingoLinesCompleted": []
+  },
+  {
+   "mode": "classic",
+   "date": "2026-11-18T09:40:00.000Z",
+   "visits": 13,
+   "score": 980,
+   "itemScore": 160,
+   "checks": [],
+   "capstones": [],
+   "visitLog": [
+    {
+     "station": "The Power Plant",
+     "items": [
+      "Wire",
+      "Battery"
+     ],
+     "elements": {
+      "Al": 1,
+      "Si": 1,
+      "S": 2,
+      "K": 2,
+      "Ni": 2,
+      "Cu": 2
+     }
+    },
+    {
+     "station": "Deep Mine",
+     "items": [],
+     "elements": {
+      "H": 1,
+      "Ti": 2,
+      "Al": 1
+     }
+    }
+   ],
+   "bingoCard": null,
+   "bingoLinesCompleted": []
+  }
+ ]
+}

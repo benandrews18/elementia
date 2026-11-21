@@ -1,0 +1,107 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[node name="HistTurn" type="VBoxContainer"]
+offset_right = 246.0
+offset_bottom = 54.5
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Rule" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 7)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Line" type="ColorRect" parent="Rule"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 1.0
+mouse_filter = 2
+color = Color(0.788235, 0.647059, 0.443137, 1)
+
+[node name="Head" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="N" type="Label" parent="Head"]
+custom_minimum_size = Vector2(18, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 12
+text = "1"
+horizontal_alignment = 2
+
+[node name="Icon" type="TextureRect" parent="Head"]
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Station" type="Label" parent="Head"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.141176, 0.0705882, 1)
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 12
+text = "Station"
+
+[node name="Collected" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Indent" type="Control" parent="Collected"]
+custom_minimum_size = Vector2(21, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Collected"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 12
+text = "Collected"
+
+[node name="Text" type="Label" parent="Collected"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 12
+text = "—"
+autowrap_mode = 3
+
+[node name="Crafted" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Indent" type="Control" parent="Crafted"]
+custom_minimum_size = Vector2(21, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Crafted"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 12
+text = "Crafted"
+
+[node name="Text" type="Label" parent="Crafted"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 12
+text = "—"
+autowrap_mode = 3

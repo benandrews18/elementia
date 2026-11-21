@@ -1,0 +1,170 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://ui/pieces/hist_entry.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u269b.png" id="atom"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="f7"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[sub_resource type="StyleBoxFlat" id="entry"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.937255, 0.862745, 0.698039, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.788235, 0.647059, 0.443137, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="copy"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_color = Color(0.788235, 0.647059, 0.443137, 1)
+
+[sub_resource type="StyleBoxFlat" id="detail"]
+content_margin_left = 13.0
+content_margin_top = 8.0
+content_margin_right = 13.0
+content_margin_bottom = 10.0
+bg_color = Color(0, 0, 0, 0)
+border_width_top = 1
+border_color = Color(0.788235, 0.647059, 0.443137, 1)
+
+[node name="HistEntry" type="PanelContainer"]
+offset_right = 274.0
+offset_bottom = 40.2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("entry")
+script = ExtResource("1")
+
+[node name="Body" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Line" type="HBoxContainer" parent="Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Row" type="Control" parent="Body/Line"]
+custom_minimum_size = Vector2(0, 38.2)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+
+[node name="Pad" type="MarginContainer" parent="Body/Line/Row"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 13
+theme_override_constants/margin_right = 13
+
+[node name="H" type="HBoxContainer" parent="Body/Line/Row/Pad"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Visits" type="Label" parent="Body/Line/Row/Pad/H"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.231373, 0.141176, 0.0705882, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 13
+text = "0 turns"
+vertical_alignment = 1
+
+[node name="Score" type="HBoxContainer" parent="Body/Line/Row/Pad/H"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="Body/Line/Row/Pad/H/Score"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("atom")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Body/Line/Row/Pad/H/Score"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.658824, 0.45098, 0.0588235, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 13
+text = "0"
+vertical_alignment = 1
+
+[node name="Gap" type="Control" parent="Body/Line/Row/Pad/H"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Caps" type="HBoxContainer" parent="Body/Line/Row/Pad/H"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="None" type="Label" parent="Body/Line/Row/Pad/H"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
+theme_override_fonts/font = ExtResource("f7")
+theme_override_font_sizes/font_size = 13
+text = "—"
+vertical_alignment = 1
+
+[node name="Arrow" type="Control" parent="Body/Line/Row/Pad/H"]
+custom_minimum_size = Vector2(6, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Copy" type="Panel" parent="Body/Line"]
+custom_minimum_size = Vector2(38, 0)
+layout_mode = 2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("copy")
+
+[node name="Glyph" type="Control" parent="Body/Line/Copy"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+mouse_filter = 2
+
+[node name="Detail" type="PanelContainer" parent="Body"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("detail")
+
+[node name="Pad" type="VBoxContainer" parent="Body/Detail"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Empty" type="Label" parent="Body/Detail/Pad"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
+theme_override_font_sizes/font_size = 13
+text = "No turn-by-turn detail recorded for this run."
+autowrap_mode = 3
+
+[node name="Turns" type="VBoxContainer" parent="Body/Detail/Pad"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8

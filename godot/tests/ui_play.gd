@@ -403,9 +403,35 @@ func _welcome(app: App) -> void:
 	top.call(SettingsWindow)[0].get_node("Window/Content/Buttons/Home").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(top.call(WelcomeScreen).size() == 1, "Home over the title screen doesn't stack a second one")
+	var fx: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/trophies_history.json"))
+	var kept := [Progress.trophies, Progress.history]
+	Progress.trophies = fx.trophies
+	Progress.history = fx.history
+	top.call(WelcomeScreen)[0].get_node("Actions/Row2/Trophies").gui_input.emit(_release())
+	check(top.call(TrophiesWindow).size() == 1, "the title screen's Trophies opens them")
+	var tw: TrophiesWindow = top.call(TrophiesWindow)[0]
+	var tiles: Array = tw.get_node("Window/Content/Scroll/Pad/Grid").get_children()
+	check(tiles.size() == Trophies.all().size() and tw.get_node("Window/Content/Count").text.begins_with("5 of %d earned" % tiles.size()), "every trophy, 5 earned")
+	tiles[0].gui_input.emit(_release())
+	check(top.call(TrophyDetail).size() == 1 and top.call(TrophyDetail)[0].get_node("Window").title == "First Run", "a tile opens its detail")
+	top.call(TrophyDetail)[0].get_node("Window/Content/Ok").gui_input.emit(_release())
+	tw.close()
+	await get_tree().process_frame
 	top.call(WelcomeScreen)[0].get_node("Actions/Play").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(top.call(ClassicMode).size() == 1, "Play opens the Classic window")
+	top.call(ClassicMode)[0].get_node("Window/Content/History").pressed.emit()
+	check(top.call(HistoryWindow).size() == 1, "its History row opens History")
+	var hw: HistoryWindow = top.call(HistoryWindow)[0]
+	var rows: Array = hw.get_node("Window/Content/Scroll/Rows").get_children()
+	check(rows.size() == 2, "one row per finished run")
+	rows[0].get_node("Body/Line/Row").gui_input.emit(_release())
+	await get_tree().process_frame
+	var first: HistEntry = hw.get_node("Window/Content/Scroll/Rows").get_children().filter(func(c): return not c.is_queued_for_deletion())[0]
+	check(first.get_node("Body/Detail").visible and first.get_node("Body/Detail/Pad/Turns").get_child_count() == fx.history[0].visitLog.size(), "a tap opens its turn-by-turn log")
+	hw.close()
+	Progress.trophies = kept[0]
+	Progress.history = kept[1]
 	top.call(ClassicMode)[0].get_node("Window/Content/Card/Body/Buttons/Continue").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(top.call(ClassicMode).is_empty() and top.call(WelcomeScreen).is_empty(), "Continue closes the window and the title screen")

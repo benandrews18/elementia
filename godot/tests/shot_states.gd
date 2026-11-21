@@ -12,7 +12,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
-	"welcome", "classic_mode"]
+	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open"]
 
 
 var state := ""  # set by tests/shot_batch.gd; else from --state
@@ -161,6 +161,19 @@ func _ready() -> void:
 			app.open_items("Bridge" if state == "items_open" else "")
 		"settings", "game_rules", "tutorial_messages":
 			app.open_settings({"settings": "", "game_rules": "rules", "tutorial_messages": "tuts"}[state])
+		"trophies", "trophy_detail", "history", "history_open":  # with tests/fixtures/trophies_history.json
+			var fx: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/trophies_history.json"))
+			Progress.trophies = fx.trophies
+			Progress.history = fx.history
+			if state.begins_with("trophies") or state == "trophy_detail":
+				TrophiesWindow.show_on(app)
+				if state == "trophy_detail":
+					TrophyDetail.show_on(app, "first-run")
+			else:
+				var hw := HistoryWindow.show_on(app)
+				if state == "history_open":
+					hw._open[0] = true
+					hw._build()
 		"welcome", "classic_mode":  # the title screen; Play's Classic window over it
 			app.show_welcome()
 			if state == "classic_mode":

@@ -123,7 +123,6 @@ text = "New Game"
 font_size = 14
 
 [node name="History" parent="Window/Content" instance=ExtResource("row")]
-visible = false
 layout_mode = 2
 text = "History"
 sub = "See your past runs"

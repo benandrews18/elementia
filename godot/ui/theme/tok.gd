@@ -157,6 +157,20 @@ static func tinted(color: Color) -> ShaderMaterial:
 
 
 ## A tick (✓), drawn: Nunito has none. In a coloured circle when bg is set.
+## ⧉ (two overlapping squares: copy), drawn (not in Nunito).
+static func copy_glyph(color: Color, px: float) -> Control:
+	var c := Control.new()
+	c.size = Vector2(px, px)
+	c.custom_minimum_size = c.size
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.draw.connect(func():
+		var s := px * 0.62
+		var w := maxf(1.2, px / 11.0)
+		c.draw_rect(Rect2(Vector2(px - s, 0) + Vector2(w, w) / 2, Vector2(s, s) - Vector2(w, w)), color, false, w)
+		c.draw_rect(Rect2(Vector2(0, px - s) + Vector2(w, w) / 2, Vector2(s, s) - Vector2(w, w)), color, false, w))
+	return c
+
+
 static func tick(color: Color, px: float, bg := Color.TRANSPARENT, ring := Color.TRANSPARENT) -> Control:
 	var c := Control.new()
 	c.size = Vector2(px, px)

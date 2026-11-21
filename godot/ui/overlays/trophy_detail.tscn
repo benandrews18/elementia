@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/trophy_detail.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+
+[node name="TrophyDetail" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 36.0
+top_gap = -15.0
+dim_closes = true
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 222.0
+offset_right = 370.0
+offset_bottom = 557.1
+title = "Trophy"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 44.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Icon" type="TextureRect" parent="Window/Content"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Gap1" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BannerSpot" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 41.3)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Gap2" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Hint" type="Label" parent="Window/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 15
+text = "How to earn it"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap3" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="At" type="Label" parent="Window/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.658824, 0.45098, 0.0588235, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 15
+text = "Not earned yet"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Gap4" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Ok" parent="Window/Content" instance=ExtResource("pill")]
+custom_minimum_size = Vector2(65.8, 44.3)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Text" parent="Window/Content/Ok" index="0"]
+text = "OK"
