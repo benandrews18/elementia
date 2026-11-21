@@ -9,6 +9,7 @@ diff prints each state's changed pixels (a pixel counts when a channel moves
 by more than 8 of 255) and writes <after>/diff_<state>.png with the changes
 in red over a faded copy. Exit code 1 when any state changed.
 """
+import json
 import re
 import subprocess
 import sys
@@ -33,18 +34,34 @@ def states():
 
 
 def shoot(out: Path, only=()):
+    """Every state (or just `only`) in one Godot run (tests/shot_batch.gd)."""
     out = out.resolve()  # Godot runs in godot/: a relative path would land there
     out.mkdir(parents=True, exist_ok=True)
+    plan = []
     for s in only or states():
-        save = SAVES.get(s, "station_visit7")
         (out / f"{s}.png").unlink(missing_ok=True)  # a failed shot must not leave an old one
-        cmd = [GODOT, "--path", str(ROOT), "--quit-after", "3000", "res://tests/shot.tscn", "--",
-               "--screen", "res://tests/shot_states.gd", "--state", s, "--save", f"tests/fixtures/{save}.json",
-               "--wait", "1.2", "--out", str(out / f"{s}.png")]
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-        errs = [l for l in r.stdout.splitlines() + r.stderr.splitlines() if "SCRIPT ERROR" in l]
-        ok = (out / f"{s}.png").exists()
-        print(f"{s:18} {'ok' if ok and not errs else 'FAILED'} {errs[0] if errs else ''}")
+        plan.append({"state": s, "save": FIX + SAVES.get(s, "station_visit7") + ".json", "out": str(out / f"{s}.png")})
+    plan_file = out / "_plan.json"
+    plan_file.write_text(json.dumps(plan), encoding="utf-8")
+    cmd = [GODOT, "--path", str(ROOT), "--fixed-fps", "60", "--disable-vsync", "--quit-after", str(400 * len(plan) + 600),
+           "res://tests/shot_batch.tscn", "--", "--plan", str(plan_file)]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    lines = r.stdout.splitlines() + r.stderr.splitlines()
+    state, bad = "", {}
+    for l in lines:
+        if l.startswith("state "):
+            state = l[6:]
+        elif "SCRIPT ERROR" in l:
+            bad.setdefault(state, l)
+    for job in plan:
+        s = job["state"]
+        ok = Path(job["out"]).exists() and s not in bad
+        print(f"{s:18} {'ok' if ok else 'FAILED'} {bad.get(s, '')}")
+    done = any(l.startswith(f"shot_batch: {len(plan)} saved") for l in lines)
+    if r.returncode != 0 or not done or bad:
+        print("shot_batch did not finish cleanly")
+        return 1
+    return 0
 
 
 def diff(a: Path, b: Path) -> int:
@@ -73,6 +90,6 @@ def diff(a: Path, b: Path) -> int:
 
 if __name__ == "__main__":
     if sys.argv[1] == "shoot":
-        shoot(Path(sys.argv[2]), sys.argv[3:])  # optional: just these states
+        sys.exit(shoot(Path(sys.argv[2]), sys.argv[3:]))  # optional: just these states
     else:
         sys.exit(diff(Path(sys.argv[2]), Path(sys.argv[3])))

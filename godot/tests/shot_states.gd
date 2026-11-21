@@ -1,5 +1,6 @@
 ## Every screen and window in a fixed state, by name, for the before/after
-## check of M5.5 (tools/shot_set.py runs the whole list):
+## check of M5.5 (tools/shot_diff.py shoots the whole list in one Godot run,
+## tests/shot_batch.gd). One state alone:
 ##   G --path godot res://tests/shot.tscn -- --screen res://tests/shot_states.gd --state market --save tests/fixtures/station_visit7.json --out x.png --wait 0.8
 ## Animations are left to settle (--wait); nothing random is shown.
 extends Control
@@ -11,8 +12,12 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "station_fold"]
 
 
+var state := ""  # set by tests/shot_batch.gd; else from --state
+
+
 func _ready() -> void:
-	var state: String = load("res://tests/shot.gd")._args().get("state", "map")
+	if state == "":
+		state = load("res://tests/shot.gd")._args().get("state", "map")
 	Progress.prefs.pinnedItems = ["Metropolis", "Plastic"]
 	Progress.prefs.hiddenTips = []
 	var app := App.new()
