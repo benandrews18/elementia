@@ -11,9 +11,9 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M5.5 Editable in the Godot editor (M5 done)
-**Next task:** M5.5 is done once you've made an edit in the editor
-yourself (EDITING.md); then M6. Start every session with `git status`: the user may
+**Current milestone:** M6 Everything around the run (M5.5 done, bar the
+user's own first edit in the editor)
+**Next task:** M6 step 1, the card pop-up. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -567,9 +567,29 @@ the next session (or tell Claude), and Claude starts each session with
 `.uid` / `.import` files and may rewrite scenes when saving: commit those.
 
 ### M6 Everything around the run (~3-4 sessions)
-- [ ] Welcome, tour and hints, settings, item reference, pins, trophies,
-      history, saved layouts and Combo Lab, dev mode
-- New screens are built as scenes from the start (M5.5 rules).
+Planned 2026-11-20 from `game/js/` (~2,500 lines). Every new screen and
+window is a scene from the start (M5.5 rules); each step gets shot states
+(`tests/shot_states.gd`) and, where it's tapped through, a play-test section;
+`tools/check.py fast` per change, `full` at the end of each step.
+Order (each makes the next useful):
+- [ ] 1. Card pop-up (`card-popup.js`): an item's card big, with its recipe
+      and where it's sold; an element's card. Opened by a tap on a card
+      anywhere (mat, Inventory, Market squares and capstones, To-Do List).
+- [ ] 2. Items screen (`reference.js`, the hub's Items button): every item,
+      filter, tap for the card pop-up.
+- [ ] 3. Settings (`settings.js`, the gear): options, the rules pages (also
+      the first check's rules and the mat's "?"), clear all data.
+- [ ] 4. Welcome (`welcome.js`): Continue / New Game at launch; the end
+      screen's Main Menu.
+- [ ] 5. Trophies and History (`trophies.js`, `history.js` screens; their
+      rules are ported).
+- [ ] 6. Pins: the tracked item (🔍 pill) (`pins.js`).
+- [ ] 7. Hints and tips (`hints.js`, `tour.js`): one-time tips, the
+      challenge tip, the coach.
+- [ ] 8. Saved layouts, collections list, Combo Lab (`mat-layouts.js`,
+      `combo-lab.js`): the mat's Layouts button.
+- [ ] 9. Dev mode (`dev.js`): jump turns, grant items, snapshots.
+- [ ] 10. M6 review.
 
 ### M7 Mini-games (size unknown; decide first)
 - [ ] Decide which of the 8 to keep. Then port them one at a time.
