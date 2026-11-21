@@ -1,0 +1,258 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://ui/components/hub_bar.gd" id="1"]
+[ext_resource type="Script" path="res://ui/components/hub_wood.gd" id="wood"]
+[ext_resource type="Script" path="res://ui/components/frame9.gd" id="f9s"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
+[ext_resource type="Texture2D" path="res://assets/ui/hub_frame.webp" id="frame"]
+[ext_resource type="Texture2D" path="res://assets/ui/hub_frame_active.webp" id="frame_on"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_todo.webp" id="todo"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_inventory.webp" id="inv"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_market.webp" id="market"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_items.webp" id="items"]
+[ext_resource type="Texture2D" path="res://assets/ui/clock_rim.webp" id="rim"]
+
+[sub_resource type="StyleBoxFlat" id="flat"]
+bg_color = Color(0.827451, 0.878431, 0.945098, 1)
+corner_radius_top_left = 38
+corner_radius_top_right = 38
+corner_radius_bottom_right = 38
+corner_radius_bottom_left = 38
+
+[node name="HubBar" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+frame = ExtResource("frame")
+active_frame = ExtResource("frame_on")
+
+[node name="Wood" type="Control" parent="."]
+layout_mode = 0
+offset_top = 779.0
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("wood")
+metadata/cmp = "hub"
+
+[node name="Jobs" type="Control" parent="."]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 762.8
+offset_right = 72.0
+offset_bottom = 838.0
+script = ExtResource("f9s")
+metadata/cmp = "hub:jobs"
+
+[node name="Icon" type="TextureRect" parent="Jobs"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 9.0
+offset_right = 56.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("todo")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Jobs"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 53.0
+offset_bottom = 67.2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 11
+text = "To-Do List"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Inv" type="Control" parent="."]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 762.8
+offset_right = 146.0
+offset_bottom = 838.0
+script = ExtResource("f9s")
+metadata/cmp = "hub:inv"
+
+[node name="Icon" type="TextureRect" parent="Inv"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 9.0
+offset_right = 56.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("inv")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Inv"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 53.0
+offset_bottom = 67.2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 11
+text = "Inventory"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Market" type="Control" parent="."]
+layout_mode = 0
+offset_left = 234.0
+offset_top = 762.8
+offset_right = 304.0
+offset_bottom = 838.0
+script = ExtResource("f9s")
+metadata/cmp = "hub:market"
+
+[node name="Icon" type="TextureRect" parent="Market"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 9.0
+offset_right = 56.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("market")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Market"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 53.0
+offset_bottom = 67.2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 11
+text = "Market"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Codex" type="Control" parent="."]
+layout_mode = 0
+offset_left = 308.0
+offset_top = 762.8
+offset_right = 378.0
+offset_bottom = 838.0
+script = ExtResource("f9s")
+metadata/cmp = "hub:codex"
+
+[node name="Icon" type="TextureRect" parent="Codex"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 9.0
+offset_right = 56.0
+offset_bottom = 51.0
+mouse_filter = 2
+texture = ExtResource("items")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="Codex"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 53.0
+offset_bottom = 67.2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 11
+text = "Items"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Home" type="Control" parent="."]
+layout_mode = 0
+offset_left = 157.0
+offset_top = 758.0
+offset_right = 233.0
+offset_bottom = 834.0
+metadata/cmp = "hub:home"
+
+[node name="Flat" type="Panel" parent="Home"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("flat")
+
+[node name="Ball" type="ColorRect" parent="Home"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Rim" type="TextureRect" parent="Home"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = -5.0
+offset_right = 5.0
+offset_bottom = 5.0
+mouse_filter = 2
+texture = ExtResource("rim")
+expand_mode = 1
+
+[node name="Icon" type="TextureRect" parent="Home"]
+custom_minimum_size = Vector2(37, 37)
+layout_mode = 0
+offset_left = 19.5
+offset_top = 12.3
+offset_right = 56.5
+offset_bottom = 49.3
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Glyph" type="Label" parent="Home"]
+visible = false
+layout_mode = 0
+offset_top = 7.0
+offset_right = 76.0
+offset_bottom = 51.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 37
+text = "?"
+horizontal_alignment = 1
+
+[node name="Label" type="Label" parent="Home"]
+layout_mode = 0
+offset_top = 50.3
+offset_right = 76.0
+offset_bottom = 63.8
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 10
+text = "Map"
+horizontal_alignment = 1
+vertical_alignment = 1

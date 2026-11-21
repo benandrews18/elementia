@@ -9,7 +9,7 @@ const H := 46.0
 
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
-	var wood := HubBar.HubWood.new()
+	var wood := HubWood.new()
 	wood.flip = true
 	wood.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	wood.mouse_filter = MOUSE_FILTER_IGNORE

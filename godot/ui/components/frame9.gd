@@ -2,6 +2,7 @@
 ## border-image: 58 fill / 16px). The 58px source corners are drawn 16px wide,
 ## scaled down from full resolution so they stay crisp. Used by the hub's
 ## side buttons and the Crafting Bench (BenchPanel).
+@tool
 class_name Frame9
 extends Control
 
@@ -10,7 +11,10 @@ const EDGE := 16.0  # border-image-width, design pixels
 
 static var _boxes := {}
 
-var texture: Texture2D = preload("res://assets/ui/hub_frame.webp")
+@export var texture: Texture2D = preload("res://assets/ui/hub_frame.webp"):
+	set(v):
+		texture = v
+		queue_redraw()
 
 
 func _draw() -> void:

@@ -21,7 +21,7 @@ static var current: App  # the running app, for screens that need it (crafting)
 func _ready() -> void:
 	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	_hub = HubBar.new()
+	_hub = HubBar.make()
 	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_hub)
 	_hub.pressed.connect(_on_hub)
