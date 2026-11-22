@@ -804,7 +804,7 @@ design happens in Godot.
         and suit badge.
   - [x] Home's Shop face shows the current station's icon.
   - [x] The clock shows the round number in its middle.
-  - [ ] Track an item from the To-Do List tray (its track button on it).
+  - [x] Track an item from the To-Do List tray (its track button on it).
   - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
         to take it off. (Check with the user: the card-drawing design
         takes the mat out of the Inventory between checks.)
@@ -816,6 +816,9 @@ design happens in Godot.
   - [x] Safe area (moved here from M9 by the user, 2026-11-22; review 8):
         the top and bottom bars clear the phone's notch and gesture bar
         (main.gd insets the app; untested on the phone yet).
+  - [ ] Card view (the user, 2026-11-22): every card's component icons in
+        one row, at a best-fit scale for all items (outliers adjusted one
+        by one; Planet left out).
   - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first

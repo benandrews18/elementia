@@ -300,6 +300,14 @@ func _todo(app: App) -> void:
 	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items[0].name
 	RefTree.new(RefTree.PARCHMENT, func(_p): pass).pin_button(comp, Vector2.ZERO).gui_input.emit(_release())  # a tree row's pin
 	check(Progress.is_pinned(comp), "a pin in the tree pins " + comp)
+	Game.set_tracked(null)
+	await get_tree().process_frame
+	var find_track := func(): return _find_meta(app._panel_node, "todo:track:Metropolis")
+	find_track.call().gui_input.emit(_release())
+	check(Game.ctx.tracked == "Metropolis", "the To-Do List's 🔍 tracks its item")
+	await get_tree().process_frame
+	find_track.call().gui_input.emit(_release())
+	check(Game.ctx.tracked == null, "a second tap stops tracking it")
 	app._on_hub("jobs")
 	check(app.panel == "", "the To-Do List button closes it again")
 	TodoTray.hint_open = false
@@ -768,6 +776,17 @@ func _dev(app: App) -> void:
 	check(not Progress.prefs.devUnlocked and not Progress.prefs.devMode and app.get_node_or_null("Dev") == null, "five more taps hide Dev Tools and the button")
 	sw.close()
 	finished.dev = true
+
+
+## The first node under n tagged with meta "cmp" == tag (or null).
+func _find_meta(n: Node, tag: String) -> Control:
+	if n.has_meta("cmp") and n.get_meta("cmp") == tag and not n.is_queued_for_deletion():
+		return n
+	for c in n.get_children():
+		var f := _find_meta(c, tag)
+		if f:
+			return f
+	return null
 
 
 func _release(at := Vector2.ZERO) -> InputEventMouseButton:

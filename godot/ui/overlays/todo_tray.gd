@@ -229,7 +229,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 	pts.add_theme_stylebox_override("panel", Tok.box(Color("#fbe9b5"), 10))
 	var ptxt := str(int(e.points))
 	pts.size = Vector2(20 + Tok.font(900).get_string_size(ptxt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14, 20)
-	pts.position = Vector2(w - 56 - pts.size.x, 16)
+	pts.position = Vector2(w - 96 - pts.size.x, 16)
 	var star := Tok.star(Color("#f5b400"), 12)
 	star.position = Vector2(7, 4)
 	pts.add_child(star)
@@ -258,6 +258,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 	tog.add_child(tl)
 	tog.gui_input.connect(func(ev): if Tap.tap(ev): _toggle(path))
 	card.add_child(tog)
+	card.add_child(_track_button(e.name, Vector2(w - 88, 14)))
 	card.add_child(_pin_button(e.name, Vector2(w - 48, 14)))
 	var h := 88.0
 	if open:
@@ -266,6 +267,23 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 		h = tree.nodes(card, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(16, h), w - 32) + 10
 	card.size = Vector2(w, h)
 	return at.y + h
+
+
+## Track (the user, 2026-11-21): 🔍 beside the pin, gold while this item is
+## the tracked one; a tap tracks it, or stops tracking it.
+func _track_button(name: String, at: Vector2) -> Control:
+	var on: bool = Game.ctx.get("tracked") == name
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD if on else Color("#3a2414"), 8, 2, Color.BLACK if on else Color("#b9b0a0"), 3, 2, Color(0, 0, 0, 0.3)))
+	b.size = Vector2(34, 34)
+	b.position = at
+	b.set_meta("cmp", "todo:track:" + name)
+	var ic := Tok.icon("🔍", 18)
+	ic.position = (b.size - Vector2(18, 18)) / 2
+	b.add_child(ic)
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
+		Game.set_tracked(null if on else name))
+	return b
 
 
 ## A pinned row's pin (the big dark one; a tree row's: RefTree.pin_button).
