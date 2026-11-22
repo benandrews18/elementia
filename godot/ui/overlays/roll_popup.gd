@@ -22,6 +22,7 @@ const PIPS := {1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6,
 const SCENE := "res://ui/overlays/roll_popup.tscn"
 
 var roll: Array  # [{face, sym}]
+var bonus := 0  # the last this many dice are the bonus earned at the last check: their own frame and a "+" badge
 var fly_to := Vector2.ZERO  # the Inventory button's centre
 var _chips: Array[Control] = []
 @onready var _collect: Control = $Box/Collect
@@ -48,7 +49,7 @@ func _ready() -> void:
 	title.size = title.get_combined_minimum_size()
 	title.position.x = (bw - title.size.x) / 2
 	for i in roll.size():
-		var c := _chip(roll[i])
+		var c := _chip(roll[i], i >= roll.size() - bonus)
 		c.pivot_offset = c.size / 2
 		c.scale = Vector2(K, K)
 		c.position = Vector2((bw - row_w) / 2 + (i % 3) * (cw + GAP), 18 + 19 + 16 + (i / 3) * (ch + GAP)) - c.size * (1 - K) / 2
@@ -80,11 +81,29 @@ func _ready() -> void:
 
 ## A rolled element: the white chip (suit border, number, badge, name),
 ## with the die face over it until the reveal.
-func _chip(r: Dictionary) -> Control:
+func _chip(r: Dictionary, is_bonus := false) -> Control:
 	var sym: String = r.sym
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
 	var c := Control.new()
 	c.size = Vector2(CHIP, CHIP + 17)
+	if is_bonus:  # a bonus die (the user, 2026-11-22): a gold frame behind, a "+" circle at its top-right
+		var frame := Panel.new()
+		frame.add_theme_stylebox_override("panel", Tok.box(Color("#4a3410"), 18, 4, Tok.GOLD, 6, 0, Color(1, 0.84, 0.47, 0.45)))
+		frame.position = Vector2(-4, -4)
+		frame.size = Vector2(CHIP, CHIP) + Vector2(8, 8)  # round the square (the name is inside it)
+		frame.mouse_filter = MOUSE_FILTER_IGNORE
+		c.add_child(frame)
+		var plus := Panel.new()
+		plus.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, 14, 2, Color("#4a3410")))
+		plus.size = Vector2(28, 28)
+		plus.position = Vector2(frame.position.x + frame.size.x - 10, frame.position.y - 18)  # out past the suit badge
+		plus.mouse_filter = MOUSE_FILTER_IGNORE
+		plus.z_index = 1  # over the chip's suit badge
+		var pl := Tok.label("+", 22, Color("#3b2412"), 900)
+		Tok.centre_name(pl, 28, -2, 28)
+		pl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		plus.add_child(pl)
+		c.add_child(plus)
 	var face := Control.new()  # everything revealed (faded in)
 	face.size = c.size
 	face.modulate.a = 0

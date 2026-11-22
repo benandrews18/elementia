@@ -722,6 +722,8 @@ func _roll() -> void:
 		return
 	var pop := RollPopup.make()
 	pop.roll = out
+	if Game.state.get("matChecked"):  # the dice past the usual roll are the Quark score's bonus (do_roll() adds them last)
+		pop.bonus = maxi(0, out.size() - int(Data.t("TAKE")))
 	pop.fly_to = _hub.button_center("inv")
 	pop.size = size
 	add_child(pop)
