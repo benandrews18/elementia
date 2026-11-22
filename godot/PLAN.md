@@ -193,22 +193,18 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
 
 ## Ground rules
 
-- **The HTML game is the reference.** When the Godot version disagrees with
-  `game/`, Godot is wrong, unless the user decided to change it (record that
-  in "Decisions").
-- **Content and tables stay in one place.** Until cutover (M9) content is
-  edited only in `game/js/` (`data.js`, plus the tables in `model.js`,
-  `mat-scoring.js` and `lock-in.js`). `godot/data/game_data.json` is
-  generated from the running HTML game by `godot/tools/export_from_game.mjs`
-  (it loads the page through `game/tools/headless_game.mjs` and writes
-  `DATA` plus every plain table: `ITEM_SUIT_COST_TABLE`,
-  `LOCKIN_ROUND_ANCHORS`, `MAT_COLLECTIONS_RAW`, `MAT_GROW_ROUNDS`, the
-  BINGO/Market constants ...). Never hand-copy a table into GDScript, and
-  never hand-edit the JSON. Anything holding functions (e.g. the challenge
-  checks in `CHECK_ORDERS`) is a rule and is ported as code.
-- **Balance freeze, mostly.** Data tweaks (a recipe, a price) are fine: re-run
-  the export. Rule changes in `game/js` during the port must also be made in
-  Godot; the parity test (below) flags any that are missed.
+- **Godot is the game (since the cutover, 2026-11-21).** `game/` is the
+  frozen HTML prototype: history, never a reference to sync with.
+- **Content and tables stay in one place:** `godot/data/game_data.json`
+  (`DATA`: stations, dice, shops, capstones; plus the plain tables:
+  `ITEM_SUIT_COST_TABLE`, `LOCKIN_ROUND_ANCHORS`, `MAT_COLLECTIONS_RAW`,
+  `MAT_GROW_ROUNDS`, the BINGO/Market constants ...). Tables built from
+  them are computed (`Data.derive()`), never stored. Never copy a table into
+  GDScript. Anything holding functions (e.g. the challenge checks) is code.
+  A new item emoji: `python godot/tools/fetch_icons.py`.
+- **The rules lock.** `tests/goldens` (in git) hold recorded rule steps; the
+  parity test replays them. A rule change on purpose makes it fail: then
+  `parity.tscn -- --accept` re-records, and the commit says why.
 - **Rules never touch the screen.** Rules code (`core/`) has no nodes, no
   drawing, no timers. Screens only call actions and read state. This is the
   one structural rule the HTML game didn't have, and it's what makes the
@@ -283,17 +279,15 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 
 | What | Command (from the repo root) |
 |---|---|
-| Re-export data, icons, art from `game/` | `node godot/tools/export_from_game.mjs` |
-| Re-record goldens (after rule changes) | `node godot/tools/record_golden.mjs [--runs 24]` |
 | Import assets (after new art) | `G --headless --path godot --import` |
 | Every check, with a clear PASS/FAIL | `python godot/tools/check.py fast [--only market]` / `full` / `accept` |
-| Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
+| Rules lock | `G --headless --path godot --quit-after 600 res://tests/parity.tscn [-- --accept]` (accept: after an intended rule change) |
+| Icons for new item emoji | `python godot/tools/fetch_icons.py` |
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
 | The play test (or one section) | `G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only market]` |
 | Phone build (+ install) | `python godot/tools/phone.py [build]` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
-| HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |
 | Before/after screens | `python godot/tools/shot_diff.py shoot godot/build/after [state ...]` (one Godot run) then `... diff godot/build/before godot/build/after` |
 
 ---
@@ -774,10 +768,10 @@ design happens in Godot.
       `data/game_data.json` is enough; a test proves they equal today's
       exported ones, then the copies leave the JSON. Done: `Data.derive()`
       (23 tables, all equal to the HTML's before the copies were removed).
-- [ ] C2. Content is edited in Godot: `data/game_data.json` is the source
+- [x] C2. Content is edited in Godot: `data/game_data.json` is the source
       (how to add an item, a station, an icon); a Godot-side Noto icon
       fetch for new emoji.
-- [ ] C3. The checks stand alone: the parity goldens become a lock on
+- [x] C3. The checks stand alone: the parity goldens become a lock on
       Godot's own rules (`parity --accept` re-records after an intended rule
       change); the HTML-reading tools retire (export_from_game, compare,
       html_shot, record_golden; `check.py --compare`).

@@ -123,7 +123,7 @@ func _redraw() -> void:
 	_kept = kept
 	_layout()
 	var i := 0
-	for t in [$Scroll/Page/PinTable, $Scroll/Page/Table]:  # tagged for tools/compare.mjs, in page order
+	for t in [$Scroll/Page/PinTable, $Scroll/Page/Table]:  # tagged (meta cmp) in page order
 		for r in t.get_children().filter(func(c): return c is RefRow):
 			r.tag("ref:row%d" % i)
 			i += 1

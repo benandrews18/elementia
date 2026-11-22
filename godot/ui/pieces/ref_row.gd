@@ -69,7 +69,7 @@ func fill(e: Dictionary, w: float, open: bool, tree: RefTree) -> float:
 	return h
 
 
-## Names its parts for tools/compare.mjs (k, k:icon, k:name...).
+## Names its parts (meta cmp: k, k:icon, k:name...) for the tests.
 func tag(k: String) -> void:
 	set_meta("cmp", k)
 	for n in [["Icon", "icon"], ["Name", "name"], ["Pts", "pts"], ["Where", "where"], ["Expand", "expand"], ["Pin", "pin"], ["Suits", "suits"]]:

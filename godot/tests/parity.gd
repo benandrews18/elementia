@@ -1,7 +1,9 @@
-## Rules parity (PLAN.md): replays every golden step recorded from the HTML
-## game (tools/record_golden.mjs) through the Godot rules and compares.
-##   Godot_console.exe --headless --path godot res://tests/parity.tscn
-## Exit code 0 only when every step is ported and matches.
+## The rules lock (PLAN.md): replays every golden step (first recorded from
+## the HTML prototype) through the rules and compares the result.
+##   Godot_console.exe --headless --path godot res://tests/parity.tscn [-- --accept]
+## Exit code 0 only when every step matches. After an intended rule change,
+## --accept writes the rules' new results into the goldens (then look at
+## what changed: `parity: N steps re-recorded`).
 extends Node
 
 const GOLDENS := "res://tests/goldens"
@@ -11,9 +13,11 @@ func _ready() -> void:
 	Progress.autosave = false
 	var files := DirAccess.get_files_at(GOLDENS)
 	if files.is_empty():
-		print("No goldens: run node godot/tools/record_golden.mjs")
+		print("No goldens in tests/goldens (they are in git)")
 		get_tree().quit(1)
 		return
+	var accept := OS.get_cmdline_user_args().has("--accept")
+	var changed := 0
 	var passed := 0
 	var failed := 0
 	var not_ported := {}
@@ -26,7 +30,12 @@ func _ready() -> void:
 				var ids: Array = Trophies.all().map(func(t): return t.id)
 				var d := "" if ids == step.allIds else "trophy ids differ: %s" % str(ids.filter(func(x): return not step.allIds.has(x)) + step.allIds.filter(func(x): return not ids.has(x)))
 				if d == "" and got != step.earned:
-					d = "earned %s, HTML game %s" % [got.filter(func(x): return not step.earned.has(x)), step.earned.filter(func(x): return not got.has(x))]
+					d = "earned %s, the golden %s" % [got.filter(func(x): return not step.earned.has(x)), step.earned.filter(func(x): return not got.has(x))]
+				if d != "" and accept:
+					step.earned = got
+					step.allIds = ids
+					changed += 1
+					d = ""
 				if d == "":
 					passed += 1
 				else:
@@ -43,6 +52,10 @@ func _ready() -> void:
 			# craft(entry) was recorded as {entry: name}; Godot takes the name.
 			Game.callv(method, step.args.map(func(a): return a.entry if a is Dictionary and a.has("entry") else a))
 			var d := diff(Game.snapshot(), step.after, "")
+			if d != "" and accept:
+				step.after = Game.snapshot()
+				changed += 1
+				d = ""
 			if d == "" and Rng.leftover() > 0:
 				d = "%d random numbers left unused" % Rng.leftover()
 			if d == "":
@@ -51,8 +64,12 @@ func _ready() -> void:
 				failed += 1
 				if failed <= SHOW_FAILS:
 					print("FAIL %s step %d %s(%s): %s" % [f, i, step.fn, JSON.stringify(step.args), d])
+		if accept and changed:
+			FileAccess.open(GOLDENS + "/" + f, FileAccess.WRITE).store_string(JSON.stringify(steps))
 	var total: int = passed + failed + not_ported.values().reduce(func(a, b): return a + b, 0)
 	print("parity: %d/%d steps match, %d differ" % [passed, total, failed])
+	if accept:
+		print("parity: %d steps re-recorded" % changed)
 	if not not_ported.is_empty():
 		print("not ported yet: " + ", ".join(not_ported.keys().map(func(k): return "%s %d" % [k, not_ported[k]])))
 	get_tree().quit(0 if passed == total else 1)

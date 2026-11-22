@@ -1,5 +1,4 @@
 .godot/
 build/*
 !build/.gdignore
-tests/goldens/
 tests/tmp/

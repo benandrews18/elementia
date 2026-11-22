@@ -7,10 +7,9 @@ cut short by --quit-after prints nothing and must never count.
       --only), and every screen against build/before (one Godot run, drawn
       off-screen) -- skipped when nothing that can change a screen has
       changed since the screens last passed; --screens forces them
-  python godot/tools/check.py full [--compare]
+  python godot/tools/check.py full
       all of fast and the whole play test (screens still skipped when nothing
-      visual changed); --compare adds the HTML comparison report (for a
-      milestone review: slow, and costly to read)
+      visual changed)
   python godot/tools/check.py accept
       the screens now are the new "before" (after an intended visual change)
 
@@ -114,12 +113,6 @@ def main() -> int:
         label = "play test" + (f" ({only})" if only and mode == "fast" else "")
         ok &= godot_test(label, "res://tests/ui_play.tscn", r"^ui_play: PASS", 20000,
                          ["--", "--only", only] if only and mode == "fast" else [])
-    if mode == "full" and "--compare" in sys.argv:  # a report of layout differences against the HTML game, not a pass/fail
-        r = subprocess.run(["node", str(ROOT / "tools/compare.mjs")], capture_output=True, text=True, timeout=900)
-        print("INFO  HTML comparison (godot/build/compare.html):")
-        for l in r.stdout.splitlines():
-            if "checked" in l or "dx dy" in l:
-                print("      " + l)
     print("ALL PASSED" if ok else "SOMETHING FAILED")
     return 0 if ok else 1
 
