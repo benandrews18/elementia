@@ -1,82 +1,49 @@
 # Elementia
 
 A chemistry crafting game for kids, played on phones and tablets in
-portrait mode. **Classic Mode is the only mode.** Plain HTML/CSS/JS, no
-framework, no build step to play. See `game/README.md` for how the code
-is laid out.
+portrait mode. **Classic Mode is the only mode.**
 
-## Godot rebuild
+**The game is the Godot 4 project in `godot/`** (since the cutover,
+2026-11-21). Before any work, read `godot/PLAN.md` (current milestone, next
+task, decisions) and update its log when done. `godot/EDITING.md` says how
+to change things in the Godot editor.
 
-The game is being rebuilt in Godot 4 under `godot/`. **Before any Godot work,
-read `godot/PLAN.md`** (current milestone, next task, decisions) and update
-its log when done. Until cutover, `game/` stays the reference for every rule
-and screen, and content and rule tables are edited only in `game/js/`
-(Godot's copy is exported from the running game, never hand-copied).
-Check Godot work with `python godot/tools/check.py fast` (add
-`--only <section>` for the play-test part that changed; it skips the
-screenshots when nothing visual changed) and `full` at the end of a step and
-before a review, milestone or publish; it must print `ALL PASSED`.
+Frozen history, never a reference to sync with: `game/` (the HTML
+prototype: still the website until the Godot web build replaces it),
+`print/` (the printed cards; a future board game would be its own
+project) and `archive/`.
 
 ## Source of truth
 
-The game is the source of truth for all content. Edit these, nothing else:
-
-- `game/js/data.js`: dice per roll (`take`), content version, each
-  station's dice, shop items and capstone (`[emoji, name, tier, recipe, points]`).
-  Every row is in the game; to add or remove an item, add or remove its
-  row. The block between the `__GAME_DATA_*__` markers must stay plain JSON.
-- `game/js/model.js`: suit costs (`ITEM_SUIT_COST_TABLE`), element suits,
-  visit limits and dice rules.
-- Item icons: an emoji renders as a Noto image. After adding an item with a
-  new emoji, run `python game/tools/fetch_noto_icons.py`. Hand-made art uses
-  a `__NAME__` marker mapped in `CUSTOM_ICONS` (`js/render-helpers.js`).
-- `game/js/mat-scoring.js`: Display Mat collections, combos, BINGO rules.
-
-Nothing else holds a copy of game data. The print pipeline reads the game.
-`archive/` is old experiments and stale data. Never use it as a reference
-for current rules.
+- `godot/data/game_data.json`: `DATA` (each station's dice, shop rows
+  `[emoji, name, tier, recipe, points]`, capstone and unlock rows) and the
+  plain rule tables (suit costs, Display Mat collections, challenges'
+  numbers, ...). Tables built from them are computed (`Data.derive()`),
+  never stored or copied into code.
+- Item icons: a new emoji needs `python godot/tools/fetch_icons.py` (Noto
+  images). Hand-made art: `godot/assets/icons/` + `icons.json`.
+- Rules are code in `godot/core/` and `godot/game/` (no nodes, no drawing).
+- A rule or data change must still load older saves (`Progress`).
 
 ## Checks
 
-- `node game/tools/run_smoke.mjs`: plays a short run in headless Chrome,
-  then checks icons, recipes and key rules (suit costs, convert, BINGO
-  redraw, loading an old save). Run it after any game change. It must
-  print `PASS`. Add a rule check to `game/tools/smoke_classic.js` when you
-  fix a rule bug.
-- A project hook (`.claude/settings.json`) syntax-checks every .js/.mjs
-  file right after Claude edits it.
-- `python print/build_pdfs.py --html-only` after content changes, to
-  confirm the print pipeline still reads the game data.
+- `python godot/tools/check.py fast` after a change (add `--only <section>`
+  for the play-test part that changed); `full` at the end of a step and
+  before a release. It must print `ALL PASSED`.
+- The rules lock (`godot/tests/goldens`, in git): a rule changed on purpose
+  makes it fail; re-record with `parity.tscn -- --accept` and say why in the
+  commit.
 
-## Publishing (standard for every game update)
+## Releases
 
-Every change to the game (anything under `game/` that players see) is
-published as part of finishing the work, without waiting to be asked: once
-it's committed and the smoke test passes, do all three steps below. Changes
-to tooling, docs, `print/` or `archive/` alone don't need a publish. If the
-smoke test or the push fails, stop and report it; don't publish a broken
-build.
-
-1. Website (https://benandrews18.github.io/elementia/):
-   `python game/deploy.py "What changed"`. It runs the smoke test, builds
-   `game/build/elementia_artifact.html`, copies it into `../elementia-site/`
-   (a separate clone), commits there and pushes `main`. It then pushes this
-   repo's `master` to the `source` branch of the same GitHub repo (the
-   source backup; that repo is public). Never push `master` to `main`.
-2. Shared link: publish that same build file with the Artifact tool to
-   https://claude.ai/artifact/KCo6nrTYdJ6cRXPhJqu2ZV
-3. Add a `CHANGELOG.md` entry. Bump `"version"` in `data.js` when content changed.
-
-## Printing
-
-`python print/build_pdfs.py` builds the Classic Station Guide, Card Deck
-and Element Cards into `print/pdf/`. Only run it when asked to update the
-PDFs. Classic only; there is no full/non-Classic guide anymore.
+- **Phone (the user's, Android):** `python godot/tools/phone.py` builds the
+  release-signed APK and installs it over Wi-Fi (setup: PLAN.md "Phone
+  builds"). The user's own phone: no need to ask.
+- **Web (testers, iPhones):** the Godot web export on the website. Pushing
+  to the site is publishing: ask the user first. Never push `master` to the
+  site repo's `main`.
+- Add a `CHANGELOG.md` entry for changes players see.
 
 ## Conventions
 
-- `js/` files are classic scripts sharing one global scope, loaded in the
-  order `elementia.html` lists them (see `game/README.md`).
-- Saves live in localStorage under `elementia-save-v4-classic`. A rule or
-  data change must still load older saves (see `loadAll()` in `js/state.js`).
-- Commit on `master`. One commit per logical change.
+- Commit on `master`, one commit per logical change.

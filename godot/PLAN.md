@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** Cutover C1 (Godot computes its derived tables), then C2-C5 (see "Cutover"). The phone pass is done (the user: it feels good; visual notes go to M8). Start every session with `git status`: the user may
+**Next task:** Cutover C4's last part (the web build's home on the site: waiting on the user), then C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C3 done. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -776,8 +776,8 @@ design happens in Godot.
       change); the HTML-reading tools retire (export_from_game, compare,
       html_shot, record_golden; `check.py --compare`).
 - [ ] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
-      `game/` and `print/` marked frozen; the web build's home on the site
-      (ask the user before publishing).
+      `game/` and `print/` marked frozen (done); left: the web build's home
+      on the site and a publish script (ask the user before publishing).
 - [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
       the unlock reveal, the after-craft mini card. Then the user resumes
       game design; animations, sound, the user's visual notes (text
