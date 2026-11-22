@@ -803,12 +803,15 @@ design happens in Godot.
   - [x] Convert tray: the chosen From/To squares show their atomic number
         and suit badge.
   - [x] Home's Shop face shows the current station's icon.
-  - [ ] The clock shows the round number in its middle.
+  - [x] The clock shows the round number in its middle.
   - [ ] Track an item from the To-Do List tray (its track button on it).
   - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
         to take it off.
-  - [ ] Sugar an ingredient of fruits (a content change: which fruits,
+  - [x] Sugar an ingredient of fruits (a content change: which fruits,
         and the rules lock re-recorded).
+  - [x] Challenge window: the title states the ask, big icons, a labelled
+        Reroll.
+  - [x] The map's turn clock (missed in the port) and its info window.
   - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
@@ -818,6 +821,18 @@ design happens in Godot.
         Crafting Bench still there; a Craft button at each row's right end
         carrying the convert icon at its top-right when a component can be
         converted.
+- [ ] Design (the user, 2026-11-21; settle the open questions first):
+      **drawing cards at Display Mat checks.** At the start of a check the
+      player draws cards from their deck (stock); each can be played onto
+      the mat (replacing a card already there) or discarded to draw more.
+      Discards are gone for the rest of that check. No limit on plays or
+      discards: the stock running out is the limit. With it, a tier /
+      display-size mark on cards: the Roman numeral plus blocks (1 for a
+      small card, 2 stacked for a full one, 4 for a capstone), on the
+      Crafting Bench and the full card view.
+- Port check (2026-11-21): every HTML window has a Godot one except the
+  capstone celebration and the unlock reveal (C5); the turn clock and its
+  window were missed and are now in.
 - [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
       the unlock reveal, the after-craft mini card. Then the user resumes
       game design; animations, sound, the user's visual notes (text
