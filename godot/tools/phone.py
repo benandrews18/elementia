@@ -11,6 +11,7 @@ A phone on Wi-Fi is paired once with `adb pair` / `adb connect` (PLAN.md).
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ANDROID = Path("C:/Users/benan/Android")
@@ -34,8 +35,13 @@ def build() -> None:
 
 
 def install() -> None:
-    lines = subprocess.run([ADB, "devices"], capture_output=True, text=True, check=True).stdout.splitlines()[1:]
-    phones = [l.split()[0] for l in lines if l.endswith("\tdevice")]
+    phones = []
+    for _ in range(10):  # a Wi-Fi phone takes a few seconds to reappear after adb restarts
+        lines = subprocess.run([ADB, "devices"], capture_output=True, text=True, check=True).stdout.splitlines()[1:]
+        phones = [l.split()[0] for l in lines if l.endswith("\tdevice")]
+        if phones:
+            break
+        time.sleep(1)
     if not phones:
         sys.exit("No phone connected (adb devices is empty): pair it first, see PLAN.md")
     for p in phones:

@@ -700,6 +700,16 @@ func _settings(app: App) -> void:
 		mr[0].get_node("Window/Content/Page2/OkRow/Ok").gui_input.emit(_release())
 		await get_tree().process_frame
 		check(top.call(MatRules).is_empty(), "Got it closes them")
+	# Back (Android) / Escape: the top window, then the panel, never a quit.
+	app.open_panel("drawer")
+	app.open_settings()
+	app.back()
+	await get_tree().process_frame
+	check(top.call(SettingsWindow).is_empty() and app.panel == "drawer", "Back closes the top window first")
+	app.back()
+	check(app.panel == "", "then the panel")
+	app.back()  # nothing open: nothing happens
+	check(ProjectSettings.get_setting("application/config/quit_on_go_back") == false, "Back never quits the app")
 	app.close_panel()
 	finished.settings = true
 

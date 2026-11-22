@@ -243,7 +243,8 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   `elementia-release.keystore` (alias `elementia`) and its password in
   `elementia-keystore-password.txt`. **Losing the key means the phone app
   can't be updated** (reinstall, save lost): the user keeps a backup.
-  Godot's editor settings point at the JDK and SDK. Preset "Android":
+  Godot's editor settings point at the JDK and SDK (and
+  `shutdown_adb_on_exit = false`, else each export drops the Wi-Fi phone). Preset "Android":
   arm64 only, app ID `io.github.benandrews18.elementia`, no Gradle.
   `python godot/tools/phone.py` builds the signed APK and installs it (`-r`
   keeps the save) on every phone adb sees; Wi-Fi pairing is once per phone
@@ -780,11 +781,13 @@ Mini-games switch off); their switch and title-screen button stay hidden.
   9); the on-screen keyboard mustn't cover the Dev Panel's text fields
   (review M6-9).
 - Haptics: mobile-development.
+- [x] Back (Android) / Escape closes the Dev Panel, the top window (its
+      Close, else its backdrop), then the panel; never quits (review 14,
+      moved here from M9 by the user, 2026-11-21).
 
 ### M9 Release and cutover (~2-3 sessions plus store review time)
 - [ ] Android: export templates, a signing key, Play Console listing, testing track
-- [ ] Before any store build: the Back button closes the top window, never
-      quits (review 14); the safe area keeps the bars clear of notches and
+- [ ] Before any store build: the safe area keeps the bars clear of notches and
       the home bar (review 8, responsive-ui); app saves get a version and the
       `loadAll()` clean-ups (review 5; the dev snapshots, dev history and
       backup files too, M6-10).

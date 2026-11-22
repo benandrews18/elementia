@@ -8,7 +8,6 @@ done"). What's left, and where it's planned:
 - 12 Re-measure the station and mat redraws on a real phone: PLAN.md M8.
 - 9 Bigger invisible tap areas for small buttons: M8 (phone pass).
 - M6-9 The phone keyboard covering the Dev Panel's text fields: M8.
-- 14 Android Back closes the top window, never quits: M9.
 - 8 Safe area (notches, home bar): M9.
 - 5 + M6-10 Save files get a version and upgrades: M9.
 - M6-5 Collections and Saved Layouts share 7 lines of list sizing: left.

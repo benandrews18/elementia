@@ -308,6 +308,51 @@ func _collection_found() -> void:
 		CollectionFound.show_on(self, c)
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:  # Android's Back (quit_on_go_back is off)
+		back()
+
+
+func _unhandled_input(ev: InputEvent) -> void:
+	if ev.is_action_pressed("ui_cancel"):  # Escape (input.js)
+		back()
+
+
+## Back / Escape: what tapping out of the top thing does, never a quit. The
+## Dev Panel; else the top window's Close, else its backdrop (each window's
+## own rules: a step that can't be skipped has neither, or ignores it); else
+## the open panel. Nothing open: nothing.
+func back() -> void:
+	var dev := get_node_or_null("Dev")
+	for p in dev.get_children() if dev else []:
+		if p is DevPanel and p.visible:
+			p.hide()
+			return
+	var wins := get_children().slice(_hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
+	if not wins.is_empty():
+		var w: Control = wins.back()
+		var t: Control = w if w.name == "LabBar" else w.find_child("Close", true, false)
+		if t == null:
+			t = w.find_child("Dim", true, false)
+		if t:
+			_tap(t)
+		return
+	if panel != "":
+		close_panel()
+
+
+## A tap on n, as a finger would.
+static func _tap(n: Control) -> void:
+	if n is BaseButton:
+		n.pressed.emit()
+		return
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.global_position = n.get_global_rect().get_center()
+	Tap._down = null
+	n.gui_input.emit(ev)
+
+
 ## A window open over the screen (anything added after the hub).
 func _window_open() -> bool:
 	return get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
