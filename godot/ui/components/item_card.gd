@@ -5,7 +5,7 @@
 ## opts: mini (tier 1 small card), in_grid (false = on the mat: a mini card
 ## drops its name), wide (capstone art 1.5x), complete (points doubled),
 ## tag (the name its parts are measured under in comparisons; default the
-## item), on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
+## item), no_stations (no station badges: the station shop), on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
 ## combo: their badges get a gold halo).
 class_name ItemCard
 extends Control
@@ -125,6 +125,7 @@ func _ready() -> void:
 		b.add_child(g)
 		_stations.add_child(b)
 	_stations.set_meta("cmp", opts.get("tag", item) + ":stations")
+	_stations.visible = not opts.get("no_stations", false)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
 	resized.connect(_place)
