@@ -1,22 +1,36 @@
 ## The challenge window (openOrderInfo(), #comboInfoOverlay): the round
-## clock on its top-left corner, "<name> Request!" or "Restriction!" on the
-## banner, what it asks and its multiplier, the rule in icons, and the swap
-## button (one Unknown Element for another challenge) beside OK. Also the
+## clock on its top-left corner, what it asks in plain words on the banner
+## (TITLES: "3 Ocean Cards", "No Organic Cards"), "Request" or
+## "Restriction" and its multiplier, the rule in big icons, and Reroll (one
+## Unknown Element for another challenge) beside OK. Also the
 ## challenge's line on the shutter (orderShutterLine()). Names and wording
 ## live here: Orders holds only the rules.
 class_name OrderInfo
 extends Control
 
-## id -> [name, description ("%s": the station / suit word)]
-const WORDS := {
-	"stationWeek": ["Station Week", "3 %s cards"], "collector": ["Collector", "1 Named collection"],
-	"fullRecipe": ["Full Recipe", "A card with its whole recipe"], "suitSet": ["Suit Set", "3 %s cards"],
-	"commonThread": ["Common Thread", "3 cards sharing a component"], "drought": ["Drought", "No %s cards"],
-	"closedStation": ["Closed Station", "No %s cards"], "freshFaces": ["Fresh Faces", "Half your cards or fewer from the last check"],
-	"shortTable": ["Short Table", "1 empty slot"], "thinStock": ["Thin Stock", "At most 3 tier 1 cards"],
-	"trendShift": ["Trend Shift", "No %s combo"], "doubleDrought": ["Double Drought", "No %s cards"],
-	"spreadOut": ["Spread Out", "No 4 cards from one station"],
+## The banner: what the challenge asks, in plain words ("%s": the station
+## or suit names). The user, 2026-11-21: a title that says the ask itself.
+const TITLES := {
+	"stationWeek": "3 %s Cards", "collector": "Complete a Collection", "fullRecipe": "A Card and Its Whole Recipe",
+	"suitSet": "3 %s Cards", "commonThread": "3 Cards Sharing a Part", "drought": "No %s Cards",
+	"closedStation": "No %s Cards", "freshFaces": "Mostly New Cards", "shortTable": "Leave 1 Slot Empty",
+	"thinStock": "3 or Fewer Tier I Cards", "trendShift": "No %s Combo", "doubleDrought": "No %s Cards",
+	"spreadOut": "No 4 Cards From One Station",
 }
+const ICON := 52.0  # the rule's icons (the user: large and clear)
+
+
+## The banner's title for o.
+static func title_of(o: Dictionary) -> String:
+	if o.id == "grand":
+		return "Grand Exhibition!"
+	var t: String = TITLES[o.id]
+	if not t.contains("%s"):
+		return t
+	var p: String = o.p
+	if o.id in ["suitSet", "drought", "doubleDrought"]:
+		return t % " or ".join(Array(p.split("|")).map(_suit_word))
+	return t % p.trim_prefix("The ")
 
 
 static func is_request(o: Dictionary) -> bool:
@@ -25,14 +39,6 @@ static func is_request(o: Dictionary) -> bool:
 
 static func _suit_word(su: String) -> String:
 	return String(Data.t("ELEMENT_SUIT_LABEL")[su]).capitalize()
-
-
-static func desc(o: Dictionary) -> String:
-	var d: String = WORDS[o.id][1]
-	if not d.contains("%s"):
-		return d
-	var p: String = o.p
-	return d % (" or ".join(Array(p.split("|")).map(_suit_word)) if o.id in ["suitSet", "drought", "doubleDrought"] else p)
 
 
 static func mult_label(o: Dictionary) -> String:
@@ -47,7 +53,7 @@ static func shutter_line(o) -> String:
 		return ""
 	if o.id == "grand":
 		return "Grand Exhibition: reach %s Quarks!" % mult_label(o)
-	return "%s: %s (%s)" % ["Request" if is_request(o) else "Restriction", WORDS[o.id][0], mult_label(o)]
+	return "%s: %s (%s)" % ["Request" if is_request(o) else "Restriction", title_of(o), mult_label(o)]
 
 
 ## The layout is ui/overlays/order_info.tscn (the window, the text's style,
@@ -73,13 +79,22 @@ func _ready() -> void:
 	$Window/OK.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	# The swap: ↻ and a "?" square (one Unknown Element for another challenge).
 	var sw: Control = $Window/Swap
-	var arrow := Tok.loop_arrow(Color("#3b2412"), 28, true)
-	arrow.position = Vector2(22, 9)
+	# Reroll: ↻, the word, and what it costs (a "?" square).
+	var arrow := Tok.loop_arrow(Color("#3b2412"), 24, true)
+	arrow.position = Vector2(14, 11)
 	sw.add_child(arrow)
+	var word := Tok.label("Reroll", 16, Color("#3b2412"), 900)
+	word.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var ww := Tok.font(900).get_string_size(word.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+	word.clip_text = true
+	word.position = Vector2(14 + 24 + 6, 0)
+	word.size = Vector2(ww + 2, 46)
+	sw.add_child(word)
 	var sq := LockInReward.unknown_square(22)
-	sq.position = Vector2(22 + 28 + 8, 12)
+	sq.position = Vector2(word.position.x + ww + 8, 12)
 	sq.mouse_filter = MOUSE_FILTER_IGNORE
 	sw.add_child(sq)
+	sw.size.x = sq.position.x + 22 + 14
 	sw.gui_input.connect(func(ev): if Tap.tap(ev) and _can_swap and Game.reroll_order(): _build())
 	_build()
 
@@ -91,10 +106,13 @@ func _build() -> void:
 		return
 	var grand: bool = o.id == "grand"
 	var win: ParchmentWindow = $Window
-	win.title = "Grand Exhibition!" if grand else "%s %s!" % [o.p if o.id == "stationWeek" else WORDS[o.id][0], "Request" if is_request(o) else "Restriction"]
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * 38
-	var text := ("Reach %s ⚛ at the final check" % mult_label(o)) if grand else "%s: %s⚛%s" % [desc(o), mult_label(o), "" if is_request(o) else " if broken"]
+	win.size.x = w  # first: the title wraps to this width
+	win.wrap_title = true
+	win.title = title_of(o)
+	var text := ("Reach %s ⚛ at the final check" % mult_label(o)) if grand else "%s: %s⚛%s" % [
+		"Request" if is_request(o) else "Restriction", mult_label(o), "" if is_request(o) else " if broken"]
 	var d: Label = $Window/Desc
 	var f := d.get_theme_font("font")
 	var px := d.get_theme_font_size("font_size")
@@ -105,7 +123,7 @@ func _build() -> void:
 	var lines := f.get_multiline_string_size(d.text + "  ", HORIZONTAL_ALIGNMENT_LEFT, inner - 24, px).y / f.get_height(px)
 	var dh := roundf(lines) * px * 1.5
 	d.size = Vector2(inner, dh)
-	d.position.x = 38
+	d.position = Vector2(38, 59 + win.extra_height)
 	var rule: Control = $Window/Rule
 	for c in rule.get_children():
 		c.queue_free()
@@ -160,49 +178,53 @@ func _build() -> void:
 		x += b.size.x + 10
 
 
-## .ord-rule: the rule in icons and figures, 30px, 8px apart.
+## .ord-rule: the rule in big icons and figures (ICON), 12px apart.
 func _rule(o: Dictionary, row: Control) -> void:
 	var parts: Array[Control] = []
 	var p = o.p
-	var st := func(): return Tok.icon(Catalog.station(p).emoji, 34)
-	var txt := func(t: String): return Tok.label(t, 30, Color("#3b2412"), 900)
+	var I := ICON
+	var st := func(): return Tok.icon(Catalog.station(p).emoji, I)
+	var txt := func(t: String): return Tok.label(t, I * 0.85, Color("#3b2412"), 900)
+	var no := func(): return Tok.icon("🚫", I)
 	match o.id:
-		"grand": parts = [Tok.icon("⚛️", 34), txt.call(mult_label(o))]
+		"grand": parts = [Tok.icon("⚛️", I), txt.call(mult_label(o))]
 		"stationWeek": parts = [txt.call("3+"), st.call()]
-		"collector": parts = [Tok.star(Tok.GOLD, 34), Tok.tick(Tok.OK, 30)]
-		"fullRecipe": parts = [Tok.icon("🧩", 34), txt.call("×2")]
+		"collector": parts = [Tok.star(Tok.GOLD, I), Tok.tick(Tok.OK, I * 0.9)]
+		"fullRecipe": parts = [Tok.icon("🧩", I), txt.call("×2")]
 		"suitSet": parts = [txt.call("3+"), _suit(p)]
-		"commonThread": parts = [Tok.icon("🧵", 34), txt.call("3+")]
-		"drought": parts = [Tok.icon("🚫", 34), _suit(p)]
-		"closedStation": parts = [Tok.icon("🚫", 34), st.call()]
-		"freshFaces": parts = [Tok.loop_arrow(Color("#3b2412"), 30), txt.call("≤ ½")]
-		"shortTable": parts = [Tok.icon("⬜", 34), txt.call("1+")]
+		"commonThread": parts = [Tok.icon("🧵", I), txt.call("3+")]
+		"drought": parts = [no.call(), _suit(p)]
+		"closedStation": parts = [no.call(), st.call()]
+		"freshFaces": parts = [Tok.loop_arrow(Color("#3b2412"), I * 0.9), txt.call("≤ ½")]
+		"shortTable": parts = [Tok.icon("⬜", I), txt.call("1+")]
 		"thinStock": parts = [txt.call("I ≤ 3")]
-		"trendShift": parts = [Tok.icon("🚫", 34), txt.call("3+"), st.call()]
+		"trendShift": parts = [no.call(), txt.call("3+"), st.call()]
 		"doubleDrought":
-			parts = [Tok.icon("🚫", 34)]
+			parts = [no.call()]
 			for su in String(p).split("|"):
 				parts.append(_suit(su))
-		"spreadOut": parts = [Tok.icon("🚫", 34), txt.call("4+"), Tok.icon("🏠", 34)]
+		"spreadOut": parts = [no.call(), txt.call("4+"), Tok.icon("🏠", I)]
+	var rh := I * 1.2
 	var x := 0.0
 	for c in parts:
-		var sz := Vector2(Tok.font(900).get_string_size(c.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 30).x, 41) if c is Label else c.size
+		var sz := Vector2(Tok.font(900).get_string_size(c.text, HORIZONTAL_ALIGNMENT_LEFT, -1, int(round(I * 0.85))).x, rh) if c is Label else c.size
 		if c is TextureRect:
-			sz = Vector2(34, 34)
+			sz = Vector2(I, I)
 		c.size = sz
-		c.position = Vector2(x, (41 - sz.y) / 2)
+		c.position = Vector2(x, (rh - sz.y) / 2)
 		row.add_child(c)
-		x += sz.x + 8
-	row.size = Vector2(x - 8, 41)
+		x += sz.x + 12
+	row.size = Vector2(x - 12, rh)
 
 
-## .ord-suit: a 38px circle in the suit's colour with its white icon.
+## .ord-suit: a circle in the suit's colour with its white icon.
 func _suit(su: String) -> Control:
 	var c := Panel.new()
-	c.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), 19))
-	c.size = Vector2(38, 38)
-	var ic := Tok.icon("suit:" + su, 24)
-	ic.position = Vector2(7, 7)
+	var d := ICON * 1.1
+	c.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), d / 2))
+	c.size = Vector2(d, d)
+	var ic := Tok.icon("suit:" + su, d * 0.63)
+	ic.position = Vector2(d * 0.185, d * 0.185)
 	ic.material = Tok.white()
 	c.add_child(ic)
 	return c
