@@ -335,6 +335,16 @@ func _cards(app: App) -> void:
 	open.call(ElementCard)[0].get_node("Card").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(open.call(ElementCard).is_empty(), "a tap closes the element card")
+	# Every card's components in one row at the shared size, bar the two
+	# outliers (smaller) and Planet (its 16 elements wrap).
+	var odd := []
+	for n in Data.t("CORE_ITEM_NAMES"):
+		app.show_card(n)
+		var cp: CardPop = open.call(CardPop)[0]
+		if n != "Planet" and cp.last_scale != CardPop.FIT:
+			odd.append(n)
+		cp.free()
+	check(odd.size() <= 3 and odd.has("Car"), "card views: one row at the shared size, bar the outliers %s" % [odd])
 	app.show_card("Bridge")
 	var pop: CardPop = open.call(CardPop)[0]
 	check(not pop.get_node("Actions/Back").visible, "a fresh card has no Back")

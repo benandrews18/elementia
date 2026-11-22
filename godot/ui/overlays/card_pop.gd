@@ -193,9 +193,15 @@ static func _cost_badge(su: String) -> Panel:
 	return b
 
 
-## The components in a wrapping row (elements first, then items by points;
-## "+" between); returns their height. Each opens its own card.
-func _parts(w: float, cap: bool) -> float:
+## The components (elements first, then items by points; "+" between), in
+## one row (the user, 2026-11-22): every card at FIT of full size when its
+## row fits (most do), else shrunk to fit; Planet's 16 elements wrap,
+## smaller, with no "+". Returns their height. Each opens its own card.
+const FIT := 0.91  # the shared size: 97 of 99 cards fit one row at it (2026-11-22: only Car and Fruit Cake shrink further)
+var last_scale := 1.0  # the row's scale on the card shown (tests)
+
+
+func _parts(w: float, _cap: bool) -> float:
 	var holder: Control = $Card/Parts
 	for c in holder.get_children():
 		c.queue_free()
@@ -208,10 +214,21 @@ func _parts(w: float, cap: bool) -> float:
 	var pts: Dictionary = Data.t("ITEM_POINTS")
 	toks = toks.filter(func(r): return r.kind == "element") + Util.stable_sort(toks.filter(func(r): return r.kind != "element"),
 		func(a, b): return pts.get(a.name, 0) - pts.get(b.name, 0))
-	var many := toks.size() >= 6
-	var lots := toks.size() >= 10  # Planet's 16 elements: smaller, no "+"
-	var gap := 4.0 if lots or (cap and many) else part_gap
-	var icon_px := 28.0 if cap and many else 32.0
+	var lots := toks.size() >= 10  # Planet
+	var k := FIT
+	if not lots:
+		var natural := _row(toks, 1.0, false, null, 0.0)
+		k = minf(FIT, w / natural)
+	last_scale = k
+	return _row(toks, k, lots, holder, w)
+
+
+## Lays the parts out at scale k into holder (or only measures: holder
+## null); one row, or wrapping at w when lots. Returns the width measured,
+## or the height laid out.
+func _row(toks: Array, k: float, lots: bool, holder: Control, w: float) -> float:
+	var gap := 4.0 if lots else part_gap * k
+	var icon_px := 32.0 * k
 	var row_h := icon_px
 	var x := 0.0
 	var y := 0.0
@@ -219,32 +236,38 @@ func _parts(w: float, cap: bool) -> float:
 		var r: Dictionary = toks[i]
 		var parts: Array[Control] = []
 		if i > 0 and not lots:
-			var plus := Tok.label("+", 14, Color("#5a5548"), 700)
-			plus.size = Vector2(9.9, row_h)
+			var plus := Tok.label("+", 14 * k, Color("#5a5548"), 700)
+			plus.size = Vector2(9.9 * k, row_h)
 			plus.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			parts.append(plus)
-		parts.append(_element(r.name, lots) if r.kind == "element" else _item(r.name, icon_px))
+		parts.append(_element(r.name, lots, k) if r.kind == "element" else _item(r.name, icon_px))
 		parts.back().set_meta("cmp", "cp:ing%d" % i)
-		for c in parts:  # each wraps on its own (CSS flex-wrap): a "+" can end a row
-			if x > 0 and x + c.size.x > w:
+		for c in parts:
+			if lots and x > 0 and x + c.size.x > w:  # Planet wraps (a "+" can't end a row: it has none)
 				x = 0
 				y += row_h + gap
-			c.position = Vector2(x, y + (row_h - c.size.y) / 2)
-			holder.add_child(c)
-			x += c.size.x + gap
+			var cw := c.size.x
+			if holder:
+				c.position = Vector2(x, y + (row_h - c.size.y) / 2)
+				holder.add_child(c)
+			else:
+				c.free()
+			x += cw + gap
+	if holder == null:
+		return x - gap
 	holder.size = Vector2(w, y + row_h)
 	return y + row_h
 
 
 ## An element: its symbol on a white chip with a black edge; opens its card.
-func _element(sym: String, small: bool) -> Control:
-	var px := 12 if small else 14
+func _element(sym: String, small: bool, k := 1.0) -> Control:
+	var px := 12.0 if small else 14.0 * k
 	var l := Tok.label(sym, px, Color("#181614"), 800)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.add_theme_stylebox_override("normal", Tok.box(Color.WHITE, 8, 2, Color.BLACK))
-	var tw := l.get_theme_font("font").get_string_size(sym, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	l.size = Vector2(tw + (10.0 if small else 18.0) + 4, px + (6.0 if small else 10.0) + 4)
+	var tw := l.get_theme_font("font").get_string_size(sym, HORIZONTAL_ALIGNMENT_LEFT, -1, int(round(px))).x
+	l.size = Vector2(tw + (10.0 if small else 18.0 * k) + 4, px + (6.0 if small else 10.0 * k) + 4)
 	l.mouse_filter = MOUSE_FILTER_STOP
 	l.gui_input.connect(func(ev): if Tap.tap(ev):
 		var on := get_parent()
@@ -259,8 +282,8 @@ func _item(name: String, px: float) -> Control:
 	c.size = Vector2(px, px)
 	c.add_child(Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), px))
 	if Catalog.owns(Game.state, name):  # .tok-check
-		var t := Tok.tick(Color.WHITE, 17, Tok.OK, Tok.CARD)
-		t.position = Vector2(px - 11, -4)
+		var t := Tok.tick(Color.WHITE, 17 * px / 32, Tok.OK, Tok.CARD)
+		t.position = Vector2(px - 11 * px / 32, -4 * px / 32)
 		c.add_child(t)
 	if Catalog.entry(name) != null:
 		c.gui_input.connect(func(ev): if Tap.tap(ev):

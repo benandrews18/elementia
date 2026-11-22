@@ -816,7 +816,7 @@ design happens in Godot.
   - [x] Safe area (moved here from M9 by the user, 2026-11-22; review 8):
         the top and bottom bars clear the phone's notch and gesture bar
         (main.gd insets the app; untested on the phone yet).
-  - [ ] Card view (the user, 2026-11-22): every card's component icons in
+  - [x] Card view (the user, 2026-11-22): every card's component icons in
         one row, at a best-fit scale for all items (outliers adjusted one
         by one; Planet left out).
   - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
