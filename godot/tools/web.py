@@ -50,8 +50,7 @@ def publish(message: str) -> None:
     names = [f.name for f in OUT.iterdir()]
     for name in names:
         shutil.copyfile(OUT / name, SITE / name)
-    shutil.rmtree(SITE / "godot", ignore_errors=True)  # the old preview, now the root
-    run(["git", "add", "-A", "--", *names, "godot"], cwd=SITE)
+    run(["git", "add", "-A", "--", *names], cwd=SITE)
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=SITE).returncode:
         run(["git", "commit", "-m", message], cwd=SITE)
         run(["git", "push", "origin", "main"], cwd=SITE)
