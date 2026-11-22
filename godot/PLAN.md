@@ -813,8 +813,9 @@ design happens in Godot.
   - [x] Challenge window: the title states the ask, big icons, a labelled
         Reroll.
   - [x] The map's turn clock (missed in the port) and its info window.
-  - [ ] Safe area (moved here from M9 by the user, 2026-11-22; review 8):
-        the top and bottom bars clear the phone's notch and gesture bar.
+  - [x] Safe area (moved here from M9 by the user, 2026-11-22; review 8):
+        the top and bottom bars clear the phone's notch and gesture bar
+        (main.gd insets the app; untested on the phone yet).
   - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first

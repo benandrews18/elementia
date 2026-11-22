@@ -284,5 +284,10 @@ func _ready() -> void:
 	Progress.record_history()
 	check(Progress.history.is_empty() and Progress.dev_history.size() == 1 and Progress.dev_history[0].dev, "dev: the run goes to Dev runs, not History")
 
+	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
+	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.
+	var ins: Vector2 = load("res://main.gd").safe_insets(Rect2i(0, 96, 1080, 2400 - 96 - 48), Vector2i.ZERO, Vector2i(1080, 2400), Vector2(390, 866.7))
+	check(ins.distance_to(Vector2(96, 48) * 866.7 / 2400) < 0.01, "safe area insets: %s" % ins)
+	check(load("res://main.gd").safe_insets(Rect2i(0, 0, 390, 844), Vector2i.ZERO, Vector2i(390, 844), Vector2(390, 844)) == Vector2.ZERO, "a desktop window: no inset")
 	print("rules_test: %s" % ("PASS" if fails == 0 else "%d FAILED" % fails))
 	get_tree().quit(0 if fails == 0 else 1)
