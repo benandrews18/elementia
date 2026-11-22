@@ -89,10 +89,7 @@ func _cell(name: String, sz: float) -> Control:
 	st.position = Vector2(2, 2)
 	c.add_child(st)
 	var n := Tok.label(name, 9, INK, 800)
-	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.position = Vector2(0, sz - 15)
-	n.size = Vector2(sz, 12)
-	n.clip_text = true
+	Tok.centre_name(n, sz, sz - 15, 12)
 	c.add_child(n)
 	c.gui_input.connect(func(ev): if Tap.tap(ev): _confirm(name))
 	return c
@@ -200,12 +197,14 @@ func _start(name: String, card: Control) -> void:
 	_busy = true
 	var app := App.current
 	var to := app._hub.button_center("inv")
+	app._hub.spotlight("inv", true)  # lit above the dim until the To-Do List opens (introInvLit)
 	var chips := card.get_children().filter(func(c): return c.has_meta("sym"))
 	for i in chips.size():
 		var chip: Control = chips[i]
 		var fly := StationScreen.element_chip(chip.get_meta("sym"), chip.size.x)
 		fly.position = chip.global_position
 		fly.pivot_offset = fly.size / 2
+		fly.z_index = 2  # over the lit Inventory
 		app.add_child(fly)
 		chip.modulate.a = 0.25
 		var d := to - (chip.global_position + chip.size / 2)
@@ -217,7 +216,9 @@ func _start(name: String, card: Control) -> void:
 		tw.tween_property(fly, "scale", Vector2(0.12, 0.12), 0.16)
 		tw.parallel().tween_property(fly, "modulate:a", 0.0, 0.16)
 		tw.tween_callback(fly.queue_free)
+		get_tree().create_timer(i * 0.08 + 0.56 * 0.72).timeout.connect(app._hub.punch.bind("inv"))
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
+	app._hub.spotlight("inv", false)
 	var go := func(): app.fade_through_black(func(): Game.start_run(name))
 	if Progress.tip_hidden("pinTip"):
 		queue_free()

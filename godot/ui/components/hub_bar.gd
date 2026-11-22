@@ -68,6 +68,35 @@ func button_center(id: String) -> Vector2:
 	return Vector2(x + side_w / 2, size.y - H - 16.2 + SIDE_H / 2)
 
 
+## introInvLit: a side button lit and drawn above everything (a window's dim
+## included), glowing gold, while things fly into it; off puts it back.
+func spotlight(id: String, on: bool) -> void:
+	var b: Frame9 = button(id)
+	b.z_index = 1 if on else 0
+	b.texture = active_frame if on or active.get(id) else frame
+	b.get_node("Label").add_theme_color_override("font_color", active_label_color if on or active.get(id) else label_color)
+	var glow := b.get_node_or_null("Glow")
+	if on and glow == null:
+		glow = Panel.new()
+		glow.name = "Glow"
+		glow.show_behind_parent = true
+		glow.mouse_filter = MOUSE_FILTER_IGNORE
+		glow.add_theme_stylebox_override("panel", Tok.box(Color(1, 0.84, 0.47, 0.35), 14, 0, Color.BLACK, 14, 0, Color(1, 0.84, 0.47, 0.8)))
+		glow.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		b.add_child(glow)
+	elif not on and glow:
+		glow.queue_free()
+
+
+## punchInventory(): a quick bounce as something lands in a button.
+func punch(id: String) -> void:
+	var b := button(id)
+	b.pivot_offset = b.size / 2
+	var tw := b.create_tween()
+	tw.tween_property(b, "scale", Vector2(1.32, 1.32), 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(b, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_SINE)
+
+
 ## Shows a new state: face, lit buttons, badges.
 func show_state(new_face: String, new_active: Dictionary, new_badges: Dictionary, air := false) -> void:
 	face = new_face

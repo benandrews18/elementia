@@ -78,6 +78,19 @@ static func label(text: String, size: float, color: Color, weight := 400) -> Lab
 	return l
 
 
+## A name label centred on a tile w wide at y: as wide as its text (at
+## least the tile), so a long name spills evenly past both edges. Its own
+## width is set: a label sized before it's in the tree widens to the theme's
+## default font size and centres off the tile.
+static func centre_name(n: Label, w: float, y: float, h: float) -> void:
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	n.clip_text = true  # its minimum width 0, so the size below holds
+	var tw := n.get_theme_font("font").get_string_size(n.text, HORIZONTAL_ALIGNMENT_LEFT, -1, n.get_theme_font_size("font_size")).x + 2
+	var lw := maxf(w, tw)
+	n.position = Vector2((w - lw) / 2, y)
+	n.size = Vector2(lw, h)
+
+
 ## An icon by its key (an item's emoji, __NAME__, suit:x), sized to fit.
 static func icon(key: String, px: float) -> TextureRect:
 	var t := TextureRect.new()
