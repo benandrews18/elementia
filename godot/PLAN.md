@@ -11,9 +11,9 @@ reference for every rule and screen until the Godot version replaces it.
 
 ## Where we are
 
-**Current milestone:** M6 Everything around the run (M5.5 done, bar the
+**Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** M8 Polish, starting with the phone pass (the user chose it; it needs a build on their phone): speed of the station and mat (review 12), bigger tap areas (9), the keyboard over the Dev Panel (M6-9). Start every session with `git status`: the user may
+**Next task:** Cutover C1 (Godot computes its derived tables), then C2-C5 (see "Cutover"). The phone pass is done (the user: it feels good; visual notes go to M8). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Republish the preview: export Web, copy build/web/* to
 ../elementia-site/godot/, commit, push main (ask the user first).
@@ -763,6 +763,32 @@ Mini-games switch off); their switch and title-screen button stay hidden.
       open questions). Then port them one at a time (input-handling,
       tween-animation, math-essentials as each needs).
 
+### Cutover: Godot stands alone (decided by the user 2026-11-21)
+The HTML game is frozen as it is and abandoned: from here on the game is
+the Godot project only. Releases: the APK on the user's phone
+(`tools/phone.py`) and the Godot web build. The print pipeline is dropped
+(a future board game would be its own project). After this, new game
+design happens in Godot.
+- [ ] C1. Godot computes the tables the HTML derived from DATA
+      (CORE_ITEM_NAMES, CAPSTONES, MAT_CARDS, STATION_SHOP, ...), so editing
+      `data/game_data.json` is enough; a test proves they equal today's
+      exported ones, then the copies leave the JSON.
+- [ ] C2. Content is edited in Godot: `data/game_data.json` is the source
+      (how to add an item, a station, an icon); a Godot-side Noto icon
+      fetch for new emoji.
+- [ ] C3. The checks stand alone: the parity goldens become a lock on
+      Godot's own rules (`parity --accept` re-records after an intended rule
+      change); the HTML-reading tools retire (export_from_game, compare,
+      html_shot, record_golden; `check.py --compare`).
+- [ ] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
+      `game/` and `print/` marked frozen; the web build's home on the site
+      (ask the user before publishing).
+- [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
+      the unlock reveal, the after-craft mini card. Then the user resumes
+      game design; animations, sound, the user's visual notes (text
+      alignment, the top and bottom bars in full screen) and the 9
+      `shortcut:` notes carry on in M8 alongside it.
+
 ### M8 Polish (ongoing)
 - [ ] Animations (crafting, travel, reveals), screen transitions, sound and
       music, haptics, a loading screen, performance on an older phone
@@ -805,6 +831,9 @@ Mini-games switch off); their switch and title-screen button stay hidden.
 
 Recorded so they aren't re-argued. Add new ones with the date.
 
+- 2026-11-21: Cutover (the user): the HTML game is frozen and abandoned; the
+  game is Godot only, released as the phone APK and the Godot web build;
+  the print pipeline is dropped. See "Cutover".
 - 2026-11-15: Godot 4 (standard build), GDScript, Compatibility renderer.
 - 2026-11-15: Inside this repo under `godot/`, not a new repo.
 - 2026-11-15: Design size 390x844, stretch `canvas_items`, aspect `expand`.
