@@ -769,10 +769,11 @@ the Godot project only. Releases: the APK on the user's phone
 (`tools/phone.py`) and the Godot web build. The print pipeline is dropped
 (a future board game would be its own project). After this, new game
 design happens in Godot.
-- [ ] C1. Godot computes the tables the HTML derived from DATA
+- [x] C1. Godot computes the tables the HTML derived from DATA
       (CORE_ITEM_NAMES, CAPSTONES, MAT_CARDS, STATION_SHOP, ...), so editing
       `data/game_data.json` is enough; a test proves they equal today's
-      exported ones, then the copies leave the JSON.
+      exported ones, then the copies leave the JSON. Done: `Data.derive()`
+      (23 tables, all equal to the HTML's before the copies were removed).
 - [ ] C2. Content is edited in Godot: `data/game_data.json` is the source
       (how to add an item, a station, an icon); a Godot-side Noto icon
       fetch for new emoji.
