@@ -29,6 +29,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var active_label_color := Color("#ffe08a")
 
 var face := "map"
+var shop_glyph := ""  # the Shop face's icon: the station you're at (else its 🛒)
 var greyed := false  # Home tapped and busy (the Lock-In count): grey, its tap ignored
 var active := {}  # id -> true for a lit side button (its panel is open)
 var badges := {}  # id -> text of its red badge ("!")
@@ -153,7 +154,7 @@ func _home_button(at: Vector2) -> void:
 		m.set_shader_parameter("base", c)
 		m.set_shader_parameter("dark", c.lerp(Color.BLACK, 0.25))
 		$Home/Ball.material = m
-	var glyph: String = "🚁" if face == "travel" and via_air else f[0]
+	var glyph: String = "🚁" if face == "travel" and via_air else shop_glyph if face == "shop" and shop_glyph != "" else f[0]
 	var tex := Data.icon(glyph)
 	$Home/Icon.texture = tex
 	$Home/Icon.visible = tex != null

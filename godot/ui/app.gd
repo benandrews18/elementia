@@ -708,6 +708,8 @@ func _sync_hub() -> void:
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
 		badges.market = "!"
+	var here = s.get("lastStation")
+	_hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
 	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
