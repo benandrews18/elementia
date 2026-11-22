@@ -40,8 +40,9 @@ project) and `archive/`.
   release-signed APK and installs it over Wi-Fi (setup: PLAN.md "Phone
   builds"). The user's own phone: no need to ask.
 - **Web (testers, iPhones):** the Godot web export is the website:
-  `python godot/tools/web.py "What changed"`. Pushing to the site is
-  publishing: ask the user first. Never push `master` to the
+  `python godot/tools/web.py "What changed"`. The user's default
+  (2026-11-21): publish every finished batch to both the phone and the
+  site without asking; a phone that isn't connected is skipped. Never push `master` to the
   site repo's `main`.
 - Add a `CHANGELOG.md` entry for changes players see.
 

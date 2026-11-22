@@ -15,8 +15,8 @@ reference for every rule and screen until the Godot version replaces it.
 user's own first edit in the editor)
 **Next task:** the user's phone notes (2026-11-21, "Phone notes" below), then Cutover C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C4 done. Start every session with `git status`: the user may
 have edited scenes in the editor.
-Publish the website: `python godot/tools/web.py "What changed"` (ask the
-user first).
+Publish every finished batch to the phone (`tools/phone.py`; skip it if not
+connected) and the website (`tools/web.py "What changed"`), no ask (the user).
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
