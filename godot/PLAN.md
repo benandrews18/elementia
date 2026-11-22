@@ -806,12 +806,15 @@ design happens in Godot.
   - [x] The clock shows the round number in its middle.
   - [ ] Track an item from the To-Do List tray (its track button on it).
   - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
-        to take it off.
+        to take it off. (Check with the user: the card-drawing design
+        takes the mat out of the Inventory between checks.)
   - [x] Sugar an ingredient of fruits (a content change: which fruits,
         and the rules lock re-recorded).
   - [x] Challenge window: the title states the ask, big icons, a labelled
         Reroll.
   - [x] The map's turn clock (missed in the port) and its info window.
+  - [ ] Safe area (moved here from M9 by the user, 2026-11-22; review 8):
+        the top and bottom bars clear the phone's notch and gesture bar.
   - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
@@ -821,15 +824,23 @@ design happens in Godot.
         Crafting Bench still there; a Craft button at each row's right end
         carrying the convert icon at its top-right when a component can be
         converted.
-- [ ] Design (the user, 2026-11-21; settle the open questions first):
-      **drawing cards at Display Mat checks.** At the start of a check the
-      player draws cards from their deck (stock); each can be played onto
-      the mat (replacing a card already there) or discarded to draw more.
-      Discards are gone for the rest of that check. No limit on plays or
-      discards: the stock running out is the limit. With it, a tier /
-      display-size mark on cards: the Roman numeral plus blocks (1 for a
-      small card, 2 stacked for a full one, 4 for a capstone), on the
-      Crafting Bench and the full card view.
+- [ ] **Drawing cards at Display Mat checks** (designed with the user,
+      2026-11-22; build after the phone notes):
+  - The deck: every card the player owns that isn't on the mat, shuffled
+    fresh at each check.
+  - A check starts with a hand of 7. A "Draw cards" button draws 2 more.
+    The hand holds at most 10.
+  - A card played onto the mat or discarded is replaced 1 for 1 from the
+    deck. Playing onto a filled slot replaces that card, and the replaced
+    card goes to the discards. Discards are gone for the rest of that check.
+    No limit on plays or discards: an empty deck is the limit.
+  - Between checks the mat isn't shown in the Inventory, only the item
+    list. A Combo Lab button in the Inventory lets players try board combos
+    with their current cards, and collections found there unlock.
+  - Open: is "Draw cards" free and unlimited (up to 10 in hand), or limited?
+  - With it: a tier / display-size mark on cards: the Roman numeral plus
+    blocks (1 for a small card, 2 stacked for a full one, 4 for a
+    capstone), on the Crafting Bench and the full card view.
 - Port check (2026-11-21): every HTML window has a Godot one except the
   capstone celebration and the unlock reveal (C5); the turn clock and its
   window were missed and are now in.
@@ -863,8 +874,7 @@ design happens in Godot.
 
 ### M9 Release and cutover (~2-3 sessions plus store review time)
 - [ ] Android: export templates, a signing key, Play Console listing, testing track
-- [ ] Before any store build: the safe area keeps the bars clear of notches and
-      the home bar (review 8, responsive-ui); app saves get a version and the
+- [ ] Before any store build: app saves get a version and the
       `loadAll()` clean-ups (review 5; the dev snapshots, dev history and
       backup files too, M6-10).
 - Skills: export-pipeline, mobile-development, web-export, assets-pipeline.
