@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-21
+- The website is now the Godot version of the game (the same game as the Android app). Saves from the old web version don't carry over: everyone starts fresh. A home-screen copy added before today keeps working; adding it anew gives a Safari bookmark for now, not the full-screen app.
 - Planet is now a tier 3 card (still 20 points). It costs one of every element and no element tax. Its card shows all four suits, and they all count toward Display Mat bonuses. It's the only card whose suits aren't a tax. The "any suit" tag and its star icon are gone.
 
 ## 2026-11-13

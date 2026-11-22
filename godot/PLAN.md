@@ -13,10 +13,10 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** Cutover C4's last part (the web build's home on the site: waiting on the user), then C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C3 done. Start every session with `git status`: the user may
+**Next task:** Cutover C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C4 done. Start every session with `git status`: the user may
 have edited scenes in the editor.
-Republish the preview: export Web, copy build/web/* to
-../elementia-site/godot/, commit, push main (ask the user first).
+Publish the website: `python godot/tools/web.py "What changed"` (ask the
+user first).
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
@@ -248,8 +248,13 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   `adb pair IP:PORT CODE` and `adb connect IP:PORT`). Away from home: the
   APK goes to the user's Google Drive and they tap Install.
 - **Web build (testers, iPhones):** preset "Web", no threads (GitHub Pages
-  can't send the headers threads need); published at ../elementia-site/godot/
-  (see "Where we are"; ask first).
+  can't send the headers threads need); it is the website's root
+  (benandrews18.github.io/elementia/; the HTML game it replaced is frozen).
+  `python godot/tools/web.py "What changed"` checks, exports, copies over
+  ../elementia-site and pushes main, then master to `source` (ask first).
+- **Exports keep scenes as text** (`editor/export/convert_text_resources_to_binary=false`):
+  Godot 4.7.2's binary conversion dropped overrides on instanced children
+  (the welcome Play pill's hidden "OK" showed through, web and phone).
 - **Always pass `--quit-after <frames>`** to test runs: a script error
   doesn't quit Godot, it just sits there forever. A run cut off there exits
   0 with no pass line, so never trust an exit code or a grep: run checks
@@ -286,6 +291,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
 | The play test (or one section) | `G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only market]` |
 | Phone build (+ install) | `python godot/tools/phone.py [build]` |
+| Web build (+ publish: ask first) | `python godot/tools/web.py build \| "What changed"` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 | Before/after screens | `python godot/tools/shot_diff.py shoot godot/build/after [state ...]` (one Godot run) then `... diff godot/build/before godot/build/after` |
@@ -775,9 +781,9 @@ design happens in Godot.
       Godot's own rules (`parity --accept` re-records after an intended rule
       change); the HTML-reading tools retire (export_from_game, compare,
       html_shot, record_golden; `check.py --compare`).
-- [ ] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
-      `game/` and `print/` marked frozen (done); left: the web build's home
-      on the site and a publish script (ask the user before publishing).
+- [x] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
+      `game/` and `print/` marked frozen; the web build replaces the HTML
+      game at the site root (the user, 2026-11-21), `tools/web.py`.
 - [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
       the unlock reveal, the after-craft mini card. Then the user resumes
       game design; animations, sound, the user's visual notes (text

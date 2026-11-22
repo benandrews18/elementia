@@ -9,7 +9,7 @@ task, decisions) and update its log when done. `godot/EDITING.md` says how
 to change things in the Godot editor.
 
 Frozen history, never a reference to sync with: `game/` (the HTML
-prototype: still the website until the Godot web build replaces it),
+prototype, replaced on the website by the Godot web build),
 `print/` (the printed cards; a future board game would be its own
 project) and `archive/`.
 
@@ -39,8 +39,9 @@ project) and `archive/`.
 - **Phone (the user's, Android):** `python godot/tools/phone.py` builds the
   release-signed APK and installs it over Wi-Fi (setup: PLAN.md "Phone
   builds"). The user's own phone: no need to ask.
-- **Web (testers, iPhones):** the Godot web export on the website. Pushing
-  to the site is publishing: ask the user first. Never push `master` to the
+- **Web (testers, iPhones):** the Godot web export is the website:
+  `python godot/tools/web.py "What changed"`. Pushing to the site is
+  publishing: ask the user first. Never push `master` to the
   site repo's `main`.
 - Add a `CHANGELOG.md` entry for changes players see.
 
