@@ -104,6 +104,7 @@ static func box(sym: String, w: float, caption: String, alpha := 1.0) -> Control
 	nm.add_theme_font_size_override("font_size", 11)
 	nm.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
 	nm.add_theme_font_override("font", Tok.font(800))
+	c.get_node("Num").visible = false  # no atomic numbers when converting (the user, 2026-11-21)
 	c.modulate.a = alpha
 	return c
 
