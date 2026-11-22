@@ -306,7 +306,7 @@ func _todo(app: App) -> void:
 	finished.todo = true
 
 
-## Card pop-ups: a station's element chip opens the element card; an item's
+## Card pop-ups: a station's element chip opens Convert on it; an element card; an item's
 ## card drills into a component (Back returns), pins, and an element part
 ## swaps to the element card; a tap closes each.
 func _cards(app: App) -> void:
@@ -319,7 +319,11 @@ func _cards(app: App) -> void:
 	press.pressed = true
 	chip.gui_input.emit(press)
 	chip.gui_input.emit(_release())
-	check(open.call(ElementCard).size() == 1, "a station's element chip opens its element card")
+	var sym: String = Catalog.sorted_dice(Catalog.station(Game.ctx.current))[0]
+	check(app.panel == "convert" and app._panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
+	app.close_panel()
+	app.show_element_card(sym)
+	check(open.call(ElementCard).size() == 1, "an element card opens")
 	open.call(ElementCard)[0].get_node("Card").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(open.call(ElementCard).is_empty(), "a tap closes the element card")

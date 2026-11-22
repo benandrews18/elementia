@@ -548,6 +548,13 @@ func show_element_card(sym: String) -> void:
 	ElementCard.open(self, sym)
 
 
+## The Convert tray with to_sym already picked as what to convert into.
+func open_convert(to_sym: String) -> void:
+	open_panel("convert")
+	_panel_node.to = to_sym
+	_panel_node._redraw()
+
+
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
 	close_panel()

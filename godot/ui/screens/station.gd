@@ -81,8 +81,8 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 		chip.position = Vector2(22 + i * (cw + 4), 98.8)
 		chip.get_child(0).set_meta("cmp", "st:chip%d" % i)
 		var sym: String = dice[i]
-		chip.mouse_filter = MOUSE_FILTER_PASS  # a tap opens its card; a drag still scrolls
-		chip.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.show_element_card(sym)))
+		chip.mouse_filter = MOUSE_FILTER_PASS  # a tap opens the Convert tray on it; a drag still scrolls
+		chip.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.open_convert(sym)))  # the user: convert into it
 		$Scroll/Page/Chips.add_child(chip)
 	# The fold button, the crafted icons in the bar, the list/cards switch.
 	var bar: Control = $Scroll/Page/Bar
@@ -229,7 +229,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.size = card_size + Vector2(12, 12)
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
-	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name})
+	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true})  # you are at its station
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
