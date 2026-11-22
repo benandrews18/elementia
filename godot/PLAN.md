@@ -235,7 +235,24 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   AMD Vega 8.
 - Screenshots need a normal (not `--headless`) run: headless has no
   renderer. A window flashes for about 2 seconds.
-- Export templates (web, Android, iOS) are not installed yet. Needed from M3.
+- Export templates 4.7.2 are installed (web, Android, iOS).
+- **Phone builds (Android, sideloaded; set up 2026-11-21):** everything lives
+  outside the repo in `C:\Users\benan\Android\`: `jdk17` (OpenJDK 17),
+  `sdk` (cmdline-tools, platform-tools, build-tools 35.0.1, android-35; no
+  NDK/CMake, those are only for Gradle builds), the release key
+  `elementia-release.keystore` (alias `elementia`) and its password in
+  `elementia-keystore-password.txt`. **Losing the key means the phone app
+  can't be updated** (reinstall, save lost): the user keeps a backup.
+  Godot's editor settings point at the JDK and SDK. Preset "Android":
+  arm64 only, app ID `io.github.benandrews18.elementia`, no Gradle.
+  `python godot/tools/phone.py` builds the signed APK and installs it (`-r`
+  keeps the save) on every phone adb sees; Wi-Fi pairing is once per phone
+  (Settings > Developer options > Wireless debugging > Pair with code, then
+  `adb pair IP:PORT CODE` and `adb connect IP:PORT`). Away from home: the
+  APK goes to the user's Google Drive and they tap Install.
+- **Web build (testers, iPhones):** preset "Web", no threads (GitHub Pages
+  can't send the headers threads need); published at ../elementia-site/godot/
+  (see "Where we are"; ask first).
 - **Always pass `--quit-after <frames>`** to test runs: a script error
   doesn't quit Godot, it just sits there forever. A run cut off there exits
   0 with no pass line, so never trust an exit code or a grep: run checks
@@ -272,6 +289,7 @@ G = `C:/Users/benan/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_
 | Rules parity | `G --headless --path godot --quit-after 600 res://tests/parity.tscn` |
 | Rule tests (button-only rules) | `G --headless --path godot --quit-after 600 res://tests/rules_test.tscn` |
 | The play test (or one section) | `G --headless --path godot --quit-after 20000 res://tests/ui_play.tscn [-- --only market]` |
+| Phone build (+ install) | `python godot/tools/phone.py [build]` |
 | Screenshot | `G --path godot --quit-after 300 res://tests/shot.tscn -- --screen <res path> --out <png> [--save <json>] [--scale 2]` |
 | Icon sheet | `--screen res://tests/icon_sheet.gd` |
 | HTML vs Godot side by side | `node godot/tools/compare.mjs` -> `godot/build/compare.html` |
