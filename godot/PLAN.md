@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** Cutover C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C4 done. Start every session with `git status`: the user may
+**Next task:** the user's phone notes (2026-11-21, "Phone notes" below), then Cutover C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C4 done. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish the website: `python godot/tools/web.py "What changed"` (ask the
 user first).
@@ -784,6 +784,35 @@ design happens in Godot.
 - [x] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
       `game/` and `print/` marked frozen; the web build replaces the HTML
       game at the site root (the user, 2026-11-21), `tools/web.py`.
+- [ ] Phone notes (the user, 2026-11-21), smallest first:
+  - [x] Professor Mouse tips off by default.
+  - [x] Capstone choice: names centred; the Inventory lights up as the
+        elements fly in.
+  - [x] Map: tracked badges over the stations; YOU ARE HERE beside the
+        Ocean; a tap on the map hides the station card.
+  - [ ] Station gathering window: element names centred, less padding,
+        squares 0.8x.
+  - [ ] Convert tray: no atomic numbers.
+  - [ ] Stations: the title block reaches the top of the screen (no gap
+        above the Quark bar); the backdrop covers the bottom too.
+  - [ ] Display Mat shutter title (every 3 rounds) centred.
+  - [ ] Lock-In button turns grey once tapped, while the score counts.
+  - [ ] Station shop cards: no station icon at the bottom.
+  - [ ] Tapping an element square at a station shop opens the Convert
+        tray with that element picked.
+  - [ ] The clock shows the round number in its middle.
+  - [ ] Track an item from the To-Do List tray (its track button on it).
+  - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
+        to take it off.
+  - [ ] Sugar an ingredient of fruits (a content change: which fruits,
+        and the rules lock re-recorded).
+  - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
+        in the Inventory's compact view: a narrow scrolling list on the
+        left (item name, its icon under it, no component items), the
+        selected item's full card on the right (shop card size), the
+        Crafting Bench still there; a Craft button at each row's right end
+        carrying the convert icon at its top-right when a component can be
+        converted.
 - [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
       the unlock reveal, the after-craft mini card. Then the user resumes
       game design; animations, sound, the user's visual notes (text
