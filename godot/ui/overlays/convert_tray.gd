@@ -124,17 +124,30 @@ func _big_box(sym: String, sz: float) -> Control:
 		l.size = b.size
 		b.add_child(l)
 		return b
-	b.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 14, 8, Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6")), 6, 3, Color(0, 0, 0, 0.35)))
+	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
+	b.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 14, 8, color, 6, 3, Color(0, 0, 0, 0.35)))
 	var s := Tok.label(sym, 28, Color("#221f1a"), 900)
-	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	s.position = Vector2(0, sz * 0.22)
-	s.size = Vector2(sz, 34)
+	Tok.centre_name(s, sz, sz * 0.22, 34)
 	b.add_child(s)
 	var n := Tok.label(Data.t("ELEMENT_NAMES").get(sym, sym), 14, Color("#221f1a"), 800)
-	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.position = Vector2(0, sz * 0.22 + 36)
-	n.size = Vector2(sz, 20)
+	Tok.centre_name(n, sz, sz * 0.22 + 36, 20)
 	b.add_child(n)
+	# Its atomic number (top-left) and suit badge (top-right), as on the
+	# station's squares (the user: the chosen ones show them).
+	var num := Tok.label(str(int(Data.t("ATOMIC_NUMBER").get(sym, 0))), 14, color, 800)
+	num.position = Vector2(14, 10)
+	b.add_child(num)
+	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
+	if suit != "":
+		var badge := Panel.new()
+		badge.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(suit), 12, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
+		badge.size = Vector2(24, 24)
+		badge.position = Vector2(sz - 24 - 10, 10)
+		var g := Tok.icon("suit:" + suit, 16)
+		g.position = Vector2(4, 4)
+		g.material = Tok.white()
+		badge.add_child(g)
+		b.add_child(badge)
 	return b
 
 
