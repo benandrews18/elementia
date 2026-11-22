@@ -36,9 +36,7 @@ with `godot-grill`.
 4. **Tier / display-size badge** (the Roman numeral plus 1, 2 or 4 blocks) on
    the Crafting Bench and the full card view: card playing builds on it.
    Skill: godot-ui.
-5. **Drawing and playing cards at checks** (designed below; one question
-   open: is "Draw cards" free and unlimited?). Skills: godot-grill for what's
-   still open, then godot-brainstorming for the design (scenes, state, save
+5. **Drawing and playing cards at checks** (designed below). Skills: godot-brainstorming for the design (scenes, state, save
    format), state-machine (the check's phases), save-load (old saves still
    load), godot-ui and hud-system (the hand), tween-animation (draws, plays,
    discards). It takes the mat out of the Inventory between checks and adds
@@ -46,8 +44,10 @@ with `godot-grill`.
 6. **UI feedback pass** (after card playing, as the user asked): skills
    tween-animation, animation-system, godot-optimization (no cost to frame
    rate), input-handling (presses); the map's dust poof (particles-vfx).
-Waiting on the user: "Inventory: tap an item to put it on the mat" (the
-card-playing design takes the mat out of the Inventory; drop it?).
+Settled 2026-11-22: "Draw cards" is free and unlimited (up to the hand's
+10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
+(now a main game feature): tap a card in the list to put it on the lab's
+mat, tap it on the mat to take it off (part of step 5).
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
@@ -836,9 +836,8 @@ design happens in Godot.
   - [x] Home's Shop face shows the current station's icon.
   - [x] The clock shows the round number in its middle.
   - [x] Track an item from the To-Do List tray (its track button on it).
-  - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
-        to take it off. (Check with the user: the card-drawing design
-        takes the mat out of the Inventory between checks.)
+  - [x] Inventory tap-to-mat: dropped (card playing takes the mat out of
+        the Inventory); it goes into the Combo Lab instead (work queue 5).
   - [x] Sugar an ingredient of fruits (a content change: which fruits,
         and the rules lock re-recorded).
   - [x] Challenge window: the title states the ask, big icons, a labelled
@@ -872,7 +871,9 @@ design happens in Godot.
   - Between checks the mat isn't shown in the Inventory, only the item
     list. A Combo Lab button in the Inventory lets players try board combos
     with their current cards, and collections found there unlock.
-  - Open: is "Draw cards" free and unlimited (up to 10 in hand), or limited?
+  - "Draw cards" is free and unlimited, up to 10 in hand (the user).
+  - The Combo Lab: tap a card to put it on the lab's mat, tap it on the
+    mat to take it off.
   - With it: a tier / display-size mark on cards: the Roman numeral plus
     blocks (1 for a small card, 2 stacked for a full one, 4 for a
     capstone), on the Crafting Bench and the full card view.
