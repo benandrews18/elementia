@@ -13,7 +13,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
-	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean",
+	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
@@ -202,6 +202,9 @@ func _ready() -> void:
 			Game.ctx.tracked = "Metropolis"
 			if state == "tracked_map":
 				Game.ctx.selectedMapStation = "The City"
+			Game.state_changed.emit()
+		"station_early":  # before the first mat check: no Quark bar, the header from the very top
+			Game.state.matChecked = false
 			Game.state_changed.emit()
 		"map_ocean":  # at the Ocean (YOU ARE HERE off to its right, clear of the hub), Metropolis tracked (its badges over the stations)
 			Game.state.lastStation = "The Ocean"

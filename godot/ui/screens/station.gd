@@ -45,13 +45,16 @@ func _redraw() -> void:
 	var name: String = Game.ctx.current
 	var st := Catalog.station(name)
 	var w := size.x
-	# The station's art, full width from the top, fixed behind the page.
+	# The station's art, full width from the top, fixed behind the page; on
+	# a screen taller than it, it grows to the bottom (its sides cropped).
 	var art: TextureRect = $Art
 	art.texture = load("res://assets/" + Data.t("STATION_BG")[name])
-	art.size = Vector2(w, w * art.texture.get_height() / art.texture.get_width())
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.size = Vector2(w, maxf(size.y, w * art.texture.get_height() / art.texture.get_width()))
 	$Wash.size = art.size
-	_scroll.position = Vector2(0, TOP)
-	_scroll.size = Vector2(w, size.y - TOP)
+	var top := TOP if Game.state.get("matChecked") else 0.0  # no Quark bar yet: the header reaches the top
+	_scroll.position = Vector2(0, top)
+	_scroll.size = Vector2(w, size.y - top)
 	var y := _header(_page, st, w)
 	if open_card != "":
 		y = _bench(_page, w, y)
