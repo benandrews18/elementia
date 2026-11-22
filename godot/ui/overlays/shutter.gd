@@ -95,16 +95,17 @@ func _label() -> Control:
 		l3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		parts.append(_wrapped(l3, minf(340, size.x - 32), 28))
 		l3.custom_minimum_size.y += 16 if l3.autowrap_mode else 0  # padding + border
+	add_child(box)
+	for l in parts:  # in the tree before measuring: until then a label sizes to the default font size
+		box.add_child(l)
 	var y := 0.0
 	for l in parts:
 		var sz := l.get_combined_minimum_size()
 		l.size = sz
 		l.position = Vector2((size.x - sz.x) / 2, y + (4.0 if l == parts[-1] and line3 != "" else 0.0))
 		y = l.position.y + sz.y + 6
-		box.add_child(l)
 	box.size = Vector2(size.x, y - 6)
 	box.position = Vector2(0, (size.y - box.size.y) / 2)
-	add_child(box)
 	return box
 
 
