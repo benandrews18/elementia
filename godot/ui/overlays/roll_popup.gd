@@ -22,7 +22,7 @@ const PIPS := {1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6,
 const SCENE := "res://ui/overlays/roll_popup.tscn"
 
 var roll: Array  # [{face, sym}]
-var bonus := 0  # the last this many dice are the bonus earned at the last check: their own frame and a "+" badge
+var bonus := 0  # the last this many dice are the bonus earned at the last check: a row of their own in one frame
 var fly_to := Vector2.ZERO  # the Inventory button's centre
 var _chips: Array[Control] = []
 @onready var _collect: Control = $Box/Collect
@@ -35,26 +35,44 @@ static func make() -> RollPopup:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	var cols := mini(3, roll.size())
-	var rows := ceili(roll.size() / 3.0)
+	# Rows of 3, each centred; the check's bonus dice start a row of their
+	# own, inside one gold frame with a "+" circle at its top-right.
 	var cw := CHIP * K
 	var ch := (CHIP + 17) * K
-	var row_w := cols * cw + (cols - 1) * GAP
-	var row_h := rows * ch + (rows - 1) * GAP
+	var plain := roll.size() - bonus
+	var slots := []  # [row, column, dice in that row] per die
+	var row := 0
+	for group in [plain, bonus]:
+		for j in group:
+			slots.append([row + j / 3, j % 3, mini(3, group - j / 3 * 3)])
+		if group > 0:
+			row += ceili(group / 3.0)
+	var frame_gap := 10.0 if bonus > 0 and plain > 0 else 0.0
+	var row_h := row * ch + (row - 1) * GAP + frame_gap
 	var bw := minf(440, size.x - 32)
-	var bh := 18 + 19 + 16 + row_h + 16 + 46 + 16
+	var top := 18 + 19 + 16 + (8.0 if bonus > 0 and plain == 0 else 0.0)
+	var bh := top + row_h + 16 + 46 + 16
 	_box.size = Vector2(bw, bh)
 	_box.position = (size - _box.size) / 2
 	var title: Control = $Box/Title
 	title.size = title.get_combined_minimum_size()
 	title.position.x = (bw - title.size.x) / 2
+	var bonus_rect := Rect2()
 	for i in roll.size():
-		var c := _chip(roll[i], i >= roll.size() - bonus)
+		var c := _chip(roll[i])
 		c.pivot_offset = c.size / 2
 		c.scale = Vector2(K, K)
-		c.position = Vector2((bw - row_w) / 2 + (i % 3) * (cw + GAP), 18 + 19 + 16 + (i / 3) * (ch + GAP)) - c.size * (1 - K) / 2
+		var sl: Array = slots[i]
+		var at := Vector2((bw - (sl[2] * cw + (sl[2] - 1) * GAP)) / 2 + sl[1] * (cw + GAP),
+			top + sl[0] * (ch + GAP) + (frame_gap if i >= plain else 0.0))
+		c.position = at - c.size * (1 - K) / 2
+		if i >= plain:
+			var sq := Rect2(at, Vector2(cw, cw))
+			bonus_rect = sq if bonus_rect.size == Vector2.ZERO else bonus_rect.merge(sq)
 		$Box/Chips.add_child(c)
 		_chips.append(c)
+	if bonus > 0:
+		_bonus_frame(bonus_rect.grow(6))
 	_collect.size = Vector2(maxf(bw * 0.6, 120), 46)
 	_collect.position = Vector2((bw - _collect.size.x) / 2, bh - 16 - 46)
 	_collect.gui_input.connect(_on_collect)
@@ -81,29 +99,11 @@ func _ready() -> void:
 
 ## A rolled element: the white chip (suit border, number, badge, name),
 ## with the die face over it until the reveal.
-func _chip(r: Dictionary, is_bonus := false) -> Control:
+func _chip(r: Dictionary) -> Control:
 	var sym: String = r.sym
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
 	var c := Control.new()
 	c.size = Vector2(CHIP, CHIP + 17)
-	if is_bonus:  # a bonus die (the user, 2026-11-22): a gold frame behind, a "+" circle at its top-right
-		var frame := Panel.new()
-		frame.add_theme_stylebox_override("panel", Tok.box(Color("#4a3410"), 18, 4, Tok.GOLD, 6, 0, Color(1, 0.84, 0.47, 0.45)))
-		frame.position = Vector2(-4, -4)
-		frame.size = Vector2(CHIP, CHIP) + Vector2(8, 8)  # round the square (the name is inside it)
-		frame.mouse_filter = MOUSE_FILTER_IGNORE
-		c.add_child(frame)
-		var plus := Panel.new()
-		plus.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, 14, 2, Color("#4a3410")))
-		plus.size = Vector2(28, 28)
-		plus.position = Vector2(frame.position.x + frame.size.x - 10, frame.position.y - 18)  # out past the suit badge
-		plus.mouse_filter = MOUSE_FILTER_IGNORE
-		plus.z_index = 1  # over the chip's suit badge
-		var pl := Tok.label("+", 22, Color("#3b2412"), 900)
-		Tok.centre_name(pl, 28, -2, 28)
-		pl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		plus.add_child(pl)
-		c.add_child(plus)
 	var face := Control.new()  # everything revealed (faded in)
 	face.size = c.size
 	face.modulate.a = 0
@@ -145,6 +145,28 @@ func _chip(r: Dictionary, is_bonus := false) -> Control:
 	c.set_meta("die", die)
 	c.set_meta("face", face)
 	return c
+
+
+## The bonus dice's frame (the user, 2026-11-22): gold round all of them,
+## behind the chips, a "+" circle at its top-right.
+func _bonus_frame(r: Rect2) -> void:
+	var frame := Panel.new()
+	frame.add_theme_stylebox_override("panel", Tok.box(Color("#4a3410"), 16, 4, Tok.GOLD, 6, 0, Color(1, 0.84, 0.47, 0.45)))
+	frame.position = r.position
+	frame.size = r.size
+	frame.mouse_filter = MOUSE_FILTER_IGNORE
+	$Box/Chips.add_child(frame)
+	$Box/Chips.move_child(frame, 0)
+	var plus := Panel.new()
+	plus.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, 14, 2, Color("#4a3410")))
+	plus.size = Vector2(28, 28)
+	plus.position = r.position + Vector2(r.size.x - 12, -16)  # out past the last chip's suit badge
+	plus.mouse_filter = MOUSE_FILTER_IGNORE
+	var pl := Tok.label("+", 22, Color("#3b2412"), 900)
+	Tok.centre_name(pl, 28, -2, 28)
+	pl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	plus.add_child(pl)
+	$Box/Chips.add_child(plus)
 
 
 ## Collect: each chip flies to the Inventory button, shrinking into it; the

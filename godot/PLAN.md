@@ -845,6 +845,11 @@ design happens in Godot.
   - With it: a tier / display-size mark on cards: the Roman numeral plus
     blocks (1 for a small card, 2 stacked for a full one, 4 for a
     capstone), on the Crafting Bench and the full card view.
+- [ ] **UI feedback pass** (the user, 2026-11-22; after card playing): a
+      wide look at UI motion: button presses, trays and windows coming on
+      screen. Subtle overall, never at the cost of performance, but most UI
+      elements give some feedback. Includes a small dust poof where the map
+      is tapped off a station. (M8's animation notes apply.)
 - Port check (2026-11-21): every HTML window has a Godot one except the
   capstone celebration and the unlock reveal (C5); the turn clock and its
   window were missed and are now in.
