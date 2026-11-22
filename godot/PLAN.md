@@ -790,22 +790,27 @@ design happens in Godot.
         elements fly in.
   - [x] Map: tracked badges over the stations; YOU ARE HERE beside the
         Ocean; a tap on the map hides the station card.
-  - [ ] Station gathering window: element names centred, less padding,
+  - [x] Station gathering window: element names centred, less padding,
         squares 0.8x.
-  - [ ] Convert tray: no atomic numbers.
-  - [ ] Stations: the title block reaches the top of the screen (no gap
+  - [x] Convert tray: no atomic numbers.
+  - [x] Stations: the title block reaches the top of the screen (no gap
         above the Quark bar); the backdrop covers the bottom too.
-  - [ ] Display Mat shutter title (every 3 rounds) centred.
-  - [ ] Lock-In button turns grey once tapped, while the score counts.
-  - [ ] Station shop cards: no station icon at the bottom.
-  - [ ] Tapping an element square at a station shop opens the Convert
+  - [x] Display Mat shutter title (every 3 rounds) centred.
+  - [x] Lock-In button turns grey once tapped, while the score counts.
+  - [x] Station shop cards: no station icon at the bottom.
+  - [x] Tapping an element square at a station shop opens the Convert
         tray with that element picked.
+  - [x] Convert tray: the chosen From/To squares show their atomic number
+        and suit badge.
+  - [x] Home's Shop face shows the current station's icon.
   - [ ] The clock shows the round number in its middle.
   - [ ] Track an item from the To-Do List tray (its track button on it).
   - [ ] Inventory: tap an item to put it on the mat; tap one on the mat
         to take it off.
   - [ ] Sugar an ingredient of fruits (a content change: which fruits,
         and the rules lock re-recorded).
+  - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
+        the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
         in the Inventory's compact view: a narrow scrolling list on the
         left (item name, its icon under it, no component items), the
