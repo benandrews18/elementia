@@ -91,6 +91,7 @@ func _run(app: App) -> void:
 			app._screen.gui_input.emit(_press(Vector2(5, 300)))
 			app._screen.gui_input.emit(_release(Vector2(5, 300)))
 			check(Game.ctx.selectedMapStation == null, "a tap on the map hides the station card")
+			Tap._down = null  # the press is remembered: later test taps land elsewhere
 			Game.ctx.selectedMapStation = options[0]
 			Game.state_changed.emit()
 		check(app.home_face() == "travel", "turn %d: Home says Travel" % turns)
@@ -731,6 +732,9 @@ func _settings(app: App) -> void:
 		await get_tree().process_frame
 		check(top.call(MatRules).is_empty(), "Got it closes them")
 	# Back (Android) / Escape: the top window, then the panel, never a quit.
+	for c in app.get_children():  # rolls earlier sections never collected
+		if c is RollPopup:
+			c.free()
 	app.open_panel("drawer")
 	app.open_settings()
 	app.back()
