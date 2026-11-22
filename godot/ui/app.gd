@@ -827,8 +827,12 @@ func _count_then(then_do: Callable) -> void:
 	var block := Control.new()
 	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(block)
+	_hub.greyed = true  # the Lock-In button greys: no second tap while it counts
+	_hub._build()
 	mat.play_lock_in(func():
 		block.queue_free()
+		_hub.greyed = false
+		_hub._build()
 		then_do.call())
 
 

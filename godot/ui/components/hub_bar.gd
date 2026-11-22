@@ -29,6 +29,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var active_label_color := Color("#ffe08a")
 
 var face := "map"
+var greyed := false  # Home tapped and busy (the Lock-In count): grey, its tap ignored
 var active := {}  # id -> true for a lit side button (its panel is open)
 var badges := {}  # id -> text of its red badge ("!")
 var via_air := false  # Travel by helicopter (off the paths): 🚁 instead of 🥾
@@ -143,7 +144,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Flat.visible = f[2] == ""  # Close: flat pale blue-grey, deliberately inert
 	$Home/Ball.visible = f[2] != ""
 	if f[2] != "":
-		var c := Color(f[2])
+		var c := Color("#8e8e8e") if greyed else Color(f[2])
 		if _ball == null:
 			_ball = load("res://ui/theme/ball.gdshader")
 		var m := ShaderMaterial.new()

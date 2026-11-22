@@ -123,9 +123,11 @@ func _run(app: App) -> void:
 				ask[0].queue_free()
 			else:  # the count, then the Bonus Dice window; Nice travels
 				var reward := Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state))
+				check(app._hub.greyed, "turn %d: Lock In greys while it counts" % turns)
 				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "turn %d: the Bonus Dice window opens" % turns)
 				var dlg: LockInReward = app.get_children().filter(func(c): return c is LockInReward)[0]
 				check(dlg.dice == mini(reward, 3) and dlg.unknown == (reward >= 4), "turn %d: shows the reward" % turns)
+				check(not app._hub.greyed, "turn %d: Lock In back to colour after the count" % turns)
 				dlg._done()
 				check(await _until(func(): return app._screen is StationScreen and app.panel == ""), "turn %d: the fade lands at the station" % turns)
 		await get_tree().process_frame
