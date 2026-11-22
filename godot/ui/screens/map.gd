@@ -64,6 +64,10 @@ func _redraw() -> void:
 		var qt := QuarkTopBar.make()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
 		$Dynamic.add_child(qt)
+	if s.get("lastStation") != null:  # the turn clock, top-left (not on the first pick)
+		var clock := TurnClock.make(int(s.get("visits", 0)))
+		clock.position = Vector2(8, top + 4)
+		$Dynamic.add_child(clock)
 	StationScreen.corner_buttons($Dynamic, false)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
 		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
