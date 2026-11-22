@@ -33,6 +33,7 @@ var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
+static var list_mode := false  # the 📋 view: a compact list on the left, the selected card on the right
 var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
 var _hub_h := HUB_H
@@ -118,7 +119,7 @@ func _redraw() -> void:
 	_scroll.size = Vector2(size.x, size.y - _hub_h - y)
 	if selected != "" and _body.has_meta("acts"):
 		_body.move_child(_body.get_meta("acts"), -1)
-	var key := "%d|%d" % [s.items.size(), int(size.x)]
+	var key := "%d|%d|%s" % [s.items.size(), int(size.x), ("list:" + selected) if list_mode else ""]
 	if key != _inv_key:
 		_inv_key = key
 		for c in _scroll.get_children():
@@ -347,9 +348,18 @@ func _inventory(width: float) -> Control:
 		b.position = Vector2(pad + w - 38 - (1 - i) * (38 + 8), y)
 		b.size = Vector2(38, 38)
 		list.add_child(b)
+		if i == 0:  # 📋: the list view and back
+			if list_mode:
+				b.add_theme_stylebox_override("panel", Tok.box(Color("#241c3a"), 8, 2.5, Tok.GOLD))
+			b.set_meta("cmp", "inv:listview")
+			b.gui_input.connect(func(ev): if Tap.tap(ev):
+				list_mode = not list_mode
+				_redraw())
 	y += 38 + 10
 	var inv: Array = Game.state.items.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
 	inv = Util.stable_sort(inv, func(a, b): return b.points - a.points if b.points != a.points else a.name.nocasecmp_to(b.name))
+	if list_mode:
+		return _inv_list(list, inv, pad, w, y, width)
 	var col_w := (w - 3 * 8) / 4
 	var row_h := col_w * card_ratio
 	for band in Data.t("MAT_TIER_BANDS"):
@@ -391,6 +401,56 @@ func _inventory(width: float) -> Control:
 	list.add_child(_inv_ring)
 	list.move_child(_inv_ring, 0)
 	list.custom_minimum_size = Vector2(width, y + 150)  # room to scroll clear of the hub
+	return list
+
+
+## The 📋 view (the user's trial, 2026-11-22; to cut the repeated Craft and
+## pin buttons at stations): a compact list on the left, each row the name
+## with its icon under it; the selected item's full card on the right.
+## shortcut: the card sits at the list's top and scrolls with it; keep it
+## on screen if the trial stays.
+func _inv_list(list: Control, inv: Array, pad: float, w: float, y: float, width: float) -> Control:
+	var lw := floorf(w * 0.5 - 4)
+	var rw := w - lw - 8
+	var top_y := y
+	for c in inv:
+		var row := Panel.new()
+		row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
+		row.position = Vector2(pad, y)
+		row.size = Vector2(lw, 56)
+		row.mouse_filter = MOUSE_FILTER_PASS
+		row.set_meta("cmp", "inv:" + c.name)
+		var nm := Tok.label(c.name, 13, Tok.CARD_INK, 800)
+		nm.clip_text = true
+		nm.position = Vector2(10, 4)
+		nm.size = Vector2(lw - 20, 18)
+		row.add_child(nm)
+		var ic := Tok.icon(c.emoji, 26)
+		ic.position = Vector2(10, 24)
+		row.add_child(ic)
+		_inv_cards[c.name] = row
+		row.gui_input.connect(_on_card_input.bind(c.name))
+		list.add_child(row)
+		y += 56 + 6
+	if selected != "" and Catalog.mat_card(selected) != null:
+		var cw := (w - 3 * 8) / 4  # the shop card's size, scaled up to the column
+		var card := ItemCard.make(selected, {"tag": "inv:card", "wide": Catalog.mat_card(selected).tier == "CAPSTONE"})
+		card.position = Vector2(pad + lw + 8, top_y)
+		card.size = Vector2(cw, cw * card_ratio)
+		card.scale = Vector2.ONE * rw / cw
+		list.add_child(card)
+	else:
+		var hint := Tok.label("Tap an item to see its card", 13, Tok.MUTE, 700)
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.position = Vector2(pad + lw + 8, top_y + 40)
+		hint.size = Vector2(rw, 40)
+		list.add_child(hint)
+	_inv_ring = _selected_ring(Vector2.ZERO, Vector2.ZERO)
+	_inv_ring.visible = false
+	list.add_child(_inv_ring)
+	list.move_child(_inv_ring, 0)
+	list.custom_minimum_size = Vector2(width, maxf(y, top_y + rw * card_ratio) + 150)
 	return list
 
 
