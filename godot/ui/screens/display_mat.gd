@@ -112,14 +112,31 @@ func _redraw() -> void:
 	var line_y := y
 	y += 2
 	# The selected card's row on the Crafting Bench, Add / Remove below it.
-	if selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null:
-		y = _sel_bench(y)
+	var sel_ok: bool = selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null
+	if sel_ok and not list_mode:
+		_sel_acts(0, y + 6, size.x)
+		y += 46
 	# The item list: search bar, then the owned cards by tier.
 	_scroll.position = Vector2(0, y)
 	_scroll.size = Vector2(size.x, size.y - _hub_h - y)
-	if selected != "" and _body.has_meta("acts"):
-		_body.move_child(_body.get_meta("acts"), -1)
-	var key := "%d|%d|%s" % [s.items.size(), int(size.x), ("list:" + selected) if list_mode else ""]
+	if list_mode:  # the side card stays put while the list scrolls; Add / Remove under it
+		var lw := _list_w(size.x)
+		var rx := LIST_PAD + lw + 8
+		var rw := size.x - LIST_PAD - rx
+		var cy := y + LIST_TOP
+		if sel_ok:
+			var card := CardPop.side_card(selected, rw)
+			card.position = Vector2(rx, cy)
+			_body.add_child(card)
+			_sel_acts(rx, cy + card.size.y * card.scale.y + 8, rw)
+		else:
+			var hint := Tok.label("Tap an item to see its card", 13, Tok.MUTE, 700)
+			hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			hint.position = Vector2(rx, cy + 40)
+			hint.size = Vector2(rw, 40)
+			_body.add_child(hint)
+	var key := "%d|%d|%s" % [s.items.size(), int(size.x), list_mode]
 	if key != _inv_key:
 		_inv_key = key
 		for c in _scroll.get_children():
@@ -404,54 +421,105 @@ func _inventory(width: float) -> Control:
 	return list
 
 
-## The 📋 view (the user's trial, 2026-11-22; to cut the repeated Craft and
-## pin buttons at stations): a compact list on the left, each row the name
-## with its icon under it; the selected item's full card on the right.
-## shortcut: the card sits at the list's top and scrolls with it; keep it
-## on screen if the trial stays.
-func _inv_list(list: Control, inv: Array, pad: float, w: float, y: float, width: float) -> Control:
-	var lw := floorf(w * 0.5 - 4)
-	var rw := w - lw - 8
-	var top_y := y
+## The 📋 view (the user, 2026-11-22; to cut the repeated Craft and pin
+## buttons at stations): a compact list on the left (each row: the icon, the
+## name with its suits, the components in one row under it), the selected
+## item's side card on the right (placed by _redraw(), outside the scroll so
+## it stays put).
+const LIST_PAD := 18.0
+const LIST_TOP := 16.0 + 14.0 + 38.0 + 10.0  # the search bar's row
+const ROW_H := 58.0
+const ROW_FIT := 0.99  # the components' shared size: every row fits at it but Car, Fruit Cake (0.82) and Planet, which shrink
+
+
+static func _list_w(width: float) -> float:
+	return floorf((width - 2 * LIST_PAD) * 0.5 - 4)
+
+
+func _inv_list(list: Control, inv: Array, pad: float, _w: float, y: float, width: float) -> Control:
+	var lw := _list_w(width)
 	for c in inv:
 		var row := Panel.new()
 		row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
 		row.position = Vector2(pad, y)
-		row.size = Vector2(lw, 56)
+		row.size = Vector2(lw, ROW_H)
 		row.mouse_filter = MOUSE_FILTER_PASS
 		row.set_meta("cmp", "inv:" + c.name)
-		var nm := Tok.label(c.name, 13, Tok.CARD_INK, 800)
-		nm.clip_text = true
-		nm.position = Vector2(10, 4)
-		nm.size = Vector2(lw - 20, 18)
-		row.add_child(nm)
-		var ic := Tok.icon(c.emoji, 26)
-		ic.position = Vector2(10, 24)
+		var ic := Tok.icon(c.emoji, 30)
+		ic.position = Vector2(6, (ROW_H - 30) / 2)
 		row.add_child(ic)
+		var x0 := 42.0
+		var nm := Tok.label(c.name, 12, Tok.CARD_INK, 800)
+		var nw := minf(Tok.font(800).get_string_size(c.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, lw - x0 - 8)
+		nm.clip_text = true
+		nm.position = Vector2(x0, 5)
+		nm.size = Vector2(nw + 2, 16)
+		row.add_child(nm)
+		var sx := x0 + nw + 5
+		for su in Data.t("ITEM_SUIT_COST_TABLE").get(c.name, []):  # its suits, after the name
+			if sx + 11 > lw - 4:
+				break
+			var g := Tok.icon("suit:" + su, 11)
+			g.material = Tok.tinted(Tok.suit_color(su))
+			g.position = Vector2(sx, 8)
+			row.add_child(g)
+			sx += 13
+		row.add_child(row_parts(c.name, Vector2(x0, 27), lw - x0 - 6))
 		_inv_cards[c.name] = row
 		row.gui_input.connect(_on_card_input.bind(c.name))
 		list.add_child(row)
-		y += 56 + 6
-	if selected != "" and Catalog.mat_card(selected) != null:
-		var cw := (w - 3 * 8) / 4  # the shop card's size, scaled up to the column
-		var card := ItemCard.make(selected, {"tag": "inv:card", "wide": Catalog.mat_card(selected).tier == "CAPSTONE"})
-		card.position = Vector2(pad + lw + 8, top_y)
-		card.size = Vector2(cw, cw * card_ratio)
-		card.scale = Vector2.ONE * rw / cw
-		list.add_child(card)
-	else:
-		var hint := Tok.label("Tap an item to see its card", 13, Tok.MUTE, 700)
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hint.position = Vector2(pad + lw + 8, top_y + 40)
-		hint.size = Vector2(rw, 40)
-		list.add_child(hint)
+		y += ROW_H + 6
 	_inv_ring = _selected_ring(Vector2.ZERO, Vector2.ZERO)
 	_inv_ring.visible = false
 	list.add_child(_inv_ring)
 	list.move_child(_inv_ring, 0)
-	list.custom_minimum_size = Vector2(width, maxf(y, top_y + rw * card_ratio) + 150)
+	list.custom_minimum_size = Vector2(width, y + 150)
 	return list
+
+
+## A row's components in one line (elements first, then items by points; no
+## "+"), at ROW_FIT, shrunk to fit room when wider. Planet's 16 elements
+## shrink too.
+static func row_parts(name: String, at: Vector2, room: float) -> Control:
+	var e = Catalog.entry(name)
+	var holder := Control.new()
+	holder.position = at
+	holder.mouse_filter = MOUSE_FILTER_IGNORE
+	if e == null:
+		return holder
+	var seen := {}
+	var toks := []
+	for r in e.reqs:
+		if not seen.has(r.kind + ":" + r.name):
+			seen[r.kind + ":" + r.name] = true
+			toks.append(r)
+	var pts: Dictionary = Data.t("ITEM_POINTS")
+	toks = toks.filter(func(r): return r.kind == "element") + Util.stable_sort(toks.filter(func(r): return r.kind != "element"),
+		func(a, b): return pts.get(a.name, 0) - pts.get(b.name, 0))
+	var x := 0.0
+	for r in toks:
+		var part: Control
+		if r.kind == "element":
+			var l := Tok.label(r.name, 11, Color("#181614"), 800)
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			l.add_theme_stylebox_override("normal", Tok.box(Color.WHITE, 6, 1.5, Color.BLACK))
+			l.clip_text = true
+			l.size = Vector2(Tok.font(800).get_string_size(r.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 10, 22)
+			part = l
+		else:
+			part = Tok.icon(Data.t("ITEM_EMOJI").get(r.name, ""), 22)
+			part.size = Vector2(22, 22)
+		part.position = Vector2(x, 0)
+		part.mouse_filter = MOUSE_FILTER_IGNORE
+		holder.add_child(part)
+		x += part.size.x + 4
+	var natural := maxf(1, x - 4)
+	var k := minf(ROW_FIT, room / natural)
+	holder.scale = Vector2(k, k)
+	holder.set_meta("fit", k)
+	holder.size = Vector2(natural, 22)
+	return holder
 
 
 ## A tap (not a scroll) selects the card: its row goes on the Crafting Bench
@@ -476,34 +544,18 @@ func _last() -> void:
 		Game.mat_last_tap)
 
 
-## The Crafting Bench under the gold line (#matSelPanel) with the selected
-## card's row, and Add / Remove dropping down below it (#matListActions).
-## Returns where the list starts.
-func _sel_bench(y: float) -> float:
-	var bench := BenchPanel.new()
-	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 36, func(_n, _r): pass, func(n):
-		Game.toggle_pin(n), true))  # saves, then redraws; plain row (no have/missing marks)
-	bench.position = Vector2(0, y)
-	bench.size = Vector2(size.x, 30 + ShopRow.H + 18)
-	_body.add_child(bench)
-	var close := TextureRect.new()
-	close.texture = load("res://assets/ui/btn_close.webp")
-	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.position = Vector2(size.x - 8 - 34, y + bench.size.y + 2 - 34)
-	close.size = Vector2(34, 34)
-	close.gui_input.connect(func(ev): if Tap.tap(ev):
-		selected = ""
-		_redraw())
-	_body.add_child(close)
-	var end := y + bench.size.y
+## Add / Remove for the selected card (#matListActions), centred in a
+## column w wide from x at y. The Crafting Bench that held its row is gone
+## from the Inventory (the user, 2026-11-22: the card shows it all).
+func _sel_acts(x: float, y: float, w: float) -> void:
 	var on: bool = Game.state.mat.has(selected)
 	var card = Catalog.mat_card(selected)
 	var fits: bool = card != null and Mat.fits(Mat.on_mat(Game.state) + [card], Mat.stage(Game.state))
-	var acts := Control.new()  # no height of its own: floats over the list
-	acts.position = Vector2(0, end + 4)
+	var acts := Control.new()
+	acts.position = Vector2(x, y)
 	acts.mouse_filter = MOUSE_FILTER_IGNORE
-	var bx := (size.x - (96 * 2 + 10)) / 2
+	var bw := minf(96, (w - 8) / 2)
+	var bx := (w - (bw * 2 + 8)) / 2
 	for i in 2:
 		var add := i == 0
 		var enabled := (not on and fits) if add else on
@@ -516,8 +568,8 @@ func _sel_bench(y: float) -> float:
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		var bs := Tok.box(Tok.OK if add else Tok.BAD, 12, 2.5, Color.BLACK, 5, 4, Color(0, 0, 0, 0.35))
 		b.add_theme_stylebox_override("normal", bs)
-		b.position = Vector2(bx + i * (96 + 10), 0)
-		b.size = Vector2(96, 34)
+		b.position = Vector2(bx + i * (bw + 8), 0)
+		b.size = Vector2(bw, 34)
 		if not enabled:
 			b.modulate = Color(0.55, 0.55, 0.55, 0.6)
 		else:
@@ -529,8 +581,6 @@ func _sel_bench(y: float) -> float:
 		b.set_meta("cmp", "mat:add" if add else "mat:remove")
 		acts.add_child(b)
 	_body.add_child(acts)
-	_body.set_meta("acts", acts)
-	return end
 
 
 ## The Elements page: every element held, 8 to a row (elementsGridHTML()).

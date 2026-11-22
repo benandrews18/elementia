@@ -21,6 +21,22 @@ const SCENE := "res://ui/overlays/card_pop.tscn"
 
 var entry: Dictionary
 var _back: Array = []  # the cards drilled in from (Back pops one)
+## The side card (the user, 2026-11-22: the Inventory's list view, the
+## station shop): the card alone, in place, scaled to its column (no dim,
+## Close or buttons). What you hold shows: a missing element faded (with the
+## convert badge when Convert could cover it; a tap opens Convert on it), a
+## suit you hold none of faded too; an item component opens its own card.
+var side := false
+
+
+## The side card for name, scaled to width w (its top-left at 0, 0).
+static func side_card(name: String, w: float) -> CardPop:
+	var p: CardPop = load(SCENE).instantiate()
+	p.side = true
+	p.size = Vector2(p.portrait.x, p.portrait.y)
+	p.show_item(name)
+	p.scale = Vector2.ONE * w / p.size.x
+	return p
 
 
 static func open(on: Control, name: String) -> CardPop:
@@ -32,6 +48,11 @@ static func open(on: Control, name: String) -> CardPop:
 
 
 func _ready() -> void:
+	if side:
+		for n in [$Dim, $Close, $Actions]:
+			n.visible = false
+		mouse_filter = MOUSE_FILTER_IGNORE
+		return
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	for n in [$Dim, $Card, $Close]:
 		n.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
@@ -95,6 +116,8 @@ func show_item(name: String, keep_back := false) -> void:
 		c.queue_free()
 	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):
 		var cb := _cost_badge(su)
+		if side and not Data.t("SUIT_CORE_ELEMENTS")[su].any(func(sym): return Catalog.count(Game.state, sym) > 0):
+			cb.modulate.a = 0.35  # none of this suit held
 		cb.set_meta("cmp", "cp:cost%d" % $Card/Costs.get_child_count())
 		$Card/Costs.add_child(cb)
 	$Card/Station/Icon.texture = Data.icon(Catalog.station(entry.station).emoji)
@@ -157,6 +180,10 @@ func show_item(name: String, keep_back := false) -> void:
 	# Centred in the screen above the hub; the buttons 12px under the card.
 	var total := card.size.y + 12 + 34.9
 	card.position = Vector2((size.x - card.size.x) / 2, maxf(20, (size.y - HubBar.H - total) / 2))
+	if side:
+		card.position = Vector2.ZERO
+		size = card.size
+		return
 	var acts: Control = $Actions
 	acts.position = Vector2(0, card.position.y + card.size.y + 12)
 	acts.size.x = size.x
@@ -198,6 +225,7 @@ static func _cost_badge(su: String) -> Panel:
 ## row fits (most do), else shrunk to fit; Planet's 16 elements wrap,
 ## smaller, with no "+". Returns their height. Each opens its own card.
 const FIT := 0.91  # the shared size: 97 of 99 cards fit one row at it (2026-11-22: only Car and Fruit Cake shrink further)
+const SIDE_FIT := 1.4  # the side card is drawn small: its parts bigger, as many as fit one row
 var last_scale := 1.0  # the row's scale on the card shown (tests)
 
 
@@ -218,7 +246,7 @@ func _parts(w: float, _cap: bool) -> float:
 	var k := FIT
 	if not lots:
 		var natural := _row(toks, 1.0, false, null, 0.0)
-		k = minf(FIT, w / natural)
+		k = minf(SIDE_FIT if side else FIT, w / natural)
 	last_scale = k
 	return _row(toks, k, lots, holder, w)
 
@@ -269,6 +297,23 @@ func _element(sym: String, small: bool, k := 1.0) -> Control:
 	var tw := l.get_theme_font("font").get_string_size(sym, HORIZONTAL_ALIGNMENT_LEFT, -1, int(round(px))).x
 	l.size = Vector2(tw + (10.0 if small else 18.0 * k) + 4, px + (6.0 if small else 10.0 * k) + 4)
 	l.mouse_filter = MOUSE_FILTER_STOP
+	if side:
+		var need := 0
+		for r in entry.reqs:
+			if r.kind == "element" and r.name == sym:
+				need += 1
+		if Catalog.count(Game.state, sym) < need:
+			l.modulate.a = 0.4
+			if Game.state.elements.values().any(func(v): return int(v) >= int(Data.t("CONVERT_RATE"))):
+				var cv := TextureRect.new()  # Convert could cover it
+				cv.texture = load("res://assets/ui/btn_quark.webp")
+				cv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				cv.size = Vector2(18, 18) * k
+				cv.position = Vector2(l.size.x - 10 * k, -10 * k)
+				cv.modulate.a = 2.5  # undo the chip's fade
+				l.add_child(cv)
+		l.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym))
+		return l
 	l.gui_input.connect(func(ev): if Tap.tap(ev):
 		var on := get_parent()
 		queue_free()
@@ -285,7 +330,9 @@ func _item(name: String, px: float) -> Control:
 		var t := Tok.tick(Color.WHITE, 17 * px / 32, Tok.OK, Tok.CARD)
 		t.position = Vector2(px - 11 * px / 32, -4 * px / 32)
 		c.add_child(t)
-	if Catalog.entry(name) != null:
+	if Catalog.entry(name) != null and side:
+		c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(name))
+	elif Catalog.entry(name) != null:
 		c.gui_input.connect(func(ev): if Tap.tap(ev):
 			_back.append(entry)
 			show_item(name, true))
