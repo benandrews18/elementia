@@ -25,6 +25,7 @@ func _ready() -> void:
 	for n in _nodes():
 		n.tapped.connect(_on_node)
 	$Area/Paths.draw.connect(_draw_paths)
+	gui_input.connect(_on_map_tap)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
 	_redraw()
@@ -68,7 +69,8 @@ func _redraw() -> void:
 		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
 
 
-## The tracked item's marks behind the station circles (renderMap()): its
+## The tracked item's marks, over the station circles (the user: the HTML had
+## them behind, half hidden; renderMap()): its
 ## own station gets a gold badge with its icon (top-left), stations selling
 ## anything it still needs a small 🔍 (top-right). None on the first pick.
 func _badges(k: float) -> void:
@@ -273,6 +275,14 @@ static func _opens(c: Control, item: String, element := "") -> void:
 func _on_node(name: String) -> void:
 	Game.ctx.selectedMapStation = name
 	Game.state_changed.emit()
+
+
+## A tap on the map itself (not a station, not the card) puts the picked
+## station's card away.
+func _on_map_tap(ev: InputEvent) -> void:
+	if Tap.tap(ev) and Game.ctx.get("selectedMapStation"):
+		Game.ctx.selectedMapStation = null
+		Game.state_changed.emit()
 
 
 func _app() -> App:

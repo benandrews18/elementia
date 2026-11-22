@@ -87,6 +87,12 @@ func _run(app: App) -> void:
 		var options: Array = Data.t("MAP_NODE_POS").keys().filter(func(n): return app.can_travel_to(n))
 		Game.ctx.selectedMapStation = options[randi() % options.size()]
 		Game.state_changed.emit()
+		if turns == 1:  # a tap on the map (not a station) puts the card away
+			app._screen.gui_input.emit(_press(Vector2(5, 300)))
+			app._screen.gui_input.emit(_release(Vector2(5, 300)))
+			check(Game.ctx.selectedMapStation == null, "a tap on the map hides the station card")
+			Game.ctx.selectedMapStation = options[0]
+			Game.state_changed.emit()
 		check(app.home_face() == "travel", "turn %d: Home says Travel" % turns)
 		var check_turn := Catalog.is_mat_check_visit(Game.state)
 		app._on_hub("home")  # travel
