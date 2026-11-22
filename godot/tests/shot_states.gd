@@ -5,7 +5,7 @@
 ## Animations are left to settle (--wait); nothing random is shown.
 extends Control
 
-const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list",
+const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "station_list",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
@@ -54,6 +54,10 @@ func _ready() -> void:
 			app.open_panel("drawer")
 			app._panel_node.selected = Game.state.items[0]
 			app._panel_node._redraw()
+		"station_list":  # the station shop's 📋 view: the list, Glass on the side card with Pin / Craft
+			StationScreen.list_mode = true
+			app._screen.open_card = "Glass"
+			app._screen._redraw()
 		"drawer_list":  # the 📋 view: the compact list, the selected card on the right
 			DisplayMatScreen.list_mode = true
 			app.open_panel("drawer")

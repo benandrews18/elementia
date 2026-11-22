@@ -32,6 +32,7 @@ func _ready() -> void:
 		TodoTray.hint_open = false
 		ItemsScreen.query = ""
 		DisplayMatScreen.list_mode = false
+		StationScreen.list_mode = false
 		ItemsScreen.sort_mode = 0
 		Engine.time_scale = 1.0
 		Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string(job.save)))

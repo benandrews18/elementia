@@ -24,7 +24,12 @@ Each step that builds something new loads its godot-prompter skills first,
 reports the pattern picked (and the one rejected) before code, and runs
 godot-code-review at its end. A step with open decisions settles them first
 with `godot-grill`.
-1. **Inventory compact view, list + card** (the user's "Bigger: fewer
+1. (In progress) **Inventory compact view, list + card**: built in the
+   Inventory and at stations (📋 at both; the side card is CardPop's own
+   card, its parts bigger; Pin and Craft under it at stations). Waiting on
+   the user's phone test: does the list view replace the station grid and
+   Crafting Bench for good (then the grid's per-card Pin / Craft go)?
+   Was: **Inventory compact view, list + card** (the user's "Bigger: fewer
    repeated Craft / pin buttons" note under Phone notes). Skills:
    godot-ui, responsive-ui. Show the user a screenshot of the list and the
    card side by side before finishing the rest. Afterwards decide with the

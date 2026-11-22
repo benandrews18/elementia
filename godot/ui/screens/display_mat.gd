@@ -439,32 +439,8 @@ static func _list_w(width: float) -> float:
 func _inv_list(list: Control, inv: Array, pad: float, _w: float, y: float, width: float) -> Control:
 	var lw := _list_w(width)
 	for c in inv:
-		var row := Panel.new()
-		row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
+		var row := list_row(c.name, lw)
 		row.position = Vector2(pad, y)
-		row.size = Vector2(lw, ROW_H)
-		row.mouse_filter = MOUSE_FILTER_PASS
-		row.set_meta("cmp", "inv:" + c.name)
-		var ic := Tok.icon(c.emoji, 30)
-		ic.position = Vector2(6, (ROW_H - 30) / 2)
-		row.add_child(ic)
-		var x0 := 42.0
-		var nm := Tok.label(c.name, 12, Tok.CARD_INK, 800)
-		var nw := minf(Tok.font(800).get_string_size(c.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, lw - x0 - 8)
-		nm.clip_text = true
-		nm.position = Vector2(x0, 5)
-		nm.size = Vector2(nw + 2, 16)
-		row.add_child(nm)
-		var sx := x0 + nw + 5
-		for su in Data.t("ITEM_SUIT_COST_TABLE").get(c.name, []):  # its suits, after the name
-			if sx + 11 > lw - 4:
-				break
-			var g := Tok.icon("suit:" + su, 11)
-			g.material = Tok.tinted(Tok.suit_color(su))
-			g.position = Vector2(sx, 8)
-			row.add_child(g)
-			sx += 13
-		row.add_child(row_parts(c.name, Vector2(x0, 27), lw - x0 - 6))
 		_inv_cards[c.name] = row
 		row.gui_input.connect(_on_card_input.bind(c.name))
 		list.add_child(row)
@@ -475,6 +451,38 @@ func _inv_list(list: Control, inv: Array, pad: float, _w: float, y: float, width
 	list.move_child(_inv_ring, 0)
 	list.custom_minimum_size = Vector2(width, y + 150)
 	return list
+
+
+## A list row (the Inventory's 📋 view, the station shop's): the icon, the
+## name with its suits, its components in one row under it. Its parent
+## places it and wires its tap.
+static func list_row(name: String, lw: float) -> Panel:
+	var row := Panel.new()
+	row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
+	row.size = Vector2(lw, ROW_H)
+	row.mouse_filter = MOUSE_FILTER_PASS
+	row.set_meta("cmp", "inv:" + name)
+	var ic := Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), 30)
+	ic.position = Vector2(6, (ROW_H - 30) / 2)
+	row.add_child(ic)
+	var x0 := 42.0
+	var nm := Tok.label(name, 12, Tok.CARD_INK, 800)
+	var nw := minf(Tok.font(800).get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, lw - x0 - 8)
+	nm.clip_text = true
+	nm.position = Vector2(x0, 5)
+	nm.size = Vector2(nw + 2, 16)
+	row.add_child(nm)
+	var sx := x0 + nw + 5
+	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):  # its suits, after the name
+		if sx + 11 > lw - 4:
+			break
+		var g := Tok.icon("suit:" + su, 11)
+		g.material = Tok.tinted(Tok.suit_color(su))
+		g.position = Vector2(sx, 8)
+		row.add_child(g)
+		sx += 13
+	row.add_child(row_parts(name, Vector2(x0, 27), lw - x0 - 6))
+	return row
 
 
 ## A row's components in one line (elements first, then items by points; no

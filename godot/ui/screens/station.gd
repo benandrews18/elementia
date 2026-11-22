@@ -18,7 +18,10 @@ const TOP := QuarkTopBar.H
 @export var card_ratio := 1.4
 @export var act_h := 35.0
 
-var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen)
+var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
+static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
+var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
+var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
 var _press_at := Vector2.ZERO
 @onready var _scroll: ScrollContainer = $Scroll
 @onready var _page: Control = $Scroll/Page
@@ -32,6 +35,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
+	_scroll.get_v_scroll_bar().value_changed.connect(func(_v): _place_side())
 	_redraw()
 
 
@@ -56,9 +60,9 @@ func _redraw() -> void:
 	_scroll.position = Vector2(0, top)
 	_scroll.size = Vector2(w, size.y - top)
 	var y := _header(_page, st, w)
-	if open_card != "":
+	if open_card != "" and not list_mode:
 		y = _bench(_page, w, y)
-	y = _shop(_page, name, w, y)
+	y = _shop_list(_page, name, w, y) if list_mode else _shop(_page, name, w, y)
 	_page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
 	_scroll.set_deferred("scroll_vertical", keep)
 	if Game.state.get("matChecked"):
@@ -66,6 +70,8 @@ func _redraw() -> void:
 		qt.size = Vector2(w, TOP)
 		$Top.add_child(qt)
 	corner_buttons($Top, true)
+	if list_mode:
+		_side_card(w)
 
 
 ## The dark header: icon and name, the element chips, the crafted-items bar.
@@ -193,6 +199,97 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 			_cell(page, e, pos, Vector2(col_w * span + gap * (span - 1), card_h), gi == 0)
 		y += rows * cell_h + (rows - 1) * gap + 12
 	return y
+
+
+## The list view's shop (the user's trial of a list + side card in place of
+## the card grid and its Crafting Bench): the same items in the grid's
+## order as compact rows on the left (green edge: craftable now; a tick,
+## dimmed: crafted; gold edge: the one on the side card).
+func _shop_list(page: Control, station: String, w: float, y: float) -> float:
+	var s := Game.state
+	y += 18
+	$Scroll/Page/ShopLabel.position.y = y
+	$Scroll/Page/ShopLine.position.y = y + 23.5
+	y += 25.5 + 10
+	page = $Scroll/Page/Shop
+	_list_top = y
+	var fold: bool = s.get("collapseCraftedItems", false)
+	var shown := shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
+	var order := ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"]
+	var lw := floorf((w - 12) * 0.5 - 4)
+	for tier in order:
+		for e in shown.filter(func(x): return x.tier == tier):
+			var owned := Catalog.owns(s, e.name)
+			var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
+			var row := DisplayMatScreen.list_row(e.name, lw)
+			row.position = Vector2(6, y)
+			row.set_meta("cmp", "st:" + e.name)
+			if e.name == open_card or can:
+				row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 3, Color("#d9a441") if e.name == open_card else Tok.OK, 2, 1, Color(0, 0, 0, 0.25)))
+			if owned:
+				row.modulate = Color(0.7, 0.7, 0.7)
+				var tick := Tok.tick(Color.WHITE, 16, Tok.OK)
+				tick.position = Vector2(lw - 20, 4)
+				row.add_child(tick)
+			row.gui_input.connect(_on_tap.bind(func():
+				open_card = e.name
+				_redraw()))
+			page.add_child(row)
+			y += DisplayMatScreen.ROW_H + 6
+	return y + 6
+
+
+## The side card for open_card with Pin and Craft under it (in place of the
+## Crafting Bench), right of the list; _place_side() keeps it on screen.
+func _side_card(w: float) -> void:
+	var lw := floorf((w - 12) * 0.5 - 4)
+	var rx := 6 + lw + 8
+	var rw := w - 6 - rx
+	_side = Control.new()
+	_side.mouse_filter = MOUSE_FILTER_IGNORE
+	_side.position.x = rx
+	$Top.add_child(_side)
+	$Top.move_child(_side, 0)  # under the Quark bar and the corner buttons
+	var e = Catalog.entry(open_card)
+	if e == null:
+		var hint := Tok.label("Tap an item to see its card", 13, Color("#e6eef6"), 700)
+		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.position = Vector2(0, 30)
+		hint.size = Vector2(rw, 40)
+		_side.add_child(hint)
+		_side.size = Vector2(rw, 80)
+		_place_side()
+		return
+	var card := CardPop.side_card(e.name, rw)
+	_side.add_child(card)
+	var ch := card.size.y * card.scale.y
+	var s := Game.state
+	var owned := Catalog.owns(s, e.name)
+	var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
+	var acts := ShopActs.make()
+	acts.position = Vector2(0, ch + 8)
+	acts.show_state(rw, act_h + 6, Progress.is_pinned(e.name), can, owned)
+	var pin: Control = acts.get_node("Pin")
+	pin.gui_input.connect(_on_tap.bind(_pin_tap.bind(e.name, _side, Vector2.ZERO, Vector2(rw, ch))))
+	pin.set_meta("cmp", "st:pin:" + e.name)
+	var btn: Control = acts.get_node("Craft")
+	if can:
+		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
+		btn.set_meta("tip", "st:craft:" + e.name)
+	btn.set_meta("cmp", "st:craft:" + e.name)
+	_side.add_child(acts)
+	_side.size = Vector2(rw, ch + 8 + act_h + 6)
+	_place_side()
+
+
+## Level with the list's first row; once that scrolls up, held under the
+## top bar (the side card stays in view down the list).
+func _place_side() -> void:
+	if not is_instance_valid(_side):
+		return
+	var top := _scroll.position.y + 8
+	_side.position.y = maxf(top, _scroll.position.y + _list_top - _scroll.scroll_vertical)
 
 
 static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:
@@ -326,10 +423,16 @@ func _round_btn(at: Vector2, fold: bool) -> Control:
 		b.gui_input.connect(_on_tap.bind(func():
 			Game.state.collapseCraftedItems = not Game.state.get("collapseCraftedItems", false)
 			Game._changed()))  # saves, then redraws
-	else:
-		var ic := Tok.icon("📋", 15)  # list view: comes later (cards only for now)
+	else:  # 📋: the list view and back
+		var ic := Tok.icon("📋", 15)
 		ic.position = Vector2(7.5, 7.5)
 		b.add_child(ic)
+		if list_mode:
+			b.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.1), 8, 2.5, Tok.GOLD))
+		b.set_meta("cmp", "st:listview")
+		b.gui_input.connect(_on_tap.bind(func():
+			list_mode = not list_mode
+			_redraw()))
 	return b
 
 
