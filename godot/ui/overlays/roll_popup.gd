@@ -8,7 +8,9 @@ extends Control
 
 signal done
 
-const CHIP := 84.0
+const CHIP := 84.0  # a chip's own layout size; drawn at K of it
+const K := 0.8  # the user, 2026-11-21: smaller squares, closer together
+const GAP := 8.0
 const STAGGER := 0.09
 const TUMBLE := 0.5
 const PAUSE := 0.35
@@ -34,8 +36,10 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var cols := mini(3, roll.size())
 	var rows := ceili(roll.size() / 3.0)
-	var row_w := cols * CHIP + (cols - 1) * 16
-	var row_h := rows * (CHIP + 6 + 11) + (rows - 1) * 14
+	var cw := CHIP * K
+	var ch := (CHIP + 17) * K
+	var row_w := cols * cw + (cols - 1) * GAP
+	var row_h := rows * ch + (rows - 1) * GAP
 	var bw := minf(440, size.x - 32)
 	var bh := 18 + 19 + 16 + row_h + 16 + 46 + 16
 	_box.size = Vector2(bw, bh)
@@ -45,7 +49,9 @@ func _ready() -> void:
 	title.position.x = (bw - title.size.x) / 2
 	for i in roll.size():
 		var c := _chip(roll[i])
-		c.position = Vector2((bw - row_w) / 2 + (i % 3) * (CHIP + 16), 18 + 19 + 16 + (i / 3) * (CHIP + 17 + 14))
+		c.pivot_offset = c.size / 2
+		c.scale = Vector2(K, K)
+		c.position = Vector2((bw - row_w) / 2 + (i % 3) * (cw + GAP), 18 + 19 + 16 + (i / 3) * (ch + GAP)) - c.size * (1 - K) / 2
 		$Box/Chips.add_child(c)
 		_chips.append(c)
 	_collect.size = Vector2(maxf(bw * 0.6, 120), 46)
@@ -87,17 +93,13 @@ func _chip(r: Dictionary) -> Control:
 	sq.size = Vector2(CHIP, CHIP)
 	c.add_child(sq)
 	var s := Tok.label(sym, 32, Color("#221f1a"), 800)
-	s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	s.position = Vector2(0, 18)
-	s.size = Vector2(CHIP, 36)
+	Tok.centre_name(s, CHIP, 18, 36)
 	face.add_child(s)
 	var num := Tok.label(str(int(Data.t("ATOMIC_NUMBER").get(sym, 0))), 12, color, 800)
 	num.position = Vector2(12, 8)
 	face.add_child(num)
 	var nm := Tok.label(Data.t("ELEMENT_NAMES").get(sym, sym), 10.5, Color.BLACK, 700)
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nm.position = Vector2(6, 56)
-	nm.size = Vector2(CHIP - 12, 14)
+	Tok.centre_name(nm, CHIP, 56, 14)
 	face.add_child(nm)
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	if suit != "":
@@ -140,7 +142,6 @@ func _on_collect(ev: InputEvent) -> void:
 		var at := c.global_position
 		c.reparent(self)
 		c.global_position = at
-		c.pivot_offset = c.size / 2
 		var target := fly_to - c.size / 2
 		var tw := create_tween()
 		tw.tween_interval(i * 0.045)
