@@ -1,6 +1,9 @@
-## The HTML game's data and rule tables, exported by
-## tools/export_from_game.mjs into data/game_data.json (never hand-edit it).
-## Data.t("ITEM_POINTS") returns a table by its JS name.
+## The game's content and rule tables: data/game_data.json is the source
+## (first exported from the HTML prototype; edited here since the cutover).
+## DATA holds the stations, their dice, shops and capstones (rows are
+## [emoji, name, tier, recipe, points]); the tables built from it are
+## derive()d at load. Data.t("ITEM_POINTS") returns a table by its name.
+## A new item emoji: python godot/tools/fetch_icons.py.
 extends Node
 
 var tables: Dictionary
@@ -12,7 +15,7 @@ func _init() -> void:
 	icons = _read_json("res://assets/icons/icons.json")
 
 func t(name: String) -> Variant:
-	assert(tables.has(name), "No table %s in game_data.json (re-run the export?)" % name)
+	assert(tables.has(name), "No table %s in game_data.json" % name)
 	return tables[name]
 
 ## The texture for an icon key (an item's emoji, __NAME__, suit:x), or one of
@@ -115,5 +118,5 @@ static func parse_recipe(recipe: String) -> Array:
 
 static func _read_json(path: String) -> Dictionary:
 	var text := FileAccess.get_file_as_string(path)
-	assert(text != "", "Missing %s: run node godot/tools/export_from_game.mjs" % path)
+	assert(text != "", "Missing %s" % path)
 	return JSON.parse_string(text)
