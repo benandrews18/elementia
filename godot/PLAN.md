@@ -13,10 +13,41 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** the user's phone notes (2026-11-21, "Phone notes" below), then Cutover C5 (the capstone celebration, the unlock reveal, the after-craft mini card). C1-C4 done. Start every session with `git status`: the user may
+**Next task:** step 1 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
+
+**Work queue (agreed order, 2026-11-22).** One step at a time. Each ends
+with `check.py full`, a commit and a publish to both places, then a compact.
+Each step that builds something new loads its godot-prompter skills first,
+reports the pattern picked (and the one rejected) before code, and runs
+godot-code-review at its end. A step with open decisions settles them first
+with `godot-grill`.
+1. **Inventory compact view, list + card** (the user's "Bigger: fewer
+   repeated Craft / pin buttons" note under Phone notes). Skills:
+   godot-ui, responsive-ui. Show the user a screenshot of the list and the
+   card side by side before finishing the rest. Afterwards decide with the
+   user whether it replaces the station shop's grid.
+2. **The Display Mat growing** on rounds where it gets bigger, in the check's
+   reveal. Skills: tween-animation, animation-system.
+3. **Cutover C5:** the capstone celebration, the unlock reveal, the
+   after-craft mini card. Skills: tween-animation, particles-vfx, godot-ui.
+4. **Tier / display-size badge** (the Roman numeral plus 1, 2 or 4 blocks) on
+   the Crafting Bench and the full card view: card playing builds on it.
+   Skill: godot-ui.
+5. **Drawing and playing cards at checks** (designed below; one question
+   open: is "Draw cards" free and unlimited?). Skills: godot-grill for what's
+   still open, then godot-brainstorming for the design (scenes, state, save
+   format), state-machine (the check's phases), save-load (old saves still
+   load), godot-ui and hud-system (the hand), tween-animation (draws, plays,
+   discards). It takes the mat out of the Inventory between checks and adds
+   the Combo Lab button there.
+6. **UI feedback pass** (after card playing, as the user asked): skills
+   tween-animation, animation-system, godot-optimization (no cost to frame
+   rate), input-handling (presses); the map's dust poof (particles-vfx).
+Waiting on the user: "Inventory: tap an item to put it on the mat" (the
+card-playing design takes the mat out of the Inventory; drop it?).
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
