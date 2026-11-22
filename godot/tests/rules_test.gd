@@ -200,11 +200,11 @@ func _ready() -> void:
 	var hint = Game.todo_hint()
 	check(hint != null and hint.name == "Glass" and hint.can_now and hint.roots == ["Metropolis"] and hint.homes.has("The City"), "the hint: %s" % [hint])
 	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
-	for t in [[["Space Station", "Fruit Cake", "Speedboat"], "Apple", ["Space Station", "Fruit Cake"]],
+	for t in [[["Space Station", "Fruit Cake", "Speedboat"], "Rocket", ["Space Station"]],  # Apple needs Sugar since 2026-11-21: not craftable here
 			[["Metropolis"], "Wheel", ["Metropolis"]], [["Homestead", "Coral Reef"], "Farm", ["Homestead"]]]:
 		Progress.prefs.pinnedItems = t[0]
 		var h = Game.todo_hint()
-		check(h != null and h.name == t[1] and h.can_now and h.roots == t[2], "the hint for %s: %s (the HTML game: %s)" % [t[0], h.name if h else null, t[1]])
+		check(h != null and h.name == t[1] and h.can_now and h.roots == t[2], "the hint for %s: %s %s (expected %s)" % [t[0], h.name if h else null, h.roots if h else null, t[1]])
 	Progress.prefs.pinnedItems = ["Glass"]
 	Game.state.items.append("Glass")
 	check(Game.todo_hint() == null, "no hint once everything pinned is owned")
