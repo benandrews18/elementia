@@ -67,6 +67,8 @@ func _redraw() -> void:
 	if s.get("lastStation") != null:  # the turn clock, top-left (not on the first pick)
 		var clock := TurnClock.make(int(s.get("visits", 0)))
 		clock.position = Vector2(8, top + 4)
+		clock.mouse_filter = MOUSE_FILTER_STOP
+		clock.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: ClockInfo.show_on(App.current))
 		$Dynamic.add_child(clock)
 	StationScreen.corner_buttons($Dynamic, false)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game

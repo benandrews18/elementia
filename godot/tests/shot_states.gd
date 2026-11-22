@@ -13,7 +13,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
-	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early",
+	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
@@ -203,6 +203,8 @@ func _ready() -> void:
 			if state == "tracked_map":
 				Game.ctx.selectedMapStation = "The City"
 			Game.state_changed.emit()
+		"clock_info":  # the turn clock's window
+			ClockInfo.show_on(app)
 		"station_early":  # before the first mat check: no Quark bar, the header from the very top
 			Game.state.matChecked = false
 			Game.state_changed.emit()

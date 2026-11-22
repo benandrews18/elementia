@@ -4,8 +4,7 @@
 ## shaded slice covers the rounds gone, and the hand points at this round.
 ## The round number sits in the middle (the user, 2026-11-21); past round
 ## 24 (Overtime) the hand keeps going round and the middle reads OT.
-## shortcut: no tap-for-info window (openClockInfo()) yet, add it when the
-## clock gets its info.
+## A tap opens ClockInfo (on the map; the window's own copy is inert).
 class_name TurnClock
 extends Control
 
