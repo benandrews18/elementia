@@ -196,6 +196,23 @@ with `godot-grill`.
    border is too subtle) and what could be crafted with a conversion (the
    bench's ⚛ on missing elements, but visible from the shop itself), now
    the Craft buttons are gone. Open design: godot-grill first.
+11. **General fixes, batch 2** (the user, 2026-11-23):
+   (a) the hub's centre button showing a station (the "shop" face): its
+   background the same colour as the map's station icons, not orange;
+   (b) trays slide in from their own sides: the To-Do List from the left,
+   the Convert tray from below, the Market from above;
+   (c) the map's clock slightly larger, with small round markers around its
+   edge for important moments (Display Mat expansions, check rounds);
+   (d) the Inventory's minimised Display Mat (the "^" button under the mat):
+   the format the HTML game had (port it from game/; look it up there);
+   (e) the tracked items tray (the 🔍 pins tray): a tap on the map hides it;
+   it comes out further from the bottom (its own button covers it now);
+   bigger icons and text; a title "Pinned Items - Tap an item to track
+   it!";
+   (f) the tutorial's words name elements by their real names ("Carbon",
+   not "C");
+   (g) a check's restricted icons: the red cross-out drawn on top of the
+   icon, not beside it, in the restriction description window.
  and unlimited (up to the hand's
 10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
 (now a main game feature): tap a card in the list to put it on the lab's
