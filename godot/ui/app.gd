@@ -19,6 +19,7 @@ var mouse: MouseTip  # Professor Mouse, on a layer above everything
 const LAB_BAR := 40.0  # Combo Lab's exit bar
 const LAB_TOP := 52.0  # where the lab's mat starts, under it
 var _real: Array = []  # Combo Lab: the real run and its context, put back on exit
+var _lab: Array = []  # a Challenge Test: the lab's run and context, put back when it ends
 
 static var current: App  # the running app, for screens that need it (crafting)
 
@@ -545,6 +546,23 @@ func open_combo_lab() -> void:
 	bar.size = Vector2(size.x, LAB_BAR)
 	bar.gui_input.connect(func(ev): if Tap.tap(ev): close_combo_lab())
 	add_child(bar)
+	var exit_text: Label = bar.get_node("Text")  # to the left: the Challenge Test button on the right
+	exit_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	exit_text.offset_left = 16
+	var test := Tok.label("Challenge Test", 12, Tok.CARD_INK, 900)
+	test.name = "Test"
+	test.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	test.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	test.add_theme_stylebox_override("normal", Tok.box(Tok.GOLD, 12, 0, Color.BLACK, 3, 2, Color(0, 0, 0, 0.35)))
+	test.size = Vector2(124, 28)
+	test.position = Vector2(size.x - 130, (LAB_BAR - 28) / 2)
+	test.mouse_filter = MOUSE_FILTER_STOP
+	test.gui_input.connect(func(ev): if Tap.tap(ev):
+		if _lab.is_empty():
+			_challenge_pick()
+		else:
+			end_challenge_test())
+	bar.add_child(test)
 
 
 func close_combo_lab() -> void:
@@ -553,15 +571,93 @@ func close_combo_lab() -> void:
 	Game.state = _real[0]
 	Game.ctx = _real[1]
 	_real = []
+	_lab = []
 	_hub.visible = true
 	_dev_shown(true)
 	var bar := get_node_or_null("LabBar")
 	if bar:
+		bar.name = "LabBarGone"  # a lab opened again this frame gets the name (its Test button is found by it)
 		bar.queue_free()
 	close_panel()
 	if is_instance_valid(_screen):
 		_screen.visible = true
 	Game.state_changed.emit()
+
+
+## The Challenge Test (the user, 2026-11-22): card playing at a check, tried
+## in the Combo Lab before real checks use it. Pick a check round; a copy of
+## the real run (its items, the mat as far as it fits) plays that check with
+## a hand. Nothing is saved; Lock In shows the reward, then back to the lab.
+func _challenge_pick() -> void:
+	var d := ParchDialog.open(self, "res://ui/overlays/challenge_test.tscn")
+	var grid: Control = d.get_node("Window/Content/Rounds")
+	var every := int(Data.t("MAT_CHECK_EVERY"))
+	for r in range(every, int(Data.t("MAX_VISITS")) + 1, every):
+		var b: Control = load("res://ui/pieces/pill_button.tscn").instantiate()
+		b.get_node("Text").text = str(r)
+		b.custom_minimum_size = Vector2(62, 46)
+		b.name = "R%d" % r
+		b.gui_input.connect(func(ev): if Tap.tap(ev):
+			d.close()
+			start_challenge_test(r))
+		grid.add_child(b)
+
+
+func start_challenge_test(round: int) -> void:
+	if _real.is_empty():
+		return
+	_lab = [Game.state, Game.ctx]
+	var s: Dictionary = _real[0].duplicate(true)
+	s.visits = round
+	s.matChecked = round > int(Data.t("MAT_CHECK_EVERY"))
+	s.checkRound = round
+	s.order = null
+	s.ended = false
+	s.runComplete = false
+	s.finalCheckPending = false
+	s.quickSavedMat = null
+	Game.state = s
+	Game.ctx = Game.fresh_ctx()
+	Game.ctx.comboLab = true
+	Game.place_mat_cards(s.mat.duplicate())  # what fits this round's mat
+	Game.ctx.hand = Hand.deal(s)
+	Game.ctx.challengeTest = round
+	_test_label("✕ End Test")
+	open_panel("drawer")
+	Game.start_check_order()
+	OrderInfo.open(self)
+
+
+func end_challenge_test() -> void:
+	if _lab.is_empty():
+		return
+	Game.state = _lab[0]
+	Game.ctx = _lab[1]
+	_lab = []
+	_test_label("Challenge Test")
+	open_panel("drawer")
+	Game.state_changed.emit()
+
+
+func _test_label(text: String) -> void:
+	var t := get_node_or_null("LabBar/Test") as Label
+	if t:
+		t.text = text
+
+
+## The test's Lock In: the real count, the reward this round would give,
+## then back to the lab.
+func challenge_lock_in() -> void:
+	var total: float = Game.mat_score().total
+	var reward := Game.reward_of(Orders.reward_for(total, int(Game.ctx.challengeTest)))
+	_count_then(func():
+		var dlg := LockInReward.make()
+		dlg.dice = reward.dice
+		dlg.unknown = reward.unknown
+		dlg.quarks = total
+		dlg.size = size
+		dlg.on_done = end_challenge_test
+		add_child(dlg))
 
 
 func _dev_shown(on: bool) -> void:

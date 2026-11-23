@@ -42,6 +42,7 @@ var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
 var _page: Panel
+var lifted := ""  # the hand card picked up to play (card playing, Game.ctx.hand)
 
 
 static func make() -> DisplayMatScreen:
@@ -106,6 +107,12 @@ func _redraw() -> void:
 		_slots(cards, sc, page, row_h, open)
 	_page_controls(page)
 	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
+	var h = Game.ctx.get("hand")
+	_scroll.visible = h == null
+	if h != null:  # a check with cards: the hand in place of the item list
+		_hand_area(h, page)
+		return
+	lifted = ""
 	# The gold line between the mat and the item list, with the fold button.
 	var line := ColorRect.new()
 	line.color = line_color
@@ -290,7 +297,7 @@ func _page_controls(page: Control) -> void:
 	_body.add_child(help)
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
-	if view != "mat":
+	if view != "mat" or Game.ctx.get("hand") != null:  # with a hand, cards only change by playing
 		return
 	var btns := [["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
 	for b in btns:
@@ -540,8 +547,81 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 		if ev.pressed:
 			_press_at = ev.global_position
 		elif ev.global_position.distance_to(_press_at) < 10:
+			if Game.ctx.get("hand") != null:
+				if lifted != "":
+					_play(name)
+				elif App.current:
+					App.current.show_card(name)
+				return
 			selected = "" if selected == name else name
 			_redraw()
+
+
+## Card playing (PLAN.md work queue 5): Draw cards, the deck and discard
+## counts, Discard (with a card lifted) and Lock In in a row over the fanned
+## hand. With a card lifted, a tap on the mat plays it into free space, a tap
+## on a mat card plays it over that card.
+func _hand_area(h: Dictionary, page: Panel) -> void:
+	if not h.hand.has(lifted):
+		lifted = ""
+	var bottom := size.y - _hub_h
+	var row_y := bottom - 262
+	var btns := [
+		["Draw +2", Tok.GOLD, Hand.can_draw(h), func():
+			Hand.draw(h)
+			_redraw()],
+		["Discard", Tok.BAD, lifted != "", func():
+			Hand.discard(h, lifted)
+			lifted = ""
+			_redraw()],
+		["Lock In", Tok.OK, not playing, func(): if App.current: App.current.challenge_lock_in()],
+	]
+	var x := side
+	var lock_w := 0.0
+	for b in btns:
+		var text: String = b[0]
+		var bw := Tok.font(800).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 26
+		var btn := _round_button(text, Vector2(bw, 34), 13, b[1])
+		btn.position = Vector2(x if text != "Lock In" else size.x - side - bw, row_y)
+		btn.disabled = not b[2]
+		if btn.disabled:
+			btn.modulate = Color(0.6, 0.6, 0.6, 0.7)
+		btn.pressed.connect(b[3])
+		btn.set_meta("cmp", "hand:" + text)
+		_body.add_child(btn)
+		if text == "Lock In":
+			lock_w = bw
+		else:
+			x += bw + 6
+	var counts := Tok.label("Deck %d  ·  Out %d" % [h.deck.size(), h.discards.size()], 11, Color.WHITE, 800)
+	counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	counts.position = Vector2(x, row_y + 8)
+	counts.size = Vector2(maxf(0, size.x - side - lock_w - 6 - x), 18)
+	counts.clip_text = true
+	_body.add_child(counts)
+	var hv := HandView.new()
+	hv.position = Vector2(0, row_y + 40)
+	hv.size = Vector2(size.x, bottom - row_y - 40)
+	_body.add_child(hv)
+	hv.show_hand(h.hand, lifted)
+	hv.lift.connect(func(n):
+		lifted = n
+		_redraw())
+	if lifted != "":  # the mat takes the play: empty space plays into a free slot
+		for c in page.get_children():
+			if not _mat_nodes.values().has(c):
+				c.mouse_filter = MOUSE_FILTER_IGNORE
+		page.mouse_filter = MOUSE_FILTER_STOP
+		page.gui_input.connect(func(ev): if Tap.tap(ev): _play(""))
+
+
+func _play(over: String) -> void:
+	var msg := Hand.play(Game.ctx.hand, Game.state, lifted, over)
+	if msg != "":
+		_show_toast(msg)
+		return
+	lifted = ""
+	Game._changed()
 
 
 ## Last: back to the last locked-in mat (asks first, quick-saving this one);

@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -280,6 +280,19 @@ func _ready() -> void:
 				(app.get_children().filter(func(c): return c is CardPop)[0] as CardPop).show_tracking()
 		"combo_lab":  # the sandbox mat over the real run
 			app.open_combo_lab()
+		"challenge_pick":  # the lab's Challenge Test: pick a check round
+			app.open_combo_lab()
+			app._challenge_pick()
+		"challenge_hand":  # the test at round 12: the hand fanned, a card lifted (Rng fed: the same every time)
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			var mat := app._panel_node as DisplayMatScreen
+			mat.lifted = Game.ctx.hand.hand[2]
+			mat._redraw()
 		"welcome", "classic_mode":  # the title screen; Play's Classic window over it
 			app.show_welcome()
 			if state == "classic_mode":

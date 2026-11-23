@@ -1,0 +1,48 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/parch_dialog.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="pill"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+
+[node name="ChallengeTest" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+dim_closes = true
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 200.0
+offset_right = 370.0
+offset_bottom = 600.0
+title = "Challenge Test"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 71.0
+offset_right = 320.0
+offset_bottom = 300.0
+theme_override_constants/separation = 16
+
+[node name="Message" type="Label" parent="Window/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 15
+text = "Practise a check with cards. Your run's items are the deck and its mat stays on; nothing is saved. Which check?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Rounds" type="GridContainer" parent="Window/Content"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
