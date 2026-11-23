@@ -19,6 +19,7 @@ const TOP := QuarkTopBar.H
 @export var act_h := 35.0
 
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
+const HEAD_H := 243.8  # the header to the crafted-items bar's foot; the shop's title goes under it
 static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
 var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
 var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
@@ -59,7 +60,7 @@ func _redraw() -> void:
 	var top := TOP if Game.state.get("matChecked") else 0.0  # no Quark bar yet: the header reaches the top
 	_scroll.position = Vector2(0, top)
 	_scroll.size = Vector2(w, size.y - top)
-	var y := _header(_page, st, w)
+	var y := _shop_title(_header(_page, st, w))
 	if open_card != "" and not list_mode:
 		y = _bench(_page, w, y)
 	y = _shop_list(_page, name, w, y) if list_mode else _shop(_page, name, w, y)
@@ -109,6 +110,15 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 				$Scroll/Page/Crafted.add_child(t)
 				x += 29
 	$Scroll/Page/View.add_child(_round_btn(Vector2.ZERO, false))
+	return HEAD_H
+
+
+## "ITEM SHOP" and "Tap Items to Start Crafting!" on the header's dark blue,
+## which reaches down under them (the user, 2026-11-22). Returns its foot.
+func _shop_title(y: float) -> float:
+	$Scroll/Page/ShopLabel.position.y = y - 2
+	$Scroll/Page/ShopHint.position.y = y - 2 + 24
+	$Scroll/Page/Head.size.y = y - 2 + 24 + 18 + 12
 	return $Scroll/Page/Head.size.y
 
 
@@ -170,10 +180,7 @@ static func shop_entries(station: String) -> Array:
 ## crafted items leave the grid.
 func _shop(page: Control, station: String, w: float, y: float) -> float:
 	var s := Game.state
-	y += 18
-	$Scroll/Page/ShopLabel.position.y = y
-	$Scroll/Page/ShopLine.position.y = y + 23.5
-	y += 25.5 + 10
+	y += 14
 	page = $Scroll/Page/Shop
 	var fold: bool = s.get("collapseCraftedItems", false)
 	var shown := shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
@@ -207,10 +214,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 ## dimmed: crafted; gold edge: the one on the side card).
 func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 	var s := Game.state
-	y += 18
-	$Scroll/Page/ShopLabel.position.y = y
-	$Scroll/Page/ShopLine.position.y = y + 23.5
-	y += 25.5 + 10
+	y += 14
 	page = $Scroll/Page/Shop
 	_list_top = y
 	var fold: bool = s.get("collapseCraftedItems", false)
