@@ -102,7 +102,8 @@ func _hook_all(n: Node) -> void:
 
 
 func _hook(n: Node) -> void:
-	if n is Control and not n.gui_input.is_connected(_on_gui):
+	if n is Control and not n.has_meta("juice"):  # once: a reparent (Juice.leave) adds it again
+		n.set_meta("juice", true)
 		n.gui_input.connect(_on_gui.bind(n))
 
 
