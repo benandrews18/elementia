@@ -35,9 +35,16 @@ func _nodes() -> Array:
 	return $Area.get_children().filter(func(c): return c is MapNode)
 
 
+var stale := false  # a redraw skipped while covered (App.screen_covered())
+
+
 func _redraw() -> void:
 	if is_queued_for_deletion():
 		return
+	if App.current and App.current.screen_covered():  # under the Display Mat: redrawn when it closes
+		stale = true
+		return
+	stale = false
 	for c in $Dynamic.get_children():
 		c.queue_free()
 	var s := Game.state

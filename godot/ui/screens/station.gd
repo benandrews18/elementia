@@ -40,9 +40,16 @@ func _ready() -> void:
 	_redraw()
 
 
+var stale := false  # a redraw skipped while covered (App.screen_covered())
+
+
 func _redraw() -> void:
 	if is_queued_for_deletion() or not Game.ctx.get("current"):
 		return  # leaving the station: the app is swapping this screen out
+	if App.current and App.current.screen_covered():  # under the Display Mat: redrawn when it closes
+		stale = true
+		return
+	stale = false
 	var keep := _scroll.scroll_vertical
 	for holder in [$Scroll/Page/Chips, $Scroll/Page/Fold, $Scroll/Page/Crafted, $Scroll/Page/View, $Scroll/Page/Bench, $Scroll/Page/Shop, $Top]:
 		for c in holder.get_children():

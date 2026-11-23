@@ -95,6 +95,8 @@ func _sync() -> void:
 		_screen = StationScreen.make() if want == "station" else MapScreen.make()
 		add_child(_screen)
 		move_child(_screen, 0)
+	if not screen_covered() and is_instance_valid(_screen) and _screen.stale:
+		_screen._redraw()
 	sync_hub()
 	_sync_floats()
 	_market_check()
@@ -921,6 +923,13 @@ func sync_hub() -> void:
 ## The Display Mat while a check is played with cards (else null).
 func _hand_mat() -> DisplayMatScreen:
 	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.check_hand() != null else null
+
+
+## The Display Mat covers the map or station under it: that screen skips
+## its redraws while it's open (every change in a check redrew it unseen)
+## and catches up when it closes (_sync()).
+func screen_covered() -> bool:
+	return panel == "drawer"
 
 
 ## The Convert tray opened from a check with cards.
