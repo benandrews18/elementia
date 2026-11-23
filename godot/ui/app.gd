@@ -737,6 +737,8 @@ func open_convert(to_sym: String) -> void:
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
 	close_panel(false)
+	if name == "drawer":
+		Game.deal_hand()  # a check's mat: its hand, the first time
 	panel = name
 	if name in ["drawer", "convert", "market", "todo", "codex", "pins"]:
 		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
@@ -748,7 +750,7 @@ func open_panel(name: String) -> void:
 ## In a check with cards, closing the Convert tray goes back to the hand
 ## (unless another panel is opening: back = false).
 func close_panel(back := true) -> void:
-	var to_hand := back and panel == "convert" and Game.check_hand() != null
+	var to_hand := back and _check_convert()
 	if is_instance_valid(_panel_node):
 		_panel_node.queue_free()
 	_panel_node = null
@@ -906,7 +908,7 @@ func sync_hub() -> void:
 			{"inv": mat.lifted == "" and mat.selected == "" or h.tosses <= 0, "codex": mat.playing,
 			"market": Hand.why_not_rehang(h, s) != ""})
 		return
-	if panel == "convert" and Game.check_hand() != null:  # the Convert tray in a check: Close goes back to the hand
+	if _check_convert():  # Close goes back to the hand
 		_hub.greyed = false
 		_hub.show_state("close", {}, {}, false, true, {"jobs": true, "inv": true, "market": true, "codex": true})
 		return
@@ -919,6 +921,11 @@ func sync_hub() -> void:
 ## The Display Mat while a check is played with cards (else null).
 func _hand_mat() -> DisplayMatScreen:
 	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.check_hand() != null else null
+
+
+## The Convert tray opened from a check with cards.
+func _check_convert() -> bool:
+	return panel == "convert" and Game.check_hand() != null
 
 
 ## The hub during a check with cards: Draw, Discard (the lifted card) or
@@ -1104,7 +1111,7 @@ func _on_hub(id: String) -> void:
 	if hand_mat:
 		_hand_tap(hand_mat, id)
 		return
-	if panel == "convert" and Game.check_hand() != null:
+	if _check_convert():
 		if id == "home":
 			close_panel()
 		return

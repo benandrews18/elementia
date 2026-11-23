@@ -35,7 +35,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if Game.ctx.get("travelPromptFor") != null:  # a fixture saved mid-check: its hand dealt the same every time
 		Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
-		Game.check_hand()
+		Game.deal_hand()
 	match state:
 		"map", "station":
 			pass

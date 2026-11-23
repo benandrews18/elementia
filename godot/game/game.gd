@@ -255,19 +255,28 @@ func _start_final_check() -> void:
 
 
 ## The hand while a check is being played (its shutter opened this
-## session, the final check, or the Combo Lab's Challenge Test), else null;
-## dealt the first time (card playing). state.hand is saved, so a check
-## resumes as it was; it waits for its check to open again. (Not in
-## start_check_order(): the rules lock replays that against the HTML game.)
+## session, the final check, or the Combo Lab's Challenge Test), else null.
+## state.hand is saved, so a check resumes as it was; it waits for its check
+## to open again. Dealt by deal_hand() (the Challenge Test deals its own).
 func check_hand() -> Variant:
-	if ctx.get("comboLab") and not ctx.get("challengeTest"):
-		return null
-	if ctx.get("travelPromptFor") == null and not state.get("finalCheckPending") and not ctx.get("challengeTest"):
-		return null
-	if state.get("hand") == null:
+	return state.get("hand") if _in_check() else null
+
+
+func _in_check() -> bool:
+	if ctx.get("challengeTest"):
+		return true
+	if ctx.get("comboLab"):
+		return false
+	return ctx.get("travelPromptFor") != null or bool(state.get("finalCheckPending"))
+
+
+## Deals the check's hand if it has none yet (App.open_panel: the check's
+## mat opening). Not in start_check_order(): the rules lock replays that
+## against the HTML game.
+func deal_hand() -> void:
+	if _in_check() and state.get("hand") == null:
 		state.hand = Hand.deal(state)
 		Progress.save_all()  # at once: closing the app must not redeal
-	return state.hand
 
 
 ## Would locking in now end the run? (The screen asks first.)
