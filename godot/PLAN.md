@@ -45,10 +45,12 @@ with `godot-grill`.
    Discard, plays, Lock In back to the lab) are in; the size badge (full
    card, Crafting Bench, hand cards) and the hand's layout (right sides
    show; a tapped card lifts out as the full card) too (2026-11-23).
-   Next (agreed 2026-11-23, see Decisions): a play and discard budget per
-   check, the fresh side deck, the score preview on a lifted card; tried
-   in the Challenge Test; then Rehang, Take back and element draws; then
-   real checks switch over, with Frame.
+   Part 1 done (2026-11-23): the play and discard budget, the fresh side
+   deck, the score preview, the hub during a check (Draw in the middle;
+   Challenge, Discard, Scoring, Lock In) and the hand in two fans. Next:
+   the user tries it; then Rehang, Take back and element draws; then real
+   checks switch over, with Frame. The round picker still lists rounds to
+   39: limit it to the regular game's 24.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
