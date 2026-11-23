@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Crafting is animated again: the elements you spend rise onto the new card, pile up and pop in a little firework; the items it used (you keep them) peek up from behind the bottom bar and slide back down into your Inventory.
 - Crafting Bench: tap a missing element in the card's recipe (the red ones) to open Convert with it already picked as what to convert into.
 - The game feels more alive to touch: buttons, cards and menus squish and spring back when tapped; windows pop in and out; trays slide up; a card you play flies from your hand into its slot (and a card it replaces drops away); a dust puff where you tap the map. On Android phones, a short buzz on big moments (playing a card, crafting, Lock In, collecting dice). Settings → Game Rules has new Low motion and Vibration switches.
 - Display Mat checks: picking up a card from your hand is faster; tapping "?" with a full hand now says so; the score bubble for a free play shows where the card would land (a capstone spans its two slots).

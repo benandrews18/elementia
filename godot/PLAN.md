@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 8 of the work queue below. Start every session with `git status`: the user may
+**Next task:** step 9 of the work queue below (the tutorial: godot-grill first). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -101,13 +101,19 @@ with `godot-grill`.
    tray.gd, element_picker.gd), as was the full card's missing element;
    added: the Crafting Bench row's missing chips (ShopRow, meta "need:").
    Left out: the HTML's goal card in the tray (the item that sent you).
-8. **The craft animation** (the user, 2026-11-22; port it carefully from
+8. Done (2026-11-23): **The craft animation** (the user, 2026-11-22; port it carefully from
    the HTML, it took a while to get right: game/js/craft-animations.js,
    flyIngredientsAndReveal(), riseIntoStack(), fireworkBurst(),
    punchInventory()): the spent elements fly out and pop; the items the
    player keeps poke up from the bottom of the screen and go back down to
    show they're kept. Run the HTML in the browser pane to watch it.
    Skill: tween-animation (particles-vfx for the pops).
+   Built in Juice (group Craft in the Inspector): craft_spend (the
+   squares rise, pile fanned, pop; firework on Juice's own random numbers),
+   craft_keep (kept items' mini cards under the hub), App._on_crafted
+   (the small card waits for the pop; the Inventory bounces when the kept
+   cards are down). Game.last_tax: the suit cost paid, shown as squares.
+   Low motion: none of it plays. Not watched side by side with the HTML.
 9. **Tutorial overhaul** (the user, 2026-11-23; big, plan and brainstorm
    it properly first: godot-grill, then godot-brainstorming). The Professor
    Mouse tutorials are obnoxious and don't flow. Replace them with:
