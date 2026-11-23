@@ -518,19 +518,25 @@ func _collections(app: App) -> void:
 	check(Game.state != real and Game.state != lab and int(Game.state.visits) == 12 and Game.state.order != null, "the test: a copy of the run at check 12, with its challenge")
 	check(hd.get("hand", []).size() == 7 and hd.deck.all(func(n): return not Game.state.mat.has(n)), "a hand of 7 from the cards not on the mat")
 	var dm := app._panel_node as DisplayMatScreen
-	check(not dm._scroll.visible and _find_meta(dm, "hand:Draw +2") != null, "the hand in place of the item list")
-	_find_meta(dm, "hand:Draw +2").pressed.emit()
-	check(hd.hand.size() == 9, "Draw +2")
+	check(not dm._scroll.visible and _find_meta(dm, "hand:counts") != null and app._hub.visible and app._hub.hand and app._hub.face == "draw", "the hand in place of the item list; the hub's middle button is Draw")
+	app._on_hub("home")
+	check(hd.hand.size() == 9, "Draw adds 2")
 	var on_mat: String = Game.state.mat[0]
 	dm.lifted = hd.hand[0]
+	dm._redraw()
+	check(_find_meta(dm, "hand:gain:" + on_mat) != null and app._hub.off.get("inv") != true, "a lifted card: the score change shows on the mat; Discard lights")
 	var played: String = hd.hand[0]
+	var plays: int = hd.plays
 	dm._play(on_mat)
-	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 9, "a lifted card played over a mat card: it's replaced, the hand refilled")
-	_find_meta(dm, "hand:Lock In").pressed.emit()
+	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 8 and hd.plays == plays - 1, "played over a mat card: it's replaced, a play spent, the hand not refilled")
+	dm.lifted = hd.hand[0]
+	app._on_hub("inv")
+	check(hd.hand.size() == 7 and hd.discards.size() == 2, "Discard (the hub) throws out the lifted card")
+	app._on_hub("codex")
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()
-	check(Game.state == lab and not Game.ctx.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge"), "then back to the lab")
+	check(Game.state == lab and not Game.ctx.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge") and not app._hub.visible, "then back to the lab")
 	app.close_combo_lab()
 	check(Game.state == real and real.mat == real_mat, "the real run is untouched")
 	finished.collections = true

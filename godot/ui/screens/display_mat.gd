@@ -37,6 +37,7 @@ static var list_mode := false  # the 📋 view: a compact list on the left, the 
 var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
 var _hub_h := HUB_H
+var _empties: Array = []  # the mat's empty slots (Rect2 on the page), for a lifted card's preview
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
 var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
@@ -63,6 +64,7 @@ func _redraw() -> void:
 	if playing:
 		return
 	_mat_nodes.clear()
+	_empties.clear()
 	_chip_nodes.clear()
 	slot_rects.clear()
 	for c in _body.get_children():
@@ -71,7 +73,7 @@ func _redraw() -> void:
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
 	var lab: bool = Game.ctx.get("comboLab", false)  # Combo Lab: the whole screen, under its exit bar
-	_hub_h = 0.0 if lab else HUB_H
+	_hub_h = 0.0 if lab and Game.ctx.get("hand") == null else HUB_H  # a lab check with cards keeps the hub
 	_drawer.size = Vector2(size.x, size.y - _hub_h)
 	var w := size.x - 2 * side
 	var y := maxf(top, App.LAB_TOP) if lab else top  # [data-combo-lab] #drawerTop: padding-top 52px
@@ -557,51 +559,27 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 			_redraw()
 
 
-## Card playing (PLAN.md work queue 5): Draw cards, the deck and discard
-## counts, Discard (with a card lifted) and Lock In in a row over the fanned
-## hand. With a card lifted, a tap on the mat plays it into free space, a tap
-## on a mat card plays it over that card.
+## Card playing (PLAN.md work queue 5): the plays, discards and deck left
+## over the hand, fanned in two rows; Draw, Discard and Lock In are on the
+## hub (App._hand_tap). With a card lifted, every place it could go on the
+## mat shows what it would do to the score; a tap on the mat plays it into
+## free space, a tap on a mat card plays it over that card.
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	if not h.hand.has(lifted):
 		lifted = ""
-	var bottom := size.y - _hub_h
-	var row_y := bottom - 262
-	var btns := [
-		["Draw +2", Tok.GOLD, Hand.can_draw(h), func():
-			Hand.draw(h)
-			_redraw()],
-		["Discard", Tok.BAD, lifted != "", func():
-			Hand.discard(h, lifted)
-			lifted = ""
-			_redraw()],
-		["Lock In", Tok.OK, not playing, func(): if App.current: App.current.challenge_lock_in()],
-	]
-	var x := side
-	var lock_w := 0.0
-	for b in btns:
-		var text: String = b[0]
-		var bw := Tok.font(800).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 26
-		var btn := _round_button(text, Vector2(bw, 34), 13, b[1])
-		btn.position = Vector2(x if text != "Lock In" else size.x - side - bw, row_y)
-		btn.disabled = not b[2]
-		if btn.disabled:
-			btn.modulate = Color(0.6, 0.6, 0.6, 0.7)
-		btn.pressed.connect(b[3])
-		btn.set_meta("cmp", "hand:" + text)
-		_body.add_child(btn)
-		if text == "Lock In":
-			lock_w = bw
-		else:
-			x += bw + 6
-	var counts := Tok.label("Deck %d  ·  Out %d" % [h.deck.size(), h.discards.size()], 11, Color.WHITE, 800)
+	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
+	var top_y := page.position.y + page.size.y + 26  # under the mat's tabs
+	var fl := Hand.fresh_left(h)
+	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Deck %d%s" % [h.plays, h.tosses, h.deck.size(), "  (%d new)" % fl if fl else ""], 12, Color.WHITE, 800)
 	counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	counts.position = Vector2(x, row_y + 8)
-	counts.size = Vector2(maxf(0, size.x - side - lock_w - 6 - x), 18)
+	counts.position = Vector2(side, top_y)
+	counts.size = Vector2(size.x - 2 * side, 18)
 	counts.clip_text = true
+	counts.set_meta("cmp", "hand:counts")
 	_body.add_child(counts)
 	var hv := HandView.new()
-	hv.position = Vector2(0, row_y + 40)
-	hv.size = Vector2(size.x, bottom - row_y - 40)
+	hv.position = Vector2(0, top_y + 22)
+	hv.size = Vector2(size.x, bottom - top_y - 22)
 	_body.add_child(hv)
 	hv.show_hand(h.hand, lifted)
 	hv.lift.connect(func(n):
@@ -613,6 +591,64 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 				c.mouse_filter = MOUSE_FILTER_IGNORE
 		page.mouse_filter = MOUSE_FILTER_STOP
 		page.gui_input.connect(func(ev): if Tap.tap(ev): _play(""))
+		_gains(page)
+	if App.current:
+		App.current.sync_hub()
+
+
+## The lifted card's score change on each mat card it could replace, and on
+## the first empty slot for a free play.
+func _gains(page: Control) -> void:
+	var at := {}
+	for n in _mat_nodes:
+		var c: Control = _mat_nodes[n]
+		at[n] = Rect2(c.position, c.size)
+	if not _empties.is_empty():
+		at[""] = _empties[0]
+	for n in at:
+		var g = Hand.gain(Game.state, Game.ctx, lifted, n)
+		if g == null:
+			continue
+		var d := roundi(g)
+		var pill := Tok.label("+%d" % d if d > 0 else "%d" % d if d < 0 else "±0", 13, Color.WHITE, 900)
+		pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var sb := Tok.box(Tok.OK if d > 0 else Tok.BAD if d < 0 else Tok.MUTE, 10, 2, Color.WHITE, 3, 2, Color(0, 0, 0, 0.4))
+		sb.content_margin_left = 7
+		sb.content_margin_right = 7
+		pill.add_theme_stylebox_override("normal", sb)
+		pill.size = pill.get_minimum_size()
+		var r: Rect2 = at[n]
+		pill.position = r.position + Vector2((r.size.x - pill.size.x) / 2, minf(6, r.size.y - pill.size.y))
+		pill.set_meta("cmp", "hand:gain:" + n)
+		page.add_child(pill)
+
+
+## Draw (the hub's middle button).
+func hand_draw() -> void:
+	var h = Game.ctx.get("hand")
+	if h == null or playing:
+		return
+	if not Hand.can_draw(h):
+		_show_toast("Your hand is full." if not h.deck.is_empty() else "The deck is empty.")
+		return
+	Hand.draw(h)
+	_redraw()
+
+
+## Discard the lifted card (the hub's Discard).
+func hand_discard() -> void:
+	var h = Game.ctx.get("hand")
+	if h == null or playing:
+		return
+	if lifted == "":
+		_show_toast("Tap a card in your hand first.")
+		return
+	var msg := Hand.discard(h, lifted)
+	if msg != "":
+		_show_toast(msg)
+		return
+	lifted = ""
+	_redraw()
 
 
 func _play(over: String) -> void:
@@ -961,8 +997,10 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					_mat_nodes[stack[k].card.name] = mini
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
+					_empties.append(Rect2(at, Vector2(col_w, mh)))
 		else:
 			page.add_child(_dashed(Rect2(pos, Vector2(col_w, h)), 12))
+			_empties.append(Rect2(pos, Vector2(col_w, h)))
 
 
 func _stage() -> int:

@@ -95,7 +95,7 @@ func _sync() -> void:
 		_screen = StationScreen.make() if want == "station" else MapScreen.make()
 		add_child(_screen)
 		move_child(_screen, 0)
-	_sync_hub()
+	sync_hub()
 	_sync_floats()
 	_market_check()
 	_maybe_end()
@@ -628,6 +628,7 @@ func start_challenge_test(round: int) -> void:
 	Game.ctx.hand = Hand.deal(s)
 	Game.ctx.challengeTest = round
 	_test_label("✕ End Test")
+	_hub.visible = true  # the hand's buttons
 	open_panel("drawer")
 	Game.start_check_order()
 	OrderInfo.open(self)
@@ -640,6 +641,7 @@ func end_challenge_test() -> void:
 	Game.ctx = _lab[1]
 	_lab = []
 	_test_label("Challenge Test")
+	_hub.visible = false
 	open_panel("drawer")
 	Game.state_changed.emit()
 
@@ -749,6 +751,8 @@ func home_face() -> String:
 	var s := Game.state
 	var c := Game.ctx
 	var sel = c.get("selectedMapStation")
+	if _hand_mat():
+		return "draw"
 	if s.get("finalCheckPending") and (panel == "" or panel == "drawer"):
 		return "final"
 	if panel == "drawer" and c.screen == "map" and sel and can_travel_to(sel) and c.get("travelPromptFor") == sel:
@@ -870,7 +874,7 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 			p.tween_property(pill, "scale", Vector2.ONE, 0.17))
 
 
-func _sync_hub() -> void:
+func sync_hub() -> void:
 	var s := Game.state
 	var sel = Game.ctx.get("selectedMapStation")
 	var badges := {}
@@ -878,8 +882,35 @@ func _sync_hub() -> void:
 		badges.market = "!"
 	var here = s.get("lastStation")
 	_hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
+	var mat := _hand_mat()
+	if mat:  # a check with cards: Draw in the middle, the hand's actions round it
+		var h: Dictionary = Game.ctx.hand
+		_hub.greyed = not Hand.can_draw(h) or mat.playing
+		_hub.show_state("draw", {}, {"inv": str(h.tosses)}, false, true,
+			{"inv": mat.lifted == "" or h.tosses <= 0, "codex": mat.playing})
+		return
+	if _hub.hand:  # out of a check with cards: Draw's grey goes with it
+		_hub.greyed = false
 	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
+
+
+## The Display Mat while a check is played with cards (else null).
+func _hand_mat() -> DisplayMatScreen:
+	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.ctx.get("hand") != null else null
+
+
+## The hub during a check with cards: Draw, Discard (the lifted card), the
+## challenge, the scoring rules, Lock In.
+func _hand_tap(mat: DisplayMatScreen, id: String) -> void:
+	match id:
+		"home": mat.hand_draw()
+		"inv": mat.hand_discard()
+		"jobs": OrderInfo.open(self)
+		"market": MatRules.show_on(self)
+		"codex":
+			if not mat.playing:
+				challenge_lock_in()
 
 
 ## The visit's roll, then the dice pop-up over everything (Collect sends
@@ -1042,6 +1073,10 @@ func fade_through_black(midpoint: Callable) -> void:
 
 
 func _on_hub(id: String) -> void:
+	var hand_mat := _hand_mat()
+	if hand_mat:
+		_hand_tap(hand_mat, id)
+		return
 	match id:
 		"inv":
 			if panel == "drawer":

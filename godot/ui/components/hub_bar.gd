@@ -21,8 +21,11 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var faces := {
 	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#b5501a"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
-	"close": ["⬅️", "Close", ""],
+	"close": ["⬅️", "Close", ""], "draw": ["🃏", "Draw", "#3f8fe0"],
 }
+## A check with cards (card playing): the side buttons become these
+## (id -> [emoji, label]); see App._hand_tap().
+@export var hand_sides := {"jobs": ["🎯", "Challenge"], "inv": ["🗑️", "Discard"], "market": ["🖼️", "Scoring"], "codex": ["🔒", "Lock In"]}
 @export var frame: Texture2D
 @export var active_frame: Texture2D  # a lit side button (its panel is open)
 @export var label_color := Color.WHITE
@@ -34,6 +37,9 @@ var greyed := false  # Home tapped and busy (the Lock-In count): grey, its tap i
 var active := {}  # id -> true for a lit side button (its panel is open)
 var badges := {}  # id -> text of its red badge ("!")
 var via_air := false  # Travel by helicopter (off the paths): 🚁 instead of 🥾
+var hand := false  # a check with cards: hand_sides on the side buttons
+var off := {}  # id -> true for a greyed side button (its tap still comes, the screen says why)
+var _own := {}  # id -> [icon, label]: the side buttons' own, for after a check
 
 static var _ball: Shader
 
@@ -45,6 +51,7 @@ static func make() -> HubBar:
 func _ready() -> void:
 	for s in SIDES:
 		get_node(s[1]).gui_input.connect(_tap.bind(s[0]))
+		_own[s[0]] = [get_node(s[1] + "/Icon").texture, get_node(s[1] + "/Label").text]
 	$Home.gui_input.connect(_tap.bind("home"))
 	resized.connect(_build)
 	_build()
@@ -99,12 +106,15 @@ func punch(id: String) -> void:
 	tw.tween_property(b, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_SINE)
 
 
-## Shows a new state: face, lit buttons, badges.
-func show_state(new_face: String, new_active: Dictionary, new_badges: Dictionary, air := false) -> void:
+## Shows a new state: face, lit buttons, badges (and a check with cards:
+## hand_sides, some greyed).
+func show_state(new_face: String, new_active: Dictionary, new_badges: Dictionary, air := false, hand_on := false, new_off := {}) -> void:
 	face = new_face
 	active = new_active
 	badges = new_badges
 	via_air = air
+	hand = hand_on
+	off = new_off
 	_build()
 
 
@@ -124,7 +134,11 @@ func _side_button(id: String, b: Frame9, r: Rect2) -> void:
 	b.texture = active_frame if active.get(id) else frame
 	b.position = r.position
 	b.size = r.size
+	b.modulate = Color(0.6, 0.6, 0.6, 0.75) if off.get(id) else Color.WHITE
 	var ic: TextureRect = b.get_node("Icon")
+	if not _own.is_empty():
+		ic.texture = Data.icon(hand_sides[id][0]) if hand else _own[id][0]
+		b.get_node("Label").text = hand_sides[id][1] if hand else _own[id][1]
 	var tex := ic.texture
 	ic.size = Vector2(42.0 * tex.get_width() / tex.get_height(), 42)
 	ic.position = Vector2((r.size.x - ic.size.x) / 2, 9)
