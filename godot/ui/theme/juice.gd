@@ -50,6 +50,21 @@ extends Node
 @export var dust_size := 16.0
 @export var dust_color := Color(0.86, 0.76, 0.6, 0.85)
 
+@export_group("Craft")
+@export var spend_size := 56.0  # a spent element's square
+@export var spend_rise := 0.42  # from below the screen onto the new card,
+@export var spend_stagger := 0.08  # one after another,
+@export var spend_fan := 7.0  # into a fanned pile (px apart; degrees x0.7)
+@export var spend_wait := 0.16  # the pile shows this long,
+@export var spend_pop := 0.28  # then pops (grows, shrinks, fades) in a firework
+@export var spark_count := 26
+@export var spark_reach := Vector2(80, 190)  # px out, at least / at most
+@export var spark_time := 0.55
+@export var keep_size := 78.0  # a kept item's card (width)
+@export var keep_up := 0.38  # peeks 75% up from behind the hub,
+@export var keep_hold := 0.65  # waits (at least; longer while elements pop),
+@export var keep_stagger := 0.07  # one after another, then back down
+
 @export_group("Buzz")
 @export var buzz_ms := 30  # a key moment; the Lock-In count's end: buzz_big_ms
 @export var buzz_big_ms := 45
@@ -62,7 +77,7 @@ static var _held: Control
 static var _held_at := Vector2.ZERO
 static var _frame := -1
 static var _dot_tex: GradientTexture2D
-static var _dust_rng := RandomNumberGenerator.new()  # its own: the dice use the global one (Rng)
+static var _dust_rng := RandomNumberGenerator.new()  # its own (the firework's too): the dice use the global one (Rng)
 
 
 static func make() -> Juice:
@@ -238,6 +253,102 @@ static func dust(on_node: Control, at: Vector2) -> void:
 		tw.tween_property(d, "scale", d.scale * 1.8, cfg.dust_time)
 		tw.tween_property(d, "modulate:a", 0.0, cfg.dust_time).set_ease(Tween.EASE_IN)
 	puff.get_tree().create_timer(cfg.dust_time + 0.05).timeout.connect(puff.queue_free)
+
+
+## When a craft's n spent elements pop (seconds from the craft; 0: nothing
+## plays), so the new card can wait for them.
+static func spend_pop_at(n: int) -> float:
+	if not on() or n == 0:
+		return 0.0
+	return (n - 1) * cfg.spend_stagger + cfg.spend_rise + cfg.spend_wait
+
+
+## flyIngredientsAndReveal()'s elements: each element a craft spent rises
+## from below the screen onto the new card at `at` (app coordinates), one
+## after another; they pile up fanned, then pop in a firework.
+static func craft_spend(app: Control, spent: Array, at: Vector2) -> void:
+	var pop_at := spend_pop_at(spent.size())
+	if pop_at == 0.0:
+		return
+	var n := spent.size()
+	var pile := Control.new()
+	pile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pile.set_meta("craft_fx", true)
+	app.add_child(pile)
+	for i in n:
+		var sq := StationScreen.element_chip(spent[i], cfg.spend_size)
+		_ignore_mouse(sq)
+		sq.get_node("Name").visible = false  # a gather-window square: no name under it
+		sq.pivot_offset = Vector2.ONE * cfg.spend_size / 2
+		var off := i - (n - 1) / 2.0
+		sq.position = Vector2(at.x + off * 70, app.size.y + 90) - sq.pivot_offset
+		sq.modulate.a = 0.0
+		sq.scale = Vector2.ONE * 0.9
+		pile.add_child(sq)
+		var tw := sq.create_tween()
+		tw.tween_interval(i * cfg.spend_stagger + 0.001)
+		tw.tween_property(sq, "modulate:a", 1.0, cfg.spend_rise * 0.12)
+		tw.parallel().tween_property(sq, "scale", Vector2.ONE, cfg.spend_rise * 0.12)
+		tw.parallel().tween_property(sq, "position", at + Vector2.ONE * off * cfg.spend_fan - sq.pivot_offset, cfg.spend_rise).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(sq, "rotation_degrees", off * cfg.spend_fan * 0.7, cfg.spend_rise)
+		tw.tween_interval(pop_at - i * cfg.spend_stagger - cfg.spend_rise + 0.001)
+		tw.tween_property(sq, "scale", Vector2.ONE * 1.25, cfg.spend_pop * 0.3)
+		tw.tween_property(sq, "scale", Vector2.ONE * 0.2, cfg.spend_pop * 0.7).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(sq, "modulate:a", 0.0, cfg.spend_pop * 0.7).set_ease(Tween.EASE_IN)
+	var pt := pile.create_tween()
+	pt.tween_interval(pop_at)
+	pt.tween_callback(func(): firework(pile, at))
+	pt.tween_interval(maxf(cfg.spend_pop, cfg.spark_time * 1.4) + 0.05)
+	pt.tween_callback(pile.queue_free)
+
+
+## fireworkBurst(): coloured sparks flying out from `at` and fading.
+static func firework(on_node: Control, at: Vector2) -> void:
+	var colors := ["#2e9e5b", "#d9432b", "#b7791f", "#3b7fc4", "#a16a34", "#e2b25a", "#ffffff"]
+	for i in cfg.spark_count:
+		var p := Panel.new()
+		p.add_theme_stylebox_override("panel", Tok.box(Color(colors[_dust_rng.randi() % colors.size()]), 4))
+		p.size = Vector2(7, 7)
+		p.pivot_offset = p.size / 2
+		p.position = at - p.pivot_offset
+		p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		on_node.add_child(p)
+		var a := TAU * i / cfg.spark_count + _dust_rng.randf() * 0.35
+		var t := cfg.spark_time * _dust_rng.randf_range(1.0, 1.4)
+		var tw := p.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(p, "position", p.position + Vector2(cos(a), sin(a)) * _dust_rng.randf_range(cfg.spark_reach.x, cfg.spark_reach.y), t)
+		tw.tween_property(p, "scale", Vector2.ONE * 0.25, t)
+		tw.tween_property(p, "modulate:a", 0.0, t)
+
+
+## The kept components (a craft uses them, doesn't spend them): their cards
+## peek up from behind the hub (drawn under it), hold at least `hold`, then
+## slide back down. Returns when the last is down (0: nothing plays).
+static func craft_keep(app: Control, items: Array, hub: Control, hold: float) -> float:
+	if not on() or items.is_empty():
+		return 0.0
+	var n := items.size()
+	var top := app.size.y - HubBar.H
+	var step := minf(96.0, (app.size.x - 150) / maxf(1, n - 1))
+	var held := maxf(cfg.keep_hold, hold)
+	for i in n:
+		var card := ItemCard.make(items[i], {"mini": true, "in_grid": false})
+		card.size = Vector2(cfg.keep_size, cfg.keep_size * 1.4)
+		card.pivot_offset = Vector2(card.size.x / 2, card.size.y)
+		card.position = Vector2(app.size.x / 2 + (i - (n - 1) / 2.0) * step - card.size.x / 2, top)
+		card.set_meta("craft_fx", true)
+		_ignore_mouse(card)
+		app.add_child(card)
+		app.move_child(card, hub.get_index())  # under the hub: it comes up from behind it
+		var tw := card.create_tween()
+		tw.tween_interval(i * cfg.keep_stagger + 0.001)
+		tw.tween_property(card, "position:y", top - card.size.y * 0.75, cfg.keep_up).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(card, "rotation_degrees", (i - (n - 1) / 2.0) * 4, cfg.keep_up)
+		tw.tween_interval(held)
+		tw.tween_property(card, "position:y", top, cfg.keep_up).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(card, "rotation_degrees", 0.0, cfg.keep_up)
+		tw.tween_callback(card.queue_free)
+	return cfg.keep_up * 2 + held + (n - 1) * cfg.keep_stagger
 
 
 ## A soft round dot (no image file): a radial gradient, white to clear.

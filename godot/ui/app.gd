@@ -208,15 +208,33 @@ func _on_crafted(name: String) -> void:
 	if Game.ctx.get("comboLab") or not is_inside_tree():
 		return
 	Juice.buzz()
-	if Data.t("ITEM_TIER").get(name, "") == "CAPSTONE":
+	# flyIngredientsAndReveal(): the elements spent (the recipe's, not its
+	# catalysts, and the suit cost paid) rise onto the new card and pop, the
+	# card waiting for them; the kept items peek up from behind the hub.
+	var e: Dictionary = Catalog.entry(name)
+	var spent := []
+	for r in e.reqs:
+		if r.kind == "element" and not r.catalyst:
+			spent.append(r.name)
+	for sym in Game.last_tax:
+		for k in int(Game.last_tax[sym]):
+			spent.append(sym)
+	var pop_at := Juice.spend_pop_at(spent.size())
+	if e.tier == "CAPSTONE":
 		_celebrate(name)
 	else:
-		_craft_peek(name)
+		_craft_peek(name, maxf(0.5, pop_at + (Juice.cfg.spend_pop if pop_at > 0 else 0.0)))
+	var centre := size / 2 - Vector2(0, HubBar.H / 2)
+	Juice.craft_spend(self, spent, centre)
+	var kept: Array = Catalog.needs_of(e.reqs).items.map(func(r): return r.name)
+	var down := Juice.craft_keep(self, kept, _hub, pop_at)
+	if down > 0:
+		_hub.create_tween().tween_interval(down).finished.connect(_hub.punch.bind("inv"))
 
 
 ## The small card: pops in at the middle, a moment's look, then flies into
 ## the Inventory button (which bounces). A tap first opens the full card.
-func _craft_peek(name: String) -> void:
+func _craft_peek(name: String, wait := 0.5) -> void:
 	var card := ItemCard.make(name)
 	card.size = Vector2(110, 110 * 1.4)
 	card.pivot_offset = card.size / 2
@@ -230,7 +248,7 @@ func _craft_peek(name: String) -> void:
 	var tw := card.create_tween()
 	tw.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(card, "modulate:a", 1.0, 0.12)
-	tw.tween_interval(0.5)
+	tw.tween_interval(wait)  # the spent elements pop on it first
 	tw.tween_callback(func(): card.mouse_filter = MOUSE_FILTER_IGNORE)
 	tw.tween_property(card, "position", to, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_property(card, "scale", Vector2(0.15, 0.15), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)

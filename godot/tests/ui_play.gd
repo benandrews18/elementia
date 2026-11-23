@@ -410,14 +410,25 @@ func _cards(app: App) -> void:
 	for c in app.get_children():  # rolls the run section never collected: the reveal waits for a clear screen
 		if c is RollPopup:
 			c.free()
-	Game.crafted.emit("Glass")
+	Game.last_tax = {}
+	Game.crafted.emit("Glass")  # two kept items (Sand, Limestone), no elements
 	var peeks := func(): return app.get_children().filter(func(c): return c.has_meta("peek") and not c.is_queued_for_deletion())
+	var fx := func(): return app.get_children().filter(func(c): return c.has_meta("craft_fx") and not c.is_queued_for_deletion())
 	check(peeks.call().size() == 1, "a craft pops up its small card")
+	var keeps: Array = fx.call().filter(func(c): return c is ItemCard)
+	check(keeps.size() == 2 and keeps[0].get_index() < app._hub.get_index(), "a craft's kept items peek up from behind the hub")
 	check(await _until(func(): return peeks.call().is_empty()), "the small card flies into the Inventory")
+	check(await _until(func(): return fx.call().is_empty()), "the kept items go back down, freed")
+	var el_item: Dictionary = Data.t("ENTRIES").filter(func(e): return e.tier != "CAPSTONE" and e.reqs.any(func(r): return r.kind == "element" and not r.catalyst))[0]
+	var n_spent: int = el_item.reqs.filter(func(r): return r.kind == "element" and not r.catalyst).size()
+	Game.crafted.emit(el_item.name)
+	check(fx.call().size() == 1 and fx.call()[0].get_child_count() == n_spent, "a craft's spent elements rise onto its card, one square each (%s: %d)" % [el_item.name, n_spent])
+	check(await _until(func(): return fx.call().is_empty() and peeks.call().is_empty()), "they pop and are freed; the card flies off")
 	Game.state.items.append("Metropolis")
 	Game.crafted.emit("Metropolis")
 	var cel: Array = open.call(CardPop)
 	check(cel.size() == 1 and cel[0].entry.name == "Metropolis", "a capstone opens its card")
+	check(await _until(func(): return fx.call().is_empty()), "a capstone's craft pieces play out over its card and are freed")
 	if cel.size() == 1:
 		cel[0].queue_free()
 	check(await _until(func(): return open.call(UnlockReveal).size() == 1), "then New Items Unlocked")

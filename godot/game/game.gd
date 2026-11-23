@@ -9,6 +9,7 @@ extends Node
 
 signal state_changed
 signal crafted(name: String)  # after the redraw: the screen plays the craft (App)
+var last_tax := {}  # the suit cost the last craft() paid (its elements): the craft animation shows them
 
 var state: Dictionary = {}
 var ctx: Dictionary = fresh_ctx()
@@ -166,6 +167,7 @@ func do_roll(roll_count: Variant = null) -> Array:
 ## Crafting from a screen: an item with a suit cost needs its picks (the
 ## suit-spend balloon, {sym: n}); see craft_paying().
 func craft(name: String, picks: Dictionary = {}) -> bool:
+	last_tax = {} if suit_cost_need(name).is_empty() else picks.duplicate()
 	return craft_raw(name) if suit_cost_need(name).is_empty() else craft_paying(name, picks)
 
 
