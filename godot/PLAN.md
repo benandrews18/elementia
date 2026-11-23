@@ -45,7 +45,12 @@ with `godot-grill`.
    Discard, plays, Lock In back to the lab) are in; the size badge (full
    card, Crafting Bench, hand cards) and the hand's layout (right sides
    show; a tapped card lifts out as the full card) too (2026-11-23).
-   Next: the user tries it; then real checks switch over.
+   Next (agreed 2026-11-23, see Decisions): a play and discard budget per
+   check, the fresh side deck, the score preview on a lifted card; tried
+   in the Challenge Test; then real checks switch over. Still being
+   designed with the user: costly ways to take control of the mat (like
+   "rehang the display") and spending surplus elements to draw cards of
+   their suit.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
@@ -1011,6 +1016,15 @@ Recorded so they aren't re-argued. Add new ones with the date.
   starts with a **round picker** (the check rounds; mat size and challenge
   follow). **Lock-In** in the test plays the real count, shows the reward
   that round would give, then goes back to the lab.
+- 2026-11-23 (card playing, the user): the mat stays between checks, but a
+  check gets a **budget of plays and discards** (numbers in game_data.json,
+  tuned by play; may grow over the run), so the deck can't be cycled
+  through. Cards crafted since the last check form a **fresh side deck**
+  dealt first; after it the rest are shuffled back into one deck. A
+  **lifted card shows the score change** on each slot before it's played.
+  Being designed: costly ways to take control of the mat; spending
+  surplus stock elements to draw cards of their suit (a special case,
+  not the normal draw).
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.
