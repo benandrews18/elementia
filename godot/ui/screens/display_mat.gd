@@ -856,7 +856,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 		var c: int = i % cols
 		var pos := Vector2(page_pad + 2 + c * (col_w + cols_gap), page_pad + 2 + r * (row_h + cols_gap))
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
-		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + cols_gap * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") or sl.kind == "top" else h))
+		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + cols_gap * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") and sl.kind != "top" else h))
 		if sl.has("card"):
 			if sl.card.name == selected:
 				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)))
@@ -869,7 +869,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 		elif sl.has("stack") or sl.kind == "top":
 			var stack: Array = sl.get("stack", [])
 			var per: int = 1 if sl.kind == "top" else L.perSlot
-			var mh := (row_h - (per - 1) * 2) / per
+			var mh := h if sl.kind == "top" else (row_h - (per - 1) * 2) / per  # the half-height strip holds one
 			for k in per:
 				var at := pos + Vector2(0, k * (mh + 2))
 				if k < stack.size():
