@@ -345,6 +345,23 @@ func _cards(app: App) -> void:
 	var sym: String = Catalog.sorted_dice(Catalog.station(Game.ctx.current))[0]
 	check(app.panel == "convert" and app._panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
 	app.close_panel()
+	# The Crafting Bench: a missing element in the card's recipe opens Convert on it.
+	var shop: Array = StationScreen.shop_entries(Game.ctx.current)
+	var want = shop.filter(func(e): return e.reqs.any(func(r): return r.kind == "element" and Catalog.count(Game.state, r.name) == 0))
+	if want.is_empty():
+		check(false, "a station card needs an element not held (for the bench test)")
+	else:
+		app.open_card(want[0].name)
+		await get_tree().process_frame
+		var missing: String = want[0].reqs.filter(func(r): return r.kind == "element" and Catalog.count(Game.state, r.name) == 0)[0].name
+		var need := _find_meta(app._screen, "need:" + missing)
+		check(need != null, "the bench's recipe marks %s as missing" % missing)
+		if need:
+			need.gui_input.emit(_press(Vector2.ZERO))
+			need.gui_input.emit(_release())
+			check(app.panel == "convert" and app._panel_node.to == missing, "a missing element on the Crafting Bench opens Convert with it on the To side")
+		app.close_panel()
+		app.open_card("")
 	app.show_element_card(sym)
 	check(open.call(ElementCard).size() == 1, "an element card opens")
 	open.call(ElementCard)[0].get_node("Card").gui_input.emit(_release())

@@ -149,6 +149,11 @@ func _recipe(at: Vector2) -> void:
 			chip.position = Vector2(x, at.y - 3)
 			chip.size = Vector2(w, 30)
 			$Recipe.add_child(chip)
+			if not have:  # .tok.el.need: a tap opens Convert with it on the To side
+				var sym: String = r.name
+				chip.set_meta("cmp", "need:" + sym)
+				chip.mouse_filter = MOUSE_FILTER_STOP
+				chip.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym))
 			if not have and convertible > 0:  # "Convert could cover this"
 				var cv := TextureRect.new()
 				cv.texture = load("res://assets/ui/btn_quark.webp")
@@ -156,6 +161,7 @@ func _recipe(at: Vector2) -> void:
 				cv.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				cv.position = Vector2(x + w - 12, at.y - 13)
 				cv.size = Vector2(22, 22)
+				cv.mouse_filter = MOUSE_FILTER_IGNORE  # a tap on it reaches the chip
 				$Recipe.add_child(cv)
 		else:
 			have = Catalog.owns(s, r.name)
