@@ -727,7 +727,7 @@ func open_convert(to_sym: String) -> void:
 
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
-	close_panel()
+	close_panel(false)
 	panel = name
 	if name in ["drawer", "convert", "market", "todo", "codex", "pins"]:
 		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
@@ -736,11 +736,17 @@ func open_panel(name: String) -> void:
 	_sync()
 
 
-func close_panel() -> void:
+## In a check with cards, closing the Convert tray goes back to the hand
+## (unless another panel is opening: back = false).
+func close_panel(back := true) -> void:
+	var to_hand := back and panel == "convert" and Game.ctx.get("hand") != null
 	if is_instance_valid(_panel_node):
 		_panel_node.queue_free()
 	_panel_node = null
 	panel = ""
+	if to_hand:
+		open_panel("drawer")
+		return
 	if Game.state.get("ended"):  # e.g. after "Review my collection": the end screen again (New Game)
 		Game.ctx.endShown = ""
 	_sync()
@@ -886,8 +892,14 @@ func sync_hub() -> void:
 	if mat:  # a check with cards: Draw in the middle, the hand's actions round it
 		var h: Dictionary = Game.ctx.hand
 		_hub.greyed = not Hand.can_draw(h) or mat.playing
+		_hub.hand_sides.inv = ["↩️", "Take Back"] if mat.selected != "" else ["🗑️", "Discard"]
 		_hub.show_state("draw", {}, {"inv": str(h.tosses)}, false, true,
-			{"inv": mat.lifted == "" or h.tosses <= 0, "codex": mat.playing})
+			{"inv": mat.lifted == "" and mat.selected == "" or h.tosses <= 0, "codex": mat.playing,
+			"market": Hand.why_not_rehang(h, s) != ""})
+		return
+	if panel == "convert" and Game.ctx.get("hand") != null:  # the Convert tray in a check: Close goes back to the hand
+		_hub.greyed = false
+		_hub.show_state("close", {}, {}, false, true, {"jobs": true, "inv": true, "market": true, "codex": true})
 		return
 	if _hub.hand:  # out of a check with cards: Draw's grey goes with it
 		_hub.greyed = false
@@ -900,14 +912,14 @@ func _hand_mat() -> DisplayMatScreen:
 	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.ctx.get("hand") != null else null
 
 
-## The hub during a check with cards: Draw, Discard (the lifted card), the
-## challenge, the scoring rules, Lock In.
+## The hub during a check with cards: Draw, Discard (the lifted card) or
+## Take Back (the picked mat card), the challenge, Rehang, Lock In.
 func _hand_tap(mat: DisplayMatScreen, id: String) -> void:
 	match id:
 		"home": mat.hand_draw()
 		"inv": mat.hand_discard()
 		"jobs": OrderInfo.open(self)
-		"market": MatRules.show_on(self)
+		"market": mat.hand_rehang()
 		"codex":
 			if not mat.playing:
 				challenge_lock_in()
@@ -1076,6 +1088,10 @@ func _on_hub(id: String) -> void:
 	var hand_mat := _hand_mat()
 	if hand_mat:
 		_hand_tap(hand_mat, id)
+		return
+	if panel == "convert" and Game.ctx.get("hand") != null:
+		if id == "home":
+			close_panel()
 		return
 	match id:
 		"inv":

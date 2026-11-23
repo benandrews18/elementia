@@ -1,0 +1,52 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/card_pick.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_400.tres" id="f4"]
+
+[node name="CardPick" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+dim_closes = true
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 120.0
+offset_right = 370.0
+offset_bottom = 700.0
+title = "Pick a Card"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 71.0
+offset_right = 326.0
+offset_bottom = 520.0
+theme_override_constants/separation = 12
+
+[node name="Message" type="Label" parent="Window/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_fonts/font = ExtResource("f4")
+theme_override_font_sizes/font_size = 15
+text = "Spend an Unknown Element to take any card from your deck into your hand."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="Window/Content"]
+custom_minimum_size = Vector2(302, 400)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Cards" type="GridContainer" parent="Window/Content/Scroll"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 3

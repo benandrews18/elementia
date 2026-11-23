@@ -525,13 +525,47 @@ func _collections(app: App) -> void:
 	dm.lifted = hd.hand[0]
 	dm._redraw()
 	check(_find_meta(dm, "hand:gain:" + on_mat) != null and app._hub.off.get("inv") != true, "a lifted card: the score change shows on the mat; Discard lights")
+	check(app._hub.hand_sides.market[1] == "Rehang" and app._hub.off.get("market") != true, "Rehang is ready before the first play")
 	var played: String = hd.hand[0]
 	var plays: int = hd.plays
 	dm._play(on_mat)
 	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 8 and hd.plays == plays - 1, "played over a mat card: it's replaced, a play spent, the hand not refilled")
 	dm.lifted = hd.hand[0]
 	app._on_hub("inv")
-	check(hd.hand.size() == 7 and hd.discards.size() == 2, "Discard (the hub) throws out the lifted card")
+	check(hd.hand.size() == 7 and hd.discards.size() == 2 and app._hub.off.get("market") == true, "Discard (the hub) throws out the lifted card; no Rehang after a play")
+	dm = app._panel_node as DisplayMatScreen
+	var back: String = Game.state.mat[-1]
+	dm._on_card_input(_press(Vector2.ZERO), back)
+	dm._on_card_input(_release(), back)
+	check(dm.selected == back and app._hub.hand_sides.inv[1] == "Take Back", "a tapped mat card: Discard becomes Take Back")
+	app._on_hub("inv")
+	check(hd.hand.has(back) and not Game.state.mat.has(back) and hd.tosses == int(Data.t("HAND_DISCARDS")) - 2, "Take Back: the mat card into the hand, for a discard")
+	# Element draws, in the Convert tray (the same button as on the station).
+	var esym := ""
+	for sym in Data.t("CLASSIC_ELEMENTS"):
+		if Hand.suit_card(hd, sym) != "":
+			esym = sym
+			break
+	Game.state.elements = {esym: 2}
+	Game.state.emptyElements = 1
+	Game._changed()
+	dm = app._panel_node as DisplayMatScreen
+	check(_find_meta(dm, "convert") != null, "the Convert button shows during a check")
+	app.open_panel("convert")
+	var tray := app._panel_node as ConvertTray
+	tray.from = esym
+	tray._redraw()
+	var want_card := Hand.suit_card(hd, esym)
+	var n_hand: int = hd.hand.size()
+	check(tray.to == "card" and tray._ready_now and app._hub.face == "close", "in a check the tray converts an element into a card (1:1)")
+	tray.do_convert()
+	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1 and app.panel == "drawer", "it draws a card of that suit, then back to the hand")
+	app.open_panel("convert")
+	var cp := CardPick.show_on(app)
+	await get_tree().process_frame
+	var pick_card: String = hd.deck[-1]
+	cp._take(pick_card)
+	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
 	app._on_hub("codex")
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()

@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "challenge_convert",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -293,6 +293,19 @@ func _ready() -> void:
 			var mat := app._panel_node as DisplayMatScreen
 			mat.lifted = Game.ctx.hand.hand[2]
 			mat._redraw()
+		"challenge_convert":  # the test's Convert tray: an element into a card of its suit
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			Game.state.elements = {"H": 2, "O": 4, "Fe": 1}
+			Game.state.emptyElements = 1
+			app.open_panel("convert")
+			var tray := app._panel_node as ConvertTray
+			tray.from = "O"
+			tray._redraw()
 		"welcome", "classic_mode":  # the title screen; Play's Classic window over it
 			app.show_welcome()
 			if state == "classic_mode":

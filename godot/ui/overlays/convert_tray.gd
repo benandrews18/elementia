@@ -4,6 +4,9 @@
 ## either opens the picker); Unknown Elements held, top right (a tap opens
 ## the "?" picker: any element of this station). The arrow converts; the
 ## result flies to the Inventory button.
+## In a check with cards (card playing, 2026-11-23) TO can be "a card" (and
+## starts as it): 1 element draws a card with its suit's pip into the hand;
+## the "?" counter picks any card from the deck. Then back to the hand.
 class_name ConvertTray
 extends Control
 
@@ -28,6 +31,8 @@ static func make() -> ConvertTray:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	if _hand() != null:
+		to = "card"
 	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
 	$Tray/Arrow.gui_input.connect(func(ev): if Tap.tap(ev) and _ready_now: do_convert())
 	Game.state_changed.connect(_redraw)
@@ -58,7 +63,7 @@ func _redraw() -> void:
 	var y := grid_y
 	for i in held.size():
 		var sym: String = held[i]
-		var ok := Catalog.count(Game.state, sym) >= int(Data.t("CONVERT_RATE"))
+		var ok := Catalog.count(Game.state, sym) >= (1 if _hand() != null else int(Data.t("CONVERT_RATE")))
 		var b := box(sym, cell, "%d" % int(Game.state.elements[sym]), 1.0 if ok else 0.45)
 		b.position = Vector2(16 + (i % 8) * (cell + 6), y + (i / 8) * (cell + 16 + 6))
 		if ok:
@@ -80,6 +85,9 @@ func _redraw() -> void:
 	from_box.gui_input.connect(func(ev): if Tap.tap(ev): _pick("from"))
 	content.add_child(from_box)
 	_ready_now = from != "" and to != "" and from != to and Catalog.count(Game.state, from) >= int(Data.t("CONVERT_RATE"))
+	if to == "card":
+		_ready_now = from != "" and Catalog.count(Game.state, from) >= 1 and _hand().hand.size() < Hand.most() and Hand.suit_card(_hand(), from) != ""
+	$Tray/Rate.text = "1:1" if to == "card" else "%d:1" % int(Data.t("CONVERT_RATE"))
 	var arrow: Panel = $Tray/Arrow
 	arrow.add_theme_stylebox_override("panel", arrow_on if _ready_now else arrow_off)
 	arrow.position = Vector2(fx + big + 20 + 10, y + big / 2 - 34)
@@ -115,6 +123,15 @@ func _big_box(sym: String, sz: float) -> Control:
 	var b := Panel.new()
 	b.size = Vector2(sz, sz)
 	b.mouse_filter = MOUSE_FILTER_STOP
+	if sym == "card":  # a check with cards: a card of FROM's suit
+		b.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 14, 8, Tok.GOLD, 6, 3, Color(0, 0, 0, 0.35)))
+		var ic := Tok.icon("🃏", sz * 0.42)
+		ic.position = Vector2((sz - ic.size.x) / 2, sz * 0.14)
+		b.add_child(ic)
+		var cl := Tok.label("A card", 14, Color("#221f1a"), 800)
+		Tok.centre_name(cl, sz, sz * 0.62, 20)
+		b.add_child(cl)
+		return b
 	if sym == "":
 		b.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.04), 14))
 		b.add_child(DisplayMatScreen._dashed(Rect2(Vector2.ZERO, b.size), 14))
@@ -180,6 +197,9 @@ func _unknown_badge(at: Vector2) -> Control:
 	if n > 0:
 		b.gui_input.connect(func(ev): if Tap.tap(ev):
 			var app := App.current
+			if _hand() != null:  # a check with cards: any card from the deck
+				CardPick.show_on(app)
+				return
 			app.close_panel()
 			UnknownPick.open(app))
 	return b
@@ -189,6 +209,7 @@ func _unknown_badge(at: Vector2) -> Control:
 func _pick(side: String) -> void:
 	var p := ElementPicker.make()
 	p.side = side
+	p.card_option = side == "to" and _hand() != null
 	p.other = to if side == "from" else from
 	p.on_pick = func(sym):
 		if side == "from":
@@ -202,6 +223,13 @@ func _pick(side: String) -> void:
 
 ## Converts; the TO box flies into the Inventory button, then both reset.
 func do_convert() -> void:
+	if to == "card":
+		var msg := Hand.suit_draw(_hand(), Game.state, from)
+		from = ""
+		if msg == "" and App.current:
+			App.current.close_panel()  # back to the hand, the card in it
+			Game._changed()
+		return
 	var to_box := _to_box
 	var target := App.current._hub.button_center("inv")
 	var fly := _big_box(to, to_box.size.x)
@@ -220,3 +248,7 @@ func do_convert() -> void:
 	from = ""
 	to = ""
 	Game.convert_elements(f, t)
+
+
+static func _hand() -> Variant:
+	return Game.ctx.get("hand")

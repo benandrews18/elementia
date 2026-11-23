@@ -549,11 +549,14 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 		if ev.pressed:
 			_press_at = ev.global_position
 		elif ev.global_position.distance_to(_press_at) < 10:
-			if Game.ctx.get("hand") != null:
+			if Game.ctx.get("hand") != null:  # a check with cards: play onto it, else pick it (Take Back), again: its card
 				if lifted != "":
 					_play(name)
-				elif App.current:
+				elif selected == name and App.current:
 					App.current.show_card(name)
+				else:
+					selected = name
+					_redraw()
 				return
 			selected = "" if selected == name else name
 			_redraw()
@@ -567,6 +570,8 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	if not h.hand.has(lifted):
 		lifted = ""
+	if lifted != "" or not Game.state.mat.has(selected):  # a mat card picked for Take Back, or a hand card lifted
+		selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var top_y := page.position.y + page.size.y + 26  # under the mat's tabs
 	var fl := Hand.fresh_left(h)
@@ -584,6 +589,8 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	hv.show_hand(h.hand, lifted)
 	hv.lift.connect(func(n):
 		lifted = n
+		if n != "":
+			selected = ""
 		_redraw())
 	if lifted != "":  # the mat takes the play: empty space plays into a free slot
 		for c in page.get_children():
@@ -592,6 +599,7 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 		page.mouse_filter = MOUSE_FILTER_STOP
 		page.gui_input.connect(func(ev): if Tap.tap(ev): _play(""))
 		_gains(page)
+	StationScreen.corner_buttons(_body, false)  # Convert, as on the station: element draws (ConvertTray)
 	if App.current:
 		App.current.sync_hub()
 
@@ -635,20 +643,40 @@ func hand_draw() -> void:
 	_redraw()
 
 
-## Discard the lifted card (the hub's Discard).
+## The hub's Discard: the lifted card out, or (Take Back) the picked mat
+## card into the hand.
 func hand_discard() -> void:
 	var h = Game.ctx.get("hand")
 	if h == null or playing:
 		return
-	if lifted == "":
-		_show_toast("Tap a card in your hand first.")
+	if lifted == "" and selected == "":
+		_show_toast("Tap a card in your hand (or on the mat) first.")
 		return
-	var msg := Hand.discard(h, lifted)
+	var msg := Hand.discard(h, lifted) if lifted != "" else Hand.take_back(h, Game.state, selected)
 	if msg != "":
 		_show_toast(msg)
 		return
 	lifted = ""
-	_redraw()
+	selected = ""
+	Game._changed()
+
+
+## The hub's Rehang: asks first (it can't be undone).
+func hand_rehang() -> void:
+	var h = Game.ctx.get("hand")
+	if h == null or playing:
+		return
+	var no := Hand.why_not_rehang(h, Game.state)
+	if no != "":
+		_show_toast(no)
+		return
+	ConfirmDialog.ask(App.current if App.current else self,
+		"Rehang the display? Every card on the mat goes back into the deck, you draw a full hand, and you get a play for each card that was on the mat (instead of this check's %d)." % int(Data.t("HAND_PLAYS")),
+		func():
+			if Hand.rehang(h, Game.state) == "":
+				lifted = ""
+				selected = ""
+				Game._changed())
 
 
 func _play(over: String) -> void:
@@ -989,6 +1017,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 			for k in per:
 				var at := pos + Vector2(0, k * (mh + 2))
 				if k < stack.size():
+					if stack[k].card.name == selected:
+						page.add_child(_selected_ring(at, Vector2(col_w, mh)))
 					var mini := ItemCard.make(stack[k].card.name, card_opts.call(stack[k].card, true))
 					mini.gui_input.connect(_on_card_input.bind(stack[k].card.name))
 					mini.position = at
