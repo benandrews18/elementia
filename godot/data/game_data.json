@@ -1509,6 +1509,9 @@
   18
  ],
  "MAT_TIER1_PER_SLOT": 2,
+ "HAND_START": 7,
+ "HAND_DRAW": 2,
+ "HAND_MAX": 10,
  "MAT_COLLECTIONS_RAW": [
   {
    "id": "fruits",

@@ -284,6 +284,36 @@ func _ready() -> void:
 	Progress.record_history()
 	check(Progress.history.is_empty() and Progress.dev_history.size() == 1 and Progress.dev_history[0].dev, "dev: the run goes to Dev runs, not History")
 
+	# Card playing at checks (core/hand.gd)
+	var by_tier := {}
+	for n in Data.t("CORE_ITEM_NAMES"):
+		var mc = Catalog.mat_card(n)
+		if mc != null and not ["Metropolis", "Maglev Train"].has(n):  # those two reshape the mat
+			by_tier[mc.tier] = by_tier.get(mc.tier, []) + [n]
+	var big: Array = by_tier.keys().filter(func(t): return t != "MATERIAL" and t != "CAPSTONE").reduce(func(a, t): return a + by_tier[t], [])
+	var capst: String = by_tier.CAPSTONE[0]
+	s = fresh()
+	s.visits = 2  # stage 0: three open slots
+	s.items = big.slice(0, 12) + ["H"]
+	s.mat = big.slice(0, 2)
+	Rng.feed(range(20).map(func(i): return 0.37))
+	var hd := Hand.deal(s)
+	Rng.feed(range(20).map(func(i): return 0.37))
+	check(Hand.deal(s).hand == hd.hand, "hand: the shuffle comes from Rng (repeatable)")
+	check(hd.hand.size() == 7 and hd.deck.size() == 3 and hd.discards.is_empty(), "hand: deals 7, the rest is the deck")
+	check((hd.hand + hd.deck).all(func(n): return not s.mat.has(n) and n != "H"), "hand: the deck is owned mat cards not on the mat")
+	check(Hand.draw(hd) == 2 and hd.hand.size() == 9 and Hand.draw(hd) == 1 and hd.hand.size() == 10 and not Hand.can_draw(hd), "hand: draws 2, never past 10 or the deck")
+	hd = {"deck": big.slice(4, 6), "hand": big.slice(2, 4) + [capst], "discards": []}
+	s.mat = big.slice(0, 1)
+	check(Hand.play(hd, s, big[2]) == "" and s.mat == [big[0], big[2]] and hd.hand.size() == 3 and hd.deck == [big[5]], "hand: a card played into a free slot is replaced from the deck")
+	check(Hand.play(hd, s, capst) == "A capstone needs two free slots." and hd.hand.has(capst), "hand: a capstone needs two free slots")
+	check(Hand.play(hd, s, big[3]) == "" and s.mat.size() == 3, "hand: the third slot fills")
+	check(Hand.play(hd, s, big[4]) == "There's no room for it there." and hd.hand.has(big[4]), "hand: a full mat refuses a free play")
+	check(Hand.play(hd, s, big[4], big[2]) == "" and s.mat == [big[0], big[4], big[3]] and hd.discards == [big[2]], "hand: a card played over another takes its place; the old one is discarded")
+	check(Hand.play(hd, s, big[5], "Nope") != "" and Hand.play(hd, s, "Nope") != "", "hand: only hand cards, only over mat cards")
+	var held: int = hd.hand.size()
+	check(Hand.discard(hd, big[5]) and hd.hand.size() == held - 1 and hd.discards.has(big[5]) and not Hand.discard(hd, big[5]), "hand: a discard with an empty deck shrinks the hand")
+
 	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
 	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.
 	var ins: Vector2 = load("res://main.gd").safe_insets(Rect2i(0, 96, 1080, 2400 - 96 - 48), Vector2i.ZERO, Vector2i(1080, 2400), Vector2(390, 866.7))
