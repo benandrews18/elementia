@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Challenge Test: a check now has 3 plays and 3 discards, and playing or discarding no longer refills your hand; tap Draw for 2 more (up to 10). Cards crafted since the last check are dealt first. The hand sits in two rows of up to 5, the buttons are on the bottom bar (Draw in the middle; Challenge, Discard, Scoring, Lock In round it), and a lifted card shows on the mat how much each play would change your score.
 - Fixed: closing the Market tray while its squares were still bouncing could leave the screen not responding to taps.
 - The size badge shows just its blocks now: one for tier 1, two stacked for tiers 2 and 3, a 2x2 square for a capstone.
 - The size badge is now a circle in the bottom-left corner of the full card and hand cards (no longer on the Crafting Bench). Card names always stay on one line, using smaller text when a name is long.
