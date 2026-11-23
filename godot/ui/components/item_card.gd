@@ -6,7 +6,8 @@
 ## drops its name), wide (capstone art 1.5x), complete (points doubled),
 ## tag (the name its parts are measured under in comparisons; default the
 ## item), no_stations (no station badges: the station shop), on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
-## combo: their badges get a gold halo).
+## combo: their badges get a gold halo), size (the size badge, bottom right:
+## cards in the hand, whose right side shows in the fan).
 class_name ItemCard
 extends Control
 
@@ -126,6 +127,10 @@ func _ready() -> void:
 		_stations.add_child(b)
 	_stations.set_meta("cmp", opts.get("tag", item) + ":stations")
 	_stations.visible = not opts.get("no_stations", false)
+	if opts.get("size"):
+		var sb := SizeBadge.make(item, 20)
+		sb.name = "Size"
+		add_child(sb)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
 	resized.connect(_place)
@@ -195,3 +200,6 @@ func _place() -> void:
 		_pips[i].position = Vector2(size.x - border + 3 - psz, border - 3 + i * (psz + 2))
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
+	var sb := get_node_or_null("Size") as Control
+	if sb:  # right edge, above the station row
+		sb.position = Vector2(size.x - border - 2 - sb.size.x, _stations.position.y - 4 - sb.size.y)

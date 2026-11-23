@@ -151,6 +151,9 @@ func show_item(name: String, keep_back := false) -> void:
 		cb.set_meta("cmp", "cp:cost%d" % $Card/Costs.get_child_count())
 		$Card/Costs.add_child(cb)
 	$Card/Station/Icon.texture = Data.icon(Catalog.station(entry.station).emoji)
+	var old_size := card.get_node_or_null("Size")
+	if old_size:
+		old_size.free()
 	# The middle: art, name, divider, "Components:", the parts, the rule.
 	var pad_top := 30.0 if cap else 36.0  # the 16px frame + 14 / 20px padding
 	var bottom := card.size.y - (28.0 if cap else 32.0)
@@ -207,6 +210,12 @@ func show_item(name: String, keep_back := false) -> void:
 	if sig.visible:
 		sig.position = Vector2(inner_x, y + 8)
 		sig.size = Vector2(parts_w, sig_h)
+	# The size badge on the bottom edge, left (the station's circle is on
+	# the right), clear of a capstone's signature box.
+	var sb := SizeBadge.make(name, 30)
+	sb.name = "Size"
+	sb.position = Vector2(26, card.size.y - sb.size.y * 0.6)
+	card.add_child(sb)
 	# Centred in the screen above the hub; the buttons 12px under the card.
 	var total := card.size.y + 12 + 34.9
 	card.position = Vector2((size.x - card.size.x) / 2, maxf(20, (size.y - HubBar.H - total) / 2))
