@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 6 of the work queue below. Start every session with `git status`: the user may
+**Next task:** step 7 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -74,9 +74,17 @@ with `godot-grill`.
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
    bonuses, its name. The card UI gets refined as part of this step.
-6. **UI feedback pass** (after card playing, as the user asked): skills
-   tween-animation, animation-system, godot-optimization (no cost to frame
-   rate), input-handling (presses); the map's dust poof (particles-vfx).
+6. Done (2026-11-23): **UI feedback pass** (decisions below). Juice
+   (ui/theme/juice.gd, one node in the App): every press squishes and
+   springs (offset transform, hooked on node_added: ~2ms on a 300-node mat
+   redraw, nothing per frame); windows pop in and shrink out (a closing
+   one moves into its own holder at once); trays rise in; a played card
+   flies to its slot, a replaced one drops away; buzz on key moments
+   (Android); the map's dust poof (tweens on their own random numbers:
+   particles would shift the dice's global stream); toasts pop. Low motion
+   and Vibration in Game Rules. Low motion doesn't yet shorten the older
+   sequences (shutter, dice, Lock-In count): M8. Reviewed (one fix: a
+   reparented node was hooked twice).
 7. **Convert tray taps** (the user, 2026-11-22; HTML reference: game/js/
    convert.js, renderConvertPicker() / renderConvertQuickGrid()): a tap on
    either big From / To box opens a window to choose that side's element;
