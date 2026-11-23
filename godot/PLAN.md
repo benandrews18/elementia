@@ -118,7 +118,22 @@ with `godot-grill`.
    hide from then on. Start by listing every tip and coach step the game
    has now (prefs hiddenTips, guidedTutorialEnabled, sawMatCheckTutorial,
    the coach steps in App) and what each teaches.
-Settled 2026-11-22: "Draw cards" is free and unlimited (up to the hand's
+10. **General fixes** (the user, 2026-11-23):
+   (a) the station shop's card view: bigger item image and text to fill
+   the cards, one standard image and text size that suits tier 1 up to
+   capstone-sized cards; the card's icon circles the same size on every
+   card (tier 1's points circle is smaller now);
+   (b) the Crafting Bench's close "x" in its top-right corner, not the
+   bottom right;
+   (c) the gathering window (the roll popup) slightly smaller, to fit its
+   contents;
+   (d) the Inventory button bounces when an element or item flies into it,
+   and every fly-in lands in its middle;
+   (e) the station shop must show clearly what's craftable (the green
+   border is too subtle) and what could be crafted with a conversion (the
+   bench's ⚛ on missing elements, but visible from the shop itself), now
+   the Craft buttons are gone. Open design: godot-grill first.
+ and unlimited (up to the hand's
 10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
 (now a main game feature): tap a card in the list to put it on the lab's
 mat, tap it on the mat to take it off (part of step 5).
