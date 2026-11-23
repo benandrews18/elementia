@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Fixed: closing the Market tray while its squares were still bouncing could leave the screen not responding to taps.
 - The size badge shows just its blocks now: one for tier 1, two stacked for tiers 2 and 3, a 2x2 square for a capstone.
 - The size badge is now a circle in the bottom-left corner of the full card and hand cards (no longer on the Crafting Bench). Card names always stay on one line, using smaller text when a name is long.
 - Cards show a size badge: the tier as a Roman numeral and how much mat space the card takes as blocks (1 small, 2 full, 4 for a capstone), on the full card view, the Crafting Bench and cards in the hand.
