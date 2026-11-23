@@ -47,6 +47,7 @@ func _ready() -> void:
 	$Window/Content.minimum_size_changed.connect(_layout)
 	resized.connect(_layout)
 	_layout()
+	Juice.pop_in($Window, get_node_or_null("Dim"))
 
 
 ## Hooks every button-like node by its name (see the class comment).
@@ -90,9 +91,11 @@ static func emojify(text: String, px: int) -> String:
 
 
 
+## Closes it: shrinks and fades out (Juice.leave: already out of the
+## tree's way, so the window under it takes taps at once).
 func close() -> void:
 	closed.emit()
-	queue_free()
+	Juice.leave(self, $Window)
 
 
 ## The window: full width (at most max_width), the content under the title,

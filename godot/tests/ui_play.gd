@@ -639,7 +639,7 @@ func _layouts(app: App) -> void:
 	check(Game.state.mat == mat_before and top.call(LayoutsWindow).is_empty(), "a row puts its layout back on the mat, and closes")
 	LayoutsWindow.show_on(app)
 	lw = top.call(LayoutsWindow)[0]
-	rows.call()[0].delete_pressed.emit()
+	lw.get_node("Window/Content/Scroll/Pad/Rows").get_children()[0].delete_pressed.emit()  # the new window's row (rows holds the closed one)
 	var ask: Array = top.call(ConfirmDialog)
 	check(ask.size() == 1, "🗑 asks first")
 	ask[0].get_node("Window/Content/Buttons/Yes").gui_input.emit(_release())

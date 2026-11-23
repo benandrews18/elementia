@@ -39,6 +39,62 @@ static func buzz(ms := 30) -> void:
 		Input.vibrate_handheld(ms, 0.6)
 
 
+## A window coming on: its backdrop fades in, the window grows from 90%
+## with a soft bounce (Tween.TRANS_BACK).
+static func pop_in(win: Control, dim: Control = null) -> void:
+	if calm():
+		return
+	win.offset_transform_enabled = true
+	win.offset_transform_scale = Vector2(0.9, 0.9)
+	win.modulate.a = 0.0
+	var tw := win.create_tween().set_parallel(true)
+	tw.tween_property(win, "offset_transform_scale", Vector2.ONE, 0.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(win, "modulate:a", 1.0, 0.12)
+	if dim != null:
+		dim.modulate.a = 0.0
+		tw.tween_property(dim, "modulate:a", 1.0, 0.15)
+
+
+## A tray coming on: it rises the last few pixels into place and fades in.
+static func slide_in(c: Control) -> void:
+	if calm():
+		return
+	c.offset_transform_enabled = true
+	c.offset_transform_position = Vector2(0, 40)
+	c.modulate.a = 0.0
+	var tw := c.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(c, "offset_transform_position", Vector2.ZERO, 0.22)
+	tw.tween_property(c, "modulate:a", 1.0, 0.14)
+
+
+## A window going: moved at once into a holder of its own (so nothing
+## counts it as open and taps pass through), then shrunk, faded and freed.
+static func leave(d: Control, win: Control) -> void:
+	var p := d.get_parent()
+	if calm() or p == null:
+		d.queue_free()
+		return
+	var holder := Control.new()
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holder.set_meta("leaving", true)
+	p.add_child(holder)
+	holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	d.reparent(holder)
+	_ignore_mouse(d)
+	win.offset_transform_enabled = true
+	var tw := holder.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_property(win, "offset_transform_scale", Vector2(0.92, 0.92), 0.14)
+	tw.tween_property(d, "modulate:a", 0.0, 0.14)
+	tw.chain().tween_callback(holder.queue_free)
+
+
+static func _ignore_mouse(n: Node) -> void:
+	if n is Control:
+		n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in n.get_children():
+		_ignore_mouse(c)
+
+
 func _hook_all(n: Node) -> void:
 	_hook(n)
 	for c in n.get_children():

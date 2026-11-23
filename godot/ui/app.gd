@@ -747,6 +747,8 @@ func open_panel(name: String) -> void:
 		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
 		add_child(_panel_node)
 		move_child(_panel_node, _floats.get_index())  # under the 🔍 button and the hub
+		if name in ["convert", "market", "todo", "pins"]:  # the trays rise into place
+			Juice.slide_in(_panel_node)
 	_sync()
 
 
