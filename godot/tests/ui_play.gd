@@ -540,6 +540,9 @@ func _collections(app: App) -> void:
 	var mn: Control = dm._mat_nodes[on_mat]
 	dm._catch.gui_input.emit(_release(mn.get_global_rect().get_center()))
 	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 8 and hd.plays == plays - 1, "played over a mat card: it's replaced, a play spent, the hand not refilled")
+	var flying := func(): return app.get_children().filter(func(c): return c.has_meta("flying") and not c.is_queued_for_deletion()).size()
+	check(flying.call() == 2 and dm._mat_nodes[played].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands); the replaced one drops away")
+	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[played].modulate.a == 1.0), "the flights end: their copies freed, the card shows in its slot")
 	dm.lifted = hd.hand[0]
 	app._on_hub("inv")
 	check(hd.hand.size() == 7 and hd.discards.size() == 2 and app._hub.off.get("market") == true, "Discard (the hub) throws out the lifted card; no Rehang after a play")
@@ -844,9 +847,21 @@ func _settings(app: App) -> void:
 	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())
 	check(Progress.prefs.guidedTutorialEnabled == true and Progress.prefs.hiddenTips.is_empty(), "tips back on: saved, and the hidden tips come back")
 	check(Progress.prefs.lowMotion == true and Juice.calm(), "Low motion saved: no press motion")
+	var leaving := func(): return app.get_children().any(func(c): return c.has_meta("leaving"))
+	check(not leaving.call(), "Low motion: Save closed the window at once (no shrinking out)")
+	app.open_settings("rules")
+	gr = top.call(GameRules)[0]
+	check(gr.get_node("Window").offset_transform_scale == Vector2.ONE and gr.get_node("Window").modulate.a == 1.0, "Low motion: a window opens without popping")
+	gr.close()
 	Progress.prefs.lowMotion = false
 	await get_tree().process_frame
 	check(top.call(GameRules).is_empty(), "Save closes Game Rules")
+	app.open_settings("rules")
+	gr = top.call(GameRules)[0]
+	check(gr.get_node("Window").offset_transform_scale.x < 1.0, "a window pops in (grows from Juice.pop_from)")
+	gr.close()
+	check(top.call(GameRules).is_empty() and leaving.call(), "a closed window is out of the way at once, shrinking out in its holder")
+	check(await _until(func(): return not leaving.call()), "and its holder is freed")
 	app.open_settings("tuts")
 	var wins := {"HowToPlay": HowToPlay, "PinTip": PinTip, "BoardChecks": MatRules, "Challenges": ParchDialog, "Unknown": UnknownTip}
 	for row in wins:

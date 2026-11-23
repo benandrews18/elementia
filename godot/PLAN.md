@@ -84,7 +84,13 @@ with `godot-grill`.
    particles would shift the dice's global stream); toasts pop. Low motion
    and Vibration in Game Rules. Low motion doesn't yet shorten the older
    sequences (shutter, dice, Lock-In count): M8. Reviewed (one fix: a
-   reparented node was hooked twice).
+   reparented node was hooked twice). Second review (godot-code-review +
+   tween-animation/animation-system/particles-vfx; the user: fix
+   everything): every motion and its numbers live in Juice, tunable in the
+   Inspector on ui/theme/juice.tscn (grouped: Press, Windows, Trays, Card
+   play, Dust, Buzz); one Juice tween per node (a new motion stops the old:
+   no window wobbling when closed mid-pop); a small card flies with its
+   small look; tests for the pop, the holder, Low motion and the flight.
 7. **Convert tray taps** (the user, 2026-11-22; HTML reference: game/js/
    convert.js, renderConvertPicker() / renderConvertQuickGrid()): a tap on
    either big From / To box opens a window to choose that side's element;
