@@ -65,9 +65,6 @@ func _ready() -> void:
 		b.add_child(g)
 		$Badges.add_child(b)
 		x += 26
-	var sb := SizeBadge.make(e.name, 22)  # how much mat space its card takes
-	sb.position = Vector2(x, 8.1)
-	$Badges.add_child(sb)
 	_recipe(Vector2(94, 53))
 	# Craft (centred down the right edge), or the owned tick.
 	var btn: Label = $Craft

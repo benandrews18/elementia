@@ -127,8 +127,8 @@ func _ready() -> void:
 		_stations.add_child(b)
 	_stations.set_meta("cmp", opts.get("tag", item) + ":stations")
 	_stations.visible = not opts.get("no_stations", false)
-	if opts.get("size"):
-		var sb := SizeBadge.make(item, 20)
+	if opts.get("size"):  # the bottom-left corner circle, the pips' size
+		var sb := SizeBadge.make(item, psz, 1.5)
 		sb.name = "Size"
 		add_child(sb)
 	if opts.get("on"):
@@ -146,22 +146,14 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 	var line := 10.5 * 1.1
 	var side := 14.0 if one_line else 2.0
 	var f := Tok.font(800)
-	var lines := 1
-	if not one_line and width > 0:
-		lines = 2 if f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, SIZE).x > width - 2 * side else 1
+	var px := Tok.fit_px(text, f, SIZE, width - 2 * side - 2) if width > 0 else SIZE  # one line always (the user, 2026-11-23)
 	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(0, lines * line + (1 if one_line else 2))
+	holder.custom_minimum_size = Vector2(0, line + (1 if one_line else 2))
 	holder.mouse_filter = MOUSE_FILTER_IGNORE
 	holder.set_meta("cmp", opts.get("tag", item) + ":name")
-	var nm := Tok.label(text, SIZE, Tok.CARD_INK, 800)
+	var nm := Tok.label(text, px, Tok.CARD_INK, 800)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	if one_line:
-		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	else:
-		nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		nm.max_lines_visible = 2
-	nm.add_theme_constant_override("line_spacing", int(round(line - f.get_height(SIZE))))
 	nm.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	nm.offset_left = side
 	nm.offset_right = -side
@@ -201,5 +193,7 @@ func _place() -> void:
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
 	var sb := get_node_or_null("Size") as Control
-	if sb:  # right edge, above the station row
-		sb.position = Vector2(size.x - border - 2 - sb.size.x, _stations.position.y - 4 - sb.size.y)
+	if sb:  # bottom-left, straddling the border like the points badge; the stations centre right of it
+		sb.position = Vector2(border - 3, size.y - border + 3 - psz)
+		var left := sb.position.x + psz + 2
+		_stations.position.x = maxf(left, left + (size.x - left - _stations.size.x) / 2 - psz / 2)

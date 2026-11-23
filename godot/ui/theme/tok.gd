@@ -91,6 +91,13 @@ static func centre_name(n: Label, w: float, y: float, h: float) -> void:
 	n.size = Vector2(lw, h)
 
 
+## The largest font size up to px at which text fits on one line in w (a
+## card's name never wraps: the user, 2026-11-23). Never below 6.
+static func fit_px(text: String, f: Font, px: int, w: float) -> int:
+	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	return px if tw <= w or tw <= 0 else maxi(6, floori(px * w / tw))
+
+
 ## An icon by its key (an item's emoji, __NAME__, suit:x), sized to fit.
 static func icon(key: String, px: float) -> TextureRect:
 	var t := TextureRect.new()

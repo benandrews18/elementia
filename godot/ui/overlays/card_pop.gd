@@ -156,15 +156,18 @@ func show_item(name: String, keep_back := false) -> void:
 		old_size.free()
 	# The middle: art, name, divider, "Components:", the parts, the rule.
 	var pad_top := 30.0 if cap else 36.0  # the 16px frame + 14 / 20px padding
-	var bottom := card.size.y - (28.0 if cap else 32.0)
+	var bottom := card.size.y - (50.0 if cap else 32.0)  # a capstone's content clears the size badge's corner
 	var inner_x := 36.0
 	var inner_w := card.size.x - 72
 	var name_l: Label = $Card/Name
 	name_l.text = name
 	var nf := name_l.get_theme_font("font")
 	var npx := name_l.get_theme_font_size("font_size")
-	var name_w := inner_w - 2 * 72  # .pc-title padding: clear of the corner circles
-	var name_h := roundf(nf.get_multiline_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, name_w, npx).y / nf.get_height(npx)) * npx * 1.15
+	var name_w := inner_w - (72.0 if cap else 0.0)  # a capstone's clear of its right-hand circles
+	npx = Tok.fit_px(name, nf, npx, name_w)  # one line always (the user, 2026-11-23): smaller type for a long name
+	name_l.add_theme_font_size_override("font_size", npx)
+	name_l.autowrap_mode = TextServer.AUTOWRAP_OFF
+	var name_h := npx * 1.15
 	var parts_w := inner_w - (32.0 if cap else 0.0)  # a capstone's clear of the suit-cost column
 	var parts_h := _parts(parts_w, cap)
 	var sig: Label = $Card/Sig
@@ -185,8 +188,8 @@ func show_item(name: String, keep_back := false) -> void:
 		# when its parts don't fit (CSS aspect-ratio gives way to content).
 		icon_px = minf(72, size.x * 0.16)
 		var rest := 2 + name_h + 6 + 1 + 6 + 14.8 + 5 + parts_h + (8 + sig_h if sig.visible else 0.0)
-		card.size.y = maxf(card.size.y, pad_top + 56 + rest + 28)
-		bottom = card.size.y - 28
+		card.size.y = maxf(card.size.y, pad_top + 56 + rest + 50)
+		bottom = card.size.y - 50
 		icon_h = bottom - pad_top - rest
 	elif Data.t("PDF_ENLARGED_ICONS").has(name):
 		icon_px = 150.0
@@ -196,7 +199,7 @@ func show_item(name: String, keep_back := false) -> void:
 	icon.position = Vector2((card.size.x - icon_px) / 2, pad_top + (icon_h - icon_px) / 2 + (0.0 if cap else 3.0))
 	var y := pad_top + icon_h + (2.0 if cap else 6.0)
 	name_l.size = Vector2(name_w, 0)  # grows to its text: centred on the CSS line boxes
-	name_l.position = Vector2(inner_x + 72, y + (name_h - name_l.size.y) / 2)
+	name_l.position = Vector2(inner_x + (36.0 if cap else 0.0), y + (name_h - name_l.size.y) / 2)
 	y += name_h + (6.0 if cap else 10.0)
 	$Card/Divider.position = Vector2(inner_x, y)
 	$Card/Divider.size.x = inner_w
@@ -210,11 +213,11 @@ func show_item(name: String, keep_back := false) -> void:
 	if sig.visible:
 		sig.position = Vector2(inner_x, y + 8)
 		sig.size = Vector2(parts_w, sig_h)
-	# The size badge on the bottom edge, left (the station's circle is on
-	# the right), clear of a capstone's signature box.
-	var sb := SizeBadge.make(name, 30)
+	# The size badge: the bottom-left corner circle (the station's is
+	# bottom-right, the points top-left).
+	var sb := SizeBadge.make(name, 60, 4)
 	sb.name = "Size"
-	sb.position = Vector2(26, card.size.y - sb.size.y * 0.6)
+	sb.position = Vector2(0, card.size.y - 60)
 	card.add_child(sb)
 	# Centred in the screen above the hub; the buttons 12px under the card.
 	var total := card.size.y + 12 + 34.9
