@@ -818,7 +818,7 @@ design happens in Godot.
 - [x] C4. Docs and publishing: the root CLAUDE.md becomes Godot-first,
       `game/` and `print/` marked frozen; the web build replaces the HTML
       game at the site root (the user, 2026-11-21), `tools/web.py`.
-- [ ] Phone notes (the user, 2026-11-21), smallest first:
+- [x] Phone notes (the user, 2026-11-21), smallest first:
   - [x] Professor Mouse tips off by default.
   - [x] Capstone choice: names centred; the Inventory lights up as the
         elements fly in.
@@ -854,7 +854,7 @@ design happens in Godot.
         by one; Planet left out).
   - [x] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
-  - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
+  - [x] Bigger: fewer repeated Craft / pin buttons at stations (work queue 1). Try first
         in the Inventory's compact view: a narrow scrolling list on the
         left (item name, its icon under it, no component items), the
         selected item's full card on the right (shop card size), the
