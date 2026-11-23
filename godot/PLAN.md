@@ -28,7 +28,7 @@ with `godot-grill`.
    switches). Both views stay for now (the user is torn, 2026-11-22). The
    grid's cards lost their Pin / Craft: a tap puts the card on the
    Crafting Bench, which crafts and pins.
-2. (In progress) **The Display Mat growing** on rounds where it gets bigger, in the check's
+2. Done: **The Display Mat growing** on rounds where it gets bigger, in the check's
    reveal. Skills: tween-animation, animation-system.
 3. **Cutover C5:** the capstone celebration, the unlock reveal, the
    after-craft mini card. Skills: tween-animation, particles-vfx, godot-ui.
@@ -848,7 +848,7 @@ design happens in Godot.
   - [x] Card view (the user, 2026-11-22): every card's component icons in
         one row, at a best-fit scale for all items (outliers adjusted one
         by one; Planet left out).
-  - [ ] Bigger: on a round where the Display Mat grows, the reveal shows
+  - [x] Bigger: on a round where the Display Mat grows, the reveal shows
         the mat physically growing to its new size.
   - [ ] Bigger: fewer repeated Craft / pin buttons at stations. Try first
         in the Inventory's compact view: a narrow scrolling list on the

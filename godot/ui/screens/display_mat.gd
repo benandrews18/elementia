@@ -40,6 +40,8 @@ var _hub_h := HUB_H
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
 var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
+var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
+var _page: Panel
 
 
 static func make() -> DisplayMatScreen:
@@ -84,7 +86,7 @@ func _redraw() -> void:
 	y += _chips(sc, Vector2(side, y), w) + 6
 	# The mat page: as many columns as are open, and one row, a row and a
 	# half-height strip, or two, as the mat has grown.
-	var st := Mat.stage(s)
+	var st := _stage()
 	var L := Mat.layout(cards, st)
 	var open: int = L.kinds.slice(0, L.cols).filter(func(k): return k != "locked").size()
 	var row_h := ((w - 14 - (open - 1) * cols_gap) / open) * card_ratio
@@ -97,6 +99,7 @@ func _redraw() -> void:
 	page.clip_contents = elements
 	page.set_meta("cmp", "mat:page")
 	_body.add_child(page)
+	_page = page
 	if elements:
 		_elements(page)
 	else:
@@ -835,7 +838,7 @@ static func _text_circle(text: String, px: float, ink: Color, bg: Color, border:
 ## renderMatGridCells(): only open slots are drawn; a stack of tier 1 cards
 ## shows a dashed square where another fits.
 func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int) -> void:
-	var st := Mat.stage(Game.state)
+	var st := _stage()
 	var pack := Mat.pack(cards, st)
 	var L: Dictionary = pack.L
 	var cols: int = L.cols
@@ -880,6 +883,52 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
 		else:
 			page.add_child(_dashed(Rect2(pos, Vector2(col_w, h)), 12))
+
+
+func _stage() -> int:
+	return stage_override if stage_override >= 0 else Mat.stage(Game.state)
+
+
+## The mat as it was before this check grew it (under the shutter, before
+## grow()); held so nothing redraws it until grow() runs.
+func show_stage(st: int) -> void:
+	stage_override = st
+	_redraw()
+	playing = true
+
+
+## The mat growing (the user, 2026-11-22): from the old stage show_stage()
+## drew to the real one. The page eases to its new size; each card slides and
+## resizes from its old slot to its new one; everything new (empty slots,
+## cards that didn't fit before, the tabs) fades in after. Returns the
+## page's rect before and after, for the reveal's hole to follow.
+func grow(secs := 0.9) -> Array:
+	var was := {}
+	for n in _mat_nodes:
+		was[n] = Rect2(_mat_nodes[n].position, _mat_nodes[n].size)
+	var from := Rect2(_page.position, _page.size)
+	stage_override = -1
+	playing = false
+	_redraw()
+	var to := Rect2(_page.position, _page.size)
+	var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	_page.size = from.size
+	tw.tween_property(_page, "size", to.size, secs)
+	var moved := []
+	for n in _mat_nodes:
+		if was.has(n):
+			var c: Control = _mat_nodes[n]
+			moved.append(c)
+			var at := Rect2(c.position, c.size)
+			c.position = was[n].position  # now, not when the tween starts: no frame at the end first
+			c.size = was[n].size
+			tw.tween_property(c, "position", at.position, secs)
+			tw.tween_property(c, "size", at.size, secs)
+	for c in _page.get_children():
+		if not moved.has(c):
+			c.modulate.a = 0.0
+			tw.tween_property(c, "modulate:a", 1.0, 0.35).set_delay(secs)
+	return [from, to]
 
 
 ## .mm-card.selected: a 4px green outline, 2px out.

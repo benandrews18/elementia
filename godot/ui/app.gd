@@ -781,12 +781,18 @@ Are you sure?", func():
 ## Under the shutter: the mat-expansion reveal on a growth turn, then this
 ## check's challenge.
 func _check_intro() -> void:
-	var r := MatExpand.fresh_rect(_panel_node) if _panel_node is DisplayMatScreen else Rect2()
+	var mat := _panel_node as DisplayMatScreen
+	var r := MatExpand.fresh_rect(mat) if mat else Rect2()
 	if r.size == Vector2.ZERO:
 		_challenge()
 		return
+	var grows := mat.view == "mat"  # the growing shows on the mat page, not the elements page
+	if grows:
+		mat.show_stage(Mat.stage(Game.state) - 1)  # under the shutter: the mat as it was
 	await get_tree().create_timer(Shutter.HOLD + Shutter.CLOSE).timeout  # once the shutter has parted
 	var mx := MatExpand.new()
+	if grows and is_instance_valid(mat):
+		mx.pages = mat.grow(MatExpand.GROW)
 	mx.hole = r
 	mx.on_done = _challenge
 	mx.size = size

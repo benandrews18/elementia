@@ -138,10 +138,17 @@ func _ready() -> void:
 			PinTip.open(app, func(): pass)
 		"suit_spend":
 			app.craft_tap("Skyscraper", Rect2(240, 600, 60, 35))
-		"expand":
+		"expand":  # the mat grown from 1.5 rows to 2 (the reveal as played)
 			app.open_panel("drawer")
+			await get_tree().process_frame
+			var mat: DisplayMatScreen = app._panel_node
+			mat.show_stage(2)
 			var mx := MatExpand.new()
-			mx.hole = Rect2(20, 200, 350, 120)
+			mx.pages = mat.grow(MatExpand.GROW)
+			var cols: int = Mat.layout(Mat.on_mat(Game.state), 3).cols
+			for i in mat.slot_rects:
+				if i >= cols:
+					mx.hole = mat.slot_rects[i] if mx.hole.size == Vector2.ZERO else mx.hole.merge(mat.slot_rects[i])
 			mx.on_done = func(): pass
 			mx.size = app.size
 			app.add_child(mx)

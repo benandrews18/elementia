@@ -9,6 +9,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-22
+- Stations: the dark blue header now reaches under the shop's title: "ITEM SHOP" on its own line, "Tap Items to Start Crafting!" under it.
+- Display Mat: on a round where the mat grows, the check opens with the mat at its old size, then it grows: cards slide and resize into their new places, new slots fade in, and the gold ring follows the mat before closing in on the new slots.
 - Station shops: the card grid has no Pin or Craft buttons under each card any more. Tap a card to put it on the Crafting Bench, then Craft or pin from there. The 📋 list view (rows plus a side card with Pin and Craft) stays as the other choice.
 - Inventory and stations: the 📋 list view (compact rows on the left, the full card on the right, kept on screen while scrolling); no Crafting Bench in the Inventory.
 
