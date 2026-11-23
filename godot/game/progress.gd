@@ -6,7 +6,8 @@ extends Node
 
 ## Kept across runs (the HTML game's prefs); not part of parity.
 const DEFAULT_PREFS := {"pinnedItems": [], "capstonesEverCrafted": [], "playDays": [], "stars": 0,
-	"minigamesEnabled": false, "guidedTutorialEnabled": false}  # Professor Mouse off until his tips are fixed (the user, 2026-11-21)
+	"minigamesEnabled": false, "guidedTutorialEnabled": false,
+	"lowMotion": false, "vibration": true}  # Professor Mouse off until his tips are fixed (the user, 2026-11-21)
 var prefs: Dictionary = DEFAULT_PREFS.duplicate(true)
 
 

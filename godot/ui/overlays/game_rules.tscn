@@ -54,6 +54,33 @@ emoji = "🐭"
 button_text = "Open"
 is_switch = true
 
+[node name="GapLow" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LowMotion" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Low motion"
+sub = "No bounces or springs when you tap"
+emoji = "🐌"
+button_text = "Open"
+is_switch = true
+
+[node name="GapVib" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Vibration" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Vibration"
+sub = "A short buzz on big moments (Android)"
+emoji = "📳"
+button_text = "Open"
+is_switch = true
+on = true
+
 [node name="Gap1" type="Control" parent="Window/Content"]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2

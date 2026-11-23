@@ -1070,6 +1070,15 @@ Recorded so they aren't re-argued. Add new ones with the date.
   free mat). Hand 7, Draw 2, 10 max, 3 plays, 3 discards at every check
   for now. Spending an element on a draw asks first; a lifted card tapped
   onto the Elements page goes back into the hand.
+- 2026-11-23 (UI feedback pass, step 6, the user): **mixed feel**: a light,
+  quick squish-and-spring on every button, card and menu press (~93%,
+  springs back with a small overshoot); game moments get more (a played
+  card flies from the hand to its slot and settles, a replaced card slides
+  off to the discards). Windows pop in with a soft bounce (backdrop fades,
+  window from ~90% with overshoot) and shrink out quickly. **No sound
+  yet** (M8; the press helper leaves room for it). **Haptics on key
+  moments only** (card played, craft, Lock In), with a Settings switch.
+  A **Low motion** switch in Settings with this step.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.

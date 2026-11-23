@@ -27,6 +27,7 @@ static var current: App  # the running app, for screens that need it (crafting)
 func _ready() -> void:
 	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(Juice.new())  # press feedback on everything added from here on
 	_floats = Control.new()
 	_floats.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_floats.mouse_filter = MOUSE_FILTER_IGNORE

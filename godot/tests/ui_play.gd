@@ -829,10 +829,20 @@ func _settings(app: App) -> void:
 	app.open_settings("rules")
 	gr = top.call(GameRules)[0]
 	tips = gr.get_node("Window/Content/Tips")
+	# Press feedback (Juice): a pressed row squishes, a release springs it back.
+	tips.gui_input.emit(_press(Vector2(200, 400)))
+	check(await _until(func(): return tips.offset_transform_scale.x < 0.94), "a pressed row squishes (Juice)")
+	get_viewport().push_input(_release(Vector2(-50, -50)))  # off the window: no tap
+	check(await _until(func(): return is_equal_approx(tips.offset_transform_scale.x, 1.0)), "and springs back on release")
+	Tap._down = null
 	tips.gui_input.emit(_release())
 	check(tips.on, "a tap flips the switch")
+	check(gr.get_node("Window/Content/Vibration").on and not gr.get_node("Window/Content/LowMotion").on, "Vibration starts on, Low motion off")
+	gr.get_node("Window/Content/LowMotion").gui_input.emit(_release())
 	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())
 	check(Progress.prefs.guidedTutorialEnabled == true and Progress.prefs.hiddenTips.is_empty(), "tips back on: saved, and the hidden tips come back")
+	check(Progress.prefs.lowMotion == true and Juice.calm(), "Low motion saved: no press motion")
+	Progress.prefs.lowMotion = false
 	await get_tree().process_frame
 	check(top.call(GameRules).is_empty(), "Save closes Game Rules")
 	app.open_settings("tuts")
