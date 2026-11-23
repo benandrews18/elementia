@@ -60,14 +60,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="Badges" type="Control" parent="Area"]
-z_index = 1
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-
 [node name="Observatory" parent="Area" instance=ExtResource("3")]
 layout_mode = 1
 anchor_left = 0.49700000000000005
@@ -172,6 +164,13 @@ offset_bottom = 39.195
 station = "The Ocean"
 pill_bottom_right = true
 icon = ExtResource("i7")
+
+[node name="Badges" type="Control" parent="Area"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
 
 [node name="Dynamic" type="Control" parent="."]
 layout_mode = 1
