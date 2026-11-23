@@ -330,6 +330,32 @@ func _ready() -> void:
 	hd.hand.append(big[6])
 	check(Hand.discard(hd, big[6]) == "No discards left this check." and hd.hand.has(big[6]), "hand: no discards past the budget")
 
+	# Taking control: Rehang, Take back, draws paid from stock.
+	s.visits = 2
+	s.mat = big.slice(0, 2)
+	hd = {"deck": big.slice(4, 12), "hand": big.slice(2, 4), "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
+	check(Hand.take_back(hd, s, big[1]) == "" and s.mat == [big[0]] and hd.hand.has(big[1]) and hd.tosses == 0, "hand: Take back brings a mat card into the hand for a discard")
+	check(Hand.take_back(hd, s, big[0]) == "No discards left this check." and s.mat == [big[0]], "hand: no Take back without a discard")
+	s.mat = big.slice(0, 2)
+	hd.hand = big.slice(2, 4)
+	var tseen: int = hd.deck.size() + hd.hand.size() + s.mat.size()
+	check(Hand.rehang(hd, s) == "" and s.mat.is_empty() and hd.plays == 2 and hd.hand.size() == Hand.most() and hd.deck.size() + hd.hand.size() == tseen, "hand: Rehang empties the mat into the deck, fills the hand, a play per card it held")
+	check(Hand.rehang(hd, s) != "", "hand: one Rehang a check")
+	hd = {"deck": big.slice(4, 12), "hand": [], "discards": [], "fresh": [], "plays": 1, "tosses": 1}
+	s.mat = big.slice(0, 1)
+	check(Hand.rehang(hd, s) == "Rehang before your first play.", "hand: no Rehang after a play")
+	var twant: String = hd.deck[3]
+	var tsuit: String = Catalog.mat_card(twant).pips[0]
+	var tsym: String = Data.t("SUIT_CORE_ELEMENTS")[tsuit][0]
+	var tfirst: String = hd.deck.filter(func(n): return Catalog.mat_card(n).pips.has(tsuit))[0]
+	s.elements = {tsym: 1}
+	check(Hand.suit_draw(hd, s, tsym) == "" and hd.hand == [tfirst] and not s.elements.has(tsym), "hand: 1 element draws the deck's first card with its suit")
+	check(Hand.suit_draw(hd, s, tsym) != "" and hd.hand.size() == 1, "hand: none left to spend")
+	s.emptyElements = 1
+	twant = hd.deck[-1]
+	check(Hand.pick_draw(hd, s, twant) == "" and hd.hand.has(twant) and not hd.deck.has(twant) and s.emptyElements == 0, "hand: an Unknown Element draws any card")
+	check(Hand.pick_draw(hd, s, hd.deck[0]) != "", "hand: no token, no pick")
+
 	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
 	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.
 	var ins: Vector2 = load("res://main.gd").safe_insets(Rect2i(0, 96, 1080, 2400 - 96 - 48), Vector2i.ZERO, Vector2i(1080, 2400), Vector2(390, 866.7))

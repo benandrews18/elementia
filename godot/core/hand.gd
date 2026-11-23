@@ -8,6 +8,11 @@
 ## discards); mat cards leave no other way. Discards are out for the rest
 ## of the check. `h` is {deck, hand, discards, fresh, plays, tosses}
 ## (names, then the plays and discards left); `s` the run state (its mat).
+## Taking control (2026-11-23): Rehang (all of a check's plays, none used
+## yet: the mat back into the deck, a full hand, a play for each card it
+## held), Take back (a discard: a mat card back into the hand), and draws
+## paid from stock: 1 element draws a card with its suit's pip, 1 Unknown
+## Element token draws any card the player picks.
 class_name Hand
 
 static func start() -> int:
@@ -114,4 +119,85 @@ static func discard(h: Dictionary, name: String) -> String:
 	h.hand.erase(name)
 	h.discards.append(name)
 	h.tosses -= 1
+	return ""
+
+
+## Rehang: the whole mat back into the deck (shuffled in), the hand filled
+## to its most, and a play for each card the mat held (in place of the
+## check's plays, which must all be unused).
+static func rehang(h: Dictionary, s: Dictionary) -> String:
+	var no := why_not_rehang(h, s)
+	if no != "":
+		return no
+	h.plays = s.mat.size()
+	h.deck = _shuffled(h.deck + s.mat)
+	s.mat = []
+	h.rehung = true
+	draw(h, most())
+	return ""
+
+
+static func why_not_rehang(h: Dictionary, s: Dictionary) -> String:
+	if h.get("rehung"):
+		return "You've already rehung the display this check."
+	if h.plays < int(Data.t("HAND_PLAYS")):
+		return "Rehang before your first play."
+	if s.mat.is_empty():
+		return "The mat is already empty."
+	return ""
+
+
+## Take back: a mat card into the hand, for a discard.
+static func take_back(h: Dictionary, s: Dictionary, name: String) -> String:
+	if not s.mat.has(name):
+		return "That card isn't on the mat."
+	if h.tosses <= 0:
+		return "No discards left this check."
+	if h.hand.size() >= most():
+		return "Your hand is full."
+	s.mat.erase(name)
+	h.hand.append(name)
+	h.tosses -= 1
+	return ""
+
+
+## The first card in the deck with this element's suit pip, for 1 of it.
+static func suit_draw(h: Dictionary, s: Dictionary, sym: String) -> String:
+	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
+	if Catalog.count(s, sym) < 1:
+		return "You have no %s." % sym
+	if h.hand.size() >= most():
+		return "Your hand is full."
+	var card := suit_card(h, sym)
+	if card == "":
+		return "No %s cards left in the deck." % Data.t("ELEMENT_SUIT_LABEL").get(suit, suit)
+	s.elements[sym] = Catalog.count(s, sym) - 1
+	if s.elements[sym] <= 0:
+		s.elements.erase(sym)
+	h.deck.erase(card)
+	h.hand.append(card)
+	return ""
+
+
+## The deck's first card with this element's suit pip ("" if none).
+static func suit_card(h: Dictionary, sym: String) -> String:
+	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
+	for n in h.deck:
+		var c = Catalog.mat_card(n)
+		if c != null and c.pips.has(suit):
+			return n
+	return ""
+
+
+## Any card from the deck, for 1 Unknown Element token.
+static func pick_draw(h: Dictionary, s: Dictionary, name: String) -> String:
+	if int(Util.get_or(s, "emptyElements", 0)) < 1:
+		return "You have no Unknown Elements."
+	if not h.deck.has(name):
+		return "That card isn't in the deck."
+	if h.hand.size() >= most():
+		return "Your hand is full."
+	s.emptyElements = int(s.emptyElements) - 1
+	h.deck.erase(name)
+	h.hand.append(name)
 	return ""
