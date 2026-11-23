@@ -279,6 +279,12 @@ func _market(app: App) -> void:
 	check(await _until(func(): return not is_instance_valid(bench) or bench.is_queued_for_deletion()), "the Crafting Bench closes once it's made")
 	check(await _until(func(): return app.market_plays > plays), "the square bounces in the open tray")
 	check(await _until(func(): return not app._market_playing), "and the tray settles")
+	# The tray closed in the middle of its bounces: the sequence still ends
+	# (it used to stop on the freed tray, its tap blocker left on screen).
+	var kids := app.get_child_count()
+	app._market_sequence([0], [])
+	app.close_panel()
+	check(await _until(func(): return not app._market_playing) and app.get_child_count() <= kids, "a tray closed mid-bounce: the sequence still ends, nothing left blocking taps")
 	app.close_panel()
 	finished.market = true
 

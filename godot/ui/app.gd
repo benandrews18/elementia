@@ -143,13 +143,18 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 	add_child(block)
 	var tray := _panel_node as MarketTray
 	await get_tree().create_timer(0.45 if opened else 0.15).timeout  # the tray's slide-in first
+	# The tray can close or be rebuilt during the waits: bounce only while
+	# it's there, so the sequence always ends (its block and _market_playing
+	# would otherwise stay, freezing taps).
 	for i in fresh:
-		DisplayMatScreen.bounce(tray.cells.get(i))
+		if is_instance_valid(tray):
+			DisplayMatScreen.bounce(tray.cells.get(i))
 		await get_tree().create_timer(0.32).timeout
 	for r in lines:
 		await get_tree().create_timer(0.3).timeout
 		for i in Market.lines()[r]:
-			DisplayMatScreen.bounce(tray.cells.get(i))
+			if is_instance_valid(tray):
+				DisplayMatScreen.bounce(tray.cells.get(i))
 		await get_tree().create_timer(0.56 + 0.65).timeout
 	block.queue_free()
 	if not lines.is_empty():
@@ -163,7 +168,7 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		_market_playing = false
 	if opened:
 		await get_tree().create_timer(1.6).timeout
-		if _panel_node == tray:  # the tray this opened (not one the player reopened since)
+		if is_instance_valid(tray) and _panel_node == tray:  # the tray this opened (not one the player reopened since)
 			close_panel()
 	_maybe_end()
 
