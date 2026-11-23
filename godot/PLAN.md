@@ -49,8 +49,7 @@ with `godot-grill`.
    deck, the score preview, the hub during a check (Draw in the middle;
    Challenge, Discard, Scoring, Lock In) and the hand in two fans. Next:
    the user tries it; then Rehang, Take back and element draws; then real
-   checks switch over, with Frame. The round picker still lists rounds to
-   39: limit it to the regular game's 24.
+   checks switch over, with Frame.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
