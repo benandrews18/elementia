@@ -17,7 +17,6 @@ const SCENE := "res://ui/overlays/element_picker.tscn"
 var side := "from"
 var other := ""
 var on_pick: Callable
-var card_option := false  # a check with cards: "A card" first on the TO side (ConvertTray)
 
 
 static func make() -> ElementPicker:
@@ -37,8 +36,6 @@ func _ready() -> void:
 	var syms: Array = (Game.state.elements.keys().filter(func(s): return Game.state.elements[s] > 0) if is_from
 		else Data.t("CLASSIC_ELEMENTS").duplicate()).filter(func(s): return s != other)
 	syms = Util.stable_sort(syms, func(a, b): return order.find(a) - order.find(b))
-	if card_option:
-		syms.insert(0, "card")
 	var grid: Control = $Window/Grid
 	var w := minf(360, size.x - 60)
 	var inner := w - 2 * grid.position.x
@@ -51,13 +48,9 @@ func _ready() -> void:
 	for i in syms.size():
 		var sym: String = syms[i]
 		var ok := not is_from or Catalog.count(Game.state, sym) >= int(Data.t("CONVERT_RATE"))
-		var b: Control
-		if sym == "card":
-			b = _card_box(cell)
-		else:
-			b = ConvertTray.box(sym, cell, "×%d" % int(Catalog.count(Game.state, sym)), 1.0 if ok else 0.45)
-			var cap: Label = b.get_child(b.get_child_count() - 1)
-			cap.add_theme_color_override("font_color", Color("#3b2412"))
+		var b := ConvertTray.box(sym, cell, "×%d" % int(Catalog.count(Game.state, sym)), 1.0 if ok else 0.45)
+		var cap: Label = b.get_child(b.get_child_count() - 1)
+		cap.add_theme_color_override("font_color", Color("#3b2412"))
 		b.position = Vector2((i % 4) * (cell + gap.x), (i / 4) * (cell + 22 + gap.y))
 		if ok:
 			b.gui_input.connect(func(ev): if Tap.tap(ev):
@@ -65,23 +58,3 @@ func _ready() -> void:
 				on_pick.call(sym))
 		grid.add_child(b)
 	$Window/None.visible = syms.is_empty()
-
-
-## "A card": a gold-edged square with 🃏, captioned like the elements.
-static func _card_box(cell: float) -> Control:
-	var b := Panel.new()
-	b.size = Vector2(cell, cell + 18)
-	b.mouse_filter = MOUSE_FILTER_STOP
-	var sq := Panel.new()
-	sq.size = Vector2(cell, cell)
-	sq.mouse_filter = MOUSE_FILTER_IGNORE
-	sq.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 10, 3, Tok.GOLD))
-	b.add_child(sq)
-	var ic := Tok.icon("🃏", cell * 0.6)
-	ic.position = Vector2(cell * 0.2, cell * 0.2)
-	b.add_child(ic)
-	var cap := Tok.label("A card", 11, Color("#3b2412"), 800)
-	Tok.centre_name(cap, cell, cell + 2, 16)
-	b.add_child(cap)
-	b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-	return b

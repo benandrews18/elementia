@@ -1,7 +1,6 @@
 ## Spending an Unknown Element in a check with cards (card playing,
 ## 2026-11-23): every card left in the deck; a tap takes it into the hand
-## (Hand.pick_draw), then back to the hand. Opened from the Convert tray's
-## "?" counter. The layout is ui/overlays/card_pick.tscn.
+## (Hand.pick_draw). Opened from the "?" on the mat's Elements tab. The layout is ui/overlays/card_pick.tscn.
 class_name CardPick
 extends ParchDialog
 
@@ -34,6 +33,4 @@ func _take(name: String) -> void:
 	if Hand.pick_draw(Game.ctx.hand, Game.state, name) != "":
 		return
 	close()
-	if App.current:
-		App.current.close_panel()  # the Convert tray: back to the hand
 	Game._changed()

@@ -51,11 +51,13 @@ with `godot-grill`.
    the user tries it.
    Part 2 done (2026-11-23): Rehang (the hub's 4th button, where Scoring
    was; the mat's "?" still has the rules), Take Back (tap a mat card: the
-   hub's Discard turns into it), element draws through the station's own
-   Convert button and tray (the user: same UI; TO can be "A card", 1:1;
-   its "?" counter picks any deck card). Draw stays one tap for 2. Next:
-   the user tries it; then real checks switch over, with Frame. Part of
-   work queue 7 is in: the Convert tray works during a check.
+   hub's Discard turns into it), element draws on the mat's Elements tab
+   (tap an element: 1 of it draws a card of its suit; "?" picks any deck
+   card). The Convert button shows during a check and works exactly as in
+   normal play (the user: no converting straight into a card; converting
+   to a better suit before a draw is the player's choice). Draw stays one
+   tap for 2. Next:
+   the user tries it; then real checks switch over, with Frame. 
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its

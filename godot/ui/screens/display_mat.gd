@@ -740,6 +740,7 @@ func _sel_acts(x: float, y: float, w: float) -> void:
 
 ## The Elements page: every element held, 8 to a row (elementsGridHTML()).
 func _elements(page: Control) -> void:
+	var hand = Game.ctx.get("hand")
 	var held: Array = Game.state.elements.keys().filter(func(k): return Game.state.elements[k] > 0)
 	var an: Dictionary = Data.t("ATOMIC_NUMBER")
 	held = Util.stable_sort(held, func(a, b): return an.get(a, 999) - an.get(b, 999))
@@ -754,6 +755,15 @@ func _elements(page: Control) -> void:
 		box.position = at
 		box.size = Vector2(cw, cw)
 		box.mouse_filter = MOUSE_FILTER_IGNORE
+		if hand != null:  # a check with cards: 1 of it draws a card of its suit
+			box.mouse_filter = MOUSE_FILTER_STOP
+			box.set_meta("cmp", "el:" + sym)
+			box.gui_input.connect(func(ev): if Tap.tap(ev):
+				var msg := Hand.suit_draw(hand, Game.state, sym)
+				if msg != "":
+					_show_toast(msg)
+				else:
+					Game._changed())
 		page.add_child(box)
 		var l := Tok.label(sym, 13, Color("#221f1a"), 800)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -766,6 +776,27 @@ func _elements(page: Control) -> void:
 		q.position = at + Vector2(0, cw + 3)
 		q.size = Vector2(cw, 12)
 		page.add_child(q)
+	var unknown := int(Util.get_or(Game.state, "emptyElements", 0))
+	if hand != null and unknown > 0:  # a check with cards: an Unknown Element picks any deck card
+		var at := Vector2(7 + (held.size() % 8) * (cw + 5), 7 + (held.size() / 8) * (cw + 3 + 12 + 6))
+		var sq := LockInReward.unknown_square(cw)
+		sq.position = at
+		sq.mouse_filter = MOUSE_FILTER_STOP
+		sq.set_meta("cmp", "el:?")
+		sq.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: CardPick.show_on(App.current))
+		page.add_child(sq)
+		var q := Tok.label(str(unknown), 9, Color("#3b2412"), 800)
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		q.position = at + Vector2(0, cw + 3)
+		q.size = Vector2(cw, 12)
+		page.add_child(q)
+	if hand != null and not (held.is_empty() and unknown == 0):
+		var tip := Tok.label("Tap an element to spend 1 and draw a card of its suit.", 12, Color("#8a6a48"), 800)
+		tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tip.position = Vector2(7, page.size.y - 24)
+		tip.size = Vector2(page.size.x - 14, 18)
+		tip.clip_text = true
+		page.add_child(tip)
 	if held.is_empty():
 		var none := Tok.label("No loose elements — visit a station and roll.", 14, Color("#8a6a48"), 400)
 		none.position = Vector2(12, 12)

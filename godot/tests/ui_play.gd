@@ -540,7 +540,7 @@ func _collections(app: App) -> void:
 	check(dm.selected == back and app._hub.hand_sides.inv[1] == "Take Back", "a tapped mat card: Discard becomes Take Back")
 	app._on_hub("inv")
 	check(hd.hand.has(back) and not Game.state.mat.has(back) and hd.tosses == int(Data.t("HAND_DISCARDS")) - 2, "Take Back: the mat card into the hand, for a discard")
-	# Element draws, in the Convert tray (the same button as on the station).
+	# Element draws on the mat's Elements tab; Convert works as ever.
 	var esym := ""
 	for sym in Data.t("CLASSIC_ELEMENTS"):
 		if Hand.suit_card(hd, sym) != "":
@@ -552,20 +552,26 @@ func _collections(app: App) -> void:
 	dm = app._panel_node as DisplayMatScreen
 	check(_find_meta(dm, "convert") != null, "the Convert button shows during a check")
 	app.open_panel("convert")
-	var tray := app._panel_node as ConvertTray
-	tray.from = esym
-	tray._redraw()
+	check(app._panel_node is ConvertTray and (app._panel_node as ConvertTray).to == "" and app._hub.face == "close", "its tray is the usual one")
+	app._on_hub("home")
+	check(app.panel == "drawer" and Game.ctx.get("hand") == hd, "closing it goes back to the hand")
+	dm = app._panel_node as DisplayMatScreen
+	dm.view = "elements"
+	dm._redraw()
 	var want_card := Hand.suit_card(hd, esym)
 	var n_hand: int = hd.hand.size()
-	check(tray.to == "card" and tray._ready_now and app._hub.face == "close", "in a check the tray converts an element into a card (1:1)")
-	tray.do_convert()
-	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1 and app.panel == "drawer", "it draws a card of that suit, then back to the hand")
-	app.open_panel("convert")
-	var cp := CardPick.show_on(app)
-	await get_tree().process_frame
+	_find_meta(dm, "el:" + esym).gui_input.emit(_release())
+	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on a card of its suit")
+	dm = app._panel_node as DisplayMatScreen
+	_find_meta(dm, "el:?").gui_input.emit(_release())
+	var cps: Array = top.call(CardPick)
 	var pick_card: String = hd.deck[-1]
-	cp._take(pick_card)
+	check(cps.size() == 1, "the ? opens the card pick")
+	if cps.size() == 1:
+		cps[0]._take(pick_card)
 	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
+	dm = app._panel_node as DisplayMatScreen
+	dm.view = "mat"
 	app._on_hub("codex")
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
