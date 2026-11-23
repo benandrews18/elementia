@@ -40,6 +40,10 @@ with `godot-grill`.
    load), godot-ui and hud-system (the hand), tween-animation (draws, plays,
    discards). It takes the mat out of the Inventory between checks and adds
    the Combo Lab button there.
+   Progress (2026-11-22): the rules (core/hand.gd, rule tests) and the
+   Combo Lab's Challenge Test (round picker, fanned hand, Draw +2,
+   Discard, plays, Lock In back to the lab) are in. Next: the size badge
+   and the card layout for the hand; then real checks switch over.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
