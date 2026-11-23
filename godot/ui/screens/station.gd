@@ -186,7 +186,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		if items.is_empty():
 			continue
 		var card_h := (row_h - 2) / 2 if gi == 0 else row_h
-		var cell_h := card_h + 3 + act_h
+		var cell_h := card_h + 3  # no Pin / Craft under the cards: tap one for the Crafting Bench (the user, 2026-11-22)
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
 		for e in items:
@@ -307,7 +307,7 @@ static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:
 
 
 ## One shop cell: the card (green ring if craftable now, dimmed with a tick
-## if owned), then the pin and the Craft button.
+## if owned). Pin and Craft are on the Crafting Bench a tap opens.
 func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: bool) -> void:
 	var s := Game.state
 	var owned := Catalog.owns(s, e.name)
@@ -334,33 +334,13 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		_redraw()))
 	if owned:
 		card.modulate = Color(0.7, 0.7, 0.7)
+	if can:  # the walkthrough's "Tap a green card" points here
+		card.set_meta("tip", "st:craft:" + e.name)
 	page.add_child(card)
 	if owned:  # .st-owned::after: a green tick, bottom right
 		var tick := Tok.tick(Color.WHITE, 20, Tok.OK)
 		tick.position = pos + card_size - Vector2(15, 15)
 		page.add_child(tick)
-	var ay := pos.y + card_size.y + 3
-	# Pin and Craft (60px, shrinking to fit) centred under the card (.st-acts).
-	var acts_w := minf(card_size.x, act_h + 3 + 60)
-	var ax := pos.x + (card_size.x - acts_w) / 2
-	var acts := ShopActs.make()
-	acts.position = Vector2(ax, ay)
-	acts.show_state(acts_w, act_h, Progress.is_pinned(e.name), can, owned)
-	var pin: Control = acts.get_node("Pin")
-	if Game.feeds_tracked(e.name):  # the tracked item's icon instead; a tap: the To-Do List
-		acts.show_needed(Data.icon(Catalog.entry(Game.ctx.tracked).emoji))
-		pin.set_meta("tip", "st:needed:" + e.name)
-		pin.gui_input.connect(_on_tap.bind(func(): if App.current: App.current.open_panel("todo")))
-	else:
-		pin.gui_input.connect(_on_tap.bind(_pin_tap.bind(e.name, page, pos, card_size)))
-	pin.set_meta("cmp", "st:pin:" + e.name)
-	var btn: Control = acts.get_node("Craft")
-	if can:
-		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
-	btn.set_meta("cmp", "st:craft:" + e.name)
-	if can:
-		btn.set_meta("tip", "st:craft:" + e.name)
-	page.add_child(acts)
 
 
 ## A white element chip with its suit-coloured border, atomic number, the

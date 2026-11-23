@@ -382,7 +382,7 @@ func _walkthrough() -> void:
 		return
 	var craftable: Control = _screen.find_tagged("st:craft:", true)
 	if craftable != null:
-		tip_once("firstcraft", 7, "Tap [b]Craft[/b]!", "top-left", craftable)
+		tip_once("firstcraft", 7, "Tap a green card, then [b]Craft[/b]!", "top-left", craftable)
 		return
 	var n := 0
 	for v in s.elements.values():

@@ -227,7 +227,7 @@ func _ready() -> void:
 			await get_tree().process_frame
 			match state:
 				"mouse_bl": app.mouse.show_tip(3, "Tap [b]Roll[/b] to get elements!", "bottom-left", app._hub.button("home"), 14)
-				"mouse_tl": app.mouse.show_tip(7, "Tap [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
+				"mouse_tl": app.mouse.show_tip(7, "Tap a green card, then [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
 				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app._hub.button("home"))
 				"mouse_br": app.mouse.show_tip(7, "Your tracked item needs this one!", "bottom-right")
 		"tut_intro", "tut_elements", "coach1":  # How to Play: its two windows; the walkthrough's first step
