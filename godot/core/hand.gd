@@ -12,7 +12,9 @@
 ## yet: the mat back into the deck, a full hand, a play for each card it
 ## held), Take back (a discard: a mat card back into the hand), and draws
 ## paid from stock: 1 element draws a card with its suit's pip, 1 Unknown
-## Element token draws any card the player picks.
+## Element token draws any card the player picks. Frame (2026-11-23): mat
+## cards framed (up to HAND_FRAME_SQUARES squares: tier 1 = 1, tiers 2-3 =
+## 2, a capstone = 4) stay on the mat through a Rehang.
 class_name Hand
 
 static func start() -> int:
@@ -96,6 +98,7 @@ static func play(h: Dictionary, s: Dictionary, name: String, over := "") -> Stri
 	s.mat = mat
 	h.hand.erase(name)
 	h.plays -= 1
+	_unframe(h, over)
 	if over != "":
 		h.discards.append(over)
 	return ""
@@ -129,9 +132,11 @@ static func rehang(h: Dictionary, s: Dictionary) -> String:
 	var no := why_not_rehang(h, s)
 	if no != "":
 		return no
-	h.plays = s.mat.size()
-	h.deck = _shuffled(h.deck + s.mat)
-	s.mat = []
+	var keep: Array = s.mat.filter(func(n): return framed(h).has(n))
+	var off: Array = s.mat.filter(func(n): return not keep.has(n))
+	h.plays = off.size()
+	h.deck = _shuffled(h.deck + off)
+	s.mat = keep
 	h.rehung = true
 	draw(h, most())
 	return ""
@@ -142,8 +147,8 @@ static func why_not_rehang(h: Dictionary, s: Dictionary) -> String:
 		return "You've already rehung the display this check."
 	if h.plays < int(Data.t("HAND_PLAYS")):
 		return "Rehang before your first play."
-	if s.mat.is_empty():
-		return "The mat is already empty."
+	if s.mat.all(func(n): return framed(h).has(n)):
+		return "There's nothing to rehang." if not s.mat.is_empty() else "The mat is already empty."
 	return ""
 
 
@@ -158,6 +163,7 @@ static func take_back(h: Dictionary, s: Dictionary, name: String) -> String:
 	s.mat.erase(name)
 	h.hand.append(name)
 	h.tosses -= 1
+	_unframe(h, name)
 	return ""
 
 
@@ -201,3 +207,33 @@ static func pick_draw(h: Dictionary, s: Dictionary, name: String) -> String:
 	h.deck.erase(name)
 	h.hand.append(name)
 	return ""
+
+
+## How many squares a card takes on the mat (its size badge's blocks).
+static func squares(name: String) -> int:
+	var tier: String = Data.t("ITEM_TIER").get(name, "")
+	return 1 if tier == "MATERIAL" else 4 if tier == "CAPSTONE" else 2
+
+
+static func framed(h: Dictionary) -> Array:
+	return h.get("framed", [])
+
+
+## Frames a mat card (or unframes a framed one). Returns "" or why not.
+static func frame(h: Dictionary, s: Dictionary, name: String) -> String:
+	if not s.mat.has(name):
+		return "That card isn't on the mat."
+	var f: Array = framed(h)
+	if f.has(name):
+		_unframe(h, name)
+		return ""
+	var used: int = f.reduce(func(a, n): return a + squares(n), 0)
+	if used + squares(name) > int(Data.t("HAND_FRAME_SQUARES")):
+		return "Frames hold %d squares at most." % int(Data.t("HAND_FRAME_SQUARES"))
+	h.framed = f + [name]
+	return ""
+
+
+static func _unframe(h: Dictionary, name: String) -> void:
+	if framed(h).has(name):
+		h.framed = framed(h).filter(func(n): return n != name)

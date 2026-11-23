@@ -356,6 +356,19 @@ func _ready() -> void:
 	check(Hand.pick_draw(hd, s, twant) == "" and hd.hand.has(twant) and not hd.deck.has(twant) and s.emptyElements == 0, "hand: an Unknown Element draws any card")
 	check(Hand.pick_draw(hd, s, hd.deck[0]) != "", "hand: no token, no pick")
 
+	# Frame: up to 4 squares stay through a Rehang.
+	s.visits = 20
+	var t1: Array = by_tier.MATERIAL
+	s.mat = [big[0], t1[0], t1[1], big[1]]
+	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
+	check(Hand.frame(hd, s, big[0]) == "" and Hand.frame(hd, s, t1[0]) == "" and Hand.frame(hd, s, t1[1]) == "" and Hand.framed(hd).size() == 3, "frame: a tier 2+ card (2) and two tier 1s (1 each) fill 4 squares")
+	check(Hand.frame(hd, s, big[1]) != "" and Hand.frame(hd, s, capst) != "", "frame: never past 4 squares, only mat cards")
+	check(Hand.frame(hd, s, t1[1]) == "" and Hand.framed(hd).size() == 2, "frame: a tap again unframes")
+	var rh := Hand.rehang(hd, s)
+	check(rh == "" and s.mat == [big[0], t1[0]] and hd.plays == 2 and (hd.deck + hd.hand).has(big[1]) and (hd.deck + hd.hand).has(t1[1]), "frame: framed cards stay through a Rehang, the rest go back")
+	hd.tosses = 1
+	check(Hand.take_back(hd, s, t1[0]) == "" and not Hand.framed(hd).has(t1[0]), "frame: a card taken back loses its frame")
+
 	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
 	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.
 	var ins: Vector2 = load("res://main.gd").safe_insets(Rect2i(0, 96, 1080, 2400 - 96 - 48), Vector2i.ZERO, Vector2i(1080, 2400), Vector2(390, 866.7))
