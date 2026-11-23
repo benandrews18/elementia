@@ -132,9 +132,9 @@ mouse_filter = 2
 [node name="CraftedLabel" type="Label" parent="Scroll/Page"]
 layout_mode = 0
 offset_left = 16.0
-offset_top = 176.9
+offset_top = 222
 offset_right = 16.0
-offset_bottom = 176.9
+offset_bottom = 222
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
@@ -146,9 +146,9 @@ text = "CRAFTED ITEMS:"
 [node name="Fold" type="Control" parent="Scroll/Page"]
 layout_mode = 0
 offset_left = 12.0
-offset_top = 199.4
+offset_top = 244.5
 offset_right = 42.0
-offset_bottom = 229.4
+offset_bottom = 274.5
 mouse_filter = 1
 
 [node name="Bar" type="Panel" parent="Scroll/Page"]
@@ -156,9 +156,9 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 48.0
-offset_top = 197.1
+offset_top = 242.2
 offset_right = -48.0
-offset_bottom = 231.8
+offset_bottom = 276.9
 mouse_filter = 2
 theme_override_styles/panel = SubResource("bar")
 
@@ -172,9 +172,9 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -42.0
-offset_top = 199.4
+offset_top = 244.5
 offset_right = -12.0
-offset_bottom = 229.4
+offset_bottom = 274.5
 mouse_filter = 1
 
 [node name="Bench" type="Control" parent="Scroll/Page"]
@@ -186,9 +186,9 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 6.0
-offset_top = 261.8
+offset_top = 172
 offset_right = -6.0
-offset_bottom = 278.8
+offset_bottom = 189
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
@@ -203,9 +203,9 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 6.0
-offset_top = 284.0
+offset_top = 196
 offset_right = -6.0
-offset_bottom = 302.0
+offset_bottom = 214
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.84, 0.9, 0.94, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)

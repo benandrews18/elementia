@@ -19,7 +19,7 @@ const TOP := QuarkTopBar.H
 @export var act_h := 35.0
 
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
-const HEAD_H := 243.8  # the header to the crafted-items bar's foot; the shop's title goes under it
+const HEAD_H := 288.9  # the header's dark blue: the shop's title, then the crafted-items bar, to its foot
 static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
 var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
 var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
@@ -113,13 +113,12 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	return HEAD_H
 
 
-## "ITEM SHOP" and "Tap Items to Start Crafting!" on the header's dark blue,
-## which reaches down under them (the user, 2026-11-22). Returns its foot.
+## "ITEM SHOP" and "Tap Items to Start Crafting!" on the header's dark blue
+## (the user, 2026-11-22), the crafted-items bar under them (both placed in
+## the scene). Returns the blue's foot.
 func _shop_title(y: float) -> float:
-	$Scroll/Page/ShopLabel.position.y = y - 2
-	$Scroll/Page/ShopHint.position.y = y - 2 + 24
-	$Scroll/Page/Head.size.y = y - 2 + 24 + 18 + 12
-	return $Scroll/Page/Head.size.y
+	$Scroll/Page/Head.size.y = y
+	return y
 
 
 ## Craft through the app (it asks which elements pay a suit cost); alone
