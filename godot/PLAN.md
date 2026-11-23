@@ -60,7 +60,16 @@ with `godot-grill`.
    done (2026-11-23, committed): real checks deal a saved hand, Lock In on
    the hub, the mat locked between checks, the Inventory's Combo Lab (the
    run's items), Frame. Reviewed (godot-code-review; one fix:
-   the hand saved right after the deal). Step 5 is done. 
+   the hand saved right after the deal). Step 5 is done. Second review
+   (2026-11-23, ponytail-review + godot-code-review/optimization/scene-
+   organization; the user: fix everything): the hand is dealt when the
+   check's mat opens (Game.deal_hand() from App.open_panel; check_hand() a
+   plain getter); lifting a card redraws only the hand and a layer over the
+   mat (99ms -> ~33ms a tap on a PC); the preview scores the mat once; the
+   free-play bubble sits where the card lands; "?" with a full hand says
+   so; the map/station skip redraws under the Display Mat. Left for the
+   swap of the two play spaces: the check table as its own screen
+   (display_mat.gd holds both jobs, ~230 lines of hand code). 
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
