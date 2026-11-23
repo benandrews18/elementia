@@ -102,7 +102,7 @@ static func buzz(big := false) -> void:
 ## A fresh tween for node n's motion, the one before it stopped (two tweens
 ## on one property fight: a window closed mid-pop, a card pressed mid-settle).
 static func _tween(n: Node) -> Tween:
-	var old = n.get_meta("juice_tw", null)
+	var old = n.get_meta("juice_tw") if n.has_meta("juice_tw") else null  # get_meta(k, null) errors when k is missing
 	if old is Tween and old.is_valid():
 		old.kill()
 	var tw := n.create_tween()
