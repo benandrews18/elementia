@@ -33,6 +33,9 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	await get_tree().process_frame
+	if Game.ctx.get("travelPromptFor") != null:  # a fixture saved mid-check: its hand dealt the same every time
+		Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+		Game.check_hand()
 	match state:
 		"map", "station":
 			pass

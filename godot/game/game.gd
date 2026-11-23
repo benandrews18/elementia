@@ -266,6 +266,7 @@ func check_hand() -> Variant:
 		return null
 	if state.get("hand") == null:
 		state.hand = Hand.deal(state)
+		Progress.save_all()  # at once: closing the app must not redeal
 	return state.hand
 
 
