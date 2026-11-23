@@ -528,13 +528,15 @@ func _collections(app: App) -> void:
 	app._on_hub("home")
 	check(hd.hand.size() == 9, "Draw adds 2")
 	var on_mat: String = Game.state.mat[0]
-	dm.lifted = hd.hand[0]
-	dm._redraw()
+	var page_was: Panel = dm._page
+	dm._lift(hd.hand[0])
+	check(dm._page == page_was, "lifting a card doesn't rebuild the mat (only the hand and the layer over the mat)")
 	check(_find_meta(dm, "hand:gain:" + on_mat) != null and app._hub.off.get("inv") != true, "a lifted card: the score change shows on the mat; Discard lights")
 	check(app._hub.hand_sides.market[1] == "Rehang" and app._hub.off.get("market") != true, "Rehang is ready before the first play")
 	var played: String = hd.hand[0]
 	var plays: int = hd.plays
-	dm._play(on_mat)
+	var mn: Control = dm._mat_nodes[on_mat]
+	dm._catch.gui_input.emit(_release(mn.get_global_rect().get_center()))
 	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 8 and hd.plays == plays - 1, "played over a mat card: it's replaced, a play spent, the hand not refilled")
 	dm.lifted = hd.hand[0]
 	app._on_hub("inv")
@@ -574,6 +576,13 @@ func _collections(app: App) -> void:
 		asks[0].queue_free()
 	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on a card of its suit")
 	dm = app._panel_node as DisplayMatScreen
+	var hand_was: Array = hd.hand.duplicate()
+	while hd.hand.size() < Hand.most():
+		hd.hand.append(hd.deck.pop_back())
+	_find_meta(dm, "el:?").gui_input.emit(_release())
+	check(top.call(CardPick).is_empty() and dm.get_children().any(func(c): return c is Label and c.text == "Your hand is full."), "the ? with a full hand: says so, no card pick")
+	hd.deck += hd.hand.filter(func(n): return not hand_was.has(n))
+	hd.hand = hand_was
 	_find_meta(dm, "el:?").gui_input.emit(_release())
 	var cps: Array = top.call(CardPick)
 	var pick_card: String = hd.deck[-1]
@@ -583,9 +592,8 @@ func _collections(app: App) -> void:
 	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
 	dm = app._panel_node as DisplayMatScreen
 	var mat_was: Array = Game.state.mat.duplicate()
-	dm.lifted = hd.hand[0]
-	dm._redraw()
-	dm._page.gui_input.emit(_release())
+	dm._lift(hd.hand[0])
+	dm._catch.gui_input.emit(_release())
 	check(dm.lifted == "" and Game.state.mat == mat_was, "a lifted card tapped onto the Elements page goes back into the hand")
 	dm.view = "mat"
 	app._on_hub("codex")

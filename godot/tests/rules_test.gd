@@ -368,6 +368,18 @@ func _ready() -> void:
 	check(rh == "" and s.mat == [big[0], t1[0]] and hd.plays == 2 and (hd.deck + hd.hand).has(big[1]) and (hd.deck + hd.hand).has(t1[1]), "frame: framed cards stay through a Rehang, the rest go back")
 	hd.tosses = 1
 	check(Hand.take_back(hd, s, t1[0]) == "" and not Hand.framed(hd).has(t1[0]), "frame: a card taken back loses its frame")
+	# Rehang with a capstone (4 squares): unframed, it goes back and plays again into two free slots;
+	# framed, it fills the frame and stays.
+	s.mat = [capst, big[0]]
+	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
+	check(Hand.rehang(hd, s) == "" and s.mat.is_empty() and hd.plays == 2 and hd.hand.has(capst), "rehang: a capstone goes back into the hand like any card")
+	check(Hand.play(hd, s, capst) == "" and s.mat == [capst], "rehang: the capstone plays again into two free slots")
+	s.mat = [capst, big[0]]
+	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
+	check(Hand.frame(hd, s, capst) == "" and Hand.frame(hd, s, t1[0]) != "", "frame: a capstone fills all 4 squares")
+	check(Hand.rehang(hd, s) == "" and s.mat == [capst] and hd.plays == 1, "rehang: a framed capstone stays")
+	var gb: float = Mat.score(Mat.on_mat(s), s, {}).total
+	check(Hand.gain(s, {}, big[0], "", gb) == Hand.gain(s, {}, big[0]), "hand: a preview with the mat's score passed in gives the same change")
 
 	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
 	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.

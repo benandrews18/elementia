@@ -44,6 +44,8 @@ var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
 var _page: Panel
 var lifted := ""  # the hand card picked up to play (card playing, Game.state.hand)
+var _hand_view: HandView
+var _catch: Control  # with a card lifted: the layer over the mat page that takes the play
 
 
 static func make() -> DisplayMatScreen:
@@ -598,28 +600,14 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	counts.clip_text = true
 	counts.set_meta("cmp", "hand:counts")
 	_body.add_child(counts)
-	var hv := HandView.new()
-	hv.position = Vector2(0, top_y + 22)
-	hv.size = Vector2(size.x, bottom - top_y - 22)
-	_body.add_child(hv)
-	hv.show_hand(h.hand, lifted)
-	hv.lift.connect(func(n):
-		lifted = n
-		if n != "":
-			selected = ""
-		_redraw())
-	if lifted != "":  # the mat takes the play: empty space plays into a free slot
-		for c in page.get_children():
-			if not _mat_nodes.values().has(c):
-				c.mouse_filter = MOUSE_FILTER_IGNORE
-		page.mouse_filter = MOUSE_FILTER_STOP
-		page.gui_input.connect(func(ev): if Tap.tap(ev):
-			if view == "elements":  # not the mat: the card goes back into the hand
-				lifted = ""
-				_redraw()
-			else:
-				_play(""))
-		_gains(page)
+	_hand_view = HandView.new()
+	_hand_view.position = Vector2(0, top_y + 22)
+	_hand_view.size = Vector2(size.x, bottom - top_y - 22)
+	_body.add_child(_hand_view)
+	_hand_view.show_hand(h.hand, lifted)
+	_hand_view.lift.connect(_lift)
+	_catch = null
+	_lift_layer()
 	if selected != "" and _mat_nodes.has(selected):  # the picked mat card: Frame (or Unframe) on it
 		var c: Control = _mat_nodes[selected]
 		var on: bool = Hand.framed(h).has(selected)
@@ -640,17 +628,66 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 		App.current.sync_hub()
 
 
-## The lifted card's score change on each mat card it could replace, and on
-## the first empty slot for a free play.
-func _gains(page: Control) -> void:
+## Lifting a hand card (or putting it back) changes only the hand and the
+## layer over the mat, not the whole drawer (a full redraw took ~100ms on a
+## PC with a turn-18 mat).
+func _lift(n: String) -> void:
+	var picked := selected != ""
+	lifted = n
+	if n != "":
+		selected = ""
+	if picked and n != "":  # the picked mat card's ring and Frame button go too
+		_redraw()
+		return
+	_hand_view.show_hand(Game.state.hand.hand, lifted)
+	_lift_layer()
+	if App.current:
+		App.current.sync_hub()
+
+
+## With a card lifted, a layer over the mat page takes the play: a tap on a
+## mat card plays over it, elsewhere into a free slot (on the Elements page
+## it puts the card back). Each place it can go shows the score change.
+func _lift_layer() -> void:
+	if is_instance_valid(_catch):
+		_catch.queue_free()
+	_catch = null
+	if lifted == "":
+		return
+	_catch = Control.new()
+	_catch.size = _page.size
+	_catch.mouse_filter = MOUSE_FILTER_STOP
+	_catch.set_meta("cmp", "hand:catch")
+	_catch.gui_input.connect(func(ev): if Tap.tap(ev): _catch_tap(_catch.get_global_transform().affine_inverse() * ev.global_position))
+	_page.add_child(_catch)
+	_gains(_catch)
+
+
+func _catch_tap(at: Vector2) -> void:
+	if view == "elements":  # not the mat: the card goes back into the hand
+		_lift("")
+		return
+	for n in _mat_nodes:
+		var c: Control = _mat_nodes[n]
+		if Rect2(c.position, c.size).has_point(at):
+			_play(n)
+			return
+	_play("")
+
+
+## The lifted card's score change on each mat card it could replace, and
+## where a free play would put it.
+func _gains(layer: Control) -> void:
+	var base: float = Mat.score(Mat.on_mat(Game.state), Game.state, Game.ctx).total  # once, not per place
 	var at := {}
 	for n in _mat_nodes:
 		var c: Control = _mat_nodes[n]
 		at[n] = Rect2(c.position, c.size)
-	if not _empties.is_empty():
-		at[""] = _empties[0]
+	var free = _landing(lifted)
+	if free != null:
+		at[""] = free
 	for n in at:
-		var g = Hand.gain(Game.state, Game.ctx, lifted, n)
+		var g = Hand.gain(Game.state, Game.ctx, lifted, n, base)
 		if g == null:
 			continue
 		var d := roundi(g)
@@ -664,7 +701,33 @@ func _gains(page: Control) -> void:
 		var r: Rect2 = at[n]
 		pill.position = r.position + Vector2((r.size.x - pill.size.x) / 2, minf(6, r.size.y - pill.size.y))
 		pill.set_meta("cmp", "hand:gain:" + n)
-		page.add_child(pill)
+		layer.add_child(pill)
+
+
+## Where a free play puts `name` on the page (the mat packed with it: a
+## capstone takes two slots), else the first empty slot; null if none.
+func _landing(name: String) -> Variant:
+	var card = Catalog.mat_card(name)
+	if card == null:
+		return null
+	var pack := Mat.pack(Mat.on_mat(Game.state) + [card], _stage())
+	for i in pack.slot.size():
+		var sl: Dictionary = pack.slot[i]
+		if not slot_rects.has(i):
+			continue
+		var r: Rect2 = slot_rects[i]
+		r.position -= _page.position
+		if sl.has("card") and sl.card.name == name:
+			if sl.w > 1 and slot_rects.has(i + 1):
+				r = r.merge(Rect2(slot_rects[i + 1].position - _page.position, slot_rects[i + 1].size))
+			return r
+		var stack: Array = sl.get("stack", [])
+		for k in stack.size():
+			if stack[k].card.name == name:
+				var per: int = 1 if sl.kind == "top" else pack.L.perSlot
+				var mh := (r.size.y - (per - 1) * 2) / per
+				return Rect2(r.position + Vector2(0, k * (mh + 2)), Vector2(r.size.x, mh))
+	return _empties[0] if not _empties.is_empty() else null
 
 
 ## Draw (the hub's middle button).
@@ -816,7 +879,11 @@ func _elements(page: Control) -> void:
 		sq.position = at
 		sq.mouse_filter = MOUSE_FILTER_STOP
 		sq.set_meta("cmp", "el:?")
-		sq.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: CardPick.show_on(App.current))
+		sq.gui_input.connect(func(ev): if Tap.tap(ev):
+			if hand.hand.size() >= Hand.most() or hand.deck.is_empty():
+				_show_toast("Your hand is full." if not hand.deck.is_empty() else "The deck is empty.")
+			elif App.current:
+				CardPick.show_on(App.current))
 		page.add_child(sq)
 		var q := Tok.label(str(unknown), 9, Color("#3b2412"), 800)
 		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

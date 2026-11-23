@@ -105,13 +105,16 @@ static func play(h: Dictionary, s: Dictionary, name: String, over := "") -> Stri
 
 
 ## What playing `name` there would do to the mat's score, or null if it
-## can't go there (the lifted card's preview).
-static func gain(s: Dictionary, ctx: Dictionary, name: String, over := "") -> Variant:
+## can't go there (the lifted card's preview). `base`: the mat's score now,
+## if the caller has it (one preview per place: scored once, not each time).
+static func gain(s: Dictionary, ctx: Dictionary, name: String, over := "", base := NAN) -> Variant:
 	var mat = _after(s, name, over)
 	if mat is String:
 		return null
 	var cards := func(m: Array): return m.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
-	return Mat.score(cards.call(mat), s, ctx).total - Mat.score(cards.call(s.mat), s, ctx).total
+	if is_nan(base):
+		base = Mat.score(cards.call(s.mat), s, ctx).total
+	return Mat.score(cards.call(mat), s, ctx).total - base
 
 
 static func discard(h: Dictionary, name: String) -> String:
