@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 1 of the work queue below. Start every session with `git status`: the user may
+**Next task:** step 5 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -32,14 +32,18 @@ with `godot-grill`.
    reveal. Skills: tween-animation, animation-system.
 3. Done: **Cutover C5:** the capstone celebration, the unlock reveal, the
    after-craft mini card. Skills: tween-animation, particles-vfx, godot-ui.
-4. **Tier / display-size badge** (the Roman numeral plus 1, 2 or 4 blocks) on
-   the Crafting Bench and the full card view: card playing builds on it.
-   Skill: godot-ui.
+4. Folded into step 5 (the user, 2026-11-22): the **tier / display-size
+   badge** exists to tell the player how much mat space a card takes when
+   played, so it is designed with the hand, not ahead of it.
 5. **Drawing and playing cards at checks** (designed below). Skills: godot-brainstorming for the design (scenes, state, save
    format), state-machine (the check's phases), save-load (old saves still
    load), godot-ui and hud-system (the hand), tween-animation (draws, plays,
    discards). It takes the mat out of the Inventory between checks and adds
    the Combo Lab button there.
+   The hand (the user, 2026-11-22): fanned at the bottom of the screen like
+   Hearthstone or Balatro. Every card in it must still show what matters
+   at a glance: its size on the mat (the tier / display-size badge), its
+   bonuses, its name. The card UI gets refined as part of this step.
 6. **UI feedback pass** (after card playing, as the user asked): skills
    tween-animation, animation-system, godot-optimization (no cost to frame
    rate), input-handling (presses); the map's dust poof (particles-vfx).
@@ -875,7 +879,13 @@ design happens in Godot.
     mat to take it off.
   - With it: a tier / display-size mark on cards: the Roman numeral plus
     blocks (1 for a small card, 2 stacked for a full one, 4 for a
-    capstone), on the Crafting Bench and the full card view.
+    capstone). Its main job is telling the player how big a card is on
+    the mat when they play it, so it is designed with the hand.
+  - The hand (the user, 2026-11-22): fanned across the bottom of the
+    screen, like Hearthstone or Balatro. Each card in the hand must show
+    its size, its bonuses and its name clearly, so the card layout gets a
+    design pass for the hand (cards overlap there, so the important parts
+    sit where the fan leaves them visible).
 - [ ] **UI feedback pass** (the user, 2026-11-22; after card playing): a
       wide look at UI motion: button presses, trays and windows coming on
       screen. Subtle overall, never at the cost of performance, but most UI
