@@ -56,9 +56,12 @@ with `godot-grill`.
    card). The Convert button shows during a check and works exactly as in
    normal play (the user: no converting straight into a card; converting
    to a better suit before a draw is the player's choice). Draw stays one
-   tap for 2. Next:
-   real checks switch over (answers 2026-11-23, see Decisions), with
-   Frame. 
+   tap for 2. Switch-over
+   done (2026-11-23, committed): real checks deal a saved hand, Lock In on
+   the hub, the mat locked between checks, the Inventory's Combo Lab (the
+   run's items), Frame. Left: rerun check.py fast to confirm the
+   mid-check screenshots are steady, then the changelog entry and publish;
+   the godot-code-review pass (one fix done: save right after the deal). 
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
