@@ -48,8 +48,14 @@ with `godot-grill`.
    Part 1 done (2026-11-23): the play and discard budget, the fresh side
    deck, the score preview, the hub during a check (Draw in the middle;
    Challenge, Discard, Scoring, Lock In) and the hand in two fans. Next:
-   the user tries it; then Rehang, Take back and element draws; then real
-   checks switch over, with Frame.
+   the user tries it.
+   Part 2 done (2026-11-23): Rehang (the hub's 4th button, where Scoring
+   was; the mat's "?" still has the rules), Take Back (tap a mat card: the
+   hub's Discard turns into it), element draws through the station's own
+   Convert button and tray (the user: same UI; TO can be "A card", 1:1;
+   its "?" counter picks any deck card). Draw stays one tap for 2. Next:
+   the user tries it; then real checks switch over, with Frame. Part of
+   work queue 7 is in: the Convert tray works during a check.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
