@@ -47,10 +47,8 @@ with `godot-grill`.
    show; a tapped card lifts out as the full card) too (2026-11-23).
    Next (agreed 2026-11-23, see Decisions): a play and discard budget per
    check, the fresh side deck, the score preview on a lifted card; tried
-   in the Challenge Test; then real checks switch over. Still being
-   designed with the user: costly ways to take control of the mat (like
-   "rehang the display") and spending surplus elements to draw cards of
-   their suit.
+   in the Challenge Test; then Rehang, Take back and element draws; then
+   real checks switch over, with Frame.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
@@ -1022,9 +1020,15 @@ Recorded so they aren't re-argued. Add new ones with the date.
   through. Cards crafted since the last check form a **fresh side deck**
   dealt first; after it the rest are shuffled back into one deck. A
   **lifted card shows the score change** on each slot before it's played.
-  Being designed: costly ways to take control of the mat; spending
-  surplus stock elements to draw cards of their suit (a special case,
-  not the normal draw).
+  Taking control of the mat: **Rehang** (all of a check's plays: the
+  whole mat back into the deck, a bigger hand to rebuild from), **Take
+  back** (a discard: one mat card back into the hand), **Frame** (one mat
+  card stays through a Rehang; its cost still to settle). No time cost
+  (no giving up visits). **Element draws:** 1 stock element of a suit
+  draws a card with that suit's pip, always 1 for 1 (elements are already
+  precious for crafting); an unknown element token draws any card the
+  player picks. The convert tray (work queue 7) works during a check, so
+  converting for a draw is a choice too.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.
