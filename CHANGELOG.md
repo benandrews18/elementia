@@ -8,6 +8,10 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-23
+- Cards show a size badge: the tier as a Roman numeral and how much mat space the card takes as blocks (1 small, 2 full, 4 for a capstone), on the full card view, the Crafting Bench and cards in the hand.
+- Challenge Test hand: the cards now overlap so each one's right side shows (its suits and size badge); a tapped card lifts out on top as the full card with its components.
+
 ## 2026-11-22
 - Combo Lab: a Challenge Test button tries the new card playing at a check: pick a round, then play from a fanned hand of 7 (Draw +2 up to 10, Discard, tap a card then tap the mat or a mat card to play it); Lock In shows the reward and goes back to the lab. Your run's items are the deck; nothing is saved.
 - Display Mat: on rounds 12-17 small cards in the half-height second row now fit it instead of spilling below the mat.

@@ -42,8 +42,10 @@ with `godot-grill`.
    the Combo Lab button there.
    Progress (2026-11-22): the rules (core/hand.gd, rule tests) and the
    Combo Lab's Challenge Test (round picker, fanned hand, Draw +2,
-   Discard, plays, Lock In back to the lab) are in. Next: the size badge
-   and the card layout for the hand; then real checks switch over.
+   Discard, plays, Lock In back to the lab) are in; the size badge (full
+   card, Crafting Bench, hand cards) and the hand's layout (right sides
+   show; a tapped card lifts out as the full card) too (2026-11-23).
+   Next: the user tries it; then real checks switch over.
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
