@@ -75,6 +75,7 @@ func _ready() -> void:
 		_bonus_frame(bonus_rect.grow(6))
 	_collect.size = Vector2(maxf(bw * 0.6, 120), 46)
 	_collect.position = Vector2((bw - _collect.size.x) / 2, bh - 16 - 46)
+	_collect.set_meta("cmp", "roll:collect")
 	_collect.gui_input.connect(_on_collect)
 	modulate.a = 0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.22)

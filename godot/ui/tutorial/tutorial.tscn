@@ -1,0 +1,360 @@
+[gd_scene load_steps=51 format=3]
+
+[ext_resource type="Script" path="res://ui/tutorial/tutorial.gd" id="1"]
+[ext_resource type="Script" path="res://ui/tutorial/tutorial_step.gd" id="2"]
+
+[sub_resource type="Resource" id="step0"]
+script = ExtResource("2")
+say = "Welcome to [b]Elementia[/b]! I'm Professor Mouse. Let's play your first game together."
+pose = 3
+until = "next"
+
+[sub_resource type="Resource" id="step1"]
+script = ExtResource("2")
+say = "Your goal: discover and craft the 8 [b]Capstones[/b], the biggest cards in the game."
+pose = 10
+until = "next"
+done_if = "started"
+
+[sub_resource type="Resource" id="step2"]
+script = ExtResource("2")
+say = "Let's start with [b]Coral Reef[/b]. Tap it!"
+pose = 7
+target = "cap:Coral Reef"
+done_if = "started"
+
+[sub_resource type="Resource" id="step3"]
+script = ExtResource("2")
+say = "Its home is [b]The Ocean[/b]. Tap to start there!"
+pose = 7
+target = "cap:start"
+until = "wait"
+done_if = "started"
+
+[sub_resource type="Resource" id="step4"]
+script = ExtResource("2")
+say = "You start with one of each element The Ocean's dice can roll. They're in your [b]Inventory[/b]."
+pose = 12
+target = "hub:inv"
+until = "next"
+done_if = "rolled"
+
+[sub_resource type="Resource" id="step5"]
+script = ExtResource("2")
+say = "Every visit you roll the station's dice. Tap [b]Roll[/b]!"
+pose = 3
+target = "hub:home"
+done_if = "rolled"
+dice = PackedStringArray("H", "O", "N", "N")
+
+[sub_resource type="Resource" id="step6"]
+script = ExtResource("2")
+say = "4 new elements! Tap [b]Collect[/b]."
+pose = 3
+target = "roll:collect"
+until = "wait"
+done_if = "collected"
+
+[sub_resource type="Resource" id="step7"]
+script = ExtResource("2")
+say = "This is The Ocean's shop. Every card is an item you can craft from elements."
+pose = 2
+target = "st:Water"
+until = "next"
+done_if = "owns:Water"
+
+[sub_resource type="Resource" id="step8"]
+script = ExtResource("2")
+say = "[b]Water[/b] is H + O, and you have both. Tap it!"
+pose = 7
+target = "st:Water"
+done_if = "owns:Water"
+
+[sub_resource type="Resource" id="step9"]
+script = ExtResource("2")
+say = "The [b]Crafting Bench[/b] shows its recipe. Tap [b]Craft[/b]!"
+pose = 7
+target = "craft:Water"
+done_if = "owns:Water"
+
+[sub_resource type="Resource" id="step10"]
+script = ExtResource("2")
+say = "Elements are spent, like coins. But [b]items are yours forever[/b]!"
+pose = 10
+until = "next"
+done_if = "owns:Seaweed"
+
+[sub_resource type="Resource" id="step11"]
+script = ExtResource("2")
+say = "[b]Seaweed[/b] needs C and Water. Tap it!"
+pose = 7
+target = "st:Seaweed"
+done_if = "owns:Seaweed"
+
+[sub_resource type="Resource" id="step12"]
+script = ExtResource("2")
+say = "Craft it!"
+pose = 7
+target = "craft:Seaweed"
+done_if = "owns:Seaweed"
+
+[sub_resource type="Resource" id="step13"]
+script = ExtResource("2")
+say = "See? Your Water came back. Items you use to craft stay yours."
+pose = 12
+until = "next"
+done_if = "owns:Limestone"
+
+[sub_resource type="Resource" id="step14"]
+script = ExtResource("2")
+say = "Now [b]Limestone[/b]: Ca + C + O. Tap it."
+pose = 7
+target = "st:Limestone"
+done_if = "owns:Limestone"
+
+[sub_resource type="Resource" id="step15"]
+script = ExtResource("2")
+say = "You're out of [b]C[/b]. Tap the red C to make some!"
+pose = 5
+target = "need:C"
+done_if = "panel:convert|has:C|owns:Limestone"
+
+[sub_resource type="Resource" id="step16"]
+script = ExtResource("2")
+say = "[b]Convert[/b] trades 3 of one element for 1 of another. You have 3 N: tap it."
+pose = 5
+target = "cv:N"
+done_if = "from:N|has:C|owns:Limestone"
+
+[sub_resource type="Resource" id="step17"]
+script = ExtResource("2")
+say = "Tap the arrow to convert!"
+pose = 5
+target = "cv:go"
+done_if = "has:C|owns:Limestone"
+
+[sub_resource type="Resource" id="step18"]
+script = ExtResource("2")
+say = "You made C! Tap here to close Convert."
+pose = 2
+target = "hub:home"
+done_if = "nopanel|owns:Limestone"
+
+[sub_resource type="Resource" id="step19"]
+script = ExtResource("2")
+say = "Now craft your [b]Limestone[/b]!"
+pose = 7
+target = "craft:Limestone"
+done_if = "owns:Limestone"
+
+[sub_resource type="Resource" id="step20"]
+script = ExtResource("2")
+say = "Coral Reef needs Seaweed and Limestone, and you have both! The [b]To-Do List[/b] shows what's left."
+pose = 10
+target = "hub:jobs"
+until = "next"
+done_if = "screen:map"
+
+[sub_resource type="Resource" id="step21"]
+script = ExtResource("2")
+say = "Done here. Tap the [b]Map[/b]."
+pose = 12
+target = "hub:home"
+done_if = "screen:map"
+
+[sub_resource type="Resource" id="step22"]
+script = ExtResource("2")
+say = "Pick [b]Old Growth Forest[/b], next door."
+pose = 1
+target = "map:Old Growth Forest"
+done_if = "selected:Old Growth Forest|at:Old Growth Forest"
+
+[sub_resource type="Resource" id="step23"]
+script = ExtResource("2")
+say = "Tap [b]Travel[/b]!"
+pose = 12
+target = "hub:home"
+until = "wait"
+done_if = "at:Old Growth Forest"
+
+[sub_resource type="Resource" id="step24"]
+script = ExtResource("2")
+say = "A new station, new dice. [b]Roll[/b]!"
+pose = 3
+target = "hub:home"
+done_if = "rolled"
+dice = PackedStringArray("Al", "Mg", "O", "P")
+
+[sub_resource type="Resource" id="step25"]
+script = ExtResource("2")
+say = "[b]Collect[/b]."
+pose = 3
+target = "roll:collect"
+until = "wait"
+done_if = "collected"
+
+[sub_resource type="Resource" id="step26"]
+script = ExtResource("2")
+say = "Make [b]Sand[/b]: Si + O."
+pose = 7
+target = "st:Sand"
+done_if = "owns:Sand"
+
+[sub_resource type="Resource" id="step27"]
+script = ExtResource("2")
+say = "Craft!"
+pose = 7
+target = "craft:Sand"
+done_if = "owns:Sand"
+
+[sub_resource type="Resource" id="step28"]
+script = ExtResource("2")
+say = "Then [b]Clay[/b]: Al + Mg."
+pose = 7
+target = "st:Clay"
+done_if = "owns:Clay"
+
+[sub_resource type="Resource" id="step29"]
+script = ExtResource("2")
+say = "Craft!"
+pose = 7
+target = "craft:Clay"
+done_if = "owns:Clay"
+
+[sub_resource type="Resource" id="step30"]
+script = ExtResource("2")
+say = "[b]Soil[/b] is made from items only: Clay + Sand. Tap it!"
+pose = 7
+target = "st:Soil"
+done_if = "owns:Soil"
+
+[sub_resource type="Resource" id="step31"]
+script = ExtResource("2")
+say = "Craft!"
+pose = 7
+target = "craft:Soil"
+done_if = "owns:Soil"
+
+[sub_resource type="Resource" id="step32"]
+script = ExtResource("2")
+say = "On to the next station: the [b]Map[/b]."
+pose = 12
+target = "hub:home"
+done_if = "screen:map"
+
+[sub_resource type="Resource" id="step33"]
+script = ExtResource("2")
+say = "Pick the [b]Greenhouse[/b]."
+pose = 1
+target = "map:Greenhouse"
+done_if = "selected:Greenhouse|at:Greenhouse"
+
+[sub_resource type="Resource" id="step34"]
+script = ExtResource("2")
+say = "[b]Travel[/b]!"
+pose = 12
+target = "hub:home"
+until = "wait"
+done_if = "at:Greenhouse"
+
+[sub_resource type="Resource" id="step35"]
+script = ExtResource("2")
+say = "Every 3rd visit, leaving a station starts a [b]Display Mat check[/b]. This is the last stop before one!"
+pose = 10
+until = "next"
+done_if = "rolled"
+
+[sub_resource type="Resource" id="step36"]
+script = ExtResource("2")
+say = "[b]Roll[/b]!"
+pose = 3
+target = "hub:home"
+done_if = "rolled"
+dice = PackedStringArray("C", "O", "K", "N")
+
+[sub_resource type="Resource" id="step37"]
+script = ExtResource("2")
+say = "[b]Collect[/b]."
+pose = 3
+target = "roll:collect"
+until = "wait"
+done_if = "collected"
+
+[sub_resource type="Resource" id="step38"]
+script = ExtResource("2")
+say = "Your turn! Craft what you can (green cards are ready), then tap the [b]Map[/b]."
+pose = 12
+until = "wait"
+done_if = "screen:map"
+free = true
+
+[sub_resource type="Resource" id="step39"]
+script = ExtResource("2")
+say = "Pick [b]The City[/b]."
+pose = 1
+target = "map:The City"
+done_if = "selected:The City|check"
+
+[sub_resource type="Resource" id="step40"]
+script = ExtResource("2")
+say = "[b]Travel[/b]: it's check time!"
+pose = 12
+target = "hub:home"
+until = "wait"
+done_if = "check"
+
+[sub_resource type="Resource" id="step41"]
+script = ExtResource("2")
+say = "Read the challenge, then close it. Meeting it multiplies your Quarks!"
+pose = 2
+until = "wait"
+done_if = "settled"
+free = true
+
+[sub_resource type="Resource" id="step42"]
+script = ExtResource("2")
+say = "This is your [b]Display Mat[/b]. Cards on it earn [b]Quark points[/b], and Quarks earn bonus dice."
+pose = 10
+target = "mat:page"
+until = "next"
+done_if = "played"
+
+[sub_resource type="Resource" id="step43"]
+script = ExtResource("2")
+say = "Your hand: every item you craft becomes a card. Tap one to pick it up!"
+pose = 7
+target = "hand"
+until = "wait"
+done_if = "lifted|played"
+
+[sub_resource type="Resource" id="step44"]
+script = ExtResource("2")
+say = "Tap the mat to play it there."
+pose = 7
+target = "hand:catch"
+done_if = "played"
+
+[sub_resource type="Resource" id="step45"]
+script = ExtResource("2")
+say = "Combos score more: 3+ from the same station, 3+ of the same suit, or an item with its recipe for [b]2x points[/b]!"
+pose = 10
+until = "next"
+done_if = "visit:4"
+
+[sub_resource type="Resource" id="step46"]
+script = ExtResource("2")
+say = "Play up to 3 cards a check, then tap [b]Lock In[/b]."
+pose = 12
+until = "wait"
+done_if = "visit:4"
+free = true
+
+[sub_resource type="Resource" id="step47"]
+script = ExtResource("2")
+say = "You're ready! Craft, collect, and build the best mat. Good luck!"
+pose = 3
+until = "next"
+
+[node name="Tutorial" type="Node"]
+script = ExtResource("1")
+steps = Array[ExtResource("2")]([SubResource("step0"), SubResource("step1"), SubResource("step2"), SubResource("step3"), SubResource("step4"), SubResource("step5"), SubResource("step6"), SubResource("step7"), SubResource("step8"), SubResource("step9"), SubResource("step10"), SubResource("step11"), SubResource("step12"), SubResource("step13"), SubResource("step14"), SubResource("step15"), SubResource("step16"), SubResource("step17"), SubResource("step18"), SubResource("step19"), SubResource("step20"), SubResource("step21"), SubResource("step22"), SubResource("step23"), SubResource("step24"), SubResource("step25"), SubResource("step26"), SubResource("step27"), SubResource("step28"), SubResource("step29"), SubResource("step30"), SubResource("step31"), SubResource("step32"), SubResource("step33"), SubResource("step34"), SubResource("step35"), SubResource("step36"), SubResource("step37"), SubResource("step38"), SubResource("step39"), SubResource("step40"), SubResource("step41"), SubResource("step42"), SubResource("step43"), SubResource("step44"), SubResource("step45"), SubResource("step46"), SubResource("step47")])

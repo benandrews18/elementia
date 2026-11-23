@@ -16,6 +16,7 @@ var _panel_node: Control
 var _hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
+var tutorial: Tutorial  # the first-play tutorial (its steps: ui/tutorial/tutorial.tscn)
 const LAB_BAR := 40.0  # Combo Lab's exit bar
 const LAB_TOP := 52.0  # where the lab's mat starts, under it
 var _real: Array = []  # Combo Lab: the real run and its context, put back on exit
@@ -41,6 +42,9 @@ func _ready() -> void:
 	add_child(layer)
 	mouse = MouseTip.make()
 	layer.add_child(mouse)
+	tutorial = Tutorial.make()
+	add_child(tutorial)
+	tutorial.resume.call_deferred()  # a run saved mid-tutorial
 	Game.state_changed.connect(_sync)
 	Game.crafted.connect(_on_crafted)
 	resized.connect(_sync_floats)  # they sit on the bottom edge
@@ -310,6 +314,8 @@ func _confetti() -> void:
 ## History; a fresh run waits on the bare map: the Elementia logo, the
 ## how-to-play slides, then the capstone is chosen (playClassicIntro()).
 func new_game() -> void:
+	if tutorial.running():  # a tutorial left unfinished ends with its run
+		tutorial.finish()
 	Progress.record_history()
 	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
 	Game.ctx = Game.fresh_ctx()
@@ -335,10 +341,15 @@ func new_game() -> void:
 	tw.tween_property(logo, "modulate:a", 0.0, 0.2)
 	tw.tween_callback(func():
 		logo.queue_free()
-		HowToPlay.play(self, func():
+		var choose := func():
 			var c := CapstoneChoice.make()
 			c.size = size
-			add_child(c)))
+			add_child(c)
+		if not Progress.prefs.get("tutorialSeen"):  # everyone's first New Game since the tutorial came in
+			choose.call()
+			tutorial.start()
+			return
+		HowToPlay.play(self, choose))
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the
@@ -418,6 +429,8 @@ func _unhandled_input(ev: InputEvent) -> void:
 ## own rules: a step that can't be skipped has neither, or ignores it); else
 ## the open panel. Nothing open: nothing.
 func back() -> void:
+	if tutorial.running() and not tutorial.steps[tutorial.i].free:
+		return  # the step needs what Back would close
 	var dev := get_node_or_null("Dev")
 	for p in dev.get_children() if dev else []:
 		if p is DevPanel and p.visible:
@@ -463,7 +476,7 @@ func _idle() -> bool:
 ## on an idle station: Roll, Craft, Convert (then where to tap a missing
 ## element), the Map; later the tracked item's badge on a shop card.
 func _walkthrough() -> void:
-	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle() or Game.ctx.get("comboLab"):
+	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle() or Game.ctx.get("comboLab") or tutorial.running():
 		return
 	var s := Game.state
 	if Game.ctx.screen == "map":
@@ -493,53 +506,23 @@ Tap the [b]Map[/b].", "bottom-left", _hub.button("home"), 15):
 		tip_once("pintrackshop", 7, "Your tracked item needs this one!", "bottom-right", badge)
 
 
-## How to Play (Settings; startNewTutorial()): "The Periodic Table", "The 16
-## Elements", then Professor Mouse walks through the hub's buttons and the
-## gear, each spotlit (tutCoachSteps()).
-func start_coach() -> void:
+## The Periodic Table and the 16 Elements (Tutorial Messages): two
+## windows, Next through them.
+func show_elements() -> void:
 	var intro := ParchDialog.open(self, "res://ui/overlays/tut_intro.tscn")
 	intro.pressed.connect(func(b): if b == "Next":
 		intro.close()
 		var els := ParchDialog.open(self, TutElements.SCENE)
-		els.pressed.connect(func(b2): if b2 == "Next":
-			els.close()
-			_coach_step(0)))
+		els.pressed.connect(func(b2): if b2 == "Next": els.close()))
 
 
-func _coach_steps() -> Array:
-	return [
-		["home", 10, "bottom-left", "The home button keeps the game going!
-Collect elements,
-and travel the map.", 15],
-		["jobs", 2, "bottom-left", "To-Do List: the items you're tracking.", 19],
-		["inv", 12, "bottom-left", "Inventory: all you've collected.", 19],
-		["codex", 1, "bottom-right", "Look up any item's recipe here.", 19],
-		["market", 2, "bottom-right", "The Market: craft items and capstones from anywhere.", 19],
-		["settings", 2, "top-right", "Settings: adjust rules or go to Main Menu.", 19],
-		["", 3, "top-right", "You're ready! {🎯} Go build!", 19]]
-
-
-var _coach_cb := Callable()  # the walkthrough's Next, bound to its next step
-
-
-func _coach_step(i: int) -> void:
-	var steps := _coach_steps()
-	if _coach_cb.is_valid() and mouse.next_step.is_connected(_coach_cb):
-		mouse.next_step.disconnect(_coach_cb)
-	if i >= steps.size():  # endTutCoach()
-		mouse.coaching = false
-		mouse.hide_tip()
-		return
-	var st: Array = steps[i]
-	var target: Control = null
-	if st[0] == "settings":
-		target = (_screen as Control).call("find_tagged", "settings") if _screen.has_method("find_tagged") else null
-	elif st[0] != "":
-		target = _hub.button(st[0])
-	mouse.coaching = true
-	mouse.show_tip(st[1], st[3], st[2], target, st[4], -1.0, "%d / %d" % [i + 1, steps.size()], i == steps.size() - 1)
-	_coach_cb = _coach_step.bind(i + 1)
-	mouse.next_step.connect(_coach_cb)
+## How to Play (Settings): the first-play tutorial again, in a new game
+## (this run goes into History).
+func replay_tutorial() -> void:
+	ConfirmDialog.ask(self, "Play the tutorial again?
+It starts a new game.", func():
+		Progress.prefs.tutorialSeen = false
+		new_game())
 
 
 ## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
@@ -1007,7 +990,7 @@ func _travel(dest: String) -> void:
 		Game.start_check_order()
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
 			open_panel("drawer")
-			if not Progress.prefs.get("sawMatCheckTutorial"):  # the very first check ever: the rules first
+			if not Progress.prefs.get("sawMatCheckTutorial") and not tutorial.running():  # the very first check ever: the rules first (the tutorial explains it)
 				Progress.prefs.sawMatCheckTutorial = true
 				Progress.save_all()
 				MatRules.show_on(self).closed.connect(_check_intro)
@@ -1070,7 +1053,7 @@ func _challenge() -> void:
 		return
 	# maybeShowOrderTip(): the challenges explained, the first check of a run
 	# that has one (unless hidden for good with its ✕ Hide), then this one.
-	if not s.get("sawOrderTip") and not Progress.tip_hidden("orderTip"):
+	if not s.get("sawOrderTip") and not Progress.tip_hidden("orderTip") and not tutorial.running():
 		s.sawOrderTip = true
 		Progress.save_all()
 		MatRules.order_tip(self).closed.connect(func(): OrderInfo.open(self))

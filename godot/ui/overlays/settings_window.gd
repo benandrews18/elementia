@@ -37,9 +37,9 @@ func _sync_dev() -> void:
 func _on_pressed(button: String) -> void:
 	var app := App.current
 	match button:
-		"HowToPlay":  # startNewTutorial(): the periodic table, the 16 elements, then the walkthrough
+		"HowToPlay":  # the first-play tutorial again (a new game)
 			close()
-			app.start_coach()
+			app.replay_tutorial()
 		"Rules":
 			close()
 			ParchDialog.open(app, GameRules.SCENE)

@@ -68,6 +68,7 @@ func _ready() -> void:
 	_recipe(Vector2(94, 53))
 	# Craft (centred down the right edge), or the owned tick.
 	var btn: Label = $Craft
+	btn.set_meta("cmp", "craft:" + e.name)
 	btn.visible = not owned
 	if can:
 		btn.add_theme_stylebox_override("normal", can_style)

@@ -14,7 +14,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early", "clock_info",
-	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "coach1",
+	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "challenge_elements",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
@@ -248,13 +248,13 @@ func _ready() -> void:
 				"mouse_tl": app.mouse.show_tip(7, "Tap a green card, then [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
 				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app._hub.button("home"))
 				"mouse_br": app.mouse.show_tip(7, "Your tracked item needs this one!", "bottom-right")
-		"tut_intro", "tut_elements", "coach1":  # How to Play: its two windows; the walkthrough's first step
-			app.start_coach()
+		"tut_intro", "tut_elements":  # Tutorial Messages' The 16 Elements: its two windows
+			app.show_elements()
 			if state != "tut_intro":
 				app.get_children().filter(func(c): return c is ParchDialog)[0].pressed.emit("Next")
-				await get_tree().process_frame
-			if state == "coach1":
-				app.get_children().filter(func(c): return c is TutElements)[0].pressed.emit("Next")
+		"tut_coach":  # the first-play tutorial's Roll step: Mouse docked away from it, Skip under him
+			await get_tree().process_frame
+			app.mouse.coach(3, "Every visit you roll the station's dice. Tap [b]Roll[/b]!", app._hub.button("home"), false, false)
 		"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card":  # from tests/fixtures/collections_prefs.json
 			Progress.prefs.merge(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/collections_prefs.json")), true)
 			match state:

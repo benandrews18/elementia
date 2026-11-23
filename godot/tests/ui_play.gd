@@ -28,13 +28,14 @@ func _ready() -> void:
 	Progress.prefs.erase("sawMatCheckTutorial")  # a first board check ever
 	Progress.prefs.guidedTutorialEnabled = false  # Professor Mouse off (the tips section turns him on)
 	Progress.prefs.sawEmptyElTip = true
+	Progress.prefs.tutorialSeen = true  # New Game skips the first-play tutorial (its own section plays it)
 	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "layouts", "collections", "dev"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "tutorial", "layouts", "collections", "dev"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -721,19 +722,16 @@ func _tips(app: App) -> void:
 	check(tips.size() == 1 and Progress.prefs.sawEmptyElTip, "the first \"?\" held: the Unknown Element tip")
 	if not tips.is_empty():
 		tips[0].close()
-	app.start_coach()
+	app.show_elements()
 	var dialogs := func(): return app.get_children().filter(func(c): return c is ParchDialog and not c.is_queued_for_deletion())
-	check(dialogs.call().size() == 1, "How to Play: the periodic table")
+	check(dialogs.call().size() == 1, "The 16 Elements: the periodic table")
 	dialogs.call()[0].pressed.emit("Next")
 	await get_tree().process_frame
 	var els: Array = dialogs.call().filter(func(c): return c is TutElements)
 	check(els.size() == 1 and els[0].get_node("Window/Content/Scroll/Grid").get_child_count() == 16, "then the 16 elements")
 	els[0].pressed.emit("Next")
 	await get_tree().process_frame
-	check(app.mouse.coaching and app.mouse.get_node("Bubble/Tour/Step").text == "1 / 7", "then the walkthrough, step 1 of 7")
-	for i in 7:
-		app.mouse.get_node("Bubble/Tour/Next").gui_input.emit(_release())
-	check(not app.mouse.coaching and not app.mouse.showing, "Next through all 7 ends it")
+	check(dialogs.call().is_empty(), "Next closes it")
 	finished.tips = true
 
 
@@ -891,7 +889,7 @@ func _settings(app: App) -> void:
 	check(top.call(GameRules).is_empty() and leaving.call(), "a closed window is out of the way at once, shrinking out in its holder")
 	check(await _until(func(): return not leaving.call()), "and its holder is freed")
 	app.open_settings("tuts")
-	var wins := {"HowToPlay": HowToPlay, "PinTip": PinTip, "BoardChecks": MatRules, "Challenges": ParchDialog, "Unknown": UnknownTip}
+	var wins := {"HowToPlay": HowToPlay, "PinTip": PinTip, "BoardChecks": MatRules, "Challenges": ParchDialog, "Unknown": UnknownTip, "Elements": ParchDialog}
 	for row in wins:
 		var tm: TutorialMessages = top.call(TutorialMessages)[0]
 		tm.get_node("Window/Content/" + row).pressed.emit()
@@ -981,6 +979,120 @@ func _dev(app: App) -> void:
 	check(not Progress.prefs.devUnlocked and not Progress.prefs.devMode and app.get_node_or_null("Dev") == null, "five more taps hide Dev Tools and the button")
 	sw.close()
 	finished.dev = true
+
+
+## The first-play tutorial (work queue 9), played with real taps through
+## the viewport (so its lock is tested too): the first New Game starts it,
+## each step's target shows and a tap on it moves on; taps elsewhere are
+## swallowed; free steps are played like a player would; it ends after the
+## first Lock In. Then Skip, and resuming a step whose bench closed.
+func _tutorial(app: App) -> void:
+	for c in app.get_children().slice(app._hub.get_index() + 1):
+		if c is Control:
+			c.queue_free()
+	app.close_panel()
+	app.mouse.hide_tip()
+	Progress.prefs.erase("tutorialSeen")
+	Progress.prefs.guidedTutorialEnabled = true  # the walkthrough tips stay quiet while it runs
+	Progress.prefs.tutorialHintsSeen = []
+	app.new_game()
+	var tut := app.tutorial
+	check(await _until(func(): return tut.running()), "the first New Game starts the tutorial")
+	check(not app.get_children().any(func(c): return c is HowToPlay), "no how-to-play slides in the tutorial")
+	var guard := 0
+	var swallowed := false
+	while tut.running() and guard < 120:
+		guard += 1
+		var at := tut.i
+		var st: TutorialStep = tut.steps[at]
+		await get_tree().process_frame
+		if st.free:
+			if st.done_if == "screen:map":
+				for e in StationScreen.shop_entries(Game.ctx.current):
+					if not Catalog.owns(Game.state, e.name) and Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(e.name):
+						Game.craft(e.name, Game.suggest_suit_picks(e.name))
+				app._on_hub("home")
+			elif st.done_if == "settled":
+				await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand) or Tutorial.met("settled"))
+				_dismiss(app)
+			else:  # Lock In, the Bonus Dice window, the fade
+				app._on_hub("codex")
+				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "tutorial: Lock In counts, then the Bonus Dice window")
+				for c in app.get_children():
+					if c is LockInReward:
+						c._done()
+		elif st.until == "next":
+			check(await _until(func(): return app.mouse.showing and app.mouse.get_node("Bubble/Tour/Next").is_visible_in_tree()), "step %d: Mouse's Next shows" % at)
+			_vtap(app.mouse.get_node("Bubble/Tour/Next").get_global_rect().get_center())
+		else:
+			for c in app.get_children():  # a window of the game's own ("New collection!"): closed as a player would
+				if c is CollectionFound:
+					c.queue_free()
+			var found := await _until(func(): return tut._target != null and is_instance_valid(tut._target) and not tut._aside)
+			check(found, "step %d: its target %s shows" % [at, st.target])
+			if not found:
+				break
+			if not swallowed and st.target == "hub:home":  # a tap elsewhere does nothing
+				swallowed = true
+				_vtap(app._hub.button("codex").get_global_rect().get_center())
+				await get_tree().process_frame
+				check(app.panel != "codex" and tut.i == at, "a tap off the target is swallowed")
+			await get_tree().create_timer(1.2).timeout  # popups finish moving in, fades end
+			var r0: Rect2 = tut._target.get_global_rect()
+			if st.target == "hand":  # a card in the fan, not the gaps
+				r0 = tut._target.get_children().filter(func(c): return c.has_meta("hand"))[0].get_global_rect()
+			_vtap(r0.get_center())
+		check(await _until(func(): return tut.i != at or not tut.running()), "step %d (%s) moves on" % [at, st.target if st.target else st.until])
+	check(not tut.running() and Game.state.visits == 4 and Game.state.items.has("Soil") and Game.state.items.has("Limestone"), "the tutorial runs to the first Lock In (visit %d)" % Game.state.visits)
+	check(int(Progress.prefs.tutorialStep) == -1 and Progress.prefs.tutorialSeen and not app.mouse.showing, "then it's over for good")
+	# Skip: asks, then ends it.
+	Progress.prefs.erase("tutorialSeen")
+	app.new_game()
+	check(await _until(func(): return tut.running()), "a fresh first New Game")
+	app.mouse.skip.emit()
+	var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
+	check(ask.size() == 1 and tut.running(), "Skip asks first")
+	if ask.size() == 1:
+		ask[0].on_yes.call()
+		ask[0].queue_free()
+	check(not tut.running() and Progress.prefs.tutorialStep == -1, "Yes ends it")
+	# Settings' How to Play: asks, then a new game with the tutorial.
+	app.replay_tutorial()
+	ask = app.get_children().filter(func(c): return c is ConfirmDialog and not c.is_queued_for_deletion())
+	check(ask.size() == 1, "How to Play asks first (it starts a new game)")
+	if ask.size() == 1:
+		ask[0].on_yes.call()
+		ask[0].queue_free()
+	check(await _until(func(): return tut.running()), "then the tutorial runs again")
+	tut.finish()
+	for k in 30:  # the logo's moment, then the capstone choice: cleared for the next sections
+		await get_tree().process_frame
+	for c in app.get_children().slice(app._hub.get_index() + 1):
+		if c is Control:
+			c.queue_free()
+	Progress.prefs.tutorialSeen = true
+	for c in app.get_children():
+		if c is CapstoneChoice:
+			c.queue_free()
+	# Resume: saved on the bench's Craft (the bench closed with the app): back to the card.
+	Game.start_run("Coral Reef")
+	Game.state.rolledHere = true
+	Game.state.elements = {"H": 1, "O": 1}
+	app.close_panel()
+	Progress.prefs.tutorialStep = 9
+	tut.resume()
+	check(tut.i == 7, "resuming on Craft with the bench closed goes back to the shop (step %d)" % tut.i)
+	tut.finish()
+	Tap._down = null  # the real taps' last press: later sections tap with releases only
+	finished["tutorial"] = true
+
+
+## A tap through the viewport, as a finger would (Tutorial._input sees it).
+func _vtap(at: Vector2) -> void:
+	Tap._down = null
+	for ev in [_press(at), _release(at)]:
+		ev.position = at
+		get_viewport().push_input(ev, true)  # in the viewport's own coordinates
 
 
 ## The first node under n tagged with meta "cmp" == tag (or null).

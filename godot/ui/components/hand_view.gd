@@ -24,6 +24,7 @@ var lifted := ""
 
 func show_hand(names: Array, lifted_name: String) -> void:
 	lifted = lifted_name
+	set_meta("cmp", "hand")  # the tutorial points at the fan
 	for c in get_children():
 		c.queue_free()
 	var n := names.size()

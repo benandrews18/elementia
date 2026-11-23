@@ -37,6 +37,7 @@ func _ready() -> void:
 	var star := Tok.star(Color("#f5b400"), 14)  # drawn: Nunito has no ★
 	$Confirm/Star.add_child(star)
 	$Confirm/Back.gui_input.connect(func(ev): if Tap.tap(ev) and not _busy: _choice())
+	$Confirm/Start.set_meta("cmp", "cap:start")
 	$Confirm/Start.gui_input.connect(func(ev): if Tap.tap(ev): _start(_shown_name, _card))
 	_choice()
 
@@ -91,6 +92,7 @@ func _cell(name: String, sz: float) -> Control:
 	var n := Tok.label(name, 9, INK, 800)
 	Tok.centre_name(n, sz, sz - 15, 12)
 	c.add_child(n)
+	c.set_meta("cmp", "cap:" + name)
 	c.gui_input.connect(func(ev): if Tap.tap(ev): _confirm(name))
 	return c
 
@@ -220,7 +222,7 @@ func _start(name: String, card: Control) -> void:
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
 	app._hub.spotlight("inv", false)
 	var go := func(): app.fade_through_black(func(): Game.start_run(name))
-	if Progress.tip_hidden("pinTip"):
+	if Progress.tip_hidden("pinTip") or app.tutorial.running():
 		queue_free()
 		go.call()
 		return

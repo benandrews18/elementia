@@ -15,12 +15,17 @@ const SCENE := "res://ui/overlays/mouse_tip.tscn"
 @export var overlap := Vector2(24, 9)  # the pose tucks under the bubble's corner (and hangs below it)
 @export var max_width := 0.92  # of the screen, pose and bubble together (at most 600)
 @export var pad := 8.0  # the spotlight around its target
+@export var skip_text := "Skip tutorial"  # the first-play tutorial's "✕ Hide"
 
 var _queue: Array = []  # tips waiting for a card to close
 var showing := false
 var coaching := false  # How to Play's walkthrough: Next steps it; stray taps don't close it
+var tutorial := false  # the first-play tutorial (Tutorial): "✕ Hide" skips it
+var _dim := true  # coaching without a target: all dark
+var _hide_text := ""
 
 signal next_step
+signal skip
 
 
 static func make() -> MouseTip:
@@ -41,7 +46,11 @@ func _ready() -> void:
 			mark.draw_line(c + Vector2(-k, k), c + Vector2(k, -k), col, 2.0, true))
 	$Bubble/Close.gui_input.connect(func(ev): if Tap.tap(ev): hide_tip())
 	$Bubble/Tour/Next.gui_input.connect(func(ev): if Tap.tap(ev): next_step.emit())
+	_hide_text = $Bubble/Hide/Row/Label.text
 	$Bubble/Hide.gui_input.connect(func(ev): if Tap.tap(ev):  # tips off for good (Game Rules can turn them back on)
+		if tutorial:
+			skip.emit()
+			return
 		Progress.prefs.guidedTutorialEnabled = false
 		Progress.save_all()
 		_queue.clear()
@@ -52,7 +61,7 @@ func _ready() -> void:
 ## bottom-left, bottom-right, top-left, top-right, center; target spotlit
 ## (or none). bottom: the bottom corners' line, when not over the hub.
 func show_tip(pose: int, text: String, anchor := "bottom-left", target: Control = null, px := 19, bottom := -1.0, step := "", last := false) -> void:
-	if _blocked() and step == "":
+	if _blocked() and step == "" and not tutorial:
 		_queue.append([pose, text, anchor, target, px, bottom])
 		return
 	showing = true
@@ -127,7 +136,7 @@ func show_tip(pose: int, text: String, anchor := "bottom-left", target: Control 
 func _spot(target: Control) -> void:
 	var s: ColorRect = $Spot
 	var has := target != null and is_instance_valid(target) and target.is_visible_in_tree()
-	s.visible = has or coaching  # the walkthrough's last step: all dark (.tut-coach-spot.hidden)
+	s.visible = has or (coaching and _dim)  # the walkthrough's last step: all dark (.tut-coach-spot.hidden)
 	var m := s.material as ShaderMaterial
 	if has:
 		var r := target.get_global_rect()
@@ -135,6 +144,36 @@ func _spot(target: Control) -> void:
 		m.set_shader_parameter("hole_size", r.size + Vector2(pad, pad) * 2)
 	else:
 		m.set_shader_parameter("hole_size", Vector2.ZERO)
+
+
+## The first-play tutorial's step (Tutorial): docked on the side away from
+## its target (never over it), no ✕, "Skip tutorial" under the bubble; Next
+## only when the step waits for it. dim: all dark without a target.
+func coach(pose: int, text: String, target: Control, next: bool, dim: bool) -> void:
+	coaching = true
+	tutorial = true
+	_dim = dim
+	var anchor := "bottom-left"
+	if target != null and is_instance_valid(target):
+		var c := target.get_global_rect().get_center()
+		anchor = ("top-" if c.y > size.y * 0.45 else "bottom-") + ("right" if c.x < size.x * 0.35 else "left")
+	$Bubble/Hide/Row/Label.text = skip_text
+	show_tip(pose, text, anchor, target, 17, -1.0, " " if next else "")
+	$Bubble/Close.visible = false
+	$Bubble/Hide.visible = true
+	$Bubble/Tour/Step.text = ""
+	if anchor.ends_with("left"):  # Mouse is on the bubble's left: Skip on its right, clear of him
+		var h: Control = $Bubble/Hide
+		h.position.x = $Bubble.size.x - h.size.x + 12
+
+
+## The tutorial over: back to plain tips.
+func end_coach() -> void:
+	coaching = false
+	tutorial = false
+	_dim = true
+	$Bubble/Hide/Row/Label.text = _hide_text
+	hide_tip()
 
 
 func hide_tip() -> void:

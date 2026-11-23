@@ -22,3 +22,4 @@ func _on_pressed(button: String) -> void:
 		"BoardChecks": MatRules.show_on(app)
 		"Challenges": MatRules.order_tip(app)
 		"Unknown": ParchDialog.open(app, UnknownTip.SCENE)
+		"Elements": app.show_elements()

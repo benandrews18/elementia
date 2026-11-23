@@ -97,3 +97,14 @@ layout_mode = 2
 text = "Unknown Elements"
 emoji = "❓"
 button_text = "View"
+
+[node name="Gap5" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Elements" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "The 16 Elements"
+emoji = "🔬"
+button_text = "View"

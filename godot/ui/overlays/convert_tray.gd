@@ -62,6 +62,7 @@ func _redraw() -> void:
 		var b := box(sym, cell, "%d" % int(Game.state.elements[sym]), 1.0 if ok else 0.45)
 		b.position = Vector2(16 + (i % 8) * (cell + 6), y + (i / 8) * (cell + 16 + 6))
 		if ok:
+			b.set_meta("cmp", "cv:" + sym)
 			b.gui_input.connect(func(ev): if Tap.tap(ev):
 				from = sym
 				_redraw())
@@ -81,6 +82,7 @@ func _redraw() -> void:
 	content.add_child(from_box)
 	_ready_now = from != "" and to != "" and from != to and Catalog.count(Game.state, from) >= int(Data.t("CONVERT_RATE"))
 	var arrow: Panel = $Tray/Arrow
+	arrow.set_meta("cmp", "cv:go")
 	arrow.add_theme_stylebox_override("panel", arrow_on if _ready_now else arrow_off)
 	arrow.position = Vector2(fx + big + 20 + 10, y + big / 2 - 34)
 	var ar := _arrow_glyph(Color.WHITE if _ready_now else Color(1, 1, 1, 0.35))
