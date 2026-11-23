@@ -981,6 +981,17 @@ Recorded so they aren't re-argued. Add new ones with the date.
   visit, in Godot only** (the HTML game keeps its behaviour; a deliberate
   parity exception). Low-processor mode on (the screenshot tools turn it
   off to draw every frame).
+- 2026-11-22 (card playing, godot-grill with the user): **built first as a
+  Challenge Test in the Combo Lab**; real checks switch over once it plays
+  right. The test's deck is the **real run's items** (so Dev Panel tweaks
+  shape it), the real run is never changed or saved by it. **The last
+  check's mat stays** at a check's start; the deck is every owned card not
+  on it. **Tap a hand card, then tap a slot** (empty: play there; a card:
+  replace it, the old one to the discards); drag maybe later. Mat cards
+  leave **only by being replaced** (no plain removal mid-check). The test
+  starts with a **round picker** (the check rounds; mat size and challenge
+  follow). **Lock-In** in the test plays the real count, shows the reward
+  that round would give, then goes back to the lab.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.
