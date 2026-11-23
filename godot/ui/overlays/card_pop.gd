@@ -102,6 +102,36 @@ func show_tracking() -> void:
 		add_child(n)
 
 
+## A capstone just crafted (celebrate(), .cp-celeb): a gold banner over the
+## card, "Capstone complete!" with the trophy and how many of the eight.
+func show_celebration(n: int, of: int) -> void:
+	var card: Control = $Card
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Color("#2a2018"), 16, 3, Tok.GOLD, 6, 3))
+	b.size = Vector2(minf(card.size.x, 300), 62)
+	b.position = Vector2(card.position.x + (card.size.x - b.size.x) / 2, card.position.y - 14 - b.size.y)
+	b.mouse_filter = MOUSE_FILTER_IGNORE
+	var t := Tok.label("Capstone complete!", 20, Color("#ffe08a"), 900)
+	var tw := t.get_theme_font("font").get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+	var cup := Tok.icon("🏆", 24)
+	cup.position = Vector2((b.size.x - tw - 30) / 2, 8)
+	b.add_child(cup)
+	t.clip_text = true  # before its size (Tok.centre_name)
+	t.position = Vector2(cup.position.x + 30, 6)
+	t.size = Vector2(tw + 2, 28)
+	b.add_child(t)
+	var sub := Tok.label("That's all eight -- every capstone in Elementia!" if n == of else "%d of %d capstones" % [n, of], 13, Color(1, 1, 1, 0.8), 700)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.clip_text = true
+	sub.position = Vector2(6, 36)
+	sub.size = Vector2(b.size.x - 12, 20)
+	b.add_child(sub)
+	b.pivot_offset = b.size / 2
+	b.scale = Vector2(0.7, 0.7)
+	add_child(b)
+	b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
 func show_item(name: String, keep_back := false) -> void:
 	if not keep_back:
 		_back.clear()

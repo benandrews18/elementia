@@ -373,6 +373,23 @@ func _cards(app: App) -> void:
 		check(open.call(CardPop).is_empty() and open.call(ElementCard).size() == 1, "an element component swaps to its element card")
 	for c in open.call(ElementCard) + open.call(CardPop):
 		c.queue_free()
+	await get_tree().process_frame
+	# After a craft (C5): the small card, flying off by itself; a capstone's
+	# card with its banner, then (once closed) the items it unlocked.
+	Game.crafted.emit("Glass")
+	var peeks := func(): return app.get_children().filter(func(c): return c.has_meta("peek") and not c.is_queued_for_deletion())
+	check(peeks.call().size() == 1, "a craft pops up its small card")
+	check(await _until(func(): return peeks.call().is_empty()), "the small card flies into the Inventory")
+	Game.state.items.append("Metropolis")
+	Game.crafted.emit("Metropolis")
+	var cel: Array = open.call(CardPop)
+	check(cel.size() == 1 and cel[0].entry.name == "Metropolis", "a capstone opens its card")
+	if cel.size() == 1:
+		cel[0].queue_free()
+	check(await _until(func(): return open.call(UnlockReveal).size() == 1), "then New Items Unlocked")
+	for c in open.call(UnlockReveal):
+		c.queue_free()
+	Game.state.items.erase("Metropolis")
 	finished.cards = true
 
 

@@ -7,7 +7,7 @@ extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "station_list",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
-	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "pin_tip",
+	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
@@ -125,6 +125,14 @@ func _ready() -> void:
 			app.add_child(h)
 			for i in int(state.right(1)):
 				h._next()
+		"celebrate":  # a capstone just crafted (no confetti: nothing random)
+			Game.state.items.append("Metropolis")
+			CardPop.open(app, "Metropolis").show_celebration(1, 8)
+		"unlock":  # the items a capstone opened up, all popped in
+			var by: Dictionary = Data.t("UNLOCKED_BY")
+			UnlockReveal.show_on(app, "Metropolis", by.keys().filter(func(n): return by[n] == "Metropolis"))
+		"craft_peek":  # the small card after a craft, before it flies (--wait under 0.7)
+			app._craft_peek("Glass")
 		"capstone", "capstone_confirm":
 			var c := CapstoneChoice.make()
 			c.size = app.size

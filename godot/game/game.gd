@@ -8,6 +8,7 @@
 extends Node
 
 signal state_changed
+signal crafted(name: String)  # after the redraw: the screen plays the craft (App)
 
 var state: Dictionary = {}
 var ctx: Dictionary = fresh_ctx()
@@ -202,6 +203,7 @@ func craft_raw(name: String) -> bool:
 	if state.get("visitLog"):
 		state.visitLog[-1].items.append(name)
 	_changed()
+	crafted.emit(name)
 	return true
 
 

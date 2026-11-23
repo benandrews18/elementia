@@ -30,7 +30,7 @@ with `godot-grill`.
    Crafting Bench, which crafts and pins.
 2. Done: **The Display Mat growing** on rounds where it gets bigger, in the check's
    reveal. Skills: tween-animation, animation-system.
-3. **Cutover C5:** the capstone celebration, the unlock reveal, the
+3. Done: **Cutover C5:** the capstone celebration, the unlock reveal, the
    after-craft mini card. Skills: tween-animation, particles-vfx, godot-ui.
 4. **Tier / display-size badge** (the Roman numeral plus 1, 2 or 4 blocks) on
    the Crafting Bench and the full card view: card playing builds on it.
@@ -884,7 +884,7 @@ design happens in Godot.
 - Port check (2026-11-21): every HTML window has a Godot one except the
   capstone celebration and the unlock reveal (C5); the turn clock and its
   window were missed and are now in.
-- [ ] C5. The HTML moments Godot still lacks: the capstone celebration,
+- [x] C5. The HTML moments Godot still lacks: the capstone celebration,
       the unlock reveal, the after-craft mini card. Then the user resumes
       game design; animations, sound, the user's visual notes (text
       alignment, the top and bottom bars in full screen) and the 9

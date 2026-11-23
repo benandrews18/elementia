@@ -40,6 +40,7 @@ func _ready() -> void:
 	mouse = MouseTip.make()
 	layer.add_child(mouse)
 	Game.state_changed.connect(_sync)
+	Game.crafted.connect(_on_crafted)
 	resized.connect(_sync_floats)  # they sit on the bottom edge
 	_sync()
 	sync_dev()
@@ -189,6 +190,72 @@ func _show_end(party: bool) -> void:
 	add_child(e)
 	if party:
 		_confetti()
+
+
+## After a craft (autoCardPop(), celebrate()): a capstone gets its card under
+## a "Capstone complete!" banner with confetti, then the items it unlocks;
+## anything else a small card that pops up and flies into the Inventory.
+func _on_crafted(name: String) -> void:
+	if Game.ctx.get("comboLab") or not is_inside_tree():
+		return
+	if Data.t("ITEM_TIER").get(name, "") == "CAPSTONE":
+		_celebrate(name)
+	else:
+		_craft_peek(name)
+
+
+## The small card: pops in at the middle, a moment's look, then flies into
+## the Inventory button (which bounces). A tap first opens the full card.
+func _craft_peek(name: String) -> void:
+	var card := ItemCard.make(name)
+	card.size = Vector2(110, 110 * 1.4)
+	card.pivot_offset = card.size / 2
+	card.position = (size - card.size) / 2 - Vector2(0, HubBar.H / 2)
+	card.scale = Vector2(0.6, 0.6)
+	card.modulate.a = 0.0
+	card.mouse_filter = MOUSE_FILTER_STOP
+	card.set_meta("peek", true)
+	add_child(card)
+	var to := _hub.button_center("inv") - card.size / 2
+	var tw := card.create_tween()
+	tw.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(card, "modulate:a", 1.0, 0.12)
+	tw.tween_interval(0.5)
+	tw.tween_callback(func(): card.mouse_filter = MOUSE_FILTER_IGNORE)
+	tw.tween_property(card, "position", to, 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(card, "scale", Vector2(0.15, 0.15), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(card, "modulate:a", 0.4, 0.45)
+	tw.tween_callback(func():
+		card.queue_free()
+		_hub.punch("inv"))
+	card.gui_input.connect(func(ev): if Tap.tap(ev) and card.mouse_filter == MOUSE_FILTER_STOP:
+		tw.kill()
+		card.queue_free()
+		show_card(name))
+
+
+## celebrate(): the capstone's card, "Capstone complete!" and how many of the
+## eight, confetti; once it's closed, the items it opened up.
+func _celebrate(name: String) -> void:
+	var tiers: Dictionary = Data.t("ITEM_TIER")
+	var caps: Array = tiers.keys().filter(func(n): return tiers[n] == "CAPSTONE")
+	var p := CardPop.open(self, name)
+	p.show_celebration(caps.filter(func(n): return Catalog.owns(Game.state, n)).size(), caps.size())
+	_confetti()
+	p.tree_exited.connect(func(): if is_inside_tree(): _unlock_reveal(name))
+
+
+## queueUnlockReveal(): "New Items Unlocked!" once the screen is clear.
+func _unlock_reveal(cap: String) -> void:
+	var unlocked: Dictionary = Data.t("UNLOCKED_BY")
+	var names: Array = unlocked.keys().filter(func(n): return unlocked[n] == cap)
+	if names.is_empty() or Game.state.get("ended"):
+		return
+	while _window_open() or _market_playing or (_panel_node is DisplayMatScreen and _panel_node.playing):
+		await get_tree().create_timer(0.4).timeout
+		if not is_inside_tree():
+			return
+	UnlockReveal.show_on(self, cap, names)
 
 
 ## fireConfetti(): 70 bits of coloured paper falling and spinning.
