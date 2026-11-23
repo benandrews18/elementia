@@ -254,6 +254,21 @@ func _start_final_check() -> void:
 	start_check_order()
 
 
+## The hand while a check is being played (its shutter opened this
+## session, the final check, or the Combo Lab's Challenge Test), else null;
+## dealt the first time (card playing). state.hand is saved, so a check
+## resumes as it was; it waits for its check to open again. (Not in
+## start_check_order(): the rules lock replays that against the HTML game.)
+func check_hand() -> Variant:
+	if ctx.get("comboLab") and not ctx.get("challengeTest"):
+		return null
+	if ctx.get("travelPromptFor") == null and not state.get("finalCheckPending") and not ctx.get("challengeTest"):
+		return null
+	if state.get("hand") == null:
+		state.hand = Hand.deal(state)
+	return state.hand
+
+
 ## Would locking in now end the run? (The screen asks first.)
 func lock_in_ends_run() -> bool:
 	var gated: bool = state.get("runComplete") or (int(state.visits) >= int(Data.t("BREAKPOINT_GATE_VISIT")) and Catalog.is_sunset_visit(state))
@@ -276,6 +291,7 @@ func confirm_lock_in() -> int:
 	state.bestMatScore = maxf(Util.get_or(state, "bestMatScore", 0), total)
 	var reward := Orders.reward_for(total, Orders.check_round(state))
 	ctx.lockInCommitted = true
+	state.erase("hand")
 	if reward == 0 and lock_in_ends_run():
 		state.finalGameOver = true
 		state.ended = true
@@ -345,6 +361,7 @@ func confirm_final_lock_in() -> float:
 		state.checkLog = []
 	state.checkLog.append({"v": state.visits, "q": Util.js_round(total), "final": true})
 	_note_mat_feats()
+	state.erase("hand")
 	state.finalCheckPending = false
 	ctx.lockInCommitted = false
 	state.runComplete = true

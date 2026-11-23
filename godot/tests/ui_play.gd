@@ -115,8 +115,13 @@ func _run(app: App) -> void:
 				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
 			_dismiss(app)
 		if app.panel == "drawer":
-			check(app.home_face() == "lockin", "turn %d: check turn, Home says Lock In" % turns)
-			app._on_hub("home")
+			var hd = Game.check_hand()
+			check(hd != null and hd.hand.size() == mini(Hand.start(), hd.hand.size() + hd.deck.size()) and app.home_face() == "draw" and app._hub.hand, "turn %d: check turn: a hand (up to %d), Draw in the middle, Lock In on the hub" % [turns, Hand.start()])
+			if hd != null and Hand.can_draw(hd):
+				var n_held: int = hd.hand.size()
+				app._on_hub("home")
+				check(hd.hand.size() > n_held, "turn %d: Draw" % turns)
+			app._on_hub("codex")
 			var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
 			if not ask.is_empty():  # "your run ends here": yes
 				check(Game.lock_in_ends_run(), "asked only when the Lock-In ends the run")
@@ -131,6 +136,7 @@ func _run(app: App) -> void:
 				check(not app._hub.greyed, "turn %d: Lock In back to colour after the count" % turns)
 				dlg._done()
 				check(await _until(func(): return app._screen is StationScreen and app.panel == ""), "turn %d: the fade lands at the station" % turns)
+				check(Game.state.get("hand") == null, "turn %d: the hand is gone after the check" % turns)
 		await get_tree().process_frame
 	print("ui_play: %d turns, visits %d, %s, %d items, best mat %d" % [turns, Game.state.visits,
 		"run complete" if Game.state.get("runComplete") else "game over" if Game.state.get("finalGameOver") else "?", Game.state.items.size(), Game.state.bestMatScore])
@@ -181,8 +187,8 @@ func _final_score(app: App) -> void:
 		c.close()
 	check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo)), "turn 24: the Grand Exhibition shows")
 	_dismiss(app)
-	check(app.home_face() == "final", "turn 24: Home says Final Score")
-	app._on_hub("home")
+	check(app.home_face() == "draw" and Game.check_hand() != null, "turn 24: the final check is played with a hand")
+	app._on_hub("codex")
 	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame and c._completing)), "turn 24: Run Complete shows")
 	finished.final_score = true
@@ -514,7 +520,7 @@ func _collections(app: App) -> void:
 	await get_tree().process_frame
 	for c in top.call(OrderInfo):
 		c.queue_free()
-	var hd: Dictionary = Game.ctx.get("hand", {})
+	var hd: Dictionary = Game.state.get("hand", {})
 	check(Game.state != real and Game.state != lab and int(Game.state.visits) == 12 and Game.state.order != null, "the test: a copy of the run at check 12, with its challenge")
 	check(hd.get("hand", []).size() == 7 and hd.deck.all(func(n): return not Game.state.mat.has(n)), "a hand of 7 from the cards not on the mat")
 	var dm := app._panel_node as DisplayMatScreen
@@ -554,7 +560,7 @@ func _collections(app: App) -> void:
 	app.open_panel("convert")
 	check(app._panel_node is ConvertTray and (app._panel_node as ConvertTray).to == "" and app._hub.face == "close", "its tray is the usual one")
 	app._on_hub("home")
-	check(app.panel == "drawer" and Game.ctx.get("hand") == hd, "closing it goes back to the hand")
+	check(app.panel == "drawer" and Game.state.get("hand") == hd, "closing it goes back to the hand")
 	dm = app._panel_node as DisplayMatScreen
 	dm.view = "elements"
 	dm._redraw()
@@ -586,19 +592,28 @@ func _collections(app: App) -> void:
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()
-	check(Game.state == lab and not Game.ctx.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge") and not app._hub.visible, "then back to the lab")
+	check(Game.state == lab and not Game.state.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge") and not app._hub.visible, "then back to the lab")
 	app.close_combo_lab()
 	check(Game.state == real and real.mat == real_mat, "the real run is untouched")
 	finished.collections = true
 
 
-## Saved Layouts: the mat's 💾 opens it; a name and 💾 save the mat; a
-## tap on its row puts it back; 🗑 asks, then deletes it.
+## Saved Layouts (the Combo Lab's now: the run's mat is locked in): the
+## mat's 💾 opens it; a name and 💾 save the mat; a tap on its row puts it
+## back; 🗑 asks, then deletes it.
 func _layouts(app: App) -> void:
 	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
+	Game.ctx.travelPromptFor = null  # between checks
 	Progress.prefs.savedMatLayouts = []
 	app.close_panel()
 	app.open_panel("drawer")
+	await get_tree().process_frame
+	var locked_mat := app._panel_node as DisplayMatScreen
+	check(locked_mat.locked() and _find_meta(locked_mat, "btn:💾") == null and _find_meta(locked_mat, "btn:Clear") == null and _find_meta(locked_mat, "btn:Combo Lab") != null,
+		"between checks the mat is locked: no 💾, Clear or Last, a Combo Lab button")
+	var run_items: Array = Game.state.items.duplicate()
+	_find_meta(locked_mat, "btn:Combo Lab").pressed.emit()
+	check(Game.ctx.get("comboLab") and Game.state.items == run_items and Game.state.mat.size() > 0, "the Inventory's Combo Lab: this run's items and mat")
 	await get_tree().process_frame
 	var mat_before: Array = Game.state.mat.duplicate()
 	var save_btn: Button = app._panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:💾")[0]
@@ -622,7 +637,7 @@ func _layouts(app: App) -> void:
 	ask[0].get_node("Window/Content/Buttons/Yes").gui_input.emit(_release())
 	check(Progress.prefs.savedMatLayouts.is_empty(), "then deletes it")
 	lw.close()
-	app.close_panel()
+	app.close_combo_lab()
 	finished.layouts = true
 
 

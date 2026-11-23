@@ -43,7 +43,7 @@ var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
 var _page: Panel
-var lifted := ""  # the hand card picked up to play (card playing, Game.ctx.hand)
+var lifted := ""  # the hand card picked up to play (card playing, Game.state.hand)
 
 
 static func make() -> DisplayMatScreen:
@@ -73,7 +73,7 @@ func _redraw() -> void:
 	var cards := Mat.on_mat(s)
 	var sc := Mat.score(cards, s, Game.ctx)
 	var lab: bool = Game.ctx.get("comboLab", false)  # Combo Lab: the whole screen, under its exit bar
-	_hub_h = 0.0 if lab and Game.ctx.get("hand") == null else HUB_H  # a lab check with cards keeps the hub
+	_hub_h = 0.0 if lab and Game.check_hand() == null else HUB_H  # a lab check with cards keeps the hub
 	_drawer.size = Vector2(size.x, size.y - _hub_h)
 	var w := size.x - 2 * side
 	var y := maxf(top, App.LAB_TOP) if lab else top  # [data-combo-lab] #drawerTop: padding-top 52px
@@ -109,7 +109,7 @@ func _redraw() -> void:
 		_slots(cards, sc, page, row_h, open)
 	_page_controls(page)
 	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
-	var h = Game.ctx.get("hand")
+	var h = Game.check_hand()
 	_scroll.visible = h == null
 	if h != null:  # a check with cards: the hand in place of the item list
 		_hand_area(h, page)
@@ -125,7 +125,7 @@ func _redraw() -> void:
 	y += 2
 	# The selected card's row on the Crafting Bench, Add / Remove below it.
 	var sel_ok: bool = selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null
-	if sel_ok and not list_mode:
+	if sel_ok and not list_mode and not locked():
 		_sel_acts(0, y + 6, size.x)
 		y += 46
 	# The item list: search bar, then the owned cards by tier.
@@ -299,7 +299,15 @@ func _page_controls(page: Control) -> void:
 	_body.add_child(help)
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
-	if view != "mat" or Game.ctx.get("hand") != null:  # with a hand, cards only change by playing
+	if locked():  # between checks: the Combo Lab is where combos are tried (with this run's items)
+		var bw := Tok.font(800).get_string_size("Combo Lab", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 24
+		var lab_btn := _round_button("Combo Lab", Vector2(bw, 34), 12, Tok.GOLD)
+		lab_btn.position = Vector2(x2 - bw, bottom + 24 - 34)
+		lab_btn.pressed.connect(func(): if App.current: App.current.open_combo_lab(true))
+		lab_btn.set_meta("cmp", "btn:Combo Lab")
+		_body.add_child(lab_btn)
+		return
+	if view != "mat" or Game.check_hand() != null:  # with a hand, cards only change by playing
 		return
 	var btns := [["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
 	for b in btns:
@@ -320,6 +328,12 @@ func _page_controls(page: Control) -> void:
 		btn.set_meta("cmp", "btn:" + text)
 		_body.add_child(btn)
 		x2 -= 4
+
+
+## The run's mat between checks (card playing, the user 2026-11-23): locked
+## in, changed only by playing cards at a check; tried freely in the lab.
+func locked() -> bool:
+	return not Game.ctx.get("comboLab", false) and Game.check_hand() == null
 
 
 func _round_button(text: String, sz: Vector2, font_px: int, bg: Color) -> Button:
@@ -549,7 +563,7 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 		if ev.pressed:
 			_press_at = ev.global_position
 		elif ev.global_position.distance_to(_press_at) < 10:
-			if Game.ctx.get("hand") != null:  # a check with cards: play onto it, else pick it (Take Back), again: its card
+			if Game.check_hand() != null:  # a check with cards: play onto it, else pick it (Take Back), again: its card
 				if lifted != "":
 					_play(name)
 				elif selected == name and App.current:
@@ -575,7 +589,9 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var top_y := page.position.y + page.size.y + 26  # under the mat's tabs
 	var fl := Hand.fresh_left(h)
-	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Deck %d%s" % [h.plays, h.tosses, h.deck.size(), "  (%d new)" % fl if fl else ""], 12, Color.WHITE, 800)
+	var sq: int = Hand.framed(h).reduce(func(a, n): return a + Hand.squares(n), 0)
+	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Deck %d%s%s" % [h.plays, h.tosses, h.deck.size(), "  (%d new)" % fl if fl else "",
+		"  ·  Framed %d/%d" % [sq, int(Data.t("HAND_FRAME_SQUARES"))] if sq else ""], 12, Color.WHITE, 800)
 	counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	counts.position = Vector2(side, top_y)
 	counts.size = Vector2(size.x - 2 * side, 18)
@@ -604,6 +620,21 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 			else:
 				_play(""))
 		_gains(page)
+	if selected != "" and _mat_nodes.has(selected):  # the picked mat card: Frame (or Unframe) on it
+		var c: Control = _mat_nodes[selected]
+		var on: bool = Hand.framed(h).has(selected)
+		var bw := Tok.font(800).get_string_size("Unframe", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 22
+		var fb := _round_button("Unframe" if on else "Frame", Vector2(bw, 28), 12, Tok.GOLD)
+		fb.position = page.position + c.position + Vector2((c.size.x - bw) / 2, -10)
+		fb.set_meta("cmp", "hand:frame")
+		var nm := selected
+		fb.pressed.connect(func():
+			var msg := Hand.frame(h, Game.state, nm)
+			if msg != "":
+				_show_toast(msg)
+			else:
+				Game._changed())
+		_body.add_child(fb)
 	StationScreen.corner_buttons(_body, false)  # Convert, as on the station: element draws (ConvertTray)
 	if App.current:
 		App.current.sync_hub()
@@ -638,7 +669,7 @@ func _gains(page: Control) -> void:
 
 ## Draw (the hub's middle button).
 func hand_draw() -> void:
-	var h = Game.ctx.get("hand")
+	var h = Game.check_hand()
 	if h == null or playing:
 		return
 	if not Hand.can_draw(h):
@@ -651,7 +682,7 @@ func hand_draw() -> void:
 ## The hub's Discard: the lifted card out, or (Take Back) the picked mat
 ## card into the hand.
 func hand_discard() -> void:
-	var h = Game.ctx.get("hand")
+	var h = Game.check_hand()
 	if h == null or playing:
 		return
 	if lifted == "" and selected == "":
@@ -668,7 +699,7 @@ func hand_discard() -> void:
 
 ## The hub's Rehang: asks first (it can't be undone).
 func hand_rehang() -> void:
-	var h = Game.ctx.get("hand")
+	var h = Game.check_hand()
 	if h == null or playing:
 		return
 	var no := Hand.why_not_rehang(h, Game.state)
@@ -676,7 +707,7 @@ func hand_rehang() -> void:
 		_show_toast(no)
 		return
 	ConfirmDialog.ask(App.current if App.current else self,
-		"Rehang the display? Every card on the mat goes back into the deck, you draw a full hand, and you get a play for each card that was on the mat (instead of this check's %d)." % int(Data.t("HAND_PLAYS")),
+		"Rehang the display? Every card on the mat goes back into the deck (framed ones stay), you draw a full hand, and you get a play for each card that went back (instead of this check's %d)." % int(Data.t("HAND_PLAYS")),
 		func():
 			if Hand.rehang(h, Game.state) == "":
 				lifted = ""
@@ -685,7 +716,7 @@ func hand_rehang() -> void:
 
 
 func _play(over: String) -> void:
-	var msg := Hand.play(Game.ctx.hand, Game.state, lifted, over)
+	var msg := Hand.play(Game.state.hand, Game.state, lifted, over)
 	if msg != "":
 		_show_toast(msg)
 		return
@@ -708,6 +739,8 @@ func _last() -> void:
 ## column w wide from x at y. The Crafting Bench that held its row is gone
 ## from the Inventory (the user, 2026-11-22: the card shows it all).
 func _sel_acts(x: float, y: float, w: float) -> void:
+	if locked():  # between checks the mat is locked in
+		return
 	var on: bool = Game.state.mat.has(selected)
 	var card = Catalog.mat_card(selected)
 	var fits: bool = card != null and Mat.fits(Mat.on_mat(Game.state) + [card], Mat.stage(Game.state))
@@ -745,7 +778,7 @@ func _sel_acts(x: float, y: float, w: float) -> void:
 
 ## The Elements page: every element held, 8 to a row (elementsGridHTML()).
 func _elements(page: Control) -> void:
-	var hand = Game.ctx.get("hand")
+	var hand = Game.check_hand()
 	var held: Array = Game.state.elements.keys().filter(func(k): return Game.state.elements[k] > 0)
 	var an: Dictionary = Data.t("ATOMIC_NUMBER")
 	held = Util.stable_sort(held, func(a, b): return an.get(a, 999) - an.get(b, 999))
@@ -1032,6 +1065,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var cols: int = L.cols
 	var inner := page.size.x - 2 * (page_pad + 2)
 	var col_w := (inner - (open - 1) * cols_gap) / open  # open columns share the width
+	var hand = Game.check_hand()
+	var fr: Array = Hand.framed(hand) if hand != null else []  # framed: they stay through a Rehang
 	var lit_suits: Array = sc.combos.suit.map(func(g): return g.name)
 	var lit_st: Array = sc.combos.station.map(func(g): return g.name)
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
@@ -1054,6 +1089,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 			card.size = Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)
 			page.add_child(card)
 			_mat_nodes[sl.card.name] = card
+			if fr.has(sl.card.name):
+				page.add_child(_frame_ring(card.position, card.size))
 		elif sl.has("stack") or sl.kind == "top":
 			var stack: Array = sl.get("stack", [])
 			var per: int = 1 if sl.kind == "top" else L.perSlot
@@ -1069,6 +1106,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					mini.size = Vector2(col_w, mh)
 					page.add_child(mini)
 					_mat_nodes[stack[k].card.name] = mini
+					if fr.has(stack[k].card.name):
+						page.add_child(_frame_ring(mini.position, mini.size))
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
 					_empties.append(Rect2(at, Vector2(col_w, mh)))
@@ -1129,6 +1168,16 @@ static func _selected_ring(pos: Vector2, sz: Vector2) -> Panel:
 	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 17, 4, Tok.OK))
 	r.position = pos - Vector2(6, 6)
 	r.size = sz + Vector2(12, 12)
+	r.mouse_filter = MOUSE_FILTER_IGNORE
+	return r
+
+
+## A framed mat card's gold frame.
+static func _frame_ring(pos: Vector2, sz: Vector2) -> Panel:
+	var r := Panel.new()
+	r.position = pos - Vector2(3, 3)
+	r.size = sz + Vector2(6, 6)
+	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 12, 4, Tok.GOLD, 4, 0, Color(1, 0.84, 0.47, 0.6)))
 	r.mouse_filter = MOUSE_FILTER_IGNORE
 	return r
 

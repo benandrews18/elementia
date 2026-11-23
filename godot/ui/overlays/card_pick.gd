@@ -16,7 +16,7 @@ static func show_on(on: Control) -> CardPick:
 
 
 func _ready() -> void:
-	var h = Game.ctx.get("hand")
+	var h = Game.check_hand()
 	var grid: GridContainer = $Window/Content/Scroll/Cards
 	for n in (h.deck if h != null else []):
 		var card := ItemCard.make(n, {"size": true})
@@ -30,7 +30,7 @@ func _ready() -> void:
 
 
 func _take(name: String) -> void:
-	if Hand.pick_draw(Game.ctx.hand, Game.state, name) != "":
+	if Hand.pick_draw(Game.state.hand, Game.state, name) != "":
 		return
 	close()
 	Game._changed()

@@ -255,8 +255,9 @@ func _ready() -> void:
 		"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card":  # from tests/fixtures/collections_prefs.json
 			Progress.prefs.merge(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/collections_prefs.json")), true)
 			match state:
-				"layouts":
-					app.open_panel("drawer")
+				"layouts":  # the Combo Lab's (the run's mat is locked in)
+					Game.ctx.travelPromptFor = null
+					app.open_combo_lab(true)
 					LayoutsWindow.show_on(app)
 				"coll_run":
 					app.open_panel("drawer")
@@ -291,7 +292,7 @@ func _ready() -> void:
 				if c is OrderInfo:
 					c.queue_free()
 			var mat := app._panel_node as DisplayMatScreen
-			mat.lifted = Game.ctx.hand.hand[2]
+			mat.lifted = Game.state.hand.hand[2]
 			mat._redraw()
 		"challenge_elements":  # the test's Elements tab: a tap spends one on a card of its suit
 			app.open_combo_lab()

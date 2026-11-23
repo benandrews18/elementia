@@ -525,7 +525,10 @@ func _coach_step(i: int) -> void:
 ## a capstone's unlocks this player has never seen), visit 20 so the Quark
 ## Meter has room, never saved. The mat fills the screen under "✕ Exit Combo
 ## Lab"; the hub, the screen and the floating buttons are hidden.
-func open_combo_lab() -> void:
+## From a run (the Inventory's button; the user, 2026-11-23): that run's
+## items, its mat and its visit instead, free to try combos on; the run's
+## own mat stays locked in between checks.
+func open_combo_lab(from_run := false) -> void:
 	_real = [Game.state, Game.ctx]
 	var seen := {}
 	for n in Util.get_or(Progress.prefs, "capstonesEverCrafted", []) + Game.state.get("items", []):
@@ -538,6 +541,12 @@ func open_combo_lab() -> void:
 	lab.items = Data.t("CORE_ITEM_NAMES").filter(func(n): return not unlocked.has(n) or seen.has(unlocked[n]))
 	lab.bingoCenterChosen = true
 	lab.visits = 20
+	if from_run:
+		lab.items = Game.state.items.duplicate()
+		lab.mat = Game.state.mat.duplicate()
+		lab.visits = Game.state.visits
+		lab.checkRound = Game.state.get("checkRound")  # the mat's size on a growth check (Mat.stage)
+		lab.matChecked = Game.state.get("matChecked", false)
 	Game.state = lab
 	Game.ctx = Game.fresh_ctx()
 	Game.ctx.comboLab = true
@@ -625,7 +634,7 @@ func start_challenge_test(round: int) -> void:
 	Game.ctx = Game.fresh_ctx()
 	Game.ctx.comboLab = true
 	Game.place_mat_cards(s.mat.duplicate())  # what fits this round's mat
-	Game.ctx.hand = Hand.deal(s)
+	Game.state.hand = Hand.deal(s)
 	Game.ctx.challengeTest = round
 	_test_label("✕ End Test")
 	_hub.visible = true  # the hand's buttons
@@ -739,7 +748,7 @@ func open_panel(name: String) -> void:
 ## In a check with cards, closing the Convert tray goes back to the hand
 ## (unless another panel is opening: back = false).
 func close_panel(back := true) -> void:
-	var to_hand := back and panel == "convert" and Game.ctx.get("hand") != null
+	var to_hand := back and panel == "convert" and Game.check_hand() != null
 	if is_instance_valid(_panel_node):
 		_panel_node.queue_free()
 	_panel_node = null
@@ -890,14 +899,14 @@ func sync_hub() -> void:
 	_hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
 	var mat := _hand_mat()
 	if mat:  # a check with cards: Draw in the middle, the hand's actions round it
-		var h: Dictionary = Game.ctx.hand
+		var h: Dictionary = Game.state.hand
 		_hub.greyed = not Hand.can_draw(h) or mat.playing
 		_hub.hand_sides.inv = ["↩️", "Take Back"] if mat.selected != "" else ["🗑️", "Discard"]
 		_hub.show_state("draw", {}, {"inv": str(h.tosses)}, false, true,
 			{"inv": mat.lifted == "" and mat.selected == "" or h.tosses <= 0, "codex": mat.playing,
 			"market": Hand.why_not_rehang(h, s) != ""})
 		return
-	if panel == "convert" and Game.ctx.get("hand") != null:  # the Convert tray in a check: Close goes back to the hand
+	if panel == "convert" and Game.check_hand() != null:  # the Convert tray in a check: Close goes back to the hand
 		_hub.greyed = false
 		_hub.show_state("close", {}, {}, false, true, {"jobs": true, "inv": true, "market": true, "codex": true})
 		return
@@ -909,7 +918,7 @@ func sync_hub() -> void:
 
 ## The Display Mat while a check is played with cards (else null).
 func _hand_mat() -> DisplayMatScreen:
-	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.ctx.get("hand") != null else null
+	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.check_hand() != null else null
 
 
 ## The hub during a check with cards: Draw, Discard (the lifted card) or
@@ -921,8 +930,14 @@ func _hand_tap(mat: DisplayMatScreen, id: String) -> void:
 		"jobs": OrderInfo.open(self)
 		"market": mat.hand_rehang()
 		"codex":
-			if not mat.playing:
+			if mat.playing:
+				return
+			if Game.ctx.get("challengeTest"):
 				challenge_lock_in()
+			elif Game.state.get("finalCheckPending"):
+				_final_lock_in()
+			else:
+				_lock_in()
 
 
 ## The visit's roll, then the dice pop-up over everything (Collect sends
@@ -1089,7 +1104,7 @@ func _on_hub(id: String) -> void:
 	if hand_mat:
 		_hand_tap(hand_mat, id)
 		return
-	if panel == "convert" and Game.ctx.get("hand") != null:
+	if panel == "convert" and Game.check_hand() != null:
 		if id == "home":
 			close_panel()
 		return
