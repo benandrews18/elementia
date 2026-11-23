@@ -124,6 +124,17 @@ with `godot-grill`.
    hide from then on. Start by listing every tip and coach step the game
    has now (prefs hiddenTips, guidedTutorialEnabled, sawMatCheckTutorial,
    the coach steps in App) and what each teaches.
+   Grilled (2026-11-23; see Decisions). Today's tips: the opening's 3
+   How-to-Play slides (classicTut; goal, gather & craft, the mat); How to
+   Play's Periodic Table + 16 Elements windows and 7 coach steps (the
+   hub's buttons, the gear); Mouse's once-ever walkthrough tips in
+   App._walkthrough (firstroll, firstcraft, firstconvert,
+   converttapmissing, gomap, checkmarket, pintrackshop) and the Pins
+   tray's pinselect (prefs.tutorialHintsSeen); the windows: Display Mat
+   rules at the first check ever (sawMatCheckTutorial), the Challenges tip
+   (orderTip, once a run), the Pin tip (pinTip, capstone choice), the
+   Unknown Element tip (sawEmptyElTip). Next: godot-brainstorming (the
+   step list, scenes, state, save).
 10. **General fixes** (the user, 2026-11-23):
    (a) the station shop's card view: bigger item image and text to fill
    the cards, one standard image and text size that suits tier 1 up to
@@ -1118,6 +1129,25 @@ Recorded so they aren't re-argued. Add new ones with the date.
   yet** (M8; the press helper leaves room for it). **Haptics on key
   moments only** (card played, craft, Lock In), with a Settings switch.
   A **Low motion** switch in Settings with this step.
+- 2026-11-23 (tutorial overhaul, step 9, the user; godot-grill):
+  **First play is a scripted real run** on a fixed seed (known dice and
+  shops): each step waits for the player to do the thing, and **only the
+  step's target works** (the rest dimmed, ignoring taps). It runs
+  **through the first Lock In** (stations, rolling, crafting, converting,
+  the map, the first check played with cards), then the run carries on
+  unscripted; it **counts as a real run** (History, trophies, capstones).
+  **Everyone gets it once**: their next New Game after the update, old
+  players too. **Skip at any time** (asks first); Settings' How to Play
+  replays it. **Professor Mouse stays, calmer**: a small docked bubble and
+  a spotlight on the one thing to tap, never covering it, never a surprise
+  popup. **Later plays: very subtle hints**, not like the tutorial: a tiny
+  💡 badge on the thing it's about (one soft fade-in, nothing more); a tap
+  shows the hint with "Don't show again"; each shows once a run until
+  hidden; Game Rules' switch turns them all off. **The old one-off windows**
+  (the 3 How-to-Play slides, Periodic Table intro, 16 Elements, Display
+  Mat rules, Challenges tip, Pin tip, Unknown Element tip) fold into
+  tutorial steps or hints and stop popping on their own; they stay
+  readable in Settings' Tutorial Messages.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.
