@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 9 of the work queue below (the tutorial: godot-grill first). Start every session with `git status`: the user may
+**Next task:** step 9 part 3 of the work queue below (the 💡 hints). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -133,8 +133,54 @@ with `godot-grill`.
    tray's pinselect (prefs.tutorialHintsSeen); the windows: Display Mat
    rules at the first check ever (sawMatCheckTutorial), the Challenges tip
    (orderTip, once a run), the Pin tip (pinTip, capstone choice), the
-   Unknown Element tip (sawEmptyElTip). Next: godot-brainstorming (the
-   step list, scenes, state, save).
+   Unknown Element tip (sawEmptyElTip).
+   Design (godot-brainstorming, 2026-11-23; the user: "go with your
+   intuition"). Pattern: **the script as data, one driver**: TutorialStep
+   resources (say, pose, target tag, until, done_if, dice, free) listed on
+   ui/tutorial/tutorial.tscn (editable in the Inspector), run by Tutorial
+   (a Node in the App). Rejected: steps hard-coded (not editable) and a
+   node per step (~20 tiny scripts for "say, point, wait").
+   - Targets: "hub:<id>" (a hub button) or a cmp tag (prefix) anywhere in
+     the App; looked up each frame until found (popups appear late).
+   - Locking: Tutorial._input marks every press outside the target (and
+     the bubble) handled; a tap on the target advances (until "tap"), or
+     the step waits on its done_if (a state test: rolled, owns:X,
+     screen:map, at:<station>, lifted, played, visit:N...). until "next":
+     Mouse's Next. free: nothing locked, waits on done_if.
+   - Calm Mouse: MouseTip docks on the side away from the target; its
+     "✕ Hide" becomes "Skip tutorial" (asks first).
+   - Dice: a step's dice are fed to Rng (each face (i+0.5)/6); every step
+     also reseeds Godot's random (seed(i)), so the check's deal and
+     challenge come out the same.
+   - Save: prefs.tutorialStep (the index; -1 off). Missing tutorialSeen:
+     the next New Game runs it. Resume: back up over steps whose done_if
+     isn't met yet (a bench that closed with the app), then skip forward
+     over steps already done.
+   - While it runs: no How-to-Play slides, Pin tip, Display Mat rules,
+     Challenges tip or Mouse walkthrough tips (folded into steps).
+   The route: Coral Reef at The Ocean (visit 1: roll H O N N; Water; Seaweed
+   keeps the Water; Limestone's missing C via its chip and Convert 3 N);
+   the map to Old Growth Forest (visit 2: roll Al Mg O P; Sand, Clay, then
+   Soil from items only); Greenhouse (visit 3: roll C O K N, free: Sugar
+   and/or Fertilizer, then the Map); travel: the first check (the hand,
+   lift, play, Draw, Lock In); then "You're on your own".
+   Parts: 1 the driver, Mouse's docking and Skip, visit 1; 2 visits 2-3,
+   the check, the old windows folded; 3 the 💡 hints replacing the
+   walkthrough tips.
+   Parts 1 and 2 done (2026-11-23): ui/tutorial/ (Tutorial, TutorialStep,
+   48 steps on tutorial.tscn), MouseTip.coach(); a play test taps through
+   it all through the viewport (the lock, Skip, resume, replay). Found on
+   the way: the tap that moves on must reach the target itself (a fade
+   covering it doesn't count); a slow tap (Start, Collect, Travel) waits
+   on its done_if, or the next step's dice get fed early (start_run draws
+   for the Market); a window the step doesn't point into (New
+   collection!) puts the tutorial aside, unlocked; so do the title screen
+   and the Combo Lab. Settings' How to Play: the tutorial again (asks: a
+   new game); the old walkthrough (start_coach, 7 hub steps) is gone; the
+   Periodic Table + 16 Elements are a Tutorial Messages row. Open for the
+   user: by the first check the mat already holds the run's cards, so
+   "tap the mat to play it" replaces one (a negative score change shows).
+   Next: part 3 (the 💡 hints).
 10. **General fixes** (the user, 2026-11-23):
    (a) the station shop's card view: bigger item image and text to fill
    the cards, one standard image and text size that suits tier 1 up to
