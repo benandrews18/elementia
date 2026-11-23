@@ -9,6 +9,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-22
+- Map: the tracked item's badges no longer show on top of the Market, the Inventory and other windows.
+- Stations: ITEM SHOP and "Tap Items to Start Crafting!" now sit right under the elements, with the crafted-items bar below them.
 - After a craft, a small card of the item pops up in the middle and flies into the Inventory (which bounces); tap it before it flies to open the full card.
 - Crafting a capstone opens its card under a gold "Capstone complete!" banner (how many of the 8 you have) with confetti; closing it shows "New Items Unlocked!" with the items that capstone opened up popping in.
 - Stations: the dark blue header now reaches under the shop's title: "ITEM SHOP" on its own line, "Tap Items to Start Crafting!" under it.
