@@ -51,6 +51,19 @@ with `godot-grill`.
 6. **UI feedback pass** (after card playing, as the user asked): skills
    tween-animation, animation-system, godot-optimization (no cost to frame
    rate), input-handling (presses); the map's dust poof (particles-vfx).
+7. **Convert tray taps** (the user, 2026-11-22; HTML reference: game/js/
+   convert.js, renderConvertPicker() / renderConvertQuickGrid()): a tap on
+   either big From / To box opens a window to choose that side's element;
+   a tap on an element in the rows above puts it on the From side; a tap
+   on a missing element in the Crafting Bench card's component list opens
+   the Convert tray with it on the To side.
+8. **The craft animation** (the user, 2026-11-22; port it carefully from
+   the HTML, it took a while to get right: game/js/craft-animations.js,
+   flyIngredientsAndReveal(), riseIntoStack(), fireworkBurst(),
+   punchInventory()): the spent elements fly out and pop; the items the
+   player keeps poke up from the bottom of the screen and go back down to
+   show they're kept. Run the HTML in the browser pane to watch it.
+   Skill: tween-animation (particles-vfx for the pops).
 Settled 2026-11-22: "Draw cards" is free and unlimited (up to the hand's
 10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
 (now a main game feature): tap a card in the list to put it on the lab's
