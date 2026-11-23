@@ -780,9 +780,11 @@ func hand_rehang() -> void:
 
 func _play(over: String) -> void:
 	var name := lifted
-	var held = _find_cmp(_hand_view, "hand:lifted") if is_instance_valid(_hand_view) else null
+	var held: Control = _find_cmp(_hand_view, "hand:lifted") if is_instance_valid(_hand_view) else null
 	var from: Rect2 = held.get_global_rect() if held else Rect2()
-	var old: Rect2 = _mat_nodes[over].get_global_rect() if _mat_nodes.has(over) else Rect2()
+	var old: ItemCard = _mat_nodes.get(over) as ItemCard
+	var old_at: Rect2 = old.get_global_rect() if old else Rect2()
+	var old_opts: Dictionary = old.opts.duplicate() if old else {}
 	var msg := Hand.play(Game.state.hand, Game.state, lifted, over)
 	if msg != "":
 		_show_toast(msg)
@@ -790,48 +792,11 @@ func _play(over: String) -> void:
 	lifted = ""
 	Game._changed()
 	Juice.buzz()
-	_fly_in(name, from, over, old)
-
-
-## The played card flies from the hand into its slot and settles; a card
-## it replaced drops away toward the discards (decisions 2026-11-23).
-func _fly_in(name: String, from: Rect2, over: String, old: Rect2) -> void:
-	var app := App.current
-	if Juice.calm() or app == null:
-		return
-	if old.has_area():
-		var gone := ItemCard.make(over, {"size": true})
-		gone.size = old.size
-		gone.position = old.position
-		gone.pivot_offset = old.size / 2
-		gone.mouse_filter = MOUSE_FILTER_IGNORE
-		app.add_child(gone)
-		var tw := gone.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-		tw.tween_property(gone, "position:y", old.position.y + 90, 0.32)
-		tw.tween_property(gone, "rotation", 0.25, 0.32)
-		tw.tween_property(gone, "modulate:a", 0.0, 0.32)
-		tw.chain().tween_callback(gone.queue_free)
-	var to: Control = _mat_nodes.get(name)
-	if to == null or not from.has_area():
-		return
-	var dest := to.get_global_rect()
-	var card := ItemCard.make(name, {"size": true})
-	card.size = dest.size
-	card.mouse_filter = MOUSE_FILTER_IGNORE
-	card.position = from.position
-	card.scale = Vector2.ONE * (from.size.x / dest.size.x)
-	app.add_child(card)
-	to.modulate.a = 0.0  # the card in its slot shows when the flight lands
-	var tw := card.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(card, "position", dest.position, 0.3)
-	tw.tween_property(card, "scale", Vector2.ONE, 0.3)
-	tw.chain().tween_callback(func():
-		card.queue_free()
-		if is_instance_valid(to):
-			to.modulate.a = 1.0
-			to.offset_transform_enabled = true
-			to.offset_transform_scale = Vector2(1.08, 1.08)
-			to.create_tween().tween_property(to, "offset_transform_scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
+	if old_at.has_area():  # the replaced card drops away toward the discards
+		Juice.drop(ItemCard.make(over, old_opts), old_at)
+	var to := _mat_nodes.get(name) as ItemCard
+	if to:  # the played card flies from the hand into its slot (its look there: a small card stays small)
+		Juice.fly(ItemCard.make(name, to.opts.duplicate()), from, to)
 
 
 static func _find_cmp(n: Node, tag: String) -> Control:

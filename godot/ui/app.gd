@@ -27,7 +27,7 @@ static var current: App  # the running app, for screens that need it (crafting)
 func _ready() -> void:
 	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(Juice.new())  # press feedback on everything added from here on
+	add_child(Juice.make())  # UI feedback on everything added from here on (its numbers: ui/theme/juice.tscn)
 	_floats = Control.new()
 	_floats.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_floats.mouse_filter = MOUSE_FILTER_IGNORE
@@ -1100,7 +1100,7 @@ func _count_then(then_do: Callable) -> void:
 	mat.tree_exiting.connect(unblock)
 	mat.play_lock_in(func():
 		unblock.call()
-		Juice.buzz(45)  # the count's end: a key moment
+		Juice.buzz(true)  # the count's end: a key moment
 		then_do.call())
 
 

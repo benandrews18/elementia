@@ -7,6 +7,8 @@
 ## Texts may hold {🕒}-style tokens: the emoji's image, inline at the text's
 ## size (left out if the game has no image for it), and {name} tokens filled
 ## from `values` (e.g. a multiplier from the game data).
+## Closing pops it out (Juice.leave moves it into a holder first): listen
+## to `closed`, never tree_exited, which then fires twice.
 ## Buttons by name, anywhere in the scene: "Close" (✕) and "Ok" close it;
 ## "Hide" hides this tip for good (tip_id) and closes it. Others emit
 ## `pressed(name)` (connect from the script that opened it).
