@@ -57,7 +57,8 @@ with `godot-grill`.
    normal play (the user: no converting straight into a card; converting
    to a better suit before a draw is the player's choice). Draw stays one
    tap for 2. Next:
-   the user tries it; then real checks switch over, with Frame. 
+   real checks switch over (answers 2026-11-23, see Decisions), with
+   Frame. 
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
@@ -1038,6 +1039,16 @@ Recorded so they aren't re-argued. Add new ones with the date.
   precious for crafting); an unknown element token draws any card the
   player picks. The convert tray (work queue 7) works during a check, so
   converting for a draw is a choice too.
+- 2026-11-23 (card playing, the switch-over, the user): **Frame** holds up
+  to 4 squares of mat cards through a Rehang (tier 1 = 1, tier 2/3 = 2, a
+  capstone = 4, any mix). **A check in progress is saved** (hand, deck,
+  budget) and resumes after the app closes. **Between checks the mat is
+  locked in**, not adjustable; the **Combo Lab** is where players try
+  combos freely, with all the old mat UI and features from before card
+  playing (the two swap: real checks get the hand, the lab gets the old
+  free mat). Hand 7, Draw 2, 10 max, 3 plays, 3 discards at every check
+  for now. Spending an element on a draw asks first; a lifted card tapped
+  onto the Elements page goes back into the hand.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.

@@ -597,7 +597,12 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 			if not _mat_nodes.values().has(c):
 				c.mouse_filter = MOUSE_FILTER_IGNORE
 		page.mouse_filter = MOUSE_FILTER_STOP
-		page.gui_input.connect(func(ev): if Tap.tap(ev): _play(""))
+		page.gui_input.connect(func(ev): if Tap.tap(ev):
+			if view == "elements":  # not the mat: the card goes back into the hand
+				lifted = ""
+				_redraw()
+			else:
+				_play(""))
 		_gains(page)
 	StationScreen.corner_buttons(_body, false)  # Convert, as on the station: element draws (ConvertTray)
 	if App.current:
@@ -758,12 +763,7 @@ func _elements(page: Control) -> void:
 		if hand != null:  # a check with cards: 1 of it draws a card of its suit
 			box.mouse_filter = MOUSE_FILTER_STOP
 			box.set_meta("cmp", "el:" + sym)
-			box.gui_input.connect(func(ev): if Tap.tap(ev):
-				var msg := Hand.suit_draw(hand, Game.state, sym)
-				if msg != "":
-					_show_toast(msg)
-				else:
-					Game._changed())
+			box.gui_input.connect(func(ev): if Tap.tap(ev): _element_draw(hand, sym))
 		page.add_child(box)
 		var l := Tok.label(sym, 13, Color("#221f1a"), 800)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -801,6 +801,19 @@ func _elements(page: Control) -> void:
 		var none := Tok.label("No loose elements — visit a station and roll.", 14, Color("#8a6a48"), 400)
 		none.position = Vector2(12, 12)
 		page.add_child(none)
+
+
+## An element's draw, asked first (the user: elements are precious).
+func _element_draw(hand: Dictionary, sym: String) -> void:
+	if Hand.suit_card(hand, sym) == "" or hand.hand.size() >= Hand.most():
+		_show_toast(Hand.suit_draw(hand, Game.state, sym))  # why not (spends nothing)
+		return
+	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
+	ConfirmDialog.ask(App.current if App.current else self,
+		"Spend 1 %s to draw a %s card?" % [Data.t("ELEMENT_NAMES").get(sym, sym), Data.t("ELEMENT_SUIT_LABEL").get(suit, suit)],
+		func():
+			if Hand.suit_draw(hand, Game.state, sym) == "":
+				Game._changed())
 
 
 ## The mat's red message pill (.mat-toast), for 2 seconds.

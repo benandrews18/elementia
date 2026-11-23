@@ -561,6 +561,11 @@ func _collections(app: App) -> void:
 	var want_card := Hand.suit_card(hd, esym)
 	var n_hand: int = hd.hand.size()
 	_find_meta(dm, "el:" + esym).gui_input.emit(_release())
+	var asks: Array = top.call(ConfirmDialog)
+	check(asks.size() == 1 and hd.hand.size() == n_hand, "Elements tab: a tapped element asks first")
+	if asks.size() == 1:
+		asks[0].on_yes.call()
+		asks[0].queue_free()
 	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on a card of its suit")
 	dm = app._panel_node as DisplayMatScreen
 	_find_meta(dm, "el:?").gui_input.emit(_release())
@@ -571,6 +576,11 @@ func _collections(app: App) -> void:
 		cps[0]._take(pick_card)
 	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
 	dm = app._panel_node as DisplayMatScreen
+	var mat_was: Array = Game.state.mat.duplicate()
+	dm.lifted = hd.hand[0]
+	dm._redraw()
+	dm._page.gui_input.emit(_release())
+	check(dm.lifted == "" and Game.state.mat == mat_was, "a lifted card tapped onto the Elements page goes back into the hand")
 	dm.view = "mat"
 	app._on_hub("codex")
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
