@@ -983,6 +983,7 @@ func _show_toast(msg: String) -> void:
 	t.size = t.get_minimum_size()
 	t.position = Vector2((size.x - t.size.x) / 2, size.y - _hub_h - 16 - t.size.y)
 	add_child(t)
+	Juice.pop_in(t)
 	get_tree().create_timer(2.0).timeout.connect(t.queue_free)
 
 

@@ -293,9 +293,63 @@ func _on_node(name: String) -> void:
 ## A tap on the map itself (not a station, not the card) puts the picked
 ## station's card away.
 func _on_map_tap(ev: InputEvent) -> void:
-	if Tap.tap(ev) and Game.ctx.get("selectedMapStation"):
+	if not Tap.tap(ev):
+		return
+	_dust(get_global_transform().affine_inverse() * ev.global_position)
+	if Game.ctx.get("selectedMapStation"):
 		Game.ctx.selectedMapStation = null
 		Game.state_changed.emit()
+
+
+## A small dust poof where the map is tapped off a station (UI feedback,
+## decisions 2026-11-23): nine soft specks that burst out, drift up, grow
+## and fade. Tweens, not CPUParticles2D: particles draw on the global random
+## numbers the dice use too (Rng), so every poof would shift later rolls;
+## these use their own.
+func _dust(at: Vector2) -> void:
+	if Juice.calm():
+		return
+	var puff := Control.new()
+	puff.position = at
+	puff.mouse_filter = MOUSE_FILTER_IGNORE
+	puff.set_meta("dust", true)
+	add_child(puff)
+	for i in 9:
+		var d := TextureRect.new()
+		d.texture = _dot()
+		d.size = Vector2(16, 16)
+		d.pivot_offset = d.size / 2
+		d.position = -d.size / 2
+		d.mouse_filter = MOUSE_FILTER_IGNORE
+		d.modulate = Color(0.86, 0.76, 0.6, 0.85)
+		d.scale = Vector2.ONE * _dust_rng.randf_range(0.4, 0.7)
+		puff.add_child(d)
+		var a := TAU * (i + _dust_rng.randf_range(-0.3, 0.3)) / 9
+		var to := d.position + Vector2(cos(a), sin(a)) * _dust_rng.randf_range(14, 26) + Vector2(0, -8)
+		var tw := d.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(d, "position", to, 0.45)
+		tw.tween_property(d, "scale", d.scale * 1.8, 0.45)
+		tw.tween_property(d, "modulate:a", 0.0, 0.45).set_ease(Tween.EASE_IN)
+	get_tree().create_timer(0.5).timeout.connect(puff.queue_free)
+
+
+static var _dot_tex: GradientTexture2D
+static var _dust_rng := RandomNumberGenerator.new()
+
+## A soft round dot (no image file): a radial gradient, white to clear.
+static func _dot() -> GradientTexture2D:
+	if _dot_tex == null:
+		_dot_tex = GradientTexture2D.new()
+		_dot_tex.width = 32
+		_dot_tex.height = 32
+		_dot_tex.fill = GradientTexture2D.FILL_RADIAL
+		_dot_tex.fill_from = Vector2(0.5, 0.5)
+		_dot_tex.fill_to = Vector2(1.0, 0.5)
+		var g := Gradient.new()
+		g.set_color(0, Color.WHITE)
+		g.set_color(1, Color(1, 1, 1, 0))
+		_dot_tex.gradient = g
+	return _dot_tex
 
 
 func _app() -> App:

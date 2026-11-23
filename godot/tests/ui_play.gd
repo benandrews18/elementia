@@ -16,6 +16,7 @@ var saw_order_tip := false  # the challenge tip, once a run
 var finished := {}  # section -> true once it ran to its end (a script error stops one quietly)
 
 
+
 func check(ok: bool, what: String) -> void:
 	if not ok:
 		fails += 1
@@ -91,6 +92,7 @@ func _run(app: App) -> void:
 			app._screen.gui_input.emit(_press(Vector2(5, 300)))
 			app._screen.gui_input.emit(_release(Vector2(5, 300)))
 			check(Game.ctx.selectedMapStation == null, "a tap on the map hides the station card")
+			check(app._screen.get_children().any(func(c): return c.has_meta("dust")), "a tap on the map puffs dust")
 			Tap._down = null  # the press is remembered: later test taps land elsewhere
 			Game.ctx.selectedMapStation = options[0]
 			Game.state_changed.emit()
