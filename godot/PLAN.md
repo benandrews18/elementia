@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 5 of the work queue below. Start every session with `git status`: the user may
+**Next task:** step 6 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -90,6 +90,16 @@ with `godot-grill`.
    player keeps poke up from the bottom of the screen and go back down to
    show they're kept. Run the HTML in the browser pane to watch it.
    Skill: tween-animation (particles-vfx for the pops).
+9. **Tutorial overhaul** (the user, 2026-11-23; big, plan and brainstorm
+   it properly first: godot-grill, then godot-brainstorming). The Professor
+   Mouse tutorials are obnoxious and don't flow. Replace them with:
+   (a) a full interactive tutorial the very first time a player plays,
+   tapped through step by step to learn the whole game (stations, rolling,
+   crafting, converting, the map, checks played with cards, Lock In); and
+   (b) in-game hints on later plays, each of which the player can choose to
+   hide from then on. Start by listing every tip and coach step the game
+   has now (prefs hiddenTips, guidedTutorialEnabled, sawMatCheckTutorial,
+   the coach steps in App) and what each teaches.
 Settled 2026-11-22: "Draw cards" is free and unlimited (up to the hand's
 10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
 (now a main game feature): tap a card in the list to put it on the lab's
