@@ -85,7 +85,7 @@ static func leave(d: Control, win: Control) -> void:
 	var tw := holder.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tw.tween_property(win, "offset_transform_scale", Vector2(0.92, 0.92), 0.14)
 	tw.tween_property(d, "modulate:a", 0.0, 0.14)
-	tw.chain().tween_callback(holder.queue_free)
+	holder.get_tree().create_timer(0.16).timeout.connect(holder.queue_free)  # not on the tween: it stops if the window is freed under it
 
 
 static func _ignore_mouse(n: Node) -> void:
