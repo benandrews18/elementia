@@ -59,9 +59,8 @@ with `godot-grill`.
    tap for 2. Switch-over
    done (2026-11-23, committed): real checks deal a saved hand, Lock In on
    the hub, the mat locked between checks, the Inventory's Combo Lab (the
-   run's items), Frame. Left: rerun check.py fast to confirm the
-   mid-check screenshots are steady, then the changelog entry and publish;
-   the godot-code-review pass (one fix done: save right after the deal). 
+   run's items), Frame. Reviewed (godot-code-review; one fix:
+   the hand saved right after the deal). Step 5 is done. 
    The hand (the user, 2026-11-22): fanned at the bottom of the screen like
    Hearthstone or Balatro. Every card in it must still show what matters
    at a glance: its size on the mat (the tier / display-size badge), its
