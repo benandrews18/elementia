@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 7 of the work queue below. Start every session with `git status`: the user may
+**Next task:** step 8 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -91,12 +91,16 @@ with `godot-grill`.
    play, Dust, Buzz); one Juice tween per node (a new motion stops the old:
    no window wobbling when closed mid-pop); a small card flies with its
    small look; tests for the pop, the holder, Low motion and the flight.
-7. **Convert tray taps** (the user, 2026-11-22; HTML reference: game/js/
+7. Done (2026-11-23): **Convert tray taps** (the user, 2026-11-22; HTML reference: game/js/
    convert.js, renderConvertPicker() / renderConvertQuickGrid()): a tap on
    either big From / To box opens a window to choose that side's element;
    a tap on an element in the rows above puts it on the From side; a tap
    on a missing element in the Crafting Bench card's component list opens
    the Convert tray with it on the To side.
+   The box taps, the picker and the quick grid were already in (convert_
+   tray.gd, element_picker.gd), as was the full card's missing element;
+   added: the Crafting Bench row's missing chips (ShopRow, meta "need:").
+   Left out: the HTML's goal card in the tray (the item that sent you).
 8. **The craft animation** (the user, 2026-11-22; port it carefully from
    the HTML, it took a while to get right: game/js/craft-animations.js,
    flyIngredientsAndReveal(), riseIntoStack(), fireworkBurst(),
