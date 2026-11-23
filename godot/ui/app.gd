@@ -597,7 +597,7 @@ func _challenge_pick() -> void:
 	var d := ParchDialog.open(self, "res://ui/overlays/challenge_test.tscn")
 	var grid: Control = d.get_node("Window/Content/Rounds")
 	var every := int(Data.t("MAT_CHECK_EVERY"))
-	for r in range(every, int(Data.t("MAX_VISITS")) + 1, every):
+	for r in range(every, int(Data.t("RUN_COMPLETE_VISIT")) + 1, every):  # the regular game's checks (40 is freeplay's cap)
 		var b: Control = load("res://ui/pieces/pill_button.tscn").instantiate()
 		b.get_node("Text").text = str(r)
 		b.custom_minimum_size = Vector2(62, 46)
