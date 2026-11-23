@@ -303,16 +303,32 @@ func _ready() -> void:
 	check(hd.hand.size() == 7 and hd.deck.size() == 3 and hd.discards.is_empty(), "hand: deals 7, the rest is the deck")
 	check((hd.hand + hd.deck).all(func(n): return not s.mat.has(n) and n != "H"), "hand: the deck is owned mat cards not on the mat")
 	check(Hand.draw(hd) == 2 and hd.hand.size() == 9 and Hand.draw(hd) == 1 and hd.hand.size() == 10 and not Hand.can_draw(hd), "hand: draws 2, never past 10 or the deck")
-	hd = {"deck": big.slice(4, 6), "hand": big.slice(2, 4) + [capst], "discards": []}
+	check(hd.plays == int(Data.t("HAND_PLAYS")) and hd.tosses == int(Data.t("HAND_DISCARDS")), "hand: a check's budget of plays and discards")
+	# The fresh side deck: cards crafted since the last check come first.
+	s.visits = 6
+	s.visitLog = [{"items": [big[2]]}, {"items": []}, {"items": []}, {"items": [big[10]]}, {"items": [big[11], "H"]}, {"items": [big[0]]}]
+	Rng.feed(range(20).map(func(i): return 0.37))
+	hd = Hand.deal(s)
+	check(hd.fresh == [big[10], big[11]] and hd.hand.slice(0, 2).all(func(n): return hd.fresh.has(n)) and not hd.fresh.has(big[2]), "hand: the fresh side deck (crafted since the last check, not on the mat) is dealt first")
+	check(Hand.fresh_left(hd) == 0 and hd.hand.size() + hd.deck.size() == 10, "hand: then the rest, one deck")
+	hd = {"deck": big.slice(4, 6), "hand": big.slice(2, 4) + [capst], "discards": [], "fresh": [], "plays": 4, "tosses": 1}
+	s.visits = 2
 	s.mat = big.slice(0, 1)
-	check(Hand.play(hd, s, big[2]) == "" and s.mat == [big[0], big[2]] and hd.hand.size() == 3 and hd.deck == [big[5]], "hand: a card played into a free slot is replaced from the deck")
-	check(Hand.play(hd, s, capst) == "A capstone needs two free slots." and hd.hand.has(capst), "hand: a capstone needs two free slots")
+	var g = Hand.gain(s, {}, big[2])
+	check(g != null and is_equal_approx(g, Mat.score(Mat.on_mat({"mat": [big[0], big[2]]}), s, {}).total - Mat.score(Mat.on_mat(s), s, {}).total) and s.mat == [big[0]], "hand: the preview gives the score change and changes nothing")
+	check(Hand.play(hd, s, big[2]) == "" and s.mat == [big[0], big[2]] and hd.hand.size() == 2 and hd.deck.size() == 2 and hd.plays == 3, "hand: a play into a free slot costs a play and doesn't refill the hand")
+	check(Hand.gain(s, {}, capst) == null, "hand: no preview where the card can't go")
+	check(Hand.play(hd, s, capst) == "A capstone needs two free slots." and hd.hand.has(capst) and hd.plays == 3, "hand: a capstone needs two free slots (no play spent)")
 	check(Hand.play(hd, s, big[3]) == "" and s.mat.size() == 3, "hand: the third slot fills")
+	Hand.draw(hd)
 	check(Hand.play(hd, s, big[4]) == "There's no room for it there." and hd.hand.has(big[4]), "hand: a full mat refuses a free play")
 	check(Hand.play(hd, s, big[4], big[2]) == "" and s.mat == [big[0], big[4], big[3]] and hd.discards == [big[2]], "hand: a card played over another takes its place; the old one is discarded")
 	check(Hand.play(hd, s, big[5], "Nope") != "" and Hand.play(hd, s, "Nope") != "", "hand: only hand cards, only over mat cards")
+	check(Hand.play(hd, s, big[5], big[0]) == "" and hd.plays == 0 and Hand.play(hd, s, capst, big[5]) == "No plays left this check.", "hand: no plays past the budget")
 	var held: int = hd.hand.size()
-	check(Hand.discard(hd, big[5]) and hd.hand.size() == held - 1 and hd.discards.has(big[5]) and not Hand.discard(hd, big[5]), "hand: a discard with an empty deck shrinks the hand")
+	check(Hand.discard(hd, capst) == "" and hd.hand.size() == held - 1 and hd.discards.has(capst) and hd.tosses == 0, "hand: a discard costs one and doesn't refill")
+	hd.hand.append(big[6])
+	check(Hand.discard(hd, big[6]) == "No discards left this check." and hd.hand.has(big[6]), "hand: no discards past the budget")
 
 	# The safe area (main.gd): a 1080x2400 phone drawn at 390 design pixels
 	# wide, a 96px notch strip and a 48px gesture bar -> the app moves in.

@@ -1512,6 +1512,8 @@
  "HAND_START": 7,
  "HAND_DRAW": 2,
  "HAND_MAX": 10,
+ "HAND_PLAYS": 3,
+ "HAND_DISCARDS": 3,
  "MAT_COLLECTIONS_RAW": [
   {
    "id": "fruits",
