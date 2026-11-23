@@ -207,6 +207,7 @@ func _show_end(party: bool) -> void:
 func _on_crafted(name: String) -> void:
 	if Game.ctx.get("comboLab") or not is_inside_tree():
 		return
+	Juice.buzz()
 	if Data.t("ITEM_TIER").get(name, "") == "CAPSTONE":
 		_celebrate(name)
 	else:
@@ -1099,6 +1100,7 @@ func _count_then(then_do: Callable) -> void:
 	mat.tree_exiting.connect(unblock)
 	mat.play_lock_in(func():
 		unblock.call()
+		Juice.buzz(45)  # the count's end: a key moment
 		then_do.call())
 
 

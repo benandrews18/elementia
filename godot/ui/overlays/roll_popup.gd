@@ -175,6 +175,7 @@ func _on_collect(ev: InputEvent) -> void:
 	if not Tap.tap(ev) or not _collect.visible:
 		return
 	_collect.visible = false
+	Juice.buzz(20)
 	var fade := create_tween()
 	fade.tween_property(_box, "modulate:a", 0.0, 0.22)
 	fade.parallel().tween_property(get_child(0), "modulate:a", 0.0, 0.22)
