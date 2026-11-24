@@ -221,7 +221,8 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 
 ## The list view's shop (the user's trial of a list + side card in place of
 ## the card grid and its Crafting Bench): the same items in the grid's
-## order as compact rows on the left (green edge: craftable now; a tick,
+## order as compact rows on the left (no craftable mark: the user wants the
+## shop explored through the bench, 2026-11-23; a tick,
 ## dimmed: crafted; gold edge: the one on the side card).
 func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 	var s := Game.state
@@ -239,8 +240,8 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 			var row := DisplayMatScreen.list_row(e.name, lw)
 			row.position = Vector2(6, y)
 			row.set_meta("cmp", "st:" + e.name)
-			if e.name == open_card or can:
-				row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 3, Color("#d9a441") if e.name == open_card else Tok.OK, 2, 1, Color(0, 0, 0, 0.25)))
+			if e.name == open_card:
+				row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 3, Color("#d9a441"), 2, 1, Color(0, 0, 0, 0.25)))
 			if owned:
 				row.modulate = Color(0.7, 0.7, 0.7)
 				var tick := Tok.tick(Color.WHITE, 16, Tok.OK)
@@ -321,19 +322,12 @@ static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:
 	return Vector2i.ZERO
 
 
-## One shop cell: the card (green ring if craftable now, dimmed with a tick
+## One shop cell: the card (no craftable mark, the user, 2026-11-23; dimmed with a tick
 ## if owned). Pin and Craft are on the Crafting Bench a tap opens.
 func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: bool) -> void:
 	var s := Game.state
 	var owned := Catalog.owns(s, e.name)
 	var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
-	if can:  # .st-can: 3px green outline, 1px out
-		var ring := Panel.new()
-		ring.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 15 if not t1 else 13, 3, Tok.OK))
-		ring.position = pos - Vector2(4, 4)
-		ring.size = card_size + Vector2(8, 8)
-		ring.mouse_filter = MOUSE_FILTER_IGNORE
-		page.add_child(ring)
 	if e.name == open_card:  # .selected: 4px gold outline, 2px out
 		var sel := Panel.new()
 		sel.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 17 if not t1 else 15, 4, Color("#d9a441")))

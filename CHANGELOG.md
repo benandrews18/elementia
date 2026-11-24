@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Station shop: craftable cards no longer get a green border; tap a card to see on its Crafting Bench whether you can make it.
 - The bottom bar's Shop button matches the map's station circles. The To-Do List slides in from the left and the Market from above. The map's clock is a little larger, with markers on its rim for check rounds (cream) and the rounds your mat grows (green). The Inventory's fold button now minimises the Display Mat to a row of its cards' icons and how full it is. The pinned items tray has a title, bigger items, sits above its button and closes when you tap the map. The tutorial names elements in full. A challenge's restricted suits and stations show the red cross-out on top of the icon.
 - Station shop cards all use one size of picture, name and circles, bigger on the small cards. The Crafting Bench's close button is in its top-right corner. The Gathering window is narrower, fitting the dice. Elements and items flying into the Inventory land in its middle and make it bounce.
 - Display Mat checks: tap several hand cards (up to 5) and Discard them all for one discard. Cards on the mat can be discarded for free, as often as you like. Take Back (a mat card back into your hand) has its own button and is once per check. Tapping a blank space lets go of what you've picked. Rehang and Frame are gone for now.

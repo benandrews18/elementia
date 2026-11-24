@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** none queued: the work queue (steps 1-13) is done. Ask the user what's next; open: the screen check's cost (proposal under step 11). Start every session with `git status`: the user may
+**Next task:** none queued: the work queue (steps 1-13) is done. The user wants to talk about the gameplay and the gameplay loop next. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -257,9 +257,9 @@ with `godot-grill`.
    opens the To-Do List lit on it); a crafted card leaves the bench;
    Aluminum Alloy / Stainless Steel on two lines; Convert opens over the
    mat in a check, its button over the tray closes it; Draw dark/white.
-   Open with the user: the screen check's cost (proposed: screens only for
-   a step that changes a look, only that part's states; all before a
-   release).
+   The screen check's cost: settled 2026-11-23 (screens only via
+   --screens <part>; all in `check.py release`). The shop's thin green
+   craftable edge removed too (the user).
 12. **Checks, cards and crafting, batch 3** (the user, 2026-11-23):
    (a) entering a check: the hand waits until the shutters have opened,
    then the cards fly up into the hand from below, one after another (as
@@ -551,18 +551,20 @@ port, landscape layout, multiplayer, accounts or cloud saves, ads.
   doesn't quit Godot, it just sits there forever. A run cut off there exits
   0 with no pass line, so never trust an exit code or a grep: run checks
   through `tools/check.py`, which needs the pass line too.
-- **Which check when** (decided 2026-11-20):
+- **Which check when** (decided 2026-11-20; screens changed 2026-11-23,
+  the user: the screen check cost ~100s every time):
   - after each change: `python godot/tools/check.py fast`, plus
     `--only <section>` when a play-test section covers what changed (`run`,
-    `final_score`, `market`, `todo`, `cards`). Its screenshot part runs only
-    when something that can change a screen changed since the screens last
-    passed (`build/screens_ok`; `--screens` forces it). The screenshot
-    window opens off-screen.
-  - at the end of each step, and before a review, a milestone or a publish:
-    `check.py full` (everything, the whole play test, the HTML comparison
-    report). Not after every small change.
+    `final_score`, `market`, `todo`, `cards`, `pins`, `tips`, `tutorial`...).
+  - screens only when a look changed, and only that part's states:
+    `--screens station,bench` (states whose names start with those; bare
+    `--screens`: all). The screenshot window opens off-screen.
+  - at the end of each step: `check.py full` (the whole play test).
+  - before a release (a publish of a big batch, a milestone): `check.py
+    release` (full and every screen).
   - an intended visual change: look at `build/after/diff_<state>.png`, then
-    `check.py accept`. The screen states are `tests/shot_states.gd`.
+    `check.py accept` (takes only the states the last run shot). The screen
+    states are `tests/shot_states.gd`.
 - Tests run as scenes (`res://tests/x.tscn`), not `-s` scripts, so the
   autoloads (Data, Rng, Game) are there.
 - After adding a new `class_name` script, run the import once
