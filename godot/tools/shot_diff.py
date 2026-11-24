@@ -68,9 +68,9 @@ def shoot(out: Path, only=()):
     return 0
 
 
-def diff(a: Path, b: Path) -> int:
+def diff(a: Path, b: Path, only=()) -> int:
     changed = 0
-    for s in states():
+    for s in only or states():
         pa, pb = a / f"{s}.png", b / f"{s}.png"
         if not pa.exists() or not pb.exists():
             print(f"{s:18} missing")
@@ -96,4 +96,4 @@ if __name__ == "__main__":
     if sys.argv[1] == "shoot":
         sys.exit(shoot(Path(sys.argv[2]), sys.argv[3:]))  # optional: just these states
     else:
-        sys.exit(diff(Path(sys.argv[2]), Path(sys.argv[3])))
+        sys.exit(diff(Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4:]))  # optional: just these states
