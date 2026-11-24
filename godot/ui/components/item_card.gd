@@ -11,6 +11,10 @@
 class_name ItemCard
 extends Control
 
+const SHOP_ICON := 42.0  # a station shop card's item image, every tier (opts.shop)
+const SHOP_NAME := 13  # its name
+const SHOP_CIRCLE := 26.0  # its points circle and suit pips
+
 ## The layout is ui/components/item_card.tscn: the face and points badge
 ## (full size and mini), the badge's number, the station row's gap. The
 ## icon, name, pips and badges come from the item.
@@ -41,6 +45,7 @@ func _ready() -> void:
 		set_meta("cmp", opts.tag)
 	var mini: bool = opts.get("mini", false)
 	var grid_mini: bool = mini and opts.get("in_grid", true)
+	var shop: bool = opts.get("shop", false)  # a station shop card: one icon, name and circle size on every tier (the user, 2026-11-23)
 	var border := 3 if mini else 4
 	# Face: parchment, black border, rounded, soft shadow.
 	$Face.add_theme_stylebox_override("panel", face_mini if mini else face)
@@ -51,17 +56,19 @@ func _ready() -> void:
 	col.offset_left = border + side
 	col.offset_right = -(border + side)
 	col.offset_top = border + (3 if grid_mini else 2 if mini else 5)
-	if opts.get("wide"):
+	if opts.get("wide") and not shop:
 		col.offset_top -= 19  # capstone art rides up into the free top centre (margin-top:-19px)
 	col.offset_bottom = -(border + side)
-	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini else BoxContainer.ALIGNMENT_CENTER
+	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini and not shop else BoxContainer.ALIGNMENT_CENTER
 	var icon_px := (17.0 if opts.get("wrap") else 26.0) if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
+	if shop:
+		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)
 	var ic := Tok.icon(card.emoji, icon_px)
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	ic.set_meta("cmp", opts.get("tag", item) + ":icon")
-	if not mini and not opts.get("wide"):
+	if not mini and not opts.get("wide") and not shop:
 		col.add_child(_gap(5.6))  # .mm-icon margin-top:3px, + 2.6px of line box above the inline image
-	if opts.get("wide"):
+	if opts.get("wide") and not shop:
 		col.add_child(_gap(5))  # the HTML icon's line box sits ~5px above 66px art (inline image)
 	col.add_child(ic)
 	if not mini or grid_mini:
@@ -69,11 +76,11 @@ func _ready() -> void:
 		col.add_child(_name_box(item, grid_mini, size.x - 2 * (border + side)))
 	# Points badge, top-left, straddling the border.
 	var pts: int = int(card.points) * (2 if opts.get("complete") else 1)
-	var bsz := 22.0 if mini else 28.0
+	var bsz := SHOP_CIRCLE if shop else 22.0 if mini else 28.0
 	var num: Label = $Badge/Num
 	num.text = str(pts)
-	if mini:
-		num.add_theme_font_size_override("font_size", 11)
+	if mini or shop:
+		num.add_theme_font_size_override("font_size", 13 if shop else 11)
 	var b_panel: Panel = $Badge
 	b_panel.add_theme_stylebox_override("panel", badge_mini if mini else badge)
 	# CSS top/left are from inside the border: -3px (mini -5px).
@@ -93,14 +100,14 @@ func _ready() -> void:
 		move_child(glow, b_panel.get_index())  # behind the badge
 	b_panel.set_meta("cmp", opts.get("tag", item) + ":pts")
 	# Suit pips: a column down the top-right corner (placed in _place()).
-	var psz := 18.0 if mini else 27.0
+	var psz := _pip_px()
 	for i in card.pips.size():
 		var su: String = card.pips[i]
 		var pip := Panel.new()
 		pip.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), psz / 2, 1.5))
 		pip.size = Vector2(psz, psz)
 		pip.mouse_filter = MOUSE_FILTER_IGNORE
-		var g := Tok.icon("suit:" + su, 11.0 if mini else 16.0)
+		var g := Tok.icon("suit:" + su, psz * 0.6 if shop else 11.0 if mini else 16.0)
 		g.position = (pip.size - g.size) / 2
 		pip.add_child(g)
 		if opts.get("lit_suits", []).has(su):
@@ -142,9 +149,10 @@ func _ready() -> void:
 ## font's full height, so a holder sized to the CSS line boxes keeps the
 ## card's layout the same and the text is centred in it.
 func _name_box(text: String, one_line: bool, width: float) -> Control:
-	const SIZE := 11  # Godot font sizes are whole pixels (CSS 10.5)
-	var line := 10.5 * 1.1
-	var side := 14.0 if one_line else 2.0
+	var shop: bool = opts.get("shop", false)
+	var SIZE: int = SHOP_NAME if shop else 11  # Godot font sizes are whole pixels (CSS 10.5)
+	var line: float = (float(SHOP_NAME) if shop else 10.5) * 1.1
+	var side := 14.0 if one_line and not shop else 2.0
 	var f := Tok.font(800)
 	var lines := 1
 	if opts.get("wrap") and text.contains(" "):  # two lines, split at the first space (the shop's wrapped names)
@@ -194,7 +202,7 @@ static func _gap(px: float) -> Control:
 ## The badges that hang off the edges follow the card's size.
 func _place() -> void:
 	var mini: bool = opts.get("mini", false)
-	var psz := 18.0 if mini else 27.0
+	var psz := _pip_px()
 	var border := 3 if mini else 4
 	# CSS offsets are from inside the border: top/right -3px, bottom -3px (mini -6px).
 	for i in _pips.size():
@@ -206,3 +214,7 @@ func _place() -> void:
 		sb.position = Vector2(border - 3, size.y - border + 3 - psz)
 		var left := sb.position.x + psz + 2
 		_stations.position.x = maxf(left, left + (size.x - left - _stations.size.x) / 2 - psz / 2)
+
+
+func _pip_px() -> float:
+	return SHOP_CIRCLE if opts.get("shop", false) else 18.0 if opts.get("mini", false) else 27.0

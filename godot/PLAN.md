@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 10 of the work queue below ((e) needs godot-grill), then 11. Start every session with `git status`: the user may
+**Next task:** step 11 of the work queue below. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -211,6 +211,17 @@ with `godot-grill`.
    border is too subtle) and what could be crafted with a conversion (the
    bench's ⚛ on missing elements, but visible from the shop itself), now
    the Craft buttons are gone. Open design: godot-grill first.
+   Done (2026-11-23): (a) ItemCard opt shop: one icon (42), name (13) and
+   circle (26) size on every shop card; tier 1 cards 0.66 of a full card's
+   height to fit; (b) the bench's ✕ in its top-right corner; (c) the roll
+   popup as wide as its dice; (d) HubBar.button_center() is the button's
+   real middle (it was worked out from constants), fly-ins use screen
+   coordinates where they set global_position (they missed on a phone
+   with a notch offset), the roll and Convert land with a bounce, a punch
+   restarts cleanly; (e) grilled: **no extra marks** for craftable or
+   convertible (the user: players should investigate the shop through the
+   Crafting Bench; the tracked item's icon leads them); the old thin
+   green edge stays.
 11. **General fixes, batch 2** (the user, 2026-11-23):
    (a) the hub's centre button showing a station (the "shop" face): its
    background the same colour as the map's station icons, not orange;

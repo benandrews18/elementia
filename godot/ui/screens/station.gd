@@ -5,6 +5,7 @@
 class_name StationScreen
 extends Control
 
+const T1_HEIGHT := 0.66  # a tier 1 shop card's height, of a full card's
 const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel"]  # shop card names on two lines (the user, 2026-11-23)
 
 ## The layout is ui/screens/station.tscn: the art and its wash, the header
@@ -160,7 +161,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	close.texture = load("res://assets/ui/btn_close.webp")
 	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.position = Vector2(w - 20 - 34, y + bench.size.y - 4 - 34)
+	close.position = Vector2(w - 34 + 4, y - 6)  # the top-right corner (the user, 2026-11-23)
 	close.size = Vector2(34, 34)
 	close.mouse_filter = MOUSE_FILTER_PASS
 	close.gui_input.connect(_on_tap.bind(func():
@@ -202,7 +203,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		var items: Array = groups[gi]
 		if items.is_empty():
 			continue
-		var card_h := (row_h - 2) / 2 if gi == 0 else row_h
+		var card_h := row_h * T1_HEIGHT if gi == 0 else row_h  # tier 1: tall enough for the shop's one icon and name size
 		var cell_h := card_h + 3  # no Pin / Craft under the cards: tap one for the Crafting Bench (the user, 2026-11-22)
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
@@ -341,7 +342,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
 	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,  # you are at its station
-		"wrap": WRAP_NAMES.has(e.name)})
+		"wrap": WRAP_NAMES.has(e.name), "shop": true})
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
@@ -365,7 +366,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 ## this one lit in its breakdown); else the 📌 (a tap pins and tracks it, or
 ## unpins it), the tracked item's own card included.
 func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1: bool) -> Control:
-	var d := 22.0 if t1 else 28.0  # the points badge's size
+	var d := ItemCard.SHOP_CIRCLE  # the points badge's size
 	var feeds := Game.feeds_tracked(item)
 	var pinned := Progress.is_pinned(item)
 	var b := Panel.new()

@@ -210,7 +210,7 @@ func _pick(side: String) -> void:
 ## Converts; the TO box flies into the Inventory button, then both reset.
 func do_convert() -> void:
 	var to_box := _to_box
-	var target := App.current._hub.button_center("inv")
+	var target := App.current._hub.button_global_center("inv")
 	var fly := _big_box(to, to_box.size.x)
 	fly.global_position = to_box.global_position
 	fly.pivot_offset = fly.size / 2
@@ -222,6 +222,7 @@ func do_convert() -> void:
 	tw.tween_property(fly, "scale", Vector2(0.15, 0.15), 0.15)
 	tw.parallel().tween_property(fly, "modulate:a", 0.0, 0.15)
 	tw.tween_callback(fly.queue_free)
+	tw.tween_callback(App.current._hub.punch.bind("inv"))
 	var f := from
 	var t := to
 	from = ""

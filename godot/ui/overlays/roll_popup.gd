@@ -49,7 +49,7 @@ func _ready() -> void:
 			row += ceili(group / 3.0)
 	var frame_gap := 10.0 if bonus > 0 and plain > 0 else 0.0
 	var row_h := row * ch + (row - 1) * GAP + frame_gap
-	var bw := minf(440, size.x - 32)
+	var bw := minf(size.x - 32, maxf(3 * cw + 2 * GAP + 2 * 34, 250))  # fits the dice (the user, 2026-11-23: smaller)
 	var top := 18 + 19 + 16 + (8.0 if bonus > 0 and plain == 0 else 0.0)
 	var bh := top + row_h + 16 + 46 + 16
 	_box.size = Vector2(bw, bh)
@@ -185,13 +185,15 @@ func _on_collect(ev: InputEvent) -> void:
 		var at := c.global_position
 		c.reparent(self)
 		c.global_position = at
-		var target := fly_to - c.size / 2
+		var target := get_global_transform().affine_inverse() * (App.current._hub.button_global_center("inv") if App.current else fly_to) - c.size / 2  # its middle on the button's
 		var tw := create_tween()
 		tw.tween_interval(i * 0.045)
-		tw.tween_property(c, "global_position", target, 0.48 * 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(c, "position", target, 0.48 * 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 		tw.parallel().tween_property(c, "scale", Vector2(0.55, 0.55), 0.48 * 0.72)
 		tw.tween_property(c, "scale", Vector2(0.15, 0.15), 0.48 * 0.28)
 		tw.parallel().tween_property(c, "modulate:a", 0.0, 0.48 * 0.28)
+		if App.current:
+			tw.tween_callback(App.current._hub.punch.bind("inv"))  # the Inventory bounces as each lands (the user, 2026-11-23)
 	var end := create_tween()
 	end.tween_interval((_chips.size() - 1) * 0.045 + 0.5)
 	end.tween_callback(func():

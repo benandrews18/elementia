@@ -197,16 +197,16 @@ func _start(name: String, card: Control) -> void:
 		return
 	_busy = true
 	var app := App.current
-	var to := app._hub.button_center("inv")
+	var to := app._hub.button_global_center("inv")
 	app._hub.spotlight("inv", true)  # lit above the dim while the elements fly in (introInvLit)
 	var chips := card.get_children().filter(func(c): return c.has_meta("sym"))
 	for i in chips.size():
 		var chip: Control = chips[i]
 		var fly := StationScreen.element_chip(chip.get_meta("sym"), chip.size.x)
-		fly.position = chip.global_position
 		fly.pivot_offset = fly.size / 2
 		fly.z_index = 2  # over the lit Inventory
 		app.add_child(fly)
+		fly.global_position = chip.global_position
 		chip.modulate.a = 0.25
 		var d := to - (chip.global_position + chip.size / 2)
 		var tw := fly.create_tween()

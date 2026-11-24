@@ -71,10 +71,13 @@ func button(id: String) -> Control:
 ## Where a side button's centre is (in this bar's coordinates), e.g. for
 ## things flying into the Inventory.
 func button_center(id: String) -> Vector2:
-	var side_w := (size.x - (HOME + 8)) / 4 - 4
-	var i := SIDES.map(func(x): return x[0]).find(id)
-	var x := 2.0 + i * (side_w + 4) + (HOME + 8 if i >= 2 else 0.0)
-	return Vector2(x + side_w / 2, size.y - H - 16.2 + SIDE_H / 2)
+	var b := button(id)
+	return get_global_transform().affine_inverse() * b.get_global_rect().get_center()  # the button itself (the hub fills the App: App coordinates)
+
+
+## The same, in screen coordinates (for global_position).
+func button_global_center(id: String) -> Vector2:
+	return button(id).get_global_rect().get_center()
 
 
 ## introInvLit: a side button lit and drawn above everything (a window's dim
@@ -101,7 +104,12 @@ func spotlight(id: String, on: bool) -> void:
 func punch(id: String) -> void:
 	var b := button(id)
 	b.pivot_offset = b.size / 2
+	var old = b.get_meta("punch", null)
+	if old is Tween and old.is_valid():  # several landing close together: start the bounce again
+		old.kill()
+		b.scale = Vector2.ONE
 	var tw := b.create_tween()
+	b.set_meta("punch", tw)
 	tw.tween_property(b, "scale", Vector2(1.32, 1.32), 0.13).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(b, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_SINE)
 
