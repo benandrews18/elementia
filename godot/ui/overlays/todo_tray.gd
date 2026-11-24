@@ -12,6 +12,7 @@ const INK := Color("#2a1f14")
 
 static var expanded := {}  # "refroot/<item>" and "ref/<root>/.../<item>" paths shown open
 static var hint_open := false
+static var focus := ""  # a shop card's tracked-item badge was tapped: this one lit in the tracked item's breakdown
 
 ## The layout is ui/overlays/todo_tray.tscn (the tray, the "Pinned" heading);
 ## this builds the pinned items' trees.
@@ -29,6 +30,15 @@ static func make() -> TodoTray:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
+	var t = Game.ctx.get("tracked")
+	if focus != "" and t:  # open the breakdown down to it
+		expanded["refroot/" + t] = true
+		for trail in _trails(t, focus):
+			var path: String = "ref/" + t
+			for n in trail.slice(0, -1):
+				path += "/" + n
+				expanded[path] = true
+	tree_exiting.connect(func(): focus = "")
 	var w := minf(400, size.x * 0.92)
 	$Tray.size = Vector2(w, size.y - HubBar.H)
 	_scroll.size = $Tray.size - Vector2(3, 3)
@@ -263,7 +273,7 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 	var h := 88.0
 	if open:
 		var tree := RefTree.new(RefTree.PARCHMENT, _toggle)
-		tree.hint_name = _hint_name if hint_open else ""
+		tree.hint_name = _hint_name if hint_open else focus
 		h = tree.nodes(card, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(16, h), w - 32) + 10
 	card.size = Vector2(w, h)
 	return at.y + h

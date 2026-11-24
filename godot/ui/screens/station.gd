@@ -5,6 +5,8 @@
 class_name StationScreen
 extends Control
 
+const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel"]  # shop card names on two lines (the user, 2026-11-23)
+
 ## The layout is ui/screens/station.tscn: the art and its wash, the header
 ## (icon, title, labels, the crafted bar), the shop's heading. This fills
 ## them in from the station and packs the shop with the numbers below.
@@ -50,6 +52,8 @@ func _redraw() -> void:
 		stale = true
 		return
 	stale = false
+	if open_card != "" and Catalog.owns(Game.state, open_card):
+		open_card = ""  # crafted: off the Crafting Bench
 	var keep := _scroll.scroll_vertical
 	for holder in [$Scroll/Page/Chips, $Scroll/Page/Fold, $Scroll/Page/Crafted, $Scroll/Page/View, $Scroll/Page/Bench, $Scroll/Page/Shop, $Top]:
 		for c in holder.get_children():
@@ -336,7 +340,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.size = card_size + Vector2(12, 12)
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
-	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true})  # you are at its station
+	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,  # you are at its station
+		"wrap": WRAP_NAMES.has(e.name)})
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
@@ -351,6 +356,37 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		var tick := Tok.tick(Color.WHITE, 20, Tok.OK)
 		tick.position = pos + card_size - Vector2(15, 15)
 		page.add_child(tick)
+	else:
+		page.add_child(_pin_slot(e.name, page, pos, card_size, t1))
+
+
+## The card's bottom-left circle (the user, 2026-11-23): the tracked item's
+## icon when the tracked item still needs this one (a tap: the To-Do List,
+## this one lit in its breakdown); else the 📌 (a tap pins and tracks it, or
+## unpins it), the tracked item's own card included.
+func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1: bool) -> Control:
+	var d := 22.0 if t1 else 28.0  # the points badge's size
+	var feeds := Game.feeds_tracked(item)
+	var pinned := Progress.is_pinned(item)
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Color("#163544") if feeds else Color("#3a2e14"), d / 2, 2, Tok.GOLD if feeds or pinned else Color("#b9b0a0")))
+	b.size = Vector2(d, d)
+	b.position = pos + Vector2(-5, card_size.y - d + 5)  # straddling the corner, like the points badge
+	b.set_meta("cmp", "st:slot:" + item)
+	var ic := Tok.icon(Catalog.entry(Game.ctx.tracked).emoji if feeds else "📌", d * 0.6)
+	ic.position = (b.size - ic.size) / 2
+	ic.mouse_filter = MOUSE_FILTER_IGNORE
+	if not feeds and not pinned:
+		b.modulate.a = 0.6
+		ic.material = Tok.grey()
+	b.add_child(ic)
+	b.gui_input.connect(_on_tap.bind(func():
+		if feeds and App.current:
+			TodoTray.focus = item
+			App.current.open_panel("todo")
+		elif not feeds:
+			_pin_tap(item, page, pos, card_size)))
+	return b
 
 
 ## A white element chip with its suit-coloured border, atomic number, the

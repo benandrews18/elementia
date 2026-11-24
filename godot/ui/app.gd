@@ -13,6 +13,7 @@ var market_plays := 0  # how often the Market's moment has played (tests read it
 var _screen: Control
 var _screen_name := ""
 var _panel_node: Control
+var _under: Control  # the Display Mat kept open under the Convert tray (back to it on close)
 var _hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
@@ -671,7 +672,12 @@ func open_convert(to_sym: String) -> void:
 
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
-	close_panel(false)
+	if name == "convert" and panel == "drawer" and is_instance_valid(_panel_node):
+		_under = _panel_node  # Convert opens over the mat (the user: not back to the map)
+		_panel_node = null
+		panel = ""
+	else:
+		close_panel(false)
 	if name == "drawer":
 		Game.deal_hand()  # a check's mat: its hand, the first time
 	panel = name
@@ -687,11 +693,20 @@ func open_panel(name: String) -> void:
 ## In a check with cards, closing the Convert tray goes back to the hand
 ## (unless another panel is opening: back = false).
 func close_panel(back := true) -> void:
-	var to_hand := back and _check_convert()
+	var to_hand := back and _check_convert() and not is_instance_valid(_under)
 	if is_instance_valid(_panel_node):
 		_panel_node.queue_free()
 	_panel_node = null
 	panel = ""
+	if is_instance_valid(_under):
+		if back:  # Convert closed: the mat under it again
+			_panel_node = _under
+			_under = null
+			panel = "drawer"
+			_sync()
+			return
+		_under.queue_free()
+	_under = null
 	if to_hand:
 		open_panel("drawer")
 		return
@@ -740,6 +755,9 @@ func can_travel_to(name) -> bool:
 func _sync_floats() -> void:
 	for c in _floats.get_children():
 		c.queue_free()
+	if panel == "convert":  # its button over the tray: a tap closes it again
+		StationScreen.corner_buttons(_floats, false)
+		return
 	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab"):
 		return
 	var y := size.y - HubBar.H - 14 - 58

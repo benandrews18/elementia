@@ -346,6 +346,29 @@ func _cards(app: App) -> void:
 			check(app.panel == "convert" and app._panel_node.to == missing, "a missing element on the Crafting Bench opens Convert with it on the To side")
 		app.close_panel()
 		app.open_card("")
+	# A crafted card leaves the Crafting Bench.
+	var craftable = shop.filter(func(e): return Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(e.name) and not Catalog.owns(Game.state, e.name))
+	if not craftable.is_empty():
+		app.open_card(craftable[0].name)
+		Game.craft(craftable[0].name, Game.suggest_suit_picks(craftable[0].name))
+		check(app._screen.open_card == "", "a crafted card leaves the Crafting Bench")
+	# The shop cards' bottom-left circle: the tracked item's icon on what it
+	# still needs (a tap: the To-Do List, lit there), else the pin.
+	var top_item = shop.filter(func(e): return not Catalog.owns(Game.state, e.name) and not Catalog.still_needed(Game.state, e.name).is_empty())
+	if not top_item.is_empty():
+		Game.ctx.tracked = top_item[0].name
+		Game._changed()
+		await get_tree().process_frame
+		var comp = Catalog.still_needed(Game.state, top_item[0].name).filter(func(n): return _find_meta(app._screen, "st:slot:" + n) != null)
+		check(_find_meta(app._screen, "st:slot:" + top_item[0].name) != null, "the tracked item's own card has the pin circle")
+		if not comp.is_empty():
+			var slot := _find_meta(app._screen, "st:slot:" + comp[0])
+			slot.gui_input.emit(_press(Vector2.ZERO))
+			slot.gui_input.emit(_release())
+			check(app.panel == "todo" and TodoTray.focus == comp[0] and TodoTray.expanded.has("refroot/" + top_item[0].name), "a component's tracked-item circle opens the To-Do List, its breakdown open to it")
+			app.close_panel()
+			check(TodoTray.focus == "", "closing the To-Do List lets go of it")
+		Game.ctx.tracked = null
 	app.show_element_card(sym)
 	check(open.call(ElementCard).size() == 1, "an element card opens")
 	open.call(ElementCard)[0].get_node("Card").gui_input.emit(_release())
@@ -578,6 +601,14 @@ func _collections(app: App) -> void:
 	check(_find_meta(dm, "convert") != null, "the Convert button shows during a check")
 	app.open_panel("convert")
 	check(app._panel_node is ConvertTray and (app._panel_node as ConvertTray).to == "" and app._hub.face == "close", "its tray is the usual one")
+	check(is_instance_valid(dm) and not dm.is_queued_for_deletion() and dm.visible, "Convert opens over the mat (the mat stays open under it)")
+	var over := _find_meta(app._floats, "convert")
+	check(over != null, "the Convert button shows over its tray")
+	if over:
+		Tap._down = null
+		over.gui_input.emit(_release())
+		check(app.panel == "drawer" and app._panel_node == dm, "a tap on it closes the tray, back to the same mat")
+		app.open_panel("convert")
 	app._on_hub("home")
 	check(app.panel == "drawer" and Game.state.get("hand") == hd, "closing it goes back to the hand")
 	dm = app._panel_node as DisplayMatScreen

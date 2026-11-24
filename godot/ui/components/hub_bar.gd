@@ -21,7 +21,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var faces := {
 	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#b5501a"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
-	"close": ["⬅️", "Close", ""], "draw": ["🃏", "Draw", "#3f8fe0"],
+	"close": ["⬅️", "Close", ""], "draw": ["🃏", "Draw", "#1c1f26"],
 }
 ## A check with cards (card playing): the side buttons become these
 ## (id -> [emoji, label]); see App._hand_tap().
@@ -174,7 +174,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Icon.visible = tex != null
 	$Home/Glyph.visible = tex == null  # shortcut: no Noto image yet for this face's emoji; the font's (desktop only)
 	$Home/Glyph.text = glyph
-	var light_label := face in ["shop", "map"]
+	var light_label := face in ["shop", "map", "draw"]  # Draw: a very dark ball, white text (the user, 2026-11-23)
 	var l: Label = $Home/Label
 	l.text = f[1]
 	l.add_theme_color_override("font_color", Color.WHITE if light_label else Color.BLACK)

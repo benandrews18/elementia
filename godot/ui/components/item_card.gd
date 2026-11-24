@@ -55,7 +55,7 @@ func _ready() -> void:
 		col.offset_top -= 19  # capstone art rides up into the free top centre (margin-top:-19px)
 	col.offset_bottom = -(border + side)
 	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini else BoxContainer.ALIGNMENT_CENTER
-	var icon_px := 26.0 if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
+	var icon_px := (17.0 if opts.get("wrap") else 26.0) if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	var ic := Tok.icon(card.emoji, icon_px)
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	ic.set_meta("cmp", opts.get("tag", item) + ":icon")
@@ -146,14 +146,23 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 	var line := 10.5 * 1.1
 	var side := 14.0 if one_line else 2.0
 	var f := Tok.font(800)
-	var px := Tok.fit_px(text, f, SIZE, width - 2 * side - 2) if width > 0 else SIZE  # one line always (the user, 2026-11-23)
+	var lines := 1
+	if opts.get("wrap") and text.contains(" "):  # two lines, split at the first space (the shop's wrapped names)
+		text = text.substr(0, text.find(" ")) + "\n" + text.substr(text.find(" ") + 1)
+		lines = 2
+	var longest := ""
+	for part in text.split("\n"):
+		longest = part if part.length() > longest.length() else longest
+	var px := Tok.fit_px(longest, f, SIZE, width - 2 * side - 2) if width > 0 else SIZE  # one line always (the user, 2026-11-23), but for wrapped names
 	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(0, line + (1 if one_line else 2))
+	holder.custom_minimum_size = Vector2(0, (line - 2) * lines + 2 + (1 if one_line else 2))
 	holder.mouse_filter = MOUSE_FILTER_IGNORE
 	holder.set_meta("cmp", opts.get("tag", item) + ":name")
 	var nm := Tok.label(text, px, Tok.CARD_INK, 800)
 	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if lines > 1:
+		nm.add_theme_constant_override("line_spacing", -3)
 	nm.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	nm.offset_left = side
 	nm.offset_right = -side

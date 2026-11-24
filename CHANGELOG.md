@@ -9,6 +9,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Station shop cards have a round button in the bottom-left corner: 📌 to pin (and track) the item, or, on an item your tracked item still needs, the tracked item's icon; tapping that opens the To-Do List with the breakdown open and that item outlined.
+- A crafted item leaves the Crafting Bench.
+- Aluminum Alloy and Stainless Steel show their names on two lines in the shop.
+- Convert during a check opens over your Display Mat (instead of showing the map), and its button stays on top of the tray so you can tap it again to close it.
+- The Draw button is very dark with white text.
 - Map: tap the 🔍 on a station to see "Components for (your tracked item) are here!", and the tracked item's own badge to see "You are 🔍 tracking (it)!".
 - Your first crafts no longer go onto the Display Mat by themselves (a leftover from before checks were played with cards, which filled the mat before your first check). The mat starts empty and you play cards onto it from your hand at each check.
 - Fixed: the tutorial got stuck at "Water is H + O": tapping the Water card opened the Crafting Bench but the tutorial didn't move on, so Craft couldn't be tapped.

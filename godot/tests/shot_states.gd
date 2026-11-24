@@ -13,7 +13,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
-	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "clock_info",
+	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "challenge_elements",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
@@ -242,6 +242,10 @@ func _ready() -> void:
 			await get_tree().create_timer(0.4).timeout
 		"clock_info":  # the turn clock's window
 			ClockInfo.show_on(app)
+		"station_mine":  # Deep Mine's shop: Aluminum Alloy and Stainless Steel's names on two lines
+			Game.ctx.current = "Deep Mine"
+			Game.ctx.screen = "station"
+			Game.state_changed.emit()
 		"station_early":  # before the first mat check: no Quark bar, the header from the very top
 			Game.state.matChecked = false
 			Game.state_changed.emit()
