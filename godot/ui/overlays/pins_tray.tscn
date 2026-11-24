@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/pins_tray.gd" id="1"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_600.tres" id="f6"]
+[ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
 
 [sub_resource type="StyleBoxFlat" id="tray"]
 bg_color = Color(0.0862745, 0.207843, 0.266667, 1)
@@ -36,15 +37,29 @@ mouse_filter = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 74
+theme_override_constants/margin_bottom = 14
 
-[node name="Chips" type="HFlowContainer" parent="Tray/Body"]
+[node name="Col" type="VBoxContainer" parent="Tray/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Tray/Body/Col"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.878431, 0.541176, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 15
+text = "Pinned Items - Tap an item to track it!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Chips" type="HFlowContainer" parent="Tray/Body/Col"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 
-[node name="Empty" type="Label" parent="Tray/Body"]
+[node name="Empty" type="Label" parent="Tray/Body/Col"]
 visible = false
 layout_mode = 2
 size_flags_vertical = 0

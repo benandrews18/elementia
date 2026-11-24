@@ -144,11 +144,11 @@ static func pop_in(win: Control, dim: Control = null) -> void:
 
 
 ## A tray coming on: it rises the last few pixels into place and fades in.
-static func slide_in(c: Control) -> void:
+static func slide_in(c: Control, from := Vector2.ZERO) -> void:
 	if not on():
 		return
 	c.offset_transform_enabled = true
-	c.offset_transform_position = Vector2(0, cfg.tray_rise)
+	c.offset_transform_position = from if from != Vector2.ZERO else Vector2(0, cfg.tray_rise)  # from: its own side (the user, 2026-11-23)
 	c.modulate.a = 0.0
 	var tw := _tween(c).set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(c, "offset_transform_position", Vector2.ZERO, cfg.tray_time)

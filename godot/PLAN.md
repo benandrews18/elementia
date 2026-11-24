@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 11 of the work queue below. Start every session with `git status`: the user may
+**Next task:** none queued: the work queue (steps 1-13) is done. Ask the user what's next; open: the screen check's cost (proposal under step 11). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -239,6 +239,16 @@ with `godot-grill`.
    not "C");
    (g) a check's restricted icons: the red cross-out drawn on top of the
    icon, not beside it, in the restriction description window.
+   Done (2026-11-23): (a) Shop face #122e3c (the map discs' colour); (b)
+   Juice.slide_in(from): To-Do from the left, Market from above, the rest
+   (Convert, pins) from below; (c) TurnClock 108px, rim markers: cream at
+   check rounds, green at MAT_GROW_ROUNDS (JSON floats: int() them); (d)
+   the fold button had no handler: DisplayMatScreen.collapsed, the mini row
+   (8 icons a row, used/cap in tier 1 units; a tap or the fold shows the
+   mat); (e) pins tray: title row (tscn Col/Title), foot above the 🔍
+   button, chips 22px icons / 16px names, a map tap closes it; (f) the
+   tutorial names elements in full; (g) OrderInfo: 🚫 over the restricted
+   suit / station / icon. Screen: drawer_mini.
    Done the same day, between steps (the user's messages, 2026-11-23): the
    tutorial stuck at Water (fixed); the map's tracked badges tappable
    ("Components for X are here!" / "You are 🔍 tracking X!"); the run's

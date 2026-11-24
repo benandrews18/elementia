@@ -33,6 +33,7 @@ var _inv_key := ""  # what the list was built for: item count and width
 var _press_at := Vector2.ZERO
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
+static var collapsed := false  # the fold button: the mat minimised to a row of its icons (setMatCollapsed())
 static var list_mode := false  # the 📋 view: a compact list on the left, the selected card on the right
 var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
@@ -98,26 +99,29 @@ func _redraw() -> void:
 	var open: int = L.kinds.slice(0, L.cols).filter(func(k): return k != "locked").size()
 	var row_h := ((w - 14 - (open - 1) * cols_gap) / open) * card_ratio
 	var mat_h: float = row_h if st < 2 else (row_h * 1.5 + 4 if st == 2 else row_h * 2 + cols_gap)
-	var page := Panel.new()
-	var elements := view == "elements"
-	page.add_theme_stylebox_override("panel", elements_page if elements else mat_page)
-	page.position = Vector2(side, y)
-	page.size = Vector2(w, mat_h + 14)
-	page.clip_contents = elements
-	page.set_meta("cmp", "mat:page")
-	_body.add_child(page)
-	_page = page
-	page.gui_input.connect(_blank_tap)
-	if elements:
-		_elements(page)
+	if collapsed and Game.check_hand() == null:  # minimised: the mat's icons in a row, how full it is
+		y = _mini_row(cards, L, Vector2(side, y), w) + 8
 	else:
-		_slots(cards, sc, page, row_h, open)
-	_page_controls(page)
-	y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
+		var page := Panel.new()
+		var elements := view == "elements"
+		page.add_theme_stylebox_override("panel", elements_page if elements else mat_page)
+		page.position = Vector2(side, y)
+		page.size = Vector2(w, mat_h + 14)
+		page.clip_contents = elements
+		page.set_meta("cmp", "mat:page")
+		_body.add_child(page)
+		_page = page
+		page.gui_input.connect(_blank_tap)
+		if elements:
+			_elements(page)
+		else:
+			_slots(cards, sc, page, row_h, open)
+		_page_controls(page)
+		y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
 	var h = Game.check_hand()
 	_scroll.visible = h == null
 	if h != null:  # a check with cards: the hand in place of the item list
-		_hand_area(h, page)
+		_hand_area(h, _page)
 		return
 	lifted = ""
 	picks = []
@@ -176,6 +180,10 @@ func _redraw() -> void:
 	fold.size = Vector2(38, 20)
 	fold.position = Vector2((size.x - 38) / 2, line_y + 1 - 10)
 	fold.add_child(_chevron())
+	fold.set_meta("cmp", "mat:fold")
+	fold.gui_input.connect(func(ev): if Tap.tap(ev):
+		collapsed = not collapsed
+		_redraw())
 	_body.add_child(fold)
 
 
@@ -356,13 +364,56 @@ func _round_button(text: String, sz: Vector2, font_px: int, bg: Color) -> Button
 	return b
 
 
+## The minimised mat (matMiniRowHTML()): the mat's cards as icons, 8 a
+## row, then how full it is in tier 1 units (a tier 1 card 1, a normal card
+## a slot's worth, a capstone two); a tap shows the mat again. Returns the
+## y under it.
+func _mini_row(cards: Array, L: Dictionary, at: Vector2, w: float) -> float:
+	var per: int = L.perSlot
+	var used := 0
+	for c in cards:
+		used += 1 if Mat.is_tier1(c) else (2 if Mat.is_capstone(c) else 1) * per
+	var cap := 0
+	for k in L.kinds:
+		if k != "locked":
+			cap += 1 if k == "top" else per
+	var row := Panel.new()
+	row.add_theme_stylebox_override("panel", Tok.box(Color("#cda874"), 12, 2, Color("#a67c4a")))
+	row.set_meta("cmp", "mat:mini")
+	var room := Tok.label("%d/%d" % [used, cap], 14, Color("#181614"), 900)
+	var rw := room.get_minimum_size().x
+	var cell := (w - 16 - rw - 8 - 7 * 3) / 8
+	var lines := maxi(1, ceili(cards.size() / 8.0))
+	var h := 12 + lines * 28 + (lines - 1) * 3
+	row.position = at
+	row.size = Vector2(w, h)
+	if cards.is_empty():
+		var none := Tok.label("Nothing on the mat yet", 12, Color(0.094, 0.086, 0.078, 0.7), 700)
+		none.position = Vector2(8, (h - none.get_minimum_size().y) / 2)
+		row.add_child(none)
+	for i in cards.size():
+		var ic := Tok.icon(cards[i].emoji, 24)
+		ic.position = Vector2(8 + (i % 8) * (cell + 3) + (cell - 24) / 2, 6 + (i / 8) * 31 + 2)
+		ic.mouse_filter = MOUSE_FILTER_IGNORE
+		row.add_child(ic)
+	room.position = Vector2(w - 8 - rw, (h - room.get_minimum_size().y) / 2)
+	row.add_child(room)
+	row.gui_input.connect(func(ev): if Tap.tap(ev):
+		collapsed = false
+		_redraw())
+	_body.add_child(row)
+	return at.y + h
+
+
 ## The fold button's chevron (.mcb-chev: a 9px corner, pointing up).
 func _chevron() -> Control:
 	var c := Control.new()
 	c.size = Vector2(38, 20)
 	c.mouse_filter = MOUSE_FILTER_IGNORE
 	c.draw.connect(func():
-		c.draw_polyline(PackedVector2Array([Vector2(13, 13), Vector2(19, 7), Vector2(25, 13)]), GOLD_LINE, 2.5, true))
+		var pts := PackedVector2Array([Vector2(13, 7), Vector2(19, 13), Vector2(25, 7)]) if collapsed \
+			else PackedVector2Array([Vector2(13, 13), Vector2(19, 7), Vector2(25, 13)])  # down when minimised
+		c.draw_polyline(pts, GOLD_LINE, 2.5, true))
 	return c
 
 

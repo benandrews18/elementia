@@ -185,7 +185,12 @@ func _rule(o: Dictionary, row: Control) -> void:
 	var I := ICON
 	var st := func(): return Tok.icon(Catalog.station(p).emoji, I)
 	var txt := func(t: String): return Tok.label(t, I * 0.85, Color("#3b2412"), 900)
-	var no := func(): return Tok.icon("🚫", I)
+	var no := func(c: Control) -> Control:  # the red cross-out on top of what's restricted (the user, 2026-11-23)
+		var x := Tok.icon("🚫", I)
+		x.mouse_filter = MOUSE_FILTER_IGNORE
+		c.add_child(x)
+		x.set_anchors_and_offsets_preset(PRESET_FULL_RECT)  # follows the icon's size, set below
+		return c
 	match o.id:
 		"grand": parts = [Tok.icon("⚛️", I), txt.call(mult_label(o))]
 		"stationWeek": parts = [txt.call("3+"), st.call()]
@@ -193,17 +198,16 @@ func _rule(o: Dictionary, row: Control) -> void:
 		"fullRecipe": parts = [Tok.icon("🧩", I), txt.call("×2")]
 		"suitSet": parts = [txt.call("3+"), _suit(p)]
 		"commonThread": parts = [Tok.icon("🧵", I), txt.call("3+")]
-		"drought": parts = [no.call(), _suit(p)]
-		"closedStation": parts = [no.call(), st.call()]
+		"drought": parts = [no.call(_suit(p))]
+		"closedStation": parts = [no.call(st.call())]
 		"freshFaces": parts = [Tok.loop_arrow(Color("#3b2412"), I * 0.9), txt.call("≤ ½")]
 		"shortTable": parts = [Tok.icon("⬜", I), txt.call("1+")]
 		"thinStock": parts = [txt.call("I ≤ 3")]
-		"trendShift": parts = [no.call(), txt.call("3+"), st.call()]
+		"trendShift": parts = [txt.call("3+"), no.call(st.call())]
 		"doubleDrought":
-			parts = [no.call()]
 			for su in String(p).split("|"):
-				parts.append(_suit(su))
-		"spreadOut": parts = [no.call(), txt.call("4+"), Tok.icon("🏠", I)]
+				parts.append(no.call(_suit(su)))
+		"spreadOut": parts = [txt.call("4+"), no.call(Tok.icon("🏠", I))]
 	var rh := I * 1.2
 	var x := 0.0
 	for c in parts:

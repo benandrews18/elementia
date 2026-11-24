@@ -5,7 +5,7 @@
 ## Animations are left to settle (--wait); nothing random is shown.
 extends Control
 
-const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "station_list",
+const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
@@ -60,6 +60,9 @@ func _ready() -> void:
 			StationScreen.list_mode = true
 			app._screen.open_card = "Glass"
 			app._screen._redraw()
+		"drawer_mini":  # the mat minimised (the fold button): its icons in a row, how full it is
+			DisplayMatScreen.collapsed = true
+			app.open_panel("drawer")
 		"drawer_list":  # the 📋 view: the compact list, the selected card on the right
 			DisplayMatScreen.list_mode = true
 			app.open_panel("drawer")

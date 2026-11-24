@@ -839,17 +839,40 @@ func _pins(app: App) -> void:
 	btn.call().gui_input.emit(_release())
 	check(app.panel == "pins" and app._panel_node is PinsTray, "🔍 opens the pins tray")
 	await get_tree().process_frame
-	var chips: Array = app._panel_node.get_node("Tray/Body/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	var chips: Array = app._panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
 	var steel: PinChip = chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0]
 	steel.gui_input.emit(_release())
 	check(Game.ctx.tracked == null, "the tracked chip stops tracking")
 	await get_tree().process_frame
 	check(btn.call().get_child_count() == 1, "nothing tracked: \"!\" on the 🔍 button")
-	chips = app._panel_node.get_node("Tray/Body/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	chips = app._panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
 	chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0].gui_input.emit(_release())
 	check(Game.ctx.tracked == "Steel", "a chip tracks it again")
 	btn.call().gui_input.emit(_release())
 	check(app.panel == "", "🔍 again closes the tray")
+	await get_tree().process_frame
+	# On the map, a tap on the map itself puts the tray away; the Inventory's
+	# fold button minimises the mat to a row of icons, a tap on it brings it back.
+	Game.go_map()
+	await get_tree().process_frame
+	btn.call().gui_input.emit(_release())
+	check(app.panel == "pins", "the pins tray on the map")
+	Tap._down = null
+	app._screen._on_map_tap(_release(Vector2(5, 300)))
+	check(app.panel == "", "a tap on the map puts the pins tray away")
+	app.open_panel("drawer")
+	await get_tree().process_frame
+	var fold := _find_meta(app._panel_node, "mat:fold")
+	check(fold != null, "the mat's fold button")
+	if fold:
+		Tap._down = null
+		fold.gui_input.emit(_release())
+		check(DisplayMatScreen.collapsed and _find_meta(app._panel_node, "mat:mini") != null and _find_meta(app._panel_node, "mat:page") == null, "fold: the mat minimised to its row of icons")
+		Tap._down = null
+		_find_meta(app._panel_node, "mat:mini").gui_input.emit(_release())
+		check(not DisplayMatScreen.collapsed and _find_meta(app._panel_node, "mat:page") != null, "a tap on the row shows the mat again")
+	app.close_panel()
+	Tap._down = null
 	await get_tree().process_frame
 	var pill: Control = floats.call().filter(func(c): return c.get_meta("cmp", "") != "pins")[0]
 	pill.gui_input.emit(_release())

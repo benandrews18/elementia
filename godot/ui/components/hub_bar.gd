@@ -19,7 +19,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 
 ## Home's faces: id -> [emoji, label, colour ("" = flat, inert)].
 @export var faces := {
-	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#b5501a"], "travel": ["🥾", "Travel", "#3aa9a0"],
+	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
 	"close": ["⬅️", "Close", ""], "draw": ["🃏", "Draw", "#1c1f26"],
 }

@@ -65,7 +65,7 @@ done_if = "owns:Water"
 
 [sub_resource type="Resource" id="step8"]
 script = ExtResource("2")
-say = "[b]Water[/b] is H + O, and you have both. Tap it!"
+say = "[b]Water[/b] is Hydrogen + Oxygen, and you have both. Tap it!"
 pose = 7
 target = "st:Water"
 done_if = "owns:Water"
@@ -86,7 +86,7 @@ done_if = "owns:Seaweed"
 
 [sub_resource type="Resource" id="step11"]
 script = ExtResource("2")
-say = "[b]Seaweed[/b] needs C and Water. Tap it!"
+say = "[b]Seaweed[/b] needs Carbon and Water. Tap it!"
 pose = 7
 target = "st:Seaweed"
 done_if = "owns:Seaweed"
@@ -107,21 +107,21 @@ done_if = "owns:Limestone"
 
 [sub_resource type="Resource" id="step14"]
 script = ExtResource("2")
-say = "Now [b]Limestone[/b]: Ca + C + O. Tap it."
+say = "Now [b]Limestone[/b]: Calcium + Carbon + Oxygen. Tap it."
 pose = 7
 target = "st:Limestone"
 done_if = "owns:Limestone"
 
 [sub_resource type="Resource" id="step15"]
 script = ExtResource("2")
-say = "You're out of [b]C[/b]. Tap the red C to make some!"
+say = "You're out of [b]Carbon[/b]. Tap the red C to make some!"
 pose = 5
 target = "need:C"
 done_if = "panel:convert|has:C|owns:Limestone"
 
 [sub_resource type="Resource" id="step16"]
 script = ExtResource("2")
-say = "[b]Convert[/b] trades 3 of one element for 1 of another. You have 3 N: tap it."
+say = "[b]Convert[/b] trades 3 of one element for 1 of another. You have 3 Nitrogen: tap it."
 pose = 5
 target = "cv:N"
 done_if = "from:N|has:C|owns:Limestone"
@@ -135,7 +135,7 @@ done_if = "has:C|owns:Limestone"
 
 [sub_resource type="Resource" id="step18"]
 script = ExtResource("2")
-say = "You made C! Tap here to close Convert."
+say = "You made Carbon! Tap here to close Convert."
 pose = 2
 target = "hub:home"
 done_if = "nopanel|owns:Limestone"
@@ -195,7 +195,7 @@ done_if = "collected"
 
 [sub_resource type="Resource" id="step26"]
 script = ExtResource("2")
-say = "Make [b]Sand[/b]: Si + O."
+say = "Make [b]Sand[/b]: Silicon + Oxygen."
 pose = 7
 target = "st:Sand"
 done_if = "owns:Sand"
@@ -209,7 +209,7 @@ done_if = "owns:Sand"
 
 [sub_resource type="Resource" id="step28"]
 script = ExtResource("2")
-say = "Then [b]Clay[/b]: Al + Mg."
+say = "Then [b]Clay[/b]: Aluminum + Magnesium."
 pose = 7
 target = "st:Clay"
 done_if = "owns:Clay"

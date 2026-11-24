@@ -340,6 +340,8 @@ func _on_map_tap(ev: InputEvent) -> void:
 	if not Tap.tap(ev):
 		return
 	Juice.dust(self, get_global_transform().affine_inverse() * ev.global_position)  # off a station: a dust poof
+	if App.current and App.current.panel == "pins":  # the pins tray goes too (the user, 2026-11-23)
+		App.current.close_panel()
 	if Game.ctx.get("selectedMapStation"):
 		Game.ctx.selectedMapStation = null
 		Game.state_changed.emit()

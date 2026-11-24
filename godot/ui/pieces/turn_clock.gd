@@ -5,10 +5,16 @@
 ## The round number sits in the middle (the user, 2026-11-21); past round
 ## 24 (Overtime) the hand keeps going round and the middle reads OT.
 ## A tap opens ClockInfo (on the map; the window's own copy is inert).
+## Round markers on the rim (the user, 2026-11-23): cream at the check
+## rounds, green where the mat grows (MAT_GROW_ROUNDS), green ringed cream
+## when it's both.
 class_name TurnClock
 extends Control
 
-const SIZE := 96.0  # the rim; the dial is 68 inside it
+const SIZE := 108.0  # the rim (slightly larger, the user, 2026-11-23); the dial is DIAL inside it
+const DIAL := SIZE * 68.0 / 96.0
+const CHECK_DOT := Color("#fff3c4")  # cream: it shows on the brass
+const GROW_DOT := Color("#3fb46c")
 const INK := Color("#2a2018")
 const GOLD := Color("#e2b25a")
 
@@ -42,7 +48,7 @@ static func make(v: int) -> TurnClock:
 func _draw() -> void:
 	var n := int(Data.t("RUN_COMPLETE_VISIT"))
 	var every := int(Data.t("MAT_CHECK_EVERY"))
-	var k := 68.0 / 100.0  # the HTML's 100-unit viewBox, drawn 68px
+	var k := DIAL / 100.0  # the HTML's 100-unit viewBox, drawn DIAL px
 	var o := size / 2
 	var at := func(i: float, r: float) -> Vector2:
 		var t := i / n * TAU
@@ -76,3 +82,17 @@ func _draw() -> void:
 		var dir := (tip - o).normalized()
 		draw_line(o + dir * 13, tip, INK, 4 * k, true)
 	draw_circle(o, 12.5, Color("#f4ead2"))  # behind the round number
+	# The rim's markers: check rounds and the mat's growth rounds.
+	var grow: Array = Data.t("MAT_GROW_ROUNDS").map(func(r): return int(r))  # JSON numbers are floats
+	var rim_r := (SIZE / 2 + 48 * k) / 2 + 1  # between the dial's edge and the rim's
+	for i in range(1, n + 1):
+		var chk := i % every == 0
+		var gr := grow.has(i)
+		if not chk and not gr:
+			continue
+		var t := float(i) / n * TAU
+		var p := o + Vector2(sin(t), -cos(t)) * rim_r
+		draw_circle(p, 5.2, INK)
+		draw_circle(p, 3.9, GROW_DOT if gr else CHECK_DOT)
+		if gr and chk:
+			draw_arc(p, 3.9, 0, TAU, 16, CHECK_DOT, 1.4, true)

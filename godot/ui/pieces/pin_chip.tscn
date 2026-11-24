@@ -37,9 +37,9 @@ corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
 [node name="PinChip" type="PanelContainer"]
-custom_minimum_size = Vector2(0, 31.5)
-offset_right = 114.0
-offset_bottom = 31.5
+custom_minimum_size = Vector2(0, 40)
+offset_right = 140.0
+offset_bottom = 40.0
 mouse_filter = 0
 theme_override_styles/panel = SubResource("off")
 script = ExtResource("1")
@@ -53,7 +53,7 @@ theme_override_constants/separation = 6
 
 [node name="Glass" type="TextureRect" parent="Row"]
 visible = false
-custom_minimum_size = Vector2(13, 13)
+custom_minimum_size = Vector2(17, 17)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -62,7 +62,7 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="Icon" type="TextureRect" parent="Row"]
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -73,6 +73,6 @@ stretch_mode = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.909804, 0.929412, 0.956863, 1)
 theme_override_fonts/font = ExtResource("f7")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 16
 text = "Item"
 vertical_alignment = 1
