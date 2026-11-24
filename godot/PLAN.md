@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 13 of the work queue below (grill first), then 10 ((e) needs godot-grill) and 11. Start every session with `git status`: the user may
+**Next task:** step 10 of the work queue below ((e) needs godot-grill), then 11. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -279,6 +279,15 @@ with `godot-grill`.
    (d) discard several hand cards at once (the UI to be designed);
    (e) a tap on a blank space in the Inventory (the mat drawer)
    deselects whatever mat card or hand card is selected.
+   Grilled and done (2026-11-23): a Discard throws out up to 5 picked hand
+   cards for 1 of the 3 discards (HAND_DISCARD_MAX); a tap toggles a hand
+   card in or out of the picks (one: lifted to play; 2+: raised, ticked,
+   "Discard (n)", no play); a mat card discards free and unlimited (to the
+   discards, no play back); Take Back has its own budget, 1 a check
+   (HAND_TAKEBACKS; on the hub's old Rehang button); **Rehang and Frame
+   removed** (the user: feel out the base mechanic first; HAND_FRAME_SQUARES
+   gone); a tap on the drawer, the mat page, an empty slot or the hand's
+   gaps lets go of the picks. Screen: hand_picks.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:

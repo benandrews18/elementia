@@ -605,7 +605,7 @@ func _collections(app: App) -> void:
 	dm._lift(hd.hand[0])
 	check(dm._page == page_was, "lifting a card doesn't rebuild the mat (only the hand and the layer over the mat)")
 	check(_find_meta(dm, "hand:gain:" + on_mat) != null and app._hub.off.get("inv") != true, "a lifted card: the score change shows on the mat; Discard lights")
-	check(app._hub.hand_sides.market[1] == "Rehang" and app._hub.off.get("market") != true, "Rehang is ready before the first play")
+	check(app._hub.hand_sides.market[1] == "Take Back" and app._hub.off.get("market") == true, "Take Back waits for a mat card")
 	var played: String = hd.hand[0]
 	var plays: int = hd.plays
 	var mn: Control = dm._mat_nodes[on_mat]
@@ -614,16 +614,34 @@ func _collections(app: App) -> void:
 	var flying := func(): return app.get_children().filter(func(c): return c.has_meta("flying") and not c.is_queued_for_deletion()).size()
 	check(flying.call() == 2 and dm._mat_nodes[played].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands); the replaced one drops away")
 	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[played].modulate.a == 1.0), "the flights end: their copies freed, the card shows in its slot")
-	dm.lifted = hd.hand[0]
+	# Several hand cards picked: Discard (n) throws them all out, for one discard.
+	var two: Array = hd.hand.slice(0, 2)
+	dm._lift(two[0])
+	dm._lift(two[1])
+	check(dm.picks == two and dm.lifted == "" and dm._catch == null and app._hub.hand_sides.inv[1] == "Discard (2)", "two hand cards picked: none lifted to play, Discard (2)")
+	dm._lift(two[1])
+	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left is lifted to play")
+	dm._lift(two[1])
+	var tosses: int = hd.tosses
 	app._on_hub("inv")
-	check(hd.hand.size() == 7 and hd.discards.size() == 2 and app._hub.off.get("market") == true, "Discard (the hub) throws out the lifted card; no Rehang after a play")
+	check(hd.hand.size() == 6 and hd.discards.size() == 3 and hd.tosses == tosses - 1, "Discard: both cards out, one discard used")
+	dm = app._panel_node as DisplayMatScreen
+	dm._lift(hd.hand[0])
+	dm._blank_tap(_release())
+	check(dm.picks.is_empty() and dm.lifted == "", "a tap on a blank space lets go of the picks")
+	var gone: String = Game.state.mat[-1]
+	dm._on_card_input(_press(Vector2.ZERO), gone)
+	dm._on_card_input(_release(), gone)
+	check(dm.selected == gone and app._hub.off.get("inv") != true and app._hub.off.get("market") != true, "a tapped mat card: Discard and Take Back light")
+	tosses = hd.tosses
+	app._on_hub("inv")
+	check(not Game.state.mat.has(gone) and hd.discards.has(gone) and hd.tosses == tosses, "Discard on a mat card: free (no discard used)")
 	dm = app._panel_node as DisplayMatScreen
 	var back: String = Game.state.mat[-1]
 	dm._on_card_input(_press(Vector2.ZERO), back)
 	dm._on_card_input(_release(), back)
-	check(dm.selected == back and app._hub.hand_sides.inv[1] == "Take Back", "a tapped mat card: Discard becomes Take Back")
-	app._on_hub("inv")
-	check(hd.hand.has(back) and not Game.state.mat.has(back) and hd.tosses == int(Data.t("HAND_DISCARDS")) - 2, "Take Back: the mat card into the hand, for a discard")
+	app._on_hub("market")
+	check(hd.hand.has(back) and not Game.state.mat.has(back) and Hand.takebacks_left(hd) == 0, "Take Back: the mat card into the hand, from its own budget")
 	# Element draws on the mat's Elements tab; Convert works as ever.
 	var esym := ""
 	for sym in Data.t("CLASSIC_ELEMENTS"):

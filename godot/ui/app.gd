@@ -858,10 +858,10 @@ func sync_hub() -> void:
 	if mat:  # a check with cards: Draw in the middle, the hand's actions round it
 		var h: Dictionary = Game.state.hand
 		_hub.greyed = not Hand.can_draw(h) or mat.playing
-		_hub.hand_sides.inv = ["↩️", "Take Back"] if mat.selected != "" else ["🗑️", "Discard"]
-		_hub.show_state("draw", {}, {"inv": str(h.tosses)}, false, true,
-			{"inv": mat.lifted == "" and mat.selected == "" or h.tosses <= 0, "codex": mat.playing,
-			"market": Hand.why_not_rehang(h, s) != ""})
+		_hub.hand_sides.inv = ["🗑️", "Discard (%d)" % mat.picks.size() if mat.picks.size() > 1 else "Discard"]
+		_hub.show_state("draw", {}, {"inv": str(h.tosses), "market": str(Hand.takebacks_left(h))}, false, true,
+			{"inv": mat.selected == "" and (mat.picks.is_empty() or h.tosses <= 0), "codex": mat.playing,
+			"market": mat.selected == "" or Hand.takebacks_left(h) <= 0})
 		return
 	if _check_convert():  # Close goes back to the hand
 		_hub.greyed = false
@@ -890,14 +890,15 @@ func _check_convert() -> bool:
 	return panel == "convert" and Game.check_hand() != null
 
 
-## The hub during a check with cards: Draw, Discard (the lifted card) or
-## Take Back (the picked mat card), the challenge, Rehang, Lock In.
+## The hub during a check with cards: Draw, Discard (the picked hand cards,
+## or the picked mat card), the challenge, Take Back (the picked mat card),
+## Lock In.
 func _hand_tap(mat: DisplayMatScreen, id: String) -> void:
 	match id:
 		"home": mat.hand_draw()
 		"inv": mat.hand_discard()
 		"jobs": OrderInfo.open(self)
-		"market": mat.hand_rehang()
+		"market": mat.hand_take_back()
 		"codex":
 			if mat.playing:
 				return

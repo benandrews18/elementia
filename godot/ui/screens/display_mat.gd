@@ -43,7 +43,8 @@ var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
 var _page: Panel
-var lifted := ""  # the hand card picked up to play (card playing, Game.state.hand)
+var lifted := ""  # the hand card picked up to play (card playing, Game.state.hand): the one pick
+var picks: Array = []  # the hand cards picked (one: lifted, to play; up to 5: for one Discard)
 var _hand_view: HandView
 var _catch: Control  # with a card lifted: the layer over the mat page that takes the play
 
@@ -54,6 +55,7 @@ static func make() -> DisplayMatScreen:
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	_drawer.gui_input.connect(_blank_tap)  # a blank space: let go of what's picked (the user, 2026-11-23)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)  # e.g. Safari's bar collapsing makes the screen wider
 	_redraw()
@@ -105,6 +107,7 @@ func _redraw() -> void:
 	page.set_meta("cmp", "mat:page")
 	_body.add_child(page)
 	_page = page
+	page.gui_input.connect(_blank_tap)
 	if elements:
 		_elements(page)
 	else:
@@ -117,6 +120,7 @@ func _redraw() -> void:
 		_hand_area(h, page)
 		return
 	lifted = ""
+	picks = []
 	# The gold line between the mat and the item list, with the fold button.
 	var line := ColorRect.new()
 	line.color = line_color
@@ -573,8 +577,9 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 					_play(name)
 				elif selected == name and App.current:
 					App.current.show_card(name)
-				else:
+				else:  # picked (Discard, Take Back); the hand's picks go
 					selected = name
+					picks = []
 					_redraw()
 				return
 			selected = "" if selected == name else name
@@ -587,16 +592,15 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 ## mat shows what it would do to the score; a tap on the mat plays it into
 ## free space, a tap on a mat card plays it over that card.
 func _hand_area(h: Dictionary, page: Panel) -> void:
-	if not h.hand.has(lifted):
-		lifted = ""
-	if lifted != "" or not Game.state.mat.has(selected):  # a mat card picked for Take Back, or a hand card lifted
+	picks = picks.filter(func(n): return h.hand.has(n))
+	lifted = picks[0] if picks.size() == 1 else ""
+	if not picks.is_empty() or not Game.state.mat.has(selected):  # a mat card picked (Discard, Take Back), or hand cards
 		selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var top_y := page.position.y + page.size.y + 26  # under the mat's tabs
 	var fl := Hand.fresh_left(h)
-	var sq: int = Hand.framed(h).reduce(func(a, n): return a + Hand.squares(n), 0)
-	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Deck %d%s%s" % [h.plays, h.tosses, h.deck.size(), "  (%d new)" % fl if fl else "",
-		"  ·  Framed %d/%d" % [sq, int(Data.t("HAND_FRAME_SQUARES"))] if sq else ""], 12, Color.WHITE, 800)
+	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Take Back %d  ·  Deck %d%s" % [h.plays, h.tosses, Hand.takebacks_left(h), h.deck.size(),
+		"  (%d new)" % fl if fl else ""], 12, Color.WHITE, 800)
 	counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	counts.position = Vector2(side, top_y)
 	counts.size = Vector2(size.x - 2 * side, 18)
@@ -607,45 +611,50 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	_hand_view.position = Vector2(0, top_y + 22)
 	_hand_view.size = Vector2(size.x, bottom - top_y - 22)
 	_body.add_child(_hand_view)
-	_hand_view.show_hand(h.hand, lifted)
+	_hand_view.show_hand(h.hand, lifted, picks)
 	_hand_view.lift.connect(_lift)
 	_catch = null
 	_lift_layer()
-	if selected != "" and _mat_nodes.has(selected):  # the picked mat card: Frame (or Unframe) on it
-		var c: Control = _mat_nodes[selected]
-		var on: bool = Hand.framed(h).has(selected)
-		var bw := Tok.font(800).get_string_size("Unframe", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 22
-		var fb := _round_button("Unframe" if on else "Frame", Vector2(bw, 28), 12, Tok.GOLD)
-		fb.position = page.position + c.position + Vector2((c.size.x - bw) / 2, -10)
-		fb.set_meta("cmp", "hand:frame")
-		var nm := selected
-		fb.pressed.connect(func():
-			var msg := Hand.frame(h, Game.state, nm)
-			if msg != "":
-				_show_toast(msg)
-			else:
-				Game._changed())
-		_body.add_child(fb)
 	StationScreen.corner_buttons(_body, false)  # Convert, as on the station: element draws (ConvertTray)
 	if App.current:
 		App.current.sync_hub()
 
 
-## Lifting a hand card (or putting it back) changes only the hand and the
-## layer over the mat, not the whole drawer (a full redraw took ~100ms on a
-## PC with a turn-18 mat).
+## A hand card tapped: picked, or put back if it was ("": a blank tap in
+## the hand, let go of them all). One pick is lifted, to play; up to
+## HAND_DISCARD_MAX for one Discard. Changes only the hand and the layer
+## over the mat, not the whole drawer (a full redraw took ~100ms on a PC
+## with a turn-18 mat).
 func _lift(n: String) -> void:
-	var picked := selected != ""
-	lifted = n
-	if n != "":
+	var had_mat := selected != ""
+	if n == "":
+		picks = []
+	elif picks.has(n):
+		picks.erase(n)
+	elif picks.size() >= int(Data.t("HAND_DISCARD_MAX")):
+		_show_toast("Discard up to %d cards at a time." % int(Data.t("HAND_DISCARD_MAX")))
+		return
+	else:
+		picks.append(n)
+	lifted = picks[0] if picks.size() == 1 else ""
+	if not picks.is_empty():
 		selected = ""
-	if picked and n != "":  # the picked mat card's ring and Frame button go too
+	if had_mat and not picks.is_empty():  # the picked mat card's ring goes too
 		_redraw()
 		return
-	_hand_view.show_hand(Game.state.hand.hand, lifted)
+	_hand_view.show_hand(Game.state.hand.hand, lifted, picks)
 	_lift_layer()
 	if App.current:
 		App.current.sync_hub()
+
+
+## A tap on a blank space: nothing picked any more.
+func _blank_tap(ev: InputEvent) -> void:
+	if Tap.tap(ev) and (not picks.is_empty() or selected != ""):
+		picks = []
+		lifted = ""
+		selected = ""
+		_redraw()
 
 
 ## With a card lifted, a layer over the mat page takes the play: a tap on a
@@ -745,40 +754,39 @@ func hand_draw() -> void:
 	_redraw()
 
 
-## The hub's Discard: the lifted card out, or (Take Back) the picked mat
-## card into the hand.
+## The hub's Discard: the picked mat card (free), or the picked hand cards
+## (up to HAND_DISCARD_MAX, for one discard).
 func hand_discard() -> void:
 	var h = Game.check_hand()
 	if h == null or playing:
 		return
-	if lifted == "" and selected == "":
-		_show_toast("Tap a card in your hand (or on the mat) first.")
+	if picks.is_empty() and selected == "":
+		_show_toast("Tap cards in your hand (or one on the mat) first.")
 		return
-	var msg := Hand.discard(h, lifted) if lifted != "" else Hand.take_back(h, Game.state, selected)
+	var msg := Hand.mat_discard(h, Game.state, selected) if selected != "" else Hand.discard(h, picks)
 	if msg != "":
 		_show_toast(msg)
 		return
+	picks = []
 	lifted = ""
 	selected = ""
 	Game._changed()
 
 
-## The hub's Rehang: asks first (it can't be undone).
-func hand_rehang() -> void:
+## The hub's Take Back: the picked mat card into the hand.
+func hand_take_back() -> void:
 	var h = Game.check_hand()
 	if h == null or playing:
 		return
-	var no := Hand.why_not_rehang(h, Game.state)
-	if no != "":
-		_show_toast(no)
+	if selected == "":
+		_show_toast("Tap a card on the mat first.")
 		return
-	ConfirmDialog.ask(App.current if App.current else self,
-		"Rehang the display? Every card on the mat goes back into the deck (framed ones stay), you draw a full hand, and you get a play for each card that went back (instead of this check's %d)." % int(Data.t("HAND_PLAYS")),
-		func():
-			if Hand.rehang(h, Game.state) == "":
-				lifted = ""
-				selected = ""
-				Game._changed())
+	var msg := Hand.take_back(h, Game.state, selected)
+	if msg != "":
+		_show_toast(msg)
+		return
+	selected = ""
+	Game._changed()
 
 
 func _play(over: String) -> void:
@@ -793,6 +801,7 @@ func _play(over: String) -> void:
 		_show_toast(msg)
 		return
 	lifted = ""
+	picks = []
 	Game._changed()
 	Juice.buzz()
 	if old_at.has_area():  # the replaced card drops away toward the discards
@@ -1161,8 +1170,6 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var cols: int = L.cols
 	var inner := page.size.x - 2 * (page_pad + 2)
 	var col_w := (inner - (open - 1) * cols_gap) / open  # open columns share the width
-	var hand = Game.check_hand()
-	var fr: Array = Hand.framed(hand) if hand != null else []  # framed: they stay through a Rehang
 	var lit_suits: Array = sc.combos.suit.map(func(g): return g.name)
 	var lit_st: Array = sc.combos.station.map(func(g): return g.name)
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
@@ -1185,8 +1192,6 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 			card.size = Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)
 			page.add_child(card)
 			_mat_nodes[sl.card.name] = card
-			if fr.has(sl.card.name):
-				page.add_child(_frame_ring(card.position, card.size))
 		elif sl.has("stack") or sl.kind == "top":
 			var stack: Array = sl.get("stack", [])
 			var per: int = 1 if sl.kind == "top" else L.perSlot
@@ -1202,8 +1207,6 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					mini.size = Vector2(col_w, mh)
 					page.add_child(mini)
 					_mat_nodes[stack[k].card.name] = mini
-					if fr.has(stack[k].card.name):
-						page.add_child(_frame_ring(mini.position, mini.size))
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
 					_empties.append(Rect2(at, Vector2(col_w, mh)))
@@ -1268,20 +1271,11 @@ static func _selected_ring(pos: Vector2, sz: Vector2) -> Panel:
 	return r
 
 
-## A framed mat card's gold frame.
-static func _frame_ring(pos: Vector2, sz: Vector2) -> Panel:
-	var r := Panel.new()
-	r.position = pos - Vector2(3, 3)
-	r.size = sz + Vector2(6, 6)
-	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 12, 4, Tok.GOLD, 4, 0, Color(1, 0.84, 0.47, 0.6)))
-	r.mouse_filter = MOUSE_FILTER_IGNORE
-	return r
-
-
 ## An empty slot: a 2px dashed outline (.mm-slot.empty, .mm-mini-empty).
 static func _dashed(r: Rect2, radius: float) -> Control:
 	var d := DashedBox.new()
 	d.position = r.position
 	d.size = r.size
 	d.radius = radius
+	d.mouse_filter = MOUSE_FILTER_IGNORE  # a tap on an empty slot is a blank tap (the page's)
 	return d

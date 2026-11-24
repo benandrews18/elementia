@@ -8,13 +8,13 @@
 ## discards); mat cards leave no other way. Discards are out for the rest
 ## of the check. `h` is {deck, hand, discards, fresh, plays, tosses}
 ## (names, then the plays and discards left); `s` the run state (its mat).
-## Taking control (2026-11-23): Rehang (all of a check's plays, none used
-## yet: the mat back into the deck, a full hand, a play for each card it
-## held), Take back (a discard: a mat card back into the hand), and draws
+## Taking control (2026-11-23): a Discard throws out up to
+## HAND_DISCARD_MAX hand cards for one of the check's discards; a mat card
+## can be discarded for free, any number of times; Take back (a mat card
+## back into the hand) has its own budget, HAND_TAKEBACKS a check; draws
 ## paid from stock: 1 element draws a card with its suit's pip, 1 Unknown
-## Element token draws any card the player picks. Frame (2026-11-23): mat
-## cards framed (up to HAND_FRAME_SQUARES squares: tier 1 = 1, tiers 2-3 =
-## 2, a capstone = 4) stay on the mat through a Rehang.
+## Element token draws any card the player picks. (Rehang and Frame are
+## gone: the user, 2026-11-23, to feel out the base game first.)
 class_name Hand
 
 static func start() -> int:
@@ -36,7 +36,7 @@ static func deal(s: Dictionary) -> Dictionary:
 				fresh.append(n)
 	var rest: Array = s.items.filter(func(n): return ok.call(n) and not fresh.has(n))
 	var h := {"deck": _shuffled(fresh) + _shuffled(rest), "hand": [], "discards": [], "fresh": fresh,
-		"plays": int(Data.t("HAND_PLAYS")), "tosses": int(Data.t("HAND_DISCARDS"))}
+		"plays": int(Data.t("HAND_PLAYS")), "tosses": int(Data.t("HAND_DISCARDS")), "takebacks": int(Data.t("HAND_TAKEBACKS"))}
 	draw(h, start())
 	return h
 
@@ -98,7 +98,6 @@ static func play(h: Dictionary, s: Dictionary, name: String, over := "") -> Stri
 	s.mat = mat
 	h.hand.erase(name)
 	h.plays -= 1
-	_unframe(h, over)
 	if over != "":
 		h.discards.append(over)
 	return ""
@@ -117,56 +116,45 @@ static func gain(s: Dictionary, ctx: Dictionary, name: String, over := "", base 
 	return Mat.score(cards.call(mat), s, ctx).total - base
 
 
-static func discard(h: Dictionary, name: String) -> String:
-	if not h.hand.has(name):
+## Discards up to HAND_DISCARD_MAX hand cards at once, for one discard.
+static func discard(h: Dictionary, names: Array) -> String:
+	if names.is_empty() or not names.all(func(n): return h.hand.has(n)):
 		return "That card isn't in your hand."
+	if names.size() > int(Data.t("HAND_DISCARD_MAX")):
+		return "Discard up to %d cards at a time." % int(Data.t("HAND_DISCARD_MAX"))
 	if h.tosses <= 0:
 		return "No discards left this check."
-	h.hand.erase(name)
-	h.discards.append(name)
+	for n in names:
+		h.hand.erase(n)
+		h.discards.append(n)
 	h.tosses -= 1
 	return ""
 
 
-## Rehang: the whole mat back into the deck (shuffled in), the hand filled
-## to its most, and a play for each card the mat held (in place of the
-## check's plays, which must all be unused).
-static func rehang(h: Dictionary, s: Dictionary) -> String:
-	var no := why_not_rehang(h, s)
-	if no != "":
-		return no
-	var keep: Array = s.mat.filter(func(n): return framed(h).has(n))
-	var off: Array = s.mat.filter(func(n): return not keep.has(n))
-	h.plays = off.size()
-	h.deck = _shuffled(h.deck + off)
-	s.mat = keep
-	h.rehung = true
-	draw(h, most())
+## A mat card discarded: free, as often as you like (out for the check).
+static func mat_discard(h: Dictionary, s: Dictionary, name: String) -> String:
+	if not s.mat.has(name):
+		return "That card isn't on the mat."
+	s.mat.erase(name)
+	h.discards.append(name)
 	return ""
 
 
-static func why_not_rehang(h: Dictionary, s: Dictionary) -> String:
-	if h.get("rehung"):
-		return "You've already rehung the display this check."
-	if h.plays < int(Data.t("HAND_PLAYS")):
-		return "Rehang before your first play."
-	if s.mat.all(func(n): return framed(h).has(n)):
-		return "There's nothing to rehang." if not s.mat.is_empty() else "The mat is already empty."
-	return ""
+static func takebacks_left(h: Dictionary) -> int:
+	return int(h.get("takebacks", Data.t("HAND_TAKEBACKS")))  # a check saved before they had their own budget
 
 
-## Take back: a mat card into the hand, for a discard.
+## Take back: a mat card into the hand (its own budget, HAND_TAKEBACKS).
 static func take_back(h: Dictionary, s: Dictionary, name: String) -> String:
 	if not s.mat.has(name):
 		return "That card isn't on the mat."
-	if h.tosses <= 0:
-		return "No discards left this check."
+	if takebacks_left(h) <= 0:
+		return "No Take Backs left this check."
 	if h.hand.size() >= most():
 		return "Your hand is full."
 	s.mat.erase(name)
 	h.hand.append(name)
-	h.tosses -= 1
-	_unframe(h, name)
+	h.takebacks = takebacks_left(h) - 1
 	return ""
 
 
@@ -210,33 +198,3 @@ static func pick_draw(h: Dictionary, s: Dictionary, name: String) -> String:
 	h.deck.erase(name)
 	h.hand.append(name)
 	return ""
-
-
-## How many squares a card takes on the mat (its size badge's blocks).
-static func squares(name: String) -> int:
-	var tier: String = Data.t("ITEM_TIER").get(name, "")
-	return 1 if tier == "MATERIAL" else 4 if tier == "CAPSTONE" else 2
-
-
-static func framed(h: Dictionary) -> Array:
-	return h.get("framed", [])
-
-
-## Frames a mat card (or unframes a framed one). Returns "" or why not.
-static func frame(h: Dictionary, s: Dictionary, name: String) -> String:
-	if not s.mat.has(name):
-		return "That card isn't on the mat."
-	var f: Array = framed(h)
-	if f.has(name):
-		_unframe(h, name)
-		return ""
-	var used: int = f.reduce(func(a, n): return a + squares(n), 0)
-	if used + squares(name) > int(Data.t("HAND_FRAME_SQUARES")):
-		return "Frames hold %d squares at most." % int(Data.t("HAND_FRAME_SQUARES"))
-	h.framed = f + [name]
-	return ""
-
-
-static func _unframe(h: Dictionary, name: String) -> void:
-	if framed(h).has(name):
-		h.framed = framed(h).filter(func(n): return n != name)

@@ -25,7 +25,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 }
 ## A check with cards (card playing): the side buttons become these
 ## (id -> [emoji, label]); see App._hand_tap().
-@export var hand_sides := {"jobs": ["🎯", "Challenge"], "inv": ["🗑️", "Discard"], "market": ["🖼️", "Rehang"], "codex": ["🔒", "Lock In"]}
+@export var hand_sides := {"jobs": ["🎯", "Challenge"], "inv": ["🗑️", "Discard"], "market": ["↩️", "Take Back"], "codex": ["🔒", "Lock In"]}
 @export var frame: Texture2D
 @export var active_frame: Texture2D  # a lit side button (its panel is open)
 @export var label_color := Color.WHITE

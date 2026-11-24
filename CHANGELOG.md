@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Display Mat checks: tap several hand cards (up to 5) and Discard them all for one discard. Cards on the mat can be discarded for free, as often as you like. Take Back (a mat card back into your hand) has its own button and is once per check. Tapping a blank space lets go of what you've picked. Rehang and Frame are gone for now.
 - Display Mat checks: once the shutters open, your hand is dealt in, the cards flying up one after another. A card you tap in the top row pops out right over that row. A hand card's pop-out no longer shows convert marks or ticks on its parts (you've already crafted it).
 - Tap a combo on the mat (a station, suit or component icon) to see the cards making it; tap the ⭐ to see the collections on your mat. The 🏆 button in the Inventory now opens Collections.
 - Tapping a missing element in a card's recipe opens Convert with that card's Crafting Bench on top, so you can craft it right there.

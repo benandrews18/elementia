@@ -3,13 +3,15 @@
 ## 2026-11-23: portrait has the height, and fewer cards a row show more of
 ## each), each tilted along an arc. Each card overlaps the next one's left
 ## side, so every card's right side shows: its suit pips, its size badge
-## (the user, 2026-11-22). A tap lifts a card out of the fan as the full
-## card, components and all, on top; a tap on it again puts it back. The
-## screen plays the lifted card (DisplayMatScreen).
+## (the user, 2026-11-22). A tap picks a card, another tap puts it back
+## (lift(name): the screen keeps the picks, DisplayMatScreen). One pick is
+## lifted out of the fan as the full card, components and all, on top (the
+## one to play); two or more (up to 5, for one Discard) sit raised with a
+## tick. A tap on the hand's blank space: lift("") (let go of them all).
 class_name HandView
 extends Control
 
-signal lift(name: String)  # "" when the card is put back
+signal lift(name: String)  # a card tapped (pick or put back); "": a blank tap, let go of all
 
 @export var card_w := 112.0  # at most: smaller when the two rows need it
 @export var per_row := 5
@@ -23,6 +25,7 @@ signal lift(name: String)  # "" when the card is put back
 @export var deal_time := 0.32  # each flying up from below into its place
 
 var lifted := ""
+var picks: Array = []  # two or more picked (for Discard): raised, ticked
 ## When the check's deal starts (Time ticks, ms; 0: none). The hand is
 ## rebuilt on every redraw, so each card works out how far along its own
 ## fly-in is from this, and a redraw mid-deal doesn't restart it.
@@ -35,9 +38,12 @@ static func deal(after: float) -> void:
 	deal_at = 0 if Juice.calm() else Time.get_ticks_msec() + int(after * 1000 / Engine.time_scale)
 
 
-func show_hand(names: Array, lifted_name: String) -> void:
+func show_hand(names: Array, lifted_name: String, picked: Array = []) -> void:
 	lifted = lifted_name
+	picks = picked
 	set_meta("cmp", "hand")  # the tutorial points at the fan
+	if not gui_input.is_connected(_blank):
+		gui_input.connect(_blank)
 	for c in get_children():
 		c.queue_free()
 	var n := names.size()
@@ -81,8 +87,14 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 		if nm == lifted:
 			card.modulate.a = 0.35  # its place in the fan; the full card is over it
 			lift_x = card.position.x + cw / 2
-		card.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit("" if lifted == nm else nm))
+		card.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 		add_child(card)
+		if picks.size() > 1 and picks.has(nm):  # picked for Discard: raised, ticked
+			card.position.y -= 18
+			var tk := Tok.tick(Color.WHITE, 22, Tok.OK, Tok.CARD)
+			tk.position = Vector2(cw - 16, -8)
+			tk.mouse_filter = MOUSE_FILTER_IGNORE
+			card.add_child(tk)
 		_dealt_in(card, first + i)
 	return lift_x
 
@@ -100,7 +112,7 @@ func _lifted_card(nm: String, centre_x: float, foot: float) -> void:
 	holder.set_meta("hand", nm)
 	holder.set_meta("cmp", "hand:lifted")
 	holder.add_child(full)
-	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(""))
+	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 	add_child(holder)
 
 
@@ -122,3 +134,8 @@ func _dealt_in(card: Control, k: int) -> void:
 	if now < start:
 		tw.tween_interval((start - now) * ts / 1000.0)
 	tw.tween_property(card, "position", to, deal_time * (1.0 - p)).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+func _blank(ev: InputEvent) -> void:
+	if Tap.tap(ev):
+		lift.emit("")

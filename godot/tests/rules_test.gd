@@ -326,24 +326,25 @@ func _ready() -> void:
 	check(Hand.play(hd, s, big[5], "Nope") != "" and Hand.play(hd, s, "Nope") != "", "hand: only hand cards, only over mat cards")
 	check(Hand.play(hd, s, big[5], big[0]) == "" and hd.plays == 0 and Hand.play(hd, s, capst, big[5]) == "No plays left this check.", "hand: no plays past the budget")
 	var held: int = hd.hand.size()
-	check(Hand.discard(hd, capst) == "" and hd.hand.size() == held - 1 and hd.discards.has(capst) and hd.tosses == 0, "hand: a discard costs one and doesn't refill")
+	check(Hand.discard(hd, [capst]) == "" and hd.hand.size() == held - 1 and hd.discards.has(capst) and hd.tosses == 0, "hand: a discard costs one and doesn't refill")
 	hd.hand.append(big[6])
-	check(Hand.discard(hd, big[6]) == "No discards left this check." and hd.hand.has(big[6]), "hand: no discards past the budget")
+	check(Hand.discard(hd, [big[6]]) == "No discards left this check." and hd.hand.has(big[6]), "hand: no discards past the budget")
+	hd = {"deck": [], "hand": big.slice(0, 7), "discards": [], "fresh": [], "plays": 3, "tosses": 1}
+	check(Hand.discard(hd, big.slice(0, 6)) != "" and hd.hand.size() == 7 and hd.tosses == 1, "hand: at most 5 cards a Discard")
+	check(Hand.discard(hd, big.slice(0, 5)) == "" and hd.hand.size() == 2 and hd.discards.size() == 5 and hd.tosses == 0, "hand: up to 5 cards go for one discard")
 
-	# Taking control: Rehang, Take back, draws paid from stock.
+	# Taking control: mat discards (free), Take back (its own budget), draws paid from stock.
 	s.visits = 2
 	s.mat = big.slice(0, 2)
-	hd = {"deck": big.slice(4, 12), "hand": big.slice(2, 4), "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
-	check(Hand.take_back(hd, s, big[1]) == "" and s.mat == [big[0]] and hd.hand.has(big[1]) and hd.tosses == 0, "hand: Take back brings a mat card into the hand for a discard")
-	check(Hand.take_back(hd, s, big[0]) == "No discards left this check." and s.mat == [big[0]], "hand: no Take back without a discard")
-	s.mat = big.slice(0, 2)
-	hd.hand = big.slice(2, 4)
-	var tseen: int = hd.deck.size() + hd.hand.size() + s.mat.size()
-	check(Hand.rehang(hd, s) == "" and s.mat.is_empty() and hd.plays == 2 and hd.hand.size() == Hand.most() and hd.deck.size() + hd.hand.size() == tseen, "hand: Rehang empties the mat into the deck, fills the hand, a play per card it held")
-	check(Hand.rehang(hd, s) != "", "hand: one Rehang a check")
+	hd = {"deck": big.slice(4, 12), "hand": big.slice(2, 4), "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 0, "takebacks": 1}
+	check(Hand.mat_discard(hd, s, big[0]) == "" and s.mat == [big[1]] and hd.discards == [big[0]] and hd.tosses == 0, "hand: a mat card discards for free (no discards needed)")
+	check(Hand.mat_discard(hd, s, big[0]) != "", "hand: only mat cards")
+	check(Hand.take_back(hd, s, big[1]) == "" and s.mat.is_empty() and hd.hand.has(big[1]) and hd.takebacks == 0, "hand: Take back brings a mat card into the hand, from its own budget")
+	s.mat = [big[0]]
+	check(Hand.take_back(hd, s, big[0]) == "No Take Backs left this check." and s.mat == [big[0]], "hand: one Take back a check")
+	hd.erase("takebacks")
+	check(Hand.takebacks_left(hd) == int(Data.t("HAND_TAKEBACKS")), "hand: a check saved before Take Back had its own budget gets it")
 	hd = {"deck": big.slice(4, 12), "hand": [], "discards": [], "fresh": [], "plays": 1, "tosses": 1}
-	s.mat = big.slice(0, 1)
-	check(Hand.rehang(hd, s) == "Rehang before your first play.", "hand: no Rehang after a play")
 	var twant: String = hd.deck[3]
 	var tsuit: String = Catalog.mat_card(twant).pips[0]
 	var tsym: String = Data.t("SUIT_CORE_ELEMENTS")[tsuit][0]
@@ -356,28 +357,8 @@ func _ready() -> void:
 	check(Hand.pick_draw(hd, s, twant) == "" and hd.hand.has(twant) and not hd.deck.has(twant) and s.emptyElements == 0, "hand: an Unknown Element draws any card")
 	check(Hand.pick_draw(hd, s, hd.deck[0]) != "", "hand: no token, no pick")
 
-	# Frame: up to 4 squares stay through a Rehang.
 	s.visits = 20
-	var t1: Array = by_tier.MATERIAL
-	s.mat = [big[0], t1[0], t1[1], big[1]]
-	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
-	check(Hand.frame(hd, s, big[0]) == "" and Hand.frame(hd, s, t1[0]) == "" and Hand.frame(hd, s, t1[1]) == "" and Hand.framed(hd).size() == 3, "frame: a tier 2+ card (2) and two tier 1s (1 each) fill 4 squares")
-	check(Hand.frame(hd, s, big[1]) != "" and Hand.frame(hd, s, capst) != "", "frame: never past 4 squares, only mat cards")
-	check(Hand.frame(hd, s, t1[1]) == "" and Hand.framed(hd).size() == 2, "frame: a tap again unframes")
-	var rh := Hand.rehang(hd, s)
-	check(rh == "" and s.mat == [big[0], t1[0]] and hd.plays == 2 and (hd.deck + hd.hand).has(big[1]) and (hd.deck + hd.hand).has(t1[1]), "frame: framed cards stay through a Rehang, the rest go back")
-	hd.tosses = 1
-	check(Hand.take_back(hd, s, t1[0]) == "" and not Hand.framed(hd).has(t1[0]), "frame: a card taken back loses its frame")
-	# Rehang with a capstone (4 squares): unframed, it goes back and plays again into two free slots;
-	# framed, it fills the frame and stays.
 	s.mat = [capst, big[0]]
-	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
-	check(Hand.rehang(hd, s) == "" and s.mat.is_empty() and hd.plays == 2 and hd.hand.has(capst), "rehang: a capstone goes back into the hand like any card")
-	check(Hand.play(hd, s, capst) == "" and s.mat == [capst], "rehang: the capstone plays again into two free slots")
-	s.mat = [capst, big[0]]
-	hd = {"deck": big.slice(4, 8), "hand": [], "discards": [], "fresh": [], "plays": int(Data.t("HAND_PLAYS")), "tosses": 1}
-	check(Hand.frame(hd, s, capst) == "" and Hand.frame(hd, s, t1[0]) != "", "frame: a capstone fills all 4 squares")
-	check(Hand.rehang(hd, s) == "" and s.mat == [capst] and hd.plays == 1, "rehang: a framed capstone stays")
 	var gb: float = Mat.score(Mat.on_mat(s), s, {}).total
 	check(Hand.gain(s, {}, big[0], "", gb) == Hand.gain(s, {}, big[0]), "hand: a preview with the mat's score passed in gives the same change")
 

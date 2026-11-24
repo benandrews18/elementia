@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "challenge_elements", "combo_info", "convert_bench", "keep_fan",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "convert_bench", "keep_fan",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -317,7 +317,7 @@ func _ready() -> void:
 				if c is OrderInfo:
 					c.queue_free()
 			var mat := app._panel_node as DisplayMatScreen
-			mat.lifted = Game.state.hand.hand[2]
+			mat.picks = [Game.state.hand.hand[2]]
 			mat._redraw()
 		"combo_info":  # the test's mat: a combo chip tapped lists the cards making it
 			app.open_combo_lab()
@@ -342,6 +342,17 @@ func _ready() -> void:
 		"keep_fan":  # a craft's kept component cards peeking up from behind the hub, fanned
 			Juice.craft_keep(app, ["Water", "Steel", "Glass", "Clay"], app._hub, 2.0)
 			await get_tree().create_timer(0.75).timeout
+		"hand_picks":  # two hand cards picked for one Discard: raised and ticked, Discard (2)
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			var mat3 := app._panel_node as DisplayMatScreen
+			Game.state.hand.hand = ["Soil", "Rubber", "Tree", "Cloud", "Plastic"]  # a fixed hand (the lab's run here can be thin)
+			mat3.picks = ["Rubber", "Cloud"]
+			mat3._redraw()
 		"challenge_elements":  # the test's Elements tab: a tap spends one on a card of its suit
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
