@@ -321,29 +321,29 @@ done_if = "played"
 
 [sub_resource type="Resource" id="step43"]
 script = ExtResource("2")
-say = "Your hand: every item you craft becomes a card. Tap one to pick it up!"
+say = "Your hand: every item you craft becomes a card. Tap cards to pick them!"
 pose = 7
 target = "hand"
 until = "wait"
-done_if = "lifted|played"
+done_if = "picked|played"
 
 [sub_resource type="Resource" id="step44"]
 script = ExtResource("2")
-say = "Tap the mat to play it there."
+say = "Tap [b]Play[/b] to lay them on the mat. Once laid, cards stay!"
 pose = 7
-target = "hand:catch"
+target = "hub:home"
 done_if = "played"
 
 [sub_resource type="Resource" id="step45"]
 script = ExtResource("2")
-say = "Combos score more: 3+ from the same station, 3+ of the same suit, or an item with its recipe for [b]2x points[/b]!"
+say = "Combos score more: 3+ from the same station, 3+ of the same suit, or an item with its recipe for [b]2x points[/b]. Combos made in [b]one play[/b] count twice!"
 pose = 10
 until = "next"
 done_if = "visit:4"
 
 [sub_resource type="Resource" id="step46"]
 script = ExtResource("2")
-say = "Play up to 3 cards a check, then tap [b]Lock In[/b]."
+say = "Keep playing until the mat is full, or tap [b]Lock In[/b] to finish early."
 pose = 12
 until = "wait"
 done_if = "visit:4"

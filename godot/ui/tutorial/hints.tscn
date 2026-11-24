@@ -62,7 +62,7 @@ when = "panel:todo"
 [sub_resource type="Resource" id="hint7"]
 script = ExtResource("2")
 id = "hand"
-say = "Lift a card from your hand, then tap the mat to play it. A higher Quark Score earns more bonus dice!"
+say = "Pick up to 5 cards, then tap Play: combos made in one play count twice. A higher Quark Score earns more bonus dice!"
 pose = 7
 target = "hand"
 when = "check"
@@ -81,7 +81,7 @@ id = "rules"
 say = "Tap here for the Display Mat rules. A score under the first breakpoint ends your run!"
 pose = 10
 target = "btn:rules"
-when = "check"
+when = "panel:drawer"
 
 [node name="Hints" type="Node"]
 script = ExtResource("1")

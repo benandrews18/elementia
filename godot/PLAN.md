@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** none queued: the work queue (steps 1-13) is done. The user wants to talk about the gameplay and the gameplay loop next. Start every session with `git status`: the user may
+**Next task:** none queued: step 14 (the check reworked) is done; the user playtests it. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -309,6 +309,33 @@ with `godot-grill`.
    removed** (the user: feel out the base mechanic first; HAND_FRAME_SQUARES
    gone); a tap on the drawer, the mat page, an empty slot or the hand's
    gaps lets go of the picks. Screen: hand_picks.
+14. **The check reworked** (the user, 2026-11-23, after the gameplay-loop
+   talk; Decisions "the check reworked"). Two parts, each its own commit:
+   (a) **the rules** (core/hand.gd, core/mat.gd, game/game.gd; rules tests,
+   save compatibility): the mat clears when a check's hand is dealt; a play
+   is 1-5 picked hand cards, placed automatically (Mat.pack), no plays
+   budget; nothing comes off the mat (Take Back and mat discards go); each
+   card played or discarded is replaced 1 for 1 from the deck; 3 discards
+   of up to 5 cards; element draws grow the hand (up to 10); every combo
+   made inside one play counts once more at scoring; the check ends when
+   the mat is full (nothing left fits), or early by Lock In.
+   (b) **the screen**: Discard top left and Draw top right above the hand
+   (styled like the convert button); Draw flips the mat to its Elements
+   side (the two tabs at its lower left go); the hub's center button is
+   Play (muted until cards are picked and fit), the other hub buttons as on
+   the map; Lock In under the mat; the live score; a combo made in one play
+   shows "played together"; the tutorial's first check follows.
+   Done (2026-11-23), one commit (the screen called the removed rules, so
+   the two parts couldn't build apart): Hand.play(names) / mat_full();
+   s.matPlays (each play's names; Mat.together() derives what a play made
+   by itself, counted only on a mat holding the whole play); the Lock In
+   count beats the doubles too; the "×2" tag on a doubled combo's chip;
+   Discard / Lock In / Draw row under the mat (no page tabs or "?" during
+   a check; the rules hint shows between checks); Play on the hub (muted
+   until picked cards fit); a full mat locks in by itself after 0.9s;
+   HAND_PLAY_MAX 5 replaces HAND_PLAYS / HAND_DRAW / HAND_TAKEBACKS; rules
+   lock unchanged. Screens: challenge_hand, hand_picks, challenge_elements,
+   combo_info.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
@@ -1308,6 +1335,30 @@ Recorded so they aren't re-argued. Add new ones with the date.
 - 2026-11-21: Settings switches and title-screen buttons for features that
   don't exist yet (Mini-Games, Auto card, Low motion, 5x5; Mini-Games,
   Combo Lab, Collections, Trophies) stay hidden until their features land.
+
+- 2026-11-23 (the check reworked, the user, after the gameplay-loop talk):
+  **The mat clears at every check** (rebuilding it from the newest cards
+  was always the heart of a check; carrying strong boards over, or loading
+  saved ones, spoiled runs). **"A card laid is a card played"**: nothing
+  comes off the mat until the check ends (no Take Back, no mat discards),
+  so a check really ends and wasted tier 1 cards can leave holes. **The
+  mat's size ends the check** (it grows over a run as before); plays are
+  unlimited, 1-5 cards each, **placed automatically** (score never depends
+  on position). **Scoring: "anything you make in one play counts twice"**:
+  the finished mat scores as before, and every combo made inside a single
+  play counts once more (a suit/station/ingredient combo adds its bonus to
+  the multiplier again; an item played with its full recipe scores x3, not
+  x2; a collection completed in one play adds its bonus again; a combo that
+  grows over plays scores at its final size plus the size played together;
+  capstone effects only once). Rejected: per-play scores multiplied again
+  at the end (compounds too fast), flat per-combo bonuses (a new table, no
+  answer for complete items). **The hand refills 1 for 1** after every
+  play and discard; **3 discards of up to 5 cards**; element draws (the
+  Draw button, flipping the mat to its Elements side) are the paid way to
+  grow the hand, up to 10. No check deck (too much management): discards
+  out for the check are the deck thinning, a gamble. Supersedes the 2026-11-23
+  "Hand 7, Draw 2, 10 max, 3 plays" and step 13's Take Back and mat
+  discards.
 
 ## Open questions (for the user, when they come up)
 

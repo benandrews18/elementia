@@ -44,10 +44,10 @@ var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
 var _page: Panel
-var lifted := ""  # the hand card picked up to play (card playing, Game.state.hand): the one pick
-var picks: Array = []  # the hand cards picked (one: lifted, to play; up to 5: for one Discard)
+var lifted := ""  # with one hand card picked: it, shown as its full card over the hand
+var picks: Array = []  # the hand cards picked (up to 5), for Play (the hub's middle button) or Discard
 var _hand_view: HandView
-var _catch: Control  # with a card lifted: the layer over the mat page that takes the play
+var _preview: Control  # with cards picked: what playing them adds, over the mat
 
 
 static func make() -> DisplayMatScreen:
@@ -117,7 +117,7 @@ func _redraw() -> void:
 		else:
 			_slots(cards, sc, page, row_h, open)
 		_page_controls(page)
-		y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below
+		y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below (a check: its buttons)
 	var h = Game.check_hand()
 	_scroll.visible = h == null
 	if h != null:  # a check with cards: the hand in place of the item list
@@ -246,6 +246,17 @@ static func score_beats(cards: Array, sc: Dictionary) -> Array:
 			var members: Array = cards.filter(func(c): return (c.stations.has(g.name) if kind == "station"
 				else c.pips.has(g.name) if kind == "suit" else c.name == g.name or Mat.direct_items(c).has(g.name)))
 			beats.append({"cards": members.map(func(c): return c.name), "points": 0, "mult": g.bonus, "chip": kind + ":" + g.name})
+	# Made inside one play: counted again (Mat.together).
+	var tg: Dictionary = sc.get("together", {"combos": [], "complete": [], "cols": []})
+	for g in tg.combos:
+		var members: Array = cards.filter(func(c): return (c.stations.has(g.name) if g.kind == "station"
+			else c.pips.has(g.name) if g.kind == "suit" else c.name == g.name or Mat.direct_items(c).has(g.name)))
+		beats.append({"cards": members.map(func(c): return c.name), "points": 0, "mult": g.bonus, "chip": g.kind + ":" + g.name})
+	for c in cards:
+		if tg.complete.has(c.name) and Mat.is_complete(c, cards):
+			beats.append({"cards": [c.name] + Mat.direct_items(c).filter(func(n): return Mat.has(cards, n)), "points": c.points, "mult": 0})
+	for col in tg.cols:
+		beats.append({"cards": cards.filter(func(c): return col.items.has(c.name)).map(func(c): return c.name), "points": col.bonus, "mult": 0, "chip": "collection"})
 	var sig := func(names: Array) -> Array: return cards.filter(func(c): return names.has(c.name)).map(func(c): return c.name)
 	var pts := 0.0
 	var mult := 0.0
@@ -272,6 +283,8 @@ static func bounce(c) -> void:
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
 ## rules "?" riding its lower-right edge (renderMatTop()).
 func _page_controls(page: Control) -> void:
+	if Game.check_hand() != null:  # a check: Discard, Lock In and Draw under the page (_hand_area)
+		return
 	var bottom := page.position.y + page.size.y
 	var x := page.position.x + 4
 	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), view == "elements"], ["Display Mat", Color("#cda874"), Color("#a67c4a"), view == "mat"]]:
@@ -623,78 +636,107 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 		if ev.pressed:
 			_press_at = ev.global_position
 		elif ev.global_position.distance_to(_press_at) < 10:
-			if Game.check_hand() != null:  # a check with cards: play onto it, else pick it (Take Back), again: its card
-				if lifted != "":
-					_play(name)
-				elif selected == name and App.current:
+			if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it
+				if App.current:
 					App.current.show_card(name)
-				else:  # picked (Discard, Take Back); the hand's picks go
-					selected = name
-					picks = []
-					_redraw()
 				return
 			selected = "" if selected == name else name
 			_redraw()
 
 
-## Card playing (PLAN.md work queue 5): the plays, discards and deck left
-## over the hand, fanned in two rows; Draw, Discard and Lock In are on the
-## hub (App._hand_tap). With a card lifted, every place it could go on the
-## mat shows what it would do to the score; a tap on the mat plays it into
-## free space, a tap on a mat card plays it over that card.
+## Card playing (PLAN.md step 14): under the mat Discard (left), Lock In
+## (centre) and Draw (right: the Elements page, element draws); the hand
+## fanned in two rows below. Picked hand cards play together from the hub's
+## middle button (App._hand_tap), packed onto the mat automatically; what
+## they'd add shows over the mat.
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	picks = picks.filter(func(n): return h.hand.has(n))
 	lifted = picks[0] if picks.size() == 1 else ""
-	if not picks.is_empty() or not Game.state.mat.has(selected):  # a mat card picked (Discard, Take Back), or hand cards
-		selected = ""
+	selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
-	var top_y := page.position.y + page.size.y + 26  # under the mat's tabs
+	var row_y := page.position.y + page.size.y + 8
 	var fl := Hand.fresh_left(h)
-	var counts := Tok.label("Plays %d  ·  Discards %d  ·  Take Back %d  ·  Deck %d%s" % [h.plays, h.tosses, Hand.takebacks_left(h), h.deck.size(),
-		"  (%d new)" % fl if fl else ""], 12, Color.WHITE, 800)
-	counts.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	counts.position = Vector2(side, top_y)
-	counts.size = Vector2(size.x - 2 * side, 18)
-	counts.clip_text = true
-	counts.set_meta("cmp", "hand:counts")
-	_body.add_child(counts)
+	_hand_button("discard", "🗑️", "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
+	_hand_button("draw", "🃏", "Draw", str(h.deck.size()) + ("+" if fl else ""), Vector2(size.x - side - BTN, row_y), h.deck.is_empty(), _flip_view, view == "elements")
+	var lock := _round_button("🔒 Lock In", Vector2(124, 40), 15, Color("#8a5ce0"))
+	lock.add_theme_color_override("font_color", Color.WHITE)
+	lock.add_theme_color_override("font_pressed_color", Color.WHITE)
+	lock.add_theme_color_override("font_hover_color", Color.WHITE)
+	lock.position = Vector2((size.x - 124) / 2, row_y + (BTN - 40) / 2)
+	lock.set_meta("cmp", "hand:lockin")
+	lock.pressed.connect(func(): if App.current: App.current.hand_lock_in())
+	_body.add_child(lock)
+	var top_y := row_y + BTN + 4
 	_hand_view = HandView.new()
-	_hand_view.position = Vector2(0, top_y + 22)
-	_hand_view.size = Vector2(size.x, bottom - top_y - 22)
+	_hand_view.position = Vector2(0, top_y)
+	_hand_view.size = Vector2(size.x, bottom - top_y)
 	_body.add_child(_hand_view)
 	_hand_view.show_hand(h.hand, lifted, picks)
 	_hand_view.lift.connect(_lift)
-	_catch = null
-	_lift_layer()
-	StationScreen.corner_buttons(_body, false)  # Convert, as on the station: element draws (ConvertTray)
+	_show_preview()
+	StationScreen.corner_buttons(_body, false)  # Convert, as on the station
 	if App.current:
 		App.current.sync_hub()
 
 
+## Draw: the mat's Elements page (spend an element on a card), or back.
+func _flip_view() -> void:
+	view = "mat" if view == "elements" else "elements"
+	_redraw()
+
+
+const BTN := 54.0  # Discard and Draw: round, the Convert button's look
+
+
+## Discard / Draw: a round gold button with its icon, its name under it and
+## a count badge; dimmed when it can't be used (its tap still says why).
+func _hand_button(id: String, icon: String, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false) -> void:
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Color("#fff3d6") if lit else Tok.GOLD, BTN / 2, 3, Color("#ffe08a") if lit else Color("#5c4a20"), 4, 3, Color(0, 0, 0, 0.35)))
+	b.position = at
+	b.size = Vector2(BTN, BTN)
+	b.set_meta("cmp", "hand:" + id)
+	var ic := Tok.icon(icon, 28)
+	ic.position = Vector2((BTN - 28) / 2, 7)
+	ic.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(ic)
+	var l := Tok.label(label, 10, Tok.CARD_INK, 900)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.position = Vector2(0, BTN - 18)
+	l.size = Vector2(BTN, 12)
+	l.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(l)
+	b.add_child(HubBar._badge(badge, Vector2(BTN - 16, -6)))
+	if dim:
+		b.modulate = Color(0.6, 0.6, 0.6, 0.75)
+	b.gui_input.connect(func(ev): if Tap.tap(ev): fn.call())
+	_body.add_child(b)
+
+
 ## A hand card tapped: picked, or put back if it was ("": a blank tap in
-## the hand, let go of them all). One pick is lifted, to play; up to
-## HAND_DISCARD_MAX for one Discard. Changes only the hand and the layer
-## over the mat, not the whole drawer (a full redraw took ~100ms on a PC
+## the hand, let go of them all); up to HAND_PLAY_MAX. Changes only the hand
+## and the preview, not the whole drawer (a full redraw took ~100ms on a PC
 ## with a turn-18 mat).
 func _lift(n: String) -> void:
-	var had_mat := selected != ""
 	if n == "":
 		picks = []
 	elif picks.has(n):
 		picks.erase(n)
-	elif picks.size() >= int(Data.t("HAND_DISCARD_MAX")):
-		_show_toast("Discard up to %d cards at a time." % int(Data.t("HAND_DISCARD_MAX")))
+	elif picks.size() >= int(Data.t("HAND_PLAY_MAX")):
+		_show_toast("Pick up to %d cards at a time." % int(Data.t("HAND_PLAY_MAX")))
 		return
 	else:
 		picks.append(n)
 	lifted = picks[0] if picks.size() == 1 else ""
-	if not picks.is_empty():
-		selected = ""
-	if had_mat and not picks.is_empty():  # the picked mat card's ring goes too
+	if view == "elements" and not picks.is_empty():  # picking to play: the mat again
+		view = "mat"
 		_redraw()
 		return
 	_hand_view.show_hand(Game.state.hand.hand, lifted, picks)
-	_lift_layer()
+	var dis := _find_cmp(_body, "hand:discard")
+	if dis:
+		dis.modulate = Color(0.6, 0.6, 0.6, 0.75) if picks.is_empty() or Game.state.hand.tosses <= 0 else Color.WHITE
+	_show_preview()
 	if App.current:
 		App.current.sync_hub()
 
@@ -708,158 +750,85 @@ func _blank_tap(ev: InputEvent) -> void:
 		_redraw()
 
 
-## With a card lifted, a layer over the mat page takes the play: a tap on a
-## mat card plays over it, elsewhere into a free slot (on the Elements page
-## it puts the card back). Each place it can go shows the score change.
-func _lift_layer() -> void:
-	if is_instance_valid(_catch):
-		_catch.queue_free()
-	_catch = null
-	if lifted == "":
+## With cards picked: what playing them would add to the score, in a pill
+## over the mat's top edge (or that they don't fit).
+func _show_preview() -> void:
+	if is_instance_valid(_preview):
+		_preview.queue_free()
+	_preview = null
+	if picks.is_empty() or not is_instance_valid(_page) or view != "mat":
 		return
-	_catch = Control.new()
-	_catch.size = _page.size
-	_catch.mouse_filter = MOUSE_FILTER_STOP
-	_catch.set_meta("cmp", "hand:catch")
-	_catch.gui_input.connect(func(ev): if Tap.tap(ev): _catch_tap(_catch.get_global_transform().affine_inverse() * ev.global_position))
-	_page.add_child(_catch)
-	_gains(_catch)
+	var g = Hand.gain(Game.state, Game.ctx, picks)
+	var d := roundi(g) if g != null else 0
+	var pill := Tok.label("No room on the mat" if g == null else "+%d" % d if d > 0 else "%d" % d if d < 0 else "±0", 13, Color.WHITE, 900)
+	pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var sb := Tok.box(Tok.MUTE if g == null or d == 0 else Tok.OK if d > 0 else Tok.BAD, 10, 2, Color.WHITE, 3, 2, Color(0, 0, 0, 0.4))
+	sb.content_margin_left = 9
+	sb.content_margin_right = 9
+	pill.add_theme_stylebox_override("normal", sb)
+	pill.size = pill.get_minimum_size()
+	pill.position = Vector2((_page.size.x - pill.size.x) / 2, 6)
+	pill.mouse_filter = MOUSE_FILTER_IGNORE
+	pill.set_meta("cmp", "hand:gain")
+	_page.add_child(pill)
+	_preview = pill
 
 
-func _catch_tap(at: Vector2) -> void:
-	if view == "elements":  # not the mat: the card goes back into the hand
-		_lift("")
-		return
-	for n in _mat_nodes:
-		var c: Control = _mat_nodes[n]
-		if Rect2(c.position, c.size).has_point(at):
-			_play(n)
-			return
-	_play("")
+## Can the picked cards be played (the hub's Play in full colour)?
+func can_play() -> bool:
+	return not picks.is_empty() and not playing and Hand.gain(Game.state, Game.ctx, picks) != null
 
 
-## The lifted card's score change on each mat card it could replace, and
-## where a free play would put it.
-func _gains(layer: Control) -> void:
-	var base: float = Mat.score(Mat.on_mat(Game.state), Game.state, Game.ctx).total  # once, not per place
-	var at := {}
-	for n in _mat_nodes:
-		var c: Control = _mat_nodes[n]
-		at[n] = Rect2(c.position, c.size)
-	var free = _landing(lifted)
-	if free != null:
-		at[""] = free
-	for n in at:
-		var g = Hand.gain(Game.state, Game.ctx, lifted, n, base)
-		if g == null:
-			continue
-		var d := roundi(g)
-		var pill := Tok.label("+%d" % d if d > 0 else "%d" % d if d < 0 else "±0", 13, Color.WHITE, 900)
-		pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var sb := Tok.box(Tok.OK if d > 0 else Tok.BAD if d < 0 else Tok.MUTE, 10, 2, Color.WHITE, 3, 2, Color(0, 0, 0, 0.4))
-		sb.content_margin_left = 7
-		sb.content_margin_right = 7
-		pill.add_theme_stylebox_override("normal", sb)
-		pill.size = pill.get_minimum_size()
-		var r: Rect2 = at[n]
-		pill.position = r.position + Vector2((r.size.x - pill.size.x) / 2, minf(6, r.size.y - pill.size.y))
-		pill.set_meta("cmp", "hand:gain:" + n)
-		layer.add_child(pill)
-
-
-## Where a free play puts `name` on the page (the mat packed with it: a
-## capstone takes two slots), else the first empty slot; null if none.
-func _landing(name: String) -> Variant:
-	var card = Catalog.mat_card(name)
-	if card == null:
-		return null
-	var pack := Mat.pack(Mat.on_mat(Game.state) + [card], _stage())
-	for i in pack.slot.size():
-		var sl: Dictionary = pack.slot[i]
-		if not slot_rects.has(i):
-			continue
-		var r: Rect2 = slot_rects[i]
-		r.position -= _page.position
-		if sl.has("card") and sl.card.name == name:
-			if sl.w > 1 and slot_rects.has(i + 1):
-				r = r.merge(Rect2(slot_rects[i + 1].position - _page.position, slot_rects[i + 1].size))
-			return r
-		var stack: Array = sl.get("stack", [])
-		for k in stack.size():
-			if stack[k].card.name == name:
-				var per: int = 1 if sl.kind == "top" else pack.L.perSlot
-				var mh := (r.size.y - (per - 1) * 2) / per
-				return Rect2(r.position + Vector2(0, k * (mh + 2)), Vector2(r.size.x, mh))
-	return _empties[0] if not _empties.is_empty() else null
-
-
-## Draw (the hub's middle button).
-func hand_draw() -> void:
-	var h = Game.check_hand()
-	if h == null or playing:
-		return
-	if not Hand.can_draw(h):
-		_show_toast("Your hand is full." if not h.deck.is_empty() else "The deck is empty.")
-		return
-	Hand.draw(h)
-	_redraw()
-
-
-## The hub's Discard: the picked mat card (free), or the picked hand cards
-## (up to HAND_DISCARD_MAX, for one discard).
+## The hub's Discard: the picked hand cards (up to HAND_DISCARD_MAX), for
+## one discard; the hand refills 1 for 1.
 func hand_discard() -> void:
 	var h = Game.check_hand()
 	if h == null or playing:
 		return
-	if picks.is_empty() and selected == "":
-		_show_toast("Tap cards in your hand (or one on the mat) first.")
+	if picks.is_empty():
+		_show_toast("Tap cards in your hand first.")
 		return
-	var msg := Hand.mat_discard(h, Game.state, selected) if selected != "" else Hand.discard(h, picks)
+	var msg := Hand.discard(h, picks)
 	if msg != "":
 		_show_toast(msg)
 		return
 	picks = []
 	lifted = ""
-	selected = ""
 	Game._changed()
 
 
-## The hub's Take Back: the picked mat card into the hand.
-func hand_take_back() -> void:
+## Play (the hub's middle button): the picked cards onto the mat, packed
+## automatically; each flies from the hand into its place. A mat with no
+## room left for anything ends the check (App.hand_lock_in).
+func hand_play() -> void:
 	var h = Game.check_hand()
 	if h == null or playing:
 		return
-	if selected == "":
-		_show_toast("Tap a card on the mat first.")
+	if picks.is_empty():
+		_show_toast("Tap cards in your hand to play them.")
 		return
-	var msg := Hand.take_back(h, Game.state, selected)
+	var from := {}
+	if is_instance_valid(_hand_view):
+		for c in _hand_view.get_children():
+			if c.has_meta("hand") and picks.has(c.get_meta("hand")) and (not from.has(c.get_meta("hand")) or c.get_meta("cmp", "") == "hand:lifted"):
+				from[c.get_meta("hand")] = c.get_global_rect()
+	var played := picks.duplicate()
+	var msg := Hand.play(h, Game.state, played)
 	if msg != "":
 		_show_toast(msg)
 		return
-	selected = ""
-	Game._changed()
-
-
-func _play(over: String) -> void:
-	var name := lifted
-	var held: Control = _find_cmp(_hand_view, "hand:lifted") if is_instance_valid(_hand_view) else null
-	var from: Rect2 = held.get_global_rect() if held else Rect2()
-	var old: ItemCard = _mat_nodes.get(over) as ItemCard
-	var old_at: Rect2 = old.get_global_rect() if old else Rect2()
-	var old_opts: Dictionary = old.opts.duplicate() if old else {}
-	var msg := Hand.play(Game.state.hand, Game.state, lifted, over)
-	if msg != "":
-		_show_toast(msg)
-		return
-	lifted = ""
+	view = "mat"
 	picks = []
+	lifted = ""
 	Game._changed()
 	Juice.buzz()
-	if old_at.has_area():  # the replaced card drops away toward the discards
-		Juice.drop(ItemCard.make(over, old_opts), old_at)
-	var to := _mat_nodes.get(name) as ItemCard
-	if to:  # the played card flies from the hand into its slot (its look there: a small card stays small)
-		Juice.fly(ItemCard.make(name, to.opts.duplicate()), from, to)
+	for n in played:
+		var to := _mat_nodes.get(n) as ItemCard
+		if to and from.has(n):  # its look there: a small card stays small
+			Juice.fly(ItemCard.make(n, to.opts.duplicate()), from[n], to)
+	if Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends
+		var app := App.current
+		get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(app) and is_same(Game.check_hand(), h): app.hand_lock_in())
 
 
 static func _find_cmp(n: Node, tag: String) -> Control:
@@ -1050,6 +1019,21 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		var em = Data.t("ITEM_EMOJI").get(g.name)
 		chips.append(_counted(_icon_circle(em if em else "", Tok.PARCHMENT, Color.TRANSPARENT, 0, true), g.k))
 		chips[-1].set_meta("combo", "component:" + g.name)
+	var twice := {}  # combos made inside one play: they count twice ("x2" on their chip)
+	for t in sc.get("together", {}).get("combos", []):
+		twice[t.kind + ":" + t.name] = true
+	for c in chips:
+		if twice.has(c.get_meta("combo", "")):
+			var tag := Tok.label("×2", 10, Color.WHITE, 900)
+			var tb := Tok.box(Tok.OK, 7, 1.5, Color.WHITE)
+			tb.content_margin_left = 4
+			tb.content_margin_right = 4
+			tag.add_theme_stylebox_override("normal", tb)
+			tag.size = tag.get_minimum_size()
+			tag.position = Vector2(c.custom_minimum_size.x - tag.size.x + 4, -5)
+			tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tag.set_meta("cmp", "twice")
+			c.add_child(tag)
 	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 	var known: Array = sc.cols.filter(func(c): return found.has(c.id))
 	if not known.is_empty():

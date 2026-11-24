@@ -319,6 +319,7 @@ func _ready() -> void:
 			for c in app.get_children():
 				if c is OrderInfo:
 					c.queue_free()
+			Hand.play(Game.state.hand, Game.state, Game.state.hand.hand.slice(0, 2))  # something on the cleared mat
 			var mat := app._panel_node as DisplayMatScreen
 			mat.picks = [Game.state.hand.hand[2]]
 			mat._redraw()
@@ -329,6 +330,20 @@ func _ready() -> void:
 			for c in app.get_children():
 				if c is OrderInfo:
 					c.queue_free()
+			var by := {}  # the mat clears at a check: a station's three cards, laid in one play
+			for n in Game.state.items:
+				var mc = Catalog.mat_card(n)
+				if mc != null and not Mat.is_capstone(mc):
+					for st in mc.stations:
+						by[st] = by.get(st, []) + [n]
+			for st in by:
+				if by[st].size() >= 3:
+					Game.state.mat = by[st].slice(0, 3)
+					Game.state.matPlays = [by[st].slice(0, 3)]
+					for k in ["hand", "deck"]:
+						Game.state.hand[k] = Game.state.hand[k].filter(func(n): return not Game.state.mat.has(n))
+					break
+			Game._changed()
 			var mat2 := app._panel_node as DisplayMatScreen
 			var combos: Array = mat2._chip_nodes.keys().filter(func(k): return k != "order")
 			if not combos.is_empty():
@@ -345,7 +360,7 @@ func _ready() -> void:
 		"keep_fan":  # a craft's kept component cards peeking up from behind the hub, fanned
 			Juice.craft_keep(app, ["Water", "Steel", "Glass", "Clay"], app._hub, 2.0)
 			await get_tree().create_timer(0.75).timeout
-		"hand_picks":  # two hand cards picked for one Discard: raised and ticked, Discard (2)
+		"hand_picks":  # two hand cards picked: raised and ticked, Play in full colour
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
 			app.start_challenge_test(12)

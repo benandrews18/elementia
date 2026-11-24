@@ -21,11 +21,11 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var faces := {
 	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
-	"close": ["⬅️", "Close", ""], "draw": ["🃏", "Draw", "#1c1f26"],
+	"close": ["⬅️", "Close", ""], "play": ["🃏", "Play", "#3fb46c"],
 }
-## A check with cards (card playing): the side buttons become these
-## (id -> [emoji, label]); see App._hand_tap().
-@export var hand_sides := {"jobs": ["🎯", "Challenge"], "inv": ["🗑️", "Discard"], "market": ["↩️", "Take Back"], "codex": ["🔒", "Lock In"]}
+## A check with cards (card playing): these side buttons change (id ->
+## [emoji, label]), the rest keep their own; see App._hand_tap().
+@export var hand_sides := {"jobs": ["🎯", "Challenge"]}
 @export var frame: Texture2D
 @export var active_frame: Texture2D  # a lit side button (its panel is open)
 @export var label_color := Color.WHITE
@@ -34,6 +34,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 var face := "map"
 var shop_glyph := ""  # the Shop face's icon: the station you're at (else its 🛒)
 var greyed := false  # Home tapped and busy (the Lock-In count): grey, its tap ignored
+var muted := false  # Play with nothing to play: its colour faded (the user, 2026-11-23)
 var active := {}  # id -> true for a lit side button (its panel is open)
 var badges := {}  # id -> text of its red badge ("!")
 var via_air := false  # Travel by helicopter (off the paths): 🚁 instead of 🥾
@@ -145,8 +146,9 @@ func _side_button(id: String, b: Frame9, r: Rect2) -> void:
 	b.modulate = Color(0.6, 0.6, 0.6, 0.75) if off.get(id) else Color.WHITE
 	var ic: TextureRect = b.get_node("Icon")
 	if not _own.is_empty():
-		ic.texture = Data.icon(hand_sides[id][0]) if hand else _own[id][0]
-		b.get_node("Label").text = hand_sides[id][1] if hand else _own[id][1]
+		var mine: bool = hand and hand_sides.has(id)
+		ic.texture = Data.icon(hand_sides[id][0]) if mine else _own[id][0]
+		b.get_node("Label").text = hand_sides[id][1] if mine else _own[id][1]
 	var tex := ic.texture
 	ic.size = Vector2(42.0 * tex.get_width() / tex.get_height(), 42)
 	ic.position = Vector2((r.size.x - ic.size.x) / 2, 9)
@@ -167,7 +169,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Flat.visible = f[2] == ""  # Close: flat pale blue-grey, deliberately inert
 	$Home/Ball.visible = f[2] != ""
 	if f[2] != "":
-		var c := Color("#8e8e8e") if greyed else Color(f[2])
+		var c := Color("#8e8e8e") if greyed else Color(f[2]).lerp(Color("#9aa39c"), 0.7) if muted else Color(f[2])
 		if _ball == null:
 			_ball = load("res://ui/theme/ball.gdshader")
 		var m := ShaderMaterial.new()
@@ -182,7 +184,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Icon.visible = tex != null
 	$Home/Glyph.visible = tex == null  # shortcut: no Noto image yet for this face's emoji; the font's (desktop only)
 	$Home/Glyph.text = glyph
-	var light_label := face in ["shop", "map", "draw"]  # Draw: a very dark ball, white text (the user, 2026-11-23)
+	var light_label := face in ["shop", "map"]
 	var l: Label = $Home/Label
 	l.text = f[1]
 	l.add_theme_color_override("font_color", Color.WHITE if light_label else Color.BLACK)

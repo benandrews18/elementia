@@ -1,20 +1,17 @@
-## Card playing at a Display Mat check (PLAN.md, work queue 5; decisions
-## 2026-11-22/23). The deck is every owned mat card not on the mat: the
-## cards crafted since the last check first (the fresh side deck), then the
-## rest, each part shuffled. A hand of 7; Draw adds 2, up to 10 held. A
-## check has a budget: HAND_PLAYS plays and HAND_DISCARDS discards, and
-## neither refills the hand (Draw does), so the deck can't be cycled
-## through. A card played onto a mat card replaces it (the old one to the
-## discards); mat cards leave no other way. Discards are out for the rest
-## of the check. `h` is {deck, hand, discards, fresh, plays, tosses}
-## (names, then the plays and discards left); `s` the run state (its mat).
-## Taking control (2026-11-23): a Discard throws out up to
-## HAND_DISCARD_MAX hand cards for one of the check's discards; a mat card
-## can be discarded for free, any number of times; Take back (a mat card
-## back into the hand) has its own budget, HAND_TAKEBACKS a check; draws
-## paid from stock: 1 element draws a card with its suit's pip, 1 Unknown
-## Element token draws any card the player picks. (Rehang and Frame are
-## gone: the user, 2026-11-23, to feel out the base game first.)
+## Card playing at a Display Mat check (PLAN.md step 14, "the check
+## reworked", the user 2026-11-23). The mat clears when the hand is dealt.
+## The deck is every owned mat card: the cards crafted since the last check
+## first (the fresh side deck), then the rest, each part shuffled. A hand of
+## 7. A play is 1 to HAND_PLAY_MAX picked hand cards, packed onto the mat
+## automatically (Mat.pack; where a card sits never changes the score), as
+## many plays as fit; "a card laid is a card played": nothing comes off the
+## mat until the check ends, so a full mat ends it. Every card played or
+## discarded is replaced 1 for 1 from the deck. HAND_DISCARDS discards of
+## up to HAND_DISCARD_MAX cards, out for the rest of the check. Element
+## draws grow the hand (up to HAND_MAX): 1 element draws a card with its
+## suit's pip, 1 Unknown Element token any card. Each play's names go on
+## s.matPlays: Mat.score counts what a play made by itself once more.
+## `h` is {deck, hand, discards, fresh, tosses}; `s` the run state.
 class_name Hand
 
 static func start() -> int:
@@ -25,10 +22,12 @@ static func most() -> int:  # the most a hand holds
 	return int(Data.t("HAND_MAX"))
 
 
-## A fresh check: the fresh side deck on top, the rest under it, each
-## shuffled (Rng, so tests can feed it); deal 7.
+## A fresh check: the mat clears; the fresh side deck on top, the rest
+## under it, each shuffled (Rng, so tests can feed it); deal 7.
 static func deal(s: Dictionary) -> Dictionary:
-	var ok := func(n): return Catalog.mat_card(n) != null and not s.mat.has(n) and s.items.has(n)
+	s.mat = []
+	s.matPlays = []
+	var ok := func(n): return Catalog.mat_card(n) != null and s.items.has(n)
 	var fresh: Array = []
 	for v in Util.get_or(s, "visitLog", []).slice(maxi(0, int(s.visits) - int(Data.t("MAT_CHECK_EVERY"))), int(s.visits)):
 		for n in v.items:
@@ -36,7 +35,7 @@ static func deal(s: Dictionary) -> Dictionary:
 				fresh.append(n)
 	var rest: Array = s.items.filter(func(n): return ok.call(n) and not fresh.has(n))
 	var h := {"deck": _shuffled(fresh) + _shuffled(rest), "hand": [], "discards": [], "fresh": fresh,
-		"plays": int(Data.t("HAND_PLAYS")), "tosses": int(Data.t("HAND_DISCARDS")), "takebacks": int(Data.t("HAND_TAKEBACKS"))}
+		"tosses": int(Data.t("HAND_DISCARDS"))}
 	draw(h, start())
 	return h
 
@@ -51,14 +50,9 @@ static func _shuffled(a: Array) -> Array:
 	return d
 
 
-static func can_draw(h: Dictionary) -> bool:
-	return h.hand.size() < most() and not h.deck.is_empty()
-
-
-## Up to n (Draw's 2 by default) from the deck's top, never past the hand's
-## most. Returns how many.
-static func draw(h: Dictionary, n := -1) -> int:
-	var k := mini(int(Data.t("HAND_DRAW")) if n < 0 else n, mini(most() - h.hand.size(), h.deck.size()))
+## Up to n from the deck's top, never past the hand's most. Returns how many.
+static func draw(h: Dictionary, n: int) -> int:
+	var k := mini(n, mini(most() - h.hand.size(), h.deck.size()))
 	for i in k:
 		h.hand.append(h.deck.pop_front())
 	return k
@@ -69,51 +63,51 @@ static func fresh_left(h: Dictionary) -> int:
 	return h.deck.filter(func(n): return h.fresh.has(n)).size()
 
 
-## The mat after `name` goes onto a free slot (over == "") or over the mat
-## card `over` (taking its place in the mat's order, so a same-size card
-## lands in the same slot); or why it can't.
-static func _after(s: Dictionary, name: String, over: String) -> Variant:
-	var mat: Array = s.mat.duplicate()
-	if over == "":
-		mat.append(name)
-	elif mat.has(over):
-		mat[mat.find(over)] = name
-	else:
-		return "That card isn't on the mat."
-	var card = Catalog.mat_card(name)
-	if not Mat.fits(mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null), Mat.stage(s)):
-		return "A capstone needs two free slots." if card != null and Mat.is_capstone(card) else "There's no room for it there."
-	return mat
+## The mat with `names` added, or why they don't fit.
+static func _after(s: Dictionary, names: Array) -> Variant:
+	var mat: Array = s.mat + names
+	if Mat.fits(mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null), Mat.stage(s)):
+		return mat
+	if names.size() == 1 and Catalog.mat_card(names[0]) != null and Mat.is_capstone(Catalog.mat_card(names[0])):
+		return "A capstone needs two free slots side by side."
+	return "There's no room for %s on the mat." % ("that" if names.size() == 1 else "all of those")
 
 
-## Plays `name` from the hand (see _after). Returns "" or why not.
-static func play(h: Dictionary, s: Dictionary, name: String, over := "") -> String:
-	if not h.hand.has(name):
+## Plays the picked hand cards onto the mat, then refills the hand 1 for 1.
+## Returns "" or why not (nothing changes).
+static func play(h: Dictionary, s: Dictionary, names: Array) -> String:
+	if names.is_empty() or not names.all(func(n): return h.hand.has(n)):
 		return "That card isn't in your hand."
-	if h.plays <= 0:
-		return "No plays left this check."
-	var mat = _after(s, name, over)
+	if names.size() > int(Data.t("HAND_PLAY_MAX")):
+		return "Play up to %d cards at a time." % int(Data.t("HAND_PLAY_MAX"))
+	var mat = _after(s, names)
 	if mat is String:
 		return mat
 	s.mat = mat
-	h.hand.erase(name)
-	h.plays -= 1
-	if over != "":
-		h.discards.append(over)
+	s.matPlays = Util.get_or(s, "matPlays", []) + [names.duplicate()]
+	for n in names:
+		h.hand.erase(n)
+	draw(h, names.size())
 	return ""
 
 
-## What playing `name` there would do to the mat's score, or null if it
-## can't go there (the lifted card's preview). `base`: the mat's score now,
-## if the caller has it (one preview per place: scored once, not each time).
-static func gain(s: Dictionary, ctx: Dictionary, name: String, over := "", base := NAN) -> Variant:
-	var mat = _after(s, name, over)
+## What playing `names` would add to the mat's score, or null if they don't
+## fit (the Play button's preview). `base`: the mat's score now, if known.
+static func gain(s: Dictionary, ctx: Dictionary, names: Array, base := NAN) -> Variant:
+	var mat = _after(s, names)
 	if mat is String:
 		return null
 	var cards := func(m: Array): return m.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
 	if is_nan(base):
 		base = Mat.score(cards.call(s.mat), s, ctx).total
-	return Mat.score(cards.call(mat), s, ctx).total - base
+	var after := s.duplicate()
+	after.matPlays = Util.get_or(s, "matPlays", []) + [names]
+	return Mat.score(cards.call(mat), after, ctx).total - base
+
+
+## Is the check over? Nothing in the hand or the deck fits on the mat.
+static func mat_full(h: Dictionary, s: Dictionary) -> bool:
+	return not (h.hand + h.deck).any(func(n): return _after(s, [n]) is Array)
 
 
 ## Discards up to HAND_DISCARD_MAX hand cards at once, for one discard.
@@ -128,33 +122,7 @@ static func discard(h: Dictionary, names: Array) -> String:
 		h.hand.erase(n)
 		h.discards.append(n)
 	h.tosses -= 1
-	return ""
-
-
-## A mat card discarded: free, as often as you like (out for the check).
-static func mat_discard(h: Dictionary, s: Dictionary, name: String) -> String:
-	if not s.mat.has(name):
-		return "That card isn't on the mat."
-	s.mat.erase(name)
-	h.discards.append(name)
-	return ""
-
-
-static func takebacks_left(h: Dictionary) -> int:
-	return int(h.get("takebacks", Data.t("HAND_TAKEBACKS")))  # a check saved before they had their own budget
-
-
-## Take back: a mat card into the hand (its own budget, HAND_TAKEBACKS).
-static func take_back(h: Dictionary, s: Dictionary, name: String) -> String:
-	if not s.mat.has(name):
-		return "That card isn't on the mat."
-	if takebacks_left(h) <= 0:
-		return "No Take Backs left this check."
-	if h.hand.size() >= most():
-		return "Your hand is full."
-	s.mat.erase(name)
-	h.hand.append(name)
-	h.takebacks = takebacks_left(h) - 1
+	draw(h, names.size())
 	return ""
 
 

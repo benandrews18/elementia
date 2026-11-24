@@ -178,25 +178,49 @@ static func destination(s: Dictionary, ctx: Dictionary) -> Variant:
 	return sel if ctx.get("screen") == "map" and sel and sel != s.get("lastStation") else null
 
 
+## What the check's plays made by themselves ("anything you make in one
+## play counts twice", the user 2026-11-23): for each play in s.matPlays
+## whose cards are all in `cards`, its combos, the items complete within it
+## and the collections it completed. Derived from the names, never stored.
+static func together(cards: Array, s: Dictionary) -> Dictionary:
+	var out := {"combo": 0, "combos": [], "complete": [], "cols": []}
+	for names in Util.get_or(s, "matPlays", []):
+		var pc: Array = cards.filter(func(c): return names.has(c.name))
+		if pc.size() != names.size() or pc.size() < 2:
+			continue  # a play not on this mat (a saved layout), or one card alone
+		var g := groups(pc)
+		out.combo += combo_bonus(g.st) + combo_bonus(g.su) + combo_bonus(g.cp)
+		for kind in [["station", g.st], ["suit", g.su], ["component", g.cp]]:
+			for x in all_groups(kind[1]):
+				out.combos.append({"kind": kind[0], "name": x.name, "k": x.k, "bonus": x.bonus})
+		for c in pc:
+			if is_complete(c, pc) and not out.complete.has(c.name):
+				out.complete.append(c.name)
+		out.cols += completed_in(pc)
+	return out
+
+
 ## matScore(): (points + collection bonuses) x combo multiplier, with the
-## capstone signature rules and the challenge in force.
+## capstone signature rules and the challenge in force; what a play made by
+## itself counts once more (together()).
 static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 	var dest = destination(s, ctx) if has(cards, "Space Station") else null
 	var maglev := has(cards, "Maglev Train")
 	var robot := has(cards, "Robot")
 	var homestead := has(cards, "Homestead")
+	var tg := together(cards, s)
 	var base := 0.0
 	for c in cards:
 		var p: float = c.points + (2 if maglev and is_tier1(c) else 0) + (5 if robot else 0)
 		if is_complete(c, cards):
-			p *= 3 if homestead else 2
+			p *= (3 if homestead else 2) + (1 if tg.complete.has(c.name) else 0)  # with its recipe in one play: x3
 		if dest != null and c.stations.has(dest):
 			p *= 2
 		base += p
 	var g := groups(cards)
-	var combo := combo_bonus(g.st) + combo_bonus(g.su) + combo_bonus(g.cp)
+	var combo: int = combo_bonus(g.st) + combo_bonus(g.su) + combo_bonus(g.cp) + tg.combo
 	var col_bonus := 0.0
-	for col in completed_in(cards):
+	for col in completed_in(cards) + tg.cols:
 		col_bonus += col.bonus
 	var stations_on := {}
 	for c in cards:
@@ -222,7 +246,7 @@ static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 	if has(cards, "Space Station"): sigs.append({"name": "Space Station", "label": "×2", "on": dest != null and cards.any(func(c): return c.stations.has(dest))})
 	return {"base": base, "colBonus": col_bonus, "mult": mult, "layered": layered, "orderMult": order_mult,
 		"combos": {"station": all_groups(g.st), "suit": all_groups(g.su), "component": all_groups(g.cp)},
-		"cols": completed_in(cards), "completeNames": complete, "sigs": sigs,
+		"cols": completed_in(cards), "completeNames": complete, "sigs": sigs, "together": tg,
 		"total": Util.js_round((pre * 2 if layered else pre) * order_mult)}
 
 

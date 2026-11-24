@@ -1510,12 +1510,10 @@
  ],
  "MAT_TIER1_PER_SLOT": 2,
  "HAND_START": 7,
- "HAND_DRAW": 2,
  "HAND_MAX": 10,
- "HAND_PLAYS": 3,
+ "HAND_PLAY_MAX": 5,
  "HAND_DISCARDS": 3,
  "HAND_DISCARD_MAX": 5,
- "HAND_TAKEBACKS": 1,
  "MAT_COLLECTIONS_RAW": [
   {
    "id": "fruits",

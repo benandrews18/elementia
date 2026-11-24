@@ -87,6 +87,9 @@ func _run(app: App) -> void:
 			Tap._down = null  # the press is remembered: later test taps land elsewhere
 			Game.ctx.selectedMapStation = options[0]
 			Game.state_changed.emit()
+		if app.panel == "market":  # a crafted Market square plays its sequence in the tray: let it finish
+			await _until(func(): return not app._market_playing)
+			app.close_panel()
 		check(app.home_face() == "travel", "turn %d: Home says Travel" % turns)
 		var check_turn := Catalog.is_mat_check_visit(Game.state)
 		app._on_hub("home")  # travel
@@ -98,22 +101,19 @@ func _run(app: App) -> void:
 			_dismiss(app)
 		if app.panel == "drawer":
 			var hd = Game.check_hand()
-			check(hd != null and hd.hand.size() == mini(Hand.start(), hd.hand.size() + hd.deck.size()) and app.home_face() == "draw" and app._hub.hand, "turn %d: check turn: a hand (up to %d), Draw in the middle, Lock In on the hub" % [turns, Hand.start()])
-			if hd != null and Hand.can_draw(hd):
-				var n_held: int = hd.hand.size()
-				app._on_hub("home")
-				check(hd.hand.size() > n_held, "turn %d: Draw" % turns)
-			# Play the hand into free slots, as a player would (the mat no
-			# longer fills itself with a run's first crafts).
+			check(hd != null and hd.hand.size() == mini(Hand.start(), hd.hand.size() + hd.deck.size()) and app.home_face() == "play" and app._hub.hand, "turn %d: check turn: a hand (up to %d), Play in the middle" % [turns, Hand.start()])
+			check(Game.state.mat.size() == Util.get_or(Game.state, "matPlays", []).reduce(func(a, p): return a + p.size(), 0), "turn %d: the mat cleared for the check (only this check's plays on it)" % turns)
+			# Play a card at a time while one fits (the hand refills), as a player would.
 			var mat := app._hand_mat()
-			if hd != null and mat != null:
-				for name in hd.hand.duplicate():
-					if hd.plays <= 0:
-						break
-					mat.lifted = name
-					mat._play("")
-				mat.lifted = ""
-			app._on_hub("codex")
+			while hd != null and mat != null and Game.check_hand() != null and not mat.playing:
+				var fit: Array = hd.hand.filter(func(n): return Hand.gain(Game.state, Game.ctx, [n]) != null)
+				if fit.is_empty():
+					break
+				mat.picks = [fit[0]]
+				mat.hand_play()
+			if mat != null:
+				mat.picks = []
+			app.hand_lock_in()
 			var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
 			if not ask.is_empty():  # "your run ends here": yes
 				check(Game.lock_in_ends_run(), "asked only when the Lock-In ends the run")
@@ -173,8 +173,8 @@ func _final_score(app: App) -> void:
 	check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn 24: the shutter opens the mat")
 	check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo)), "turn 24: the Grand Exhibition shows")
 	_dismiss(app)
-	check(app.home_face() == "draw" and Game.check_hand() != null, "turn 24: the final check is played with a hand")
-	app._on_hub("codex")
+	check(app.home_face() == "play" and Game.check_hand() != null, "turn 24: the final check is played with a hand")
+	app.hand_lock_in()
 	check(await _until(func(): return Game.state.get("runComplete") == true), "turn 24: the count completes the run")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame and c._completing)), "turn 24: Run Complete shows")
 	finished.final_score = true
@@ -595,53 +595,44 @@ func _collections(app: App) -> void:
 		c.queue_free()
 	var hd: Dictionary = Game.state.get("hand", {})
 	check(Game.state != real and Game.state != lab and int(Game.state.visits) == 12 and Game.state.order != null, "the test: a copy of the run at check 12, with its challenge")
-	check(hd.get("hand", []).size() == 7 and hd.deck.all(func(n): return not Game.state.mat.has(n)), "a hand of 7 from the cards not on the mat")
+	check(hd.get("hand", []).size() == 7 and Game.state.mat.is_empty(), "a hand of 7; the mat cleared for the check")
 	var dm := app._panel_node as DisplayMatScreen
-	check(not dm._scroll.visible and _find_meta(dm, "hand:counts") != null and app._hub.visible and app._hub.hand and app._hub.face == "draw", "the hand in place of the item list; the hub's middle button is Draw")
-	app._on_hub("home")
-	check(hd.hand.size() == 9, "Draw adds 2")
-	var on_mat: String = Game.state.mat[0]
+	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") != null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard, Lock In and Draw under the mat")
+	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
+	check(app._hub.hand_sides.keys() == ["jobs"] and app._hub.off.get("market") == true, "the hub's other buttons as usual (the Challenge on Jobs), the Market shut")
 	var page_was: Panel = dm._page
-	dm._lift(hd.hand[0])
-	check(dm._page == page_was, "lifting a card doesn't rebuild the mat (only the hand and the layer over the mat)")
-	check(_find_meta(dm, "hand:gain:" + on_mat) != null and app._hub.off.get("inv") != true, "a lifted card: the score change shows on the mat; Discard lights")
-	check(app._hub.hand_sides.market[1] == "Take Back" and app._hub.off.get("market") == true, "Take Back waits for a mat card")
-	var played: String = hd.hand[0]
-	var plays: int = hd.plays
-	var mn: Control = dm._mat_nodes[on_mat]
-	dm._catch.gui_input.emit(_release(mn.get_global_rect().get_center()))
-	check(Game.state.mat.has(played) and hd.discards == [on_mat] and hd.hand.size() == 8 and hd.plays == plays - 1, "played over a mat card: it's replaced, a play spent, the hand not refilled")
+	var first: String = hd.hand[0]
+	dm._lift(first)
+	check(dm._page == page_was and dm.lifted == first, "picking a card doesn't rebuild the mat; one pick shows its card")
+	check(_find_meta(dm._page, "hand:gain") != null and not app._hub.muted, "picked: what it adds shows over the mat; Play in full colour")
+	var deck_n: int = hd.deck.size()
+	app._on_hub("home")
+	check(Game.state.mat == [first] and hd.hand.size() == 7 and hd.deck.size() == deck_n - 1 and Game.state.matPlays == [[first]], "Play: the card on the mat, the hand refilled 1 for 1")
 	var flying := func(): return app.get_children().filter(func(c): return c.has_meta("flying") and not c.is_queued_for_deletion()).size()
-	check(flying.call() == 2 and dm._mat_nodes[played].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands); the replaced one drops away")
-	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[played].modulate.a == 1.0), "the flights end: their copies freed, the card shows in its slot")
-	# Several hand cards picked: Discard (n) throws them all out, for one discard.
+	dm = app._panel_node as DisplayMatScreen
+	check(flying.call() == 1 and dm._mat_nodes[first].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands)")
+	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[first].modulate.a == 1.0), "the flight ends: its copy freed, the card shows in its slot")
+	# Several picked: Discard throws them all out, for one discard.
 	var two: Array = hd.hand.slice(0, 2)
 	dm._lift(two[0])
 	dm._lift(two[1])
-	check(dm.picks == two and dm.lifted == "" and dm._catch == null and app._hub.hand_sides.inv[1] == "Discard (2)", "two hand cards picked: none lifted to play, Discard (2)")
+	check(dm.picks == two and dm.lifted == "", "two hand cards picked: both raised, no card popped out")
 	dm._lift(two[1])
-	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left is lifted to play")
+	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left shows its card")
 	dm._lift(two[1])
 	var tosses: int = hd.tosses
-	app._on_hub("inv")
-	check(hd.hand.size() == 6 and hd.discards.size() == 3 and hd.tosses == tosses - 1, "Discard: both cards out, one discard used")
+	Tap._down = null
+	_find_meta(dm, "hand:discard").gui_input.emit(_release())
+	check(hd.hand.size() == 7 and hd.discards == two and hd.tosses == tosses - 1, "Discard: both cards out for one discard, the hand refilled")
 	dm = app._panel_node as DisplayMatScreen
 	dm._lift(hd.hand[0])
 	dm._blank_tap(_release())
 	check(dm.picks.is_empty() and dm.lifted == "", "a tap on a blank space lets go of the picks")
-	var gone: String = Game.state.mat[-1]
-	dm._on_card_input(_press(Vector2.ZERO), gone)
-	dm._on_card_input(_release(), gone)
-	check(dm.selected == gone and app._hub.off.get("inv") != true and app._hub.off.get("market") != true, "a tapped mat card: Discard and Take Back light")
-	tosses = hd.tosses
-	app._on_hub("inv")
-	check(not Game.state.mat.has(gone) and hd.discards.has(gone) and hd.tosses == tosses, "Discard on a mat card: free (no discard used)")
-	dm = app._panel_node as DisplayMatScreen
-	var back: String = Game.state.mat[-1]
-	dm._on_card_input(_press(Vector2.ZERO), back)
-	dm._on_card_input(_release(), back)
-	app._on_hub("market")
-	check(hd.hand.has(back) and not Game.state.mat.has(back) and Hand.takebacks_left(hd) == 0, "Take Back: the mat card into the hand, from its own budget")
+	dm._on_card_input(_press(Vector2.ZERO), first)
+	dm._on_card_input(_release(), first)
+	check(Game.state.mat.has(first) and dm.selected == "" and not top.call(CardPop).is_empty(), "a mat card tapped: its card shows; nothing comes off the mat")
+	for c in top.call(CardPop):
+		c.queue_free()
 	# Element draws on the mat's Elements tab; Convert works as ever.
 	var esym := ""
 	for sym in Data.t("CLASSIC_ELEMENTS"):
@@ -666,8 +657,9 @@ func _collections(app: App) -> void:
 	app._on_hub("home")
 	check(app.panel == "drawer" and Game.state.get("hand") == hd, "closing it goes back to the hand")
 	dm = app._panel_node as DisplayMatScreen
-	dm.view = "elements"
-	dm._redraw()
+	Tap._down = null
+	_find_meta(dm, "hand:draw").gui_input.emit(_release())
+	check(dm.view == "elements" and _find_meta(dm, "el:" + esym) != null, "Draw flips the mat to its Elements page")
 	var want_card := Hand.suit_card(hd, esym)
 	var n_hand: int = hd.hand.size()
 	_find_meta(dm, "el:" + esym).gui_input.emit(_release())
@@ -693,12 +685,12 @@ func _collections(app: App) -> void:
 		cps[0]._take(pick_card)
 	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
 	dm = app._panel_node as DisplayMatScreen
-	var mat_was: Array = Game.state.mat.duplicate()
+	dm.view = "elements"
+	dm._redraw()
 	dm._lift(hd.hand[0])
-	dm._catch.gui_input.emit(_release())
-	check(dm.lifted == "" and Game.state.mat == mat_was, "a lifted card tapped onto the Elements page goes back into the hand")
-	dm.view = "mat"
-	app._on_hub("codex")
+	check(dm.view == "mat" and dm.picks.size() == 1, "picking a card on the Elements page turns back to the mat")
+	dm._lift("")
+	(_find_meta(dm, "hand:lockin") as Button).pressed.emit()
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()
@@ -1123,7 +1115,7 @@ func _tutorial(app: App) -> void:
 				await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand) or Tutorial.met("settled"))
 				_dismiss(app)
 			else:  # Lock In, the Bonus Dice window, the fade
-				app._on_hub("codex")
+				app.hand_lock_in()
 				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "tutorial: Lock In counts, then the Bonus Dice window")
 				for c in app.get_children():
 					if c is LockInReward:

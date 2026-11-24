@@ -239,8 +239,8 @@ static func _met1(t: String) -> bool:
 		"selected": ok = Game.ctx.get("selectedMapStation") == v
 		"check": ok = app._hand_mat() != null
 		"settled": ok = app._hand_mat() != null and not app._window_open()  # the check's windows closed
-		"lifted": ok = app._hand_mat() != null and app._hand_mat().lifted != ""
-		"played": ok = Game.check_hand() != null and int(Game.check_hand().plays) < int(Data.t("HAND_PLAYS"))
+		"picked": ok = app._hand_mat() != null and not app._hand_mat().picks.is_empty()
+		"played": ok = Game.check_hand() != null and not Util.get_or(s, "matPlays", []).is_empty()
 		"visit": ok = int(s.get("visits", 0)) >= int(v)
 		"unknown": ok = int(Util.get_or(s, "emptyElements", 0)) > 0
 		"canconvert": ok = s.get("elements", {}).values().any(func(n): return int(n) >= int(Data.t("CONVERT_RATE")))

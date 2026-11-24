@@ -723,7 +723,7 @@ func home_face() -> String:
 	var c := Game.ctx
 	var sel = c.get("selectedMapStation")
 	if _hand_mat():
-		return "draw"
+		return "play"
 	if s.get("finalCheckPending") and (panel == "" or panel == "drawer"):
 		return "final"
 	if panel == "drawer" and c.screen == "map" and sel and can_travel_to(sel) and c.get("travelPromptFor") == sel:
@@ -855,13 +855,11 @@ func sync_hub() -> void:
 	var here = s.get("lastStation")
 	_hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
 	var mat := _hand_mat()
-	if mat:  # a check with cards: Draw in the middle, the hand's actions round it
-		var h: Dictionary = Game.state.hand
-		_hub.greyed = not Hand.can_draw(h) or mat.playing
-		_hub.hand_sides.inv = ["🗑️", "Discard (%d)" % mat.picks.size() if mat.picks.size() > 1 else "Discard"]
-		_hub.show_state("draw", {}, {"inv": str(h.tosses), "market": str(Hand.takebacks_left(h))}, false, true,
-			{"inv": mat.selected == "" and (mat.picks.is_empty() or h.tosses <= 0), "codex": mat.playing,
-			"market": mat.selected == "" or Hand.takebacks_left(h) <= 0})
+	_hub.muted = false
+	if mat:  # a check with cards: Play in the middle (muted until picked cards fit), the Challenge on Jobs
+		_hub.greyed = mat.playing
+		_hub.muted = not mat.can_play()
+		_hub.show_state("play", {"inv": true}, {}, false, true, {"market": true, "inv": Game.ctx.get("challengeTest", false)})
 		return
 	if _check_convert():  # Close goes back to the hand
 		_hub.greyed = false
@@ -890,24 +888,33 @@ func _check_convert() -> bool:
 	return panel == "convert" and Game.check_hand() != null
 
 
-## The hub during a check with cards: Draw, Discard (the picked hand cards,
-## or the picked mat card), the challenge, Take Back (the picked mat card),
-## Lock In.
-func _hand_tap(mat: DisplayMatScreen, id: String) -> void:
+## The hub during a check with cards: Play (the picked hand cards), the
+## challenge on Jobs, the Market shut until the check ends; Inventory
+## (closes the mat: the check waits) and Codex as usual. True if handled.
+func _hand_tap(mat: DisplayMatScreen, id: String) -> bool:
 	match id:
-		"home": mat.hand_draw()
-		"inv": mat.hand_discard()
+		"home": mat.hand_play()
 		"jobs": OrderInfo.open(self)
-		"market": mat.hand_take_back()
-		"codex":
-			if mat.playing:
-				return
-			if Game.ctx.get("challengeTest"):
-				challenge_lock_in()
-			elif Game.state.get("finalCheckPending"):
-				_final_lock_in()
-			else:
-				_lock_in()
+		"market": mat._show_toast("The Market opens after the check.")
+		"inv":
+			return Game.ctx.get("challengeTest", false)  # the lab's test: nothing under the mat to go back to
+		_:
+			return false
+	return true
+
+
+## Lock In (under the mat, or the mat full after a play): the check's count,
+## then on.
+func hand_lock_in() -> void:
+	var mat := _hand_mat()
+	if mat == null or mat.playing:
+		return
+	if Game.ctx.get("challengeTest"):
+		challenge_lock_in()
+	elif Game.state.get("finalCheckPending"):
+		_final_lock_in()
+	else:
+		_lock_in()
 
 
 ## The visit's roll, then the dice pop-up over everything (Collect sends
@@ -1060,8 +1067,7 @@ func fade_through_black(midpoint: Callable) -> void:
 
 func _on_hub(id: String) -> void:
 	var hand_mat := _hand_mat()
-	if hand_mat:
-		_hand_tap(hand_mat, id)
+	if hand_mat and _hand_tap(hand_mat, id):
 		return
 	if _check_convert():
 		if id == "home":
