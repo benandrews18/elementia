@@ -18,6 +18,10 @@ const NAVY := Color("#1b3446")
 
 var from := ""
 var to := ""
+## Opened from a card's missing element (the user, 2026-11-23): that card's
+## Crafting Bench rides on top of the tray, Craft and all, until it's made.
+var bench_item := ""
+var _bench: Control
 var _to_box: Control
 var _ready_now := false
 
@@ -53,6 +57,7 @@ func _redraw() -> void:
 	var h := grid_y + grid_h + 26 + big + 30 + 20
 	tray.position = Vector2(0, size.y - HubBar.H - h)
 	tray.size = Vector2(w, h + HubBar.H)
+	_put_bench(tray.position.y, w)
 	content.add_child(_unknown_badge(Vector2(w - 16 - 54, TOP_PAD + 26)))
 	# The quick grid: a tap on an element with 3+ sets FROM.
 	var y := grid_y
@@ -222,3 +227,20 @@ func do_convert() -> void:
 	from = ""
 	to = ""
 	Game.convert_elements(f, t)
+
+
+## The card's Crafting Bench just above the tray (as at the shop: Craft,
+## the pin); gone once the card is crafted.
+func _put_bench(tray_y: float, w: float) -> void:
+	if is_instance_valid(_bench):
+		_bench.queue_free()
+	var e = Catalog.entry(bench_item) if bench_item != "" else null
+	if e == null or Catalog.owns(Game.state, bench_item):
+		return
+	var bench := BenchPanel.new()
+	var bw := minf(w - 16, 420.0)
+	bench.add_child(ShopRow.make(e, bw - 36, func(n, at: Rect2): if App.current: App.current.craft_tap(n, at), func(n): Game.toggle_pin(n)))
+	bench.size = Vector2(bw, 30 + ShopRow.H + 18)
+	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y - 6)
+	add_child(bench)
+	_bench = bench

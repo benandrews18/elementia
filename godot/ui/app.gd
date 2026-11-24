@@ -663,10 +663,12 @@ func show_element_card(sym: String) -> void:
 	ElementCard.open(self, sym)
 
 
-## The Convert tray with to_sym already picked as what to convert into.
-func open_convert(to_sym: String) -> void:
+## The Convert tray with to_sym already picked as what to convert into;
+## item: the card it's missing from (its bench rides on the tray).
+func open_convert(to_sym: String, item := "") -> void:
 	open_panel("convert")
 	_panel_node.to = to_sym
+	_panel_node.bench_item = item  # its Crafting Bench on top of the tray
 	_panel_node._redraw()
 
 
@@ -934,6 +936,7 @@ func _travel(dest: String) -> void:
 		Game.ctx.travelPromptFor = dest
 		Game.start_check_order()
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
+			HandView.deal(Shutter.HOLD + Shutter.CLOSE - 0.38)  # dealt in as the shutters part (the user, 2026-11-23)
 			open_panel("drawer")
 			_check_intro())
 	else:

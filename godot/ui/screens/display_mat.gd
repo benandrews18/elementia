@@ -400,6 +400,9 @@ func _inventory(width: float) -> Control:
 			b.gui_input.connect(func(ev): if Tap.tap(ev):
 				list_mode = not list_mode
 				_redraw())
+		else:  # 🏆: the Collections window (#matCollectionsBtn; it did nothing before)
+			b.set_meta("cmp", "inv:collections")
+			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: CollectionsWindow.show_on(App.current))
 	y += 38 + 10
 	var inv: Array = Game.state.items.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
 	inv = Util.stable_sort(inv, func(a, b): return b.points - a.points if b.points != a.points else a.name.nocasecmp_to(b.name))
@@ -1020,6 +1023,11 @@ func _place_chips(chips: Array, at: Vector2, w: float) -> float:
 		_body.add_child(c)
 		if c.has_meta("combo"):
 			_chip_nodes[c.get_meta("combo")] = c
+			var combo: String = c.get_meta("combo")
+			if combo != "order":  # the challenge opens its own window; the rest: who makes the combo (the user, 2026-11-23)
+				Juice._ignore_mouse(c)  # its circle and count take no taps: the chip does
+				c.mouse_filter = MOUSE_FILTER_STOP
+				c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: ComboInfo.open_for(App.current, combo))
 		x += sz.x + chip_gap
 		row_h = maxf(row_h, sz.y)
 	# Chips in a row stretch to its tallest (flex align-items:stretch).

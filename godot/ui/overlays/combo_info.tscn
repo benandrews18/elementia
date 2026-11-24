@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/combo_info.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="x"]
+
+[node name="ComboInfo" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+dim_closes = true
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 222.0
+offset_right = 370.0
+offset_bottom = 557.0
+title = "Combo"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 44.0
+offset_right = 326.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Close" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -26.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 26.0
+texture = ExtResource("x")
+expand_mode = 1
+stretch_mode = 5

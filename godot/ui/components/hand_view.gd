@@ -19,7 +19,20 @@ signal lift(name: String)  # "" when the card is put back
 @export var lifted_w := 150.0  # the lifted card's width (a capstone's landscape card: lifted_cap_w)
 @export var lifted_cap_w := 260.0
 
+@export var deal_stagger := 0.09  # entering a check: one card after another,
+@export var deal_time := 0.32  # each flying up from below into its place
+
 var lifted := ""
+## When the check's deal starts (Time ticks, ms; 0: none). The hand is
+## rebuilt on every redraw, so each card works out how far along its own
+## fly-in is from this, and a redraw mid-deal doesn't restart it.
+static var deal_at := 0
+
+
+## Entering a check (the user, 2026-11-23): the hand is dealt in once the
+## shutters have parted, `after` seconds from now.
+static func deal(after: float) -> void:
+	deal_at = 0 if Juice.calm() else Time.get_ticks_msec() + int(after * 1000 / Engine.time_scale)
 
 
 func show_hand(names: Array, lifted_name: String) -> void:
@@ -35,18 +48,20 @@ func show_hand(names: Array, lifted_name: String) -> void:
 	var ch := cw * 1.4
 	var gap := minf(ch + 4, size.y - 8 - ch)  # foot to foot: apart when there's room, else tucked
 	var lift_x := -1.0
+	var lift_foot := size.y - 4
 	for r in rows.size():  # the back row first: the front one over it
 		var foot := size.y - 6 - (rows.size() - 1 - r) * gap
-		var x = _fan(rows[r], cw, foot)
+		var x = _fan(rows[r], cw, foot, 0 if r == 0 else rows[0].size())
 		if x >= 0:
 			lift_x = x
+			lift_foot = minf(foot + 2, size.y - 4)
 	if lift_x >= 0:
-		_lifted_card(lifted, lift_x)  # last: over the whole hand
+		_lifted_card(lifted, lift_x, lift_foot)  # last: over the whole hand
 
 
 ## One row, its cards' feet on `foot`. Returns the lifted card's centre x
 ## if it's in this row, else -1.
-func _fan(names: Array, cw: float, foot: float) -> float:
+func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 	var n := names.size()
 	var ch := cw * 1.4
 	var step := minf(cw + 6, (size.x - 16 - cw) / (n - 1)) if n > 1 else 0.0
@@ -68,21 +83,42 @@ func _fan(names: Array, cw: float, foot: float) -> float:
 			lift_x = card.position.x + cw / 2
 		card.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit("" if lifted == nm else nm))
 		add_child(card)
+		_dealt_in(card, first + i)
 	return lift_x
 
 
 ## The lifted card: the full card (CardPop's side card), raised out of the
 ## fan over its place, kept on screen; a tap puts it back.
-func _lifted_card(nm: String, centre_x: float) -> void:
+func _lifted_card(nm: String, centre_x: float, foot: float) -> void:
 	var cap: bool = Data.t("ITEM_TIER").get(nm, "") == "CAPSTONE"
-	var full := CardPop.side_card(nm, lifted_cap_w if cap else lifted_w)
+	var full := CardPop.side_card(nm, lifted_cap_w if cap else lifted_w, true)
 	var sz: Vector2 = full.size * full.scale
 	var holder := Control.new()  # takes the tap (the side card ignores the mouse)
 	holder.size = sz
-	holder.position = Vector2(clampf(centre_x - sz.x / 2, 4, size.x - 4 - sz.x), size.y - 4 - sz.y)
+	holder.position = Vector2(clampf(centre_x - sz.x / 2, 4, size.x - 4 - sz.x), foot - sz.y)  # over its own row (the user: a top-row card pops out there)
 	holder.mouse_filter = MOUSE_FILTER_STOP
 	holder.set_meta("hand", nm)
 	holder.set_meta("cmp", "hand:lifted")
 	holder.add_child(full)
 	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(""))
 	add_child(holder)
+
+
+## The deal: the k-th card flies up from below the screen into its place,
+## from wherever it has got to (a redraw mid-deal picks it up there).
+func _dealt_in(card: Control, k: int) -> void:
+	if deal_at == 0:
+		return
+	var ts := Engine.time_scale  # the clock is real time; tweens follow the game's speed
+	var start := deal_at + int(k * deal_stagger * 1000 / ts)
+	var now := Time.get_ticks_msec()
+	var p := clampf(float(now - start) * ts / (deal_time * 1000), 0.0, 1.0)
+	if p >= 1.0:
+		return
+	var to := card.position
+	var from := Vector2(to.x, size.y + 40)
+	card.position = from.lerp(to, ease(p, 0.4))
+	var tw := card.create_tween()
+	if now < start:
+		tw.tween_interval((start - now) * ts / 1000.0)
+	tw.tween_property(card, "position", to, deal_time * (1.0 - p)).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)

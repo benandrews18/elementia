@@ -27,12 +27,14 @@ var _back: Array = []  # the cards drilled in from (Back pops one)
 ## convert badge when Convert could cover it; a tap opens Convert on it), a
 ## suit you hold none of faded too; an item component opens its own card.
 var side := false
+var plain := false  # a crafted card (the hand's): no fades, ⚛ or ticks on its parts (the user, 2026-11-23)
 
 
 ## The side card for name, scaled to width w (its top-left at 0, 0).
-static func side_card(name: String, w: float) -> CardPop:
+static func side_card(name: String, w: float, plain := false) -> CardPop:
 	var p: CardPop = load(SCENE).instantiate()
 	p.side = true
+	p.plain = plain
 	p.size = Vector2(p.portrait.x, p.portrait.y)
 	p.show_item(name)
 	p.scale = Vector2.ONE * w / p.size.x
@@ -339,6 +341,8 @@ func _element(sym: String, small: bool, k := 1.0) -> Control:
 	var tw := l.get_theme_font("font").get_string_size(sym, HORIZONTAL_ALIGNMENT_LEFT, -1, int(round(px))).x
 	l.size = Vector2(tw + (10.0 if small else 18.0 * k) + 4, px + (6.0 if small else 10.0 * k) + 4)
 	l.mouse_filter = MOUSE_FILTER_STOP
+	if side and plain:
+		return l
 	if side:
 		var need := 0
 		for r in entry.reqs:
@@ -354,7 +358,7 @@ func _element(sym: String, small: bool, k := 1.0) -> Control:
 				cv.position = Vector2(l.size.x - 10 * k, -10 * k)
 				cv.modulate.a = 2.5  # undo the chip's fade
 				l.add_child(cv)
-		l.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym))
+		l.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym, entry.name))
 		return l
 	l.gui_input.connect(func(ev): if Tap.tap(ev):
 		var on := get_parent()
@@ -368,7 +372,7 @@ func _item(name: String, px: float) -> Control:
 	var c := Control.new()
 	c.size = Vector2(px, px)
 	c.add_child(Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), px))
-	if Catalog.owns(Game.state, name):  # .tok-check
+	if Catalog.owns(Game.state, name) and not plain:  # .tok-check
 		var t := Tok.tick(Color.WHITE, 17 * px / 32, Tok.OK, Tok.CARD)
 		t.position = Vector2(px - 11 * px / 32, -4 * px / 32)
 		c.add_child(t)

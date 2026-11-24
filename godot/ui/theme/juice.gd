@@ -60,7 +60,9 @@ extends Node
 @export var spark_count := 26
 @export var spark_reach := Vector2(80, 190)  # px out, at least / at most
 @export var spark_time := 0.55
-@export var keep_size := 78.0  # a kept item's card (width)
+@export var keep_size := 104.0  # a kept item's card (width; the user, 2026-11-23: larger, fanned)
+@export var keep_tilt := 7.0  # degrees per card from the fan's middle
+@export var keep_overlap := 0.45  # of a card's width under the next one
 @export var keep_up := 0.38  # peeks 75% up from behind the hub,
 @export var keep_hold := 0.65  # waits (at least; longer while elements pop),
 @export var keep_stagger := 0.07  # one after another, then back down
@@ -329,7 +331,7 @@ static func craft_keep(app: Control, items: Array, hub: Control, hold: float) ->
 		return 0.0
 	var n := items.size()
 	var top := app.size.y - HubBar.H
-	var step := minf(96.0, (app.size.x - 150) / maxf(1, n - 1))
+	var step := minf(cfg.keep_size * (1.0 - cfg.keep_overlap), (app.size.x - 20 - cfg.keep_size) / maxf(1, n - 1))  # close together: a fan
 	var held := maxf(cfg.keep_hold, hold)
 	for i in n:
 		var card := ItemCard.make(items[i], {"mini": true, "in_grid": false})
@@ -342,8 +344,9 @@ static func craft_keep(app: Control, items: Array, hub: Control, hold: float) ->
 		app.move_child(card, hub.get_index())  # under the hub: it comes up from behind it
 		var tw := card.create_tween()
 		tw.tween_interval(i * cfg.keep_stagger + 0.001)
-		tw.tween_property(card, "position:y", top - card.size.y * 0.75, cfg.keep_up).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tw.parallel().tween_property(card, "rotation_degrees", (i - (n - 1) / 2.0) * 4, cfg.keep_up)
+		var d := i - (n - 1) / 2.0
+		tw.tween_property(card, "position:y", top - card.size.y * 0.75 + d * d * 3.0, cfg.keep_up).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)  # the outer cards a little lower
+		tw.parallel().tween_property(card, "rotation_degrees", d * cfg.keep_tilt, cfg.keep_up)
 		tw.tween_interval(held)
 		tw.tween_property(card, "position:y", top, cfg.keep_up).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 		tw.parallel().tween_property(card, "rotation_degrees", 0.0, cfg.keep_up)

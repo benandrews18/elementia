@@ -9,6 +9,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-23
+- Display Mat checks: once the shutters open, your hand is dealt in, the cards flying up one after another. A card you tap in the top row pops out right over that row. A hand card's pop-out no longer shows convert marks or ticks on its parts (you've already crafted it).
+- Tap a combo on the mat (a station, suit or component icon) to see the cards making it; tap the ⭐ to see the collections on your mat. The 🏆 button in the Inventory now opens Collections.
+- Tapping a missing element in a card's recipe opens Convert with that card's Crafting Bench on top, so you can craft it right there.
+- The items you keep after crafting peek up bigger and fanned.
 - Station shop cards have a round button in the bottom-left corner: 📌 to pin (and track) the item, or, on an item your tracked item still needs, the tracked item's icon; tapping that opens the To-Do List with the breakdown open and that item outlined.
 - A crafted item leaves the Crafting Bench.
 - Aluminum Alloy and Stainless Steel show their names on two lines in the shop.

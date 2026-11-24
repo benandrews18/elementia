@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 12 of the work queue below (the user's latest batch), then 10 and 11 (10(e) needs godot-grill). Start every session with `git status`: the user may
+**Next task:** step 10 of the work queue below (general fixes; (e) needs godot-grill), then 11. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -259,10 +259,16 @@ with `godot-grill`.
    card in the top row, not down by the bottom row;
    (g) the kept component cards that peek up from the bottom when crafting:
    larger and closer together, fanned.
- and unlimited (up to the hand's
-10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
-(now a main game feature): tap a card in the list to put it on the lab's
-mat, tap it on the mat to take it off (part of step 5).
+   Done (2026-11-23): (a) HandView.deal() from the shutter's parting
+   (static deal_at; each card finds its own progress, so a redraw mid-deal
+   doesn't restart it; follows Engine.time_scale; none in Low motion); (b)
+   CardPop.side_card(plain); (c) ComboInfo (ui/overlays/combo_info.tscn:
+   cards_for() = matCardsForCombo(); the ⭐: CollectionRows, no switch);
+   (d) the Inventory's 🏆 had no handler: opens CollectionsWindow (the
+   HTML's matCollectionsBtn did the same); (e) open_convert(sym, item):
+   ConvertTray.bench_item, a BenchPanel+ShopRow above the tray; (f) the
+   lifted card's foot on its own row; (g) Juice keep_size 104, overlap,
+   tilt 7°. Screens: combo_info, convert_bench, keep_fan.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:

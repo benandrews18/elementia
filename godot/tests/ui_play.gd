@@ -344,8 +344,44 @@ func _cards(app: App) -> void:
 			need.gui_input.emit(_press(Vector2.ZERO))
 			need.gui_input.emit(_release())
 			check(app.panel == "convert" and app._panel_node.to == missing, "a missing element on the Crafting Bench opens Convert with it on the To side")
+			check(app.panel == "convert" and app._panel_node.bench_item == want[0].name and is_instance_valid(app._panel_node._bench) and _find_meta(app._panel_node._bench, "craft:" + want[0].name) != null,
+				"and the card's Crafting Bench rides on the tray, Craft and all")
 		app.close_panel()
 		app.open_card("")
+	# A hand card's pop-out (crafted): no ⚛ marks or ticks on its parts.
+	var plain := CardPop.side_card(want[0].name if not want.is_empty() else "Water", 150, true)
+	app.add_child(plain)
+	var quarks := plain.find_children("*", "TextureRect", true, false).filter(func(t): return t.texture != null and t.texture.resource_path.ends_with("btn_quark.webp"))
+	check(quarks.is_empty(), "a hand card's pop-out has no ⚛ convert marks")
+	plain.queue_free()
+	# The mat's combo chips and 🏆.
+	var three: Array = StationScreen.shop_entries(Game.ctx.current).filter(func(e): return Catalog.mat_card(e.name) != null).slice(0, 3).map(func(e): return e.name)
+	for n in three:
+		if not Game.state.items.has(n):
+			Game.state.items.append(n)
+	Game.state.mat = three.duplicate()
+	app.open_panel("drawer")
+	await get_tree().process_frame
+	var chipn: Control = app._panel_node._chip_nodes.get("station:" + Game.ctx.current)
+	check(chipn != null, "three cards from this station: its combo chip")
+	if chipn:
+		Tap._down = null
+		chipn.gui_input.emit(_release())
+		var ci: Array = open.call(ComboInfo)
+		check(ci.size() == 1 and ComboInfo.cards_for("station", Game.ctx.current).size() >= 3, "a tap on a combo chip lists the cards making it")
+		for c in ci:
+			c.queue_free()
+	var trophy := _find_meta(app._panel_node, "inv:collections")
+	if trophy:
+		Tap._down = null
+		trophy.gui_input.emit(_release())
+		check(open.call(CollectionsWindow).size() == 1, "the Inventory's 🏆 opens Collections")
+		for c in open.call(CollectionsWindow):
+			c.queue_free()
+	else:
+		check(false, "the Inventory's 🏆 is there")
+	Game.state.mat = []
+	app.close_panel()
 	# A crafted card leaves the Crafting Bench.
 	var craftable = shop.filter(func(e): return Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(e.name) and not Catalog.owns(Game.state, e.name))
 	if not craftable.is_empty():

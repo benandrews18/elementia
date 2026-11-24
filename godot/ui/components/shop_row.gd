@@ -154,7 +154,7 @@ func _recipe(at: Vector2) -> void:
 				var sym: String = r.name
 				chip.set_meta("cmp", "need:" + sym)
 				chip.mouse_filter = MOUSE_FILTER_STOP
-				chip.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym))
+				chip.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert(sym, e.name))
 			if not have and convertible > 0:  # "Convert could cover this"
 				var cv := TextureRect.new()
 				cv.texture = load("res://assets/ui/btn_quark.webp")
