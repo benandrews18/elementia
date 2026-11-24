@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 9 part 3 of the work queue below (the 💡 hints). Start every session with `git status`: the user may
+**Next task:** step 10 of the work queue below (general fixes; (e) needs godot-grill). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -180,7 +180,19 @@ with `godot-grill`.
    Periodic Table + 16 Elements are a Tutorial Messages row. Open for the
    user: by the first check the mat already holds the run's cards, so
    "tap the mat to play it" replaces one (a negative score change shows).
-   Next: part 3 (the 💡 hints).
+   Part 3 done (2026-11-23): ui/tutorial/hints.tscn lists 10 Hint
+   resources (id, say, pose, target, when: Tutorial.met's tests, now with
+   "&" and "!"), run by Hints (a Node in the App, a look every 0.25 s): one
+   HintBadge (💡, a child of its target, one fade-in) at a time; a tap:
+   MouseTip.hint() docked away, "Don't show again" (prefs.hiddenTips);
+   state.hintsSeen: tapped, or its moment passed while out. prefs.hints is
+   Game Rules' switch (guidedTutorialEnabled gone). Pattern: badge as a
+   component child of its target; rejected: one overlay layer chasing
+   targets each frame. Gone: App._walkthrough/tip_once (the dead
+   pintrackshop tip too), the How-to-Play slides on New Game, the first
+   check's Display Mat rules, the once-a-run Challenges tip, the Pin tip
+   beat (the capstone is still pinned), the Unknown Element window; all
+   still in Tutorial Messages.
 10. **General fixes** (the user, 2026-11-23):
    (a) the station shop's card view: bigger item image and text to fill
    the cards, one standard image and text size that suits tier 1 up to
