@@ -86,6 +86,7 @@ func _redraw() -> void:
 ## them behind, half hidden; renderMap()): its
 ## own station gets a gold badge with its icon (top-left), stations selling
 ## anything it still needs a small 🔍 (top-right). None on the first pick.
+## A tap on either says what it means in a small bubble (the user, 2026-11-23).
 func _badges(k: float) -> void:
 	var holder: Control = $Area/Badges
 	for c in holder.get_children():
@@ -111,6 +112,7 @@ func _badges(k: float) -> void:
 			ic.position = (b.size - ic.size) / 2
 			b.add_child(ic)
 			holder.add_child(b)
+			_on_badge(b, "You are {🔍} tracking {%s}!" % e.emoji)
 		if comps.has(n.station):
 			var g := TextureRect.new()
 			g.texture = load("res://assets/ui/btn_search.webp")
@@ -118,8 +120,50 @@ func _badges(k: float) -> void:
 			g.size = Vector2(28, 28) * k
 			g.position = c + Vector2(off, -off) - g.size / 2
 			holder.add_child(g)
-	for c in holder.get_children():
+			_on_badge(g, "Components for {%s} are here!" % e.emoji)
+
+
+func _on_badge(b: Control, says: String) -> void:
+	b.mouse_filter = MOUSE_FILTER_STOP  # the tap is the badge's, not the station's under it
+	for c in b.get_children():
 		c.mouse_filter = MOUSE_FILTER_IGNORE
+	b.gui_input.connect(func(ev): if Tap.tap(ev): _say(b, says))
+
+
+var _bubble: Control  # the badge's words showing (one at a time)
+
+
+## A small dark bubble just above at, saying text ({emoji}: its image),
+## kept on screen; gone after a few seconds.
+func _say(at: Control, text: String) -> void:
+	if is_instance_valid(_bubble):
+		_bubble.queue_free()
+	var box := PanelContainer.new()
+	var sb := Tok.box(Color("#2b1d0e"), 14, 2, Tok.GOLD, 6, 4, Color(0, 0, 0, 0.4))
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
+	sb.content_margin_top = 7
+	sb.content_margin_bottom = 7
+	box.add_theme_stylebox_override("panel", sb)
+	var t := RichTextLabel.new()
+	t.bbcode_enabled = true
+	t.fit_content = true
+	t.autowrap_mode = TextServer.AUTOWRAP_OFF
+	t.scroll_active = false
+	t.add_theme_color_override("default_color", Color.WHITE)
+	t.add_theme_font_size_override("normal_font_size", 14)
+	t.text = ParchDialog.emojify(text, 18)
+	t.mouse_filter = MOUSE_FILTER_IGNORE
+	box.mouse_filter = MOUSE_FILTER_IGNORE
+	box.add_child(t)
+	add_child(box)
+	box.size = box.get_combined_minimum_size()
+	var r := at.get_global_rect()
+	var p := Vector2(r.get_center().x - box.size.x / 2, r.position.y - box.size.y - 6) - global_position
+	box.position = Vector2(clampf(p.x, 8, size.x - box.size.x - 8), maxf(p.y, 8))
+	_bubble = box
+	Juice.pop_in(box)
+	get_tree().create_timer(2.5).timeout.connect(func(): if is_instance_valid(box): box.queue_free())
 
 
 ## Dashed paths between the stations (MAP_EDGES), wherever their nodes sit:
