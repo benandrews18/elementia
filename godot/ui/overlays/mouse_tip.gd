@@ -1,6 +1,6 @@
 ## Professor Mouse (hints.js #mouseTip): a pose and a speech bubble in one
 ## corner of the screen (or the centre), the tip's target spotlit. ✕ closes
-## it, "✕ Hide" turns the tips off (Game Rules' Tutorial tips), and the next
+## it, "✕ Hide" turns the hints off (Game Rules' Tutorial tips), and the next
 ## tap anywhere also closes it (the tap still goes through). Tips that come
 ## while a card is open wait their turn. App owns one, on its own layer above
 ## everything. The look is ui/overlays/mouse_tip.tscn.
@@ -23,6 +23,7 @@ var coaching := false  # How to Play's walkthrough: Next steps it; stray taps do
 var tutorial := false  # the first-play tutorial (Tutorial): "✕ Hide" skips it
 var _dim := true  # coaching without a target: all dark
 var _hide_text := ""
+var _hint_id := ""  # a 💡 hint showing (Hints): "✕ Hide" hides just it
 
 signal next_step
 signal skip
@@ -51,8 +52,11 @@ func _ready() -> void:
 		if tutorial:
 			skip.emit()
 			return
-		Progress.prefs.guidedTutorialEnabled = false
-		Progress.save_all()
+		if _hint_id != "":
+			Progress.hide_tip(_hint_id)
+		else:
+			Progress.prefs.hints = false
+			Progress.save_all()
 		_queue.clear()
 		hide_tip())
 
@@ -153,10 +157,7 @@ func coach(pose: int, text: String, target: Control, next: bool, dim: bool) -> v
 	coaching = true
 	tutorial = true
 	_dim = dim
-	var anchor := "bottom-left"
-	if target != null and is_instance_valid(target):
-		var c := target.get_global_rect().get_center()
-		anchor = ("top-" if c.y > size.y * 0.45 else "bottom-") + ("right" if c.x < size.x * 0.35 else "left")
+	var anchor := _dock(target)
 	$Bubble/Hide/Row/Label.text = skip_text
 	show_tip(pose, text, anchor, target, 17, -1.0, " " if next else "")
 	$Bubble/Close.visible = false
@@ -165,6 +166,22 @@ func coach(pose: int, text: String, target: Control, next: bool, dim: bool) -> v
 	if anchor.ends_with("left"):  # Mouse is on the bubble's left: Skip on its right, clear of him
 		var h: Control = $Bubble/Hide
 		h.position.x = $Bubble.size.x - h.size.x + 12
+
+
+## The corner away from target (never over it).
+func _dock(target: Control) -> String:
+	if target == null or not is_instance_valid(target):
+		return "bottom-left"
+	var c := target.get_global_rect().get_center()
+	return ("top-" if c.y > size.y * 0.45 else "bottom-") + ("right" if c.x < size.x * 0.35 else "left")
+
+
+## A 💡 hint (Hints), tapped: docked away from what it's about, spotlit;
+## "✕ Hide" reads hide_text and hides just this hint for good.
+func hint(id: String, pose: int, text: String, target: Control, hide_text: String) -> void:
+	_hint_id = id
+	$Bubble/Hide/Row/Label.text = hide_text
+	show_tip(pose, text, _dock(target), target, 17)
 
 
 ## The tutorial over: back to plain tips.
@@ -179,6 +196,9 @@ func end_coach() -> void:
 func hide_tip() -> void:
 	showing = false
 	visible = false
+	if _hint_id != "":
+		_hint_id = ""
+		$Bubble/Hide/Row/Label.text = _hide_text
 	flush()
 
 

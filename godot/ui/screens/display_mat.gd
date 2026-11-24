@@ -973,6 +973,7 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 	if o != null:
 		chips.append(_order_chip(o, sc))
 		chips[-1].set_meta("combo", "order")
+		chips[-1].set_meta("tip", "order")  # the challenge hint's 💡
 		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
 	for g in sc.sigs:
 		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))

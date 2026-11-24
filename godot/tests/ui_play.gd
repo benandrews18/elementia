@@ -11,8 +11,6 @@ var fails := 0
 var balloon_done := false
 var expansions := 0
 var convert_done := false
-var saw_rules := false
-var saw_order_tip := false  # the challenge tip, once a run
 var finished := {}  # section -> true once it ran to its end (a script error stops one quietly)
 
 
@@ -25,9 +23,7 @@ func check(ok: bool, what: String) -> void:
 
 func _ready() -> void:
 	Progress.autosave = false
-	Progress.prefs.erase("sawMatCheckTutorial")  # a first board check ever
-	Progress.prefs.guidedTutorialEnabled = false  # Professor Mouse off (the tips section turns him on)
-	Progress.prefs.sawEmptyElTip = true
+	Progress.prefs.hints = false  # no 💡 hints (the tips section turns them on)
 	Progress.prefs.tutorialSeen = true  # New Game skips the first-play tutorial (its own section plays it)
 	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
@@ -50,17 +46,11 @@ func _run(app: App) -> void:
 	# the run starts at its station.
 	Progress.prefs.hiddenTips = []
 	app.new_game()
-	check(await _until(func(): return app.get_children().any(func(c): return c is HowToPlay)), "the logo, then the how-to-play slides")
-	var tut: HowToPlay = app.get_children().filter(func(c): return c is HowToPlay)[0]
-	for i in 3:
-		tut._next()  # Next, Next, Let's play
-	check(await _until(func(): return app.get_children().any(func(c): return c is CapstoneChoice)), "then the capstone choice")
+	check(await _until(func(): return app.get_children().any(func(c): return c is CapstoneChoice)), "the logo, then the capstone choice (no how-to-play slides)")
 	var pick: CapstoneChoice = app.get_children().filter(func(c): return c is CapstoneChoice)[0]
 	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
 	pick._confirm("Coral Reef")
 	pick._start("Coral Reef", pick._card)
-	check(await _until(func(): return app.get_children().any(func(c): return c is PinTip)) and app.panel == "todo", "the To-Do List and the pinning tip")
-	app.get_children().filter(func(c): return c is PinTip)[0]._done()
 	check(await _until(func(): return app._screen is StationScreen), "the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
 	var turns := 0
@@ -102,19 +92,8 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # travel
 		if check_turn:
 			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn %d: the shutter opens the mat" % turns)
-			for c in app.get_children():  # the very first board check ever: the Display Mat rules first
-				if c is MatRules and not c.is_queued_for_deletion():
-					check(not saw_rules, "turn %d: the Display Mat rules open at the first board check only" % turns)
-					saw_rules = true
-					c.close()
+			check(not app.get_children().any(func(c): return c is MatRules or (c is ParchDialog and c.tip_id == "orderTip")), "turn %d: no rules or challenge tip windows (they're hints)" % turns)
 			if Orders.current(Game.state) != null:
-				# The run's first check with a challenge: the challenges explained first (maybeShowOrderTip()).
-				var is_tip := func(c): return c is ParchDialog and c.tip_id == "orderTip" and not c.is_queued_for_deletion()
-				await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand or is_tip.call(c)))
-				for c in app.get_children().filter(is_tip):
-					check(not saw_order_tip, "turn %d: the challenge tip shows once a run" % turns)
-					saw_order_tip = true
-					c.close()
 				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
 			_dismiss(app)
 		if app.panel == "drawer":
@@ -146,7 +125,6 @@ func _run(app: App) -> void:
 	check(Game.state.get("runComplete") or Game.state.get("finalGameOver"), "the run ended properly")
 	check(balloon_done, "crafted something through the suit-spend balloon")
 	check(convert_done, "converted through the Convert tray")
-	check(saw_rules, "the first board check opened the Display Mat rules")
 	check(Game.state.visits < 12 or expansions > 0, "the mat-expansion reveal showed")
 	check(await _until(func(): return app.get_children().any(func(c): return c is EndGame)), "the end screen shows")
 	# "Review my collection", then closing the mat: the end screen comes back.
@@ -174,7 +152,6 @@ func _run(app: App) -> void:
 ## The run's last turn (24): leaving the station plays the "Final Score!"
 ## shutter and opens the mat; Home counts it and the run is complete.
 func _final_score(app: App) -> void:
-	saw_order_tip = false  # a new run: its first challenge brings the tip again
 	Game.start_run("Coral Reef")
 	await get_tree().process_frame
 	Game.state.visits = int(Data.t("RUN_COMPLETE_VISIT"))
@@ -184,10 +161,6 @@ func _final_score(app: App) -> void:
 	app._on_hub("home")
 	check(Game.state.get("finalCheckPending") == true, "turn 24: the final check is pending")
 	check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn 24: the shutter opens the mat")
-	for c in app.get_children().filter(func(c): return c is ParchDialog and c.tip_id == "orderTip" and not c.is_queued_for_deletion()):
-		check(not saw_order_tip, "turn 24: the challenge tip, if no check showed it yet")  # the run's first challenge can be the final one
-		saw_order_tip = true
-		c.close()
 	check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo)), "turn 24: the Grand Exhibition shows")
 	_dismiss(app)
 	check(app.home_face() == "draw" and Game.check_hand() != null, "turn 24: the final check is played with a hand")
@@ -694,34 +667,39 @@ func _tips(app: App) -> void:
 			c.queue_free()
 	app.mouse._queue.clear()  # and no tip from an earlier section (Settings turns the tips back on)
 	app.mouse.hide_tip()
-	Progress.prefs.guidedTutorialEnabled = true
-	Progress.prefs.tutorialHintsSeen = []
+	# The 💡 hints (Hints): one at a time, on the thing itself; a tap and
+	# Mouse says it; once a run; "Don't show again" hides just that one.
+	Progress.prefs.hints = true
+	Progress.prefs.hiddenTips = []
 	Game.start_run("Coral Reef")
 	app.close_panel()
-	for i in 3:
-		await get_tree().process_frame
-	check(app.mouse.showing and app.mouse.get_node("Bubble/Text").text.contains("Roll"), "the first tip: Roll (showing: '%s')" % app.mouse.get_node("Bubble/Text").text)
-	app.mouse.get_node("Bubble/Close").gui_input.emit(_release())
-	check(not app.mouse.showing and Progress.prefs.tutorialHintsSeen.has("firstroll"), "✕ closes it; it's seen")
-	Game._changed()
-	for i in 2:
-		await get_tree().process_frame
-	check(not app.mouse.showing, "a seen tip doesn't come back")
-	Progress.prefs.tutorialHintsSeen = []
-	Game._changed()
-	for i in 2:
-		await get_tree().process_frame
+	var badge := func(): return app.hints._badge if app.hints._on != null and is_instance_valid(app.hints._badge) else null
+	check(await _until(func(): return badge.call() != null and app.hints._on.id == "roll"), "a 💡 on Roll")
+	check(badge.call() != null and badge.call().get_parent() == app._hub.button("home") and not app.mouse.showing, "on the Roll button itself; Mouse waits for a tap")
+	Tap._down = null
+	badge.call().gui_input.emit(_release())
+	var said: String = app.mouse.get_node("Bubble/Text").text
+	check(app.mouse.showing and said.contains("Roll") and app.mouse.get_node("Bubble/Hide/Row/Label").text == app.hints.hide_text, "a tap: Mouse says it, with Don't show again ('%s')" % said)
+	check(app.hints.seen("roll") and badge.call() == null, "tapped: seen this run, the 💡 gone")
 	app.mouse.get_node("Bubble/Hide").gui_input.emit(_release())
-	check(not app.mouse.showing and Progress.prefs.guidedTutorialEnabled == false, "✕ Hide turns the tips off")
-	Progress.prefs.sawEmptyElTip = false
+	check(not app.mouse.showing and Progress.tip_hidden("roll") and Hints.enabled(), "Don't show again hides just that hint")
+	check(app.mouse.get_node("Bubble/Hide/Row/Label").text != app.hints.hide_text, "and Mouse's Hide is itself again")
+	Game.state.hintsSeen = []
+	for i in 10:
+		await get_tree().process_frame
+	check(badge.call() == null or app.hints._on.id != "roll", "a hidden hint stays hidden (next run too)")
+	Progress.prefs.hiddenTips = []
+	check(await _until(func(): return badge.call() != null and app.hints._on.id == "roll"), "unhidden, it's back")
+	Game.state.rolledHere = true
+	Game._changed()
+	check(await _until(func(): return app.hints.seen("roll")), "its moment passed while it was out: seen this run")
+	Progress.prefs.hints = false
+	check(await _until(func(): return badge.call() == null and app.hints._on == null), "hints off: no 💡")
 	Game.state.emptyElements = 1
 	Game._changed()
-	for i in 2:
+	for i in 3:
 		await get_tree().process_frame
-	var tips: Array = app.get_children().filter(func(c): return c is UnknownTip and not c.is_queued_for_deletion())
-	check(tips.size() == 1 and Progress.prefs.sawEmptyElTip, "the first \"?\" held: the Unknown Element tip")
-	if not tips.is_empty():
-		tips[0].close()
+	check(not app.get_children().any(func(c): return c is UnknownTip), "the first \"?\" held: no window (it's a hint)")
 	app.show_elements()
 	var dialogs := func(): return app.get_children().filter(func(c): return c is ParchDialog and not c.is_queued_for_deletion())
 	check(dialogs.call().size() == 1, "The 16 Elements: the periodic table")
@@ -847,7 +825,7 @@ func _settings(app: App) -> void:
 	gear.gui_input.emit(_release())
 	check(top.call(SettingsWindow).size() == 1, "the gear opens Settings")
 	var sw: SettingsWindow = top.call(SettingsWindow)[0]
-	Progress.prefs.guidedTutorialEnabled = false  # tips off, one hidden
+	Progress.prefs.hints = false  # tips off, one hidden
 	Progress.prefs.hiddenTips = ["classicTut"]
 	sw.get_node("Window/Content/Rules").pressed.emit()
 	await get_tree().process_frame
@@ -855,7 +833,7 @@ func _settings(app: App) -> void:
 	var gr: GameRules = top.call(GameRules)[0]
 	var tips: SettingRow = gr.get_node("Window/Content/Tips")
 	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())  # unchanged: stays off
-	check(Progress.prefs.guidedTutorialEnabled == false and Progress.prefs.hiddenTips == ["classicTut"], "Save keeps a switch as it is")
+	check(Progress.prefs.hints == false and Progress.prefs.hiddenTips == ["classicTut"], "Save keeps a switch as it is")
 	await get_tree().process_frame
 	app.open_settings("rules")
 	gr = top.call(GameRules)[0]
@@ -871,7 +849,7 @@ func _settings(app: App) -> void:
 	check(gr.get_node("Window/Content/Vibration").on and not gr.get_node("Window/Content/LowMotion").on, "Vibration starts on, Low motion off")
 	gr.get_node("Window/Content/LowMotion").gui_input.emit(_release())
 	gr.get_node("Window/Content/SaveRow/Save").gui_input.emit(_release())
-	check(Progress.prefs.guidedTutorialEnabled == true and Progress.prefs.hiddenTips.is_empty(), "tips back on: saved, and the hidden tips come back")
+	check(Progress.prefs.hints == true and Progress.prefs.hiddenTips.is_empty(), "tips back on: saved, and the hidden tips come back")
 	check(Progress.prefs.lowMotion == true and Juice.calm(), "Low motion saved: no press motion")
 	var leaving := func(): return app.get_children().any(func(c): return c.has_meta("leaving"))
 	check(not leaving.call(), "Low motion: Save closed the window at once (no shrinking out)")
@@ -993,8 +971,8 @@ func _tutorial(app: App) -> void:
 	app.close_panel()
 	app.mouse.hide_tip()
 	Progress.prefs.erase("tutorialSeen")
-	Progress.prefs.guidedTutorialEnabled = true  # the walkthrough tips stay quiet while it runs
-	Progress.prefs.tutorialHintsSeen = []
+	Progress.prefs.hints = true  # the 💡 hints stay quiet while it runs
+	Progress.prefs.hiddenTips = []
 	app.new_game()
 	var tut := app.tutorial
 	check(await _until(func(): return tut.running()), "the first New Game starts the tutorial")
@@ -1006,6 +984,7 @@ func _tutorial(app: App) -> void:
 		var at := tut.i
 		var st: TutorialStep = tut.steps[at]
 		await get_tree().process_frame
+		check(app.hints._on == null, "step %d: no 💡 hint while the tutorial runs" % at)
 		if st.free:
 			if st.done_if == "screen:map":
 				for e in StationScreen.shop_entries(Game.ctx.current):

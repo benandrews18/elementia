@@ -184,11 +184,15 @@ func _ready() -> void:
 
 
 ## The control a target names: a hub button, or the first visible control
-## in the App tagged with it (meta "cmp"; "x*" a prefix).
+## in the App tagged with it (meta "cmp"; "x*" a prefix; "tip:x": meta "tip").
 static func find(tag: String) -> Control:
 	var app := App.current
 	if tag.begins_with("hub:"):
 		return app._hub.button(tag.substr(4))
+	var key := "cmp"
+	if tag.begins_with("tip:"):
+		key = "tip"
+		tag = tag.substr(4)
 	var prefix := tag.ends_with("*")
 	var want := tag.trim_suffix("*")
 	var stack: Array = [app]
@@ -196,39 +200,47 @@ static func find(tag: String) -> Control:
 		var n: Node = stack.pop_front()
 		if n is Control and (not n.is_visible_in_tree() or n.is_queued_for_deletion()):
 			continue
-		if n.has_meta("cmp"):
-			var t: String = n.get_meta("cmp")
+		if n.has_meta(key):
+			var t: String = n.get_meta(key)
 			if t == want or (prefix and t.begins_with(want)):
 				return n
 		stack.append_array(n.get_children())
 	return null
 
 
-## Does the state test hold? ("a|b": either.)
+## Does the state test hold? ("a|b": either; "a&b": both, before "|";
+## "!a": not.)
 static func met(test: String) -> bool:
-	var app := App.current
-	var s := Game.state
-	for t in test.split("|"):
-		var k := t.get_slice(":", 0)
-		var v := t.get_slice(":", 1) if t.contains(":") else ""
-		var ok := false
-		match k:
-			"rolled": ok = bool(s.get("rolledHere"))
-			"collected": ok = bool(s.get("rolledHere")) and not app.get_children().any(func(c): return c is RollPopup and not c.is_queued_for_deletion())
-			"started": ok = int(s.get("visits", 0)) >= 1
-			"owns": ok = Catalog.owns(s, v)
-			"has": ok = Catalog.count(s, v) >= 1
-			"from": ok = app._panel_node is ConvertTray and app._panel_node.from == v
-			"panel": ok = app.panel == v
-			"nopanel": ok = app.panel == ""
-			"screen": ok = Game.ctx.get("screen") == v
-			"at": ok = Game.ctx.get("current") == v
-			"selected": ok = Game.ctx.get("selectedMapStation") == v
-			"check": ok = app._hand_mat() != null
-			"settled": ok = app._hand_mat() != null and not app._window_open()  # the check's windows closed
-			"lifted": ok = app._hand_mat() != null and app._hand_mat().lifted != ""
-			"played": ok = Game.check_hand() != null and int(Game.check_hand().plays) < int(Data.t("HAND_PLAYS"))
-			"visit": ok = int(s.get("visits", 0)) >= int(v)
-		if ok:
+	for alt in test.split("|"):
+		if Array(alt.split("&")).all(func(t): return _met1(t.trim_prefix("!")) != t.begins_with("!")):
 			return true
 	return false
+
+
+static func _met1(t: String) -> bool:
+	var app := App.current
+	var s := Game.state
+	var k := t.get_slice(":", 0)
+	var v := t.get_slice(":", 1) if t.contains(":") else ""
+	var ok := false
+	match k:
+		"rolled": ok = bool(s.get("rolledHere"))
+		"collected": ok = bool(s.get("rolledHere")) and not app.get_children().any(func(c): return c is RollPopup and not c.is_queued_for_deletion())
+		"started": ok = int(s.get("visits", 0)) >= 1
+		"owns": ok = Catalog.owns(s, v)
+		"has": ok = Catalog.count(s, v) >= 1
+		"from": ok = app._panel_node is ConvertTray and app._panel_node.from == v
+		"panel": ok = app.panel == v
+		"nopanel": ok = app.panel == ""
+		"screen": ok = Game.ctx.get("screen") == v
+		"at": ok = Game.ctx.get("current") == v
+		"selected": ok = Game.ctx.get("selectedMapStation") == v
+		"check": ok = app._hand_mat() != null
+		"settled": ok = app._hand_mat() != null and not app._window_open()  # the check's windows closed
+		"lifted": ok = app._hand_mat() != null and app._hand_mat().lifted != ""
+		"played": ok = Game.check_hand() != null and int(Game.check_hand().plays) < int(Data.t("HAND_PLAYS"))
+		"visit": ok = int(s.get("visits", 0)) >= int(v)
+		"unknown": ok = int(Util.get_or(s, "emptyElements", 0)) > 0
+		"canconvert": ok = s.get("elements", {}).values().any(func(n): return int(n) >= int(Data.t("CONVERT_RATE")))
+		"marketvisited": ok = bool(s.get("marketVisited"))
+	return ok

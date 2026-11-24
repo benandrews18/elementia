@@ -17,6 +17,7 @@ var _hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
 var tutorial: Tutorial  # the first-play tutorial (its steps: ui/tutorial/tutorial.tscn)
+var hints: Hints  # later plays' 💡 hints (ui/tutorial/hints.tscn)
 const LAB_BAR := 40.0  # Combo Lab's exit bar
 const LAB_TOP := 52.0  # where the lab's mat starts, under it
 var _real: Array = []  # Combo Lab: the real run and its context, put back on exit
@@ -44,6 +45,8 @@ func _ready() -> void:
 	layer.add_child(mouse)
 	tutorial = Tutorial.make()
 	add_child(tutorial)
+	hints = Hints.make()
+	add_child(hints)
 	tutorial.resume.call_deferred()  # a run saved mid-tutorial
 	Game.state_changed.connect(_sync)
 	Game.crafted.connect(_on_crafted)
@@ -106,8 +109,6 @@ func _sync() -> void:
 	_sync_floats()
 	_market_check()
 	_maybe_end()
-	_walkthrough.call_deferred()  # after this change's own windows have opened
-	_unknown_tip.call_deferred()
 	_collection_found.call_deferred()
 
 
@@ -345,11 +346,9 @@ func new_game() -> void:
 			var c := CapstoneChoice.make()
 			c.size = size
 			add_child(c)
+		choose.call()
 		if not Progress.prefs.get("tutorialSeen"):  # everyone's first New Game since the tutorial came in
-			choose.call()
-			tutorial.start()
-			return
-		HowToPlay.play(self, choose))
+			tutorial.start())
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the
@@ -370,35 +369,6 @@ func open_card(name: String) -> void:
 	if _screen is StationScreen:
 		_screen.open_card = name
 		_screen._redraw()
-
-
-## showTutorialHintOnce(): a Professor Mouse tip once ever (its id goes in
-## prefs.tutorialHintsSeen), unless the tips are off (Game Rules). Returns
-## whether it showed. queued: behind the tip showing (queueTutorialHintOnce()).
-func tip_once(id: String, pose: int, text: String, anchor := "bottom-left", target: Control = null, px := 19, queued := false, bottom := -1.0) -> bool:
-	var seen: Array = Util.get_or(Progress.prefs, "tutorialHintsSeen", [])
-	if Progress.prefs.get("guidedTutorialEnabled") == false or seen.has(id):
-		return false
-	Progress.prefs.tutorialHintsSeen = seen + [id]
-	Progress.save_all()
-	if queued:
-		mouse.queue_tip(pose, text, anchor, target, px)
-	else:
-		mouse.show_tip(pose, text, anchor, target, px, bottom)
-	return true
-
-
-## maybeShowEmptyElTip(): the first time a player ever holds a "?", what it
-## is, once whatever handed it over has finished (nothing open, run going).
-func _unknown_tip() -> void:
-	var s := Game.state
-	if Progress.prefs.get("sawEmptyElTip") or int(Util.get_or(s, "emptyElements", 0)) <= 0 or s.get("ended") or _market_playing:
-		return
-	if _window_open():
-		return  # a window is open; the next change tries again
-	Progress.prefs.sawEmptyElTip = true
-	Progress.save_all()
-	ParchDialog.open(self, UnknownTip.SCENE)
 
 
 ## maybeShowCollectionFound(): a named collection complete on the mat that
@@ -464,46 +434,6 @@ static func _tap(n: Control) -> void:
 ## A window open over the screen (anything added after the hub).
 func _window_open() -> bool:
 	return get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
-
-
-## walkthroughIdle(): nothing over the screen (no window, panel, roll or
-## opening), no tip showing or waiting.
-func _idle() -> bool:
-	return panel == "" and not mouse.showing and mouse._queue.is_empty() 		and not _window_open()
-
-
-## maybeShowWalkthroughTip(): the new player's first presses, each once ever,
-## on an idle station: Roll, Craft, Convert (then where to tap a missing
-## element), the Map; later the tracked item's badge on a shop card.
-func _walkthrough() -> void:
-	if Progress.prefs.get("guidedTutorialEnabled") == false or not _idle() or Game.ctx.get("comboLab") or tutorial.running():
-		return
-	var s := Game.state
-	if Game.ctx.screen == "map":
-		if int(s.get("visits", 0)) >= 1 and not s.get("marketVisited"):  # travel.js: back on the map, Market never opened
-			tip_once("checkmarket", 1, "Check out the Market!", "bottom-right", _hub.button("market"), 16)
-		return
-	if Game.ctx.screen != "station" or not Game.ctx.get("current") or not _screen is StationScreen:
-		return
-	if not s.get("rolledHere"):
-		tip_once("firstroll", 3, "Tap [b]Roll[/b] to get elements!", "bottom-left", _hub.button("home"), 14)
-		return
-	var craftable: Control = _screen.find_tagged("st:craft:", true)
-	if craftable != null:
-		tip_once("firstcraft", 7, "Tap a green card, then [b]Craft[/b]!", "top-left", craftable)
-		return
-	var n := 0
-	for v in s.elements.values():
-		n += int(v) / int(Data.t("CONVERT_RATE"))
-	if n > 0 and tip_once("firstconvert", 5, "Convert Elements! [b]3:1[/b]", "center", _screen.find_tagged("convert")):
-		tip_once("converttapmissing", 7, "Tap to craft missing elements", "bottom-left", null, 12, true)
-		return
-	if tip_once("gomap", 12, "Onto the next station!
-Tap the [b]Map[/b].", "bottom-left", _hub.button("home"), 15):
-		return
-	var badge: Control = _screen.find_tagged("st:needed:", true)
-	if badge != null:
-		tip_once("pintrackshop", 7, "Your tracked item needs this one!", "bottom-right", badge)
 
 
 ## The Periodic Table and the 16 Elements (Tutorial Messages): two
@@ -845,9 +775,7 @@ func _sync_floats() -> void:
 		if panel == "pins":
 			close_panel()
 		else:
-			open_panel("pins")
-			# openPinsTray(): once there's a pin to tap; on the tray's top edge (bottom:45vh)
-			tip_once("pinselect", 10, "Tap to start tracking!", "bottom-left", null, 17, false, size.y * 0.45))
+			open_panel("pins"))
 	if t == null:
 		b.add_child(HubBar._badge("!", Vector2(58 + 7 - 24, -7)))
 	_floats.add_child(b)
@@ -979,8 +907,7 @@ func _roll() -> void:
 ## Travel: on a board-check turn the shutter, then the mat opens for the
 ## Lock-In (Home becomes Lock In); tapping Travel again just reopens the mat.
 ## Otherwise a quiet check sets this trip's dice and off you go.
-## The very first check ever opens the Display Mat rules first.
-## shortcut: the once-a-run challenge tip comes with M6 step 7 (tips).
+## The rules and the challenge are hints now (Hints), not windows.
 func _travel(dest: String) -> void:
 	if Catalog.is_mat_check_visit(Game.state):
 		if Game.ctx.get("travelPromptFor") == dest:
@@ -990,12 +917,7 @@ func _travel(dest: String) -> void:
 		Game.start_check_order()
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
 			open_panel("drawer")
-			if not Progress.prefs.get("sawMatCheckTutorial") and not tutorial.running():  # the very first check ever: the rules first (the tutorial explains it)
-				Progress.prefs.sawMatCheckTutorial = true
-				Progress.save_all()
-				MatRules.show_on(self).closed.connect(_check_intro)
-			else:
-				_check_intro())
+			_check_intro())
 	else:
 		Game.quiet_check()
 		Game.go_station(dest)
@@ -1050,13 +972,6 @@ func _challenge() -> void:
 	var s := Game.state
 	var o = Orders.current(s)
 	if o == null or int(o.round) != int(s.visits):
-		return
-	# maybeShowOrderTip(): the challenges explained, the first check of a run
-	# that has one (unless hidden for good with its ✕ Hide), then this one.
-	if not s.get("sawOrderTip") and not Progress.tip_hidden("orderTip") and not tutorial.running():
-		s.sawOrderTip = true
-		Progress.save_all()
-		MatRules.order_tip(self).closed.connect(func(): OrderInfo.open(self))
 		return
 	OrderInfo.open(self)
 

@@ -3,8 +3,7 @@
 ## station's card, the capstone, its components, Back / "Start at <station>
 ## and track <capstone>"). Start flies the station's elements into the
 ## Inventory, then fades into that station with the run begun.
-## Then the To-Do List with the capstone's breakdown and the pinning tip
-## (unless hidden for good), and the fade into its station.
+## Then the fade into its station (the pinning tip is a 💡 hint now).
 class_name CapstoneChoice
 extends Control
 
@@ -199,7 +198,7 @@ func _start(name: String, card: Control) -> void:
 	_busy = true
 	var app := App.current
 	var to := app._hub.button_center("inv")
-	app._hub.spotlight("inv", true)  # lit above the dim until the To-Do List opens (introInvLit)
+	app._hub.spotlight("inv", true)  # lit above the dim while the elements fly in (introInvLit)
 	var chips := card.get_children().filter(func(c): return c.has_meta("sym"))
 	for i in chips.size():
 		var chip: Control = chips[i]
@@ -222,19 +221,7 @@ func _start(name: String, card: Control) -> void:
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
 	app._hub.spotlight("inv", false)
 	var go := func(): app.fade_through_black(func(): Game.start_run(name))
-	if Progress.tip_hidden("pinTip") or app.tutorial.running():
-		queue_free()
-		go.call()
-		return
-	visible = false  # freed once the tip is up (a freed node's await never resumes)
-	# Beat 2: the To-Do List with the capstone pinned and its breakdown
-	# open, and the pinning tip over it; Got it goes on into the station.
 	if not Progress.is_pinned(name):
 		Progress.toggle_pin(name)
-	TodoTray.expanded["refroot/" + name] = true
-	app.open_panel("todo")
-	await get_tree().create_timer(0.45).timeout
-	PinTip.open(app, func():
-		app.close_panel()
-		go.call())
-	queue_free()
+	queue_free()  # the pinning tip is the To-Do's 💡 hint now (Hints)
+	go.call()

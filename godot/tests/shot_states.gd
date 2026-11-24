@@ -14,7 +14,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_station", "map_ocean", "station_early", "clock_info",
-	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "tut_intro", "tut_elements", "tut_coach",
+	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "challenge_elements",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
@@ -27,8 +27,7 @@ func _ready() -> void:
 		state = load("res://tests/shot.gd")._args().get("state", "map")
 	Progress.prefs.pinnedItems = ["Metropolis", "Plastic"]
 	Progress.prefs.hiddenTips = []
-	Progress.prefs.guidedTutorialEnabled = false  # no Professor Mouse popping up on his own (the mouse_* states show him)
-	Progress.prefs.sawEmptyElTip = true
+	Progress.prefs.hints = false  # no 💡 hints (the hint_* states show one)
 	var app := App.new()
 	add_child(app)
 	app.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -194,7 +193,7 @@ func _ready() -> void:
 			ItemsScreen.query = "steel" if state == "items_search" else ""
 			app.open_items("Bridge" if state == "items_open" else "")
 		"settings", "game_rules", "tutorial_messages":
-			Progress.prefs.guidedTutorialEnabled = true  # Game Rules' Tutorial tips switch shows on (a window is open: no tip pops up)
+			Progress.prefs.hints = true  # Game Rules' Tutorial tips switch shows on
 			app.open_settings({"settings": "", "game_rules": "rules", "tutorial_messages": "tuts"}[state])
 		"trophies", "trophy_detail", "history", "history_open":  # with tests/fixtures/trophies_history.json
 			var fx: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/trophies_history.json"))
@@ -248,6 +247,15 @@ func _ready() -> void:
 				"mouse_tl": app.mouse.show_tip(7, "Tap a green card, then [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
 				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app._hub.button("home"))
 				"mouse_br": app.mouse.show_tip(7, "Your tracked item needs this one!", "bottom-right")
+		"hint_badge", "hint_open":  # a 💡 hint (Hints) out; tapped: Mouse says it, Don't show again
+			Progress.prefs.hints = true
+			for i in 60:
+				if app.hints._badge != null:
+					break
+				await get_tree().process_frame
+			await get_tree().create_timer(0.6).timeout  # its fade-in
+			if state == "hint_open" and app.hints._badge != null:
+				app.hints._open()
 		"tut_intro", "tut_elements":  # Tutorial Messages' The 16 Elements: its two windows
 			app.show_elements()
 			if state != "tut_intro":
