@@ -153,7 +153,9 @@ func _covered() -> bool:
 func _on_target_input(ev: InputEvent, t: Control) -> void:
 	if i < 0 or t != _target or steps[i].until != "tap":
 		return
-	if ev is InputEventMouseButton and not ev.pressed and Tap.tap(ev):
+	# Every event goes through Tap.tap: the press records where the finger
+	# went down (a target with its own tap code, like a shop card, doesn't).
+	if Tap.tap(ev):
 		_tapped.call_deferred(i)  # after the target has handled it
 
 

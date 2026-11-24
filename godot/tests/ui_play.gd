@@ -1068,7 +1068,7 @@ func _tutorial(app: App) -> void:
 
 ## A tap through the viewport, as a finger would (Tutorial._input sees it).
 func _vtap(at: Vector2) -> void:
-	Tap._down = null
+	Tap._down = Vector2(-999, -999)  # a stale press elsewhere, as on a phone: the press must be seen
 	for ev in [_press(at), _release(at)]:
 		ev.position = at
 		get_viewport().push_input(ev, true)  # in the viewport's own coordinates
