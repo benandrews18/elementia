@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 10 of the work queue below (general fixes; (e) needs godot-grill). Start every session with `git status`: the user may
+**Next task:** step 12 of the work queue below (the user's latest batch), then 10 and 11 (10(e) needs godot-grill). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -228,6 +228,37 @@ with `godot-grill`.
    not "C");
    (g) a check's restricted icons: the red cross-out drawn on top of the
    icon, not beside it, in the restriction description window.
+   Done the same day, between steps (the user's messages, 2026-11-23): the
+   tutorial stuck at Water (fixed); the map's tracked badges tappable
+   ("Components for X are here!" / "You are 🔍 tracking X!"); the run's
+   first crafts no longer auto-placed on the mat (rules lock re-recorded);
+   shop cards' bottom-left circle (📌, or the tracked item's icon: a tap
+   opens the To-Do List lit on it); a crafted card leaves the bench;
+   Aluminum Alloy / Stainless Steel on two lines; Convert opens over the
+   mat in a check, its button over the tray closes it; Draw dark/white.
+   Open with the user: the screen check's cost (proposed: screens only for
+   a step that changes a look, only that part's states; all before a
+   release).
+12. **Checks, cards and crafting, batch 3** (the user, 2026-11-23):
+   (a) entering a check: the hand waits until the shutters have opened,
+   then the cards fly up into the hand from below, one after another (as
+   if drawn);
+   (b) a hand card's pop-out (tap a card in the hand): no ⚛ "convert" mark
+   over elements the player doesn't hold and no ticks on component items
+   (it's crafted already; they confuse);
+   (c) the mat's combo row: a tap on a combo icon shows a summary of the
+   cards making that combo; a tap on the ⭐ (when there) shows the
+   collections on the mat;
+   (d) the collections trophy button doesn't work at all yet: check it
+   against the HTML game (game/), which had a designed button and window,
+   and port it;
+   (e) a needed element tapped in a shop card's component list opens
+   Convert (works) and also puts that card's Crafting Bench on top of the
+   Convert tray, working like the shop's (Craft can be tapped right there);
+   (f) the hand's top row: a tapped card's pop-out appears right over that
+   card in the top row, not down by the bottom row;
+   (g) the kept component cards that peek up from the bottom when crafting:
+   larger and closer together, fanned.
  and unlimited (up to the hand's
 10). Tap-to-mat is dropped from the Inventory but belongs in the Combo Lab
 (now a main game feature): tap a card in the list to put it on the lab's
