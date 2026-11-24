@@ -151,6 +151,29 @@ func _jump(body: Control) -> void:
 		_btn("Game Over screen", func():
 			hide()
 			Dev.end_screen(false))])
+	# Testing options (prefs: they last across runs; a run they change becomes a dev run).
+	var keep := CheckBox.new()
+	keep.text = "No game over at breakpoints"
+	keep.button_pressed = Progress.prefs.get("devNoGameOver") == true
+	keep.toggled.connect(func(on):
+		Progress.prefs.devNoGameOver = on
+		Progress.save_all())
+	body.add_child(keep)
+	var now := 0
+	if Progress.prefs.get("devDiceUnknown") == true:
+		now = DICE.size() - 1
+	elif int(Progress.prefs.get("devDice", 0)) > 0:
+		now = DICE.find(int(Progress.prefs.devDice))
+	var dice := _pick(DICE_LABELS, DICE_LABELS[maxi(0, now)])
+	dice.item_selected.connect(func(i):
+		Progress.prefs.devDice = DICE[i]
+		Progress.prefs.devDiceUnknown = i == DICE.size() - 1
+		Progress.save_all())
+	_row(body, [_note("Dice per roll"), dice])
+
+
+const DICE := [0, 3, 4, 5, 6, 6]  # the last: 6 and an Unknown Element
+const DICE_LABELS := ["Normal", "At least 3", "At least 4", "At least 5", "At least 6", "6 + Unknown Element"]
 
 
 # ---- Inventory

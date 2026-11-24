@@ -26,6 +26,14 @@ static func touch() -> void:
 	Game.state.dev = true
 
 
+## The Dev Panel's testing options (prefs, so they last across runs; only
+## with Developer mode on): devNoGameOver (a missed breakpoint doesn't end
+## the run), devDice (every roll at least this many dice), devDiceUnknown
+## (an Unknown Element every roll too). A run they change becomes a dev run.
+static func opts() -> Dictionary:
+	return Progress.prefs if Progress.prefs.get("devMode") == true else {}
+
+
 static func has_backup() -> bool:
 	return FileAccess.file_exists(BACKUP_PATH)
 

@@ -283,6 +283,23 @@ func _ready() -> void:
 	Progress.dev_history = []
 	Progress.record_history()
 	check(Progress.history.is_empty() and Progress.dev_history.size() == 1 and Progress.dev_history[0].dev, "dev: the run goes to Dev runs, not History")
+	# The Dev Panel's testing options (prefs; only with Developer mode on).
+	s = fresh()
+	s.rolledHere = false
+	Game.ctx.current = "The Ocean"
+	var prefs_was: Dictionary = Progress.prefs.duplicate(true)
+	Progress.prefs.devMode = true
+	Progress.prefs.devDice = 6
+	Progress.prefs.devDiceUnknown = true
+	check(Game.do_roll().size() == 6 and int(s.emptyElements) == 1 and s.dev, "dev: at least 6 dice a roll and an Unknown Element; the run becomes a dev run")
+	s.runComplete = true  # a gate: a mat scoring nothing would end the run
+	s.mat = []
+	check(Game.lock_in_ends_run(), "dev: a missed gate ends the run")
+	Progress.prefs.devNoGameOver = true
+	check(not Game.lock_in_ends_run(), "dev: not with No game over on")
+	Progress.prefs.devMode = false
+	check(Game.lock_in_ends_run(), "dev: the options only work with Developer mode on")
+	Progress.prefs = prefs_was
 
 	# Card playing at checks (core/hand.gd)
 	var by_tier := {}

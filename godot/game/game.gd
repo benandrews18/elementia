@@ -145,6 +145,13 @@ func do_roll(roll_count: Variant = null) -> Array:
 	var base: int = Data.t("TAKE") if roll_count == null else int(roll_count)
 	var bonus: float = state.tripDice if state.get("tripDice") != null else Util.get_or(state, "matBonusDice", 0)
 	var n := int(base + bonus) if state.get("matChecked") else maxi(int(Data.t("MAT_PRE_CHECK_DICE")), base)
+	var dev_dice := int(Util.get_or(Dev.opts(), "devDice", 0))  # the Dev Panel's guaranteed dice
+	if dev_dice > n:
+		Dev.touch()
+		n = dev_dice
+	if Dev.opts().get("devDiceUnknown") == true:  # "6 + ?": an Unknown Element every roll too
+		Dev.touch()
+		state.emptyElements = int(Util.get_or(state, "emptyElements", 0)) + 1
 	var out := []
 	for i in n:
 		var sym: String = dice[int(floor(Rng.next() * 6))]
@@ -277,7 +284,11 @@ func deal_hand() -> void:
 ## Would locking in now end the run? (The screen asks first.)
 func lock_in_ends_run() -> bool:
 	var gated: bool = state.get("runComplete") or (int(state.visits) >= int(Data.t("BREAKPOINT_GATE_VISIT")) and Catalog.is_sunset_visit(state))
-	return gated and Orders.reward_for(mat_score().total, Orders.check_round(state)) == 0
+	var ends: bool = gated and Orders.reward_for(mat_score().total, Orders.check_round(state)) == 0
+	if ends and Dev.opts().get("devNoGameOver") == true:  # the Dev Panel's switch: the run goes on
+		Dev.touch()
+		return false
+	return ends
 
 
 ## What a reward tier (0-4) gives (diceDeltaForReward()): bonus dice, at
