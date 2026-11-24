@@ -48,6 +48,7 @@ var lifted := ""  # with one hand card picked: it, shown as its full card over t
 var picks: Array = []  # the hand cards picked (up to 5), for Play (the hub's middle button) or Discard
 var _hand_view: HandView
 var _preview: Control  # with cards picked: what playing them adds, over the mat
+var _fits := false  # the picked cards fit on the mat (_show_preview works it out once per change)
 
 
 static func make() -> DisplayMatScreen:
@@ -756,9 +757,10 @@ func _show_preview() -> void:
 	if is_instance_valid(_preview):
 		_preview.queue_free()
 	_preview = null
+	var g = Hand.gain(Game.state, Game.ctx, picks) if not picks.is_empty() else null
+	_fits = g != null
 	if picks.is_empty() or not is_instance_valid(_page) or view != "mat":
 		return
-	var g = Hand.gain(Game.state, Game.ctx, picks)
 	var d := roundi(g) if g != null else 0
 	var pill := Tok.label("No room on the mat" if g == null else "+%d" % d if d > 0 else "%d" % d if d < 0 else "±0", 13, Color.WHITE, 900)
 	pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -776,7 +778,7 @@ func _show_preview() -> void:
 
 ## Can the picked cards be played (the hub's Play in full colour)?
 func can_play() -> bool:
-	return not picks.is_empty() and not playing and Hand.gain(Game.state, Game.ctx, picks) != null
+	return not picks.is_empty() and not playing and _fits
 
 
 ## The hub's Discard: the picked hand cards (up to HAND_DISCARD_MAX), for
