@@ -63,6 +63,7 @@ func _ready() -> void:
 	var icon_px := (17.0 if opts.get("wrap") else 26.0) if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	if shop:
 		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)
+	icon_px = opts.get("icon_px", icon_px)  # a caller's own size (the craft's poke-up cards)
 	var ic := Tok.icon(card.emoji, icon_px)
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	ic.set_meta("cmp", opts.get("tag", item) + ":icon")

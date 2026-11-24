@@ -61,6 +61,7 @@ extends Node
 @export var spark_reach := Vector2(80, 190)  # px out, at least / at most
 @export var spark_time := 0.55
 @export var keep_size := 104.0  # a kept item's card (width; the user, 2026-11-23: larger, fanned)
+@export var keep_icon := 62.0  # its image (the user, 2026-11-23: to fit the card)
 @export var keep_tilt := 7.0  # degrees per card from the fan's middle
 @export var keep_overlap := 0.45  # of a card's width under the next one
 @export var keep_up := 0.38  # peeks 75% up from behind the hub,
@@ -334,7 +335,7 @@ static func craft_keep(app: Control, items: Array, hub: Control, hold: float) ->
 	var step := minf(cfg.keep_size * (1.0 - cfg.keep_overlap), (app.size.x - 20 - cfg.keep_size) / maxf(1, n - 1))  # close together: a fan
 	var held := maxf(cfg.keep_hold, hold)
 	for i in n:
-		var card := ItemCard.make(items[i], {"mini": true, "in_grid": false})
+		var card := ItemCard.make(items[i], {"mini": true, "in_grid": false, "icon_px": cfg.keep_icon})
 		card.size = Vector2(cfg.keep_size, cfg.keep_size * 1.4)
 		card.pivot_offset = Vector2(card.size.x / 2, card.size.y)
 		card.position = Vector2(app.size.x / 2 + (i - (n - 1) / 2.0) * step - card.size.x / 2, top)

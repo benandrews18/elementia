@@ -38,6 +38,12 @@ static func deal(after: float) -> void:
 	deal_at = 0 if Juice.calm() else Time.get_ticks_msec() + int(after * 1000 / Engine.time_scale)
 
 
+## The check's opening (the user, 2026-11-23): the hand waits below the
+## screen until the challenge window is closed, then deal() brings it in.
+static func hold() -> void:
+	deal_at = -1
+
+
 func show_hand(names: Array, lifted_name: String, picked: Array = []) -> void:
 	lifted = lifted_name
 	picks = picked
@@ -120,6 +126,9 @@ func _lifted_card(nm: String, centre_x: float, foot: float) -> void:
 ## from wherever it has got to (a redraw mid-deal picks it up there).
 func _dealt_in(card: Control, k: int) -> void:
 	if deal_at == 0:
+		return
+	if deal_at < 0:  # held: out of sight below
+		card.position.y = size.y + 40
 		return
 	var ts := Engine.time_scale  # the clock is real time; tweens follow the game's speed
 	var start := deal_at + int(k * deal_stagger * 1000 / ts)

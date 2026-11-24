@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "convert_bench", "keep_fan",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "convert_bench", "keep_fan",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -149,8 +149,11 @@ func _ready() -> void:
 			Progress.prefs.pinnedItems = ["Robot"]
 			app.open_panel("todo")
 			PinTip.open(app, func(): pass)
-		"suit_spend":
-			app.craft_tap("Skyscraper", Rect2(240, 600, 60, 35))
+		"suit_spend":  # Craft on the bench: the picker points at the row's suit badges
+			app.open_card("Skyscraper")
+			await get_tree().process_frame
+			var row := (app._screen as StationScreen).find_tagged("row:Skyscraper") as ShopRow
+			app.craft_tap("Skyscraper", row._tax_anchor(row.get_node("Craft")) if row else Rect2(240, 600, 60, 35))
 		"expand":  # the mat grown from 1.5 rows to 2 (the reveal as played)
 			app.open_panel("drawer")
 			await get_tree().process_frame
@@ -348,6 +351,28 @@ func _ready() -> void:
 			var combos: Array = mat2._chip_nodes.keys().filter(func(k): return k != "order")
 			if not combos.is_empty():
 				ComboInfo.open_for(app, combos[0])
+		"play_together":  # Play with a station's three cards picked: their own combo shows before they fly
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			var by2 := {}
+			for n in Game.state.items:
+				var mc = Catalog.mat_card(n)
+				if mc != null and not Mat.is_capstone(mc):
+					for st in mc.stations:
+						by2[st] = by2.get(st, []) + [n]
+			for st in by2:
+				if by2[st].size() >= 3:
+					Game.state.hand.hand = by2[st].slice(0, 3) + Game.state.hand.hand.filter(func(n): return not by2[st].slice(0, 3).has(n)).slice(0, 4)
+					break
+			var mat4 := app._panel_node as DisplayMatScreen
+			mat4.picks = Game.state.hand.hand.slice(0, 3)
+			mat4._redraw()
+			mat4.hand_play()
+			await get_tree().create_timer(0.5).timeout
 		"convert_bench":  # a card's missing element tapped: Convert, the card's Crafting Bench on top
 			var withel = StationScreen.shop_entries(Game.ctx.current).filter(func(e): return not Catalog.owns(Game.state, e.name) and e.reqs.any(func(r): return r.kind == "element"))
 			if not withel.is_empty():

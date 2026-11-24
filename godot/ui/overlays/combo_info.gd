@@ -1,5 +1,6 @@
 ## A combo chip tapped on the mat (openComboInfo(); the user, 2026-11-23):
-## the mat cards making that combo (icon, name, points), or, for the ⭐,
+## the mat cards making that combo (icon, name and the icon being counted)
+## and the plays that made it together (counted again), or, for the ⭐,
 ## the found collections the mat completes (CollectionRow). The window is
 ## ui/overlays/combo_info.tscn; the rows are built here.
 class_name ComboInfo
@@ -40,10 +41,16 @@ func _ready() -> void:
 	else:
 		var cards := cards_for(kind, key)
 		var label: String = Data.t("ELEMENT_SUIT_LABEL").get(key, key) if kind == "suit" else key
-		$Window.title = "%s ×%d" % [label, cards.size()]
+		var plays := together_plays(kind, key)
+		var extra := 0
+		for p in plays:
+			extra += p.size()
+		$Window.title = "%s ×%d" % [label, cards.size() + extra]
 		$Window.icon = Data.icon(Catalog.station(key).emoji if kind == "station" else "suit:" + key if kind == "suit" else Data.t("ITEM_EMOJI").get(key, ""))
 		for c in cards:
 			box.add_child(_row(c, w))
+		for p in plays:
+			box.add_child(_together_row(p, w))
 	super()
 
 
@@ -57,6 +64,23 @@ static func cards_for(k: String, name: String) -> Array:
 	return []
 
 
+## The plays (their mat cards making this combo) that made it by
+## themselves: each counts again (Mat.together).
+static func together_plays(k: String, name: String) -> Array:
+	var mat := Mat.on_mat(Game.state)
+	var making := cards_for(k, name).map(func(c): return c.name)
+	var out := []
+	for names in Util.get_or(Game.state, "matPlays", []):
+		if names.size() < 2 or not names.all(func(n): return Mat.has(mat, n)):
+			continue
+		var in_it: Array = names.filter(func(n): return making.has(n))
+		if Mat.combo_tier(in_it.size()) > 0:
+			out.append(in_it)
+	return out
+
+
+## A mat card: its icon, its name, and next to the name the icon this
+## combo counts on it (its station, suit or ingredient).
 func _row(c: Dictionary, w: float) -> Control:
 	var row := Panel.new()
 	row.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.35), 10, 1.5, Color("#c9a571")))
@@ -67,7 +91,42 @@ func _row(c: Dictionary, w: float) -> Control:
 	var nm := Tok.label(c.name, 15, Tok.CARD_INK, 800)
 	nm.position = Vector2(row_px + 18, 6 + (row_px - nm.get_minimum_size().y) / 2)
 	row.add_child(nm)
-	var pts := Tok.label(str(int(c.points)), 15, Tok.CARD_INK, 800)
-	pts.position = Vector2(w - 12 - pts.get_minimum_size().x, nm.position.y)
-	row.add_child(pts)
+	var cx := nm.position.x + nm.get_minimum_size().x + 8
+	var cy := 6 + (row_px - 22) / 2
+	if kind == "suit":
+		var dot := Panel.new()
+		dot.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(key), 11, 1.5))
+		dot.position = Vector2(cx, cy)
+		dot.size = Vector2(22, 22)
+		var g := Tok.icon("suit:" + key, 13)
+		g.position = Vector2(4.5, 4.5)
+		g.material = Tok.white()
+		dot.add_child(g)
+		row.add_child(dot)
+	else:
+		var counted := Tok.icon(Catalog.station(key).emoji if kind == "station" else Data.t("ITEM_EMOJI").get(key, ""), 22)
+		counted.position = Vector2(cx, cy)
+		row.add_child(counted)
+	return row
+
+
+## "Played together": the cards of one play that made this combo by
+## themselves, and what they add to its count.
+func _together_row(names: Array, w: float) -> Control:
+	var row := Panel.new()
+	row.add_theme_stylebox_override("panel", Tok.box(Color(Tok.OK, 0.18), 10, 1.5, Tok.OK))
+	row.custom_minimum_size = Vector2(w, row_px + 12)
+	row.set_meta("cmp", "combo:together")
+	var nm := Tok.label("Played together", 14, Tok.CARD_INK, 900)
+	nm.position = Vector2(10, 6 + (row_px - nm.get_minimum_size().y) / 2)
+	row.add_child(nm)
+	var x := nm.position.x + nm.get_minimum_size().x + 8
+	for n in names:
+		var ic := Tok.icon(Data.t("ITEM_EMOJI").get(n, ""), 24)
+		ic.position = Vector2(x, 6 + (row_px - 24) / 2)
+		row.add_child(ic)
+		x += 26
+	var add := Tok.label("+%d" % names.size(), 15, Tok.OK, 900)
+	add.position = Vector2(w - 12 - add.get_minimum_size().x, nm.position.y)
+	row.add_child(add)
 	return row

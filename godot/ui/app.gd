@@ -944,7 +944,7 @@ func _travel(dest: String) -> void:
 		Game.ctx.travelPromptFor = dest
 		Game.start_check_order()
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
-			HandView.deal(Shutter.HOLD + Shutter.CLOSE - 0.38)  # dealt in as the shutters part (the user, 2026-11-23)
+			HandView.hold()  # dealt in once the challenge is closed (the user, 2026-11-23): _challenge()
 			open_panel("drawer")
 			_check_intro())
 	else:
@@ -1001,8 +1001,19 @@ func _challenge() -> void:
 	var s := Game.state
 	var o = Orders.current(s)
 	if o == null or int(o.round) != int(s.visits):
+		_deal_hand()
 		return
-	OrderInfo.open(self)
+	OrderInfo.open(self).tree_exiting.connect(_deal_hand)
+
+
+## The held hand flies in (the challenge window closed, or there was none).
+func _deal_hand() -> void:
+	if HandView.deal_at >= 0:
+		return
+	HandView.deal(0.05)
+	var mat := _hand_mat()
+	if mat:
+		mat._redraw()
 
 
 ## Back on the map after turn 24's shopping: the "Final Score!" shutter and

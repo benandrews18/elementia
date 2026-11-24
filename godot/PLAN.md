@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** none queued: step 14 (the check reworked) is done; the user playtests it. Start every session with `git status`: the user may
+**Next task:** none queued: step 15 is done; the user playtests. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -336,6 +336,26 @@ with `godot-grill`.
    HAND_PLAY_MAX 5 replaces HAND_PLAYS / HAND_DRAW / HAND_TAKEBACKS; rules
    lock unchanged. Screens: challenge_hand, hand_picks, challenge_elements,
    combo_info.
+15. **The check, polished** (the user, 2026-11-23, after step 14):
+   (a) the Lock In button under the mat goes (the check ends itself when
+   nothing more fits); (b) the hand is dealt in once the challenge window
+   is closed; (c) picked hand cards light up the mat slots they'd take;
+   (d) after Play, the bonuses the play earns by itself show before the
+   cards fly to the mat; (e) no "x2" tag: a chip's count includes what
+   played-together combos add (3 together: 6), and its combo window lists
+   the plays that added to it; the window's rows: icon, name and the icon
+   being counted, no points; (f) the element-tax picker points at the suit
+   badges on the item's row (why it's asked); (g) the Craft button never
+   covers the recipe on the Crafting Bench (the recipe shrinks to fit);
+   (h) bigger item images on the cards that poke up after a craft.
+   Done (2026-11-23): HandView.hold() until the challenge window goes
+   (App._deal_hand); the mat full -> Lock In by itself (checked on every
+   hand redraw, once per mat); lit slots from Mat.pack (_landings); the
+   "Played together!" panel (1.5s, 0.9 in Low motion; single-card plays
+   skip it); chip counts + together k; ComboInfo rows with the counted
+   icon and "Played together" rows; ShopRow._tax_anchor; the recipe scales
+   to the room left of Craft; ItemCard opt icon_px (Juice keep_icon 62).
+   New screen play_together; suit_spend now opens from the bench.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:

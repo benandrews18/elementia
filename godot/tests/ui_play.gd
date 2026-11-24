@@ -597,7 +597,7 @@ func _collections(app: App) -> void:
 	check(Game.state != real and Game.state != lab and int(Game.state.visits) == 12 and Game.state.order != null, "the test: a copy of the run at check 12, with its challenge")
 	check(hd.get("hand", []).size() == 7 and Game.state.mat.is_empty(), "a hand of 7; the mat cleared for the check")
 	var dm := app._panel_node as DisplayMatScreen
-	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") != null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard, Lock In and Draw under the mat")
+	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") == null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard and Draw under the mat, no Lock In")
 	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
 	check(app._hub.hand_sides.keys() == ["jobs"] and app._hub.off.get("market") == true, "the hub's other buttons as usual (the Challenge on Jobs), the Market shut")
 	var page_was: Panel = dm._page
@@ -605,6 +605,7 @@ func _collections(app: App) -> void:
 	dm._lift(first)
 	check(dm._page == page_was and dm.lifted == first, "picking a card doesn't rebuild the mat; one pick shows its card")
 	check(_find_meta(dm._page, "hand:gain") != null and not app._hub.muted, "picked: what it adds shows over the mat; Play in full colour")
+	check(_find_meta(dm._page, "hand:landing") != null, "picked: the slot it would take lights up")
 	var deck_n: int = hd.deck.size()
 	app._on_hub("home")
 	check(Game.state.mat == [first] and hd.hand.size() == 7 and hd.deck.size() == deck_n - 1 and Game.state.matPlays == [[first]], "Play: the card on the mat, the hand refilled 1 for 1")
@@ -690,7 +691,7 @@ func _collections(app: App) -> void:
 	dm._lift(hd.hand[0])
 	check(dm.view == "mat" and dm.picks.size() == 1, "picking a card on the Elements page turns back to the mat")
 	dm._lift("")
-	(_find_meta(dm, "hand:lockin") as Button).pressed.emit()
+	app.hand_lock_in()
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()

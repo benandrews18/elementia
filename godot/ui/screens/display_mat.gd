@@ -49,6 +49,7 @@ var picks: Array = []  # the hand cards picked (up to 5), for Play (the hub's mi
 var _hand_view: HandView
 var _preview: Control  # with cards picked: what playing them adds, over the mat
 var _fits := false  # the picked cards fit on the mat (_show_preview works it out once per change)
+var _ending := false  # the mat is full: its Lock In is on its way
 
 
 static func make() -> DisplayMatScreen:
@@ -645,8 +646,9 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 			_redraw()
 
 
-## Card playing (PLAN.md step 14): under the mat Discard (left), Lock In
-## (centre) and Draw (right: the Elements page, element draws); the hand
+## Card playing (PLAN.md steps 14-15): under the mat Discard (left) and
+## Draw (right: the Elements page, element draws); no Lock In: the check
+## ends itself once nothing in the hand or deck fits; the hand
 ## fanned in two rows below. Picked hand cards play together from the hub's
 ## middle button (App._hand_tap), packed onto the mat automatically; what
 ## they'd add shows over the mat.
@@ -659,14 +661,10 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	var fl := Hand.fresh_left(h)
 	_hand_button("discard", "🗑️", "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
 	_hand_button("draw", "🃏", "Draw", str(h.deck.size()) + ("+" if fl else ""), Vector2(size.x - side - BTN, row_y), h.deck.is_empty(), _flip_view, view == "elements")
-	var lock := _round_button("🔒 Lock In", Vector2(124, 40), 15, Color("#8a5ce0"))
-	lock.add_theme_color_override("font_color", Color.WHITE)
-	lock.add_theme_color_override("font_pressed_color", Color.WHITE)
-	lock.add_theme_color_override("font_hover_color", Color.WHITE)
-	lock.position = Vector2((size.x - 124) / 2, row_y + (BTN - 40) / 2)
-	lock.set_meta("cmp", "hand:lockin")
-	lock.pressed.connect(func(): if App.current: App.current.hand_lock_in())
-	_body.add_child(lock)
+	if not _ending and HandView.deal_at >= 0 and Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends itself
+		_ending = true
+		var app := App.current
+		get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(app) and is_same(Game.check_hand(), h): app.hand_lock_in())
 	var top_y := row_y + BTN + 4
 	_hand_view = HandView.new()
 	_hand_view.position = Vector2(0, top_y)
@@ -772,8 +770,46 @@ func _show_preview() -> void:
 	pill.position = Vector2((_page.size.x - pill.size.x) / 2, 6)
 	pill.mouse_filter = MOUSE_FILTER_IGNORE
 	pill.set_meta("cmp", "hand:gain")
-	_page.add_child(pill)
-	_preview = pill
+	var layer := Control.new()  # the lit slots, then the pill over them: one queue_free clears it all
+	layer.size = _page.size
+	layer.mouse_filter = MOUSE_FILTER_IGNORE
+	_page.add_child(layer)
+	_preview = layer
+	if g != null:
+		for r in _landings(picks):  # where each picked card would go, lit (the user, 2026-11-23)
+			var lit := Panel.new()
+			lit.add_theme_stylebox_override("panel", Tok.box(Color(Tok.OK, 0.28), 10, 3, Tok.OK))
+			lit.position = r.position
+			lit.size = r.size
+			lit.mouse_filter = MOUSE_FILTER_IGNORE
+			lit.set_meta("cmp", "hand:landing")
+			layer.add_child(lit)
+	layer.add_child(pill)
+
+
+## Where the picked cards would sit on the page (the mat packed with them:
+## a capstone over two slots, tier 1 cards in their share of a stack).
+func _landings(names: Array) -> Array:
+	var cards: Array = names.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
+	var pack := Mat.pack(Mat.on_mat(Game.state) + cards, _stage())
+	var out := []
+	for i in pack.slot.size():
+		var sl: Dictionary = pack.slot[i]
+		if not slot_rects.has(i):
+			continue
+		var r: Rect2 = slot_rects[i]
+		r.position -= _page.position
+		if sl.has("card") and names.has(sl.card.name):
+			if sl.w > 1 and slot_rects.has(i + 1):
+				r = r.merge(Rect2(slot_rects[i + 1].position - _page.position, slot_rects[i + 1].size))
+			out.append(r)
+		var stack: Array = sl.get("stack", [])
+		for k in stack.size():
+			if names.has(stack[k].card.name):
+				var per: int = 1 if sl.kind == "top" else pack.L.perSlot
+				var mh := (r.size.y - (per - 1) * 2) / per
+				out.append(Rect2(r.position + Vector2(0, k * (mh + 2)), Vector2(r.size.x, mh)))
+	return out
 
 
 ## Can the picked cards be played (the hub's Play in full colour)?
@@ -809,12 +845,31 @@ func hand_play() -> void:
 	if picks.is_empty():
 		_show_toast("Tap cards in your hand to play them.")
 		return
+	var played := picks.duplicate()
+	var gain = Hand.gain(Game.state, Game.ctx, played)
+	if gain == null:
+		_show_toast(Hand.play(h, Game.state, played))  # why not (changes nothing)
+		return
+	var tg := Mat.together(Mat.on_mat({"mat": played}), {"matPlays": [played]})
+	if not (tg.combos.is_empty() and tg.complete.is_empty() and tg.cols.is_empty()):
+		playing = true  # the reveal: no redraws, no second Play
+		var banner := _together_banner(tg, gain)
+		if is_instance_valid(_hand_view):
+			for c in _hand_view.get_children():
+				if c.has_meta("hand") and played.has(c.get_meta("hand")):
+					bounce(c)
+		await get_tree().create_timer(0.9 if Juice.calm() else 1.5).timeout
+		if not is_instance_valid(self):
+			return
+		banner.queue_free()
+		playing = false
+		if not is_same(Game.check_hand(), h):
+			return
 	var from := {}
 	if is_instance_valid(_hand_view):
 		for c in _hand_view.get_children():
 			if c.has_meta("hand") and picks.has(c.get_meta("hand")) and (not from.has(c.get_meta("hand")) or c.get_meta("cmp", "") == "hand:lifted"):
 				from[c.get_meta("hand")] = c.get_global_rect()
-	var played := picks.duplicate()
 	var msg := Hand.play(h, Game.state, played)
 	if msg != "":
 		_show_toast(msg)
@@ -828,9 +883,50 @@ func hand_play() -> void:
 		var to := _mat_nodes.get(n) as ItemCard
 		if to and from.has(n):  # its look there: a small card stays small
 			Juice.fly(ItemCard.make(n, to.opts.duplicate()), from[n], to)
-	if Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends
-		var app := App.current
-		get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(app) and is_same(Game.check_hand(), h): app.hand_lock_in())
+
+
+## "Played together!": the combos, whole recipes and collections a play
+## makes by itself (each counts once more), and what the play adds, over
+## the top of the hand.
+func _together_banner(tg: Dictionary, gain: float) -> Control:
+	var chips := []
+	for t in tg.combos:
+		var icon: String = Catalog.station(t.name).emoji if t.kind == "station" else "suit:" + t.name if t.kind == "suit" else Data.t("ITEM_EMOJI").get(t.name, "")
+		var bg: Color = Tok.station_color(t.name) if t.kind == "station" else Tok.suit_color(t.name) if t.kind == "suit" else Tok.PARCHMENT
+		chips.append(_counted(_icon_circle(icon, bg, Color.TRANSPARENT, 0, t.kind != "suit"), t.k))
+	for n in tg.complete:
+		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(n, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×3", 13))
+	for col in tg.cols:
+		var star := _icon_circle("", Color("#241c3a"), Color("#8a5ce0"), 1.5)
+		var st_ic := Tok.star(Color("#ffd166"), 15)
+		st_ic.position = Vector2(6, 5.5)
+		star.add_child(st_ic)
+		chips.append(_chip(star, "+%d" % int(col.bonus), 13))
+	var box := Panel.new()
+	box.add_theme_stylebox_override("panel", Tok.box(Color("#fff3d6"), 16, 3, Tok.GOLD, 8, 4, Color(0, 0, 0, 0.45)))
+	box.mouse_filter = MOUSE_FILTER_STOP  # nothing under it while it shows
+	box.set_meta("cmp", "hand:together")
+	var title := Tok.label("Played together!", 16, Tok.CARD_INK, 900)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(title)
+	var x := 14.0
+	var ch := 0.0
+	for c in chips:
+		c.position = Vector2(x, 34)
+		c.size = c.custom_minimum_size
+		box.add_child(c)
+		x += c.size.x + 6
+		ch = maxf(ch, c.size.y)
+	var plus := Tok.label("+%d" % roundi(gain), 22, Tok.OK, 900)
+	plus.position = Vector2(x + 4, 34 + (ch - plus.get_minimum_size().y) / 2)
+	box.add_child(plus)
+	box.size = Vector2(maxf(200, x + 8 + plus.get_minimum_size().x + 14), 34 + ch + 12)
+	title.size = Vector2(box.size.x, 30)
+	title.position.y = 6
+	box.position = Vector2((size.x - box.size.x) / 2, (_hand_view.position.y if is_instance_valid(_hand_view) else size.y / 2) - 8)
+	_body.add_child(box)
+	Juice.pop_in(box)
+	return box
 
 
 static func _find_cmp(n: Node, tag: String) -> Control:
@@ -1011,31 +1107,19 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
 	for g in sc.sigs:
 		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))
+	var twice := {}  # a combo made inside a play counts again: its count too (3 played together: 6)
+	for t in sc.get("together", {}).get("combos", []):
+		twice[t.kind + ":" + t.name] = twice.get(t.kind + ":" + t.name, 0) + int(t.k)
 	for g in sc.combos.station:
-		chips.append(_counted(_icon_circle(Catalog.station(g.name).emoji, Tok.station_color(g.name), Color.TRANSPARENT, 0, true), g.k))
+		chips.append(_counted(_icon_circle(Catalog.station(g.name).emoji, Tok.station_color(g.name), Color.TRANSPARENT, 0, true), g.k + twice.get("station:" + g.name, 0)))
 		chips[-1].set_meta("combo", "station:" + g.name)
 	for g in sc.combos.suit:
-		chips.append(_counted(_icon_circle("suit:" + g.name, Tok.suit_color(g.name)), g.k))
+		chips.append(_counted(_icon_circle("suit:" + g.name, Tok.suit_color(g.name)), g.k + twice.get("suit:" + g.name, 0)))
 		chips[-1].set_meta("combo", "suit:" + g.name)
 	for g in sc.combos.component:
 		var em = Data.t("ITEM_EMOJI").get(g.name)
-		chips.append(_counted(_icon_circle(em if em else "", Tok.PARCHMENT, Color.TRANSPARENT, 0, true), g.k))
+		chips.append(_counted(_icon_circle(em if em else "", Tok.PARCHMENT, Color.TRANSPARENT, 0, true), g.k + twice.get("component:" + g.name, 0)))
 		chips[-1].set_meta("combo", "component:" + g.name)
-	var twice := {}  # combos made inside one play: they count twice ("x2" on their chip)
-	for t in sc.get("together", {}).get("combos", []):
-		twice[t.kind + ":" + t.name] = true
-	for c in chips:
-		if twice.has(c.get_meta("combo", "")):
-			var tag := Tok.label("×2", 10, Color.WHITE, 900)
-			var tb := Tok.box(Tok.OK, 7, 1.5, Color.WHITE)
-			tb.content_margin_left = 4
-			tb.content_margin_right = 4
-			tag.add_theme_stylebox_override("normal", tb)
-			tag.size = tag.get_minimum_size()
-			tag.position = Vector2(c.custom_minimum_size.x - tag.size.x + 4, -5)
-			tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			tag.set_meta("cmp", "twice")
-			c.add_child(tag)
 	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 	var known: Array = sc.cols.filter(func(c): return found.has(c.id))
 	if not known.is_empty():

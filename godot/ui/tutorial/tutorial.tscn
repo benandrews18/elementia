@@ -343,7 +343,7 @@ done_if = "visit:4"
 
 [sub_resource type="Resource" id="step46"]
 script = ExtResource("2")
-say = "Keep playing until the mat is full, or tap [b]Lock In[/b] to finish early."
+say = "Keep playing until the mat is full: the check ends by itself."
 pose = 12
 until = "wait"
 done_if = "visit:4"

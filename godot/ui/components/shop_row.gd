@@ -73,7 +73,7 @@ func _ready() -> void:
 	if can:
 		btn.add_theme_stylebox_override("normal", can_style)
 		btn.mouse_filter = MOUSE_FILTER_STOP
-		btn.gui_input.connect(func(ev): if Tap.tap(ev): on_craft.call(e.name, btn.get_global_rect()))
+		btn.gui_input.connect(func(ev): if Tap.tap(ev): on_craft.call(e.name, _tax_anchor(btn)))
 	else:
 		btn.add_theme_color_override("font_color", locked_color)
 		btn.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
@@ -98,6 +98,15 @@ func _ready() -> void:
 		pin.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_panel("todo"))
 		return
 	pin.gui_input.connect(func(ev): if Tap.tap(ev): on_pin.call(e.name))
+
+
+## What a suit cost's picker points at (the user, 2026-11-23): the row's
+## suit badges, why it asks; the Craft button when there are none.
+func _tax_anchor(btn: Control) -> Rect2:
+	var r := Rect2()
+	for b in $Badges.get_children():
+		r = b.get_global_rect() if r.size == Vector2.ZERO else r.merge(b.get_global_rect())
+	return r if r.size != Vector2.ZERO else btn.get_global_rect()
 
 
 ## The recipe tokens: elements first (declared order), then items by points,
@@ -176,4 +185,9 @@ func _recipe(at: Vector2) -> void:
 			t.position = Vector2(x + w - 9, at.y - 6)
 			$Recipe.add_child(t)
 		x += w
+	# Never under the Craft button (the user, 2026-11-23): a long recipe shrinks to fit beside it.
+	var room: float = ($Craft.position.x if $Craft.visible else size.x - 12) - 8 - at.x
+	var k := minf(1.0, room / maxf(1.0, x - at.x))
+	$Recipe.scale = Vector2(k, k)
+	$Recipe.position = at * (1.0 - k) + Vector2(0, 13 * (1.0 - k))  # shrinks toward its start, kept on the line's middle
 
