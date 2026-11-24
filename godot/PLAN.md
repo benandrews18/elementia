@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 10 of the work queue below (general fixes; (e) needs godot-grill), then 11. Start every session with `git status`: the user may
+**Next task:** step 13 of the work queue below (grill first), then 10 ((e) needs godot-grill) and 11. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -269,6 +269,16 @@ with `godot-grill`.
    ConvertTray.bench_item, a BenchPanel+ShopRow above the tray; (f) the
    lifted card's foot on its own row; (g) Juice keep_size 104, overlap,
    tilt 7°. Screens: combo_info, convert_bench, keep_fan.
+13. **Discards, Take Back and Frame** (the user, 2026-11-23; open
+   decisions: godot-grill first):
+   (a) Frame no longer shows when a mat card is tapped; only a Rehang asks
+   the player to choose some cards to keep on the mat;
+   (b) discarding a card straight from the mat: allowed (it was a design
+   choice not to; the user changes it), with no limit;
+   (c) Take Back (a mat card back into the hand): limited;
+   (d) discard several hand cards at once (the UI to be designed);
+   (e) a tap on a blank space in the Inventory (the mat drawer)
+   deselects whatever mat card or hand card is selected.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
