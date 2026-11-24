@@ -187,13 +187,6 @@ func craft_raw(name: String) -> bool:
 		if state.elements[k] <= 0:
 			state.elements.erase(k)
 	state.items.append(name)
-	# Auto-place a run's first crafts on the mat while they'd all still fit.
-	var card = Catalog.mat_card(name)
-	var st := Mat.stage(state)
-	if card != null and not state.mat.has(name) \
-			and Mat.fits(state.items.map(func(x): return Catalog.mat_card(x)).filter(func(c): return c != null), st) \
-			and Mat.fits(Mat.on_mat(state) + [card], st):
-		state.mat.append(name)
 	if e.tier == "CAPSTONE" and not Progress.prefs.capstonesEverCrafted.has(name):
 		Progress.prefs.capstonesEverCrafted.append(name)
 	if Progress.is_pinned(name):

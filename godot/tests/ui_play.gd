@@ -103,6 +103,16 @@ func _run(app: App) -> void:
 				var n_held: int = hd.hand.size()
 				app._on_hub("home")
 				check(hd.hand.size() > n_held, "turn %d: Draw" % turns)
+			# Play the hand into free slots, as a player would (the mat no
+			# longer fills itself with a run's first crafts).
+			var mat := app._hand_mat()
+			if hd != null and mat != null:
+				for name in hd.hand.duplicate():
+					if hd.plays <= 0:
+						break
+					mat.lifted = name
+					mat._play("")
+				mat.lifted = ""
 			app._on_hub("codex")
 			var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
 			if not ask.is_empty():  # "your run ends here": yes
@@ -700,6 +710,16 @@ func _tips(app: App) -> void:
 	for i in 3:
 		await get_tree().process_frame
 	check(not app.get_children().any(func(c): return c is UnknownTip), "the first \"?\" held: no window (it's a hint)")
+	# The map's tracked-item badges say what they mean when tapped.
+	Game.ctx.tracked = "Coral Reef"
+	app._go_map()
+	check(await _until(func(): return app._screen is MapScreen and app._screen.get_node("Area/Badges").get_child_count() > 0), "the map shows the tracked item's badges")
+	for b: Control in app._screen.get_node("Area/Badges").get_children():
+		Tap._down = null
+		b.gui_input.emit(_release())
+		var bub = app._screen._bubble
+		var txt: String = bub.get_child(0).get_parsed_text() if is_instance_valid(bub) else ""
+		check(txt.contains("tracking") or txt.contains("are here"), "a tapped badge says what it means ('%s')" % txt)
 	app.show_elements()
 	var dialogs := func(): return app.get_children().filter(func(c): return c is ParchDialog and not c.is_queued_for_deletion())
 	check(dialogs.call().size() == 1, "The 16 Elements: the periodic table")
