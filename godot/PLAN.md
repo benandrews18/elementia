@@ -356,6 +356,11 @@ with `godot-grill`.
    icon and "Played together" rows; ShopRow._tax_anchor; the recipe scales
    to the room left of Craft; ItemCard opt icon_px (Juice keep_icon 62).
    New screen play_together; suit_spend now opens from the bench.
+   Then (the user): Draw's badge is Hand.draws_left() (elements against
+   deck cards of their suit, plus Unknown Elements, capped by the deck and
+   the hand's room); the deck's count in the middle of the row, a tap
+   shows the Inventory as between checks (browsing: no Add / Remove; Back
+   to your hand). Screen: hand_inventory.
 
 Log (newest first, one line per session):
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:

@@ -126,6 +126,26 @@ static func discard(h: Dictionary, names: Array) -> String:
 	return ""
 
 
+## How many element draws could be made now (the Draw button's badge): per
+## suit, the elements held against the deck cards with its pip, plus the
+## Unknown Elements; never more than the deck or the hand's room.
+static func draws_left(h: Dictionary, s: Dictionary) -> int:
+	var in_deck := {}
+	for n in h.deck:
+		var c = Catalog.mat_card(n)
+		if c != null:
+			for su in c.pips:
+				in_deck[su] = in_deck.get(su, 0) + 1
+	var held := {}
+	for sym in Util.get_or(s, "elements", {}):
+		var su: String = Data.t("ELEMENT_SUIT").get(sym, "")
+		held[su] = held.get(su, 0) + int(s.elements[sym])
+	var n := int(Util.get_or(s, "emptyElements", 0))
+	for su in held:
+		n += mini(held[su], in_deck.get(su, 0))
+	return mini(n, mini(most() - h.hand.size(), h.deck.size()))
+
+
 ## The first card in the deck with this element's suit pip, for 1 of it.
 static func suit_draw(h: Dictionary, s: Dictionary, sym: String) -> String:
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")

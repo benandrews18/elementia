@@ -399,6 +399,10 @@ func _ready() -> void:
 	check(Hand.suit_draw(hd, s, tsym) == "" and hd.hand == [tfirst] and not s.elements.has(tsym), "hand: 1 element draws the deck's first card with its suit")
 	check(Hand.suit_draw(hd, s, tsym) != "" and hd.hand.size() == 1, "hand: none left to spend")
 	s.emptyElements = 1
+	s.elements = {tsym: 2}
+	var same_suit: int = hd.deck.filter(func(n): return Catalog.mat_card(n).pips.has(tsuit)).size()
+	check(Hand.draws_left(hd, s) == mini(1 + mini(2, same_suit), mini(Hand.most() - hd.hand.size(), hd.deck.size())), "hand: the draws left: elements against cards of their suit, plus Unknown Elements")
+	s.elements = {}
 	twant = hd.deck[-1]
 	check(Hand.pick_draw(hd, s, twant) == "" and hd.hand.has(twant) and not hd.deck.has(twant) and s.emptyElements == 0, "hand: an Unknown Element draws any card")
 	check(Hand.pick_draw(hd, s, hd.deck[0]) != "", "hand: no token, no pick")

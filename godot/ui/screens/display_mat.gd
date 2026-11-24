@@ -50,6 +50,7 @@ var _hand_view: HandView
 var _preview: Control  # with cards picked: what playing them adds, over the mat
 var _fits := false  # the picked cards fit on the mat (_show_preview works it out once per change)
 var _ending := false  # the mat is full: its Lock In is on its way
+var browsing := false  # a check: the deck count tapped, the whole Inventory shown (the user, 2026-11-23)
 
 
 static func make() -> DisplayMatScreen:
@@ -121,8 +122,8 @@ func _redraw() -> void:
 		_page_controls(page)
 		y += page.size.y + 22  # .mat-zone-wrap margin-bottom: the tabs hang below (a check: its buttons)
 	var h = Game.check_hand()
-	_scroll.visible = h == null
-	if h != null:  # a check with cards: the hand in place of the item list
+	_scroll.visible = h == null or browsing
+	if h != null and not browsing:  # a check with cards: the hand in place of the item list
 		_hand_area(h, _page)
 		return
 	lifted = ""
@@ -177,6 +178,15 @@ func _redraw() -> void:
 			var c: Control = _inv_cards[selected]
 			_inv_ring.position = c.position - Vector2(6, 6)
 			_inv_ring.size = c.size + Vector2(12, 12)
+	if browsing and h != null:  # in place of the fold: back to the hand
+		var back := _round_button("Back to your hand", Vector2(180, 32), 13, Tok.GOLD)
+		back.position = Vector2((size.x - 180) / 2, line_y + 1 - 16)
+		back.set_meta("cmp", "hand:back")
+		back.pressed.connect(func():
+			browsing = false
+			_redraw())
+		_body.add_child(back)
+		return
 	var fold := Panel.new()
 	fold.add_theme_stylebox_override("panel", fold_style)
 	fold.size = Vector2(38, 20)
@@ -362,7 +372,7 @@ func _page_controls(page: Control) -> void:
 ## The run's mat between checks (card playing, the user 2026-11-23): locked
 ## in, changed only by playing cards at a check; tried freely in the lab.
 func locked() -> bool:
-	return not Game.ctx.get("comboLab", false) and Game.check_hand() == null
+	return browsing or (not Game.ctx.get("comboLab", false) and Game.check_hand() == null)
 
 
 func _round_button(text: String, sz: Vector2, font_px: int, bg: Color) -> Button:
@@ -660,7 +670,29 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	var row_y := page.position.y + page.size.y + 8
 	var fl := Hand.fresh_left(h)
 	_hand_button("discard", "🗑️", "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
-	_hand_button("draw", "🃏", "Draw", str(h.deck.size()) + ("+" if fl else ""), Vector2(size.x - side - BTN, row_y), h.deck.is_empty(), _flip_view, view == "elements")
+	var draws := Hand.draws_left(h, Game.state)
+	_hand_button("draw", "🃏", "Draw", str(draws), Vector2(size.x - side - BTN, row_y), draws <= 0, _flip_view, view == "elements")
+	# The deck's count in the middle; a tap: the whole Inventory, to plan (the user, 2026-11-23).
+	var deck := _round_button("", Vector2(150, 46), 13, Color("#1c2b3d"))
+	deck.position = Vector2((size.x - 150) / 2, row_y + (BTN - 46) / 2)
+	deck.set_meta("cmp", "hand:deck")
+	var dn := Tok.label("%d in deck%s" % [h.deck.size(), "  (%d new)" % fl if fl else ""], 14, Color.WHITE, 900)
+	dn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dn.position = Vector2(0, 5)
+	dn.size = Vector2(150, 20)
+	dn.mouse_filter = MOUSE_FILTER_IGNORE
+	deck.add_child(dn)
+	var sub := Tok.label("Tap: your Inventory", 10, Color("#ffe08a"), 800)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.position = Vector2(0, 25)
+	sub.size = Vector2(150, 14)
+	sub.mouse_filter = MOUSE_FILTER_IGNORE
+	deck.add_child(sub)
+	deck.pressed.connect(func():
+		browsing = true
+		picks = []
+		_redraw())
+	_body.add_child(deck)
 	if not _ending and HandView.deal_at >= 0 and Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends itself
 		_ending = true
 		var app := App.current

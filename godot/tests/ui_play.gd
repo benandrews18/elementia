@@ -600,6 +600,12 @@ func _collections(app: App) -> void:
 	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") == null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard and Draw under the mat, no Lock In")
 	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
 	check(app._hub.hand_sides.keys() == ["jobs"] and app._hub.off.get("market") == true, "the hub's other buttons as usual (the Challenge on Jobs), the Market shut")
+	check(_find_meta(dm, "hand:deck") != null, "the deck's count in the middle")
+	(_find_meta(dm, "hand:deck") as Button).pressed.emit()
+	check(dm.browsing and dm._scroll.visible and _find_meta(dm, "hand") == null, "the deck tapped: the whole Inventory, no hand")
+	check(_find_meta(dm, "mat:add") == null, "browsing: no Add / Remove (the mat changes only by playing)")
+	(_find_meta(dm, "hand:back") as Button).pressed.emit()
+	check(not dm.browsing and not dm._scroll.visible and _find_meta(dm, "hand:deck") != null, "Back to your hand")
 	var page_was: Panel = dm._page
 	var first: String = hd.hand[0]
 	dm._lift(first)
