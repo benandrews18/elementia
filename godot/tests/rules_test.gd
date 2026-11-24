@@ -292,6 +292,11 @@ func _ready() -> void:
 	Progress.prefs.devDice = 6
 	Progress.prefs.devDiceUnknown = true
 	check(Game.do_roll().size() == 6 and int(s.emptyElements) == 1 and s.dev, "dev: at least 6 dice a roll and an Unknown Element; the run becomes a dev run")
+	s.visits = int(Data.t("BREAKPOINT_GATE_VISIT"))
+	while not Catalog.is_sunset_visit(s):
+		s.visits += 1
+	s.mat = []
+	check(not Game.lock_in_ends_run(), "a missed breakpoint doesn't end the run (off while testing, the user 2026-11-24)")
 	s.runComplete = true  # a gate: a mat scoring nothing would end the run
 	s.mat = []
 	check(Game.lock_in_ends_run(), "dev: a missed gate ends the run")
@@ -340,6 +345,9 @@ func _ready() -> void:
 	check(Hand.play(hd, s, [big[1]]) == "" and s.mat == [big[0], big[1]] and hd.hand.size() == 4 and hd.hand.has(big[6]) and hd.deck.size() == 1, "hand: a play packs onto the mat and refills the hand 1 for 1")
 	check(s.matPlays == [[big[0]], [big[1]]], "hand: each play's cards are kept for the scoring")
 	check(Hand.gain(s, {}, [capst]) == null, "hand: no preview when it doesn't fit")
+	check(Hand.score_after(s, {}, [capst]) == null and not Hand.fits(s, [capst]), "hand: no score after, no fit, when it doesn't fit")
+	var sa = Hand.score_after(s, {}, [big[1]])
+	check(sa != null and is_equal_approx(sa.total - Mat.score(Mat.on_mat(s), s, {}).total, Hand.gain(s, {}, [big[1]])), "hand: the score after a play less the score now is its gain")
 	check(Hand.play(hd, s, [capst]) == "A capstone needs two free slots side by side." and hd.hand.has(capst) and s.mat.size() == 2, "hand: a capstone needs two free slots (nothing changes)")
 	check(Hand.play(hd, s, [big[2], big[3]]).begins_with("There's no room") and s.mat.size() == 2, "hand: a play must fit whole")
 	check(Hand.play(hd, s, ["Nope"]) != "" and Hand.play(hd, s, []) != "", "hand: only hand cards")

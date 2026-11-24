@@ -8,6 +8,15 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-24
+- **A missed breakpoint no longer ends the run** (for testing): you just get no bonus dice. Overtime still ends on a miss.
+- Checks: a **Done** button beside the deck count ends the check whenever you like (it asks first if a card in your hand still fits), so a hand with nothing that fits can't get stuck.
+- Checks: picking cards shows what Play would do before you tap it: the combos it makes or grows, the items it completes, the points it adds and the mat's new total.
+- While looking through your Inventory mid-check, discarded cards are faded too, so what's left shows what you can still draw.
+- Tapping the parts of a hand card's pop-out no longer opens their cards.
+- Station shop: tier 1 cards are smaller (two of them stand as tall as a tier 2 card), the same size as in the Inventory and on the mat. A soft 💡 shows on every card you can craft, fading in once a visit (not again on every tap). A shop card's suit circles fade when you hold none of that suit; a card you own never fades them.
+- The dots round the map's clock are gone.
+
 ## 2026-11-23
 - Checks: the Draw button's number is how many element draws you can make right now. The middle of the row shows the cards left in your deck; tap it to look through your whole Inventory (Back to your hand returns).
 - **The check, polished.** No Lock In button: a check ends by itself once nothing in your hand or deck fits. The hand is dealt in after you close the challenge. Picked cards light up the mat slots they'll take. After Play, a "Played together!" panel shows the combos that play made by itself (they count again) and what it adds, before the cards fly to the mat. Combo chips count played-together combos in their number (3 played together shows 6) instead of a ×2 tag; tap a chip to see each card with the icon being counted, and the plays that added to it.

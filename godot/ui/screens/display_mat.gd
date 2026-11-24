@@ -170,7 +170,7 @@ func _redraw() -> void:
 		_scroll.add_child(_inventory(size.x))
 	else:
 		for n in _inv_cards:
-			_inv_cards[n].modulate = Color(0.6, 0.6, 0.6) if s.mat.has(n) else Color.WHITE
+			_inv_cards[n].modulate = Color(0.6, 0.6, 0.6) if _spent(n) else Color.WHITE
 	# The selection's green ring, moved onto its card (no list rebuild).
 	if is_instance_valid(_inv_ring):
 		_inv_ring.visible = _inv_cards.has(selected)
@@ -515,7 +515,7 @@ func _inventory(width: float) -> Control:
 			if x + span > 4:
 				x = 0
 				y += h + 8
-			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": Game.state.mat.has(c.name), "tag": "inv:" + c.name})
+			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": _spent(c.name), "tag": "inv:" + c.name})
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
 			card.set_meta("cmp", "inv:" + c.name)
@@ -673,19 +673,23 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	var draws := Hand.draws_left(h, Game.state)
 	_hand_button("draw", "🃏", "Draw", str(draws), Vector2(size.x - side - BTN, row_y), draws <= 0, _flip_view, view == "elements")
 	# The deck's count in the middle; a tap: the whole Inventory, to plan (the user, 2026-11-23).
-	var deck := _round_button("", Vector2(150, 46), 13, Color("#1c2b3d"))
-	deck.position = Vector2((size.x - 150) / 2, row_y + (BTN - 46) / 2)
+	# Done beside it: stop playing and lock in (the user, 2026-11-24: a hand with nothing that fits).
+	var dw := 124.0
+	var dx := (size.x - dw - 8 - BTN) / 2
+	_hand_button("pass", "🏁", "Done", "", Vector2(dx + dw + 8, row_y), false, hand_pass)
+	var deck := _round_button("", Vector2(dw, 46), 13, Color("#1c2b3d"))
+	deck.position = Vector2(dx, row_y + (BTN - 46) / 2)
 	deck.set_meta("cmp", "hand:deck")
-	var dn := Tok.label("%d in deck%s" % [h.deck.size(), "  (%d new)" % fl if fl else ""], 14, Color.WHITE, 900)
+	var dn := Tok.label("%d in deck" % h.deck.size(), 14, Color.WHITE, 900)
 	dn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dn.position = Vector2(0, 5)
-	dn.size = Vector2(150, 20)
+	dn.size = Vector2(dw, 20)
 	dn.mouse_filter = MOUSE_FILTER_IGNORE
 	deck.add_child(dn)
-	var sub := Tok.label("Tap: your Inventory", 10, Color("#ffe08a"), 800)
+	var sub := Tok.label("%d new · see all" % fl if fl else "Tap: see them all", 10, Color("#ffe08a"), 800)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.position = Vector2(0, 25)
-	sub.size = Vector2(150, 14)
+	sub.size = Vector2(dw, 14)
 	sub.mouse_filter = MOUSE_FILTER_IGNORE
 	deck.add_child(sub)
 	deck.pressed.connect(func():
@@ -708,6 +712,25 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	StationScreen.corner_buttons(_body, false)  # Convert, as on the station
 	if App.current:
 		App.current.sync_hub()
+
+
+## Done: no more plays this check, lock in. Asks first while a hand card
+## still fits (a slip of the finger shouldn't end the check).
+func hand_pass() -> void:
+	if Game.check_hand() == null or playing or App.current == null:
+		return
+	var app := App.current
+	if Game.check_hand().hand.any(func(n): return Hand.fits(Game.state, [n])):
+		ConfirmDialog.ask(app, "Finish this check now?\nSome cards in your hand still fit on the mat.", app.hand_lock_in)
+	else:
+		app.hand_lock_in()
+
+
+## Faded in the Inventory: on the mat, or (browsing mid-check) discarded:
+## what's left shows what can still be drawn (the user, 2026-11-24).
+func _spent(n: String) -> bool:
+	var h = Game.check_hand()
+	return Game.state.mat.has(n) or (browsing and h != null and h.discards.has(n))
 
 
 ## Draw: the mat's Elements page (spend an element on a card), or back.
@@ -737,7 +760,8 @@ func _hand_button(id: String, icon: String, label: String, badge: String, at: Ve
 	l.size = Vector2(BTN, 12)
 	l.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(l)
-	b.add_child(HubBar._badge(badge, Vector2(BTN - 16, -6)))
+	if badge != "":
+		b.add_child(HubBar._badge(badge, Vector2(BTN - 16, -6)))
 	if dim:
 		b.modulate = Color(0.6, 0.6, 0.6, 0.75)
 	b.gui_input.connect(func(ev): if Tap.tap(ev): fn.call())
@@ -787,10 +811,12 @@ func _show_preview() -> void:
 	if is_instance_valid(_preview):
 		_preview.queue_free()
 	_preview = null
-	var g = Hand.gain(Game.state, Game.ctx, picks) if not picks.is_empty() else null
-	_fits = g != null
+	var after = Hand.score_after(Game.state, Game.ctx, picks) if not picks.is_empty() else null
+	_fits = after != null
 	if picks.is_empty() or not is_instance_valid(_page) or view != "mat":
 		return
+	var before := Game.mat_score()
+	var g = after.total - before.total if after != null else null
 	var d := roundi(g) if g != null else 0
 	var pill := Tok.label("No room on the mat" if g == null else "+%d" % d if d > 0 else "%d" % d if d < 0 else "±0", 13, Color.WHITE, 900)
 	pill.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -802,6 +828,35 @@ func _show_preview() -> void:
 	pill.position = Vector2((_page.size.x - pill.size.x) / 2, 6)
 	pill.mouse_filter = MOUSE_FILTER_IGNORE
 	pill.set_meta("cmp", "hand:gain")
+	# Before Play: the combos the picks would make or grow, and the score
+	# they'd bring the mat to (the user, 2026-11-24: playing blind was too
+	# much of a gamble against the breakpoint).
+	var shown: Control = pill
+	if after != null:
+		var chips := _preview_chips(before, after)
+		var box := Panel.new()
+		box.add_theme_stylebox_override("panel", Tok.box(Color(1, 0.953, 0.839, 0.96), 12, 2, Tok.GOLD, 0, 3, Color(0, 0, 0, 0.35)))
+		box.mouse_filter = MOUSE_FILTER_IGNORE
+		var x := 8.0
+		var ch := 0.0
+		for c in chips:
+			c.position = Vector2(x, 4)  # its count badge rides 6px up
+			c.size = c.custom_minimum_size
+			Juice._ignore_mouse(c)
+			box.add_child(c)
+			x += c.size.x + 2
+			ch = maxf(ch, c.size.y)
+		var tot := Tok.label("= %d" % roundi(after.total), 13, Tok.CARD_INK, 900)
+		var bh := maxf(ch + 6, 32)
+		pill.position = Vector2(x + 4, (bh - pill.size.y) / 2)
+		box.add_child(pill)
+		tot.position = Vector2(pill.position.x + pill.size.x + 11, (bh - tot.get_minimum_size().y) / 2)
+		tot.mouse_filter = MOUSE_FILTER_IGNORE
+		box.add_child(tot)
+		box.size = Vector2(tot.position.x + tot.get_minimum_size().x + 10, bh)
+		box.position = Vector2((_page.size.x - box.size.x) / 2, 4)
+		box.set_meta("cmp", "hand:preview")
+		shown = box
 	var layer := Control.new()  # the lit slots, then the pill over them: one queue_free clears it all
 	layer.size = _page.size
 	layer.mouse_filter = MOUSE_FILTER_IGNORE
@@ -816,7 +871,41 @@ func _show_preview() -> void:
 			lit.mouse_filter = MOUSE_FILTER_IGNORE
 			lit.set_meta("cmp", "hand:landing")
 			layer.add_child(lit)
-	layer.add_child(pill)
+	layer.add_child(shown)
+
+
+## Each combo's count as its chip shows it (combo_chips()).
+static func _combo_counts(sc: Dictionary) -> Dictionary:
+	var n := {}
+	for kind in ["station", "suit", "component"]:
+		for g in sc.combos[kind]:
+			n[kind + ":" + g.name] = int(g.k)
+	for t in sc.together.combos:
+		n[t.kind + ":" + t.name] = n.get(t.kind + ":" + t.name, 0) + int(t.k)
+	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
+	n.collection = sc.cols.filter(func(c): return found.has(c.id)).size()
+	n.new = sc.cols.size() - n.collection
+	return n
+
+
+## The chips a play would add or grow (before -> after), and a chip for
+## each item it would complete (with its recipe: x2, x3 made in one play).
+static func _preview_chips(before: Dictionary, after: Dictionary) -> Array:
+	var was := _combo_counts(before)
+	var now := _combo_counts(after)
+	var out := []
+	for c in combo_chips(after, false):
+		var k: String = c.get_meta("combo", "")
+		if k != "" and now.get(k, 0) != was.get(k, 0):
+			out.append(c)
+		else:
+			c.free()
+	var homestead: bool = after.sigs.any(func(g): return g.name == "Homestead")
+	for nm in after.completeNames:
+		if not before.completeNames.has(nm):
+			var x: int = (3 if homestead else 2) + (1 if after.together.complete.has(nm) else 0)
+			out.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(nm, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×%d" % x, 12))
+	return out
 
 
 ## Where the picked cards would sit on the page (the mat packed with them:

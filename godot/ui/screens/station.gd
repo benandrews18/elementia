@@ -5,7 +5,9 @@
 class_name StationScreen
 extends Control
 
-const T1_HEIGHT := 0.66  # a tier 1 shop card's height, of a full card's
+## A tier 1 shop card: two of them, one above the other with the gap
+## between, stand as tall as a tier 2/3 card (the user, 2026-11-24); the
+## Inventory's and the mat's tier 1 cards are this size too.
 const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel"]  # shop card names on two lines (the user, 2026-11-23)
 
 ## The layout is ui/screens/station.tscn: the art and its wash, the header
@@ -27,6 +29,7 @@ static var list_mode := false  # 📋: the shop as a list, the selected item's s
 var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
 var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
 var _press_at := Vector2.ZERO
+var _bulbs := {}  # shop cards whose 💡 has shown this visit (station -> {name: true}): no fade-in again on a redraw
 @onready var _scroll: ScrollContainer = $Scroll
 @onready var _page: Control = $Scroll/Page
 
@@ -203,7 +206,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		var items: Array = groups[gi]
 		if items.is_empty():
 			continue
-		var card_h := row_h * T1_HEIGHT if gi == 0 else row_h  # tier 1: tall enough for the shop's one icon and name size
+		var card_h := (row_h - gap) / 2 if gi == 0 else row_h
 		var cell_h := card_h + 3  # no Pin / Craft under the cards: tap one for the Crafting Bench (the user, 2026-11-22)
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
@@ -336,7 +339,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
 	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,  # you are at its station
-		"wrap": WRAP_NAMES.has(e.name), "shop": true})
+		"wrap": WRAP_NAMES.has(e.name) and not t1, "shop": not t1, "fade_suits": not owned})  # tier 1: the Inventory's small card
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
@@ -346,6 +349,17 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		card.modulate = Color(0.7, 0.7, 0.7)
 	if can:  # the walkthrough's "Tap a green card" points here
 		card.set_meta("tip", "st:craft:" + e.name)
+		# A soft 💡 on every card you can craft (the user, 2026-11-24), faded
+		# in once a visit, not again each time a tap redraws the shop.
+		var here: String = str(Game.ctx.get("current", ""))
+		if not _bulbs.has(here):
+			_bulbs = {here: {}}
+		var bulb := HintBadge.new()
+		bulb.tappable = false
+		bulb.fade_in = not _bulbs[here].has(e.name)
+		_bulbs[here][e.name] = true
+		bulb.set_meta("cmp", "st:bulb:" + e.name)
+		card.add_child(bulb)
 	page.add_child(card)
 	if owned:  # .st-owned::after: a green tick, bottom right
 		var tick := Tok.tick(Color.WHITE, 20, Tok.OK)
@@ -360,7 +374,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 ## this one lit in its breakdown); else the 📌 (a tap pins and tracks it, or
 ## unpins it), the tracked item's own card included.
 func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1: bool) -> Control:
-	var d := ItemCard.SHOP_CIRCLE  # the points badge's size
+	var d := 20.0 if t1 else ItemCard.SHOP_CIRCLE  # the points badge's size (a tier 1 card's small one)
 	var feeds := Game.feeds_tracked(item)
 	var pinned := Progress.is_pinned(item)
 	var b := Panel.new()

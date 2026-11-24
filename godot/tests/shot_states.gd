@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_inventory", "convert_bench", "keep_fan",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -351,7 +351,7 @@ func _ready() -> void:
 			var combos: Array = mat2._chip_nodes.keys().filter(func(k): return k != "order")
 			if not combos.is_empty():
 				ComboInfo.open_for(app, combos[0])
-		"play_together":  # Play with a station's three cards picked: their own combo shows before they fly
+		"play_together", "hand_preview":  # a station's three cards picked: the preview's combo and score (hand_preview); Play: their own combo shows before they fly
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
 			app.start_challenge_test(12)
@@ -371,8 +371,9 @@ func _ready() -> void:
 			var mat4 := app._panel_node as DisplayMatScreen
 			mat4.picks = Game.state.hand.hand.slice(0, 3)
 			mat4._redraw()
-			mat4.hand_play()
-			await get_tree().create_timer(0.5).timeout
+			if state == "play_together":
+				mat4.hand_play()
+				await get_tree().create_timer(0.5).timeout
 		"hand_inventory":  # a check: the deck's count tapped, the whole Inventory to plan with
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))

@@ -148,7 +148,7 @@ func show_item(name: String, keep_back := false) -> void:
 		c.queue_free()
 	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):
 		var cb := _cost_badge(su)
-		if side and not Data.t("SUIT_CORE_ELEMENTS")[su].any(func(sym): return Catalog.count(Game.state, sym) > 0):
+		if side and not plain and not Catalog.owns(Game.state, name) and not Game.suit_held(su):  # never on a card you own (the user, 2026-11-24)
 			cb.modulate.a = 0.35  # none of this suit held
 		cb.set_meta("cmp", "cp:cost%d" % $Card/Costs.get_child_count())
 		$Card/Costs.add_child(cb)
@@ -342,6 +342,7 @@ func _element(sym: String, small: bool, k := 1.0) -> Control:
 	l.size = Vector2(tw + (10.0 if small else 18.0 * k) + 4, px + (6.0 if small else 10.0 * k) + 4)
 	l.mouse_filter = MOUSE_FILTER_STOP
 	if side and plain:
+		l.mouse_filter = MOUSE_FILTER_IGNORE  # the hand's card: its parts take no taps (the user, 2026-11-24)
 		return l
 	if side:
 		var need := 0
@@ -376,7 +377,9 @@ func _item(name: String, px: float) -> Control:
 		var t := Tok.tick(Color.WHITE, 17 * px / 32, Tok.OK, Tok.CARD)
 		t.position = Vector2(px - 11 * px / 32, -4 * px / 32)
 		c.add_child(t)
-	if Catalog.entry(name) != null and side:
+	if plain:
+		c.mouse_filter = MOUSE_FILTER_IGNORE  # the hand's card: its parts don't open their own cards (the user, 2026-11-24)
+	elif Catalog.entry(name) != null and side:
 		c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(name))
 	elif Catalog.entry(name) != null:
 		c.gui_input.connect(func(ev): if Tap.tap(ev):

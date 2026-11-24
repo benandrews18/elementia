@@ -78,7 +78,7 @@ when = "check"
 [sub_resource type="Resource" id="hint9"]
 script = ExtResource("2")
 id = "rules"
-say = "Tap here for the Display Mat rules. A score under the first breakpoint ends your run!"
+say = "Tap here for the Display Mat rules. A score under the first breakpoint earns no bonus dice!"
 pose = 10
 target = "btn:rules"
 when = "panel:drawer"

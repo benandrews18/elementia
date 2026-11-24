@@ -283,7 +283,8 @@ func deal_hand() -> void:
 
 ## Would locking in now end the run? (The screen asks first.)
 func lock_in_ends_run() -> bool:
-	var gated: bool = state.get("runComplete") or (int(state.visits) >= int(Data.t("BREAKPOINT_GATE_VISIT")) and Catalog.is_sunset_visit(state))
+	# The run's breakpoint gates are off while testing (the user, 2026-11-24): a miss just earns no bonus dice.
+	var gated: bool = state.get("runComplete") or (Data.t("BREAKPOINT_GAME_OVER") == true and int(state.visits) >= int(Data.t("BREAKPOINT_GATE_VISIT")) and Catalog.is_sunset_visit(state))
 	var ends: bool = gated and Orders.reward_for(mat_score().total, Orders.check_round(state)) == 0
 	if ends and Dev.opts().get("devNoGameOver") == true:  # the Dev Panel's switch: the run goes on
 		Dev.touch()
@@ -453,6 +454,11 @@ func suit_cost_need(name: String) -> Dictionary:
 	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):
 		need[su] = need.get(su, 0) + 1
 	return need
+
+
+## Any element of this suit in stock? (a suit circle faded when not)
+func suit_held(su: String) -> bool:
+	return Data.t("SUIT_CORE_ELEMENTS")[su].any(func(sym): return Catalog.count(state, sym) > 0)
 
 
 func suit_cost_payable(name: String) -> bool:

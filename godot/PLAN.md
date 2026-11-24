@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** none queued: step 15 is done; the user playtests. Start every session with `git status`: the user may
+**Next task:** step 16 part 2: tune the breakpoints from simulated runs (the user, 2026-11-24). Part 1 is done (the batch below). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -1252,6 +1252,15 @@ design happens in Godot.
 ## Decisions
 
 Recorded so they aren't re-argued. Add new ones with the date.
+
+- 2026-11-24 (the user, step 16): the run's breakpoint gates don't end the
+  run while testing (data `BREAKPOINT_GAME_OVER: false`; a miss just earns no
+  bonus dice; Overtime still ends on a miss). Checks get a Done button (asks
+  if a hand card still fits) and a preview of the picks' combos and points
+  before Play. Tier 1 cards: two stand as tall as a tier 2 card, in the shop,
+  the Inventory and on the mat. A 💡 on every craftable shop card (fades in
+  once a visit). A shop card's suit circle fades when no element of that
+  suit is held; owned cards never fade them. The clock's rim dots are gone.
 
 - 2026-11-21: Cutover (the user): the HTML game is frozen and abandoned; the
   game is Godot only, released as the phone APK and the Godot web build;

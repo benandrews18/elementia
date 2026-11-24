@@ -69,11 +69,14 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # map
 		await get_tree().process_frame
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
+		if app.panel == "market":  # a crafted Market square plays its sequence in the tray: let it finish
+			await _until(func(): return not app._market_playing)
+			app.close_panel()
 		if Game.state.get("finalCheckPending"):
-			check(app.home_face() == "final", "final check face")
 			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "the Final Score shutter opens the mat")
 			_dismiss(app)
-			app._on_hub("home")
+			check(app.home_face() == "play" and Game.check_hand() != null, "the final check is played with a hand")
+			app.hand_lock_in()
 			check(await _until(func(): return Game.state.get("runComplete")), "the final count ends the run")
 			break
 		var options: Array = Data.t("MAP_NODE_POS").keys().filter(func(n): return app.can_travel_to(n))
@@ -87,9 +90,6 @@ func _run(app: App) -> void:
 			Tap._down = null  # the press is remembered: later test taps land elsewhere
 			Game.ctx.selectedMapStation = options[0]
 			Game.state_changed.emit()
-		if app.panel == "market":  # a crafted Market square plays its sequence in the tray: let it finish
-			await _until(func(): return not app._market_playing)
-			app.close_panel()
 		check(app.home_face() == "travel", "turn %d: Home says Travel" % turns)
 		var check_turn := Catalog.is_mat_check_visit(Game.state)
 		app._on_hub("home")  # travel
@@ -144,7 +144,8 @@ func _run(app: App) -> void:
 			c.queue_free()
 	app.open_panel("drawer")
 	app.close_panel()
-	check(await _until(func(): return shown.call(EndGame)), "closing the mat after the run ends brings the end screen back")
+	if Game.state.get("ended"):  # Run Complete: Overtime goes on, no end screen again
+		check(await _until(func(): return shown.call(EndGame)), "closing the mat after the run ends brings the end screen back")
 	# New Game from there: the capstone choice, and the end screen stays gone.
 	for c in app.get_children():
 		if c is EndGame:
@@ -632,6 +633,11 @@ func _collections(app: App) -> void:
 	_find_meta(dm, "hand:discard").gui_input.emit(_release())
 	check(hd.hand.size() == 7 and hd.discards == two and hd.tosses == tosses - 1, "Discard: both cards out for one discard, the hand refilled")
 	dm = app._panel_node as DisplayMatScreen
+	(_find_meta(dm, "hand:deck") as Button).pressed.emit()
+	var faded := func(n): return _find_meta(dm, "inv:" + n) != null and _find_meta(dm, "inv:" + n).modulate != Color.WHITE
+	check(faded.call(two[0]) and faded.call(first) and not faded.call(hd.hand[0]), "browsing: the mat's cards and the discards faded, the rest not")
+	(_find_meta(dm, "hand:back") as Button).pressed.emit()
+	dm = app._panel_node as DisplayMatScreen
 	dm._lift(hd.hand[0])
 	dm._blank_tap(_release())
 	check(dm.picks.is_empty() and dm.lifted == "", "a tap on a blank space lets go of the picks")
@@ -697,7 +703,14 @@ func _collections(app: App) -> void:
 	dm._lift(hd.hand[0])
 	check(dm.view == "mat" and dm.picks.size() == 1, "picking a card on the Elements page turns back to the mat")
 	dm._lift("")
-	app.hand_lock_in()
+	check(_find_meta(dm, "hand:pass") != null, "Done beside the deck")
+	Tap._down = null
+	_find_meta(dm, "hand:pass").gui_input.emit(_release())
+	var done_ask: Array = top.call(ConfirmDialog)
+	check(done_ask.size() == 1 and Game.check_hand() != null, "Done with a card that still fits: asks first")
+	if done_ask.size() == 1:
+		done_ask[0].on_yes.call()
+		done_ask[0].queue_free()
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()

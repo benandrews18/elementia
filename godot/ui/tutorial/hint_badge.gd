@@ -11,6 +11,9 @@ extends Control
 
 signal tapped
 
+var fade_in := true  # false: already showing before a redraw rebuilt its target
+var tappable := true  # false: just a mark (a craftable shop card's), taps go to the card
+
 
 func _ready() -> void:
 	anchor_left = 1.0
@@ -19,7 +22,7 @@ func _ready() -> void:
 	offset_right = diameter * 0.3
 	offset_top = -diameter * 0.3
 	offset_bottom = diameter * 0.7
-	mouse_filter = MOUSE_FILTER_STOP
+	mouse_filter = MOUSE_FILTER_STOP if tappable else MOUSE_FILTER_IGNORE
 	var bulb := TextureRect.new()
 	bulb.texture = Data.icon("💡")
 	bulb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -31,7 +34,7 @@ func _ready() -> void:
 	bulb.offset_bottom = -diameter * 0.17
 	bulb.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(bulb)
-	if not Progress.prefs.get("lowMotion"):
+	if fade_in and not Progress.prefs.get("lowMotion"):
 		modulate.a = 0.0
 		create_tween().tween_property(self, "modulate:a", 1.0, fade)
 	gui_input.connect(func(ev):

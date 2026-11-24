@@ -113,6 +113,8 @@ func _ready() -> void:
 		pip.add_child(g)
 		if opts.get("lit_suits", []).has(su):
 			pip.add_child(_halo(psz))
+		if opts.get("fade_suits") and not Game.suit_held(su):  # a shop card: a suit you hold none of (the user, 2026-11-24)
+			pip.modulate.a = 0.35
 		pip.set_meta("cmp", "%s:pip%d" % [opts.get("tag", item), i])
 		$Pips.add_child(pip)
 		_pips.append(pip)

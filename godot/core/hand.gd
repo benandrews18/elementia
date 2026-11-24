@@ -91,23 +91,36 @@ static func play(h: Dictionary, s: Dictionary, names: Array) -> String:
 	return ""
 
 
-## What playing `names` would add to the mat's score, or null if they don't
-## fit (the Play button's preview). `base`: the mat's score now, if known.
-static func gain(s: Dictionary, ctx: Dictionary, names: Array, base := NAN) -> Variant:
+## Do these cards fit on the mat now?
+static func fits(s: Dictionary, names: Array) -> bool:
+	return _after(s, names) is Array
+
+
+## The mat's score (Mat.score()) once `names` are played, or null if they
+## don't fit (the play preview's combos).
+static func score_after(s: Dictionary, ctx: Dictionary, names: Array) -> Variant:
 	var mat = _after(s, names)
 	if mat is String:
 		return null
-	var cards := func(m: Array): return m.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
-	if is_nan(base):
-		base = Mat.score(cards.call(s.mat), s, ctx).total
 	var after := s.duplicate()
 	after.matPlays = Util.get_or(s, "matPlays", []) + [names]
-	return Mat.score(cards.call(mat), after, ctx).total - base
+	return Mat.score(Mat.on_mat({"mat": mat}), after, ctx)
+
+
+## What playing `names` would add to the mat's score, or null if they don't
+## fit (the Play button's preview). `base`: the mat's score now, if known.
+static func gain(s: Dictionary, ctx: Dictionary, names: Array, base := NAN) -> Variant:
+	var sc = score_after(s, ctx, names)
+	if sc == null:
+		return null
+	if is_nan(base):
+		base = Mat.score(Mat.on_mat(s), s, ctx).total
+	return sc.total - base
 
 
 ## Is the check over? Nothing in the hand or the deck fits on the mat.
 static func mat_full(h: Dictionary, s: Dictionary) -> bool:
-	return not (h.hand + h.deck).any(func(n): return _after(s, [n]) is Array)
+	return not (h.hand + h.deck).any(func(n): return fits(s, [n]))
 
 
 ## Discards up to HAND_DISCARD_MAX hand cards at once, for one discard.

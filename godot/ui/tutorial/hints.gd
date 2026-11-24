@@ -18,6 +18,7 @@ const SCENE := "res://ui/tutorial/hints.tscn"
 var _on: Hint  # the hint whose 💡 is out
 var _badge: HintBadge
 var _wait := 0.0
+var _last_on := ""  # the hint and target tag last badged: put back after a redraw, it doesn't fade in again
 
 
 static func make() -> Hints:
@@ -58,6 +59,9 @@ func _process(d: float) -> void:
 			continue
 		_on = h
 		_badge = HintBadge.new()
+		var key: String = h.id + "|" + str(t.get_meta("tip", t.get_meta("cmp", "")))
+		_badge.fade_in = key != _last_on
+		_last_on = key
 		_badge.tapped.connect(_open)
 		t.add_child(_badge)
 		return
