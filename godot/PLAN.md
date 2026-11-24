@@ -177,9 +177,12 @@ with `godot-grill`.
    collection!) puts the tutorial aside, unlocked; so do the title screen
    and the Combo Lab. Settings' How to Play: the tutorial again (asks: a
    new game); the old walkthrough (start_coach, 7 hub steps) is gone; the
-   Periodic Table + 16 Elements are a Tutorial Messages row. Open for the
-   user: by the first check the mat already holds the run's cards, so
-   "tap the mat to play it" replaces one (a negative score change shows).
+   Periodic Table + 16 Elements are a Tutorial Messages row. Was open: by the
+   first check the mat already held the run's cards; fixed 2026-11-23 (the
+   user: the crafts' auto-place on the mat was a leftover; removed, rules
+   lock re-recorded). Also fixed: the tutorial stuck at Water (a target
+   with its own tap code never recorded the press; every target event
+   goes through Tap.tap now).
    Part 3 done (2026-11-23): ui/tutorial/hints.tscn lists 10 Hint
    resources (id, say, pose, target, when: Tutorial.met's tests, now with
    "&" and "!"), run by Hints (a Node in the App, a look every 0.25 s): one
