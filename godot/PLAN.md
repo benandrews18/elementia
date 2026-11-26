@@ -493,7 +493,13 @@ Market, tutorials), motion last (it animates the final layouts).
    - Small assets (the user, 2026-11-26): Play's face the hand-of-cards
      icon from images/playing_card_icons.png (not 🃏); Metropolis's
      picture images/Metropolis.png.
-20b. **Mat cards and stars** (the user, 2026-11-26).
+20b. Done (2026-11-26): **Mat cards and stars.** DisplayMatScreen.enlarge()
+   (a CardPop side card on the App over the mat card, a full-screen
+   "Close" under it: taps and Back); ItemCard.star_button() on the
+   picture (starred() now maps name -> collection id; the hand's big card
+   too); CollectionsWindow.show_on(..., focus_id) lights and scrolls to
+   the row; the check's corner Convert gone. Screens mat_big, coll_focus.
+   Was:
    - A tap on a card on the Display Mat shows it enlarged (like the
      hand's big card) over its own place; a tap on it or anywhere else
      puts it back.
@@ -501,6 +507,8 @@ Market, tutorials), motion last (it animates the final layouts).
      card's), in a round rim and background like 🔍; a tap opens the
      Collections window on that collection, highlighted. Only for
      collections the player has fully unlocked.
+   - No Convert button in the check's lower-right corner (it lives in
+     the Elements page now).
 20c. **The Collections window, reworked** (the user, 2026-11-26): no
    longer loads collections onto the mat, so it is a reference players
    open often: very readable and easy to find your way in (grill the
@@ -563,6 +571,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 20b (mat cards and stars): a tapped mat card shows big in place, the ⭐ on the picture opens Collections lit, no corner Convert at a check.
 - 2026-11-26: step 20 (the check, in motion): rising draws, tossed discards, a found collection's window before the count, a punchier count; Play's hand icon, Metropolis's picture. The user's six new items planned as 20-20d.
 - 2026-11-26: step 19 (the check screen, clearer): round buttons, gold combo borders, one-piece preview, landings on open slots, the last pick big in the fan, collection stars, the Elements page's line and Convert.
 - 2026-11-26: step 18c (code review of steps 14-18): tap and lambda-capture fixes, dead wide-card code out, no engine errors in the play test.

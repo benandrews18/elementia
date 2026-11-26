@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -377,7 +377,7 @@ func _ready() -> void:
 			if state == "play_together":
 				mat4.hand_play()
 				await get_tree().create_timer(0.5).timeout
-		"hand_combo":  # a check: a station combo on the mat (gold borders), a known collection the hand can finish (⭐), one card picked (big, in the fan)
+		"hand_combo", "mat_big", "coll_focus":  # a check: a station combo on the mat (gold borders), a known collection the hand can finish (⭐), one card picked (big, in the fan)
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
 			app.start_challenge_test(12)
@@ -412,6 +412,13 @@ func _ready() -> void:
 			var mat6 := app._panel_node as DisplayMatScreen
 			mat6.picks = [hd.hand[0]]
 			mat6._redraw()
+			if state == "mat_big":  # a mat card tapped: big over its place
+				mat6.picks = []
+				mat6.lifted = ""
+				mat6._redraw()
+				mat6.enlarge(trio[1])
+			elif state == "coll_focus":  # a ⭐ tapped: Collections on its collection
+				CollectionsWindow.show_on(app, false, col3.id)
 		"hand_inventory":  # a check: the deck's count tapped, the whole Inventory to plan with
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))

@@ -27,7 +27,7 @@ signal lift(name: String)  # a card tapped (pick or put back); "": a blank tap, 
 
 var lifted := ""
 var picks: Array = []  # picked: raised (two or more: ticked)
-var starred := {}  # card name -> true: its ⭐
+var starred := {}  # card name -> its collection's id: its ⭐
 ## When the check's deal starts (Time ticks, ms; 0: none). The hand is
 ## rebuilt on every redraw, so each card works out how far along its own
 ## fly-in is from this, and a redraw mid-deal doesn't restart it.
@@ -94,7 +94,7 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 	var lift_x := -1.0
 	for i in range(n - 1, -1, -1):  # right to left: each card drawn over the one to its right
 		var nm: String = names[i]
-		var card := ItemCard.make(nm, {"size": true, "star": starred.has(nm)})
+		var card := ItemCard.make(nm, {"size": true, "star": starred.get(nm, "")})
 		card.size = Vector2(cw, ch)
 		card.pivot_offset = Vector2(cw / 2, ch)  # tilts from its foot
 		var d := i - mid
@@ -137,10 +137,11 @@ func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> v
 	holder.set_meta("hand", nm)
 	holder.set_meta("cmp", "hand:lifted")
 	holder.add_child(full)
-	if starred.has(nm):
-		var star := ItemCard.star_mark(24)
-		star.position = Vector2(sz.x - 24 - 6, -8)
-		holder.add_child(star)
+	if starred.has(nm):  # on the picture's top right, 26 px on screen
+		var pic: Control = full.get_node("Card/Icon")
+		var star := ItemCard.star_button(26 / full.scale.x, starred[nm])
+		star.position = Vector2(pic.size.x - star.size.x * 0.6, -star.size.x * 0.3)
+		pic.add_child(star)
 	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 	add_child(holder)
 

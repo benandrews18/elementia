@@ -13,11 +13,13 @@ const SCENE := "res://ui/overlays/collections.tscn"
 @export var banner_x := 49.1  # from the title screen the title sits left of the Stars bubble (.coll-head)
 
 var from_menu := false
+var focus := ""  # a collection's id: its row lit and scrolled to (a card's ⭐)
 
 
-static func show_on(on: Control, menu := false) -> CollectionsWindow:
+static func show_on(on: Control, menu := false, focus_id := "") -> CollectionsWindow:
 	var d: CollectionsWindow = load(SCENE).instantiate()
 	d.from_menu = menu
+	d.focus = focus_id
 	d.size = on.size
 	on.add_child(d)
 	return d
@@ -67,7 +69,23 @@ func _build() -> void:
 		var row := CollectionRow.make()
 		rows.add_child(row)
 		row.custom_minimum_size.y = row.fill(c, null if found.has(c.id) else clues[c.id], 322)
-	$Window/Content/Scroll.set_deferred("scroll_vertical", keep)
+		row.set_meta("collection", c.id)
+		if c.id == focus:
+			var ring := Panel.new()
+			ring.add_theme_stylebox_override("panel", Tok.box(Color(Tok.GOLD, 0.12), 12, 3, Tok.GOLD, 8, 0, Color(Tok.GOLD, 0.6)))
+			ring.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			ring.set_meta("cmp", "coll:focus")
+			row.add_child(ring)
+			_scroll_to.call_deferred(row)
+			keep = -1
+	if keep >= 0:
+		$Window/Content/Scroll.set_deferred("scroll_vertical", keep)
+
+
+func _scroll_to(row: Control) -> void:
+	if is_instance_valid(row):
+		$Window/Content/Scroll.ensure_control_visible(row)
 
 
 ## buyClues(n): the Stars are spent first, then the gifts open one by one.

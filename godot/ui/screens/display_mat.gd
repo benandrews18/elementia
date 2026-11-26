@@ -32,6 +32,7 @@ var _inv_ring: Panel  # the selected card's green ring in the list
 var _inv_key := ""  # what the list was built for: item count and width
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
+var _big: Control  # a mat card shown big at a check (enlarge())
 static var collapsed := false  # the fold button: the mat minimised to a row of its icons (setMatCollapsed())
 static var list_mode := false  # the 📋 view: a compact list on the left, the selected card on the right
 var playing := false  # the Lock-In count is running: no redraws under it
@@ -679,12 +680,55 @@ static func row_parts(name: String, at: Vector2, room: float) -> Control:
 func _on_card_input(ev: InputEvent, name: String) -> void:
 	if not Tap.tap(ev):
 		return
-	if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it
-		if App.current:
-			App.current.show_card(name)
+	if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it big
+		enlarge(name)
 		return
 	selected = "" if selected == name else name
 	_redraw()
+
+
+## A mat card tapped at a check (the user, 2026-11-26): its full card, big
+## (like the hand's), over its own place; a tap on it or anywhere else puts
+## it back. The same card again: just back.
+func enlarge(name: String) -> void:
+	var was := ""
+	if is_instance_valid(_big):
+		was = _big.get_meta("card")
+		_big.queue_free()
+		_big = null
+	var at := _mat_nodes.get(name) as Control
+	if was == name or at == null or App.current == null:
+		return
+	var app := App.current
+	_big = Control.new()
+	_big.size = app.size
+	_big.mouse_filter = MOUSE_FILTER_IGNORE
+	_big.set_meta("card", name)
+	_big.set_meta("cmp", "mat:big")
+	var back := Control.new()  # the whole screen: any tap (or Back: App.back finds "Close") puts it back
+	back.name = "Close"
+	back.size = app.size
+	back.gui_input.connect(func(ev): if Tap.tap(ev): enlarge(name))
+	_big.add_child(back)
+	var cap: bool = Data.t("ITEM_TIER").get(name, "") == "CAPSTONE"
+	var full := CardPop.side_card(name, 260.0 if cap else 150.0, true)
+	var sz: Vector2 = full.size * full.scale
+	var r := at.get_global_rect()
+	full.position = Vector2(clampf(r.get_center().x - sz.x / 2, 8, app.size.x - 8 - sz.x), clampf(r.get_center().y - sz.y / 2, 8, app.size.y - 8 - sz.y))
+	Juice._ignore_mouse(full)  # its taps reach the Close under it
+	_big.add_child(full)
+	app.add_child(_big)
+	if Juice.on():  # grows out of the mat card
+		var s0: Vector2 = full.scale
+		full.pivot_offset = r.get_center() - full.position
+		full.pivot_offset /= s0  # pivot in the card's own units
+		full.scale = s0 * (r.size.x / sz.x)
+		full.create_tween().tween_property(full, "scale", s0, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_big):  # it's on the App: it goes with the mat
+		_big.queue_free()
 
 
 ## Card playing (PLAN.md steps 14-15): under the mat Discard (left) and
@@ -739,8 +783,6 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	_hand_view.show_hand(h.hand, lifted, picks, starred(h))
 	_hand_view.lift.connect(_lift)
 	_show_preview()
-	if view != "elements":  # the Elements page has its own, at its lower right
-		StationScreen.corner_buttons(_body, false)  # Convert, as on the station
 	if App.current:
 		App.current.sync_hub()
 
@@ -1537,7 +1579,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var stars := starred(Game.check_hand()) if Game.check_hand() != null else {}
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
 		return {"mini": mini, "in_grid": false, "complete": sc.completeNames.has(c.name), "lit_suits": lit_suits, "lit_stations": lit_st,
-			"combo": in_combo.has(c.name), "star": stars.has(c.name)}
+			"combo": in_combo.has(c.name), "star": stars.get(c.name, "")}
 	for i in pack.slot.size():
 		var sl: Dictionary = pack.slot[i]
 		if sl.kind == "locked":
@@ -1589,7 +1631,8 @@ static func combo_members(cards: Array, sc: Dictionary) -> Dictionary:
 	return out
 
 
-## The cards that get a ⭐ (the user, 2026-11-26): each known collection
+## The cards that get a ⭐ (name -> the collection's id; the user,
+## 2026-11-26): each known collection
 ## whose cards are all on screen (the hand and the mat) with at least one
 ## still in the hand (not when all are on the mat).
 static func starred(h: Dictionary) -> Dictionary:
@@ -1599,7 +1642,7 @@ static func starred(h: Dictionary) -> Dictionary:
 	for col in Mat.collections():
 		if found.has(col.id) and col.items.all(func(n): return h.hand.has(n) or on_mat.has(n)) and col.items.any(func(n): return h.hand.has(n)):
 			for n in col.items:
-				out[n] = true
+				out[n] = col.id
 	return out
 
 

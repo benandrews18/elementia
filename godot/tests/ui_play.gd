@@ -682,6 +682,19 @@ func _collections(app: App) -> void:
 	var mat_was: Array = Game.state.mat
 	Game.state.mat = col.items.slice(1)
 	check(DisplayMatScreen.starred(fake).has(col.items[0]) and DisplayMatScreen.starred(fake).size() == col.items.size(), "⭐ on each card of a known collection the hand can finish")
+	var sc := ItemCard.make(col.items[0], {"star": col.id})
+	sc.size = Vector2(100, 140)
+	app.add_child(sc)
+	var star := _find_meta(sc, "card:star")
+	check(star != null and star.get_parent().get_meta("cmp", "").ends_with(":icon"), "the ⭐ rides the item's picture")
+	if star:
+		Tap._down = null
+		star.gui_input.emit(_release())
+		var cws: Array = top.call(CollectionsWindow)
+		check(cws.size() == 1 and cws[0].focus == col.id and _find_meta(cws[0], "coll:focus") != null, "a tap on the ⭐: Collections, that collection lit")
+		for c in cws:
+			c.queue_free()
+	sc.queue_free()
 	fake.hand = []
 	Game.state.mat = col.items.duplicate()
 	check(DisplayMatScreen.starred(fake).is_empty(), "no ⭐ when all of it is on the mat")
@@ -755,9 +768,13 @@ func _collections(app: App) -> void:
 	check(dm.picks.is_empty() and dm.lifted == "", "a tap on a blank space lets go of the picks")
 	dm._on_card_input(_press(Vector2.ZERO), first)
 	dm._on_card_input(_release(), first)
-	check(Game.state.mat.has(first) and dm.selected == "" and not top.call(CardPop).is_empty(), "a mat card tapped: its card shows; nothing comes off the mat")
-	for c in top.call(CardPop):
-		c.queue_free()
+	var big := _find_meta(app, "mat:big")
+	check(Game.state.mat.has(first) and dm.selected == "" and big != null and big.get_meta("card") == first, "a mat card tapped: shown big over its place; nothing comes off the mat")
+	check(_find_meta(dm, "convert") == null, "no Convert in the check's corner (it's on the Elements page)")
+	if big:
+		big.get_node("Close").gui_input.emit(_release())
+		await get_tree().process_frame
+		check(not is_instance_valid(big) or big.is_queued_for_deletion(), "a tap anywhere puts it back")
 	# An owned capstone: always on, its chip beside the mat; a tap shows its card.
 	var cap: String = Data.t("CAPSTONES").filter(func(c): return not Catalog.owns(Game.state, c))[0]
 	Game.state.items.append(cap)
@@ -782,7 +799,11 @@ func _collections(app: App) -> void:
 	Game.state.emptyElements = 1
 	Game._changed()
 	dm = app._panel_node as DisplayMatScreen
-	check(_find_meta(dm, "convert") != null, "the Convert button shows during a check")
+	check(_find_meta(dm, "convert") == null, "no Convert in the mat's corner during a check")
+	dm.view = "elements"
+	dm._redraw()
+	check(_find_meta(dm, "convert") != null, "Convert on the Elements page")
+	dm.view = "mat"
 	app.open_panel("convert")
 	check(app._panel_node is ConvertTray and (app._panel_node as ConvertTray).to == "" and app._hub.face == "close", "its tray is the usual one")
 	check(is_instance_valid(dm) and not dm.is_queued_for_deletion() and dm.visible, "Convert opens over the mat (the mat stays open under it)")

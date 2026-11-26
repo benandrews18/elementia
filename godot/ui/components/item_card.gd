@@ -146,10 +146,11 @@ func _ready() -> void:
 		var sb := SizeBadge.make(item, psz, 1.5)
 		sb.name = "Size"
 		add_child(sb)
-	if opts.get("star"):
-		var star := star_mark(16.0 if mini else 22.0)
+	if opts.get("star"):  # on the picture's top-right corner
+		var star := star_button(minf(16.0 if mini else 24.0, icon_px * 0.6), opts.star)
 		star.name = "Star"
-		add_child(star)
+		star.position = Vector2(icon_px - star.size.x * 0.6, -star.size.x * 0.3)
+		ic.add_child(star)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
 	resized.connect(_place)
@@ -194,18 +195,24 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 
 ## "Lit" (part of a live combo): a 3.5px gold ring and a 10px glow, behind
 ## the badge (.mm-pip.lit, .mm-station.lit).
-## The collection ⭐ (a known collection the hand can finish): a gold star
-## with a dark edge, riding the card's top-right corner (placed in _place()).
-static func star_mark(px: float) -> Control:
-	var holder := Control.new()
-	holder.size = Vector2(px, px)
-	holder.mouse_filter = MOUSE_FILTER_IGNORE
-	holder.set_meta("cmp", "card:star")
-	var back := Tok.star(Color("#3b2412"), px + 4)
-	back.position = Vector2(-2, -2)
-	holder.add_child(back)
-	holder.add_child(Tok.star(Color("#ffd166"), px))
-	return holder
+## The collection ⭐ (a found collection the hand can finish; the user,
+## 2026-11-26): a gold star in 🔍's round rim, on the item picture's top
+## right. A tap opens Collections on that collection (col_id), lit.
+static func star_button(px: float, col_id: String) -> Control:
+	var b := TextureRect.new()
+	b.texture = load("res://assets/ui/btn_round.webp")
+	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	b.size = Vector2(px, px)
+	b.mouse_filter = MOUSE_FILTER_STOP  # its tap isn't the card's
+	b.set_meta("cmp", "card:star")
+	b.set_meta("collection", col_id)
+	var st := Tok.star(Color("#ffd166"), px * 0.56)
+	st.position = (b.size - st.size) / 2
+	b.add_child(st)
+	b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
+		CollectionsWindow.show_on(App.current, false, col_id))
+	return b
 
 
 static func _gap(px: float) -> Control:
@@ -225,9 +232,6 @@ func _place() -> void:
 		_pips[i].position = Vector2(size.x - border + 3 - psz, border - 3 + i * (psz + 2))
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
-	var star := get_node_or_null("Star") as Control
-	if star:  # the top right, just left of the pips
-		star.position = Vector2(size.x - border + 3 - psz - star.size.x - 2, border - 1)
 	var sb := get_node_or_null("Size") as Control
 	if sb:  # bottom-left, straddling the border like the points badge; the stations centre right of it
 		sb.position = Vector2(border - 3, size.y - border + 3 - psz)
