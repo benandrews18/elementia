@@ -25,7 +25,7 @@ func _ready() -> void:
 	for n in s.get("items", []):
 		pts += Data.t("ITEM_POINTS").get(n, 0)
 	var stats: Label = $Window/Content/Card/Body/Info/StatsWrap/Stats
-	stats.text = "%d visits · %d points" % [int(s.get("visits", 0)), int(pts)] if Progress.has_save() else "New"
+	stats.text = "%d visits · %d points" % [int(s.get("visits", 0)), int(pts)] if Progress.has_save() and int(s.get("visits", 0)) > 0 else "New"
 	pressed.connect(_on_pressed)
 
 

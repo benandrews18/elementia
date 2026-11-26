@@ -9,6 +9,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- **Capstones are always on.** Every capstone you've crafted counts at every check without being drawn or taking a slot: its points, its combos, its signature bonus and any request it helps. Restrictions only look at the cards you play. Its chip above the mat shows its card when tapped. The 2 slots it used to take are free for cards.
+- Checks: play or discard **as many cards at once** as you like (still 3 discards a check).
+- Challenges: requests at rounds 3-15 (two new: **All 4 Suits** and **5 Stations**), an easy restriction at round 18 and a hard one at 21. "Mostly new cards" is gone.
+- Market: **every Market item you craft earns an Unknown Element**; finishing a row no longer pays extra.
+- Main Menu from the end screen ends the run: Play starts a new one.
 - **New breakpoints for every check**, set from 400 simulated runs played on the real rules with the new hand: about 95% of runs reach the first breakpoint, 60% the second, 30% the third and 10% the fourth. Early checks are easier to clear than before; rounds 18 and 21 no longer need impossible scores.
 
 ## 2026-11-24

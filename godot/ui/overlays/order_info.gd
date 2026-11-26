@@ -14,6 +14,7 @@ const TITLES := {
 	"stationWeek": "3 %s Cards", "collector": "Complete a Collection", "fullRecipe": "A Card and Its Whole Recipe",
 	"suitSet": "3 %s Cards", "commonThread": "3 Cards Sharing a Part", "drought": "No %s Cards",
 	"closedStation": "No %s Cards", "freshFaces": "Mostly New Cards", "shortTable": "Leave 1 Slot Empty",
+	"rainbow": "All 4 Suits", "grandTour": "5 Stations",
 	"thinStock": "3 or Fewer Tier I Cards", "trendShift": "No %s Combo", "doubleDrought": "No %s Cards",
 	"spreadOut": "No 4 Cards From One Station",
 }
@@ -198,6 +199,10 @@ func _rule(o: Dictionary, row: Control) -> void:
 		"fullRecipe": parts = [Tok.icon("🧩", I), txt.call("×2")]
 		"suitSet": parts = [txt.call("3+"), _suit(p)]
 		"commonThread": parts = [Tok.icon("🧵", I), txt.call("3+")]
+		"rainbow":
+			for su in Data.t("ELEMENT_SUIT_LABEL"):
+				parts.append(_suit(su))
+		"grandTour": parts = [txt.call("%d+" % int(Data.t("ORDER_GRAND_TOUR_STATIONS"))), Tok.icon("🗺️", I)]
 		"drought": parts = [no.call(_suit(p))]
 		"closedStation": parts = [no.call(st.call())]
 		"freshFaces": parts = [Tok.loop_arrow(Color("#3b2412"), I * 0.9), txt.call("≤ ½")]

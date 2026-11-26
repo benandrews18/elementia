@@ -69,13 +69,10 @@ func _redraw() -> void:
 			c.position = Vector2(10 + k * (cell + 8), 3)
 			row.add_child(c)
 			cells[idx] = c
-		var rw: Control
-		if done:
-			rw = Tok.tick(Color("#4fe583"), 22)
-		else:
-			rw = LockInReward.unknown_square(26)
-		rw.position = Vector2(row.size.x - 3 - 15 - rw.size.x / 2, (row.size.y - rw.size.y) / 2)
-		row.add_child(rw)
+		if done:  # a row pays nothing now; its squares each paid a "?"
+			var rw := Tok.tick(Color("#4fe583"), 22)
+			rw.position = Vector2(row.size.x - 3 - 15 - rw.size.x / 2, (row.size.y - rw.size.y) / 2)
+			row.add_child(rw)
 		ry += row.size.y + 4
 	$Bg/Scroll/Content/Tray/Market/Foot.position.y = ry
 	panel.size = Vector2(pw, ry + 16 + 10)
@@ -153,6 +150,10 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	n.size = Vector2(sz - 4, 11)
 	n.clip_text = true
 	c.add_child(n)
+	if not inspect and not owned:  # what crafting it pays
+		var q := LockInReward.unknown_square(16)
+		q.position = Vector2(-4, -4)
+		c.add_child(q)
 	if inspect:
 		var st := Tok.icon(Catalog.station(Data.t("CORE_ITEM_STATION")[name]).emoji, 16)
 		st.position = Vector2(3, 3)

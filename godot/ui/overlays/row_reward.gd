@@ -22,8 +22,8 @@ func _ready() -> void:
 	var h := win.size.y
 	win.size.x = w
 	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
-	if rows > 1:
-		$Window/Text.text = "%d rows complete" % rows
+	if rows > 1:  # a "?" per Market square made (the user, 2026-11-26)
+		$Window.title = "      %d Market items made!" % rows
 	# "+n" and a "?" square per row, centred together.
 	var plus: Label = $Window/Plus
 	plus.text = "+%d" % rows

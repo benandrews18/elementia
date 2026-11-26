@@ -77,9 +77,9 @@ func _ready() -> void:
 
 	# Challenge reroll: a ? for a different challenge
 	s = fresh()
-	s.visits = 12
+	s.visits = 18  # restrictions only from round 18 (the user, 2026-11-26)
 	s.lastCheckedMat = ["Water"]
-	s.order = {"id": "drought", "p": "organic", "round": 12}
+	s.order = {"id": "drought", "p": "organic", "round": 18}
 	s.usedOrders = ["drought:organic"]
 	s.emptyElements = 1
 	check(Game.reroll_order() and Orders.key(s.order) != "drought:organic" and s.emptyElements == 0 and s.usedOrders.size() == 2, "reroll swaps the challenge for a ?")
@@ -94,8 +94,10 @@ func _ready() -> void:
 	for i in 8:
 		check(Game.toggle_mat_card(t2[i]) == "", "place card %d" % i)
 	check(Game.toggle_mat_card(t2[8]) == "The display mat is full.", "9th card refused")
-	check(Game.toggle_mat_card(cap) == "A capstone needs two free slots.", "capstone needs two slots")
-	check(Game.toggle_mat_card(t2[0]) == "" and Game.toggle_mat_card(t2[1]) == "" and Game.toggle_mat_card(cap) == "", "capstone fits in two freed slots")
+	check(Game.toggle_mat_card(cap).begins_with("Capstones are always on") and not s.mat.has(cap), "a capstone takes no slot")
+	check(Mat.has(Mat.on_mat(s), cap) and Mat.on_mat(s).size() == 9, "an owned capstone always counts, beside the full mat")
+	check(Mat.on_mat({"mat": [cap], "items": []}).is_empty(), "a capstone in an old save's mat, not owned: gone")
+	check(Game.toggle_mat_card(t2[0]) == "" and Game.toggle_mat_card(t2[1]) == "", "cards come off")
 	s.lastCheckedMat = [t2[0]]
 	var before: Array = s.mat.duplicate()
 	Game.mat_last_tap()
@@ -336,7 +338,7 @@ func _ready() -> void:
 	check(hd.fresh == [big[10], big[11], big[0]] and hd.hand.slice(0, 3).all(func(n): return hd.fresh.has(n)) and not hd.fresh.has(big[2]), "hand: the fresh side deck (crafted since the last check) is dealt first")
 	check(Hand.fresh_left(hd) == 0 and hd.hand.size() + hd.deck.size() == 12, "hand: then the rest, one deck")
 	# Plays: 1-5 hand cards, packed automatically, refilled 1 for 1, nothing comes back.
-	hd = {"deck": big.slice(6, 8), "hand": big.slice(1, 4) + [capst], "discards": [], "fresh": [], "tosses": 1}
+	hd = {"deck": big.slice(6, 8), "hand": big.slice(1, 5), "discards": [], "fresh": [], "tosses": 1}
 	s.visits = 2
 	s.mat = big.slice(0, 1)
 	s.matPlays = [big.slice(0, 1)]
@@ -344,26 +346,22 @@ func _ready() -> void:
 	check(g != null and is_equal_approx(g, Mat.score(Mat.on_mat({"mat": [big[0], big[1]]}), s, {}).total - Mat.score(Mat.on_mat(s), s, {}).total) and s.mat == [big[0]], "hand: the preview gives the score change and changes nothing")
 	check(Hand.play(hd, s, [big[1]]) == "" and s.mat == [big[0], big[1]] and hd.hand.size() == 4 and hd.hand.has(big[6]) and hd.deck.size() == 1, "hand: a play packs onto the mat and refills the hand 1 for 1")
 	check(s.matPlays == [[big[0]], [big[1]]], "hand: each play's cards are kept for the scoring")
-	check(Hand.gain(s, {}, [capst]) == null, "hand: no preview when it doesn't fit")
-	check(Hand.score_after(s, {}, [capst]) == null and not Hand.fits(s, [capst]), "hand: no score after, no fit, when it doesn't fit")
+	check(Hand.gain(s, {}, [big[2], big[3]]) == null, "hand: no preview when it doesn't fit")
+	check(Hand.score_after(s, {}, [big[2], big[3]]) == null and not Hand.fits(s, [big[2], big[3]]), "hand: no score after, no fit, when it doesn't fit")
 	var sa = Hand.score_after(s, {}, [big[1]])
 	check(sa != null and is_equal_approx(sa.total - Mat.score(Mat.on_mat(s), s, {}).total, Hand.gain(s, {}, [big[1]])), "hand: the score after a play less the score now is its gain")
-	check(Hand.play(hd, s, [capst]) == "A capstone needs two free slots side by side." and hd.hand.has(capst) and s.mat.size() == 2, "hand: a capstone needs two free slots (nothing changes)")
 	check(Hand.play(hd, s, [big[2], big[3]]).begins_with("There's no room") and s.mat.size() == 2, "hand: a play must fit whole")
 	check(Hand.play(hd, s, ["Nope"]) != "" and Hand.play(hd, s, []) != "", "hand: only hand cards")
 	check(not Hand.mat_full(hd, s), "hand: a free slot: the check goes on")
 	check(Hand.play(hd, s, [big[2]]) == "" and s.mat.size() == 3 and Hand.mat_full(hd, s), "hand: nothing in the hand or deck fits: the mat is full")
 	var held: int = hd.hand.size()
 	hd.deck = [big[9]]
-	check(Hand.discard(hd, [capst]) == "" and hd.hand.size() == held and hd.hand.has(big[9]) and hd.discards.has(capst) and hd.tosses == 0, "hand: a discard costs one and refills 1 for 1")
+	check(Hand.discard(hd, [big[4]]) == "" and hd.hand.size() == held and hd.hand.has(big[9]) and hd.discards.has(big[4]) and hd.tosses == 0, "hand: a discard costs one and refills 1 for 1")
 	check(Hand.discard(hd, [big[9]]) == "No discards left this check." and hd.hand.has(big[9]), "hand: no discards past the budget")
 	hd = {"deck": [], "hand": big.slice(0, 7), "discards": [], "fresh": [], "tosses": 1}
-	check(Hand.discard(hd, big.slice(0, 6)) != "" and hd.hand.size() == 7 and hd.tosses == 1, "hand: at most 5 cards a Discard")
-	check(Hand.discard(hd, big.slice(0, 5)) == "" and hd.hand.size() == 2 and hd.discards.size() == 5 and hd.tosses == 0, "hand: up to 5 cards go for one discard")
 	s.mat = []
 	s.matPlays = []
 	hd = {"deck": [], "hand": big.slice(0, 7), "discards": [], "fresh": [], "tosses": 1}
-	check(Hand.play(hd, s, big.slice(0, 6)) == "Play up to 5 cards at a time." and s.mat.is_empty(), "hand: at most 5 cards a play")
 
 	# "Anything you make in one play counts twice" (Mat.together).
 	var trio: Array = []
@@ -415,8 +413,57 @@ func _ready() -> void:
 	check(Hand.pick_draw(hd, s, twant) == "" and hd.hand.has(twant) and not hd.deck.has(twant) and s.emptyElements == 0, "hand: an Unknown Element draws any card")
 	check(Hand.pick_draw(hd, s, hd.deck[0]) != "", "hand: no token, no pick")
 
+	# Capstones: never dealt, always counted (the user, 2026-11-26).
+	s.items = big.slice(0, 12) + [capst]
+	s.mat = []
+	Rng.feed([])
+	check(not (Hand.deal(s).hand + Hand.deal(s).deck).has(capst), "hand: capstones are never in the deck")
+	s.mat = [big[0]]
+	check(Mat.score(Mat.on_mat(s), s, {}).base > Mat.score(Mat.on_mat({"mat": [big[0]]}), s, {}).base, "a capstone's points count without playing it")
+	# No limit on cards per play or discard.
+	s.visits = 20  # the whole mat
+	s.mat = []
+	s.matPlays = []
+	hd = {"deck": [], "hand": big.slice(0, 7), "discards": [], "fresh": [], "tosses": 1}
+	check(Hand.play(hd, s, big.slice(0, 6)) == "" and s.mat.size() == 6, "hand: any number of cards in one play")
+	hd = {"deck": big.slice(10, 12), "hand": big.slice(0, 7), "discards": [], "fresh": [], "tosses": 1}
+	check(Hand.discard(hd, big.slice(0, 7)) == "" and hd.discards.size() == 7, "hand: any number of cards in one discard")
+	# Challenges: restrictions ignore capstones, requests count them; the new requests.
+	var capc = Catalog.mat_card(capst)
+	var su0: String = capc.pips[0] if not capc.pips.is_empty() else "metal"
+	check(Orders.ok("drought", [capc], su0, s), "a restriction ignores an always-on capstone")
+	var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
+	var four := []
+	for su in suits:
+		for n in Data.t("CORE_ITEM_NAMES"):
+			var mc = Catalog.mat_card(n)
+			if mc != null and not Mat.is_capstone(mc) and mc.pips.has(su) and not four.has(mc):
+				four.append(mc)
+				break
+	check(Orders.ok("rainbow", four, null, s) and not Orders.ok("rainbow", four.slice(0, 3).filter(func(c): return c.pips.size() == 1), null, s), "Rainbow: all 4 suits")
+	var by_st := {}
+	for n in Data.t("CORE_ITEM_NAMES"):
+		var mc = Catalog.mat_card(n)
+		if mc != null and not Mat.is_capstone(mc) and mc.stations.size() == 1 and not by_st.has(mc.station):
+			by_st[mc.station] = mc
+	var tour: Array = by_st.values()
+	check(Orders.ok("grandTour", tour.slice(0, 5), null, s) and not Orders.ok("grandTour", tour.slice(0, 4), null, s), "Grand Tour: cards from 5 stations")
+	s.visits = 15
+	check(Orders.draw(s, 15, null) == null or Orders.KINDS[Orders.draw(s, 15, null).id][0] == "request", "round 15: a request")
+	check(Orders.draw(s, 18, null) == null or Orders.KINDS[Orders.draw(s, 18, null).id][1] == "easy", "round 18: an easy restriction")
+	check(Orders.draw(s, 21, null) == null or Orders.KINDS[Orders.draw(s, 21, null).id][1] == "hard", "round 21: a hard restriction")
+	# The Market: each square made pays a "?", a row nothing more.
+	var ms := fresh()
+	Market.ensure_card(ms)
+	ms.items = ms.bingoCard.slice(0, 3)
+	Market.check_lines(ms)  # an older save: what's owned was paid already, but the last craft
+	check(ms.pendingBingoClears == [2] and ms.marketSquaresPaid.size() == 3, "Market: an old save pays only the square just made")
+	ms.items.append(ms.bingoCard[3])
+	Market.check_lines(ms)
+	check(ms.pendingBingoClears == [2, 3] and ms.bingoLinesCompleted.has(0), "Market: a square pays; its finished row pays nothing more")
+
 	s.visits = 20
-	s.mat = [capst]
+	s.mat = [big[5]]
 	s.matPlays = []
 	var gb: float = Mat.score(Mat.on_mat(s), s, {}).total
 	check(Hand.gain(s, {}, [big[0]], gb) == Hand.gain(s, {}, [big[0]]), "hand: a preview with the mat's score passed in gives the same change")

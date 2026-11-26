@@ -342,11 +342,11 @@ static func _slots(n: String) -> float:
 
 
 ## Greedy: add the hand card that raises the score most per slot, while it
-## beats `bar` per slot (up to HAND_PLAY_MAX). [names, gain]
+## beats `bar` per slot. [names, gain]
 func _best_play(h: Dictionary, base: float, bar: float) -> Array:
 	var cur := []
 	var total := base
-	for k in int(Data.t("HAND_PLAY_MAX")):
+	for k in h.hand.size():
 		var best = null
 		var best_t := 0.0
 		var best_d := bar
@@ -401,7 +401,7 @@ func _play_hand(final: bool) -> void:
 				var g = Hand.gain(s, Game.ctx, [n], now.total)
 				return [n, -1e9 if g == null else g / _slots(n)])
 			ranked.sort_custom(func(a, b): return a[1] < b[1])
-			var out := ranked.filter(func(r): return r[1] < bar).slice(0, int(Data.t("HAND_DISCARD_MAX"))).map(func(r): return r[0])
+			var out := ranked.filter(func(r): return r[1] < bar).map(func(r): return r[0])
 			if not out.is_empty() and Hand.discard(h, out) == "":
 				continue
 		var syms := _draw_syms(h, final)

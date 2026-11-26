@@ -133,9 +133,12 @@ func _market_check() -> void:
 	_squares = owned
 	if lines.is_empty() and fresh.is_empty():
 		return
-	if lines.is_empty() and s.get("sawMarketSquareTray") and panel != "market":
+	if s.get("sawMarketSquareTray") and panel != "market":
 		s.marketUnseen = true  # with the tray open (crafted from it) it bounces there instead
-		Game._changed.call_deferred()
+		if lines.is_empty():
+			Game._changed.call_deferred()
+		else:  # each square pays a "?" (the user, 2026-11-26): its window, without the tray
+			_market_reward.call_deferred(lines.size())
 		return
 	s.sawMarketSquareTray = true
 	_market_sequence.call_deferred(fresh, lines)
@@ -159,12 +162,6 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		if is_instance_valid(tray):
 			DisplayMatScreen.bounce(tray.cells.get(i))
 		await get_tree().create_timer(0.32).timeout
-	for r in lines:
-		await get_tree().create_timer(0.3).timeout
-		for i in Market.lines()[r]:
-			if is_instance_valid(tray):
-				DisplayMatScreen.bounce(tray.cells.get(i))
-		await get_tree().create_timer(0.56 + 0.65).timeout
 	block.queue_free()
 	if not lines.is_empty():
 		var rw := RowReward.make(lines.size(), func(): pass)
@@ -179,6 +176,19 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		await get_tree().create_timer(1.6).timeout
 		if is_instance_valid(tray) and _panel_node == tray:  # the tray this opened (not one the player reopened since)
 			close_panel()
+	_maybe_end()
+
+
+## A Market square made away from the tray (after the run's first): the
+## "?" it pays, on Nice; the tray stays shut (the Market button has its "!").
+func _market_reward(n: int) -> void:
+	_market_playing = true
+	var rw := RowReward.make(n, func(): pass)
+	rw.size = size
+	add_child(rw)
+	await rw.tree_exited  # until Nice
+	_market_playing = false
+	Game.collect_market_rewards()
 	_maybe_end()
 
 
@@ -316,14 +326,7 @@ func _confetti() -> void:
 ## History; a fresh run waits on the bare map: the Elementia logo, the
 ## how-to-play slides, then the capstone is chosen (playClassicIntro()).
 func new_game() -> void:
-	if tutorial.running():  # a tutorial left unfinished ends with its run
-		tutorial.finish()
-	Progress.record_history()
-	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
-	Game.ctx = Game.fresh_ctx()
-	Progress.prefs.pinnedItems = []
-	close_panel()
-	Game._changed()
+	end_run()
 	var logo := TextureRect.new()  # #introLogo: bounces in, a second on screen
 	logo.texture = load("res://assets/banners/elementia-logo.webp")
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -616,6 +619,19 @@ func _dev_shown(on: bool) -> void:
 	var dev := get_node_or_null("Dev") as CanvasLayer
 	if dev:
 		dev.visible = on
+
+
+## The run over for good (New Game, the end screen's Main Menu): into
+## History, then a fresh state is saved, so Play starts a new run.
+func end_run() -> void:
+	if tutorial.running():  # a tutorial left unfinished ends with its run
+		tutorial.finish()
+	Progress.record_history()
+	Game.state = Game.fresh_state()  # before close_panel(): an ended run would reopen its end screen
+	Game.ctx = Game.fresh_ctx()
+	Progress.prefs.pinnedItems = []
+	close_panel()
+	Game._changed()
 
 
 ## The title screen over everything (launch, Settings' Home, the end

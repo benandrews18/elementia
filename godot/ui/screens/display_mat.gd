@@ -222,7 +222,7 @@ func play_lock_in(on_done: Callable) -> void:
 			return
 		var b: Dictionary = beats[i]
 		for n in b.cards:
-			bounce(_mat_nodes.get(n))
+			bounce(_mat_nodes.get(n, _chip_nodes.get("cap:" + n)))
 		if b.has("chip"):
 			bounce(_chip_nodes.get(b.chip, _chip_nodes.get("new") if b.chip == "collection" else null))
 		pts += b.points
@@ -397,7 +397,7 @@ func _mini_row(cards: Array, L: Dictionary, at: Vector2, w: float) -> float:
 	var per: int = L.perSlot
 	var used := 0
 	for c in cards:
-		used += 1 if Mat.is_tier1(c) else (2 if Mat.is_capstone(c) else 1) * per
+		used += 0 if Mat.is_capstone(c) else 1 if Mat.is_tier1(c) else per  # capstones: beside the mat
 	var cap := 0
 	for k in L.kinds:
 		if k != "locked":
@@ -769,7 +769,7 @@ func _hand_button(id: String, icon: String, label: String, badge: String, at: Ve
 
 
 ## A hand card tapped: picked, or put back if it was ("": a blank tap in
-## the hand, let go of them all); up to HAND_PLAY_MAX. Changes only the hand
+## the hand, let go of them all); any number. Changes only the hand
 ## and the preview, not the whole drawer (a full redraw took ~100ms on a PC
 ## with a turn-18 mat).
 func _lift(n: String) -> void:
@@ -777,9 +777,6 @@ func _lift(n: String) -> void:
 		picks = []
 	elif picks.has(n):
 		picks.erase(n)
-	elif picks.size() >= int(Data.t("HAND_PLAY_MAX")):
-		_show_toast("Pick up to %d cards at a time." % int(Data.t("HAND_PLAY_MAX")))
-		return
 	else:
 		picks.append(n)
 	lifted = picks[0] if picks.size() == 1 else ""
@@ -938,7 +935,7 @@ func can_play() -> bool:
 	return not picks.is_empty() and not playing and _fits
 
 
-## The hub's Discard: the picked hand cards (up to HAND_DISCARD_MAX), for
+## The hub's Discard: the picked hand cards (any number), for
 ## one discard; the hand refills 1 for 1.
 func hand_discard() -> void:
 	var h = Game.check_hand()
@@ -1226,8 +1223,14 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		chips[-1].set_meta("combo", "order")
 		chips[-1].set_meta("tip", "order")  # the challenge hint's 💡
 		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
-	for g in sc.sigs:
-		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0))
+	for g in sc.sigs:  # every owned capstone, always on beside the mat: a tap shows its card (the user, 2026-11-26)
+		var cap := _chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0)
+		cap.set_meta("cap", g.name)
+		Juice._ignore_mouse(cap)
+		cap.mouse_filter = MOUSE_FILTER_STOP
+		var nm: String = g.name
+		cap.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(nm))
+		chips.append(cap)
 	var twice := {}  # a combo made inside a play counts again: its count too (3 played together: 6)
 	for t in sc.get("together", {}).get("combos", []):
 		twice[t.kind + ":" + t.name] = twice.get(t.kind + ":" + t.name, 0) + int(t.k)
@@ -1272,6 +1275,8 @@ func _place_chips(chips: Array, at: Vector2, w: float) -> float:
 		c.size = sz
 		c.set_meta("cmp", "chip%d" % i)
 		_body.add_child(c)
+		if c.has_meta("cap"):
+			_chip_nodes["cap:" + c.get_meta("cap")] = c
 		if c.has_meta("combo"):
 			_chip_nodes[c.get_meta("combo")] = c
 			var combo: String = c.get_meta("combo")
@@ -1353,6 +1358,7 @@ static func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 				circle.add_child(ic)
 		_:
 			var glyph: String = {"grand": "🏛️", "collector": "★", "fullRecipe": "🧩", "commonThread": "🧵", "freshFaces": "🆕",
+				"rainbow": Data.t("ITEM_EMOJI")["Rainbow"], "grandTour": "🗺️",
 				"shortTable": "🪑", "thinStock": "📦", "spreadOut": "↔️"}.get(o.id, "?")
 			if o.id == "collector":  # ★: drawn (not in Nunito)
 				circle = _icon_circle("", Color("#fff3c4"), Tok.GOLD, 2)

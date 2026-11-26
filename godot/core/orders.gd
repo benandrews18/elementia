@@ -7,7 +7,9 @@ class_name Orders
 const KINDS := {
 	"stationWeek": ["request", null], "collector": ["request", null], "fullRecipe": ["request", null],
 	"suitSet": ["request", null], "commonThread": ["request", null],
-	"drought": ["restriction", "easy"], "closedStation": ["restriction", "easy"], "freshFaces": ["restriction", "easy"],
+	"rainbow": ["request", null], "grandTour": ["request", null],  # the user, 2026-11-26
+	"drought": ["restriction", "easy"], "closedStation": ["restriction", "easy"],
+	"freshFaces": ["restriction", "retired"],  # never drawn now (the user, 2026-11-26); a save may hold it
 	"shortTable": ["restriction", "hard"], "thinStock": ["restriction", "hard"], "trendShift": ["restriction", "hard"],
 	"doubleDrought": ["restriction", "hard"], "spreadOut": ["restriction", "hard"],
 }
@@ -28,12 +30,15 @@ static func _suit_cards(cards: Array, su: String) -> int:
 ## CHECK_ORDERS[id].params(owned): the choices of p for this order.
 static func params(id: String, owned: Array, s: Dictionary) -> Array:
 	var stations: Array = Data.t("STATION_BY_NAME").keys()
+	owned = _judged(id, owned)
 	match id:
 		"stationWeek": return stations.filter(func(st): return _station_count(owned, st) >= 3)
 		"collector": return [null] if not Mat.completed_in(owned).is_empty() else []
 		"fullRecipe": return [null] if owned.any(func(c): return Mat.is_complete(c, owned)) else []
 		"suitSet": return _suits().filter(func(su): return _suit_cards(owned, su) >= 3)
 		"commonThread": return [null] if Mat.groups(owned).cp.values().any(func(n): return n >= 3) else []
+		"rainbow": return [null] if _suits().all(func(su): return _suit_cards(owned, su) >= 1) else []
+		"grandTour": return [null] if Mat.groups(owned).st.size() >= int(Data.t("ORDER_GRAND_TOUR_STATIONS")) else []
 		"drought": return _suits()
 		"closedStation": return stations.filter(func(st): return _station_count(owned, st) >= 1)
 		"freshFaces": return [null] if not Util.get_or(s, "lastCheckedMat", []).is_empty() else []
@@ -50,17 +55,29 @@ static func params(id: String, owned: Array, s: Dictionary) -> Array:
 	return []
 
 
+## The cards an order looks at: a restriction only the played ones (an
+## owned capstone, always on, could otherwise break it for good: the user,
+## 2026-11-26); a request every card that counts.
+static func _judged(id: String, cards: Array) -> Array:
+	if KINDS.get(id, [""])[0] == "restriction":
+		return cards.filter(func(c): return not Mat.is_capstone(c))
+	return cards
+
+
 ## CHECK_ORDERS[id].ok(mat, p)
 static func ok(id: String, cards: Array, p: Variant, s: Dictionary) -> bool:
+	cards = _judged(id, cards)
 	match id:
 		"stationWeek": return _station_count(cards, p) >= 3
 		"collector": return not Mat.completed_in(cards).is_empty()
 		"fullRecipe": return cards.any(func(c): return Mat.is_complete(c, cards))
 		"suitSet": return _suit_cards(cards, p) >= 3
 		"commonThread": return Mat.groups(cards).cp.values().any(func(n): return n >= 3)
+		"rainbow": return _suits().all(func(su): return _suit_cards(cards, su) >= 1)
+		"grandTour": return Mat.groups(cards).st.size() >= int(Data.t("ORDER_GRAND_TOUR_STATIONS"))
 		"drought": return not cards.any(func(c): return c.pips.has(p))
 		"closedStation": return _station_count(cards, p) == 0
-		"freshFaces":
+		"freshFaces":  # gone, but a save may still hold it
 			var last: Array = Util.get_or(s, "lastCheckedMat", [])
 			return cards.filter(func(c): return last.has(c.name)).size() * 2 <= cards.size()
 		"shortTable": return Mat.has_empty_slot(cards, Mat.stage(s))

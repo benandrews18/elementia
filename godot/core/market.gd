@@ -66,6 +66,7 @@ static func ensure_card(s: Dictionary) -> Array:
 		if card != null:
 			s.bingoLinesCompleted = []
 			s.pendingBingoClears = []
+			s.marketSquaresPaid = []
 			s.bingoCenterChosen = false
 		s.bingoCard = draw_row_card(null)
 	return s.bingoCard
@@ -88,12 +89,22 @@ static func lines() -> Array:
 	return range(int(Data.t("MARKET_ROWS"))).map(func(r): return range(r * n, r * n + n))
 
 
-## checkBingoLines(): each newly finished row, once ever.
+## checkBingoLines(): each newly finished row, once ever (kept for the
+## trophies; it pays nothing now), and each newly made square, which pays
+## an Unknown Element (s.pendingBingoClears, paid by
+## Game.collect_market_rewards(): the user, 2026-11-26).
 static func check_lines(s: Dictionary) -> void:
 	if s.get("bingoCard") == null:
 		return
 	if s.get("pendingBingoClears") == null:
 		s.pendingBingoClears = []
+	if s.get("marketSquaresPaid") == null:  # an older save: what's owned was paid by its rows (the last craft wasn't)
+		var last = s.items.back() if not s.items.is_empty() else null
+		s.marketSquaresPaid = range(s.bingoCard.size()).filter(func(i): return s.bingoCard[i] != last and Catalog.owns(s, s.bingoCard[i]))
+	for i in s.bingoCard.size():
+		if not s.marketSquaresPaid.has(i) and Catalog.owns(s, s.bingoCard[i]):
+			s.marketSquaresPaid.append(i)
+			s.pendingBingoClears.append(i)
 	var ls := lines()
 	for i in ls.size():
 		if s.bingoLinesCompleted.any(func(x): return int(x) == i):
@@ -101,4 +112,3 @@ static func check_lines(s: Dictionary) -> void:
 		if not ls[i].all(func(idx): return Catalog.owns(s, s.bingoCard[idx])):
 			continue
 		s.bingoLinesCompleted.append(i)
-		s.pendingBingoClears.append(i)

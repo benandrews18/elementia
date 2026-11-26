@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 17, the rules batch (grill its open questions first). Start every session with `git status`: the user may
+**Next task:** step 18, element draws and small fixes. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -377,8 +377,12 @@ scores, layouts and what the tutorials say), then the screens most of the
 list touches (the check, the station), then what sits on them (To-Do,
 Market, tutorials), motion last (it animates the final layouts).
 
-17. **Rules batch** (grill the open questions first). Rule tests, rules
-   lock re-recorded, then the tuner re-run.
+17. Done (2026-11-26): **Rules batch** (decisions below). Mat.on_mat() is
+   the one place capstones join (owned ones, never in s.mat; pack()
+   skips them); Orders._judged() keeps them out of restrictions; their
+   signature chips open their card; Market.check_lines() pays per square
+   (s.marketSquaresPaid; an old save pays only the square just made);
+   App.end_run(). Rules lock re-recorded, breakpoints re-tuned.
    - No limit on cards per play or per discard (HAND_PLAY_MAX and
      HAND_DISCARD_MAX go).
    - Restrictions only from round 18; "mostly new cards" (freshFaces)
@@ -483,8 +487,13 @@ Market, tutorials), motion last (it animates the final layouts).
    slides down, the cards come in from the right, the tracked pill bounces
    as the 🔍 marks appear; taps work throughout. Leaving for the map: a
    plain, quick fade.
+27. **Every icon tells you something** (the user, 2026-11-26): a pass over
+   every screen so almost any icon (items, elements, suits, stations,
+   chips, badges, rewards) opens its card or a short explanation when
+   tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 17 (rules batch): capstones always on, no card limits, new requests, restrictions from 18, a "?" per Market square, Main Menu ends the run; breakpoints re-tuned.
 - 2026-11-26: step 16 part 2: the simulator (tests/sim.gd, tools/sim.py), breakpoints tuned (2 passes of 200 runs), rules lock re-recorded; the user's big list planned as steps 17-26.
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
   safe saves, one save per action, low-processor mode, Items screen
@@ -1376,6 +1385,21 @@ design happens in Godot.
 
 Recorded so they aren't re-argued. Add new ones with the date.
 
+- 2026-11-26 (the user, step 17 grill): **capstones leave the mat.** Every
+  crafted capstone is always on, beside the mat: no slots, never drawn
+  (out of the deck). It counts like a card on the mat: its points (x2 with
+  its whole recipe on the mat), station and suit combos, named
+  collections and requests; restrictions ignore it (only played cards, so a
+  restriction can always be kept). Ecosystem's streak becomes every check
+  since it was made. The mat keeps its size (the 2 capstone slots are card
+  slots). Plays and discards take any number of cards (HAND_PLAY_MAX and
+  HAND_DISCARD_MAX go; still HAND_DISCARDS discards a check); tier 1
+  flooding: no other change for now (revisit if it still floods).
+  Requests at rounds 3-15 (new: Rainbow, all 4 suits on the mat; Grand
+  Tour, cards from 5+ stations); restrictions only at 18 (easy) and 21
+  (hard); "mostly new cards" (freshFaces) gone. Each Market square pays an
+  Unknown Element when crafted; a finished row pays nothing. Main Menu from
+  the end screen ends the run (no Continue). Re-tune the breakpoints after.
 - 2026-11-24 (the user, step 16): the run's breakpoint gates don't end the
   run while testing (data `BREAKPOINT_GAME_OVER: false`; a miss just earns no
   bonus dice; Overtime still ends on a miss). Checks get a Done button (asks

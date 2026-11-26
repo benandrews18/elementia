@@ -5,8 +5,16 @@ class_name Mat
 static var _collections: Array  # MAT_COLLECTIONS: the raw list minus any with a missing card
 
 
+## The cards that count: those played (s.mat) and every owned capstone,
+## always on beside the mat, in no slot (the user, 2026-11-26). An old
+## save's capstone in s.mat is dropped.
 static func on_mat(s: Dictionary) -> Array:
-	return s.mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
+	var out: Array = s.mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null and not is_capstone(c))
+	for n in Util.get_or(s, "items", []):
+		var c = Catalog.mat_card(n)
+		if c != null and is_capstone(c):
+			out.append(c)
+	return out
 
 
 static func has(cards: Array, name: String) -> bool:
@@ -45,8 +53,8 @@ static func layout(cards: Array, st: int) -> Dictionary:
 	return {"cols": cols, "kinds": kinds, "perSlot": per_slot, "stage": st}
 
 
-## matPack(): bigger cards first into open slots (a capstone takes two side
-## by side), then tier 1 cards stacked. Returns {slot, overflow}.
+## matPack(): bigger cards first into open slots, then tier 1 cards
+## stacked; capstones take no slot (on_mat()). Returns {slot, overflow}.
 static func pack(cards: Array, st: int) -> Dictionary:
 	var L := layout(cards, st)
 	var cols: int = L.cols
@@ -56,9 +64,9 @@ static func pack(cards: Array, st: int) -> Dictionary:
 	var overflow := []
 	for idx in cards.size():
 		var c: Dictionary = cards[idx]
-		if is_tier1(c):
+		if is_tier1(c) or is_capstone(c):
 			continue
-		var w := 2 if is_capstone(c) else 1
+		var w := 1
 		var at := -1
 		for i in slot.size():
 			if i % cols + w <= cols and i + w <= slot.size() and slot.slice(i, i + w).all(free):

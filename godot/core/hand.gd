@@ -2,12 +2,12 @@
 ## reworked", the user 2026-11-23). The mat clears when the hand is dealt.
 ## The deck is every owned mat card: the cards crafted since the last check
 ## first (the fresh side deck), then the rest, each part shuffled. A hand of
-## 7. A play is 1 to HAND_PLAY_MAX picked hand cards, packed onto the mat
+## 7. A play is any number of picked hand cards, packed onto the mat
 ## automatically (Mat.pack; where a card sits never changes the score), as
 ## many plays as fit; "a card laid is a card played": nothing comes off the
 ## mat until the check ends, so a full mat ends it. Every card played or
 ## discarded is replaced 1 for 1 from the deck. HAND_DISCARDS discards of
-## up to HAND_DISCARD_MAX cards, out for the rest of the check. Element
+## any number of cards, out for the rest of the check. Element
 ## draws grow the hand (up to HAND_MAX): 1 element draws a card with its
 ## suit's pip, 1 Unknown Element token any card. Each play's names go on
 ## s.matPlays: Mat.score counts what a play made by itself once more.
@@ -27,7 +27,7 @@ static func most() -> int:  # the most a hand holds
 static func deal(s: Dictionary) -> Dictionary:
 	s.mat = []
 	s.matPlays = []
-	var ok := func(n): return Catalog.mat_card(n) != null and s.items.has(n)
+	var ok := func(n): return Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)) and s.items.has(n)  # capstones: always on
 	var fresh: Array = []
 	for v in Util.get_or(s, "visitLog", []).slice(maxi(0, int(s.visits) - int(Data.t("MAT_CHECK_EVERY"))), int(s.visits)):
 		for n in v.items:
@@ -66,10 +66,8 @@ static func fresh_left(h: Dictionary) -> int:
 ## The mat with `names` added, or why they don't fit.
 static func _after(s: Dictionary, names: Array) -> Variant:
 	var mat: Array = s.mat + names
-	if Mat.fits(mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null), Mat.stage(s)):
+	if Mat.fits(Mat.on_mat({"mat": mat, "items": s.items}), Mat.stage(s)):
 		return mat
-	if names.size() == 1 and Catalog.mat_card(names[0]) != null and Mat.is_capstone(Catalog.mat_card(names[0])):
-		return "A capstone needs two free slots side by side."
 	return "There's no room for %s on the mat." % ("that" if names.size() == 1 else "all of those")
 
 
@@ -78,8 +76,6 @@ static func _after(s: Dictionary, names: Array) -> Variant:
 static func play(h: Dictionary, s: Dictionary, names: Array) -> String:
 	if names.is_empty() or not names.all(func(n): return h.hand.has(n)):
 		return "That card isn't in your hand."
-	if names.size() > int(Data.t("HAND_PLAY_MAX")):
-		return "Play up to %d cards at a time." % int(Data.t("HAND_PLAY_MAX"))
 	var mat = _after(s, names)
 	if mat is String:
 		return mat
@@ -104,7 +100,7 @@ static func score_after(s: Dictionary, ctx: Dictionary, names: Array) -> Variant
 		return null
 	var after := s.duplicate()
 	after.matPlays = Util.get_or(s, "matPlays", []) + [names]
-	return Mat.score(Mat.on_mat({"mat": mat}), after, ctx)
+	return Mat.score(Mat.on_mat({"mat": mat, "items": s.items}), after, ctx)
 
 
 ## What playing `names` would add to the mat's score, or null if they don't
@@ -123,12 +119,10 @@ static func mat_full(h: Dictionary, s: Dictionary) -> bool:
 	return not (h.hand + h.deck).any(func(n): return fits(s, [n]))
 
 
-## Discards up to HAND_DISCARD_MAX hand cards at once, for one discard.
+## Discards any number of hand cards at once, for one discard.
 static func discard(h: Dictionary, names: Array) -> String:
 	if names.is_empty() or not names.all(func(n): return h.hand.has(n)):
 		return "That card isn't in your hand."
-	if names.size() > int(Data.t("HAND_DISCARD_MAX")):
-		return "Discard up to %d cards at a time." % int(Data.t("HAND_DISCARD_MAX"))
 	if h.tosses <= 0:
 		return "No discards left this check."
 	for n in names:

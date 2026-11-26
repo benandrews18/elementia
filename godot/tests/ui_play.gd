@@ -69,8 +69,8 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # map
 		await get_tree().process_frame
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
-		if app.panel == "market":  # a crafted Market square plays its sequence in the tray: let it finish
-			await _until(func(): return not app._market_playing)
+		await _settle_market(app)  # a crafted Market square: its sequence and its "?" (Nice)
+		if app.panel == "market":
 			app.close_panel()
 		if Game.state.get("finalCheckPending"):
 			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "the Final Score shutter opens the mat")
@@ -208,8 +208,8 @@ func _convert(app: App) -> bool:
 
 
 ## The Market's moments, as crafts land: the run's first square ever opens
-## the tray; a later one only puts "!" on the Market button; a finished row
-## opens it, shows Row complete! and pays one "?" on Nice. (The crafts are
+## the tray; a later one only puts "!" on the Market button; every square
+## pays one "?" on Nice, a finished row nothing more. (The crafts are
 ## stood in for by owning the items: the screens react to the same state.)
 func _market(app: App) -> void:
 	for c in app.get_children():
@@ -222,25 +222,23 @@ func _market(app: App) -> void:
 		Game.state.items.append(n)
 		Market.check_lines(Game.state)
 		Game._changed()
+	var q: int = Util.get_or(Game.state, "emptyElements", 0)
 	own.call(row[0])
 	check(await _until(func(): return app.panel == "market"), "the first Market square opens the tray")
+	check(await _nice(app) and await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 1), "its ? is paid on Nice")
 	check(await _until(func(): return app.panel == ""), "the tray closes again after the square")
 	own.call(row[1])
-	await get_tree().process_frame
-	check(app.panel == "" and Game.state.get("marketUnseen") == true, "a later square only marks the Market button")
+	check(await _nice(app) and app.panel == "" and Game.state.get("marketUnseen") == true, "a later square: its ? window without the tray, and the Market button marked")
+	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 2 and Game.state.pendingBingoClears.is_empty()), "Nice pays the square's ?")
 	app._on_hub("market")
 	check(app.panel == "market" and not Game.state.marketUnseen and app.home_face() == "map", "the Market button opens the tray (Home reads Map) and clears its mark")
 	app._on_hub("home")
 	check(app.panel == "", "Home closes the tray")
-	var q: int = Util.get_or(Game.state, "emptyElements", 0)
 	own.call(row[2])
-	await get_tree().process_frame
+	await _nice(app)
 	own.call(row[3])
-	check(await _until(func(): return app.get_children().any(func(c): return c is RowReward)), "a finished row shows Row complete!")
-	var rw: RowReward = app.get_children().filter(func(c): return c is RowReward)[0]
-	rw.queue_free()
-	rw.on_done.call()
-	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 1 and Game.state.pendingBingoClears.is_empty()), "Nice pays the row's ?")
+	await _nice(app)
+	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 4 and Game.state.bingoLinesCompleted.has(0)), "a finished row: its squares paid, the row nothing more")
 	# Crafting a square from the open Market: its Crafting Bench, Craft.
 	await get_tree().process_frame
 	var name := ""
@@ -271,6 +269,7 @@ func _market(app: App) -> void:
 	check(Catalog.owns(Game.state, name), "crafted %s from its Market square" % name)
 	check(await _until(func(): return not is_instance_valid(bench) or bench.is_queued_for_deletion()), "the Crafting Bench closes once it's made")
 	check(await _until(func(): return app.market_plays > plays), "the square bounces in the open tray")
+	check(await _nice(app), "its ? window")
 	check(await _until(func(): return not app._market_playing), "and the tray settles")
 	# The tray closed in the middle of its bounces: the sequence still ends
 	# (it used to stop on the freed tray, its tap blocker left on screen).
@@ -646,6 +645,20 @@ func _collections(app: App) -> void:
 	check(Game.state.mat.has(first) and dm.selected == "" and not top.call(CardPop).is_empty(), "a mat card tapped: its card shows; nothing comes off the mat")
 	for c in top.call(CardPop):
 		c.queue_free()
+	# An owned capstone: always on, its chip beside the mat; a tap shows its card.
+	var cap: String = Data.t("CAPSTONES").filter(func(c): return not Catalog.owns(Game.state, c))[0]
+	Game.state.items.append(cap)
+	dm._redraw()
+	var cap_chip = dm._chip_nodes.get("cap:" + cap)
+	check(cap_chip != null and not dm._mat_nodes.has(cap), "an owned capstone: a chip beside the mat, no slot")
+	if cap_chip != null:
+		Tap._down = null
+		cap_chip.gui_input.emit(_release())
+	check(top.call(CardPop).size() == 1 and top.call(CardPop)[0].entry.name == cap, "a capstone's chip tapped: its card")
+	for c in top.call(CardPop):
+		c.queue_free()
+	Game.state.items.erase(cap)
+	dm._redraw()
 	# Element draws on the mat's Elements tab; Convert works as ever.
 	var esym := ""
 	for sym in Data.t("CLASSIC_ELEMENTS"):
@@ -948,6 +961,7 @@ func _welcome(app: App) -> void:
 	top.call(EndGame)[0].get_node("Window/Foot/MainMenu").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(top.call(WelcomeScreen).size() == 1 and top.call(EndGame).is_empty(), "the end screen's Main Menu: the title screen")
+	check(int(Game.state.get("visits", 0)) == 0, "and the run is over: Play starts a new one")
 	top.call(WelcomeScreen)[0].queue_free()
 	finished.welcome = true
 
@@ -1240,6 +1254,26 @@ func _press(at: Vector2) -> InputEventMouseButton:
 
 
 ## The handed-over ingredients aren't new Market squares (only the craft is).
+## Waits for a Market "?" window and taps its Nice. False if none came.
+func _nice(app: App) -> bool:
+	if not await _until(func(): return app.get_children().any(func(c): return c is RowReward and not c.is_queued_for_deletion())):
+		return false
+	var rw: RowReward = app.get_children().filter(func(c): return c is RowReward and not c.is_queued_for_deletion())[0]
+	rw.queue_free()
+	rw.on_done.call()
+	return true
+
+
+## Lets the Market's moments end, tapping Nice on each "?" window.
+func _settle_market(app: App) -> bool:
+	return await _until(func():
+		for c in app.get_children():
+			if c is RowReward and not c.is_queued_for_deletion():
+				c.queue_free()
+				c.on_done.call()
+		return not app._market_playing)
+
+
 func _squares_reset(app: App) -> void:
 	app._squares_card = ""
 	app._market_check()

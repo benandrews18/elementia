@@ -617,8 +617,10 @@ func toggle_mat_card(name: String) -> String:
 	var card = Catalog.mat_card(name)
 	if card == null or not Catalog.owns(state, name):
 		return "Not owned."
+	if Mat.is_capstone(card):
+		return "Capstones are always on: they count without taking a slot."
 	if not Mat.fits(Mat.on_mat(state) + [card], st):
-		return "A capstone needs two free slots." if Mat.is_capstone(card) else "The display mat is full."
+		return "The display mat is full."
 	state.mat.append(name)
 	_changed()
 	return ""
@@ -629,8 +631,8 @@ func place_mat_cards(names: Array) -> void:
 	var kept := []
 	var st := Mat.stage(state)
 	for n in names:
-		if Catalog.mat_card(n) != null and Catalog.owns(state, n) \
-				and Mat.fits((kept + [n]).map(func(x): return Catalog.mat_card(x)), st):
+		if Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)) and Catalog.owns(state, n) \
+				and Mat.fits(Mat.on_mat({"mat": kept + [n], "items": state.items}), st):
 			kept.append(n)
 	state.mat = kept
 	_changed()
@@ -660,7 +662,7 @@ func add_collection_to_mat(id: String) -> bool:
 			col = c
 	if col == null or not col.items.all(func(n): return Catalog.owns(state, n)):
 		return false
-	var missing: Array = col.items.filter(func(n): return not state.mat.has(n))
+	var missing: Array = col.items.filter(func(n): return not state.mat.has(n) and not Mat.is_capstone(Catalog.mat_card(n)))
 	if missing.is_empty() or not Mat.fits(Mat.on_mat(state) + missing.map(func(n): return Catalog.mat_card(n)), Mat.stage(state)):
 		return false
 	state.mat += missing
