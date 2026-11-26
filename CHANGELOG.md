@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Checks, in motion: new cards (draws and the refills after a play or a discard) rise from below like the deal; discarded cards fly off to the left. A play that finds a new collection shows its window first, then the count. The Lock-In count punches: each beat snaps out and springs back, with its "+points" popping over the cards; "Played together!" pops its chips one by one. Play's button shows a hand of cards; Metropolis has its own picture.
 - Checks, clearer: Discard, **Pass** (was Done), the deck and Draw are gold-rimmed round buttons with card icons (Pass in the middle, the deck's count on its circle, Draw a card with a +). Cards in a combo have a gold border (no glow). The play preview is one piece. The green landing shows only on open slots. The last card you tap stays big, standing in the fan with your other picks. A ⭐ marks cards of a collection you've found that your hand can finish. The Elements page: "Spend elements to draw a card of the same type" on top, Convert in its corner. No Combo Lab button during a check.
 - Collections: the on/off switch is gone (the mat only changes by playing cards).
 - Fixes: a drag over the Inventory's or a station's cards never selects one; during a play's "Played together!" banner, tapping other hand cards no longer stops the played cards flying to the mat.

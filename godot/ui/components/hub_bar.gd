@@ -21,7 +21,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 @export var faces := {
 	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
-	"close": ["⬅️", "Close", ""], "play": ["🃏", "Play", "#3fb46c"],
+	"close": ["⬅️", "Close", ""], "play": ["ui:play", "Play", "#3fb46c"],
 }
 ## A check with cards (card playing): these side buttons change (id ->
 ## [emoji, label]), the rest keep their own; see App._hand_tap().

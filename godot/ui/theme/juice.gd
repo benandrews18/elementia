@@ -41,6 +41,10 @@ extends Node
 @export var drop_distance := 90.0  # a replaced card falls this far,
 @export var drop_turn := 0.25  # turning (radians),
 @export var drop_time := 0.32  # and fading
+@export var toss_time := 0.38  # a discarded card flies off the screen's left,
+@export var toss_lift := 60.0  # rising this far,
+@export var toss_turn := -0.6  # turning (radians)
+@export var toss_stagger := 0.05  # one after another
 
 @export_group("Dust")
 @export var dust_count := 9
@@ -224,6 +228,26 @@ static func drop(card: Control, at: Rect2) -> void:
 	tw.tween_property(card, "position:y", at.position.y + cfg.drop_distance, cfg.drop_time)
 	tw.tween_property(card, "rotation", cfg.drop_turn, cfg.drop_time)
 	tw.tween_property(card, "modulate:a", 0.0, cfg.drop_time)
+	tw.chain().tween_callback(card.queue_free)
+
+
+## A discarded card (a copy, not yet in the tree) flies off the screen's
+## left edge from `at` (global), rising and turning; the k-th waits its turn.
+static func toss(card: Control, at: Rect2, turn := 0.0, k := 0) -> void:
+	var app := App.current
+	if not on() or app == null or not at.has_area():
+		card.free()
+		return
+	card.size = at.size
+	card.position = at.position
+	card.pivot_offset = at.size / 2
+	card.rotation = turn
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.set_meta("flying", true)
+	app.add_child(card)
+	var tw := _tween(card).set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tw.tween_property(card, "position", Vector2(-at.size.x * 1.6, at.position.y - cfg.toss_lift), cfg.toss_time).set_delay(k * cfg.toss_stagger)
+	tw.tween_property(card, "rotation", turn + cfg.toss_turn, cfg.toss_time).set_delay(k * cfg.toss_stagger)
 	tw.chain().tween_callback(card.queue_free)
 
 

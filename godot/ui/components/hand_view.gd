@@ -32,18 +32,26 @@ var starred := {}  # card name -> true: its ⭐
 ## rebuilt on every redraw, so each card works out how far along its own
 ## fly-in is from this, and a redraw mid-deal doesn't restart it.
 static var deal_at := 0
+## Cards new since the last redraw (a draw, the refill after a play or a
+## discard) rise from below like the deal: name -> when (ms) its rise starts.
+static var _arrive := {}
+static var _last: Array = []  # the names shown last ([]: a fresh deal, nothing rises)
 
 
 ## Entering a check (the user, 2026-11-23): the hand is dealt in once the
 ## shutters have parted, `after` seconds from now.
 static func deal(after: float) -> void:
 	deal_at = 0 if Juice.calm() else Time.get_ticks_msec() + int(after * 1000 / Engine.time_scale)
+	_last = []
+	_arrive = {}
 
 
 ## The check's opening (the user, 2026-11-23): the hand waits below the
 ## screen until the challenge window is closed, then deal() brings it in.
 static func hold() -> void:
 	deal_at = -1
+	_last = []
+	_arrive = {}
 
 
 func show_hand(names: Array, lifted_name: String, picked: Array = [], stars := {}) -> void:
@@ -55,6 +63,7 @@ func show_hand(names: Array, lifted_name: String, picked: Array = [], stars := {
 		gui_input.connect(_blank)
 	for c in get_children():
 		c.queue_free()
+	_note_arrivals(names)
 	var n := names.size()
 	if n == 0:
 		return
@@ -136,16 +145,38 @@ func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> v
 	add_child(holder)
 
 
+## The names not shown last time start rising now, one after another.
+func _note_arrivals(names: Array) -> void:
+	var now := Time.get_ticks_msec()
+	var k := 0
+	for nm in names:
+		if not _last.is_empty() and not _last.has(nm) and not _arrive.has(nm) and Juice.on():
+			_arrive[nm] = now + int(k * deal_stagger * 1000 / Engine.time_scale)
+			k += 1
+	for nm in _arrive.keys():
+		if not names.has(nm):
+			_arrive.erase(nm)
+	_last = names.duplicate()
+
+
 ## The deal: the k-th card flies up from below the screen into its place,
-## from wherever it has got to (a redraw mid-deal picks it up there).
+## from wherever it has got to (a redraw mid-deal picks it up there). A
+## card new since the last redraw rises the same way.
 func _dealt_in(card: Control, k: int) -> void:
+	var nm: String = card.get_meta("hand")
+	if _arrive.has(nm):
+		_rise(card, _arrive[nm])
+		return
 	if deal_at == 0:
 		return
 	if deal_at < 0:  # held: out of sight below
 		card.position.y = size.y + 40
 		return
+	_rise(card, deal_at + int(k * deal_stagger * 1000 / Engine.time_scale))
+
+
+func _rise(card: Control, start: int) -> void:
 	var ts := Engine.time_scale  # the clock is real time; tweens follow the game's speed
-	var start := deal_at + int(k * deal_stagger * 1000 / ts)
 	var now := Time.get_ticks_msec()
 	var p := clampf(float(now - start) * ts / (deal_time * 1000), 0.0, 1.0)
 	if p >= 1.0:

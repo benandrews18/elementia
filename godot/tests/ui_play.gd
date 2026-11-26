@@ -111,6 +111,11 @@ func _run(app: App) -> void:
 					break
 				mat.picks = [fit[0]]
 				mat.hand_play()
+				for c in app.get_children():  # a collection the play found: its window first; Add
+					if c is CollectionFound and not c.is_queued_for_deletion():
+						c.get_node("Window/Content/Add").gui_input.emit(_release())
+						await get_tree().process_frame
+						await get_tree().process_frame
 			if mat != null:
 				mat.picks = []
 			app.hand_lock_in()
@@ -658,6 +663,7 @@ func _collections(app: App) -> void:
 	var flying := func(): return app.get_children().filter(func(c): return c.has_meta("flying") and not c.is_queued_for_deletion()).size()
 	dm = app._panel_node as DisplayMatScreen
 	check(flying.call() == 1 and dm._mat_nodes[first].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands)")
+	check(HandView._arrive.has(hd.hand[-1]), "the refill rises from below")
 	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[first].modulate.a == 1.0), "the flight ends: its copy freed, the card shows in its slot")
 	dm._lift(hd.hand[0])
 	var on_mat: Array = dm._mat_nodes.values().map(func(c): return Rect2(c.position, c.size).grow(-2))
@@ -683,8 +689,34 @@ func _collections(app: App) -> void:
 	fake.hand = [col.items[0]]
 	Game.state.mat = col.items.slice(1)
 	check(DisplayMatScreen.starred(fake).is_empty(), "no ⭐ for a collection not found yet")
+	# A collection a play finds: its reveal window first, then the cards land.
+	var plays_was: Array = Game.state.matPlays.duplicate(true)
+	var hand_before: Array = hd.hand.duplicate()
+	var items_before: Array = Game.state.items.duplicate()
+	Game.state.mat = col.items.slice(1)
+	hd.hand[0] = col.items[0]
+	for n in col.items:
+		if not Game.state.items.has(n):
+			Game.state.items.append(n)
+	Game._changed()
+	dm = app._panel_node as DisplayMatScreen
+	dm._lift(col.items[0])
+	dm.hand_play()
+	await get_tree().process_frame
+	var reveal: Array = top.call(CollectionFound)
+	check(reveal.size() == 1 and reveal[0].collection.id == col.id and not Game.state.mat.has(col.items[0]), "a play that finds a collection: its window first, the card not played yet")
+	if reveal.size() == 1:
+		reveal[0].get_node("Window/Content/Add").gui_input.emit(_release())
+	check(await _until(func(): return Game.state.mat.has(col.items[0])), "then the card lands")
+	check(Progress.prefs.everUnlockedMatCollections.has(col.id) and top.call(CollectionFound).is_empty(), "found once, no second window")
+	await _until(func(): return flying.call() == 0)
+	Game.state.matPlays = plays_was
+	hd.hand.assign(hand_before)
+	Game.state.items = items_before
 	Progress.prefs.everUnlockedMatCollections = was_found
 	Game.state.mat = mat_was
+	Game._changed()
+	dm = app._panel_node as DisplayMatScreen
 	# Combo cards: those in a live group (a gold border).
 	var by_st := {}
 	for n in Game.state.items:
@@ -707,9 +739,11 @@ func _collections(app: App) -> void:
 	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left shows its card")
 	dm._lift(two[1])
 	var tosses: int = hd.tosses
+	var held: Array = hd.hand.duplicate()
 	Tap._down = null
 	_find_meta(dm, "hand:discard").gui_input.emit(_release())
 	check(hd.hand.size() == 7 and hd.discards == two and hd.tosses == tosses - 1, "Discard: both cards out for one discard, the hand refilled")
+	check(flying.call() == 2 and hd.hand.filter(func(n): return not held.has(n)).all(func(n): return HandView._arrive.has(n)), "the discards fly off, the refills rise")
 	dm = app._panel_node as DisplayMatScreen
 	_find_meta(dm, "hand:deck").gui_input.emit(_release())
 	var faded := func(n): return _find_meta(dm, "inv:" + n) != null and _find_meta(dm, "inv:" + n).modulate != Color.WHITE

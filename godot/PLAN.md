@@ -477,13 +477,37 @@ Market, tutorials), motion last (it animates the final layouts).
    - Draw (elements view): Convert at the lower right of the display;
      "Spend elements to draw a card of the same type" centred above the
      rows, black.
-20. **The check, in motion.**
+20. Done (2026-11-26): **The check, in motion.** HandView._arrive (cards
+   new since the last redraw rise like the deal); Juice.toss (discards off
+   to the left); hand_play shows CollectionFound for a collection the play
+   finds, then the count; bounce() snaps (70 ms to 1.3x, elastic back),
+   Lock-In beats pop "+points" (_beat_pop), the banner's chips pop in turn.
+   Play's face assets/ui/card_hand.png ("ui:play" in icons.json); 🌆 ->
+   assets/icons/metropolis.png. Was:
    - Draws come up from the bottom (as the deal) for element draws and
      the refills after a play or discard; discards fly off to the left.
    - A collection found in a play: its reveal window, then the combo
      count.
    - The count-up with weight: sets pop out with snap and overshoot
      (Balatro-like), not a smooth glide.
+   - Small assets (the user, 2026-11-26): Play's face the hand-of-cards
+     icon from images/playing_card_icons.png (not 🃏); Metropolis's
+     picture images/Metropolis.png.
+20b. **Mat cards and stars** (the user, 2026-11-26).
+   - A tap on a card on the Display Mat shows it enlarged (like the
+     hand's big card) over its own place; a tap on it or anywhere else
+     puts it back.
+   - The collection ⭐ in the top right of the item's picture (not the
+     card's), in a round rim and background like 🔍; a tap opens the
+     Collections window on that collection, highlighted. Only for
+     collections the player has fully unlocked.
+20c. **The Collections window, reworked** (the user, 2026-11-26): no
+   longer loads collections onto the mat, so it is a reference players
+   open often: very readable and easy to find your way in (grill the
+   layout first).
+20d. **A minimum text size** (the user, 2026-11-26): 12 px (mobile
+   guidance) at the phone's size, everywhere; a check flags any smaller
+   label.
 21. **Stations and cards.**
    - Card background: the station cards' off-white everywhere (the full
      card too).
@@ -539,6 +563,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 20 (the check, in motion): rising draws, tossed discards, a found collection's window before the count, a punchier count; Play's hand icon, Metropolis's picture. The user's six new items planned as 20-20d.
 - 2026-11-26: step 19 (the check screen, clearer): round buttons, gold combo borders, one-piece preview, landings on open slots, the last pick big in the fan, collection stars, the Elements page's line and Convert.
 - 2026-11-26: step 18c (code review of steps 14-18): tap and lambda-capture fixes, dead wide-card code out, no engine errors in the play test.
 - 2026-11-26: step 18b (smooth scrolling): DragScroll, our own list drag and fling, measured on the desktop.

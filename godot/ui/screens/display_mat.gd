@@ -225,11 +225,14 @@ func play_lock_in(on_done: Callable) -> void:
 		var b: Dictionary = beats[i]
 		for n in b.cards:
 			bounce(_mat_nodes.get(n, _chip_nodes.get("cap:" + n)))
+		if not b.cards.is_empty():
+			_beat_pop(_mat_nodes.get(b.cards[0], _chip_nodes.get("cap:" + b.cards[0])), b)
 		if b.has("chip"):
 			bounce(_chip_nodes.get(b.chip, _chip_nodes.get("new") if b.chip == "collection" else null))
 		pts += b.points
 		mult += b.mult
 		_qm.show_score(pts * mult, tiers)
+		bounce(_qm.total_label())
 	await get_tree().create_timer(0.38 + 0.15).timeout
 	_qm.show_score(sc.total, tiers)
 	bounce(_qm.total_label())
@@ -284,14 +287,40 @@ static func score_beats(cards: Array, sc: Dictionary) -> Array:
 	return beats
 
 
-## bouncePulse(): a quick scale punch (1 -> 1.35 -> 1, 380ms).
+## A punch with weight (the user, 2026-11-26: Balatro-like, not a glide):
+## snaps to 1.3x in 70 ms, then springs back past 1 and settles (elastic).
+## A new punch on the same node replaces the one running.
 static func bounce(c) -> void:
 	if not is_instance_valid(c):
 		return
 	c.pivot_offset = c.size / 2
-	var tw: Tween = c.create_tween()
-	tw.tween_property(c, "scale", Vector2(1.35, 1.35), 0.19).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(c, "scale", Vector2.ONE, 0.19).set_trans(Tween.TRANS_SINE)
+	var tw: Tween = Juice._tween(c)
+	tw.tween_property(c, "scale", Vector2(1.3, 1.3), 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(c, "scale", Vector2.ONE, 0.36).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## A Lock-In beat's "+points" or "+×mult" pops out over its first card,
+## overshooting, then drifts up and fades.
+func _beat_pop(on: Control, b: Dictionary) -> void:
+	if not is_instance_valid(on) or not Juice.on() or App.current == null:
+		return
+	var pts: bool = b.points != 0
+	var l := Tok.label(("+%s" % _num(b.points)) if pts else ("+×%s" % _num(b.mult)), 20, Color.WHITE if pts else Color("#ffd166"), 900)
+	l.add_theme_color_override("font_outline_color", Tok.OK.darkened(0.35) if pts else Color("#4a2f8a"))
+	l.add_theme_constant_override("outline_size", 6)
+	l.size = l.get_minimum_size()
+	var r := on.get_global_rect()
+	l.position = Vector2(r.get_center().x - l.size.x / 2, r.position.y - l.size.y * 0.4)
+	l.pivot_offset = l.size / 2
+	l.scale = Vector2(0.3, 0.3)
+	App.current.add_child(l)
+	var tw := l.create_tween()
+	tw.tween_property(l, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(0.12)
+	tw.set_parallel(true)
+	tw.tween_property(l, "position:y", l.position.y - 26, 0.36).set_delay(0.28)
+	tw.tween_property(l, "modulate:a", 0.0, 0.36).set_delay(0.28)
+	tw.chain().tween_callback(l.queue_free)
 
 
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
@@ -988,6 +1017,8 @@ func hand_discard() -> void:
 	if picks.is_empty():
 		_show_toast("Tap cards in your hand first.")
 		return
+	var tossed := picks.duplicate()
+	var from := _hand_rects(tossed)
 	var msg := Hand.discard(h, picks)
 	if msg != "":
 		_show_toast(msg)
@@ -995,6 +1026,19 @@ func hand_discard() -> void:
 	picks = []
 	lifted = ""
 	Game._changed()
+	for i in tossed.size():  # off to the left, the refill rising in their place (HandView)
+		if from.has(tossed[i]):
+			Juice.toss(ItemCard.make(tossed[i], {"size": true}), from[tossed[i]][0], from[tossed[i]][1], i)
+
+
+## The fan cards of these hand cards: name -> [global rect, rotation].
+func _hand_rects(names: Array) -> Dictionary:
+	var out := {}
+	if is_instance_valid(_hand_view):
+		for c in _hand_view.get_children():
+			if c is ItemCard and c.has_meta("hand") and names.has(c.get_meta("hand")):
+				out[c.get_meta("hand")] = [Rect2(c.global_position, c.size * c.get_global_transform().get_scale()), c.rotation]
+	return out
 
 
 ## Play (the hub's middle button): the picked cards onto the mat, packed
@@ -1012,6 +1056,20 @@ func hand_play() -> void:
 	if gain == null:
 		_show_toast(Hand.play(h, Game.state, played))  # why not (changes nothing)
 		return
+	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
+	var fresh: Array = Hand.score_after(Game.state, Game.ctx, played).cols.filter(func(c): return not found.has(c.id))
+	if not fresh.is_empty() and App.current:  # a collection found: its reveal first, then the count
+		playing = true
+		for col in fresh:
+			await CollectionFound.show_on(App.current, col).closed
+			if not is_instance_valid(self):
+				return
+			await get_tree().process_frame  # its Add discovers it after closing
+			if not is_instance_valid(self):
+				return
+		playing = false
+		if not is_same(Game.check_hand(), h):
+			return
 	var tg := Mat.together(Mat.on_mat({"mat": played}), {"matPlays": [played]})
 	if not (tg.combos.is_empty() and tg.complete.is_empty() and tg.cols.is_empty()):
 		playing = true  # the reveal: no redraws, no second Play
@@ -1088,6 +1146,13 @@ func _together_banner(tg: Dictionary, gain: float) -> Control:
 	box.position = Vector2((size.x - box.size.x) / 2, (_hand_view.position.y if is_instance_valid(_hand_view) else size.y / 2) - 8)
 	_body.add_child(box)
 	Juice.pop_in(box)
+	if Juice.on():  # the sets pop out one by one, snapping past full size
+		var pops: Array = chips + [plus]
+		for i in pops.size():
+			var c: Control = pops[i]
+			c.pivot_offset = c.size / 2 if c != plus else plus.get_minimum_size() / 2
+			c.scale = Vector2.ZERO
+			c.create_tween().tween_property(c, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT).set_delay(0.12 + i * 0.12)
 	return box
 
 
