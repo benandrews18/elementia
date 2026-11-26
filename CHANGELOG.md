@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Scrolling, everywhere: a list follows your finger from wherever you start the drag (rows used to block it), flicks glide and slow down smoothly, and a tap on a moving list stops it. Every frame is drawn while you scroll.
 - Checks: tapping an element on the Elements tab lets you **pick which card of its suit** to take (closing the picker spends nothing).
 - Scrolling lists: a drag never counts as a tap (the card picker, the To-Do list's breakdowns, every list); the picker's cards scroll when dragged.
 - Settings from every screen: a gear on the map's station card and beside the check's chips.

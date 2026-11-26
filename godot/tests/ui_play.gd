@@ -519,6 +519,37 @@ func _items(app: App) -> void:
 	row.gui_input.emit(_release(Vector2(100, 340)))
 	await get_tree().process_frame
 	check(not TodoTray.expanded.has("refroot/Bridge"), "dragging the list by a row doesn't open it (Tap)")
+	var ds: DragScroll = app.get_children().filter(func(c): return c is DragScroll)[0]
+	var bar: VScrollBar = scr._scroll.get_v_scroll_bar()
+	check(scr._scroll.scroll_deadzone > 100000, "Godot's own list drag is off (DragScroll's instead)")
+	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
+	await get_tree().process_frame
+	var y0 := bar.value
+	var lpm := OS.low_processor_usage_mode
+	ds._input(_press(Vector2(100, 600)))  # the finger goes down on a row (rows stop input: Godot's drag never saw them)
+	row.gui_input.emit(_press(Vector2(100, 600)))
+	for i in 8:
+		ds._input(_drag(Vector2(100, 600 - 12 * (i + 1))))
+	check(absf(bar.value - (y0 + 96 - 12)) < 1.0, "a drag on a row scrolls the list with the finger (past the slop: %.0f -> %.0f)" % [y0, bar.value])
+	check(not OS.low_processor_usage_mode, "every frame drawn while a finger is down")
+	var held := bar.value
+	ds._input(_release(Vector2(100, 504)))
+	row.gui_input.emit(_release(Vector2(100, 504)))
+	for i in 5:
+		await get_tree().process_frame
+	check(not TodoTray.expanded.has("refroot/Bridge"), "a drag never taps the row")
+	check(bar.value > held, "a quick release flings the list on")
+	ds._input(_press(Vector2(100, 400)))
+	row.gui_input.emit(_press(Vector2(100, 400)))
+	ds._input(_release(Vector2(100, 400)))
+	row.gui_input.emit(_release(Vector2(100, 400)))
+	var stopped := bar.value
+	await get_tree().process_frame
+	await get_tree().process_frame
+	check(bar.value == stopped and not TodoTray.expanded.has("refroot/Bridge"), "a press on a flinging list stops it and isn't a tap")
+	check(OS.low_processor_usage_mode == lpm, "low processor mode back once nothing moves")
+	bar.value = y0
+	DragScroll.caught = false  # the later checks press rows without _input (which resets it each press)
 	row = rows.call().filter(func(r): return r.item == "Bridge")[0]
 	row.gui_input.emit(_press(Vector2(100, 400)))
 	row.gui_input.emit(_release(Vector2(103, 404)))  # a tap: the finger stayed put
@@ -1264,7 +1295,16 @@ func _release(at := Vector2.ZERO) -> InputEventMouseButton:
 	var ev := InputEventMouseButton.new()
 	ev.button_index = MOUSE_BUTTON_LEFT
 	ev.pressed = false
+	ev.position = at  # DragScroll reads the viewport's
 	ev.global_position = at
+	return ev
+
+
+func _drag(at: Vector2) -> InputEventMouseMotion:
+	var ev := InputEventMouseMotion.new()
+	ev.position = at
+	ev.global_position = at
+	ev.button_mask = MOUSE_BUTTON_MASK_LEFT
 	return ev
 
 

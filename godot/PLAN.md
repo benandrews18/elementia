@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 18b, smooth scrolling (then 18c, the code review; then 19). Start every session with `git status`: the user may
+**Next task:** step 18c, the code review (then 19). Check 18b's scrolling feel on the phone when it's connected (it wasn't, 2026-11-26). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -415,7 +415,16 @@ Market, tutorials), motion last (it animates the final layouts).
    - Settings reachable from every screen, the title screen too.
    - Challenge window: a pill on its border, "REQUEST ×2" or
      "RESTRICTION −25%" (out of the body); names always on one line.
-18b. **Smooth scrolling** (the user, 2026-11-26: "delayed and buggy
+18b. Done (2026-11-26): ui/theme/drag_scroll.gd (DragScroll, added by the
+   App): our own drag for every ScrollContainer (Godot's off: a huge
+   scroll_deadzone). Measured in a desktop window (the phone wasn't
+   connected): rows that STOP input blocked Godot's drag entirely, step
+   18's deadzone left the list 8 px behind the finger, its fling ran on
+   the 60 Hz physics clock with a linear brake, and low processor mode
+   slept ~7 ms a frame. Now: any row starts a drag, 1:1 past Tap.SLOP,
+   friction fling per drawn frame (FRICTION, MIN_FLING), a press stops a
+   fling (DragScroll.caught: no tap), low processor mode off while moving.
+   Was: **Smooth scrolling** (the user, 2026-11-26: "delayed and buggy
    throughout the game. it should feel very smooth and immediate").
    Measure on the phone first (adb swipes, screen recordings, an FPS
    readout): find what delays a drag (step 18's SLOP deadzone in
@@ -507,6 +516,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 18b (smooth scrolling): DragScroll, our own list drag and fling, measured on the desktop.
 - 2026-11-26: step 18 (element draws and small fixes): pick the card an element draws, drags never tap, Settings everywhere, the challenge pill, the list view's balloon.
 - 2026-11-26: step 17 (rules batch): capstones always on, no card limits, new requests, restrictions from 18, a "?" per Market square, Main Menu ends the run; breakpoints re-tuned.
 - 2026-11-26: step 16 part 2: the simulator (tests/sim.gd, tools/sim.py), breakpoints tuned (2 passes of 200 runs), rules lock re-recorded; the user's big list planned as steps 17-26.
