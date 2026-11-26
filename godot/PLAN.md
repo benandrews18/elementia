@@ -509,7 +509,14 @@ Market, tutorials), motion last (it animates the final layouts).
      collections the player has fully unlocked.
    - No Convert button in the check's lower-right corner (it lives in
      the Elements page now).
-20c. **The Collections window, reworked** (the user, 2026-11-26): no
+20c. Done (2026-11-26): **The Collections window, reworked.** Grilled
+   (all four recommended): found + clue leads, the rest counted
+   ("N more to discover"); rows of tiles (icon, name under it) with run
+   status (CollectionRow.where(): mat green, hand gold, owned plain, not
+   yet faded; a legend; "have / total", ✓ when all on the mat); in a run
+   the closest to done first (CollectionRow.closeness()); always as tall
+   as the room. Was:
+   (the user, 2026-11-26): no
    longer loads collections onto the mat, so it is a reference players
    open often: very readable and easy to find your way in (grill the
    layout first).
@@ -571,6 +578,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 20c (Collections window): grilled; tiles with names and run status, closest first, a legend, the rest counted, always tall.
 - 2026-11-26: step 20b (mat cards and stars): a tapped mat card shows big in place, the ⭐ on the picture opens Collections lit, no corner Convert at a check.
 - 2026-11-26: step 20 (the check, in motion): rising draws, tossed discards, a found collection's window before the count, a punchier count; Play's hand icon, Metropolis's picture. The user's six new items planned as 20-20d.
 - 2026-11-26: step 19 (the check screen, clearer): round buttons, gold combo borders, one-piece preview, landings on open slots, the last pick big in the fan, collection stars, the Elements page's line and Convert.

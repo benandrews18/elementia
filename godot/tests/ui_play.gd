@@ -610,6 +610,16 @@ func _collections(app: App) -> void:
 	await get_tree().process_frame
 	var row = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())[0]
 	check(row.get_node_or_null("Toggle") == null, "a found collection has no on/off switch (the mat changes only by playing)")
+	var rws: Array = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return r is CollectionRow and not r.is_queued_for_deletion())
+	var ids: Array = rws.map(func(r): return r.get_meta("collection"))
+	var near: Array = ids.filter(func(i): return Progress.prefs.everUnlockedMatCollections.has(i)).map(func(i): return CollectionRow.closeness(Mat.collections().filter(func(c): return c.id == i)[0]))
+	var sorted_near := near.duplicate()
+	sorted_near.sort()
+	sorted_near.reverse()
+	check(near == sorted_near and _find_meta(cw, "coll:legend").visible and _find_meta(cw, "coll:more") != null, "in a run: found collections closest-to-done first, a legend, how many are left")
+	var on_mat_item: String = Game.state.mat[0] if not Game.state.mat.is_empty() else ""
+	var tile := _find_meta(cw, "coll:item:" + on_mat_item) if on_mat_item != "" else null
+	check(on_mat_item == "" or tile == null or tile.get_meta("place") == "mat", "a tile says its item is on the mat")
 	cw.close()
 	cw = CollectionsWindow.show_on(app, true)
 	cw.get_node("Window/Content/Shop/One").gui_input.emit(_release())
