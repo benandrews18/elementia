@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 19, the check screen, clearer. Start every session with `git status`: the user may
+**Next task:** step 18b, smooth scrolling (then 18c, the code review; then 19). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -415,6 +415,15 @@ Market, tutorials), motion last (it animates the final layouts).
    - Settings reachable from every screen, the title screen too.
    - Challenge window: a pill on its border, "REQUEST ×2" or
      "RESTRICTION −25%" (out of the body); names always on one line.
+18b. **Smooth scrolling** (the user, 2026-11-26: "delayed and buggy
+   throughout the game. it should feel very smooth and immediate").
+   Measure on the phone first (adb swipes, screen recordings, an FPS
+   readout): find what delays a drag (step 18's SLOP deadzone in
+   Tap.hook, STOP children that swallow drags, redraws on scroll,
+   frame rate) and fix it everywhere; inertia that feels native.
+18c. **Code and best-practices review** of what steps 14-18 built (the
+   check, hand and mat code first, since 19-21 rework them): bugs, dead
+   code, Godot pitfalls, then fixes.
 19. **The check screen, clearer** (the mat's clarity first).
    - Buttons: Draw a "+"; Draw, Discard and Pass (Done renamed, same
      icon) gold-rimmed circles the size of 🔍 and Convert, labels under
