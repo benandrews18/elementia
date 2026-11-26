@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 16 part 2: tune the breakpoints from simulated runs (the user, 2026-11-24). Part 1 is done (the batch below). Start every session with `git status`: the user may
+**Next task:** step 17, the rules batch (grill its open questions first). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -361,8 +361,131 @@ with `godot-grill`.
    the hand's room); the deck's count in the middle of the row, a tap
    shows the Inventory as between checks (browsing: no Add / Remove; Back
    to your hand). Screen: hand_inventory.
+16. **Breakpoints from simulated runs** (the user, 2026-11-24). Part 1
+   (the batch: no breakpoint game over, Done, the play preview, ...) done.
+   Part 2 done (2026-11-26): `tests/sim.gd` (a bot playing whole runs on
+   the real rules, the hand included; ported from the HTML sim_agent.js)
+   and `tools/sim.py` (the report: the bot's scores per check round
+   against the breakpoints and your runs; `--write` sets
+   LOCKIN_ROUND_ANCHORS so 95/60/30/10% of the bot's runs get through).
+   Your History exports go in tests/sim_guide/ (the bot's opening book and
+   craft habits). **Re-run `python godot/tools/sim.py --write --rounds 2`
+   after any rule change that moves scores** (steps 17 and 19 at least).
+
+The user's big list (2026-11-26), in this order: rules first (they move
+scores, layouts and what the tutorials say), then the screens most of the
+list touches (the check, the station), then what sits on them (To-Do,
+Market, tutorials), motion last (it animates the final layouts).
+
+17. **Rules batch** (grill the open questions first). Rule tests, rules
+   lock re-recorded, then the tuner re-run.
+   - No limit on cards per play or per discard (HAND_PLAY_MAX and
+     HAND_DISCARD_MAX go).
+   - Restrictions only from round 18; "mostly new cards" (freshFaces)
+     gone; more requests (grill: ideas to pick from).
+   - Every Market square pays an Unknown Element when crafted; a finished
+     row pays nothing.
+   - Capstones (grill): off the mat entirely, their bonuses always on
+     (every crafted capstone counts, no space taken), or one owned
+     capstone auto-played at the check's start (a 2nd drawn as normal).
+     Off the mat makes the auto-play moot: decide that first.
+   - Tier 1 cards flooding the hand (grill; options: a kind's tier 1 cards
+     stack as one hand card, a small tier 1 pile of its own, tier 1 cards
+     in the deck only while they'd complete something, free discards for
+     tier 1).
+   - Main Menu from the end screen resets the run (no Continue).
+18. **Element draws and small fixes.**
+   - An element draw opens a picker of the deck's cards of that suit (the
+     player chooses); its scrolling fixed (smooth, a drag never taps).
+     The same scroll fix in the To-Do list (a drag opens a row's
+     breakdown now).
+   - Element picker (Unknown Element): no atomic numbers, white names.
+   - Convert tray: no dimming behind it.
+   - The element-tax balloon points at the card's elements on the web but
+     not in the APK: find why (scale, safe area?) and fix.
+   - Settings reachable from every screen, the title screen too.
+   - Challenge window: a pill on its border, "REQUEST ×2" or
+     "RESTRICTION −25%" (out of the body); names always on one line.
+19. **The check screen, clearer** (the mat's clarity first).
+   - Buttons: Draw a "+"; Draw, Discard and Pass (Done renamed, same
+     icon) gold-rimmed circles the size of 🔍 and Convert, labels under
+     them; icons from images/playing_card_icons.png. Pass in the middle
+     under the mat; the deck a circle (a card, its count on top) beside
+     Draw on the right.
+   - The Combo Lab button off the check (only in the full Inventory
+     view).
+   - Combo cards: a solid gold border, the rest black; no glow.
+   - One preview: the combo chips and the "+x" pill as one piece.
+   - The green landing preview only on open slots (never over cards
+     already there, even when the real packing moves them).
+   - The last tapped hand card stays big (off-white) but sits in the fan
+     with the other picks.
+   - ⭐ in a card's top right when a known named collection is on the
+     screen (hand + mat) and at least one of its cards is in the hand (not
+     when all are on the mat); the Collections window's on/off switch
+     goes.
+   - Draw (elements view): Convert at the lower right of the display;
+     "Spend elements to draw a card of the same type" centred above the
+     rows, black.
+20. **The check, in motion.**
+   - Draws come up from the bottom (as the deal) for element draws and
+     the refills after a play or discard; discards fly off to the left.
+   - A collection found in a play: its reveal window, then the combo
+     count.
+   - The count-up with weight: sets pop out with snap and overshoot
+     (Balatro-like), not a smooth glide.
+21. **Stations and cards.**
+   - Card background: the station cards' off-white everywhere (the full
+     card too).
+   - A white line above "Item Shop", under the element pool; "TAP ON
+     ITEMS TO START CRAFTING" under the crafted-items row.
+   - Station preview icons twice as big, 2 rows of 5, centred.
+   - Stainless Steel, Aluminum Alloy, Natural Gas on 2 lines on the small
+     cards (station, Inventory), not the full card.
+   - Tier 1 items sold at several stations: every station along the
+     bottom, from the right.
+   - A 🔍 instead of the parent item in a shop card's bottom right.
+   - The tracked item's text and pill twice as big.
+   - Crafting Bench: its component icons and its card picture open the
+     full card.
+   - The centre button: lower (its text level with the others), bigger
+     (over its neighbours, past the screen's bottom); Gather on it too (tap
+     twice to gather), with a spotlight circle while the rest is dimmed.
+   - Travel's text: white on a black backdrop like Map's.
+   - The Ocean's "YOU ARE HERE" above the station, centred.
+   - First screen (the start capstone): branch lines from the component
+     row up to the capstone, like an org chart.
+22. **Tracking and the To-Do list** (grill + brainstorm: a redesign).
+   - The To-Do list rethought: compact and followable, no capstone tree
+     exploding open on the first tap (the tracked item's 🔍 at a station
+     too).
+   - Nudge players to track mid-tier and tier 1 items early (grill:
+     ideas, e.g. a suggested pick, a small reward for a tracked item made,
+     the capstone pinned but a part tracked).
+   - A suit pill out of Convert's left side (looks like the tracked
+     pill): the 4 suit icons with totals; grill: only while the tray is
+     open, or always.
+23. **Market.**
+   - Opening lag: profile and fix.
+   - Title: the Market button's icon (not the cart); all text white with
+     a small black shadow.
+   - Names under the squares, bigger, 2 lines when long (Satellite Dish),
+     centred, never touching; the same for the capstones.
+24. **Combo Lab**: a tap adds a card to the mat, a tap on the mat takes it
+   off; the last tapped shows on the Crafting Bench below, no Add /
+   Remove.
+25. **Tutorials** (once the screens settle: they describe them).
+   - The 3-4 intro windows (the whole game in brief) back at the start of
+     every game, until the player hides them.
+   - The Display Mat windows at the first check.
+   - The mouse stays for the tap-by-tap guidance.
+26. **Station transitions**: arriving fades in the backdrop, the header
+   slides down, the cards come in from the right, the tracked pill bounces
+   as the 🔍 marks appear; taps work throughout. Leaving for the map: a
+   plain, quick fade.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 16 part 2: the simulator (tests/sim.gd, tools/sim.py), breakpoints tuned (2 passes of 200 runs), rules lock re-recorded; the user's big list planned as steps 17-26.
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:
   safe saves, one save per action, low-processor mode, Items screen
   ~360 -> ~28 ms, Tap.tap (a drag isn't a tap), mid-visit resume (Godot

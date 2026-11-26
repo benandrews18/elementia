@@ -8,6 +8,9 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-26
+- **New breakpoints for every check**, set from 400 simulated runs played on the real rules with the new hand: about 95% of runs reach the first breakpoint, 60% the second, 30% the third and 10% the fourth. Early checks are easier to clear than before; rounds 18 and 21 no longer need impossible scores.
+
 ## 2026-11-24
 - **A missed breakpoint no longer ends the run** (for testing): you just get no bonus dice. Overtime still ends on a miss.
 - Checks: a **Done** button beside the deck count ends the check whenever you like (it asks first if a card in your hand still fits), so a hand with nothing that fits can't get stuck.
