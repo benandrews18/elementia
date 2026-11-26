@@ -404,6 +404,11 @@ func _ready() -> void:
 	s.elements = {tsym: 1}
 	check(Hand.suit_draw(hd, s, tsym) == "" and hd.hand == [tfirst] and not s.elements.has(tsym), "hand: 1 element draws the deck's first card with its suit")
 	check(Hand.suit_draw(hd, s, tsym) != "" and hd.hand.size() == 1, "hand: none left to spend")
+	s.elements[tsym] = 1
+	var tcards: Array = Hand.suit_cards(hd, tsym)
+	if not tcards.is_empty():
+		check(Hand.suit_draw(hd, s, tsym, "Nothing") != "" and s.elements[tsym] == 1, "hand: a card not in the deck spends nothing")
+		check(Hand.suit_draw(hd, s, tsym, tcards[-1]) == "" and hd.hand.has(tcards[-1]) and not s.elements.has(tsym), "hand: an element draws the card picked")
 	s.emptyElements = 1
 	s.elements = {tsym: 2}
 	var same_suit: int = hd.deck.filter(func(n): return Catalog.mat_card(n).pips.has(tsuit)).size()

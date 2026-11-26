@@ -259,14 +259,16 @@ func _row(e: Dictionary, at: Vector2, w: float) -> float:
 	var tog := Control.new()  # ▸ Full breakdown
 	tog.position = Vector2(64, 60)
 	tog.size = Vector2(170, 20)
-	tog.mouse_filter = MOUSE_FILTER_STOP
+	tog.mouse_filter = MOUSE_FILTER_PASS  # a drag scrolls the list; a tap toggles (not the card's tap too)
 	var arrow := RefTree.arrow(open, Color("#8a5a1a"))
 	arrow.position = Vector2(2, 5)
 	tog.add_child(arrow)
 	var tl := Tok.label("Hide full breakdown" if open else "Full breakdown", 11.5, Color("#8a5a1a"), 800)
 	tl.position = Vector2(16, 1)
 	tog.add_child(tl)
-	tog.gui_input.connect(func(ev): if Tap.tap(ev): _toggle(path))
+	tog.gui_input.connect(func(ev): if Tap.tap(ev):
+		tog.accept_event()
+		_toggle(path))
 	card.add_child(tog)
 	card.add_child(_track_button(e.name, Vector2(w - 88, 14)))
 	card.add_child(_pin_button(e.name, Vector2(w - 48, 14)))

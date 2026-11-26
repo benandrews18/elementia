@@ -93,8 +93,10 @@ func node(parent: Control, name: String, kind: String, path: String, seen: Dicti
 	box.add_theme_stylebox_override("panel", Tok.box(look.have if has else look.box, 12, 1.5, look.have_line if has else look.line))
 	box.position = Vector2(x0, at.y)
 	box.size = Vector2(row_w - (x0 - at.x), ROW)
-	box.mouse_filter = Control.MOUSE_FILTER_STOP
-	box.gui_input.connect(func(ev): if Tap.tap(ev): on_toggle.call(path))
+	box.mouse_filter = Control.MOUSE_FILTER_PASS  # a drag scrolls the list it's in; a tap toggles it alone
+	box.gui_input.connect(func(ev): if Tap.tap(ev):
+		box.accept_event()
+		on_toggle.call(path))
 	parent.add_child(box)
 	var arr := arrow(open, look.ink)
 	arr.position = Vector2(12, 20)

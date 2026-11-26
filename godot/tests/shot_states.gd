@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -410,6 +410,19 @@ func _ready() -> void:
 			Game.state.hand.hand = ["Soil", "Rubber", "Tree", "Cloud", "Plastic"]  # a fixed hand (the lab's run here can be thin)
 			mat3.picks = ["Rubber", "Cloud"]
 			mat3._redraw()
+		"element_pick":  # an element tapped in a check: its suit's deck cards to pick from
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			var h: Dictionary = Game.state.hand
+			h.deck = ["Soil", "Rubber", "Tree", "Cloud", "Plastic", "Wire"]  # a fixed deck (the lab's run here is thin)
+			var su: String = Catalog.mat_card("Tree").pips[0]
+			var sy: String = Data.t("SUIT_CORE_ELEMENTS")[su][0]
+			Game.state.elements = {sy: 2}
+			CardPick.show_on(app, sy)
 		"challenge_elements":  # the test's Elements tab: a tap spends one on a card of its suit
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))

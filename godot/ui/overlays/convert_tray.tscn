@@ -46,6 +46,7 @@ arrow_off = SubResource("arrow_off")
 
 [node name="Scrim" parent="." instance=ExtResource("scrim")]
 layout_mode = 1
+color = Color(0, 0, 0, 0)
 
 [node name="Tray" type="Panel" parent="."]
 layout_mode = 0

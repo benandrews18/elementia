@@ -329,6 +329,19 @@ func _cards(app: App) -> void:
 	var sym: String = Catalog.sorted_dice(Catalog.station(Game.ctx.current))[0]
 	check(app.panel == "convert" and app._panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
 	app.close_panel()
+	# The list view's side card: a suit cost's balloon points at the card's suit badges, not at Craft.
+	var with_cost: Array = StationScreen.shop_entries(Game.ctx.current).filter(func(e): return not Data.t("ITEM_SUIT_COST_TABLE").get(e.name, []).is_empty())
+	if not with_cost.is_empty():
+		StationScreen.list_mode = true
+		app._screen.open_card = with_cost[0].name
+		app._screen._redraw()
+		await get_tree().process_frame
+		var cbtn := _find_meta(app._screen, "st:craft:" + with_cost[0].name)
+		var r := StationScreen._costs_rect(app._screen._side.get_child(0).get_node("Card/Costs"), cbtn)
+		check(cbtn != null and r.end.y < cbtn.get_global_rect().position.y, "the list view's Craft: a suit cost's balloon points at the card's suit badges")
+		StationScreen.list_mode = false
+		app._screen.open_card = ""
+		app._screen._redraw()
 	# The Crafting Bench: a missing element in the card's recipe opens Convert on it.
 	var shop: Array = StationScreen.shop_entries(Game.ctx.current)
 	var want = shop.filter(func(e): return e.reqs.any(func(r): return r.kind == "element" and Catalog.count(Game.state, r.name) == 0))
@@ -686,15 +699,23 @@ func _collections(app: App) -> void:
 	Tap._down = null
 	_find_meta(dm, "hand:draw").gui_input.emit(_release())
 	check(dm.view == "elements" and _find_meta(dm, "el:" + esym) != null, "Draw flips the mat to its Elements page")
-	var want_card := Hand.suit_card(hd, esym)
+	var suit_cards := Hand.suit_cards(hd, esym)
+	var want_card: String = suit_cards[-1]  # the player's pick, not just the deck's first
 	var n_hand: int = hd.hand.size()
 	_find_meta(dm, "el:" + esym).gui_input.emit(_release())
-	var asks: Array = top.call(ConfirmDialog)
-	check(asks.size() == 1 and hd.hand.size() == n_hand, "Elements tab: a tapped element asks first")
-	if asks.size() == 1:
-		asks[0].on_yes.call()
-		asks[0].queue_free()
-	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on a card of its suit")
+	var picks_el: Array = top.call(CardPick)
+	check(picks_el.size() == 1 and hd.hand.size() == n_hand and picks_el[0].get_node("Window/Content/Scroll/Cards").get_child_count() == suit_cards.size(),
+		"Elements tab: a tapped element opens a pick of its suit's deck cards")
+	if picks_el.size() == 1:
+		var pc = _find_meta(picks_el[0], "pick:" + want_card)
+		check(pc != null and pc.mouse_filter == Control.MOUSE_FILTER_PASS, "the pick's cards let a drag scroll")
+		Tap._down = null
+		Tap._scrolled = true  # a drag that scrolled the list
+		pc.gui_input.emit(_release())
+		check(hd.hand.size() == n_hand, "a drag on a card never takes it")
+		Tap._scrolled = false
+		pc.gui_input.emit(_release())
+	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on the card picked")
 	dm = app._panel_node as DisplayMatScreen
 	var hand_was: Array = hd.hand.duplicate()
 	while hd.hand.size() < Hand.most():

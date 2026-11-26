@@ -9,6 +9,12 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Checks: tapping an element on the Elements tab lets you **pick which card of its suit** to take (closing the picker spends nothing).
+- Scrolling lists: a drag never counts as a tap (the card picker, the To-Do list's breakdowns, every list); the picker's cards scroll when dragged.
+- Settings from every screen: a gear on the map's station card and beside the check's chips.
+- The challenge window: a **REQUEST ×2** / **RESTRICTION −25%** pill on its bottom edge; names always on one line.
+- The Unknown Element picker: no atomic numbers, white names. Nothing is dimmed behind the Convert tray.
+- The suit-cost balloon from the list view's side card points at the card's suit badges (it pointed at Craft).
 - **Capstones are always on.** Every capstone you've crafted counts at every check without being drawn or taking a slot: its points, its combos, its signature bonus and any request it helps. Restrictions only look at the cards you play. Its chip above the mat shows its card when tapped. The 2 slots it used to take are free for cards.
 - Checks: play or discard **as many cards at once** as you like (still 3 discards a check).
 - Challenges: requests at rounds 3-15 (two new: **All 4 Suits** and **5 Stations**), an easy restriction at round 18 and a hard one at 21. "Mostly new cards" is gone.

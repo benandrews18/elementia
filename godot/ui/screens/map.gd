@@ -77,7 +77,7 @@ func _redraw() -> void:
 		clock.mouse_filter = MOUSE_FILTER_STOP
 		clock.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: ClockInfo.show_on(App.current))
 		$Dynamic.add_child(clock)
-	StationScreen.corner_buttons($Dynamic, false)
+	StationScreen.corner_buttons($Dynamic, true)  # Settings from every screen (the user, 2026-11-26)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
 		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
 
@@ -214,8 +214,14 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	card.add_child(h2)
 	var tname = Game.ctx.get("tracked")
 	var tracked = Catalog.entry(tname) if tname else null
+	var right := w
+	if not boxed:  # on the map: Settings at the title row's end (the card covers the corner gear)
+		var gear := StationScreen.gear_button(34)
+		gear.position = Vector2(w - 19 - 34, y)
+		card.add_child(gear)
+		right -= 42
 	if tracked != null:  # .mc-tracked-wrap: the 🔍 circle and a gold pill naming it, top right
-		card.add_child(_tracked_tag(tracked, w, y))
+		card.add_child(_tracked_tag(tracked, right, y))
 	var job := {}  # the tracked item and what it still needs: gold rings below
 	if tracked != null:
 		job[tname] = true

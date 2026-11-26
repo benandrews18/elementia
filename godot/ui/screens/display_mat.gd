@@ -93,8 +93,11 @@ func _redraw() -> void:
 	_qm = qm
 	qm.show_score(sc.total, Orders.tiers(Orders.check_round(s)))
 	y += qm.size.y + 4
-	# Combo chips (min height 40, wrapping rows).
-	y += _chips(sc, Vector2(side, y), w) + 6
+	# Combo chips (min height 40, wrapping rows), Settings at their end.
+	var gear := StationScreen.gear_button(40)
+	gear.position = Vector2(side + w - 40, y)
+	_body.add_child(gear)
+	y += _chips(sc, Vector2(side, y), w - 48) + 6
 	# The mat page: as many columns as are open, and one row, a row and a
 	# half-height strip, or two, as the mat has grown.
 	var st := _stage()
@@ -1158,7 +1161,7 @@ func _elements(page: Control) -> void:
 		q.size = Vector2(cw, 12)
 		page.add_child(q)
 	if hand != null and not (held.is_empty() and unknown == 0):
-		var tip := Tok.label("Tap an element to spend 1 and draw a card of its suit.", 12, Color("#8a6a48"), 800)
+		var tip := Tok.label("Tap an element to spend 1 on a card of its suit.", 12, Color("#8a6a48"), 800)
 		tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tip.position = Vector2(7, page.size.y - 24)
 		tip.size = Vector2(page.size.x - 14, 18)
@@ -1170,17 +1173,13 @@ func _elements(page: Control) -> void:
 		page.add_child(none)
 
 
-## An element's draw, asked first (the user: elements are precious).
+## An element's draw: the deck's cards of its suit to pick from (the user,
+## 2026-11-26); closing the picker spends nothing.
 func _element_draw(hand: Dictionary, sym: String) -> void:
 	if Hand.suit_card(hand, sym) == "" or hand.hand.size() >= Hand.most():
 		_show_toast(Hand.suit_draw(hand, Game.state, sym))  # why not (spends nothing)
 		return
-	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
-	ConfirmDialog.ask(App.current if App.current else self,
-		"Spend 1 %s to draw a %s card?" % [Data.t("ELEMENT_NAMES").get(sym, sym), Data.t("ELEMENT_SUIT_LABEL").get(suit, suit)],
-		func():
-			if Hand.suit_draw(hand, Game.state, sym) == "":
-				Game._changed())
+	CardPick.show_on(App.current if App.current else self, sym)
 
 
 ## The mat's red message pill (.mat-toast), for 2 seconds.

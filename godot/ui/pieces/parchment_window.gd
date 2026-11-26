@@ -18,6 +18,12 @@ extends NineSlice
 		wrap_title = v
 		if is_node_ready():
 			_fit()
+## One line always: a title too wide for the window gets a smaller font.
+@export var fit_title := false:
+	set(v):
+		fit_title = v
+		if is_node_ready():
+			_fit()
 ## An icon before the title (⚙️ Settings); none: the title alone.
 @export var icon: Texture2D:
 	set(v):
@@ -34,6 +40,7 @@ func _ready() -> void:
 ## How much taller than one line the title's banner is (a wrapped title);
 ## a window's content starts this much lower.
 var extra_height := 0.0
+var _title_px := 0  # the scene's title size (fit_title shrinks from it)
 
 
 func _fit() -> void:
@@ -42,12 +49,19 @@ func _fit() -> void:
 	t.text = title
 	banner.visible = title != ""
 	var f := t.get_theme_font("font")
-	var px := t.get_theme_font_size("font_size")
-	var tw := f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	if _title_px == 0:
+		_title_px = t.get_theme_font_size("font_size")
+	var px := _title_px
 	var ic: TextureRect = $Banner/Icon
 	ic.texture = icon
 	ic.visible = icon != null
 	var iw := ic.size.x + 8 if icon else 0.0  # the icon and its gap
+	var tw := f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var most := size.x - 100 - iw  # the banner can reach almost the window's edges
+	if fit_title and tw > most and most > 0:
+		px = floori(px * most / tw)
+		tw = f.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	t.add_theme_font_size_override("font_size", px)  # the scene's own size unless fit_title shrank it
 	# Too wide for the window (inside its 38px sides): the title wraps, the
 	# banner takes the full width and grows a line (.sheetbox.parch > h2).
 	var room := size.x - 76

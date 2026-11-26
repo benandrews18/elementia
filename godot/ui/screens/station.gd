@@ -258,6 +258,18 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 	return y + 6
 
 
+## Where the suit-cost balloon points from the side card's Craft (the user,
+## 2026-11-26: at the card's suit badges, as from the Crafting Bench; it
+## pointed at Craft): the cost badges on screen (the card is scaled), or
+## the button when there are none.
+static func _costs_rect(costs: Control, btn: Control) -> Rect2:
+	var r := Rect2()
+	for c in costs.get_children():
+		var g: Rect2 = c.get_global_transform() * Rect2(Vector2.ZERO, c.size)
+		r = g if r.size == Vector2.ZERO else r.merge(g)
+	return r if r.size != Vector2.ZERO else btn.get_global_rect()
+
+
 ## The side card for open_card with Pin and Craft under it (in place of the
 ## Crafting Bench), right of the list; _place_side() keeps it on screen.
 func _side_card(w: float) -> void:
@@ -294,7 +306,8 @@ func _side_card(w: float) -> void:
 	pin.set_meta("cmp", "st:pin:" + e.name)
 	var btn: Control = acts.get_node("Craft")
 	if can:
-		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, btn.get_global_rect())))
+		var costs: Control = card.get_node("Card/Costs")
+		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, _costs_rect(costs, btn))))
 		btn.set_meta("tip", "st:craft:" + e.name)
 	btn.set_meta("cmp", "st:craft:" + e.name)
 	_side.add_child(acts)
@@ -471,18 +484,24 @@ func _round_btn(at: Vector2, fold: bool) -> Control:
 	return b
 
 
-## Settings (top right; not on the map, under its card) and Convert (bottom
-## right, once any element is held), on screen `on`.
-static func corner_buttons(on: Control, settings: bool, convert := true) -> void:
-	var w := on.size.x
+## The gear: a tap opens Settings.
+static func gear_button(px: float) -> TextureRect:
 	var gear := TextureRect.new()
 	gear.texture = load("res://assets/ui/btn_settings.webp")
 	gear.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	gear.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
-	gear.size = Vector2(46, 46)
+	gear.size = Vector2(px, px)
 	gear.set_meta("cmp", "settings")
 	gear.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_settings())
+	return gear
+
+
+## Settings (top right; on the map, under its card) and Convert (bottom
+## right, once any element is held), on screen `on`.
+static func corner_buttons(on: Control, settings: bool, convert := true) -> void:
+	var w := on.size.x
+	var gear := gear_button(46)
+	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
 	if settings:
 		on.add_child(gear)
 	# Convert: on screen once any element is held (state.convertRevealed in

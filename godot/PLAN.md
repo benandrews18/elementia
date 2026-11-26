@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 18, element draws and small fixes. Start every session with `git status`: the user may
+**Next task:** step 19, the check screen, clearer. Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -398,7 +398,12 @@ Market, tutorials), motion last (it animates the final layouts).
      in the deck only while they'd complete something, free discards for
      tier 1).
    - Main Menu from the end screen resets the run (no Continue).
-18. **Element draws and small fixes.**
+18. Done (2026-11-26): **Element draws and small fixes.** Hand.suit_draw()
+   takes the picked card (Hand.suit_cards(); CardPick shows them); Tap.hook()
+   on every ScrollContainer (a SLOP deadzone; a scroll cancels the tap);
+   StationScreen.gear_button(); ParchmentWindow.fit_title; OrderInfo's pill.
+   The APK balloon: the list view's side-card Craft anchored on the button,
+   not the badges (StationScreen._costs_rect; the phone used the list view).
    - An element draw opens a picker of the deck's cards of that suit (the
      player chooses); its scrolling fixed (smooth, a drag never taps).
      The same scroll fix in the To-Do list (a drag opens a row's
@@ -493,6 +498,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 18 (element draws and small fixes): pick the card an element draws, drags never tap, Settings everywhere, the challenge pill, the list view's balloon.
 - 2026-11-26: step 17 (rules batch): capstones always on, no card limits, new requests, restrictions from 18, a "?" per Market square, Main Menu ends the run; breakpoints re-tuned.
 - 2026-11-26: step 16 part 2: the simulator (tests/sim.gd, tools/sim.py), breakpoints tuned (2 passes of 200 runs), rules lock re-recorded; the user's big list planned as steps 17-26.
 - 2026-11-21: godot-prompter review (5 passes in REVIEW.md) and its fixes:

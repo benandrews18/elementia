@@ -31,6 +31,7 @@ func _ready() -> void:
 	current = self
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(Juice.make())  # UI feedback on everything added from here on (its numbers: ui/theme/juice.tscn)
+	get_tree().node_added.connect(Tap.hook)  # every list: a drag never taps
 	_floats = Control.new()
 	_floats.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_floats.mouse_filter = MOUSE_FILTER_IGNORE

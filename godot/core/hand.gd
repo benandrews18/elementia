@@ -153,14 +153,18 @@ static func draws_left(h: Dictionary, s: Dictionary) -> int:
 	return mini(n, mini(most() - h.hand.size(), h.deck.size()))
 
 
-## The first card in the deck with this element's suit pip, for 1 of it.
-static func suit_draw(h: Dictionary, s: Dictionary, sym: String) -> String:
+## A card with this element's suit pip from the deck, for 1 of it: `card`
+## (the player's pick), or the deck's first.
+static func suit_draw(h: Dictionary, s: Dictionary, sym: String, card := "") -> String:
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	if Catalog.count(s, sym) < 1:
 		return "You have no %s." % sym
 	if h.hand.size() >= most():
 		return "Your hand is full."
-	var card := suit_card(h, sym)
+	if card != "" and not suit_cards(h, sym).has(card):
+		return "That card isn't in the deck."
+	if card == "":
+		card = suit_card(h, sym)
 	if card == "":
 		return "No %s cards left in the deck." % Data.t("ELEMENT_SUIT_LABEL").get(suit, suit)
 	s.elements[sym] = Catalog.count(s, sym) - 1
@@ -179,6 +183,12 @@ static func suit_card(h: Dictionary, sym: String) -> String:
 		if c != null and c.pips.has(suit):
 			return n
 	return ""
+
+
+## Every deck card with this element's suit pip (the draw's picker).
+static func suit_cards(h: Dictionary, sym: String) -> Array:
+	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
+	return h.deck.filter(func(n): return Catalog.mat_card(n) != null and Catalog.mat_card(n).pips.has(suit))
 
 
 ## Any card from the deck, for 1 Unknown Element token.

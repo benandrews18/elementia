@@ -52,6 +52,11 @@ func _ready() -> void:
 	for i in dice.size():
 		var sym: String = dice[i]
 		var c := StationScreen.element_chip(sym, cw)
+		c.get_node("Num").visible = false  # the user, 2026-11-26: no atomic numbers, white names
+		var nm: Label = c.get_node("Name")
+		nm.add_theme_color_override("font_color", Color.WHITE)
+		nm.add_theme_color_override("font_outline_color", Color("#3b2412"))
+		nm.add_theme_constant_override("outline_size", 4)
 		c.position = Vector2(x0 + i * (cw + chip_gap), 0)
 		c.mouse_filter = MOUSE_FILTER_STOP
 		c.gui_input.connect(func(ev): if Tap.tap(ev):

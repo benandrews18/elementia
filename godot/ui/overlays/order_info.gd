@@ -1,8 +1,9 @@
 ## The challenge window (openOrderInfo(), #comboInfoOverlay): the round
 ## clock on its top-left corner, what it asks in plain words on the banner
-## (TITLES: "3 Ocean Cards", "No Organic Cards"), "Request" or
-## "Restriction" and its multiplier, the rule in big icons, and Reroll (one
-## Unknown Element for another challenge) beside OK. Also the
+## (TITLES: "3 Ocean Cards", "No Organic Cards"; always one line), the rule
+## in big icons, Reroll (one Unknown Element for another challenge) beside
+## OK, and a pill on the bottom edge: "REQUEST ×2" or "RESTRICTION −25%"
+## (the user, 2026-11-26). Also the
 ## challenge's line on the shutter (orderShutterLine()). Names and wording
 ## live here: Orders holds only the rules.
 class_name OrderInfo
@@ -42,6 +43,13 @@ static func _suit_word(su: String) -> String:
 	return String(Data.t("ELEMENT_SUIT_LABEL")[su]).capitalize()
 
 
+## The pill's words: "REQUEST ×2", "RESTRICTION −25%".
+static func pill_text(o: Dictionary) -> String:
+	if is_request(o):
+		return "REQUEST ×" + Util.js_str(Data.t("ORDER_REQUEST_MULT"))
+	return "RESTRICTION −%d%%" % roundi((1.0 - float(Data.t("ORDER_RESTRICT_MULT"))) * 100)
+
+
 static func mult_label(o: Dictionary) -> String:
 	if o.id == "grand":
 		return Util.thousands(int(Data.t("GRAND_EXHIBITION_TARGET")))
@@ -70,6 +78,7 @@ static func open(on: Control) -> OrderInfo:
 
 
 var _can_swap := false
+var _pill: Control
 
 
 func _ready() -> void:
@@ -109,12 +118,12 @@ func _build() -> void:
 	var win: ParchmentWindow = $Window
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * 38
-	win.size.x = w  # first: the title wraps to this width
-	win.wrap_title = true
+	win.size.x = w  # first: the title fits this width
+	win.fit_title = true
 	win.title = title_of(o)
-	var text := ("Reach %s ⚛ at the final check" % mult_label(o)) if grand else "%s: %s⚛%s" % [
-		"Request" if is_request(o) else "Restriction", mult_label(o), "" if is_request(o) else " if broken"]
+	var text := "Reach %s ⚛ at the final check" % mult_label(o)  # the Grand Exhibition's; a challenge's: its pill
 	var d: Label = $Window/Desc
+	d.visible = grand
 	var f := d.get_theme_font("font")
 	var px := d.get_theme_font_size("font_size")
 	d.text = text.replace("⚛", "")
@@ -122,7 +131,7 @@ func _build() -> void:
 	d.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var lines := f.get_multiline_string_size(d.text + "  ", HORIZONTAL_ALIGNMENT_LEFT, inner - 24, px).y / f.get_height(px)
-	var dh := roundf(lines) * px * 1.5
+	var dh := roundf(lines) * px * 1.5 if grand else 0.0
 	d.size = Vector2(inner, dh)
 	d.position = Vector2(38, 59 + win.extra_height)
 	var rule: Control = $Window/Rule
@@ -139,7 +148,7 @@ func _build() -> void:
 	var atom: Control = $Window/Atom
 	var rest: Label = $Window/Rest
 	var tw := f.get_string_size(d.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	atom.visible = tw < inner - 20
+	atom.visible = grand and tw < inner - 20
 	rest.visible = false
 	if atom.visible:
 		var mx := f.get_string_size(text.get_slice("⚛", 0), HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
@@ -156,6 +165,12 @@ func _build() -> void:
 			rest.position = Vector2(x0 + mx + 18, d.position.y)
 			rest.size = Vector2(after + 4, dh)
 		d.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if is_instance_valid(_pill):
+		_pill.queue_free()
+	if not grand:
+		_pill = _make_pill(o)
+		_pill.position = Vector2((w - _pill.size.x) / 2, h - _pill.size.y / 2 - 6)
+		win.add_child(_pill)
 	var clock: Control = $Window/Clock
 	for c in clock.get_children():
 		c.queue_free()
@@ -177,6 +192,21 @@ func _build() -> void:
 	for b in btns:
 		b.position = Vector2(x, by)
 		x += b.size.x + 10
+
+
+## The pill on the window's bottom edge: green for a request, red for a
+## restriction.
+func _make_pill(o: Dictionary) -> Label:
+	var p := Tok.label(pill_text(o), 13, Color.WHITE, 900)
+	var sb := Tok.box(Tok.OK if is_request(o) else Tok.BAD, 14, 2, Color("#3b2412"), 3, 2, Color(0, 0, 0, 0.35))
+	sb.content_margin_left = 14
+	sb.content_margin_right = 14
+	sb.content_margin_top = 4
+	sb.content_margin_bottom = 4
+	p.add_theme_stylebox_override("normal", sb)
+	p.size = p.get_minimum_size()
+	p.set_meta("cmp", "order:pill")
+	return p
 
 
 ## .ord-rule: the rule in big icons and figures (ICON), 12px apart.

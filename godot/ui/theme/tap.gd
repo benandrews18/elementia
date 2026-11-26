@@ -8,6 +8,7 @@ class_name Tap
 const SLOP := 10.0  # how far a finger may wander and still tap
 
 static var _down: Variant = null  # where the last press was; null: none seen (tests send bare releases)
+static var _scrolled := false  # a list scrolled since that press (App hooks every ScrollContainer)
 
 
 static func tap(ev: InputEvent) -> bool:
@@ -15,5 +16,14 @@ static func tap(ev: InputEvent) -> bool:
 		return false
 	if ev.pressed:
 		_down = ev.global_position
+		_scrolled = false
 		return false
-	return _down == null or ev.global_position.distance_to(_down) <= SLOP
+	return not _scrolled and (_down == null or ev.global_position.distance_to(_down) <= SLOP)
+
+
+## Every ScrollContainer: a finger must move SLOP before it scrolls (a
+## shaky tap stays a tap); once it scrolls, the press is no tap.
+static func hook(n: Node) -> void:
+	if n is ScrollContainer:
+		n.scroll_deadzone = int(SLOP)
+		n.scroll_started.connect(func(): _scrolled = true)
