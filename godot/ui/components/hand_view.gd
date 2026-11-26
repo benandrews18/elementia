@@ -4,10 +4,11 @@
 ## each), each tilted along an arc. Each card overlaps the next one's left
 ## side, so every card's right side shows: its suit pips, its size badge
 ## (the user, 2026-11-22). A tap picks a card, another tap puts it back
-## (lift(name): the screen keeps the picks, DisplayMatScreen). One pick is
-## lifted out of the fan as the full card, components and all, on top (the
-## one to play); two or more (up to 5, for one Discard) sit raised with a
-## tick. A tap on the hand's blank space: lift("") (let go of them all).
+## (lift(name): the screen keeps the picks, DisplayMatScreen). Picks sit
+## raised in the fan (two or more with a tick); the last one tapped shows as
+## the full card, components and all, big but in its place in the fan (the
+## user, 2026-11-26). A ⭐ marks cards of a known collection the hand can
+## finish. A tap on the hand's blank space: lift("") (let go of them all).
 class_name HandView
 extends Control
 
@@ -25,7 +26,8 @@ signal lift(name: String)  # a card tapped (pick or put back); "": a blank tap, 
 @export var deal_time := 0.32  # each flying up from below into its place
 
 var lifted := ""
-var picks: Array = []  # two or more picked (for Discard): raised, ticked
+var picks: Array = []  # picked: raised (two or more: ticked)
+var starred := {}  # card name -> true: its ⭐
 ## When the check's deal starts (Time ticks, ms; 0: none). The hand is
 ## rebuilt on every redraw, so each card works out how far along its own
 ## fly-in is from this, and a redraw mid-deal doesn't restart it.
@@ -44,9 +46,10 @@ static func hold() -> void:
 	deal_at = -1
 
 
-func show_hand(names: Array, lifted_name: String, picked: Array = []) -> void:
+func show_hand(names: Array, lifted_name: String, picked: Array = [], stars := {}) -> void:
 	lifted = lifted_name
 	picks = picked
+	starred = stars
 	set_meta("cmp", "hand")  # the tutorial points at the fan
 	if not gui_input.is_connected(_blank):
 		gui_input.connect(_blank)
@@ -66,9 +69,9 @@ func show_hand(names: Array, lifted_name: String, picked: Array = []) -> void:
 		var x = _fan(rows[r], cw, foot, 0 if r == 0 else rows[0].size())
 		if x >= 0:
 			lift_x = x
-			lift_foot = minf(foot + 2, size.y - 4)
+			lift_foot = foot - 18  # raised like the other picks
 	if lift_x >= 0:
-		_lifted_card(lifted, lift_x, lift_foot)  # last: over the whole hand
+		_lifted_card(lifted, lift_x, lift_foot, ch * 1.3)  # last: over the whole hand
 
 
 ## One row, its cards' feet on `foot`. Returns the lifted card's centre x
@@ -82,7 +85,7 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 	var lift_x := -1.0
 	for i in range(n - 1, -1, -1):  # right to left: each card drawn over the one to its right
 		var nm: String = names[i]
-		var card := ItemCard.make(nm, {"size": true})
+		var card := ItemCard.make(nm, {"size": true, "star": starred.has(nm)})
 		card.size = Vector2(cw, ch)
 		card.pivot_offset = Vector2(cw / 2, ch)  # tilts from its foot
 		var d := i - mid
@@ -95,8 +98,9 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 			lift_x = card.position.x + cw / 2
 		card.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 		add_child(card)
-		if picks.size() > 1 and picks.has(nm):  # picked for Discard: raised, ticked
+		if picks.has(nm):  # picked: raised (two or more: ticked, for Discard)
 			card.position.y -= 18
+		if picks.size() > 1 and picks.has(nm):
 			var tk := Tok.tick(Color.WHITE, 22, Tok.OK, Tok.CARD)
 			tk.position = Vector2(cw - 16, -8)
 			tk.mouse_filter = MOUSE_FILTER_IGNORE
@@ -105,19 +109,29 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 	return lift_x
 
 
-## The lifted card: the full card (CardPop's side card), raised out of the
-## fan over its place, kept on screen; a tap puts it back.
-func _lifted_card(nm: String, centre_x: float, foot: float) -> void:
+## The last card tapped: the full card (CardPop's side card), big, standing
+## in its place in the fan (its foot with the raised picks), shrunk to fit
+## the hand's area but never under least_h tall (then it rises over the
+## buttons); a tap puts it back.
+func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> void:
 	var cap: bool = Data.t("ITEM_TIER").get(nm, "") == "CAPSTONE"
 	var full := CardPop.side_card(nm, lifted_cap_w if cap else lifted_w, true)
 	var sz: Vector2 = full.size * full.scale
+	var room := maxf(foot + 4, least_h)
+	if sz.y > room:  # taller than the room above its foot: smaller
+		full.scale *= room / sz.y
+		sz = full.size * full.scale
 	var holder := Control.new()  # takes the tap (the side card ignores the mouse)
 	holder.size = sz
-	holder.position = Vector2(clampf(centre_x - sz.x / 2, 4, size.x - 4 - sz.x), foot - sz.y)  # over its own row (the user: a top-row card pops out there)
+	holder.position = Vector2(clampf(centre_x - sz.x / 2, 4, size.x - 4 - sz.x), foot - sz.y)
 	holder.mouse_filter = MOUSE_FILTER_STOP
 	holder.set_meta("hand", nm)
 	holder.set_meta("cmp", "hand:lifted")
 	holder.add_child(full)
+	if starred.has(nm):
+		var star := ItemCard.star_mark(24)
+		star.position = Vector2(sz.x - 24 - 6, -8)
+		holder.add_child(star)
 	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 	add_child(holder)
 

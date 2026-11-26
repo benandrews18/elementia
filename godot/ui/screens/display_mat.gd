@@ -38,6 +38,7 @@ var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
 var _hub_h := HUB_H
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
+var _empties: Array = []  # the mat's open slots (Rect2 on the page): where the picks' landings may show
 var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
 var stage_override := -1  # the growth reveal draws the mat as it was first (grow())
@@ -70,6 +71,7 @@ func _redraw() -> void:
 	if playing:
 		return
 	_mat_nodes.clear()
+	_empties.clear()
 	_chip_nodes.clear()
 	slot_rects.clear()
 	for c in _body.get_children():
@@ -339,6 +341,8 @@ func _page_controls(page: Control) -> void:
 	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
 	if locked():  # between checks: the Combo Lab is where combos are tried (with this run's items)
+		if Game._in_check():  # never during a check, even before its hand is dealt (the user, 2026-11-26)
+			return
 		var bw := Tok.font(800).get_string_size("Combo Lab", HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 24
 		var lab_btn := _round_button("Combo Lab", Vector2(bw, 34), 12, Tok.GOLD)
 		lab_btn.position = Vector2(x2 - bw, bottom + 24 - 34)
@@ -662,51 +666,52 @@ func _on_card_input(ev: InputEvent, name: String) -> void:
 ## they'd add shows over the mat.
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	picks = picks.filter(func(n): return h.hand.has(n))
-	lifted = picks[0] if picks.size() == 1 else ""
+	lifted = picks.back() if not picks.is_empty() else ""  # the last tapped stays big (the user, 2026-11-26)
 	selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var row_y := page.position.y + page.size.y + 8
-	var fl := Hand.fresh_left(h)
-	_hand_button("discard", "🗑️", "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
+	# Gold-rimmed circles (the user, 2026-11-26): Discard on the left, Pass
+	# in the middle (stop playing and lock in), the deck (a tap: the whole
+	# Inventory, to plan) and Draw on the right.
+	_hand_button("discard", _card_icon("cards_scatter"), "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
+	_hand_button("pass", Tok.icon("🏁", 30), "Pass", "", Vector2((size.x - BTN) / 2, row_y), false, hand_pass)
 	var draws := Hand.draws_left(h, Game.state)
-	_hand_button("draw", "🃏", "Draw", str(draws), Vector2(size.x - side - BTN, row_y), draws <= 0, _flip_view, view == "elements")
-	# The deck's count in the middle; a tap: the whole Inventory, to plan (the user, 2026-11-23).
-	# Done beside it: stop playing and lock in (the user, 2026-11-24: a hand with nothing that fits).
-	var dw := 124.0
-	var dx := (size.x - dw - 8 - BTN) / 2
-	_hand_button("pass", "🏁", "Done", "", Vector2(dx + dw + 8, row_y), false, hand_pass)
-	var deck := _round_button("", Vector2(dw, 46), 13, Color("#1c2b3d"))
-	deck.position = Vector2(dx, row_y + (BTN - 46) / 2)
-	deck.set_meta("cmp", "hand:deck")
-	var dn := Tok.label("%d in deck" % h.deck.size(), 14, Color.WHITE, 900)
+	var draw_ic := _card_icon("card")
+	var plus := Tok.label("+", 26, Tok.GOLD, 900)
+	plus.add_theme_color_override("font_outline_color", Color("#3b2412"))
+	plus.add_theme_constant_override("outline_size", 6)
+	plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	plus.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	plus.size = draw_ic.size
+	plus.mouse_filter = MOUSE_FILTER_IGNORE
+	draw_ic.add_child(plus)
+	_hand_button("draw", draw_ic, "Draw", str(draws), Vector2(size.x - side - BTN, row_y), draws <= 0, _flip_view, view == "elements")
+	var deck_ic := _card_icon("cards_deck")
+	var dn := Tok.label(str(h.deck.size()), 17, Color.WHITE, 900)
+	dn.add_theme_color_override("font_outline_color", Color("#0b2a40"))
+	dn.add_theme_constant_override("outline_size", 6)
 	dn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dn.position = Vector2(0, 5)
-	dn.size = Vector2(dw, 20)
+	dn.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dn.size = deck_ic.size - Vector2(0, 6)
 	dn.mouse_filter = MOUSE_FILTER_IGNORE
-	deck.add_child(dn)
-	var sub := Tok.label("%d new · see all" % fl if fl else "Tap: see them all", 10, Color("#ffe08a"), 800)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.position = Vector2(0, 25)
-	sub.size = Vector2(dw, 14)
-	sub.mouse_filter = MOUSE_FILTER_IGNORE
-	deck.add_child(sub)
-	deck.pressed.connect(func():
+	deck_ic.add_child(dn)
+	_hand_button("deck", deck_ic, "Deck", "", Vector2(size.x - side - 2 * BTN - 10, row_y), false, func():
 		browsing = true
 		picks = []
 		_redraw())
-	_body.add_child(deck)
 	if not _ending and HandView.deal_at >= 0 and Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends itself
 		_ending = true
 		get_tree().create_timer(0.9).timeout.connect(func(): if App.current and is_same(Game.check_hand(), h): App.current.hand_lock_in())  # no node captured: a freed one errors
-	var top_y := row_y + BTN + 4
+	var top_y := row_y + BTN + 30  # the labels, and room for raised picks
 	_hand_view = HandView.new()
 	_hand_view.position = Vector2(0, top_y)
 	_hand_view.size = Vector2(size.x, bottom - top_y)
 	_body.add_child(_hand_view)
-	_hand_view.show_hand(h.hand, lifted, picks)
+	_hand_view.show_hand(h.hand, lifted, picks, starred(h))
 	_hand_view.lift.connect(_lift)
 	_show_preview()
-	StationScreen.corner_buttons(_body, false)  # Convert, as on the station
+	if view != "elements":  # the Elements page has its own, at its lower right
+		StationScreen.corner_buttons(_body, false)  # Convert, as on the station
 	if App.current:
 		App.current.sync_hub()
 
@@ -736,25 +741,45 @@ func _flip_view() -> void:
 	_redraw()
 
 
-const BTN := 54.0  # Discard and Draw: round, the Convert button's look
+const BTN := 58.0  # the check's round buttons: the size of 🔍 and Convert
 
 
-## Discard / Draw: a round gold button with its icon, its name under it and
-## a count badge; dimmed when it can't be used (its tap still says why).
-func _hand_button(id: String, icon: String, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false) -> void:
-	var b := Panel.new()
-	b.add_theme_stylebox_override("panel", Tok.box(Color("#fff3d6") if lit else Tok.GOLD, BTN / 2, 3, Color("#ffe08a") if lit else Color("#5c4a20"), 4, 3, Color(0, 0, 0, 0.35)))
+## A white card icon (images/playing_card_icons.png, cut by hand into
+## assets/ui), 32px on its long side.
+static func _card_icon(n: String) -> TextureRect:
+	var t := TextureRect.new()
+	t.texture = load("res://assets/ui/%s.png" % n)
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.size = Vector2(32, 32)
+	t.mouse_filter = MOUSE_FILTER_IGNORE
+	return t
+
+
+## Discard / Pass / the deck / Draw: a gold-rimmed circle (assets/ui/
+## btn_round.webp, 🔍's rim) with its icon, its name under it and a count
+## badge; dimmed when it can't be used (its tap still says why); lit: Draw
+## while its page shows.
+func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false) -> void:
+	var b := TextureRect.new()
+	b.texture = load("res://assets/ui/btn_round.webp")
+	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	b.position = at
 	b.size = Vector2(BTN, BTN)
+	b.mouse_filter = MOUSE_FILTER_STOP
 	b.set_meta("cmp", "hand:" + id)
-	var ic := Tok.icon(icon, 28)
-	ic.position = Vector2((BTN - 28) / 2, 7)
+	if lit:
+		b.add_child(_lit_ring())
+	ic.position = (Vector2(BTN, BTN) - ic.size) / 2
 	ic.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(ic)
-	var l := Tok.label(label, 10, Tok.CARD_INK, 900)
+	var l := Tok.label(label, 11, Color.WHITE, 900)
+	l.add_theme_color_override("font_outline_color", Color("#0b1a2a"))
+	l.add_theme_constant_override("outline_size", 4)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.position = Vector2(0, BTN - 18)
-	l.size = Vector2(BTN, 12)
+	l.position = Vector2(-10, BTN - 1)
+	l.size = Vector2(BTN + 20, 14)
 	l.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(l)
 	if badge != "":
@@ -763,6 +788,16 @@ func _hand_button(id: String, icon: String, label: String, badge: String, at: Ve
 		b.modulate = Color(0.6, 0.6, 0.6, 0.75)
 	b.gui_input.connect(func(ev): if Tap.tap(ev): fn.call())
 	_body.add_child(b)
+
+
+## Draw while its page shows: a pale gold ring round the button.
+static func _lit_ring() -> Panel:
+	var r := Panel.new()
+	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, BTN / 2 + 3, 3, Color("#ffe08a")))
+	r.position = Vector2(-3, -3)
+	r.size = Vector2(BTN + 6, BTN + 6)
+	r.mouse_filter = MOUSE_FILTER_IGNORE
+	return r
 
 
 ## A hand card tapped: picked, or put back if it was ("": a blank tap in
@@ -776,12 +811,12 @@ func _lift(n: String) -> void:
 		picks.erase(n)
 	else:
 		picks.append(n)
-	lifted = picks[0] if picks.size() == 1 else ""
+	lifted = picks.back() if not picks.is_empty() else ""
 	if view == "elements" and not picks.is_empty():  # picking to play: the mat again
 		view = "mat"
 		_redraw()
 		return
-	_hand_view.show_hand(Game.state.hand.hand, lifted, picks)
+	_hand_view.show_hand(Game.state.hand.hand, lifted, picks, starred(Game.state.hand))
 	var dis := _find_cmp(_body, "hand:discard")
 	if dis:
 		dis.modulate = Color(0.6, 0.6, 0.6, 0.75) if picks.is_empty() or Game.state.hand.tosses <= 0 else Color.WHITE
@@ -842,9 +877,13 @@ func _show_preview() -> void:
 			ch = maxf(ch, c.size.y)
 		var tot := Tok.label("= %d" % roundi(after.total), 13, Tok.CARD_INK, 900)
 		var bh := maxf(ch + 6, 32)
+		pill.add_theme_stylebox_override("normal", StyleBoxEmpty.new())  # one piece with the chips (the user, 2026-11-26): the gain as green text
+		pill.add_theme_color_override("font_color", Tok.OK.darkened(0.25) if d > 0 else Tok.BAD if d < 0 else Tok.MUTE)
+		pill.add_theme_font_size_override("font_size", 16)
+		pill.size = pill.get_minimum_size()
 		pill.position = Vector2(x + 4, (bh - pill.size.y) / 2)
 		box.add_child(pill)
-		tot.position = Vector2(pill.position.x + pill.size.x + 11, (bh - tot.get_minimum_size().y) / 2)
+		tot.position = Vector2(pill.position.x + pill.size.x + 6, (bh - tot.get_minimum_size().y) / 2)
 		tot.mouse_filter = MOUSE_FILTER_IGNORE
 		box.add_child(tot)
 		box.size = Vector2(tot.position.x + tot.get_minimum_size().x + 10, bh)
@@ -922,7 +961,17 @@ func _landings(names: Array) -> Array:
 				var per: int = 1 if sl.kind == "top" else pack.L.perSlot
 				var mh := (r.size.y - (per - 1) * 2) / per
 				out.append(Rect2(r.position + Vector2(0, k * (mh + 2)), Vector2(r.size.x, mh)))
-	return out
+	# Lit only on open slots (the user, 2026-11-26): a landing over a card
+	# already there (the packing moved it) takes an open slot instead.
+	var taken: Array = _mat_nodes.values().filter(func(c): return is_instance_valid(c)).map(func(c): return Rect2(c.position, c.size).grow(-2))
+	var free: Array = _empties.filter(func(e): return not out.any(func(r): return r.grow(-2).intersects(e)))
+	var lit := []
+	for r in out:
+		if not taken.any(func(t): return t.intersects(r.grow(-2))):
+			lit.append(r)
+		elif not free.is_empty():
+			lit.append(free.pop_front())
+	return lit
 
 
 ## Can the picked cards be played (the hub's Play in full colour)?
@@ -1109,10 +1158,20 @@ func _elements(page: Control) -> void:
 	held = Util.stable_sort(held, func(a, b): return an.get(a, 999) - an.get(b, 999))
 	var inner := page.size.x - 14
 	var cw := (inner - 7 * 5) / 8
+	var row0 := 7.0
+	if hand != null and not (held.is_empty() and int(Util.get_or(Game.state, "emptyElements", 0)) == 0):
+		var tip := Tok.label("Spend elements to draw a card of the same type", 12, Color.BLACK, 800)
+		tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tip.position = Vector2(7, 6)
+		tip.size = Vector2(page.size.x - 14, 18)
+		tip.clip_text = true
+		tip.set_meta("cmp", "el:tip")
+		page.add_child(tip)
+		row0 = 28.0
 	for i in held.size():
 		var sym: String = held[i]
 		var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
-		var at := Vector2(7 + (i % 8) * (cw + 5), 7 + (i / 8) * (cw + 3 + 12 + 6))
+		var at := Vector2(7 + (i % 8) * (cw + 5), row0 + (i / 8) * (cw + 3 + 12 + 6))
 		var box := Panel.new()
 		box.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 8, 5, color))
 		box.position = at
@@ -1136,7 +1195,7 @@ func _elements(page: Control) -> void:
 		page.add_child(q)
 	var unknown := int(Util.get_or(Game.state, "emptyElements", 0))
 	if hand != null and unknown > 0:  # a check with cards: an Unknown Element picks any deck card
-		var at := Vector2(7 + (held.size() % 8) * (cw + 5), 7 + (held.size() / 8) * (cw + 3 + 12 + 6))
+		var at := Vector2(7 + (held.size() % 8) * (cw + 5), row0 + (held.size() / 8) * (cw + 3 + 12 + 6))
 		var sq := LockInReward.unknown_square(cw)
 		sq.position = at
 		sq.mouse_filter = MOUSE_FILTER_STOP
@@ -1152,13 +1211,11 @@ func _elements(page: Control) -> void:
 		q.position = at + Vector2(0, cw + 3)
 		q.size = Vector2(cw, 12)
 		page.add_child(q)
-	if hand != null and not (held.is_empty() and unknown == 0):
-		var tip := Tok.label("Tap an element to spend 1 on a card of its suit.", 12, Color("#8a6a48"), 800)
-		tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tip.position = Vector2(7, page.size.y - 24)
-		tip.size = Vector2(page.size.x - 14, 18)
-		tip.clip_text = true
-		page.add_child(tip)
+	if hand != null:  # Convert at the page's lower right (the user, 2026-11-26)
+		var conv := StationScreen.convert_button(46)
+		if conv:
+			conv.position = page.size - Vector2(46 + 8, 46 + 8)
+			page.add_child(conv)
 	if held.is_empty():
 		var none := Tok.label("No loose elements — visit a station and roll.", 14, Color("#8a6a48"), 400)
 		none.position = Vector2(12, 12)
@@ -1411,8 +1468,11 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var col_w := (inner - (open - 1) * cols_gap) / open  # open columns share the width
 	var lit_suits: Array = sc.combos.suit.map(func(g): return g.name)
 	var lit_st: Array = sc.combos.station.map(func(g): return g.name)
+	var in_combo := combo_members(cards, sc)
+	var stars := starred(Game.check_hand()) if Game.check_hand() != null else {}
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
-		return {"mini": mini, "in_grid": false, "complete": sc.completeNames.has(c.name), "lit_suits": lit_suits, "lit_stations": lit_st}
+		return {"mini": mini, "in_grid": false, "complete": sc.completeNames.has(c.name), "lit_suits": lit_suits, "lit_stations": lit_st,
+			"combo": in_combo.has(c.name), "star": stars.has(c.name)}
 	for i in pack.slot.size():
 		var sl: Dictionary = pack.slot[i]
 		if sl.kind == "locked":
@@ -1448,8 +1508,34 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					_mat_nodes[stack[k].card.name] = mini
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
+					_empties.append(Rect2(at, Vector2(col_w, mh)))
 		else:
 			page.add_child(_dashed(Rect2(pos, Vector2(col_w, h)), 12))
+			_empties.append(Rect2(pos, Vector2(col_w, h)))
+
+
+## The cards in a live station, suit or component combo (a solid gold
+## border: the user, 2026-11-26).
+static func combo_members(cards: Array, sc: Dictionary) -> Dictionary:
+	var out := {}
+	for c in cards:
+		if sc.combos.station.any(func(g): return c.stations.has(g.name)) or sc.combos.suit.any(func(g): return c.pips.has(g.name)) 				or sc.combos.component.any(func(g): return c.name == g.name or Mat.direct_items(c).has(g.name)):
+			out[c.name] = true
+	return out
+
+
+## The cards that get a ⭐ (the user, 2026-11-26): each known collection
+## whose cards are all on screen (the hand and the mat) with at least one
+## still in the hand (not when all are on the mat).
+static func starred(h: Dictionary) -> Dictionary:
+	var out := {}
+	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
+	var on_mat: Array = Game.state.get("mat", [])
+	for col in Mat.collections():
+		if found.has(col.id) and col.items.all(func(n): return h.hand.has(n) or on_mat.has(n)) and col.items.any(func(n): return h.hand.has(n)):
+			for n in col.items:
+				out[n] = true
+	return out
 
 
 func _stage() -> int:

@@ -503,28 +503,36 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
 	if settings:
 		on.add_child(gear)
-	# Convert: on screen once any element is held (state.convertRevealed in
-	# the HTML game's updateHub()), with how many 3:1 conversions are possible.
-	var held: Array = Util.get_or(Game.state, "elements", {}).values()
-	if convert and (Game.state.get("convertRevealed") or held.any(func(v): return v > 0)):
-		var conv := TextureRect.new()
-		conv.texture = load("res://assets/ui/btn_quark.webp")
-		conv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		conv.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var conv := convert_button(58) if convert else null
+	if conv:
 		conv.position = Vector2(w - 16 - 58, on.size.y - HubBar.H - 14 - 58)
-		conv.size = Vector2(58, 58)
-		conv.set_meta("cmp", "convert")
-		conv.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
-			if App.current.panel == "convert":
-				App.current.close_panel()
-			else:
-				App.current.open_panel("convert"))
 		on.add_child(conv)
-		var n := 0
-		for v in held:
-			n += int(v) / int(Data.t("CONVERT_RATE"))
-		if n > 0:
-			conv.add_child(HubBar._badge(str(n), Vector2(58 + 7 - 24, -7)))
+
+
+## Convert: on screen once any element is held (state.convertRevealed in
+## the HTML game's updateHub()), with how many 3:1 conversions are
+## possible; null before that. The caller places it.
+static func convert_button(px: float) -> TextureRect:
+	var held: Array = Util.get_or(Game.state, "elements", {}).values()
+	if not (Game.state.get("convertRevealed") or held.any(func(v): return v > 0)):
+		return null
+	var conv := TextureRect.new()
+	conv.texture = load("res://assets/ui/btn_quark.webp")
+	conv.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	conv.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	conv.size = Vector2(px, px)
+	conv.set_meta("cmp", "convert")
+	conv.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
+		if App.current.panel == "convert":
+			App.current.close_panel()
+		else:
+			App.current.open_panel("convert"))
+	var n := 0
+	for v in held:
+		n += int(v) / int(Data.t("CONVERT_RATE"))
+	if n > 0:
+		conv.add_child(HubBar._badge(str(n), Vector2(px + 7 - 24, -7)))
+	return conv
 
 
 ## The first control here (in tree order) whose "tip" or "cmp" tag starts

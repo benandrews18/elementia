@@ -6,7 +6,10 @@
 ## drops its name), wide (capstone art 1.5x), complete (points doubled),
 ## tag (the name its parts are measured under in comparisons; default the
 ## item), no_stations (no station badges: the station shop), on (already on the mat: dimmed), lit_suits / lit_stations (names in a live
-## combo: their badges get a gold halo), size (the size badge, bottom right:
+## combo: their badges get a solid gold ring), combo (the card is in a live
+## combo: a solid gold border, the rest black; no glow: the user,
+## 2026-11-26), star (a ⭐ in the top right: a known collection it's part of
+## can be finished from the hand), size (the size badge, bottom right:
 ## cards in the hand, whose right side shows in the fan).
 class_name ItemCard
 extends Control
@@ -48,7 +51,11 @@ func _ready() -> void:
 	var shop: bool = opts.get("shop", false)  # a station shop card: one icon, name and circle size on every tier (the user, 2026-11-23)
 	var border := 3 if mini else 4
 	# Face: parchment, black border, rounded, soft shadow.
-	$Face.add_theme_stylebox_override("panel", face_mini if mini else face)
+	var fs: StyleBox = face_mini if mini else face
+	if opts.get("combo"):
+		fs = fs.duplicate()
+		fs.border_color = Tok.GOLD
+	$Face.add_theme_stylebox_override("panel", fs)
 	# Icon over name, centred (a grid mini card starts from the top).
 	var col: VBoxContainer = $Col
 	# CSS padding: 5px 3px 3px (mini 2px; 3px on top in a grid).
@@ -105,14 +112,13 @@ func _ready() -> void:
 	for i in card.pips.size():
 		var su: String = card.pips[i]
 		var pip := Panel.new()
-		pip.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), psz / 2, 1.5))
+		var lit_su: bool = opts.get("lit_suits", []).has(su)
+		pip.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), psz / 2, 2.5 if lit_su else 1.5, Tok.GOLD if lit_su else Color.BLACK))
 		pip.size = Vector2(psz, psz)
 		pip.mouse_filter = MOUSE_FILTER_IGNORE
 		var g := Tok.icon("suit:" + su, psz * 0.6 if shop else 11.0 if mini else 16.0)
 		g.position = (pip.size - g.size) / 2
 		pip.add_child(g)
-		if opts.get("lit_suits", []).has(su):
-			pip.add_child(_halo(psz))
 		if opts.get("fade_suits") and not Game.suit_held(su):  # a shop card: a suit you hold none of (the user, 2026-11-24)
 			pip.modulate.a = 0.35
 		pip.set_meta("cmp", "%s:pip%d" % [opts.get("tag", item), i])
@@ -122,13 +128,12 @@ func _ready() -> void:
 	var ssz := 18.0 if mini else 26.0
 	for st in card.stations:
 		var b := Panel.new()
-		b.add_theme_stylebox_override("panel", Tok.box(Tok.station_color(st), ssz / 2, 1.5))
+		var lit_st: bool = opts.get("lit_stations", []).has(st)
+		b.add_theme_stylebox_override("panel", Tok.box(Tok.station_color(st), ssz / 2, 2.5 if lit_st else 1.5, Tok.GOLD if lit_st else Color.BLACK))
 		b.custom_minimum_size = Vector2(ssz, ssz)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		var g := Tok.icon(Catalog.station(st).emoji, 12.0 if mini else 17.0)
 		g.material = Tok.outline(12.0 if mini else 17.0)
-		if opts.get("lit_stations", []).has(st):
-			b.add_child(_halo(ssz))
 		var k := "%s:st%d" % [opts.get("tag", item), _stations.get_child_count()]
 		b.set_meta("cmp", k)
 		g.set_meta("cmp", k + "icon")
@@ -141,6 +146,10 @@ func _ready() -> void:
 		var sb := SizeBadge.make(item, psz, 1.5)
 		sb.name = "Size"
 		add_child(sb)
+	if opts.get("star"):
+		var star := star_mark(16.0 if mini else 22.0)
+		star.name = "Star"
+		add_child(star)
 	if opts.get("on"):
 		modulate = Color(0.6, 0.6, 0.6)
 	resized.connect(_place)
@@ -185,14 +194,18 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 
 ## "Lit" (part of a live combo): a 3.5px gold ring and a 10px glow, behind
 ## the badge (.mm-pip.lit, .mm-station.lit).
-static func _halo(px: float) -> Panel:
-	var h := Panel.new()
-	h.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, px / 2 + 3.5, 0, Color.BLACK, 5, 0, Color(Tok.GOLD, 0.9)))
-	h.position = Vector2(-3.5, -3.5)
-	h.size = Vector2(px + 7, px + 7)
-	h.show_behind_parent = true
-	h.mouse_filter = MOUSE_FILTER_IGNORE
-	return h
+## The collection ⭐ (a known collection the hand can finish): a gold star
+## with a dark edge, riding the card's top-right corner (placed in _place()).
+static func star_mark(px: float) -> Control:
+	var holder := Control.new()
+	holder.size = Vector2(px, px)
+	holder.mouse_filter = MOUSE_FILTER_IGNORE
+	holder.set_meta("cmp", "card:star")
+	var back := Tok.star(Color("#3b2412"), px + 4)
+	back.position = Vector2(-2, -2)
+	holder.add_child(back)
+	holder.add_child(Tok.star(Color("#ffd166"), px))
+	return holder
 
 
 static func _gap(px: float) -> Control:
@@ -212,6 +225,9 @@ func _place() -> void:
 		_pips[i].position = Vector2(size.x - border + 3 - psz, border - 3 + i * (psz + 2))
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
+	var star := get_node_or_null("Star") as Control
+	if star:  # the top right, just left of the pips
+		star.position = Vector2(size.x - border + 3 - psz - star.size.x - 2, border - 1)
 	var sb := get_node_or_null("Size") as Control
 	if sb:  # bottom-left, straddling the border like the points badge; the stations centre right of it
 		sb.position = Vector2(border - 3, size.y - border + 3 - psz)

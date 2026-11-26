@@ -1,8 +1,6 @@
 ## Collections (renderCollectionsList(); the title screen's Collections, and
 ## from a run): how many of the named collections are found, then one
-## CollectionRow each for the found ones (switch: all on the mat or off) and
-## the ones a clue has started; in a run, those that can switch right now
-## first. From the title screen: the Stars bubble by the title, and the clue
+## CollectionRow each for the found ones and the ones a clue has started. From the title screen: the Stars bubble by the title, and the clue
 ## buttons (one clue for CLUE_COST Stars, or all the Stars allow), which open
 ## the gifts (ClueOpen). A dark window like Saved Layouts. The layout is
 ## ui/overlays/collections.tscn.
@@ -57,11 +55,8 @@ func _build() -> void:
 	shop.get_node("All/Row/Text").text = "Open all" + (" (%d)" % can if can > 1 else "")
 	shop.get_node("One").modulate.a = 1.0 if can > 0 and left > 0 else 0.45
 	shop.get_node("All").modulate.a = 1.0 if can > 1 and left > 0 else 0.45
-	# Found ones and clue leads, in collection order; in a run the switchable ones first.
-	var usable := func(c): return not from_menu and found.has(c.id) \
-		and (c.items.all(func(n): return Game.state.get("mat", []).has(n)) or CollectionRow._fits(c))
-	var shown: Array = Util.stable_sort(all.filter(func(c): return found.has(c.id) or clues.has(c.id)),
-		func(a, b): return int(usable.call(b)) - int(usable.call(a)))
+	# Found ones and clue leads, in collection order.
+	var shown: Array = all.filter(func(c): return found.has(c.id) or clues.has(c.id))
 	var rows: VBoxContainer = $Window/Content/Scroll/Pad/Rows
 	var keep: int = $Window/Content/Scroll.scroll_vertical
 	for r in rows.get_children():
@@ -72,12 +67,6 @@ func _build() -> void:
 		var row := CollectionRow.make()
 		rows.add_child(row)
 		row.custom_minimum_size.y = row.fill(c, null if found.has(c.id) else clues[c.id], 322)
-		var id: String = c.id
-		row.toggled.connect(func(on: bool):  # all on at once, or all off
-			if on:
-				Game.add_collection_to_mat(id)
-			else:
-				Game.remove_collection_from_mat(id))
 	$Window/Content/Scroll.set_deferred("scroll_vertical", keep)
 
 

@@ -582,7 +582,7 @@ func _items(app: App) -> void:
 
 
 ## Collections: a collection complete on the mat brings "New collection!"
-## (Add: found, a Star); its switch takes it off the mat and puts it back;
+## (Add: found, a Star); its row has no on/off switch;
 ## from the title screen a clue costs Stars and opens as a gift; Combo Lab
 ## swaps in a sandbox run and Exit puts the real one back, unsaved.
 func _collections(app: App) -> void:
@@ -604,11 +604,7 @@ func _collections(app: App) -> void:
 	var cw := CollectionsWindow.show_on(app)
 	await get_tree().process_frame
 	var row = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())[0]
-	row.toggled.emit(false)
-	check(not Game.state.mat.has("Steel"), "its switch takes Alloys off the mat")
-	row = cw.get_node("Window/Content/Scroll/Pad/Rows").get_children().filter(func(r): return not r.is_queued_for_deletion())[0]
-	row.toggled.emit(true)
-	check(Game.state.mat.has("Steel") and Game.state.mat.has("Stainless Steel"), "and puts it all back")
+	check(row.get_node_or_null("Toggle") == null, "a found collection has no on/off switch (the mat changes only by playing)")
 	cw.close()
 	cw = CollectionsWindow.show_on(app, true)
 	cw.get_node("Window/Content/Shop/One").gui_input.emit(_release())
@@ -645,7 +641,7 @@ func _collections(app: App) -> void:
 	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
 	check(app._hub.hand_sides.keys() == ["jobs"] and app._hub.off.get("market") == true, "the hub's other buttons as usual (the Challenge on Jobs), the Market shut")
 	check(_find_meta(dm, "hand:deck") != null, "the deck's count in the middle")
-	(_find_meta(dm, "hand:deck") as Button).pressed.emit()
+	_find_meta(dm, "hand:deck").gui_input.emit(_release())
 	check(dm.browsing and dm._scroll.visible and _find_meta(dm, "hand") == null, "the deck tapped: the whole Inventory, no hand")
 	check(_find_meta(dm, "mat:add") == null, "browsing: no Add / Remove (the mat changes only by playing)")
 	(_find_meta(dm, "hand:back") as Button).pressed.emit()
@@ -663,11 +659,50 @@ func _collections(app: App) -> void:
 	dm = app._panel_node as DisplayMatScreen
 	check(flying.call() == 1 and dm._mat_nodes[first].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands)")
 	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[first].modulate.a == 1.0), "the flight ends: its copy freed, the card shows in its slot")
+	dm._lift(hd.hand[0])
+	var on_mat: Array = dm._mat_nodes.values().map(func(c): return Rect2(c.position, c.size).grow(-2))
+	var lit: Array = []
+	for n in dm._page.get_children():
+		for l in n.get_children():
+			if l.get_meta("cmp", "") == "hand:landing":
+				lit.append(Rect2(l.position, l.size))
+	check(not lit.is_empty() and not lit.any(func(r): return on_mat.any(func(m): return m.intersects(r))), "a pick's landing lights only open slots, never a card already there")
+	dm._lift("")
+	# The ⭐: a known collection the hand and the mat can finish, one of its cards still in the hand.
+	var col: Dictionary = Mat.collections()[0]
+	var was_found: Array = Progress.prefs.everUnlockedMatCollections.duplicate()
+	Progress.prefs.everUnlockedMatCollections = [col.id]
+	var fake := {"hand": [col.items[0]]}
+	var mat_was: Array = Game.state.mat
+	Game.state.mat = col.items.slice(1)
+	check(DisplayMatScreen.starred(fake).has(col.items[0]) and DisplayMatScreen.starred(fake).size() == col.items.size(), "⭐ on each card of a known collection the hand can finish")
+	fake.hand = []
+	Game.state.mat = col.items.duplicate()
+	check(DisplayMatScreen.starred(fake).is_empty(), "no ⭐ when all of it is on the mat")
+	Progress.prefs.everUnlockedMatCollections = []
+	fake.hand = [col.items[0]]
+	Game.state.mat = col.items.slice(1)
+	check(DisplayMatScreen.starred(fake).is_empty(), "no ⭐ for a collection not found yet")
+	Progress.prefs.everUnlockedMatCollections = was_found
+	Game.state.mat = mat_was
+	# Combo cards: those in a live group (a gold border).
+	var by_st := {}
+	for n in Game.state.items:
+		var mc = Catalog.mat_card(n)
+		if mc != null and not Mat.is_capstone(mc) and not Mat.is_tier1(mc):
+			by_st[mc.stations[0]] = by_st.get(mc.stations[0], []) + [mc]
+	for st in by_st:
+		if by_st[st].size() >= 3:
+			var three: Array = by_st[st].slice(0, 3)
+			var lone = Catalog.mat_card("Water")
+			var cm := DisplayMatScreen.combo_members(three + [lone], Mat.score(three + [lone], {"visits": 12}, {}))
+			check(three.all(func(c): return cm.has(c.name)), "three cards of a station: all combo cards")
+			break
 	# Several picked: Discard throws them all out, for one discard.
 	var two: Array = hd.hand.slice(0, 2)
 	dm._lift(two[0])
 	dm._lift(two[1])
-	check(dm.picks == two and dm.lifted == "", "two hand cards picked: both raised, no card popped out")
+	check(dm.picks == two and dm.lifted == two[1] and _find_meta(dm._hand_view, "hand:lifted") != null, "two hand cards picked: both raised, the last tapped big in the fan")
 	dm._lift(two[1])
 	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left shows its card")
 	dm._lift(two[1])
@@ -676,7 +711,7 @@ func _collections(app: App) -> void:
 	_find_meta(dm, "hand:discard").gui_input.emit(_release())
 	check(hd.hand.size() == 7 and hd.discards == two and hd.tosses == tosses - 1, "Discard: both cards out for one discard, the hand refilled")
 	dm = app._panel_node as DisplayMatScreen
-	(_find_meta(dm, "hand:deck") as Button).pressed.emit()
+	_find_meta(dm, "hand:deck").gui_input.emit(_release())
 	var faded := func(n): return _find_meta(dm, "inv:" + n) != null and _find_meta(dm, "inv:" + n).modulate != Color.WHITE
 	check(faded.call(two[0]) and faded.call(first) and not faded.call(hd.hand[0]), "browsing: the mat's cards and the discards faded, the rest not")
 	(_find_meta(dm, "hand:back") as Button).pressed.emit()
@@ -768,7 +803,7 @@ func _collections(app: App) -> void:
 	dm._lift(hd.hand[0])
 	check(dm.view == "mat" and dm.picks.size() == 1, "picking a card on the Elements page turns back to the mat")
 	dm._lift("")
-	check(_find_meta(dm, "hand:pass") != null, "Done beside the deck")
+	check(_find_meta(dm, "hand:pass") != null, "Pass in the middle")
 	Tap._down = null
 	_find_meta(dm, "hand:pass").gui_input.emit(_release())
 	var done_ask: Array = top.call(ConfirmDialog)

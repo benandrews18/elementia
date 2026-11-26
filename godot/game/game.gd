@@ -655,31 +655,3 @@ func clear_mat() -> void:
 	_changed()
 
 
-func add_collection_to_mat(id: String) -> bool:
-	var col = null
-	for c in Mat.collections():
-		if c.id == id:
-			col = c
-	if col == null or not col.items.all(func(n): return Catalog.owns(state, n)):
-		return false
-	var missing: Array = col.items.filter(func(n): return not state.mat.has(n) and not Mat.is_capstone(Catalog.mat_card(n)))
-	if missing.is_empty() or not Mat.fits(Mat.on_mat(state) + missing.map(func(n): return Catalog.mat_card(n)), Mat.stage(state)):
-		return false
-	state.mat += missing
-	_changed()
-	return true
-
-
-func remove_collection_from_mat(id: String) -> void:
-	for c in Mat.collections():
-		if c.id == id:
-			state.mat = state.mat.filter(func(n): return not c.items.has(n))
-	_trim_mat_to_fit()
-	_changed()
-
-
-## trimMatToFit(): drops the last-placed cards until the mat fits.
-func _trim_mat_to_fit() -> void:
-	while not state.mat.is_empty() and not Mat.fits(Mat.on_mat(state), Mat.stage(state)):
-		state.mat.pop_back()
-

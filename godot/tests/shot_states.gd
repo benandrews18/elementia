@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -377,6 +377,41 @@ func _ready() -> void:
 			if state == "play_together":
 				mat4.hand_play()
 				await get_tree().create_timer(0.5).timeout
+		"hand_combo":  # a check: a station combo on the mat (gold borders), a known collection the hand can finish (⭐), one card picked (big, in the fan)
+			app.open_combo_lab()
+			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
+			app.start_challenge_test(12)
+			for c in app.get_children():
+				if c is OrderInfo:
+					c.queue_free()
+			var by3 := {}
+			for n in Game.state.items:
+				var mc = Catalog.mat_card(n)
+				if mc != null and not Mat.is_capstone(mc):
+					for st in mc.stations:
+						by3[st] = by3.get(st, []) + [n]
+			var trio: Array = []
+			for st in by3:
+				if by3[st].size() >= 3:
+					trio = by3[st].slice(0, 3)
+					break
+			var col3 = null
+			for col in Mat.collections():
+				if col.items.size() <= 3 and col.items.all(func(n): return not trio.has(n) and not Mat.is_capstone(Catalog.mat_card(n))):
+					col3 = col
+					break
+			for n in col3.items:  # owned, so it can be in the hand
+				if not Game.state.items.has(n):
+					Game.state.items.append(n)
+			Game.state.mat = trio
+			Game.state.matPlays = [trio]
+			var hd: Dictionary = Game.state.hand
+			var keep: Array = hd.hand.filter(func(n): return not trio.has(n) and not col3.items.has(n))
+			hd.hand = col3.items + keep.slice(0, 7 - col3.items.size())
+			Progress.prefs.everUnlockedMatCollections = [col3.id]
+			var mat6 := app._panel_node as DisplayMatScreen
+			mat6.picks = [hd.hand[0]]
+			mat6._redraw()
 		"hand_inventory":  # a check: the deck's count tapped, the whole Inventory to plan with
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))

@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 19, the check screen, clearer. Check 18b's scrolling feel on the phone when it's connected (it wasn't, 2026-11-26). Start every session with `git status`: the user may
+**Next task:** step 20, the check, in motion. Check 18b's scrolling feel on the phone when it's connected (it wasn't, 2026-11-26). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -444,7 +444,19 @@ Market, tutorials), motion last (it animates the final layouts).
    Was: **Code and best-practices review** of what steps 14-18 built (the
    check, hand and mat code first, since 19-21 rework them): bugs, dead
    code, Godot pitfalls, then fixes.
-19. **The check screen, clearer** (the mat's clarity first).
+19. Done (2026-11-26): **The check screen, clearer.** Round buttons
+   (assets/ui/btn_round.webp: 🔍's rim, blank; white card icons cut from
+   images/playing_card_icons.png: card, cards_deck, cards_scatter);
+   ItemCard opts combo/star (DisplayMatScreen.combo_members(), starred());
+   landings only on open slots (_empties); HandView: the last pick big in
+   its fan spot (never under 1.3x a fan card); StationScreen.convert_button();
+   Combo Lab hidden while Game._in_check(); the collection switch, Game's
+   add/remove_collection_to_mat and _trim_mat_to_fit removed. Readings
+   taken (the user may overrule): Convert inside the Elements page only on
+   that page (the corner on the mat page); the ⭐ on hand and mat cards of
+   the collection. Screen hand_combo; all 101 screens re-accepted (many
+   were from 11-23/24: breakpoints and step 16's cards).
+   Was:
    - Buttons: Draw a "+"; Draw, Discard and Pass (Done renamed, same
      icon) gold-rimmed circles the size of 🔍 and Convert, labels under
      them; icons from images/playing_card_icons.png. Pass in the middle
@@ -527,6 +539,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 19 (the check screen, clearer): round buttons, gold combo borders, one-piece preview, landings on open slots, the last pick big in the fan, collection stars, the Elements page's line and Convert.
 - 2026-11-26: step 18c (code review of steps 14-18): tap and lambda-capture fixes, dead wide-card code out, no engine errors in the play test.
 - 2026-11-26: step 18b (smooth scrolling): DragScroll, our own list drag and fling, measured on the desktop.
 - 2026-11-26: step 18 (element draws and small fixes): pick the card an element draws, drags never tap, Settings everywhere, the challenge pill, the list view's balloon.

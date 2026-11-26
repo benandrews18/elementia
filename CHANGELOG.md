@@ -9,6 +9,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Checks, clearer: Discard, **Pass** (was Done), the deck and Draw are gold-rimmed round buttons with card icons (Pass in the middle, the deck's count on its circle, Draw a card with a +). Cards in a combo have a gold border (no glow). The play preview is one piece. The green landing shows only on open slots. The last card you tap stays big, standing in the fan with your other picks. A ⭐ marks cards of a collection you've found that your hand can finish. The Elements page: "Spend elements to draw a card of the same type" on top, Convert in its corner. No Combo Lab button during a check.
+- Collections: the on/off switch is gone (the mat only changes by playing cards).
 - Fixes: a drag over the Inventory's or a station's cards never selects one; during a play's "Played together!" banner, tapping other hand cards no longer stops the played cards flying to the mat.
 - Scrolling, everywhere: a list follows your finger from wherever you start the drag (rows used to block it), flicks glide and slow down smoothly, and a tap on a moving list stops it. Every frame is drawn while you scroll.
 - Checks: tapping an element on the Elements tab lets you **pick which card of its suit** to take (closing the picker spends nothing).
