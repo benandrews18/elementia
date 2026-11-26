@@ -12,6 +12,8 @@ extends Control
 ## The layout is ui/overlays/market_tray.tscn (the tray, the Market's frame
 ## and its texts, the Capstones heading); this fills in the rows and squares.
 const SCENE := "res://ui/overlays/market_tray.tscn"
+const NAME_PX := 12  # the names under the squares (step 23 early, the user 2026-11-26)
+const NAME_H := 28.0  # room for two lines
 
 var cells := {}  # card index -> its square (the row sequence bounces them)
 @onready var _scroll: ScrollContainer = $Bg/Scroll
@@ -50,6 +52,12 @@ func _redraw() -> void:
 	panel.position = Vector2(16, y)
 	var pw := w - 32
 	panel.size.x = pw
+	var hint: Label = $Bg/Scroll/Content/Tray/Market/Hint
+	if not hint.has_node("Unknown"):  # the reward: an Unknown Element, its square after the text (the user, 2026-11-26)
+		var sq := LockInReward.unknown_square(20)
+		sq.name = "Unknown"
+		sq.position = Vector2(hint.get_theme_font("font").get_string_size(hint.text, HORIZONTAL_ALIGNMENT_LEFT, -1, hint.get_theme_font_size("font_size")).x + 6, 4)
+		hint.add_child(sq)
 	var rows_at: Control = $Bg/Scroll/Content/Tray/Market/Rows
 	var ry := 42.0
 	var card: Array = s.bingoCard
@@ -60,13 +68,13 @@ func _redraw() -> void:
 		var row := Panel.new()
 		row.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if done else Color.TRANSPARENT, 14, 2, Tok.GOLD if done else Color.TRANSPARENT))
 		row.position = Vector2(14, ry)
-		row.size = Vector2(pw - 28, cell + 6 + 4)
+		row.size = Vector2(pw - 28, cell + 6 + 4 + NAME_H)
 		row.mouse_filter = MOUSE_FILTER_PASS
 		rows_at.add_child(row)
 		for k in lines[r].size():
 			var idx: int = lines[r][k]
 			var c := _cell(card[idx], cell, false)
-			c.position = Vector2(10 + k * (cell + 8), 3)
+			c.position = Vector2((row.size.x - lines[r].size() * (cell + 8) + 8) / 2 + k * (cell + 8), 3)  # centred in the box (no 🎁 corner now)
 			row.add_child(c)
 			cells[idx] = c
 		if done:  # a row pays nothing now; its squares each paid a "?"
@@ -87,9 +95,9 @@ func _redraw() -> void:
 	var cw := (w - 32 - 44 - 3 * 8) / 4
 	for i in caps.size():
 		var c := _cell(caps[i], cw, true)
-		c.position = Vector2(16 + 22 + (i % 4) * (cw + 8), y + (i / 4) * (cw + 10))
+		c.position = Vector2(16 + 22 + (i % 4) * (cw + 8), y + (i / 4) * (cw + 10 + NAME_H))
 		$Bg/Scroll/Content/Tray/Caps.add_child(c)
-	y += ceili(caps.size() / 4.0) * (cw + 10) + 8
+	y += ceili(caps.size() / 4.0) * (cw + 10 + NAME_H) + 8
 	_tray.size = Vector2(w, y)
 	content.custom_minimum_size = Vector2(full, y)
 	bg.size = Vector2(full, minf(y, size.y - HubBar.H - 30))
@@ -141,14 +149,21 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	c.size = Vector2(sz, sz)
 	c.mouse_filter = MOUSE_FILTER_PASS  # taps still land; a drag scrolls the tray
 	var ic := Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), sz * 0.6)
-	ic.position = Vector2(sz * 0.2, sz * 0.12)
+	ic.position = Vector2(sz * 0.2, sz * 0.18)
 	ic.material = Tok.outline(sz * 0.6 * 1.5)  # a 1px edge
 	c.add_child(ic)
-	var n := Tok.label(name, 8, Color.WHITE if owned else Color("#181614"), 700)
+	# The name under the square (the user, 2026-11-26): bigger, centred, two
+	# lines when long, never touching the next one's.
+	var n := Tok.label(name, NAME_PX, Color.WHITE, 800)
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	n.position = Vector2(2, sz - 14)
-	n.size = Vector2(sz - 4, 11)
-	n.clip_text = true
+	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	n.max_lines_visible = 2
+	n.add_theme_constant_override("line_spacing", -3)
+	n.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	n.add_theme_constant_override("outline_size", 4)
+	n.size = Vector2(sz + 4, NAME_H)
+	n.position = Vector2(-2, sz + 3)
+	n.set_meta("cmp", "market:name:" + name)
 	c.add_child(n)
 	if not inspect and not owned:  # what crafting it pays
 		var q := LockInReward.unknown_square(16)

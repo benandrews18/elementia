@@ -38,6 +38,7 @@ static func side_card(name: String, w: float, plain := false) -> CardPop:
 	p.size = Vector2(p.portrait.x, p.portrait.y)
 	p.show_item(name)
 	p.scale = Vector2.ONE * w / p.size.x
+	Tok.floor_text(p, p.scale.x)
 	return p
 
 

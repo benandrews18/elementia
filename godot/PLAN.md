@@ -520,8 +520,19 @@ Market, tutorials), motion last (it animates the final layouts).
    longer loads collections onto the mat, so it is a reference players
    open often: very readable and easy to find your way in (grill the
    layout first).
-20d. **A minimum text size** (the user, 2026-11-26): 12 px (mobile
-   guidance) at the phone's size, everywhere; a check flags any smaller
+20d. Done (2026-11-26): **A minimum text size, 11 px.** Tok.MIN_TEXT:
+   Tok.label and Tok.fit_px never go under it; scene sizes under 11 raised;
+   Tok.floor_text() grows the fonts of shrunk things (side cards, the
+   roll's chips); ItemCard names wrap to two lines rather than shrink;
+   tests/text_floor.gd scans every screen state (shot_batch) and the
+   screens check fails on any text under 11 px. With the user's asks on
+   the way: the Market's names under the squares (step 23's names, done
+   early), its header "Craft market items a reward" + the Unknown square,
+   no 🎁, rows centred; the Unknown Element picker the station's chips
+   exactly, one row on the header's navy. Left: the Combo Lab capstone
+   minis' names touch their station circle. Was:
+   (the user, 2026-11-26): 11 px (first 12,
+   then 11) at the phone's size, everywhere; a check flags any smaller
    label.
 21. **Stations and cards.**
    - Card background: the station cards' off-white everywhere (the full
@@ -558,7 +569,7 @@ Market, tutorials), motion last (it animates the final layouts).
    - Opening lag: profile and fix.
    - Title: the Market button's icon (not the cart); all text white with
      a small black shadow.
-   - Names under the squares, bigger, 2 lines when long (Satellite Dish),
+   - Done in 20d: names under the squares, bigger, 2 lines when long,
      centred, never touching; the same for the capstones.
 24. **Combo Lab**: a tap adds a card to the mat, a tap on the mat takes it
    off; the last tapped shows on the Crafting Bench below, no Add /
@@ -578,6 +589,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 20d (11 px minimum text): a floor in Tok, shrunk cards' fonts grown, names wrap, every screen scanned by the screens check; the Market's names under its squares, its new header; the Unknown picker as the station's chips.
 - 2026-11-26: step 20c (Collections window): grilled; tiles with names and run status, closest first, a legend, the rest counted, always tall.
 - 2026-11-26: step 20b (mat cards and stars): a tapped mat card shows big in place, the ⭐ on the picture opens Collections lit, no corner Convert at a check.
 - 2026-11-26: step 20 (the check, in motion): rising draws, tossed discards, a found collection's window before the count, a punchier count; Play's hand icon, Metropolis's picture. The user's six new items planned as 20-20d.

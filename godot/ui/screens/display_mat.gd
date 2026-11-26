@@ -335,7 +335,7 @@ func _page_controls(page: Control) -> void:
 		var tab := Label.new()
 		tab.text = t[0]
 		tab.add_theme_font_override("font", Tok.font(800))
-		tab.add_theme_font_size_override("font_size", 10)
+		tab.add_theme_font_size_override("font_size", 11)
 		tab.add_theme_color_override("font_color", Color("#3a2f1e"))
 		var tsb := Tok.box(t[1], 10, 2, t[2], 3 if t[3] else 0, 3, Color(0, 0, 0, 0.35))
 		tsb.border_width_top = 0

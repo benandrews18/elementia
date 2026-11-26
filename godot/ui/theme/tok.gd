@@ -68,11 +68,24 @@ static func box(bg: Color, radius: float, border := 0.0, border_color := Color.B
 
 
 ## A label in the game's font.
+## The smallest text anywhere (step 20d, the user 2026-11-26: 11 px on the
+## phone; tests/text_floor.gd checks every screen).
+const MIN_TEXT := 11
+
+
+## Shown shrunk (scale s: a side card, the roll's chips): every text under
+## n at least MIN_TEXT on screen, its font grown to make up for the scale.
+static func floor_text(n: Node, s: float) -> void:
+	for l in n.find_children("*", "Label", true, false):
+		if l.get_theme_font_size("font_size") * s < MIN_TEXT - 0.25:
+			l.add_theme_font_size_override("font_size", ceili(MIN_TEXT / s))
+
+
 static func label(text: String, size: float, color: Color, weight := 400) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_override("font", font(weight))
-	l.add_theme_font_size_override("font_size", int(round(size)))
+	l.add_theme_font_size_override("font_size", maxi(MIN_TEXT, int(round(size))))
 	l.add_theme_color_override("font_color", color)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
@@ -95,7 +108,7 @@ static func centre_name(n: Label, w: float, y: float, h: float) -> void:
 ## card's name never wraps: the user, 2026-11-23). Never below 6.
 static func fit_px(text: String, f: Font, px: int, w: float) -> int:
 	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	return px if tw <= w or tw <= 0 else maxi(6, floori(px * w / tw))
+	return px if tw <= w or tw <= 0 else maxi(MIN_TEXT, floori(px * w / tw))
 
 
 ## An icon by its key (an item's emoji, __NAME__, suit:x), sized to fit.

@@ -171,6 +171,10 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 	if opts.get("wrap") and text.contains(" "):  # two lines, split at the first space (the shop's wrapped names)
 		text = text.substr(0, text.find(" ")) + "\n" + text.substr(text.find(" ") + 1)
 		lines = 2
+	if lines == 1 and width > 0 and text.contains(" ") and f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, Tok.MIN_TEXT).x > width - 2 * side - 2:
+		var cut := _middle_space(text)  # under the smallest text on one line: two lines (Stainless Steel)
+		text = text.substr(0, cut) + "\n" + text.substr(cut + 1)
+		lines = 2
 	var longest := ""
 	for part in text.split("\n"):
 		longest = part if part.length() > longest.length() else longest
@@ -213,6 +217,15 @@ static func star_button(px: float, col_id: String) -> Control:
 	b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
 		CollectionsWindow.show_on(App.current, false, col_id))
 	return b
+
+
+## The space nearest the middle of text (where a name splits in two).
+static func _middle_space(text: String) -> int:
+	var best := -1
+	for i in text.length():
+		if text[i] == " " and (best < 0 or absi(i - text.length() / 2) < absi(best - text.length() / 2)):
+			best = i
+	return best
 
 
 static func _gap(px: float) -> Control:

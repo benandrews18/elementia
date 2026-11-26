@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/market_tray.gd" id="1"]
 [ext_resource type="Script" path="res://ui/components/frame9.gd" id="f9s"]
@@ -7,7 +7,6 @@
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_900.tres" id="f9"]
 [ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f6d2.png" id="cart"]
-[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f381.png" id="gift"]
 [ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f3c6.png" id="trophy"]
 [ext_resource type="PackedScene" path="res://ui/pieces/scrim.tscn" id="scrim"]
 
@@ -89,29 +88,14 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_left = 104.0
 offset_top = 10.0
-offset_right = -46.0
+offset_right = -16.0
 offset_bottom = 38.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.701961, 0.745098, 0.803922, 1)
 theme_override_fonts/font = ExtResource("f7")
-theme_override_font_sizes/font_size = 11
-text = "Every market item you craft earns an Unknown Element!"
-autowrap_mode = 3
-
-[node name="Gift" type="TextureRect" parent="Bg/Scroll/Content/Tray/Market"]
-custom_minimum_size = Vector2(20, 20)
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -39.0
-offset_top = 12.0
-offset_right = -19.0
-offset_bottom = 32.0
-mouse_filter = 2
-texture = ExtResource("gift")
-expand_mode = 1
-stretch_mode = 5
+theme_override_font_sizes/font_size = 13
+text = "Craft market items a reward"
+vertical_alignment = 1
 
 [node name="Rows" type="Control" parent="Bg/Scroll/Content/Tray/Market"]
 layout_mode = 0

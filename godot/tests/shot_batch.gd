@@ -45,6 +45,8 @@ func _ready() -> void:
 			await get_tree().process_frame
 		await get_tree().create_timer(WAIT).timeout
 		await RenderingServer.frame_post_draw
+		for t in load("res://tests/text_floor.gd").small(screen):
+			print("small_text %s  %s" % [job.state, t])
 		if get_viewport().get_texture().get_image().save_png(job.out) != OK:
 			print("FAILED to save " + job.out)
 			get_tree().quit(1)

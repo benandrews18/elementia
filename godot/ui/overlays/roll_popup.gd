@@ -62,6 +62,7 @@ func _ready() -> void:
 		var c := _chip(roll[i])
 		c.pivot_offset = c.size / 2
 		c.scale = Vector2(K, K)
+		Tok.floor_text(c, K)
 		var sl: Array = slots[i]
 		var at := Vector2((bw - (sl[2] * cw + (sl[2] - 1) * GAP)) / 2 + sl[1] * (cw + GAP),
 			top + sl[0] * (ch + GAP) + (frame_gap if i >= plain else 0.0))

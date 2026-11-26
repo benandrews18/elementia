@@ -36,7 +36,7 @@ alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.541176, 0.517647, 0.470588, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 11
 text = "1"
 horizontal_alignment = 1
 
@@ -53,6 +53,6 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_colors/font_color = Color(0.352941, 0.333333, 0.282353, 1)
 theme_override_fonts/font = ExtResource("f7")
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 11
 text = "Hydrogen"
 horizontal_alignment = 1

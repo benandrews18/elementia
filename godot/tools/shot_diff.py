@@ -61,7 +61,14 @@ def shoot(out: Path, only=()):
         s = job["state"]
         ok = Path(job["out"]).exists() and s not in bad
         print(f"{s:18} {'ok' if ok else 'FAILED'} {bad.get(s, '')}")
+    small = [l[len("small_text "):] for l in lines if l.startswith("small_text ")]  # under the minimum text size (tests/text_floor.gd)
+    (out / "small_text.txt").write_text(chr(10).join(small), encoding="utf-8")
+    for l in small:
+        print("text under 11px: " + l)
     done = any(l.startswith(f"shot_batch: {len(plan)} saved") for l in lines)
+    if small:
+        print(f"{len(small)} texts under 11px (list: {out / 'small_text.txt'})")
+        return 1
     if r.returncode != 0 or not done or bad:
         print("shot_batch did not finish cleanly")
         return 1

@@ -98,7 +98,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 11
 text = "Quarks"
 
 [node name="Value" type="Label" parent="Window/Scroll/Body/Stats/Quarks"]
@@ -133,7 +133,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 11
 text = "Item Score"
 
 [node name="Value" type="Label" parent="Window/Scroll/Body/Stats/ItemScore"]
@@ -168,7 +168,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 11
 text = "Items"
 
 [node name="Value" type="Label" parent="Window/Scroll/Body/Stats/Items"]
@@ -203,7 +203,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.541176, 0.415686, 0.282353, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 11
 text = "Capstones"
 
 [node name="Value" type="Label" parent="Window/Scroll/Body/Stats/Capstones"]

@@ -129,6 +129,7 @@ func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> v
 	var room := maxf(foot + 4, least_h)
 	if sz.y > room:  # taller than the room above its foot: smaller
 		full.scale *= room / sz.y
+		Tok.floor_text(full, full.scale.x)
 		sz = full.size * full.scale
 	var holder := Control.new()  # takes the tap (the side card ignores the mouse)
 	holder.size = sz

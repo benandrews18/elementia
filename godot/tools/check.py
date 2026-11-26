@@ -66,7 +66,7 @@ def screens(only=()) -> bool:
     print(f"{'PASS' if ok else 'FAIL'}  screens vs build/before: {len(picked)} {'all' if not only else 'of ' + ', '.join(only)}  ({time.time() - t:.0f}s)")
     if not ok:
         for l in (shot.stdout + diff.stdout).splitlines():
-            if "FAILED" in l or "differ" in l or "missing" in l or "size" in l or "cleanly" in l:
+            if "FAILED" in l or "differ" in l or "missing" in l or "size" in l or "cleanly" in l or "11px" in l:
                 print("      " + l)
         print("      (pictures: build/after/diff_<state>.png; intended? python godot/tools/check.py accept)")
     return ok
