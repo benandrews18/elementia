@@ -78,6 +78,6 @@ func show_copied() -> void:
 	g.get_child(0).visible = false
 	var t := Tok.tick(Color("#3fb46c"), 15)
 	g.add_child(t)
-	get_tree().create_timer(1.8).timeout.connect(func(): if is_instance_valid(t):
+	t.create_tween().tween_callback(func():  # dies with the tick
 		t.queue_free()
-		g.get_child(0).visible = true)
+		g.get_child(0).visible = true).set_delay(1.8)

@@ -105,7 +105,7 @@ func spotlight(id: String, on: bool) -> void:
 func punch(id: String) -> void:
 	var b := button(id)
 	b.pivot_offset = b.size / 2
-	var old = b.get_meta("punch", null)
+	var old = b.get_meta("punch") if b.has_meta("punch") else null  # get_meta(k, null) errors when k is missing
 	if old is Tween and old.is_valid():  # several landing close together: start the bounce again
 		old.kill()
 		b.scale = Vector2.ONE

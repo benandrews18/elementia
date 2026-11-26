@@ -31,7 +31,7 @@ func _ready() -> void:
 	for n in ([] if h == null else Hand.suit_cards(h, sym) if sym != "" else h.deck):
 		var card := ItemCard.make(n, {"size": true})
 		card.custom_minimum_size = Vector2(card_w, card_w * 1.4)
-		card.mouse_filter = MOUSE_FILTER_PASS  # a drag on a card scrolls the list; a tap (Tap: never a drag) takes it
+		card.mouse_filter = MOUSE_FILTER_PASS  # a tap takes it (Tap: never a drag; DragScroll scrolls the list)
 		card.set_meta("cmp", "pick:" + n)
 		var nm: String = n
 		card.gui_input.connect(func(ev): if Tap.tap(ev): _take(nm))

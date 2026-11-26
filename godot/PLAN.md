@@ -13,7 +13,7 @@ reference for every rule and screen until the Godot version replaces it.
 
 **Current milestone:** Cutover (M6 done; M7 deferred; M5.5 done, bar the
 user's own first edit in the editor)
-**Next task:** step 18c, the code review (then 19). Check 18b's scrolling feel on the phone when it's connected (it wasn't, 2026-11-26). Start every session with `git status`: the user may
+**Next task:** step 19, the check screen, clearer. Check 18b's scrolling feel on the phone when it's connected (it wasn't, 2026-11-26). Start every session with `git status`: the user may
 have edited scenes in the editor.
 Publish every finished batch to the phone (`tools/phone.py`; skip it if not
 connected) and the website (`tools/web.py "What changed"`), no ask (the user).
@@ -430,7 +430,18 @@ Market, tutorials), motion last (it animates the final layouts).
    readout): find what delays a drag (step 18's SLOP deadzone in
    Tap.hook, STOP children that swallow drags, redraws on scroll,
    frame rate) and fix it everywhere; inertia that feels native.
-18c. **Code and best-practices review** of what steps 14-18 built (the
+18c. Done (2026-11-26): reviewed core/hand.gd, core/mat.gd, core/orders.gd,
+   display_mat.gd (all), hand_view.gd, card_pick.gd, App's lock-in. Fixed:
+   the Inventory's and the station's own tap tests (now Tap.tap: drags and
+   caught flings never tap); hand_play's fly-ins read `played`, not picks
+   (which change under the banner); HubBar.punch's get_meta(k, null) error;
+   lambdas that captured nodes freed before a timer fired (the count's
+   unblock, the auto Lock-In, 4 x 1.8-2.5 s timers: now tweens on the node);
+   the station head's anchored size warning. Removed dead code: Mat.pack's
+   wide cards (w/cover: nothing is wide since capstones left the slots),
+   _empties, _press_at. The play test now runs with no engine errors.
+   Left: play_lock_in's is_instance_valid(self) after await (dead, harmless).
+   Was: **Code and best-practices review** of what steps 14-18 built (the
    check, hand and mat code first, since 19-21 rework them): bugs, dead
    code, Godot pitfalls, then fixes.
 19. **The check screen, clearer** (the mat's clarity first).
@@ -516,6 +527,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 18c (code review of steps 14-18): tap and lambda-capture fixes, dead wide-card code out, no engine errors in the play test.
 - 2026-11-26: step 18b (smooth scrolling): DragScroll, our own list drag and fling, measured on the desktop.
 - 2026-11-26: step 18 (element draws and small fixes): pick the card an element draws, drags never tap, Settings everywhere, the challenge pill, the list view's balloon.
 - 2026-11-26: step 17 (rules batch): capstones always on, no card limits, new requests, restrictions from 18, a "?" per Market square, Main Menu ends the run; breakpoints re-tuned.

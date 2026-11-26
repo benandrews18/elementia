@@ -567,7 +567,7 @@ func _items(app: App) -> void:
 	await get_tree().process_frame
 	check(Progress.is_pinned("Banana") != was and (rows.call().filter(func(r): return r.item == "Banana")[0].get_parent().name == "PinTable") == Progress.is_pinned("Banana"),
 		"📌 on a row pins it (into the Pinned table)")
-	check(rows.call().has(apple) and not rows.call().has(banana), "pinning makes only that row again")
+	check(rows.call().has(apple) and (not is_instance_valid(banana) or not rows.call().has(banana)), "pinning makes only that row again")
 	if Progress.is_pinned("Banana") != was:
 		Progress.toggle_pin("Banana")
 	app._on_hub("codex")

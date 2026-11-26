@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Fixes: a drag over the Inventory's or a station's cards never selects one; during a play's "Played together!" banner, tapping other hand cards no longer stops the played cards flying to the mat.
 - Scrolling, everywhere: a list follows your finger from wherever you start the drag (rows used to block it), flicks glide and slow down smoothly, and a tap on a moving list stops it. Every frame is drawn while you scroll.
 - Checks: tapping an element on the Elements tab lets you **pick which card of its suit** to take (closing the picker spends nothing).
 - Scrolling lists: a drag never counts as a tap (the card picker, the To-Do list's breakdowns, every list); the picker's cards scroll when dragged.

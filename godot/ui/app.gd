@@ -1065,11 +1065,13 @@ func _count_then(then_do: Callable) -> void:
 	add_child(block)
 	_hub.greyed = true  # the Lock-In button greys: no second tap while it counts
 	_hub._build()
+	var held := [block]  # emptied once unblocked: a lambda capturing a freed node errors when called again
 	var unblock := func():  # also when the mat goes mid-count (its count never finishes then)
-		if is_instance_valid(block):
-			block.queue_free()
+		if not held.is_empty() and is_instance_valid(held[0]):
+			held[0].queue_free()
 			_hub.greyed = false
 			_hub._build()
+		held.clear()
 	mat.tree_exiting.connect(unblock)
 	mat.play_lock_in(func():
 		unblock.call()

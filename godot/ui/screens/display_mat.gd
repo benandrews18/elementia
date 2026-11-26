@@ -30,7 +30,6 @@ const GOLD_LINE := Color("#e2b25a")
 var _inv_cards := {}  # item name -> its card in the list, to dim it in place
 var _inv_ring: Panel  # the selected card's green ring in the list
 var _inv_key := ""  # what the list was built for: item count and width
-var _press_at := Vector2.ZERO
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
 static var collapsed := false  # the fold button: the mat minimised to a row of its icons (setMatCollapsed())
@@ -38,7 +37,6 @@ static var list_mode := false  # the 📋 view: a compact list on the left, the 
 var playing := false  # the Lock-In count is running: no redraws under it
 var _qm: QuarkMeter
 var _hub_h := HUB_H
-var _empties: Array = []  # the mat's empty slots (Rect2 on the page), for a lifted card's preview
 var _mat_nodes := {}  # card name -> its card on the mat (the count bounces them)
 var _chip_nodes := {}  # "kind:name" -> its combo chip
 var slot_rects := {}  # slot index -> its rect on screen (the expansion reveal)
@@ -72,7 +70,6 @@ func _redraw() -> void:
 	if playing:
 		return
 	_mat_nodes.clear()
-	_empties.clear()
 	_chip_nodes.clear()
 	slot_rects.clear()
 	for c in _body.get_children():
@@ -349,7 +346,7 @@ func _page_controls(page: Control) -> void:
 		lab_btn.set_meta("cmp", "btn:Combo Lab")
 		_body.add_child(lab_btn)
 		return
-	if view != "mat" or Game.check_hand() != null:  # with a hand, cards only change by playing
+	if view != "mat":
 		return
 	var btns := [["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
 	for b in btns:
@@ -394,7 +391,7 @@ func _round_button(text: String, sz: Vector2, font_px: int, bg: Color) -> Button
 
 ## The minimised mat (matMiniRowHTML()): the mat's cards as icons, 8 a
 ## row, then how full it is in tier 1 units (a tier 1 card 1, a normal card
-## a slot's worth, a capstone two); a tap shows the mat again. Returns the
+## a slot's worth; capstones sit beside the mat); a tap shows the mat again. Returns the
 ## y under it.
 func _mini_row(cards: Array, L: Dictionary, at: Vector2, w: float) -> float:
 	var per: int = L.perSlot
@@ -647,16 +644,14 @@ static func row_parts(name: String, at: Vector2, room: float) -> Control:
 ## A tap (not a scroll) selects the card: its row goes on the Crafting Bench
 ## with Add / Remove (tap it again to put it back).
 func _on_card_input(ev: InputEvent, name: String) -> void:
-	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
-		if ev.pressed:
-			_press_at = ev.global_position
-		elif ev.global_position.distance_to(_press_at) < 10:
-			if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it
-				if App.current:
-					App.current.show_card(name)
-				return
-			selected = "" if selected == name else name
-			_redraw()
+	if not Tap.tap(ev):
+		return
+	if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it
+		if App.current:
+			App.current.show_card(name)
+		return
+	selected = "" if selected == name else name
+	_redraw()
 
 
 ## Card playing (PLAN.md steps 14-15): under the mat Discard (left) and
@@ -702,8 +697,7 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	_body.add_child(deck)
 	if not _ending and HandView.deal_at >= 0 and Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends itself
 		_ending = true
-		var app := App.current
-		get_tree().create_timer(0.9).timeout.connect(func(): if is_instance_valid(app) and is_same(Game.check_hand(), h): app.hand_lock_in())
+		get_tree().create_timer(0.9).timeout.connect(func(): if App.current and is_same(Game.check_hand(), h): App.current.hand_lock_in())  # no node captured: a freed one errors
 	var top_y := row_y + BTN + 4
 	_hand_view = HandView.new()
 	_hand_view.position = Vector2(0, top_y)
@@ -909,7 +903,7 @@ static func _preview_chips(before: Dictionary, after: Dictionary) -> Array:
 
 
 ## Where the picked cards would sit on the page (the mat packed with them:
-## a capstone over two slots, tier 1 cards in their share of a stack).
+## tier 1 cards in their share of a stack).
 func _landings(names: Array) -> Array:
 	var cards: Array = names.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null)
 	var pack := Mat.pack(Mat.on_mat(Game.state) + cards, _stage())
@@ -921,8 +915,6 @@ func _landings(names: Array) -> Array:
 		var r: Rect2 = slot_rects[i]
 		r.position -= _page.position
 		if sl.has("card") and names.has(sl.card.name):
-			if sl.w > 1 and slot_rects.has(i + 1):
-				r = r.merge(Rect2(slot_rects[i + 1].position - _page.position, slot_rects[i + 1].size))
 			out.append(r)
 		var stack: Array = sl.get("stack", [])
 		for k in stack.size():
@@ -989,7 +981,7 @@ func hand_play() -> void:
 	var from := {}
 	if is_instance_valid(_hand_view):
 		for c in _hand_view.get_children():
-			if c.has_meta("hand") and picks.has(c.get_meta("hand")) and (not from.has(c.get_meta("hand")) or c.get_meta("cmp", "") == "hand:lifted"):
+			if c.has_meta("hand") and played.has(c.get_meta("hand")) and (not from.has(c.get_meta("hand")) or c.get_meta("cmp", "") == "hand:lifted"):
 				from[c.get_meta("hand")] = c.get_global_rect()
 	var msg := Hand.play(h, Game.state, played)
 	if msg != "":
@@ -1423,20 +1415,20 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 		return {"mini": mini, "in_grid": false, "complete": sc.completeNames.has(c.name), "lit_suits": lit_suits, "lit_stations": lit_st}
 	for i in pack.slot.size():
 		var sl: Dictionary = pack.slot[i]
-		if sl.has("cover") or sl.kind == "locked":
+		if sl.kind == "locked":
 			continue
 		var r: int = i / cols
 		var c: int = i % cols
 		var pos := Vector2(page_pad + 2 + c * (col_w + cols_gap), page_pad + 2 + r * (row_h + cols_gap))
 		var h := row_h if sl.kind == "full" else (row_h - 2) / 2
-		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w * sl.get("w", 1) + cols_gap * (sl.get("w", 1) - 1), row_h if sl.has("card") or sl.has("stack") and sl.kind != "top" else h))
+		slot_rects[i] = Rect2(page.position + pos, Vector2(col_w, row_h if sl.has("card") or sl.has("stack") and sl.kind != "top" else h))
 		if sl.has("card"):
 			if sl.card.name == selected:
-				page.add_child(_selected_ring(pos, Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)))
+				page.add_child(_selected_ring(pos, Vector2(col_w, row_h)))
 			var card := ItemCard.make(sl.card.name, card_opts.call(sl.card, false))
 			card.gui_input.connect(_on_card_input.bind(sl.card.name))
 			card.position = pos
-			card.size = Vector2(col_w * sl.w + cols_gap * (sl.w - 1), row_h)
+			card.size = Vector2(col_w, row_h)
 			page.add_child(card)
 			_mat_nodes[sl.card.name] = card
 		elif sl.has("stack") or sl.kind == "top":
@@ -1456,10 +1448,8 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 					_mat_nodes[stack[k].card.name] = mini
 				elif k == stack.size():
 					page.add_child(_dashed(Rect2(at, Vector2(col_w, mh)), 10))
-					_empties.append(Rect2(at, Vector2(col_w, mh)))
 		else:
 			page.add_child(_dashed(Rect2(pos, Vector2(col_w, h)), 12))
-			_empties.append(Rect2(pos, Vector2(col_w, h)))
 
 
 func _stage() -> int:

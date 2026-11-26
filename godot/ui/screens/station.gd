@@ -28,7 +28,6 @@ const HEAD_H := 288.9  # the header's dark blue: the shop's title, then the craf
 static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
 var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
 var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
-var _press_at := Vector2.ZERO
 var _bulbs := {}  # shop cards whose 💡 has shown this visit (station -> {name: true}): no fade-in again on a redraw
 @onready var _scroll: ScrollContainer = $Scroll
 @onready var _page: Control = $Scroll/Page
@@ -132,7 +131,7 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 ## (the user, 2026-11-22), the crafted-items bar under them (both placed in
 ## the scene). Returns the blue's foot.
 func _shop_title(y: float) -> float:
-	$Scroll/Page/Head.size.y = y
+	$Scroll/Page/Head.offset_bottom = y  # anchored across: size.y would warn
 	return y
 
 
@@ -554,8 +553,5 @@ func _pin_tap(item: String, page: Control, pos: Vector2, card_size: Vector2) -> 
 
 ## A tap (not a scroll) runs fn.
 func _on_tap(ev: InputEvent, fn: Callable) -> void:
-	if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
-		if ev.pressed:
-			_press_at = ev.global_position
-		elif ev.global_position.distance_to(_press_at) < 10:
-			fn.call()
+	if Tap.tap(ev):
+		fn.call()

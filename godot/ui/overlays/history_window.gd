@@ -89,7 +89,7 @@ func _export() -> void:
 	DisplayServer.clipboard_set(JSON.stringify(_runs(), "  "))
 	var l: Label = $Window/Export/Row/Text
 	l.text = "Copied!"
-	get_tree().create_timer(1.8).timeout.connect(func(): if is_instance_valid(l): l.text = "Export")
+	l.create_tween().tween_callback(func(): l.text = "Export").set_delay(1.8)  # dies with the label
 
 
 func _layout() -> void:

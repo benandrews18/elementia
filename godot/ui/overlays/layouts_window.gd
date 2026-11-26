@@ -143,9 +143,9 @@ func _export() -> void:
 	var t := Tok.tick(Tok.OK, 18)
 	t.position = Vector2(10, 10)
 	box.add_child(t)
-	get_tree().create_timer(1.8).timeout.connect(func(): if is_instance_valid(t):
+	t.create_tween().tween_callback(func():  # dies with the tick
 		t.queue_free()
-		box.get_child(0).visible = true)
+		box.get_child(0).visible = true).set_delay(1.8)
 
 
 ## The list takes what's left of the screen above the hub, and scrolls.

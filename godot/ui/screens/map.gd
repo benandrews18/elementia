@@ -163,7 +163,7 @@ func _say(at: Control, text: String) -> void:
 	box.position = Vector2(clampf(p.x, 8, size.x - box.size.x - 8), maxf(p.y, 8))
 	_bubble = box
 	Juice.pop_in(box)
-	get_tree().create_timer(2.5).timeout.connect(func(): if is_instance_valid(box): box.queue_free())
+	box.create_tween().tween_callback(box.queue_free).set_delay(2.5)  # dies with the box (a timer's lambda would call into a freed one)
 
 
 ## Dashed paths between the stations (MAP_EDGES), wherever their nodes sit:

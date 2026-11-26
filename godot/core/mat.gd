@@ -57,19 +57,17 @@ static func layout(cards: Array, st: int) -> Dictionary:
 ## stacked; capstones take no slot (on_mat()). Returns {slot, overflow}.
 static func pack(cards: Array, st: int) -> Dictionary:
 	var L := layout(cards, st)
-	var cols: int = L.cols
 	var slot: Array = L.kinds.map(func(k): return {"kind": k})
 	var free := func(x) -> bool:
-		return x.kind == "full" and not x.has("card") and not x.has("stack") and not x.has("cover")
+		return x.kind == "full" and not x.has("card") and not x.has("stack")
 	var overflow := []
 	for idx in cards.size():
 		var c: Dictionary = cards[idx]
 		if is_tier1(c) or is_capstone(c):
 			continue
-		var w := 1
 		var at := -1
 		for i in slot.size():
-			if i % cols + w <= cols and i + w <= slot.size() and slot.slice(i, i + w).all(free):
+			if free.call(slot[i]):
 				at = i
 				break
 		if at < 0:
@@ -77,9 +75,6 @@ static func pack(cards: Array, st: int) -> Dictionary:
 			continue
 		slot[at].card = c
 		slot[at].idx = idx
-		slot[at].w = w
-		for k in range(1, w):
-			slot[at + k].cover = true
 	for idx in cards.size():
 		var c: Dictionary = cards[idx]
 		if not is_tier1(c):
@@ -113,7 +108,7 @@ static func fits(cards: Array, st: int) -> bool:
 
 
 static func has_empty_slot(cards: Array, st: int) -> bool:
-	return pack(cards, st).slot.any(func(x): return x.kind != "locked" and not x.has("card") and not x.has("stack") and not x.has("cover"))
+	return pack(cards, st).slot.any(func(x): return x.kind != "locked" and not x.has("card") and not x.has("stack"))
 
 
 static func direct_items(c: Dictionary) -> Array:
