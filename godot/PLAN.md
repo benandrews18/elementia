@@ -29,7 +29,7 @@ One step at a time, in this order unless the user says otherwise.
 5. **Folders by feature** (`ui/check/`, `ui/station/`, `ui/market/`,
    `ui/windows/` ...), moved in the editor so `.uid`s follow; comments lose
    their "(the user, date)" history notes (git has it).
-6. **New mechanics, designed first with godot-grill:** Catalysts (a choice
+6. **New mechanics (draft ideas: MECHANICS.md), designed first with godot-grill:** Catalysts (a choice
    of 2-4 passive rule-benders, awarded at points in the run), Stakes
    (difficulty the player picks at the start, like Balatro's), Mission mode
    (a set of items to craft, post-capstone ones included), Station events
