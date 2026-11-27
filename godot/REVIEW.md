@@ -6,6 +6,28 @@ and `tools/sim.py --runs 80 --seed 3`.
 
 ## Fixes
 
+**Done 2026-11-27.** What each became:
+- 1: the real cost was `load()`. A scene nobody holds is re-read from disk
+  by every `load()` (~3 ms per card or chip), so every scene now comes
+  through `Tok.make()`, which keeps it. Saves wait for the frame's end
+  (`Progress.flush()`). A screen under the Display Mat or the Codex is
+  hidden and not rebuilt. Desktop, per tap: station 43 -> 19 ms, mat 30 ->
+  15, map 20 -> 8, Codex 20 -> 9. Coalescing redraws wasn't needed (one
+  emit per action).
+- 2 and 4: measured at about 1 ms / a fraction of a ms, so left as they
+  are. The press hook (`Juice._on_gui`) is where the tap sound goes.
+- 3: the glow pulses 5 times and the clue wobbles 8 times, then they rest.
+- 5: `App.hub`, `hand_mat()`, `panel_node`, `market_playing`, `go_map()`,
+  `window_open()`.
+- 6: `tests/perf.gd` in `check.py full`.
+- 7: PLAN.md trimmed (1,810 -> 386 lines).
+- 8: `Tok.grow_hit()` on the Market pins and the shop's short-suit badges;
+  the Dev Panel rises above the phone keyboard; saves carry `saveVersion`
+  and load through `Progress.upgrade()`. The phone measurement is still to
+  do (step 7 of the queue).
+
+The original findings:
+
 1. **A tap rebuilds whole screens.** Every `Game.state_changed` frees and
    rebuilds the open screen and panel. Desktop cost per tap: station 43 ms,
    Display Mat 30 ms, map 20 ms, Codex 20 ms (2,325 nodes). A phone is
