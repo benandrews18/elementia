@@ -568,13 +568,17 @@ func _cards(app: App) -> void:
 	# Every card's components in one row at the shared size, bar the two
 	# outliers (smaller) and Planet (its 16 elements wrap).
 	var odd := []
+	var two := []
 	for n in Data.t("CORE_ITEM_NAMES"):
 		app.show_card(n)
 		var cp: CardPop = open.call(CardPop)[0]
-		if n != "Planet" and cp.last_scale != CardPop.FIT:
+		if cp.last_scale != CardPop.FIT:
 			odd.append(n)
+		if n != "Planet" and cp.get_node("Card/Parts").size.y > 32 * CardPop.FIT + 1:
+			two.append(n)
 		cp.free()
-	check(odd.size() <= 3 and odd.has("Car"), "card views: one row at the shared size, bar the outliers %s" % [odd])
+	check(odd.is_empty() and two.has("Car") and two.has("Cruise Ship") and two.size() <= 4,
+		"card views: every recipe at the shared size; the long ones on two rows %s" % [two])
 	app.show_card("Bridge")
 	var pop: CardPop = open.call(CardPop)[0]
 	check(not pop.get_node("Actions/Back").visible, "a fresh card has no Back")

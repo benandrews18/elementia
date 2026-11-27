@@ -204,7 +204,7 @@ static func together(cards: Array, s: Dictionary) -> Dictionary:
 
 
 ## matScore(): (points + collection bonuses) x combo multiplier, with the
-## capstone signature rules and the challenge in force; what a play made by
+## capstone signature rules (and Cruise Ship's, the one non-capstone) and the challenge in force; what a play made by
 ## itself counts once more (together()).
 static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 	var dest = destination(s, ctx) if has(cards, "Space Station") else null
@@ -231,7 +231,9 @@ static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 			stations_on[x] = true
 	var coral := stations_on.size() if has(cards, "Coral Reef") else 0
 	var eco := int(s.get("ecoStreak", 0)) + 1 if has(cards, "Ecosystem") else 0
-	var mult := 1 + combo + coral + eco
+	# Cruise Ship's Grand Voyage (the user, 2026-11-26; a tier 3 card, not a capstone): +1 per capstone crafted this run.
+	var voyage: int = Data.t("CAPSTONES").filter(func(n): return Util.get_or(s, "items", []).has(n)).size() if has(cards, "Cruise Ship") else 0
+	var mult := 1 + combo + coral + eco + voyage
 	var layered: bool = has(cards, "Fruit Cake") and Data.t("ELEMENT_SUIT_LABEL").keys().all(
 		func(su): return cards.any(func(c): return c.pips.has(su)))
 	var pre := (base + col_bonus) * mult
@@ -246,6 +248,7 @@ static func score(cards: Array, s: Dictionary, ctx: Dictionary) -> Dictionary:
 	if has(cards, "Ecosystem"): sigs.append({"name": "Ecosystem", "label": "+%d" % eco, "on": true})
 	if has(cards, "Fruit Cake"): sigs.append({"name": "Fruit Cake", "label": "×2", "on": layered})
 	if has(cards, "Metropolis"): sigs.append({"name": "Metropolis", "label": "+2", "on": true})
+	if has(cards, "Cruise Ship"): sigs.append({"name": "Cruise Ship", "label": "+%d" % voyage, "on": voyage > 0})
 	if has(cards, "Space Station"): sigs.append({"name": "Space Station", "label": "×2", "on": dest != null and cards.any(func(c): return c.stations.has(dest))})
 	return {"base": base, "colBonus": col_bonus, "mult": mult, "layered": layered, "orderMult": order_mult,
 		"combos": {"station": all_groups(g.st), "suit": all_groups(g.su), "component": all_groups(g.cp)},

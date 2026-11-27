@@ -93,6 +93,7 @@ static func all() -> Array:
 	add.call("unlocked", "🔓", "Unlocked!", "Craft an item a capstone unlocks", func(st, _p): return st.items.any(func(n): return unlocked.has(n)))
 	add.call("way-out", "🪐", "Way Out There", "Craft Planet, Solar System, University, Library or Trumpet",
 		func(st, _p): return Data.t("WAY_OUT_THERE").any(func(n): return st.items.has(n)))
+	add.call("bon-voyage", "🛳️", "Bon Voyage", "Craft the Cruise Ship", func(st, _p): return st.items.has("Cruise Ship"))  # the user, 2026-11-26
 	var q_icons := ["⚛️", "💫", "🌟"]
 	var qs := [1000, 2500, 4000]
 	for i in 3:

@@ -390,6 +390,17 @@ func _ready() -> void:
 	check(trio.size() == 3 and togeth.mult > apart.mult and togeth.together.combos.any(func(x): return x.kind == "suit" and x.name == tsu), "together: a suit combo played in one play adds its bonus again (%s vs %s)" % [togeth.mult, apart.mult])
 	s.matPlays = []
 	check(Mat.score(Mat.on_mat(s), s, {}).total == apart.total, "together: cards played one at a time score as the mat always did")
+	# Cruise Ship's Grand Voyage (the user, 2026-11-26): +1 multiplier per capstone crafted this run.
+	var gv := Game.fresh_state()
+	gv.visits = 20
+	gv.items = ["Cruise Ship", "Coral Reef", "Robot"]
+	gv.mat = ["Cruise Ship"]
+	var sv: Dictionary = Mat.score(Mat.on_mat(gv), gv, {})
+	var sig: Array = sv.sigs.filter(func(x): return x.name == "Cruise Ship")
+	gv.mat = []  # the same capstones (always on), no Cruise Ship
+	var none: Dictionary = Mat.score(Mat.on_mat(gv), gv, {})
+	var cb := func(sc): return sc.combos.suit.reduce(func(t, x): return t + x.bonus, 0) + sc.combos.station.reduce(func(t, x): return t + x.bonus, 0) + sc.combos.component.reduce(func(t, x): return t + x.bonus, 0)
+	check(sv.mult - none.mult - (cb.call(sv) - cb.call(none)) == 2 and sig.size() == 1 and sig[0].label == "+2", "Grand Voyage (%s vs %s)" % [sv.mult, none.mult] + ": Grand Voyage: +1 multiplier per capstone crafted, its own chip")
 	var whole = null
 	for n in Data.t("CORE_ITEM_NAMES"):
 		var mc = Catalog.mat_card(n)

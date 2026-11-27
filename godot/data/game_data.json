@@ -15,7 +15,7 @@
  "CONVERT_RATE": 3,
  "DATA": {
   "take": 3,
-  "version": "2026.11.26a",
+  "version": "2026.11.26b",
   "suits": {
    "ocean": {
     "label": "OCEAN",
@@ -169,7 +169,7 @@
       "🛳️",
       "Cruise Ship",
       "CREATION",
-      "🚤 Speedboat + 🔩 Stainless Steel + 📡 Satellite Dish + 🎆 Fireworks + 🍩 Éclair + 🎺 Trumpet",
+      "🚤 Speedboat + 🔩 Stainless Steel + 📡 Satellite Dish + 🎆 Fireworks + 🍩 Éclair + 🎺 Trumpet + 🔆 Solar Panel + 🍥 Fish Cakes",
       40
      ]
     ]
@@ -2086,7 +2086,8 @@
   "Ecosystem": "Old Growth: +1 multiplier for each board check since you made it.",
   "Fruit Cake": "Four-Layer Cake: all 4 suits on your mat doubles your Quarks.",
   "Metropolis": "Expansion: your mat has 2 extra slots.",
-  "Space Station": "Orbit: cards from the station you're travelling to score ×2."
+  "Space Station": "Orbit: cards from the station you're travelling to score ×2.",
+  "Cruise Ship": "Grand Voyage: +1 multiplier for each capstone crafted this run."
  },
  "TIER_NUMERAL": {
   "MATERIAL": "I",

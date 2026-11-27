@@ -175,7 +175,7 @@ func show_item(name: String, keep_back := false) -> void:
 	var parts_w := inner_w - (32.0 if cap else 0.0)  # a capstone's clear of the suit-cost column
 	var parts_h := _parts(parts_w, cap)
 	var sig: Label = $Card/Sig
-	sig.visible = cap and Data.t("CAPSTONE_SIGNATURES").has(name)
+	sig.visible = Data.t("CAPSTONE_SIGNATURES").has(name)  # Cruise Ship too (a tier 3 card with one)
 	var sig_h := 0.0
 	if sig.visible:
 		sig.text = Data.t("CAPSTONE_SIGNATURES")[name]
@@ -201,6 +201,10 @@ func show_item(name: String, keep_back := false) -> void:
 		icon_h = bottom - pad_top - rest
 	elif Data.t("PDF_ENLARGED_ICONS").has(name):
 		icon_px = 150.0
+	if not cap and sig.visible:  # a portrait card with a rule (Cruise Ship): the art gives way, the rule clears the corner badges
+		var rest_p := 6 + name_h + 10 + 1 + 10 + 14.8 + 9 + parts_h + 8 + sig_h
+		icon_h = minf(icon_h, card.size.y - 50 - pad_top - rest_p)
+		icon_px = minf(icon_px, icon_h - 6)
 	var icon: TextureRect = $Card/Icon
 	icon.texture = Data.icon(entry.emoji)
 	var isz := Vector2(icon_px * k, art_h if art_h > 0 else icon_px * k)
@@ -277,7 +281,7 @@ static func _cost_badge(su: String) -> Panel:
 ## one row (the user, 2026-11-22): every card at FIT of full size when its
 ## row fits (most do), else shrunk to fit; Planet's 16 elements wrap,
 ## smaller, with no "+". Returns their height. Each opens its own card.
-const FIT := 0.91  # the shared size: 97 of 99 cards fit one row at it (2026-11-22: only Car and Fruit Cake shrink further)
+const FIT := 0.91  # the shared size; a recipe too long for one row at it takes two (Car, Fruit Cake, Cruise Ship)
 const SIDE_FIT := 1.4  # the side card is drawn small: its parts bigger, as many as fit one row
 var last_scale := 1.0  # the row's scale on the card shown (tests)
 
@@ -295,19 +299,17 @@ func _parts(w: float, _cap: bool) -> float:
 	var pts: Dictionary = Data.t("ITEM_POINTS")
 	toks = toks.filter(func(r): return r.kind == "element") + Util.stable_sort(toks.filter(func(r): return r.kind != "element"),
 		func(a, b): return pts.get(a.name, 0) - pts.get(b.name, 0))
-	var lots := toks.size() >= 10  # Planet
-	var k := FIT
-	if not lots:
-		var natural := _row(toks, 1.0, false, null, 0.0)
-		k = minf(SIDE_FIT if side else FIT, w / natural)
+	var lots := toks.size() >= 10  # Planet: small chips, no "+"
+	var k := FIT if lots or not side else SIDE_FIT
+	var wraps := lots or _row(toks, k, false, null, 0.0) > w  # too long: a second row, never smaller (the user, 2026-11-26: Car, Cruise Ship)
 	last_scale = k
-	return _row(toks, k, lots, holder, w)
+	return _row(toks, k, lots, holder, w, wraps)
 
 
 ## Lays the parts out at scale k into holder (or only measures: holder
 ## null); one row, or wrapping at w when lots. Returns the width measured,
 ## or the height laid out.
-func _row(toks: Array, k: float, lots: bool, holder: Control, w: float) -> float:
+func _row(toks: Array, k: float, lots: bool, holder: Control, w: float, wraps := false) -> float:
 	var gap := 4.0 if lots else part_gap * k
 	var icon_px := 32.0 * k
 	var row_h := icon_px
@@ -323,10 +325,16 @@ func _row(toks: Array, k: float, lots: bool, holder: Control, w: float) -> float
 			parts.append(plus)
 		parts.append(_element(r.name, lots, k) if r.kind == "element" else _item(r.name, icon_px))
 		parts.back().set_meta("cmp", "cp:ing%d" % i)
+		var group_w := 0.0
 		for c in parts:
-			if lots and x > 0 and x + c.size.x > w:  # Planet wraps (a "+" can't end a row: it has none)
-				x = 0
-				y += row_h + gap
+			group_w += c.size.x + gap
+		if wraps and x > 0 and x + group_w - gap > w:  # the next part on a new row; its "+" stays behind
+			x = 0
+			y += row_h + gap
+			if parts.size() > 1:
+				parts[0].free()
+				parts.remove_at(0)
+		for c in parts:
 			var cw := c.size.x
 			if holder:
 				c.position = Vector2(x, y + (row_h - c.size.y) / 2)

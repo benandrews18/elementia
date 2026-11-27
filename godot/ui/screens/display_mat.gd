@@ -1368,7 +1368,7 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		chips[-1].set_meta("combo", "order")
 		chips[-1].set_meta("tip", "order")  # the challenge hint's 💡
 		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
-	for g in sc.sigs:  # every owned capstone, always on beside the mat: a tap shows its card (the user, 2026-11-26)
+	for g in sc.sigs:  # every owned capstone (always on) and a Cruise Ship on the mat: a tap shows its card (the user, 2026-11-26)
 		var cap := _chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0)
 		cap.set_meta("cap", g.name)
 		Juice._ignore_mouse(cap)
