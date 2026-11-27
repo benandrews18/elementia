@@ -388,3 +388,4 @@ One line per batch (details: CHANGELOG.md and git).
 - 2026-11-27: F11 on the web (head_include stops it reaching Godot's canvas); map reveal waits for the map in view (opening doesn't mark neighbours seen); Market Unknown squares open UnknownTip; Display Mat Score and Quark Combos texts.
 - 2026-11-27: empty first check: App.auto_lock_in (the mat's self-ending check goes through it) shows Mouse's two lines (1/2, 2/2) behind a blocker, then hand_lock_in; not in the tutorial, the final check, a Challenge Test, or once matChecked.
 - 2026-11-27: the details' track tip and Mouse's "tap its 🔍" draw the Noto image (no emoji in text); StartLock shows a round 🔍; the opening's Track glow is rings outside the button (draw_arc for round ones), nothing inside.
+- 2026-11-27: RefTree.suit_row(ringed) gives the breakdown the suit strip's rings; Named Collections' ★ is a drawn star in the banner's icon spot.

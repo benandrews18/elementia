@@ -32,7 +32,10 @@ func _ready() -> void:
 		var sc: Dictionary = Game.mat_score()
 		var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 		var cols: Array = sc.cols.filter(func(c): return found.has(c.id))
-		$Window.title = "★ Named Collections (%d)" % cols.size()
+		$Window.title = "Named Collections (%d)" % cols.size()
+		# the banner's icon spot holds a drawn ★ (not in Nunito; a text ★ differs per device)
+		$Window.icon = ImageTexture.create_from_image(Image.create_empty(1, 1, false, Image.FORMAT_RGBA8))
+		$Window/Banner/Icon.add_child(Tok.star(Tok.GOLD, 24))
 		for c in cols:
 			var r := CollectionRow.make()
 			r.custom_minimum_size.y = r.fill(c, null, w)

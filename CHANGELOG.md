@@ -8,6 +8,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- To-Do details breakdown: an item's suit icons now sit in the same gold rings as the suit strip by Convert.
+- Named Collections window: its ★ is drawn as a picture, so it looks the same on every device.
 - The 🔍 in the To-Do details' "Tap 🔍 on a part to track it" (and in Professor Mouse's "tap its 🔍") is now the game's own picture, so it looks the same on every device instead of showing as a broken emoji on some.
 - "Track an item to start" now shows the round 🔍 Track button at its left, so you know what to look for.
 - The opening's glowing 🔍 Track buttons: the glow is now a gold ring with a soft halo outside it; the inside stays clear, so they no longer look already selected.

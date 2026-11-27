@@ -78,8 +78,9 @@ static func ready(name: String) -> bool:
 
 
 ## An item's suit cost (its "element tax"), as a row of suit icons centred
-## on `at` (x: the middle; y: the top). Empty if it has none.
-static func suit_row(name: String, at: Vector2, px: float) -> Control:
+## on `at` (x: the middle; y: the top). Empty if it has none. ringed: each in
+## the suit strip's gold ring, px wide (station.gd suit_pill).
+static func suit_row(name: String, at: Vector2, px: float, ringed := false) -> Control:
 	var suits: Array = Data.t("ITEM_SUIT_COST_TABLE").get(name, [])
 	var r := Control.new()
 	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -88,12 +89,20 @@ static func suit_row(name: String, at: Vector2, px: float) -> Control:
 	r.size = Vector2(maxf(0, suits.size() * step - 3), px)
 	r.position = Vector2(at.x - r.size.x / 2, at.y)
 	for i in suits.size():
-		var g := Tok.icon("suit:" + suits[i], px)
+		var ipx := px * 17.0 / 28.0 if ringed else px
+		var g := Tok.icon("suit:" + suits[i], ipx)
 		g.material = Tok.tinted(Tok.suit_color(suits[i]))
-		g.position = Vector2(i * step, 0)
+		var slot: Control = g
+		if ringed:  # the user, 2026-11-27
+			slot = Panel.new()
+			slot.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), px / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
+			slot.size = Vector2(px, px)
+			g.position = (slot.size - Vector2(ipx, ipx)) / 2
+			slot.add_child(g)
+		slot.position = Vector2(i * step, 0)
 		var su: String = suits[i]
-		SuitSpend.on_tap(g, su)  # the suit and its elements (step 27; the user, 2026-11-26)
-		r.add_child(g)
+		SuitSpend.on_tap(slot, su)  # the suit and its elements (step 27; the user, 2026-11-26)
+		r.add_child(slot)
 	return r
 
 
@@ -279,8 +288,9 @@ func _flat(parent: Control, name: String, kind: String, path: String, seen: Dict
 		seen2[name] = true
 		var top := y
 		if not Data.t("ITEM_SUIT_COST_TABLE").get(name, []).is_empty():  # its suit cost first (the user, 2026-11-26)
-			parent.add_child(suit_row(name, Vector2(at.x + 16 + 14, y + 4), 16))
-			y += 26
+			var sw: float = Data.t("ITEM_SUIT_COST_TABLE")[name].size() * 25 - 3
+			parent.add_child(suit_row(name, Vector2(at.x + 16 + sw / 2, y + 4), 22, true))  # from the parts' left edge
+			y += 30
 		y = nodes(parent, components(e), path, seen2, Vector2(at.x + 16, y), w - 16)
 		var rule := ColorRect.new()
 		rule.color = look.rule
