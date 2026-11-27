@@ -47,7 +47,11 @@ func _run(app: App) -> void:
 	# the run starts at its station.
 	Progress.prefs.hiddenTips = []
 	app.new_game()
-	check(await _until(func(): return app.get_children().any(func(c): return c is CapstoneChoice)), "the logo, then the capstone choice (no how-to-play slides)")
+	check(await _until(func(): return app.get_children().any(func(c): return c is HowToPlay)), "New Game: the logo, then the game in brief (step 25)")
+	for h in app.get_children().filter(func(c): return c is HowToPlay):
+		for k in 3:
+			h._next()  # Next, Next, Let's play
+	check(await _until(func(): return app.get_children().any(func(c): return c is CapstoneChoice)), "Let's play: the capstone choice")
 	var pick: CapstoneChoice = app.get_children().filter(func(c): return c is CapstoneChoice)[0]
 	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
 	pick._confirm("Coral Reef")
@@ -66,6 +70,8 @@ func _run(app: App) -> void:
 	check(await _until(func(): return app._screen is StationScreen), "Start: the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
 	var turns := 0
+	var rules_seen := false
+	var tip_seen := false
 	while not Game.state.get("ended") and not Game.state.get("runComplete") and turns < 60:
 		turns += 1
 		check(app._screen is StationScreen, "turn %d: at a station" % turns)
@@ -116,7 +122,16 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # travel
 		if check_turn:
 			check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn %d: the shutter opens the mat" % turns)
-			check(not app.get_children().any(func(c): return c is MatRules or (c is ParchDialog and c.tip_id == "orderTip")), "turn %d: no rules or challenge tip windows (they're hints)" % turns)
+			var rules: Array = app.get_children().filter(func(c): return c is MatRules)
+			check(rules.size() == (0 if rules_seen else 1), "turn %d: the run's first check (only) opens the Display Mat rules" % turns)
+			for r in rules:
+				r.close()  # Got it: on to the check
+			rules_seen = true
+			if Orders.current(Game.state) != null and not tip_seen:
+				check(await _until(func(): return app.get_children().any(func(c): return c is ParchDialog and c.tip_id == "orderTip")), "turn %d: the first challenge: its tip first" % turns)
+				for c in app.get_children().filter(func(c): return c is ParchDialog and c.tip_id == "orderTip"):
+					c.close()
+				tip_seen = true
 			if Orders.current(Game.state) != null:
 				check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo or c is MatExpand)), "turn %d: the challenge (or the expansion) shows" % turns)
 			_dismiss(app)
@@ -200,6 +215,10 @@ func _final_score(app: App) -> void:
 	app._on_hub("home")
 	check(Game.state.get("finalCheckPending") == true, "turn 24: the final check is pending")
 	check(await _until(func(): return app.panel == "drawer" and not _busy(app)), "turn 24: the shutter opens the mat")
+	for k in 2:  # a fresh run's first check and challenge: the rules, then the challenges tip
+		await get_tree().process_frame
+		for c in app.get_children().filter(func(c): return c is ParchDialog and c.tip_id in ["matRules", "orderTip"]):
+			c.close()
 	check(await _until(func(): return app.get_children().any(func(c): return c is OrderInfo)), "turn 24: the Grand Exhibition shows")
 	_dismiss(app)
 	check(app.home_face() == "play" and Game.check_hand() != null, "turn 24: the final check is played with a hand")

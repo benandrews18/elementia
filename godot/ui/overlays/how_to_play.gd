@@ -29,7 +29,7 @@ const SCENE := "res://ui/overlays/how_to_play.tscn"
 @export_multiline var gather_line := "Spend elements like currency.\n[b]Item cards are yours forever![/b]"
 @export_group("Slide 3: the Display Mat")
 @export var mat_kicker := "Display Mat"
-@export var mat_line := "Arrange a [b]Display Mat[/b] to earn [b]Quark Points[/b]"
+@export var mat_line := "Play item cards on your [b]Display Mat[/b] to earn [b]Quark Points[/b]"
 @export var combo_station := "3+ from the [b]same station[/b]"
 @export var combo_suit := "3+ of the [b]same suit[/b]"
 @export var combo_shared := "3+ that [b]share an item[/b]"

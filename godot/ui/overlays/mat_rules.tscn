@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/mat_rules.gd" id="s"]
 [ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="r1"]
@@ -8,6 +8,7 @@
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_700.tres" id="r5"]
 [ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="r6"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_600.tres" id="r7"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parch_button.tscn" id="r8"]
 
 [sub_resource type="StyleBoxFlat" id="warn"]
 content_margin_left = 10.0
@@ -30,6 +31,7 @@ layout_mode = 3
 offset_right = 390.0
 offset_bottom = 844.0
 script = ExtResource("s")
+tip_id = "matRules"
 
 [node name="Dim" parent="." instance=ExtResource("r1")]
 layout_mode = 1
@@ -68,12 +70,32 @@ theme_override_fonts/bold_font = ExtResource("r5")
 theme_override_font_sizes/normal_font_size = 13
 theme_override_font_sizes/bold_font_size = 13
 bbcode_enabled = true
-text = "[center]{🕒} Display Mat [b]challenge[/b] every 3 turns[/center]"
+text = "[center]{🕒} Display Mat [b]challenge[/b] every {every} turns[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
 [node name="G1" type="Control" parent="Window/Content/Page1"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="LHand" type="RichTextLabel" parent="Window/Content/Page1"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 1
+theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 13
+theme_override_font_sizes/bold_font_size = 13
+bbcode_enabled = true
+text = "[center]{🃏} Play item cards from your [b]hand[/b] onto the mat, then [b]Pass[/b][/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="GHand" type="Control" parent="Window/Content/Page1"]
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 mouse_filter = 2
@@ -288,3 +310,15 @@ layout_mode = 2
 
 [node name="Text" parent="Window/Content/Page2/OkRow/Ok" index="0"]
 text = "Got it"
+
+[node name="Hide" parent="Window" instance=ExtResource("r8")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -46.0
+offset_right = 84.0
+offset_bottom = -16.0
+theme_override_font_sizes/font_size = 12
+text = "✕  Hide"

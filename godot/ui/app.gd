@@ -354,9 +354,11 @@ func new_game() -> void:
 			var c := CapstoneChoice.make()
 			c.size = size
 			add_child(c)
-		choose.call()
 		if not Progress.prefs.get("tutorialSeen"):  # everyone's first New Game since the tutorial came in
-			tutorial.start())
+			choose.call()
+			tutorial.start()
+		else:  # the game in brief, every game until hidden (step 25)
+			HowToPlay.play(self, choose))
 
 
 ## A Craft tap: crafts at once, or, for an item with a suit cost, opens the
@@ -1024,7 +1026,9 @@ func _roll() -> void:
 ## Travel: on a board-check turn the shutter, then the mat opens for the
 ## Lock-In (Home becomes Lock In); tapping Travel again just reopens the mat.
 ## Otherwise a quiet check sets this trip's dice and off you go.
-## The rules and the challenge are hints now (Hints), not windows.
+## A run's first check opens the Display Mat rules first, and its first
+## challenge the challenges tip (step 25: each until hidden; not in the
+## tutorial, which says it all).
 func _travel(dest: String) -> void:
 	if Catalog.is_mat_check_visit(Game.state):
 		if Game.ctx.get("travelPromptFor") == dest:
@@ -1035,7 +1039,12 @@ func _travel(dest: String) -> void:
 		Shutter.play(self, "Display Mat Challenge!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
 			HandView.hold()  # dealt in once the challenge is closed (the user, 2026-11-23): _challenge()
 			open_panel("drawer")
-			_check_intro())
+			if not Game.state.get("sawMatRules") and not Progress.tip_hidden("matRules") and not tutorial.running():
+				Game.state.sawMatRules = true
+				Progress.save_all()
+				MatRules.show_on(self).closed.connect(_check_intro)
+			else:
+				_check_intro())
 	else:
 		Game.quiet_check()
 		Game.go_station(dest)
@@ -1093,6 +1102,11 @@ func _challenge() -> void:
 	var o = Orders.current(s)
 	if o == null or int(o.round) != int(s.visits):
 		_deal_hand()
+		return
+	if not s.get("sawOrderTip") and not Progress.tip_hidden("orderTip") and not tutorial.running():
+		s.sawOrderTip = true
+		Progress.save_all()
+		MatRules.order_tip(self).closed.connect(func(): OrderInfo.open(self).tree_exiting.connect(_deal_hand))
 		return
 	OrderInfo.open(self).tree_exiting.connect(_deal_hand)
 

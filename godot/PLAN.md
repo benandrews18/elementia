@@ -627,11 +627,19 @@ Market, tutorials), motion last (it animates the final layouts).
    (not locked(), no hand) and keeps the card as `selected`; _lab_bench()
    (BenchPanel + plain ShopRow) under the mat's line; the list view's side
    card shows it; _sel_acts gone. Play test and shot state lab_bench.
-25. **Tutorials** (once the screens settle: they describe them).
+25. ✅ **Tutorials** (once the screens settle: they describe them).
    - The 3-4 intro windows (the whole game in brief) back at the start of
      every game, until the player hides them.
    - The Display Mat windows at the first check.
    - The mouse stays for the tap-by-tap guidance.
+   Done (2026-11-26): New Game plays HowToPlay before the capstone choice
+   (not on the guided first game); its mat slide says cards are played.
+   A run's first check opens MatRules (state.sawMatRules; tip_id matRules,
+   ✕ Hide; a new line on playing the hand; {every} from MAT_CHECK_EVERY),
+   its first challenge the order tip (state.sawOrderTip, as before step 9).
+   Neither while the tutorial runs. The 💡 hints stay as they are. Chosen
+   (say if not): the windows every run until hidden, like the slides, not
+   once ever.
 26. **Station transitions**: arriving fades in the backdrop, the header
    slides down, the cards come in from the right, the tracked pill bounces
    as the 🔍 marks appear; taps work throughout. Leaving for the map: a
@@ -652,6 +660,7 @@ Market, tutorials), motion last (it animates the final layouts).
    since the last map visit animates.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 25 (tutorials): the How-to-Play slides every game until hidden; the Display Mat rules and challenges tip at a run's first check, each hideable.
 - 2026-11-26: step 24 (Combo Lab): taps put cards on and off the mat, the last on a Crafting Bench; no Add / Remove.
 - 2026-11-26: step 22 checked done; step 28 planned (the map discovered as you go). Step 23 (Market): opening ~170 -> ~28 ms (no full redraw on open; Data keeps icon textures), the stall icon and white shadowed text.
 - 2026-11-26: To-Do List polish (the user): hint card line by line, the tip, a bit wider, title in two lines on a darker band, panel slide-in, green parts counts, closest-first order (tracked on top), a tap below closes the panel. Next: step 23 (Market).

@@ -1,7 +1,8 @@
 ## The Display Mat rules (openMatRules(), #matRulesOverlay), two pages: how
 ## a board check works, then Quark combos (the stations, the suits and some
 ## items as icons). Opened by the mat's "?", from Tutorial Messages, and at
-## the first board check ever. The layout is ui/overlays/mat_rules.tscn.
+## a run's first check until hidden (✕ Hide: matRules; step 25). The layout
+## is ui/overlays/mat_rules.tscn.
 ## Also opens the challenge tip (order_tip.tscn).
 class_name MatRules
 extends ParchDialog
@@ -15,7 +16,7 @@ const ORDER_TIP := "res://ui/overlays/order_tip.tscn"
 
 
 static func show_on(on: Control) -> MatRules:
-	return ParchDialog.open(on, SCENE) as MatRules
+	return ParchDialog.open(on, SCENE, {"every": int(Data.t("MAT_CHECK_EVERY"))}) as MatRules
 
 
 ## Display Mat Challenges, with this game's multipliers.
