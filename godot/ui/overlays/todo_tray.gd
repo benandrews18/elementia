@@ -104,14 +104,21 @@ func _redraw() -> void:
 		if hint_open:
 			y = _hint_card(hint, y, w) + 16
 		if Game.ctx.get("tracked") == null and detail == "":  # a nudge, not a pick (the user, 2026-11-26); in the panel when it's open
-			var tip := Tok.label("Tip: open an item, then tap 🔍 on a part to track it.", 13, Color("#b3becd"), 700)
-			tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			tip.custom_minimum_size = Vector2(w, 0)
+			var tip := Tok.label("Tap items to view details", 13, Color("#b3becd"), 700)  # the user's words, 2026-11-26
 			tip.position = Vector2(20, y)
 			tip.set_meta("cmp", "todo:tip")
 			_list.add_child(tip)
-			tip.size = Vector2(w, 0)
-			y += 6 + ceilf(Tok.font(700).get_multiline_string_size(tip.text, HORIZONTAL_ALIGNMENT_LEFT, w, 13).y)
+			y += 22
+			var g := Tok.icon("🔍", 15)
+			g.position = Vector2(20, y + 1)
+			_list.add_child(g)
+			var t2 := Tok.label("Track item parts to guide your journey!", 13, Color("#e2b25a"), 700)
+			t2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			t2.custom_minimum_size = Vector2(w - 20, 0)
+			t2.position = Vector2(40, y)
+			_list.add_child(t2)
+			t2.size = Vector2(w - 20, 0)
+			y += 6 + ceilf(Tok.font(700).get_multiline_string_size(t2.text, HORIZONTAL_ALIGNMENT_LEFT, w - 20, 13).y)
 		y += 4
 		for n in names:
 			y = _row(Catalog.entry(n), y, _scroll.size.x)
@@ -137,7 +144,7 @@ func _list_width(names: Array) -> float:
 		var e: Dictionary = Catalog.entry(n)
 		widest = maxf(widest, Tok.font(800).get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, _name_px(n)).x)
 		widest = maxf(widest, 15 + Tok.font(700).get_string_size(_sub_text(e), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x)
-	return maxf(190, 56 + widest + 12 + 22 + 14)
+	return maxf(210, 56 + widest + 22 + 22 + 24)  # some air either side of the pins (the user: squished)
 
 
 func _show(name: String) -> void:
@@ -313,7 +320,7 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	row.add_child(sub)
 	var pin := Tok.icon("📌", 22)  # drop it from the list
-	pin.position = Vector2(w - 14 - 22, (ROW_H - 22) / 2)
+	pin.position = Vector2(w - 24 - 22, (ROW_H - 22) / 2)
 	pin.mouse_filter = MOUSE_FILTER_STOP
 	pin.set_meta("cmp", "todo:pin:" + e.name)
 	pin.gui_input.connect(func(ev): if Tap.tap(ev):
