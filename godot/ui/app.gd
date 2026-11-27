@@ -858,8 +858,17 @@ func _start_lock(on: bool) -> void:
 	p.set_meta("cmp", "start:lock")
 	var l := Tok.label("Track an item to start", 15, Color.WHITE, 800)
 	var tw := Tok.font(800).get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-	p.size = Vector2(tw + 28, 30)
-	l.position = Vector2(14, 4)
+	var bt := Panel.new()  # the parts' round 🔍 Track button, to look for (the user, 2026-11-27)
+	bt.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.12), 15, 2, Tok.GOLD))
+	bt.mouse_filter = MOUSE_FILTER_IGNORE
+	bt.size = Vector2(30, 30)
+	bt.position = Vector2(6, 5)
+	var ic := Tok.icon("🔍", 15)
+	ic.position = Vector2(7.5, 7.5)
+	bt.add_child(ic)
+	p.add_child(bt)
+	p.size = Vector2(tw + 58, 40)
+	l.position = Vector2(44, 9)
 	p.add_child(l)
 	p.position = Vector2((size.x - p.size.x) / 2, size.y - HubBar.H - 14 - 58 - 12 - p.size.y)  # over the 🔍 / ⚛️ row
 	p.pivot_offset = p.size / 2

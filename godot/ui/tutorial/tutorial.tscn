@@ -33,7 +33,7 @@ done_if = "started"
 
 [sub_resource type="Resource" id="stepTrack"]
 script = ExtResource("2")
-say = "Coral Reef is on your [b]To-Do List[/b]. Pick one of its parts to work on first: tap its 🔍!"
+say = "Coral Reef is on your [b]To-Do List[/b]. Pick one of its parts to work on first: tap its {🔍}!"
 pose = 7
 target = "todo:track:*"
 until = "wait"

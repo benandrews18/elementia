@@ -473,9 +473,17 @@ func _details() -> void:
 	head.position = Vector2(14, 104 + dy)
 	body.add_child(head)
 	if Game.ctx.get("tracked") == null:  # a nudge, not a pick
-		var tip := Tok.label("Tap 🔍 on a part to track it", 12, Color("#e2b25a"), 700)
+		var tip := Control.new()  # 🔍 as its image: an emoji in text draws differently per device
+		tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tip.position = Vector2(62, 103 + dy)
 		tip.set_meta("cmp", "todo:tip")
+		var x := 0.0
+		for part in ["Tap", "🔍", "on a part to track it"]:
+			var n: Control = Tok.icon(part, 14) if part == "🔍" else Tok.label(part, 12, Color("#e2b25a"), 700)
+			n.position = Vector2(x, 1 if part == "🔍" else 0)
+			tip.add_child(n)
+			x += 14.0 if part == "🔍" else Tok.font(700).get_string_size(part, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+			x += 4
 		body.add_child(tip)
 	var tree := RefTree.new(RefTree.FLAT, _toggle)
 	tree.hint_name = _hint_name if hint_open else focus

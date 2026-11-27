@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- The 🔍 in the To-Do details' "Tap 🔍 on a part to track it" (and in Professor Mouse's "tap its 🔍") is now the game's own picture, so it looks the same on every device instead of showing as a broken emoji on some.
+- "Track an item to start" now shows the round 🔍 Track button at its left, so you know what to look for.
+- The opening's glowing 🔍 Track buttons: the glow is now a gold ring with a soft halo outside it; the inside stays clear, so they no longer look already selected.
 - First Display Mat check with no items: Professor Mouse appears and says "Looks like you haven't crafted any items yet!", then (Next) "Try to craft some before the next Display Mat Challenge on turn 6! 🕒". Once they're cleared, the check carries on as normal ("No bonus dice this time").
 - Website: F11 works again (the game was swallowing it), so the browser's own full screen fills the screen's height.
 - The map growing: it now plays the first time you reach the map after a station (the opening no longer counts the next stations as seen), and only once the map is really on screen, never under the To-Do List, Market or another panel.

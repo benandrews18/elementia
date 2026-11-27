@@ -363,11 +363,26 @@ static func track_button(name: String, at: Vector2, px := 40.0) -> Control:
 	ic.position = (b.size - Vector2(ipx, ipx)) / 2
 	b.add_child(ic)
 	if Game.ctx.get("awaitingStart") and Game.ctx.get("tracked") == null:  # the opening: track something to Start (the user, 2026-11-27)
-		var glow := Panel.new()  # a soft gold halo, breathing 5 times, then lit and still (an endless loop redraws every frame: battery)
-		glow.add_theme_stylebox_override("panel", Tok.box(Color(Tok.GOLD, 0.25), px / 2 + 3, 2, Tok.GOLD, 8, 0, Color(Tok.GOLD, 0.6)))
-		glow.position = Vector2(-3, -3)
-		glow.size = b.size + Vector2(6, 6)
+		# A gold ring with a halo outside it only, the inside left clear (a fill read as "already on"),
+		# breathing 5 times, then still (an endless loop redraws every frame: battery).
+		var m := 8.0
+		var r0 := px / 2 if px < 40 else 8.0
+		var glow := Control.new()
+		glow.position = Vector2(-m, -m)
+		glow.size = b.size + Vector2(m, m) * 2
 		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glow.draw.connect(func():
+			var core := Rect2(Vector2(m, m), b.size)
+			for k in range(4, 0, -1):
+				var a := Color(Tok.GOLD, 0.45 * (1 - k / 5.0))
+				if px < 40:  # true circles: a round style box seams at these sizes
+					glow.draw_arc(core.get_center(), px / 2 + k * 1.5, 0, TAU, 64, a, 2, true)
+				else:
+					glow.draw_style_box(Tok.box(Color.TRANSPARENT, r0 + k * 2, 2, a), core.grow(k * 2))
+			if px < 40:
+				glow.draw_arc(core.get_center(), px / 2 - 1, 0, TAU, 64, Tok.GOLD, 2, true)
+			else:
+				glow.draw_style_box(Tok.box(Color.TRANSPARENT, r0, 2, Tok.GOLD), core))
 		glow.set_meta("cmp", "todo:trackglow")
 		b.add_child(glow)
 		b.move_child(glow, 0)
