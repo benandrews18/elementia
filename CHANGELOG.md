@@ -9,6 +9,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Data 2026.11.26b. Cruise Ship now also takes Solar Panel and Fish Cakes (8 parts across seven stations). On the Display Mat it has its own chip, Grand Voyage: +1 multiplier for each capstone crafted this run. New trophy: 🛳️ Bon Voyage (craft the Cruise Ship).
+- Full cards: a long recipe (Car, Fruit Cake, Cruise Ship) takes two rows of parts at the usual size instead of shrinking.
+- Unknown Element picker: the elements sit on the parchment (no blue backing), their names in black.
 - Data 2026.11.26a. New item: 🛳️ Cruise Ship (40 points, one of each suit), made at The Ocean once Coral Reef is crafted, from Speedboat, Stainless Steel, Satellite Dish, Fireworks, Éclair and Trumpet: a late-game challenge reaching across six stations.
 - Station list view: each row on one line (picture, name, suit icons, parts), the same sizes for every item; only Planet's 16 elements run onto a second line.
 - Paying a suit cost: the balloon's title says what to pick, "Choose 1 (suit), 2 (suit)", counting down as you pick.

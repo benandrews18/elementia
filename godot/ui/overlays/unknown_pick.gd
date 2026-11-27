@@ -48,15 +48,10 @@ func _ready() -> void:
 	em.position.x = (w - name_w - 32) / 2
 	nl.position.x = em.position.x + 32
 	var x0 := (w - row_w) / 2
-	var navy := Panel.new()
-	navy.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), 12))
-	navy.position = Vector2(x0 - 5, -7)
-	navy.size = Vector2(row_w + 10, cw + 14 + 14)
-	navy.mouse_filter = MOUSE_FILTER_IGNORE
-	chips.add_child(navy)
-	for i in dice.size():
+	for i in dice.size():  # on the parchment itself, names in black (the user, 2026-11-26)
 		var sym: String = dice[i]
 		var c := StationScreen.element_chip(sym, cw)
+		(c.get_node("Name") as Label).add_theme_color_override("font_color", Color.BLACK)
 		c.position = Vector2(x0 + i * (cw + 4), 0)
 		c.mouse_filter = MOUSE_FILTER_STOP
 		c.gui_input.connect(func(ev): if Tap.tap(ev):
