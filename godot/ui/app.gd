@@ -1041,6 +1041,55 @@ func hand_lock_in() -> void:
 		_lock_in()
 
 
+## A check ending itself (nothing more fits). The run's first check with
+## no item cards at all (the user, 2026-11-27): Professor Mouse says so
+## first (two messages, Next), then the Lock In as usual.
+func auto_lock_in() -> void:
+	var h = Game.check_hand()
+	if not _empty_says.is_empty():
+		if is_same(_empty_for, h) and has_node("EmptyCheckBlock"):
+			return  # Mouse is already saying it
+		_empty_says = []  # left over from a check that's gone
+		if mouse.next_step.is_connected(_empty_next):
+			mouse.next_step.disconnect(_empty_next)
+	var mat := hand_mat()
+	if mat == null or mat.playing:
+		return  # already counting (Pass came first)
+	if h == null or tutorial.running() or Game.state.get("matChecked") or Game.state.get("finalCheckPending") or Game.ctx.get("challengeTest") 			or not (h.hand.is_empty() and h.deck.is_empty()):
+		hand_lock_in()
+		return
+	var block := Control.new()  # the game waits under him
+	block.name = "EmptyCheckBlock"
+	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(block)
+	var turn := Orders.check_round(Game.state) + int(Data.t("MAT_CHECK_EVERY"))
+	_empty_says = [[5, "Looks like you haven't crafted any items yet!"],
+		[3, "Try to craft some before the next Display Mat Challenge on turn %d! {🕒}" % turn]]
+	_empty_for = h
+	mouse.coaching = true
+	mouse.next_step.connect(_empty_next)
+	_empty_next(true)
+
+
+var _empty_says: Array = []  # Professor Mouse's lines at an empty first check, still to come
+var _empty_for: Variant = null  # the check hand they're about
+
+
+func _empty_next(first := false) -> void:
+	if not first:
+		_empty_says.pop_front()
+	if not _empty_says.is_empty():
+		var k := 3 - _empty_says.size()
+		mouse.show_tip(_empty_says[0][0], _empty_says[0][1], "bottom-left", null, 17, -1.0, "%d/2" % k)
+		return
+	mouse.next_step.disconnect(_empty_next)
+	mouse.end_coach()
+	var block := get_node_or_null("EmptyCheckBlock")
+	if block:
+		block.queue_free()
+	hand_lock_in()
+
+
 ## The visit's roll, then the dice pop-up over everything (Collect sends
 ## the elements into the Inventory button).
 func _roll() -> void:

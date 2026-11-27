@@ -386,3 +386,4 @@ One line per batch (details: CHANGELOG.md and git).
 - 2026-11-27: whole-game review (REVIEW.md); review fixes; PLAN.md trimmed.
 - 2026-11-27: tutorial strict (Tutorial last in the App for input; animations and the peek card aren't windows; a real window takes taps only inside itself; ui_play decoy taps every step); Mouse on the hub, balloon off the target, x/y counts; desktop web letterboxed (main.gd: KEEP aspect without a touchscreen).
 - 2026-11-27: F11 on the web (head_include stops it reaching Godot's canvas); map reveal waits for the map in view (opening doesn't mark neighbours seen); Market Unknown squares open UnknownTip; Display Mat Score and Quark Combos texts.
+- 2026-11-27: empty first check: App.auto_lock_in (the mat's self-ending check goes through it) shows Mouse's two lines (1/2, 2/2) behind a blocker, then hand_lock_in; not in the tutorial, the final check, a Challenge Test, or once matChecked.

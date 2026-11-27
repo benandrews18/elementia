@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- First Display Mat check with no items: Professor Mouse appears and says "Looks like you haven't crafted any items yet!", then (Next) "Try to craft some before the next Display Mat Challenge on turn 6! 🕒". Once they're cleared, the check carries on as normal ("No bonus dice this time").
 - Website: F11 works again (the game was swallowing it), so the browser's own full screen fills the screen's height.
 - The map growing: it now plays the first time you reach the map after a station (the opening no longer counts the next stations as seen), and only once the map is really on screen, never under the To-Do List, Market or another panel.
 - Market: tapping an Unknown Element square bounces it and opens the Unknown Element window over the Market.

@@ -463,6 +463,28 @@ func _todo(app: App) -> void:
 ## card drills into a component (Back returns), pins, and an element part
 ## swaps to the element card; a tap closes each.
 func _cards(app: App) -> void:
+	# The run's first check with no item cards (the user, 2026-11-27): Mouse's
+	# two lines (1/2, 2/2, the next check's turn), then the Lock In as usual.
+	Game.start_run("Coral Reef")
+	Game.state.items = Game.state.items.filter(func(n): return Catalog.entry(n) == null)  # elements only
+	Game.ctx.travelPromptFor = "The Power Plant"
+	app.open_panel("drawer")
+	await get_tree().process_frame
+	var eh = Game.check_hand()
+	check(eh != null and eh.hand.is_empty() and eh.deck.is_empty(), "an empty first check: no cards to deal")
+	var next_turn := Orders.check_round(Game.state) + int(Data.t("MAT_CHECK_EVERY"))
+	app.auto_lock_in()
+	await get_tree().process_frame
+	var said: String = app.mouse.get_node("Bubble/Text").get_parsed_text()
+	check(app.mouse.showing and said.begins_with("Looks like you haven't crafted") and app.mouse.get_node("Bubble/Tour/Step").text == "1/2" and app.has_node("EmptyCheckBlock"), "an empty first check: Mouse says so (1/2), the game waits")
+	app.mouse.next_step.emit()
+	said = app.mouse.get_node("Bubble/Text").get_parsed_text()
+	check(said.contains("turn %d!" % next_turn) and app.mouse.get_node("Bubble/Tour/Step").text == "2/2", "then when the next check is (2/2): %s / %s" % [said, app.mouse.get_node("Bubble/Tour/Step").text])
+	app.mouse.next_step.emit()
+	check(not app.mouse.showing and await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "then the Lock In as usual (no bonus dice)")
+	for c in app.get_children():
+		if c is LockInReward or c.name == "EmptyCheckBlock":
+			c.queue_free()
 	Game.start_run("Coral Reef")
 	app.close_panel()
 	await get_tree().process_frame

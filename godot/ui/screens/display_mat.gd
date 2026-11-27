@@ -736,7 +736,7 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 		_redraw())
 	if not _ending and HandView.deal_at >= 0 and Hand.mat_full(h, Game.state) and App.current:  # nothing more fits: the check ends itself
 		_ending = true
-		get_tree().create_timer(0.9).timeout.connect(func(): if App.current and is_same(Game.check_hand(), h): App.current.hand_lock_in())  # no node captured: a freed one errors
+		get_tree().create_timer(0.9).timeout.connect(func(): if App.current and is_same(Game.check_hand(), h): App.current.auto_lock_in())  # no node captured: a freed one errors
 	var top_y := row_y + BTN + 30  # the labels, and room for raised picks
 	_hand_view = HandView.new()
 	_hand_view.position = Vector2(0, top_y)
