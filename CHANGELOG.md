@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- To-Do List: titled "📌 Pinned and 🔍 Tracked Items"; the details panel slides in from the right; a parts count you can craft now turns green (no more green dots).
 - To-Do List: the tip reads "Tap items to view details" and "🔍 Track item parts to guide your journey!"; the list has a little more room around its pins.
 - The hint reads top to bottom: "Try crafting...", the item, "Needed for:" with each pinned item that needs it, then where it's made.
 - To-Do List: the list is only as wide as its rows (the screen shows beside it); each item's suit cost sits under its picture, in the list and in its details; an open part starts with its suit cost; owned parts keep the 🔍 column clear.

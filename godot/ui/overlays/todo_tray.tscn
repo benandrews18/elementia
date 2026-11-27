@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/todo_tray.gd" id="1"]
 [ext_resource type="FontVariation" path="res://ui/theme/fonts/nunito_800.tres" id="f8"]
 [ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f4cc.png" id="pin"]
+[ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f50d.png" id="glass"]
 [ext_resource type="PackedScene" path="res://ui/pieces/scrim.tscn" id="scrim"]
 
 [sub_resource type="StyleBoxFlat" id="tray"]
@@ -59,7 +60,31 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.886275, 0.698039, 0.352941, 1)
 theme_override_fonts/font = ExtResource("f8")
 theme_override_font_sizes/font_size = 13
-text = "Pinned"
+text = "Pinned and"
+
+[node name="Glass" type="TextureRect" parent="Tray/Scroll/List"]
+custom_minimum_size = Vector2(15, 15)
+layout_mode = 0
+offset_left = 20.0
+offset_top = 44.0
+offset_right = 35.0
+offset_bottom = 59.0
+mouse_filter = 2
+texture = ExtResource("glass")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Tracked" type="Label" parent="Tray/Scroll/List"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 42.0
+offset_right = 40.0
+offset_bottom = 42.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.886275, 0.698039, 0.352941, 1)
+theme_override_fonts/font = ExtResource("f8")
+theme_override_font_sizes/font_size = 13
+text = "Tracked Items"
 
 [node name="Items" type="Control" parent="Tray/Scroll/List"]
 layout_mode = 0

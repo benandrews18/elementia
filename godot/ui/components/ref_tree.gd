@@ -96,6 +96,9 @@ static func suit_row(name: String, at: Vector2, px: float) -> Control:
 	return r
 
 
+const GREEN := Color("#5fd38a")  # a parts count you can craft now (the user, 2026-11-26: not a dot)
+
+
 ## The green "can craft now" dot, on an icon's top-right corner.
 static func ready_dot(at: Vector2) -> Control:
 	var d := Panel.new()
@@ -242,15 +245,13 @@ func _flat(parent: Control, name: String, kind: String, path: String, seen: Dict
 	var ic := Tok.icon(e.emoji, 22)
 	ic.position = Vector2(14, 8)
 	row.add_child(ic)
-	if ready(name):
-		row.add_child(ready_dot(Vector2(30, 3)))
 	var right := w - 36  # the 🔍 column, kept clear even when owned (no 🔍: nothing moves into it)
 	if not has:
 		row.add_child(track_button(name, Vector2(w - 30, 4), 30))
 	right = where(row, name, "item", right + 10, 10)
 	if not has:
 		var pc := parts(e)
-		var cl := Tok.label("%d/%d" % [pc.x, pc.y], 12, look.dim, 800)
+		var cl := Tok.label("%d/%d" % [pc.x, pc.y], 12, GREEN if ready(name) else look.dim, 800)
 		var cw := Tok.font(800).get_string_size(cl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		right -= cw + 4
 		cl.position = Vector2(right, 11)

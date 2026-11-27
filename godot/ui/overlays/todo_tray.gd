@@ -96,8 +96,10 @@ func _redraw() -> void:
 	var y := 20.0
 	$Tray/Scroll/List/Pin.visible = not names.is_empty()
 	$Tray/Scroll/List/Pinned.visible = not names.is_empty()
+	$Tray/Scroll/List/Glass.visible = not names.is_empty()
+	$Tray/Scroll/List/Tracked.visible = not names.is_empty()
 	if not names.is_empty():
-		y += 26
+		y += 26 + 24  # the two-line title
 		var hint = Game.todo_hint() if hint_open else null
 		_hint_name = hint.name if hint != null else ""
 		y = _hint_button(y) + 10
@@ -247,8 +249,6 @@ func _hint_card(hint, y: float, w: float) -> float:
 	card.add_child(top)
 	ly += 24
 	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w, 26, 16, Color.WHITE, 900)
-	if hint.can_now:
-		card.add_child(RefTree.ready_dot(Vector2(14 + 26 - 8, ly - 30 - 3)))
 	var others: Array = hint.roots.filter(func(r): return r != hint.name)
 	if not others.is_empty():
 		ly += 4
@@ -300,8 +300,6 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	ic.position = Vector2(16, 6)
 	row.add_child(ic)
 	row.add_child(RefTree.suit_row(e.name, Vector2(31, 41), 11))  # its suit cost, under the picture
-	if RefTree.ready(e.name):
-		row.add_child(RefTree.ready_dot(Vector2(40, 3)))
 	if e.name == lead():  # the tracked item is this, or in it
 		var g := Tok.icon("🔍", 16)
 		g.position = Vector2(6, 6)
@@ -315,8 +313,11 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	var star := Tok.star(Color("#f5b400"), 11)
 	star.position = Vector2(56, 35)
 	row.add_child(star)
-	var sub := Tok.label(_sub_text(e), 12, Color("#8fa3b5"), 700)
-	sub.position = Vector2(71, 31)
+	var pts := Tok.label("%d   " % int(e.points), 12, Color("#8fa3b5"), 700)
+	pts.position = Vector2(71, 31)
+	row.add_child(pts)
+	var sub := Tok.label("crafted" if owned else "%d/%d parts" % [pc.x, pc.y], 12, RefTree.GREEN if RefTree.ready(e.name) else Color("#8fa3b5"), 700)
+	sub.position = Vector2(71 + Tok.font(700).get_string_size(pts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, 31)
 	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	row.add_child(sub)
 	var pin := Tok.icon("📌", 22)  # drop it from the list
@@ -343,6 +344,7 @@ static var _detail_keep := 0  # the details panel's scroll, kept across redraws
 ## its card), points, where it's made, a parts bar, then its parts' tree.
 func _details() -> void:
 	var old := $Tray.get_node_or_null("Details")
+	var was_open := old != null
 	if old:
 		var sc := old.get_node_or_null("Scroll")
 		if sc:
@@ -361,6 +363,8 @@ func _details() -> void:
 	panel.size = Vector2(dw, h)
 	panel.set_meta("cmp", "todo:details")
 	$Tray.add_child(panel)
+	if not was_open:
+		Juice.slide_in(panel, Vector2(dw, 0))
 	var scroll := ScrollContainer.new()
 	scroll.name = "Scroll"
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -396,8 +400,11 @@ func _details() -> void:
 	var star := Tok.star(Color("#f5b400"), 12)
 	star.position = Vector2(68, 42)
 	body.add_child(star)
-	var line := Tok.label("%d   %d/%d parts" % [int(e.points), pc.x, pc.y], 13, Color("#b3becd"), 700)
-	line.position = Vector2(84, 38)
+	var dpts := Tok.label("%d   " % int(e.points), 13, Color("#b3becd"), 700)
+	dpts.position = Vector2(84, 38)
+	body.add_child(dpts)
+	var line := Tok.label("%d/%d parts" % [pc.x, pc.y], 13, RefTree.GREEN if RefTree.ready(e.name) else Color("#b3becd"), 700)
+	line.position = Vector2(84 + Tok.font(700).get_string_size(dpts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x, 38)
 	body.add_child(line)
 	var bar := Panel.new()  # the parts bar
 	bar.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.12), 4))
