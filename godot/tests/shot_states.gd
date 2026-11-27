@@ -6,7 +6,7 @@
 extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
-	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "confirm", "reward",
+	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "todo_quest", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
@@ -96,6 +96,16 @@ func _ready() -> void:
 			app._on_hub("jobs")
 			app._panel_node._open_hint_paths()
 			app._panel_node._redraw()
+		"todo_quest", "pin_ask":  # a part of Metropolis tracked: its quest leads, open down to it; Plastic folded. A new pin asks.
+			TodoTray.hint_open = false
+			TodoTray.expanded = {}
+			if state == "pin_ask":
+				Progress.prefs.pinAsked = false
+				Progress.prefs.pinnedItems = ["Metropolis"]
+				App.pin("Glass")
+			else:
+				Game.track("Glass")
+				app._on_hub("jobs")
 		"confirm":
 			ConfirmDialog.ask(app, "Reset the Display Mat to your last locked-in layout?", func(): pass)
 		"reward":

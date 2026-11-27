@@ -3,7 +3,10 @@
 ## where it's rolled), and under an open item its own components, down a
 ## guide line. Shared by the To-Do List (parchment) and the Items screen
 ## (dark); which branches are open is shared too (TodoTray.expanded, the
-## HTML game's jobExpanded). A tap on an item row opens or closes it.
+## HTML game's jobExpanded). A tap on an item row opens or closes it. On the
+## To-Do List (look.track) an unowned item row has 🔍 Track instead of 📌,
+## its parts count and a green dot when it can be crafted now: facts, never
+## advice (the user, 2026-11-26).
 class_name RefTree
 extends RefCounted
 
@@ -15,6 +18,7 @@ const PARCHMENT := {
 	"ink": Color("#2a1f14"), "leaf_have_ink": Color("#2a1f14"), "leaf_need_ink": Color("#2a1f14"),
 	"rule": Color("#8a6a48"), "rule_dashed": false,
 	"pin": Color("#e9e4da"), "pin_line": Color("#b9b0a0"), "pin_on": Color("#e9e4da"), "pin_on_line": Color("#b9b0a0"), "pin_off_alpha": 1.0,
+	"track": true,
 }
 ## The Items screen's dark look (game-mode.css .mission-tree).
 const DARK := {
@@ -50,6 +54,32 @@ static func components(e: Dictionary) -> Array:
 			dedup[r.kind + ":" + r.name] = true
 			toks.append(r)
 	return sorted(toks)
+
+
+## Its direct parts owned (items owned, elements held in the numbers needed)
+## of all of them.
+static func parts(e: Dictionary) -> Vector2i:
+	var n := Catalog.needs_of(e.reqs)
+	var done: int = n.items.filter(func(it): return Catalog.owns(Game.state, it.name)).size()
+	done += n.els.keys().filter(func(sym): return Catalog.count(Game.state, sym) >= n.els[sym]).size()
+	return Vector2i(done, n.items.size() + n.els.size())
+
+
+## Craftable right now: every part held and its suit cost payable.
+static func ready(name: String) -> bool:
+	var e = Catalog.entry(name)
+	return e != null and not Catalog.owns(Game.state, name) and Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(name)
+
+
+## The green "can craft now" dot, on an icon's top-right corner.
+static func ready_dot(at: Vector2) -> Control:
+	var d := Panel.new()
+	d.add_theme_stylebox_override("panel", Tok.box(Color("#3fcf6c"), 6, 2, Color.WHITE))
+	d.size = Vector2(12, 12)
+	d.position = at
+	d.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	d.set_meta("cmp", "todo:ready")
+	return d
 
 
 ## One level of the tree in parent, from at; returns the bottom.
@@ -107,8 +137,23 @@ func node(parent: Control, name: String, kind: String, path: String, seen: Dicti
 	var nl := Tok.label(name, 16, look.ink, 800)
 	nl.position = Vector2(60, 13)
 	box.add_child(nl)
-	where(box, name, "item", box.size.x)
-	parent.add_child(pin_button(name, Vector2(at.x + row_w + 8, at.y + 5)))
+	var right := where(box, name, "item", box.size.x)
+	if look.get("track", false):
+		if not has:
+			var pc := parts(e)
+			var cl := Tok.label("%d/%d" % [pc.x, pc.y], 12, Color("#8a6a48"), 800)
+			var cw := Tok.font(800).get_string_size(cl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+			right -= cw + 6
+			cl.position = Vector2(right, 16)
+			box.add_child(cl)
+			if ready(name):
+				box.add_child(ready_dot(Vector2(46, 8)))
+			parent.add_child(track_button(name, Vector2(at.x + row_w + 8, at.y + 5)))
+		var px := Tok.fit_px(name, Tok.font(800), 16, right - 6 - 60)
+		nl.add_theme_font_size_override("font_size", px)
+		nl.position.y = 13 + (16 - px) * 0.6
+	else:
+		parent.add_child(pin_button(name, Vector2(at.x + row_w + 8, at.y + 5)))
 	if name == hint_name:  # the suggestion, outlined in green
 		var hl := Panel.new()
 		hl.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 14, 3, Color("#4fe583")))
@@ -142,8 +187,9 @@ func _rule(at: Vector2, h: float) -> Control:
 	return c
 
 
-## Where it comes from, as station icons at the row's right end.
-static func where(box: Control, name: String, kind: String, w: float) -> void:
+## Where it comes from, as station icons at the row's right end; returns
+## their left edge.
+static func where(box: Control, name: String, kind: String, w: float) -> float:
 	var at: Array = Data.t("STATION_BY_NAME").values().filter(func(st): return st.dice.has(name)).map(func(st): return st.name) if kind == "element" \
 		else Data.t("ENTRIES").filter(func(x): return x.name == name).map(func(x): return x.station)
 	var uniq := []
@@ -151,11 +197,13 @@ static func where(box: Control, name: String, kind: String, w: float) -> void:
 		if not uniq.has(st):
 			uniq.append(st)
 	var x := w - 14 - uniq.size() * 20
+	var left := x
 	for st in uniq:
 		var ic := Tok.icon(Catalog.station(st).emoji, 18)
 		ic.position = Vector2(x, 16)
 		box.add_child(ic)
 		x += 20
+	return left
 
 
 ## A tree row's pin (a 40px square, .refpin zoomed).
@@ -173,7 +221,29 @@ func pin_button(name: String, at: Vector2) -> Control:
 		ic.material = Tok.grey()
 	b.add_child(ic)
 	b.gui_input.connect(func(ev): if Tap.tap(ev):
-		Game.toggle_pin(name))
+		App.pin(name))
+	return b
+
+
+## A To-Do tree row's 🔍 Track (gold while it's the tracked item): tracks
+## it (and pins it), or stops tracking it.
+static func track_button(name: String, at: Vector2) -> Control:
+	var on: bool = Game.ctx.get("tracked") == name
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD if on else Color("#e9e4da"), 8, 2,
+		Color.BLACK if on else Color("#b9b0a0"), 3, 2, Color(0, 0, 0, 0.3)))
+	b.size = Vector2(40, 40)
+	b.position = at
+	b.set_meta("cmp", "todo:track:" + name)
+	var ic := Tok.icon("🔍", 20)
+	ic.position = (b.size - Vector2(20, 20)) / 2
+	b.add_child(ic)
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
+		b.accept_event()
+		if on:
+			Game.set_tracked(null)
+		else:
+			Game.track(name))
 	return b
 
 

@@ -60,7 +60,7 @@ func _ready() -> void:
 	for n in [$Dim, $Card, $Close]:
 		n.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	$Actions/Pin.gui_input.connect(func(ev): if Tap.tap(ev):
-		Game.toggle_pin(entry.name)
+		App.pin(entry.name)
 		_show_pin())
 	$Actions/Back.mouse_filter = MOUSE_FILTER_STOP
 	$Actions/Back.gui_input.connect(func(ev): if Tap.tap(ev) and not _back.is_empty(): show_item(_back.pop_back().name, true))

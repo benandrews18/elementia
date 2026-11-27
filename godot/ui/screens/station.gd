@@ -152,7 +152,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	var bench := BenchPanel.new()
 	var craft := func(n, at: Rect2): _craft(n, at)
 	var pin := func(n):
-		Game.toggle_pin(n)  # saves, then redraws
+		App.pin(n)  # saves, then redraws
 	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
@@ -508,7 +508,49 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 	var conv := convert_button(58) if convert else null
 	if conv:
 		conv.position = Vector2(w - App.EDGE - 58, on.size.y - HubBar.H - 14 - 58)
+		on.add_child(suit_pill(conv.position))
 		on.add_child(conv)
+
+
+## The suit pill (the user, 2026-11-26): out of Convert's left side like the
+## tracked pill, each suit's icon over how many of its elements are held
+## (what suit costs are paid from). A tap opens Convert too.
+static func suit_pill(conv_at: Vector2) -> Control:
+	const COL := 22.0
+	const GAP := 8.0
+	var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
+	var held := {}
+	for sym in Util.get_or(Game.state, "elements", {}):
+		var su: String = Data.t("ELEMENT_SUIT").get(sym, "")
+		held[su] = held.get(su, 0) + int(Catalog.count(Game.state, sym))
+	var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
+	pill.get_node("Row").visible = false
+	var inner := suits.size() * COL + (suits.size() - 1) * GAP
+	pill.size = Vector2(16 + inner + 29 + 8, App.PILL_H)  # its right end hides under the button's middle
+	pill.position = Vector2(conv_at.x + 29 - pill.size.x, conv_at.y + (58 - App.PILL_H) / 2)
+	pill.set_meta("cmp", "suits")
+	for i in suits.size():
+		var su: String = suits[i]
+		var x := 16 + i * (COL + GAP)
+		var ic := Tok.icon("suit:" + su, 16)
+		ic.material = Tok.tinted(Tok.suit_color(su))
+		ic.position = Vector2(x + (COL - 16) / 2, 5)
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pill.add_child(ic)
+		var n := Tok.label(str(held.get(su, 0)), 12, Color.WHITE, 800)
+		n.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
+		n.add_theme_constant_override("shadow_offset_y", 1)
+		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		n.position = Vector2(x - 4, 21)
+		n.size = Vector2(COL + 8, 16)
+		n.set_meta("cmp", "suits:" + su)
+		pill.add_child(n)
+	pill.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
+		if App.current.panel == "convert":
+			App.current.close_panel()
+		else:
+			App.current.open_panel("convert"))
+	return pill
 
 
 ## Convert: on screen once any element is held (state.convertRevealed in
@@ -552,13 +594,10 @@ func find_tagged(prefix: String, tip_only := false) -> Control:
 	return null
 
 
-## A card's 📌: pins and tracks it (saves, then redraws); tracked, its icon
+## A card's 📌: pins it (saves, then redraws); once it's tracked, its icon
 ## flies from the card to the pill (flyItemToTracker()).
 func _pin_tap(item: String, page: Control, pos: Vector2, card_size: Vector2) -> void:
-	var from := Rect2(page.global_position + pos, Vector2(card_size.x, minf(card_size.x, 60)))
-	Game.toggle_pin(item)
-	if Game.ctx.get("tracked") == item and App.current:
-		App.current.fly_to_tracker(item, from)
+	App.pin(item, Rect2(page.global_position + pos, Vector2(card_size.x, minf(card_size.x, 60))))
 
 
 ## A tap (not a scroll) runs fn.

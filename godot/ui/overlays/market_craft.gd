@@ -38,7 +38,7 @@ func _redraw() -> void:
 	var bench: Control = $Bench
 	var w := minf(max_width, size.x - 20)
 	_row = ShopRow.make(Catalog.entry(item), w - 36, func(n, at: Rect2): App.current.craft_tap(n, at), func(n):
-		Game.toggle_pin(n))
+		App.pin(n))
 	bench.add_child(_row)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
 	bench.position = Vector2((size.x - w) / 2, (size.y - HubBar.H - bench.size.y) / 2)

@@ -240,7 +240,7 @@ func _put_bench(tray_y: float, w: float) -> void:
 		return
 	var bench := BenchPanel.new()
 	var bw := minf(w - 16, 420.0)
-	bench.add_child(ShopRow.make(e, bw - 36, func(n, at: Rect2): if App.current: App.current.craft_tap(n, at), func(n): Game.toggle_pin(n)))
+	bench.add_child(ShopRow.make(e, bw - 36, func(n, at: Rect2): if App.current: App.current.craft_tap(n, at), func(n): App.pin(n)))
 	bench.size = Vector2(bw, 30 + ShopRow.H + 18)
 	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y - 6)
 	add_child(bench)

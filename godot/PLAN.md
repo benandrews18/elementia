@@ -586,6 +586,12 @@ Market, tutorials), motion last (it animates the final layouts).
      tracked item stops tracking with a "!" on the 🔍 button; the shop's 🔍
      circle opens the To-Do List lit on it; a suit pill out of Convert's
      left (4 suits, totals), always where ⚛️ shows.
+     Done (2026-11-26): TodoTray rows are quests (parts bar: RefTree.parts,
+     green dot: RefTree.ready; TodoTray.lead() opens the shortest path to the
+     tracked item); RefTree's parchment look has 🔍 Track (Game.track pins);
+     App.pin() asks via ConfirmDialog's new tick box (prefs.pinAsked,
+     prefs.autoTrackOnPin); StationScreen.suit_pill(). Caveat: over the
+     Convert tray the pill touches the "3:1" text.
    - 22b: the opening: after the capstone pick the To-Do List shows it and
      its direct parts with a tip (track one part to start); Home is the
      station's icon reading Start, locked until an item is tracked (a line
@@ -616,6 +622,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 22 grilled (tracking as quests); 22a: the To-Do List as a quest log, pin and track separate (Track it? window, Auto-track on pin), the suit pill.
 - 2026-11-26: after 21 (the user): Metropolis's wide art twice as wide on its cards and full card (ItemCard.BIG_ART); the tracked pill 44 px, 17 px text shrinking to fit by the screen's middle, the 🔍 and ⚛️ 6 px from the sides (App.EDGE).
 - 2026-11-26: step 21 (stations and cards, 13 items); step 20 review fixes before it.
 - 2026-11-26: step 20e: the Bonus Dice window has the quark meter as it stands above it (LockInReward.tiers, both Lock-Ins); QuarkMeter keeps its last two numbers apart.

@@ -766,6 +766,35 @@ func home_face() -> String:
 	return "map"
 
 
+## Every 📌 tap: pins or unpins (Game.toggle_pin). A new pin that isn't
+## tracked asks "Track it now?" until "Don't ask again" is ticked, which
+## sets Game Rules' "Auto-track on pin" to the answer (the user, 2026-11-26).
+## Once tracked, the item flies from `from` to the pill.
+static func pin(name: String, from := Rect2()) -> void:
+	var was := Progress.is_pinned(name)
+	Game.toggle_pin(name)
+	if was or current == null:
+		return
+	var app := current
+	var fly := func(): if from.has_area() and Game.ctx.get("tracked") == name: app.fly_to_tracker(name, from)
+	if Game.ctx.get("tracked") == name or Progress.prefs.get("pinAsked") == true:
+		fly.call()
+		return
+	var dlg := []  # the window, for its tick box once answered
+	var answer := func(yes: bool):
+		if dlg[0].checked:
+			Progress.prefs.pinAsked = true
+			Progress.prefs.autoTrackOnPin = yes
+		if yes:
+			Game.track(name)
+			fly.call()
+		else:
+			Progress.save_all()
+	dlg.append(ConfirmDialog.ask(app, "%s is pinned to your To-Do List. Track it now? Its parts get 🔍 marks at the stations and on the map." % name,
+		func(): answer.call(true), {"title": "Track it?", "yes_text": "Track it", "no_text": "Not now",
+		"check_text": "Don't ask again", "on_no": func(): answer.call(false)}))
+
+
 ## canTravelTo(): not where you are, reachable (a path, or a Helicopter), run not over.
 func can_travel_to(name) -> bool:
 	var s := Game.state

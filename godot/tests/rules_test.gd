@@ -211,13 +211,22 @@ func _ready() -> void:
 	Game.state.items.append("Glass")
 	check(Game.todo_hint() == null, "no hint once everything pinned is owned")
 
-	# Tracking (selectedJobItem): a 📌 tap pins and tracks; unpinning the
-	# tracked item, or crafting it, stops tracking it; what it still needs
-	# "feeds" it.
+	# Tracking (selectedJobItem): a 📌 tap pins without tracking (unless
+	# Auto-track on pin); 🔍 Track pins and tracks; unpinning the tracked
+	# item, or crafting it, stops tracking it; what it still needs "feeds" it.
 	fresh()
 	Progress.prefs.pinnedItems = []
+	Game.ctx.tracked = null
 	Game.toggle_pin("Metropolis")
-	check(Progress.is_pinned("Metropolis") and Game.ctx.tracked == "Metropolis", "a pin tracks the item")
+	check(Progress.is_pinned("Metropolis") and Game.ctx.tracked == null, "a pin doesn't track")
+	Game.toggle_pin("Metropolis")
+	Progress.prefs.autoTrackOnPin = true
+	Game.toggle_pin("Metropolis")
+	Progress.prefs.autoTrackOnPin = false
+	check(Game.ctx.tracked == "Metropolis", "Auto-track on pin tracks")
+	Game.toggle_pin("Metropolis")
+	Game.track("Metropolis")
+	check(Progress.is_pinned("Metropolis") and Game.ctx.tracked == "Metropolis", "tracking pins the item")
 	var still: Array = Catalog.still_needed(Game.state, "Metropolis")
 	check(not still.is_empty() and Game.feeds_tracked(still[0]) and not Game.feeds_tracked("Metropolis"), "what the tracked item still needs feeds it (not itself)")
 	Game.toggle_pin("Metropolis")
@@ -230,7 +239,7 @@ func _ready() -> void:
 	s = fresh()
 	for sym in Catalog.needs_of(Catalog.entry(leaf).reqs).els:
 		s.elements[sym] = 9
-	Game.toggle_pin(leaf)
+	Game.track(leaf)
 	check(Game.craft(leaf) and Game.ctx.tracked == null, "crafting the tracked item (%s) stops tracking it" % leaf)
 
 	# A save made mid-visit resumes at that station (Godot only); leaving

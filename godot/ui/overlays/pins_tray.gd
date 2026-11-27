@@ -35,7 +35,7 @@ func _redraw() -> void:
 		chip.fill(n, Game.ctx.get("tracked") == n)
 		var item: String = n
 		chip.gui_input.connect(func(ev): if Tap.tap(ev):  # toggleJobSelect()
-			Game.set_tracked(null if Game.ctx.get("tracked") == item else item))
+			Game.set_tracked(null) if Game.ctx.get("tracked") == item else Game.track(item))
 		chips.add_child(chip)
 	_place()
 

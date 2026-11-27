@@ -81,6 +81,19 @@ button_text = "Open"
 is_switch = true
 on = true
 
+[node name="GapTrack" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="AutoTrack" parent="Window/Content" instance=ExtResource("r5")]
+layout_mode = 2
+text = "Auto-track on pin"
+sub = "A pinned item is tracked straight away"
+emoji = "📌"
+button_text = "Open"
+is_switch = true
+
 [node name="Gap1" type="Control" parent="Window/Content"]
 custom_minimum_size = Vector2(0, 18)
 layout_mode = 2

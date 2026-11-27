@@ -12,15 +12,23 @@ const SCENE := "res://ui/overlays/confirm.tscn"
 var message: String
 var on_yes: Callable
 var title := ""  # "" keeps the scene's title
+var yes_text := ""  # "" keeps the scene's
+var no_text := ""
+var on_no := Callable()  # Cancel (not a tap outside)
+var check_text := ""  # a tick box above the buttons ("Don't ask again")
+var checked := false
 ## Parchment below the buttons.
 @export var bottom_pad := 49.0
 
 
-## Shows the dialog over `on` (the app).
-static func ask(on: Control, msg: String, yes: Callable) -> ConfirmDialog:
+## Shows the dialog over `on` (the app); opts sets the vars above (title,
+## yes_text, no_text, on_no, check_text).
+static func ask(on: Control, msg: String, yes: Callable, opts := {}) -> ConfirmDialog:
 	var d: ConfirmDialog = load(SCENE).instantiate()
 	d.message = msg
 	d.on_yes = yes
+	for k in opts:
+		d.set(k, opts[k])
 	d.size = on.size
 	on.add_child(d)
 	return d
@@ -44,6 +52,16 @@ func _ready() -> void:
 	msg.add_theme_constant_override("line_spacing", int(round(px * 1.5 - f.get_height(px))))
 	var lines := f.get_multiline_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, inner, px).y / f.get_height(px)
 	msg.custom_minimum_size = Vector2(inner, roundf(lines) * px * 1.5)
+	if yes_text != "":
+		$Window/Content/Buttons/Yes/Text.text = yes_text
+	if no_text != "":
+		$Window/Content/Buttons/Cancel.text = no_text
+	var check_h := 0.0
+	if check_text != "":
+		var row := _check_row()
+		content.add_child(row)
+		content.move_child(row, $Window/Content/Buttons.get_index())
+		check_h = row.custom_minimum_size.y + content.get_theme_constant("separation")
 	# Each button fits its text with 22px either side.
 	for b in [$Window/Content/Buttons/Yes, $Window/Content/Buttons/Cancel]:
 		var l: Label = b if b is Label else b.get_node("Text")
@@ -51,10 +69,38 @@ func _ready() -> void:
 	$Window/Content/Buttons/Yes.gui_input.connect(func(ev): if Tap.tap(ev):
 		queue_free()
 		on_yes.call())
-	$Window/Content/Buttons/Cancel.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
+	$Window/Content/Buttons/Cancel.gui_input.connect(func(ev): if Tap.tap(ev):
+		queue_free()
+		if on_no.is_valid():
+			on_no.call())
 	# The content's height from its parts (a wrapping label reports a huge minimum).
-	var content_h: float = msg.custom_minimum_size.y + content.get_theme_constant("separation") + $Window/Content/Buttons.get_combined_minimum_size().y
+	var content_h: float = msg.custom_minimum_size.y + content.get_theme_constant("separation") + check_h + $Window/Content/Buttons.get_combined_minimum_size().y
 	content.size = Vector2(inner, content_h)
 	var h := content.position.y + content_h + bottom_pad
 	win.size = Vector2(w, h)
 	win.position = Vector2((size.x - w) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
+
+
+## The tick box and its words; the whole row toggles it.
+func _check_row() -> Control:
+	var row := Control.new()
+	row.custom_minimum_size = Vector2(0, 26)
+	row.set_meta("cmp", "confirm:check")
+	var box := Panel.new()
+	box.size = Vector2(24, 24)
+	box.mouse_filter = MOUSE_FILTER_IGNORE
+	row.add_child(box)
+	var tick := Tok.tick(Tok.OK, 18)
+	tick.position = Vector2(3, 3)
+	box.add_child(tick)
+	var l := Tok.label(check_text, 15, Color("#5e4026"), 700)
+	l.position = Vector2(34, 1)
+	row.add_child(l)
+	var show := func():
+		box.add_theme_stylebox_override("panel", Tok.box(Color("#fffaf0"), 6, 2, Color("#8a6a48")))
+		tick.visible = checked
+	show.call()
+	row.gui_input.connect(func(ev): if Tap.tap(ev):
+		checked = not checked
+		show.call())
+	return row

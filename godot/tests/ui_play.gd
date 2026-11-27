@@ -25,6 +25,7 @@ func _ready() -> void:
 	Progress.autosave = false
 	Progress.prefs.hints = false  # no 💡 hints (the tips section turns them on)
 	Progress.prefs.tutorialSeen = true  # New Game skips the first-play tutorial (its own section plays it)
+	Progress.prefs.pinAsked = true  # a 📌 doesn't ask "Track it?" (the todo section asks)
 	Engine.time_scale = 20.0  # the Lock-In count and fades, fast
 	seed(7)
 	var app := App.new()
@@ -295,8 +296,10 @@ func _market(app: App) -> void:
 	finished.market = true
 
 
-## The To-Do List: the hub button opens it (Home reads Close); the hint
-## opens the breakdowns down to its suggestion; a pin in a tree pins.
+## The To-Do List, a quest log: the hub button opens it (Home reads Close);
+## the hint opens the breakdowns down to its suggestion; a quest shows its
+## parts bar and folds on a tap; a tree row's 🔍 tracks (and pins) a part; a
+## new pin asks "Track it?", and "Don't ask again" remembers the answer.
 func _todo(app: App) -> void:
 	Game.start_run("Coral Reef")
 	await get_tree().process_frame
@@ -310,20 +313,51 @@ func _todo(app: App) -> void:
 	tray._open_hint_paths()
 	var hint = Game.todo_hint()
 	check(hint != null and TodoTray.expanded.has("refroot/Metropolis"), "the hint opens the breakdown it's in (%s)" % [hint.name if hint else null])
-	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items[0].name
-	RefTree.new(RefTree.PARCHMENT, func(_p): pass).pin_button(comp, Vector2.ZERO).gui_input.emit(_release())  # a tree row's pin
-	check(Progress.is_pinned(comp), "a pin in the tree pins " + comp)
+	tray.hint_open = false
+	tray._redraw()
+	await get_tree().process_frame
+	var pc := RefTree.parts(Catalog.entry("Metropolis"))
+	check(_find_meta(app._panel_node, "todo:bar:%d/%d" % [pc.x, pc.y]) != null, "the quest shows its parts bar (%d/%d)" % [pc.x, pc.y])
+	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
+	check(not TodoTray.expanded.has("refroot/Metropolis"), "a tap folds the quest")
+	await get_tree().process_frame
+	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
+	check(TodoTray.expanded.has("refroot/Metropolis"), "a second tap opens it")
+	await get_tree().process_frame
+	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items.filter(func(it): return not Catalog.owns(Game.state, it.name))[0].name
 	Game.set_tracked(null)
 	await get_tree().process_frame
-	var find_track := func(): return _find_meta(app._panel_node, "todo:track:Metropolis")
+	check(_find_meta(app._panel_node, "todo:tip") != null, "untracked, the list says how to track a part")
+	var find_track := func(): return _find_meta(app._panel_node, "todo:track:" + comp)
 	find_track.call().gui_input.emit(_release())
-	check(Game.ctx.tracked == "Metropolis", "the To-Do List's 🔍 tracks its item")
+	check(Game.ctx.tracked == comp and Progress.is_pinned(comp), "a tree row's 🔍 tracks %s and pins it (its own quest)" % comp)
+	check(TodoTray.lead() == "Metropolis", "the quest holding the tracked part leads")
 	await get_tree().process_frame
 	find_track.call().gui_input.emit(_release())
 	check(Game.ctx.tracked == null, "a second tap stops tracking it")
 	app._on_hub("jobs")
 	check(app.panel == "", "the To-Do List button closes it again")
-	TodoTray.hint_open = false
+	# Pinning never tracks by itself: the first pin asks.
+	Progress.prefs.pinAsked = false
+	Progress.prefs.autoTrackOnPin = false
+	App.pin("Plastic")
+	var ask := app.get_children().filter(func(c): return c is ConfirmDialog and not c.is_queued_for_deletion())
+	check(Progress.is_pinned("Plastic") and Game.ctx.tracked == null and ask.size() == 1, "a new pin asks \"Track it?\" and doesn't track")
+	ask[0].get_node("Window/Content/Buttons/Yes").gui_input.emit(_release())
+	check(Game.ctx.tracked == "Plastic" and not Progress.prefs.pinAsked, "Track it tracks it")
+	App.pin("Plastic")
+	App.pin("Plastic")
+	ask = app.get_children().filter(func(c): return c is ConfirmDialog and not c.is_queued_for_deletion())
+	check(ask.size() == 1, "asked again while Don't ask again is off")
+	_find_meta(ask[0], "confirm:check").gui_input.emit(_release())
+	ask[0].get_node("Window/Content/Buttons/Cancel").gui_input.emit(_release())
+	check(Progress.prefs.pinAsked and not Progress.prefs.autoTrackOnPin and Game.ctx.tracked == null, "Don't ask again + Not now: Auto-track on pin stays off")
+	await get_tree().process_frame
+	App.pin("Plastic")
+	App.pin("Plastic")
+	check(not app.get_children().any(func(c): return c is ConfirmDialog and not c.is_queued_for_deletion()), "never asked again")
+	Progress.prefs.pinAsked = true
+	Progress.prefs.pinnedItems = ["Metropolis"]
 	finished.todo = true
 
 
@@ -1043,7 +1077,8 @@ func _pins(app: App) -> void:
 	var row: RefRow = app._panel_node._rows.filter(func(r): return r.item == "Steel")[0]
 	row.get_node("Pin").gui_input.emit(_release())
 	await get_tree().process_frame
-	check(Game.ctx.tracked == "Steel" and Progress.is_pinned("Steel"), "a 📌 tap pins and tracks")
+	check(Game.ctx.tracked == "Coral Reef" and Progress.is_pinned("Steel"), "a 📌 tap pins, tracking stays (Auto-track on pin is off)")
+	Game.track("Steel")
 	app.close_panel()
 	await get_tree().process_frame
 	btn.call().gui_input.emit(_release())

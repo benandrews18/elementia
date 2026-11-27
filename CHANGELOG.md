@@ -9,6 +9,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- The To-Do List is a quest log: each pinned item is a quest with a bar of its parts done; tap it to fold or open it, one level at a time (nothing opens on its own). Parts show how many of their own parts you have, where they're made, and a green dot when you can craft them now. 🔍 on a part tracks it (and pins it). The quest holding your tracked item leads, open down to it.
+- Pinning no longer tracks: the first pin asks "Track it?" (with Don't ask again); Game Rules has **Auto-track on pin** (off). Crafting your tracked item stops tracking, and the 🔍 button shows "!" until you pick a new goal.
+- A suit pill beside ⚛️ shows how many elements of each suit you hold.
 - Metropolis's picture is twice as big on its cards. The tracked item's pill reads better (bigger text, out to the middle of the screen), with the 🔍 and ⚛️ buttons closer to the edges.
 - Stations: a white line over ITEM SHOP, "TAP ON ITEMS TO START CRAFTING" under your crafted items; tier 1 cards sold at several stations show them all; the tracking circle shows 🔍.
 - The middle button is bigger; after a roll it reads **Gather**: tap it again to collect. Travel's label is white.

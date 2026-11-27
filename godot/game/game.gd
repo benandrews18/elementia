@@ -43,14 +43,25 @@ func set_tracked(name: Variant) -> void:
 	state_changed.emit()
 
 
-## A 📌 tap anywhere: pins the item and tracks it, or unpins it (and stops
+## A 📌 tap anywhere: pins the item (and tracks it only with Game Rules'
+## "Auto-track on pin": the user, 2026-11-26), or unpins it (and stops
 ## tracking it, if it was).
 func toggle_pin(name: String) -> void:
 	Progress.toggle_pin(name)
 	if Progress.is_pinned(name):
-		ctx.tracked = name
+		if Progress.prefs.get("autoTrackOnPin") == true:
+			ctx.tracked = name
 	elif ctx.get("tracked") == name:
 		ctx.tracked = null
+	_changed()
+
+
+## 🔍 Track (the To-Do List's rows, the pins tray, the first-pin window):
+## tracks the item and pins it (a quest on the list).
+func track(name: String) -> void:
+	if not Progress.is_pinned(name):
+		Progress.toggle_pin(name)
+	ctx.tracked = name
 	_changed()
 
 
