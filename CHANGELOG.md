@@ -8,6 +8,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Website: F11 works again (the game was swallowing it), so the browser's own full screen fills the screen's height.
+- The map growing: it now plays the first time you reach the map after a station (the opening no longer counts the next stations as seen), and only once the map is really on screen, never under the To-Do List, Market or another panel.
+- Market: tapping an Unknown Element square bounces it and opens the Unknown Element window over the Market.
+- Display Mat Score window: the title fits on one line, the second line reads "Play item cards from your hand onto the mat to make combos", and the red "no bonus dice" warning is gone.
+- Quark Combos window: starts with "Elements are made of Quarks!", then a line each: generate Quarks from your card display; more Quarks = more Elements to gather; Quark Score = Display Score × Combo Multiplier; items with their own complete recipe earn DOUBLE the points.
 - Guided tutorial: only what Professor Mouse asks for works. Taps anywhere else do nothing at every step (the details panel can't be closed, the craft animation no longer lets taps through), and any part's 🔍 counts when he asks you to track a part. Skipping the tutorial (and saying yes) gives the full game as before.
 - Professor Mouse now stands on the bottom hub, on the side away from what he's pointing at; his balloon moves up when it would cover it. When he has several things to say in a row, the balloon counts them (1/3, 2/3, 3/3). The 💡 hints use the same spot.
 - Desktop browsers: the game keeps its phone shape, scaled to the window's height with wood bars at the sides, instead of stretching wide. Phones and tablets fill the screen as before.
