@@ -308,7 +308,7 @@ func _beat_pop(on: Control, b: Dictionary) -> void:
 	l.add_theme_color_override("font_outline_color", Tok.OK.darkened(0.35) if pts else Color("#4a2f8a"))
 	l.add_theme_constant_override("outline_size", 6)
 	l.size = l.get_minimum_size()
-	var r := on.get_global_rect()
+	var r := App.current.local_rect(on.get_global_rect())
 	l.position = Vector2(r.get_center().x - l.size.x / 2, r.position.y - l.size.y * 0.4)
 	l.pivot_offset = l.size / 2
 	l.scale = Vector2(0.3, 0.3)
@@ -730,7 +730,7 @@ func enlarge(name: String) -> void:
 	var cap: bool = Data.t("ITEM_TIER").get(name, "") == "CAPSTONE"
 	var full := CardPop.side_card(name, 260.0 if cap else 150.0, true)
 	var sz: Vector2 = full.size * full.scale
-	var r := at.get_global_rect()
+	var r: Rect2 = app.local_rect(at.get_global_rect())
 	full.position = Vector2(clampf(r.get_center().x - sz.x / 2, 8, app.size.x - 8 - sz.x), clampf(r.get_center().y - sz.y / 2, 8, app.size.y - 8 - sz.y))
 	Juice._ignore_mouse(full)  # its taps reach the Close under it
 	_big.add_child(full)

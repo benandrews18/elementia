@@ -56,6 +56,7 @@ func _redraw() -> void:
 	if not hint.has_node("Unknown"):  # the reward: an Unknown Element, its square after the text (the user, 2026-11-26)
 		var sq := LockInReward.unknown_square(20)
 		sq.name = "Unknown"
+		_bounces(sq)
 		sq.position = Vector2(hint.get_theme_font("font").get_string_size(hint.text, HORIZONTAL_ALIGNMENT_LEFT, -1, hint.get_theme_font_size("font_size")).x + 6, 4)
 		hint.add_child(sq)
 	var rows_at: Control = $Bg/Scroll/Content/Tray/Market/Rows
@@ -82,8 +83,7 @@ func _redraw() -> void:
 			rw.position = Vector2(row.size.x - 3 - 15 - rw.size.x / 2, (row.size.y - rw.size.y) / 2)
 			row.add_child(rw)
 		ry += row.size.y + 4
-	$Bg/Scroll/Content/Tray/Market/Foot.position.y = ry
-	panel.size = Vector2(pw, ry + 16 + 10)
+	panel.size = Vector2(pw, ry + 10)
 	y += panel.size.y + 12
 	# Capstones: a reference list, pinnable.
 	$Bg/Scroll/Content/Tray/CapsHead.position.y = y
@@ -132,15 +132,23 @@ func _stations(at: Vector2, w: float) -> float:
 			t.position = Vector2(d - 9, -4)
 			c.add_child(t)
 		$Bg/Scroll/Content/Tray/Stations.add_child(c)
-	var r: Control = Tok.tick(Color("#4fe583"), 22) if s.get("allStationsPaid") else LockInReward.unknown_square(26)
+	var r: Control = Tok.tick(Color("#4fe583"), 22) if s.get("allStationsPaid") else _bounces(LockInReward.unknown_square(26))
 	r.position = at + Vector2(w - r.size.x - 2, 20 + (d - r.size.y) / 2)
 	$Bg/Scroll/Content/Tray/Stations.add_child(r)
 	return 20 + d
 
 
+## An Unknown Element square: a tap bounces it, nothing opens (the user, 2026-11-26).
+func _bounces(sq: Control) -> Control:
+	sq.mouse_filter = MOUSE_FILTER_STOP
+	sq.set_meta("cmp", "market:unknown")
+	sq.gui_input.connect(func(ev): if Tap.tap(ev): DisplayMatScreen.bounce(sq))
+	return sq
+
+
 ## bingoCellHTML(): a parchment square (green inside rim when owned or
 ## craftable now; owned turns green), the icon, the name, the corner pin,
-## the tier numeral; a capstone (inspect) shows its station too.
+## a capstone (inspect) shows its station (no tier numeral, no "?": the user, 2026-11-26).
 func _cell(name: String, sz: float, inspect: bool) -> Control:
 	var s := Game.state
 	var e = Catalog.entry(name)
@@ -168,23 +176,10 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	n.position = Vector2(-2, sz + 3)
 	n.set_meta("cmp", "market:name:" + name)
 	c.add_child(n)
-	if not inspect and not owned:  # what crafting it pays
-		var q := LockInReward.unknown_square(16)
-		q.position = Vector2(-4, -4)
-		c.add_child(q)
 	if inspect:
 		var st := Tok.icon(Catalog.station(Data.t("CORE_ITEM_STATION")[name]).emoji, 16)
 		st.position = Vector2(3, 3)
 		c.add_child(st)
-	var tier: String = Data.t("TIER_NUMERAL").get(Data.t("ITEM_TIER").get(name, ""), "")
-	if tier != "":
-		var t := Tok.label(tier, 8.5, Color("#2a1f08") if tier == "IV" else Color("#f2e6cc"), 800)
-		t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		t.add_theme_stylebox_override("normal", Tok.box(Tok.GOLD if tier == "IV" else Color("#2a2520"), 9.5, 1.5, Color.BLACK))
-		t.position = Vector2(-5, sz - 14)
-		t.size = Vector2(19, 19)
-		c.add_child(t)
 	var pinned := Progress.is_pinned(name)
 	var pin := Panel.new()
 	pin.add_theme_stylebox_override("panel", Tok.box(Tok.CARD, 10, 1.5, Tok.GOLD if pinned else Color.BLACK))

@@ -36,7 +36,7 @@ static func show_suit(su: String, target: Control, counts := false) -> void:
 	var b := make()
 	b.view_suit = su
 	b.view_counts = counts
-	b.anchor = target.get_global_rect()
+	b.anchor = App.current.local_rect(target.get_global_rect())
 	b.size = App.current.size
 	b.set_meta("cmp", "suitview:" + su)
 	App.current.add_child(b)

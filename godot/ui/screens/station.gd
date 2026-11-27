@@ -94,10 +94,9 @@ func arrive() -> void:
 	for n in [$Art, $Wash]:
 		n.modulate.a = 0.0
 		n.create_tween().tween_property(n, "modulate:a", 1.0, 0.35)
-	for nm in ["Head", "Icon", "Title", "ElementsLabel", "Chips", "CraftedLabel", "Fold", "Bar", "Crafted", "View"]:
+	for nm in ["Head", "Icon", "Title", "ElementsLabel", "Chips", "CraftedLabel", "Fold", "Bar", "Crafted", "View", "ShopLine", "ShopLabel", "ShopHint"]:  # the shop title falls with the header (the user, 2026-11-26)
 		_arrive_slide(_page.get_node(nm), Vector2(0, -60), 0.0)
-	for nm in ["ShopLine", "ShopLabel", "ShopHint", "Bench"]:
-		_arrive_slide(_page.get_node(nm), Vector2(size.x * 0.6, 0), 0.08)
+	_arrive_slide(_page.get_node("Bench"), Vector2(size.x * 0.6, 0), 0.08)
 	var shop: Array = $Scroll/Page/Shop.get_children()
 	var top := INF
 	for c in shop:

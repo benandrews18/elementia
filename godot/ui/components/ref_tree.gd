@@ -223,6 +223,12 @@ func _flat(parent: Control, name: String, kind: String, path: String, seen: Dict
 		var have := Catalog.count(s, name) >= 1
 		var chip := StationScreen.element_chip(name, 22)
 		chip.get_child(chip.get_child_count() - 1).visible = false  # no caption
+		# just the symbol in its coloured border, a thinner one (the user, 2026-11-26)
+		chip.get_node("Badge").visible = false
+		chip.get_node("Num").visible = false
+		var sb: StyleBoxFlat = chip.get_node("Chip").get_theme_stylebox("panel")
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(6)
 		chip.position = Vector2(14, 8)
 		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(chip)

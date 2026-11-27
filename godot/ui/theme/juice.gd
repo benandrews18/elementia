@@ -191,7 +191,8 @@ static func fly(card: Control, from: Rect2, to: Control) -> void:
 	if not on() or app == null or not from.has_area():
 		card.free()
 		return
-	var dest := to.get_global_rect()
+	var dest := app.local_rect(to.get_global_rect())
+	from = app.local_rect(from)
 	card.size = dest.size
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.position = from.position
@@ -218,6 +219,7 @@ static func drop(card: Control, at: Rect2) -> void:
 	if not on() or app == null or not at.has_area():
 		card.free()
 		return
+	at = app.local_rect(at)
 	card.size = at.size
 	card.position = at.position
 	card.pivot_offset = at.size / 2

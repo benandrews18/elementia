@@ -6,7 +6,7 @@
 extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
-	"convert", "picker", "unknown", "market", "explain", "suit_counts", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
+	"convert", "picker", "unknown", "market", "explain", "suit_counts", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "todo_tools", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
@@ -140,6 +140,12 @@ func _ready() -> void:
 			else:
 				Game.track("Glass")
 				app._on_hub("jobs")
+				app._panel_node._show("Metropolis")  # the details panel opens on a tap only
+		"todo_tools":  # the details panel: made at several stations (a line each); its elements just their symbols
+			TodoTray.detail = ""
+			Progress.prefs.pinnedItems = ["Tools"]
+			app.open_panel("todo")
+			app._panel_node._show("Tools")
 		"confirm":
 			ConfirmDialog.ask(app, "Reset the Display Mat to your last locked-in layout?", func(): pass)
 		"reward":

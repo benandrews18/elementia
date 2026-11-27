@@ -29,6 +29,7 @@ func _ready() -> void:
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
 	var fresh := fresh_stations()
+	Game.state.mapSeen = Catalog.found_stations(Game.state).keys()  # each reveal plays once (the user, 2026-11-26)
 	if Juice.on():
 		for st in fresh:
 			_pending[st] = true
@@ -44,13 +45,16 @@ var _pending := {}  # station -> true until it bounces in
 var _grow := {}  # station -> 0..1: the path from here growing toward it
 
 
-## What leaving this station found: found now, not found without it.
+## Found now and never shown on the map before (state.mapSeen); a save from
+## before mapSeen counts what was found without the station just left.
 static func fresh_stations() -> Array:
 	var s := Game.state
 	var here = s.get("lastStation")
 	if here == null or Game.ctx.get("awaitingStart"):
 		return []
-	var before := Catalog.found_stations(s, Util.get_or(s, "visitedStations", {}).keys().filter(func(v): return v != here))
+	var before = s.get("mapSeen")
+	if before == null:
+		before = Catalog.found_stations(s, Util.get_or(s, "visitedStations", {}).keys().filter(func(v): return v != here)).keys()
 	return Catalog.found_stations(s).keys().filter(func(st): return not before.has(st))
 
 
@@ -290,14 +294,8 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	card.add_child(h2)
 	var tname = Game.ctx.get("tracked")
 	var tracked = Catalog.entry(tname) if tname else null
-	var right := w
-	if not boxed:  # on the map: Settings at the title row's end (the card covers the corner gear)
-		var gear := StationScreen.gear_button(34)
-		gear.position = Vector2(w - 19 - 34, y)
-		card.add_child(gear)
-		right -= 42
-	if tracked != null:  # .mc-tracked-wrap: the 🔍 circle and a gold pill naming it, top right
-		card.add_child(_tracked_tag(tracked, right, y))
+	if tracked != null:  # .mc-tracked-wrap: the 🔍 circle and a gold pill naming it, in the corner (the card covers the gear: the user, 2026-11-26)
+		card.add_child(_tracked_tag(tracked, w, y))
 	var job := {}  # the tracked item and what it still needs: gold rings below
 	if tracked != null:
 		job[tname] = true
@@ -378,26 +376,35 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 
 
 ## A tap on c opens an item's card (or an element's).
-## The tracked item on the station card's top row: the 🔍 button's circle
-## overlapping a gold pill with its icon and name (at most half the card).
-static func _tracked_tag(e: Dictionary, w: float, y: float) -> Control:
-	var tag := Control.new()
-	tag.mouse_filter = MOUSE_FILTER_IGNORE
+## The tracked item's gold pill (28px: its icon, its name at one size, cut
+## short past max_w), tucked under a 🔍 circle on its left. Also the map's
+## bottom-left pill (App._floats).
+static func tracked_pill(e: Dictionary, max_w: float) -> Panel:
 	var name_l := Tok.label(e.name, 12.5, Tok.INK, 800)
 	name_l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var full := name_l.get_theme_font("font").get_string_size(e.name, HORIZONTAL_ALIGNMENT_LEFT, -1, name_l.get_theme_font_size("font_size")).x
-	var nw := minf(full, w / 2 - 34 + 12 - 16 - 15 - 6 - 10 - 6)
+	var nw := minf(full, max_w - 16 - 15 - 6 - 10)
 	var pill := Panel.new()
 	pill.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT, 14, 3, Tok.GOLD))
 	pill.size = Vector2(16 + 15 + 6 + nw + 10, 28)
-	pill.position = Vector2(34 - 12, 3)
 	var ic := Tok.icon(e.emoji, 15)
+	ic.name = "Icon"
 	ic.position = Vector2(16, (28 - 15) / 2.0)
 	pill.add_child(ic)
 	name_l.size = Vector2(nw, 28)
 	name_l.position = Vector2(16 + 15 + 6, 0)
 	name_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	pill.add_child(name_l)
+	return pill
+
+
+## The tracked item on the station card's top row: the 🔍 button's circle
+## overlapping a gold pill with its icon and name (at most half the card).
+static func _tracked_tag(e: Dictionary, w: float, y: float) -> Control:
+	var tag := Control.new()
+	tag.mouse_filter = MOUSE_FILTER_IGNORE
+	var pill := tracked_pill(e, w / 2 - 34 + 12 - 6)
+	pill.position = Vector2(34 - 12, 3)
 	tag.add_child(pill)
 	var glass := TextureRect.new()
 	glass.texture = load("res://assets/ui/btn_search.webp")

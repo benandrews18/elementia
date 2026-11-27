@@ -6,7 +6,7 @@ class_name App
 extends Control
 
 const EDGE := 6.0  # the 🔍 and ⚛️ corner buttons' gap to the screen's side (the user, 2026-11-26: room for the tracked pill)
-const PILL_H := 44.0  # the tracked pill's height
+const PILL_H := 28.0  # the tracked pill's height (MapScreen.tracked_pill)
 
 var panel := ""  # "", "drawer" (the Display Mat), "convert", "market" or "todo"
 var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
@@ -387,7 +387,7 @@ func craft_tap(name: String, button: Rect2) -> void:
 		return
 	var b := SuitSpend.make()
 	b.item = name
-	b.anchor = button
+	b.anchor = local_rect(button)
 	b.size = size
 	add_child(b)
 
@@ -792,6 +792,12 @@ func home_face() -> String:
 ## tracked asks "Track it now?" until "Don't ask again" is ticked, which
 ## sets Game Rules' "Auto-track on pin" to the answer (the user, 2026-11-26).
 ## Once tracked, the item flies from `from` to the pill.
+## A screen rect (get_global_rect) in the App's own coordinates: on a phone
+## the App sits below the notch (main.gd), so the two differ.
+func local_rect(r: Rect2) -> Rect2:
+	return Rect2(r.position - global_position, r.size)
+
+
 static func pin(name: String, from := Rect2()) -> void:
 	var was := Progress.is_pinned(name)
 	Game.toggle_pin(name)
@@ -812,7 +818,8 @@ static func pin(name: String, from := Rect2()) -> void:
 			fly.call()
 		else:
 			Progress.save_all()
-	dlg.append(ConfirmDialog.ask(app, "%s is pinned to your To-Do List. Track it now? Its parts get 🔍 marks at the stations and on the map." % name,
+	dlg.append(ConfirmDialog.ask(app, "{%s} %s is {📌} pinned to your list!
+Do you want to {🔍} track this item now?" % [Catalog.entry(name).emoji, name],
 		func(): answer.call(true), {"title": "Track it?", "yes_text": "Track it", "no_text": "Not now",
 		"check_text": "Don't ask again", "on_no": func(): answer.call(false)}))
 
@@ -866,18 +873,11 @@ func _sync_floats() -> void:
 	var t = Game.ctx.get("tracked")
 	var e = Catalog.entry(t) if t else null
 	if e != null:
-		var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
-		pill.get_node("Row/Icon").texture = Data.icon(e.emoji)
-		var nl: Label = pill.get_node("Row/Name")
-		nl.text = t
-		# Readable first (the user, 2026-11-26): 17 px, out to the screen's
-		# middle at most, a long name shrinking to fit (never under 11).
-		pill.position = Vector2(EDGE + 40, y + (58 - PILL_H) / 2)
-		var room := size.x / 2 - pill.position.x - (26 + 30 + 8 + 20)
-		var px := Tok.fit_px(t, nl.get_theme_font("font"), 17, room)
-		nl.add_theme_font_size_override("font_size", px)
-		var tw := nl.get_theme_font("font").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-		pill.size = Vector2(26 + 30 + 8 + tw + 20, PILL_H)
+		# The station card's pill (the user, 2026-11-26): one size for every name, the thin gold edge.
+		var px0 := EDGE + 58 - 12
+		var pill := MapScreen.tracked_pill(e, size.x / 2 + 40 - px0)
+		pill.position = Vector2(px0, y + (58 - PILL_H) / 2)
+		pill.mouse_filter = MOUSE_FILTER_STOP
 		pill.set_meta("cmp", "tracked")
 		var item: String = t
 		pill.gui_input.connect(func(ev): if Tap.tap(ev): CardPop.open(self, item).show_tracking())
@@ -914,7 +914,7 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 	if pills.is_empty() or e == null:
 		return
 	var pill: Control = pills[0]
-	var icon: Control = pill.get_node("Row/Icon")
+	var icon: Control = pill.get_node("Icon")
 	icon.modulate.a = 0  # shown again as the circle lands
 	var d := clampf(from.size.y, 36, 60)
 	var c := Panel.new()
@@ -926,7 +926,7 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 	ic.position = (c.size - ic.size) / 2
 	c.add_child(ic)
 	var start := from.get_center() - global_position - c.size / 2
-	var target := pill.position + Vector2(26 + 15, PILL_H / 2) - c.size / 2
+	var target := pill.position + Vector2(16 + 7.5, PILL_H / 2) - c.size / 2
 	var dv := target - start
 	c.position = start
 	c.scale = Vector2(0.6, 0.6)

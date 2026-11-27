@@ -50,8 +50,25 @@ func _ready() -> void:
 	var f := msg.get_theme_font("font")
 	var px := msg.get_theme_font_size("font_size")
 	msg.add_theme_constant_override("line_spacing", int(round(px * 1.5 - f.get_height(px))))
-	var lines := f.get_multiline_string_size(message, HORIZONTAL_ALIGNMENT_LEFT, inner, px).y / f.get_height(px)
+	var plain := RegEx.create_from_string("[{][^{}]+[}]").sub(message, "MM", true)  # an inline icon is about two letters wide
+	var lines := f.get_multiline_string_size(plain, HORIZONTAL_ALIGNMENT_LEFT, inner, px).y / f.get_height(px)
 	msg.custom_minimum_size = Vector2(inner, roundf(lines) * px * 1.5)
+	if plain != message:  # {emoji} tokens: icons inline (ParchDialog.emojify), the same font and size
+		var rt := RichTextLabel.new()
+		rt.bbcode_enabled = true
+		rt.scroll_active = false
+		rt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		rt.mouse_filter = MOUSE_FILTER_IGNORE
+		rt.add_theme_font_override("normal_font", f)
+		rt.add_theme_font_size_override("normal_font_size", px)
+		rt.add_theme_color_override("default_color", msg.get_theme_color("font_color"))
+		rt.add_theme_constant_override("line_separation", int(round(px * 1.5 - f.get_height(px))))
+		rt.text = ParchDialog.emojify(message, px + 2)
+		rt.custom_minimum_size = msg.custom_minimum_size
+		rt.set_meta("cmp", "confirm:message")
+		content.add_child(rt)
+		content.move_child(rt, msg.get_index())
+		msg.visible = false
 	if yes_text != "":
 		$Window/Content/Buttons/Yes/Text.text = yes_text
 	if no_text != "":

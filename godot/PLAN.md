@@ -1802,3 +1802,4 @@ Recorded so they aren't re-argued. Add new ones with the date.
   tweaks)? Every rule change then has to be made twice.
 - **Godot location:** move it out of Downloads (e.g. `C:\Godot\`) so it doesn't
   get cleaned up; update "Setup facts" if it moves.
+- 2026-11-26: phone batch (the user): map reveals once (state.mapSeen; older saves fall back to the visits); shop title falls with the header; App.local_rect (the App sits under the notch on a phone: SuitSpend, craft_tap, Juice.fly/drop, mat pops were in screen coordinates); greyed bench suit badges open Convert; Track-it text with inline icons (ConfirmDialog takes {emoji} tokens); To-Do: no auto details, row 🔍/📌 buttons, stations a line each, element chips plain; Market: no corner ?/tier, new title, Foot gone, ? squares bounce; map card covers the gear, MapScreen.tracked_pill shared with the bottom pill. Next (the user): the whole-game review.

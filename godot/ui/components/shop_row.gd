@@ -60,6 +60,10 @@ func _ready() -> void:
 		b.position = Vector2(x, 8.1)
 		b.size = Vector2(22, 22)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
+		if not lit:  # short of it: a tap opens Convert, this bench on top (the user, 2026-11-26)
+			b.mouse_filter = MOUSE_FILTER_STOP
+			b.set_meta("cmp", "tax:short:" + su)
+			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert("", e.name))
 		var g := Tok.icon("suit:" + su, 13)
 		g.position = Vector2(4.5, 4.5)
 		g.material = Tok.white()

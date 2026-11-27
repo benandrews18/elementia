@@ -38,9 +38,8 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
 	var t = Game.ctx.get("tracked")
-	if t:  # the leading quest in the details panel, open down to the tracked item (or to the shop's 🔍 tap)
-		detail = lead()
-		_open_to(detail, focus if focus != "" else t)
+	if t:  # the leading quest's breakdown open down to the tracked item (or to the shop's 🔍 tap); the details panel only on a tap (the user, 2026-11-26)
+		_open_to(lead(), focus if focus != "" else t)
 	tree_exiting.connect(func(): focus = "")
 	var w := minf(560, size.x)  # the whole width: the details panel needs it
 	$Tray.size = Vector2(w, size.y - HubBar.H)
@@ -169,7 +168,7 @@ func _list_width(names: Array) -> float:
 		var e: Dictionary = Catalog.entry(n)
 		widest = maxf(widest, Tok.font(800).get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, _name_px(n)).x)
 		widest = maxf(widest, Tok.font(700).get_string_size(_sub_text(e), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x)
-	return maxf(210, 56 + widest + 22 + 22 + 24)  # some air either side of the pins (the user: squished)
+	return maxf(210, 56 + widest + 14 + BTN * 2 + 8 + 14)  # some air either side of the buttons (the user: squished)
 
 
 func _show(name: String) -> void:
@@ -345,14 +344,17 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	sub.position = Vector2(56, 31)
 	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	row.add_child(sub)
-	var pin := Tok.icon("📌", 22)  # drop it from the list
-	pin.position = Vector2(w - 24 - 22, (ROW_H - 22) / 2)
-	pin.mouse_filter = MOUSE_FILTER_STOP
-	pin.set_meta("cmp", "todo:pin:" + e.name)
-	pin.gui_input.connect(func(ev): if Tap.tap(ev):
-		pin.accept_event()
-		App.pin(e.name))
+	# 🔍 Track and 📌 (drop it from the list), as buttons (the user, 2026-11-26)
+	var pin := _button("📌", true, Vector2(w - 14 - BTN, (ROW_H - BTN) / 2), "todo:pin:" + e.name, func(): App.pin(e.name))
 	row.add_child(pin)
+	if not owned:
+		var on: bool = Game.ctx.get("tracked") == e.name
+		row.add_child(_button("🔍", on, pin.position - Vector2(BTN + 8, 0), "todo:rowtrack:" + e.name,
+			func():
+				if on:
+					Game.set_tracked(null)
+				else:
+					Game.track(e.name)))
 	var line := ColorRect.new()
 	line.color = Color(1, 1, 1, 0.07)
 	line.position = Vector2(14, ROW_H - 1)
@@ -360,6 +362,27 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	line.mouse_filter = MOUSE_FILTER_IGNORE
 	row.add_child(line)
 	return y + ROW_H
+
+
+const BTN := 34.0
+
+
+## A row's square button: lit gold while on, else a raised dark tile.
+func _button(emoji: String, on: bool, at: Vector2, cmp: String, act: Callable) -> Control:
+	var b := Panel.new()
+	b.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD if on else Color(1, 1, 1, 0.12), 8, 1.5,
+		Color.BLACK if on else Color(1, 1, 1, 0.35), 3, 2, Color(0, 0, 0, 0.35)))
+	b.size = Vector2(BTN, BTN)
+	b.position = at
+	b.set_meta("cmp", cmp)
+	var ic := Tok.icon(emoji, 20)
+	ic.position = (b.size - Vector2(20, 20)) / 2
+	ic.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(ic)
+	b.gui_input.connect(func(ev): if Tap.tap(ev):
+		b.accept_event()
+		act.call())
+	return b
 
 
 static var _detail_keep := 0  # the details panel's scroll, kept across redraws
@@ -437,25 +460,26 @@ func _details() -> void:
 		fill.mouse_filter = MOUSE_FILTER_IGNORE
 		bar.add_child(fill)
 	body.add_child(bar)
-	var hx := 68.0  # where it's made
+	var sy := 80.0  # where it's made: a line each (the user, 2026-11-26: Tools is at several)
 	for st in Data.t("ENTRIES").filter(func(x): return x.name == e.name).map(func(x): return x.station):
 		var sic := Tok.icon(Catalog.station(st).emoji, 14)
-		sic.position = Vector2(hx, 80)
+		sic.position = Vector2(68, sy)
 		body.add_child(sic)
 		var sl := Tok.label(st, 12, Color("#b3becd"), 600)
-		sl.position = Vector2(hx + 17, 78)
+		sl.position = Vector2(68 + 17, sy - 2)
 		body.add_child(sl)
-		hx += 17 + Tok.font(600).get_string_size(st, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 10
+		sy += 18
+	var dy := maxf(0, sy - 98)  # past the first line
 	var head := Tok.label("PARTS", 11, Color("#8fa3b5"), 800)
-	head.position = Vector2(14, 104)
+	head.position = Vector2(14, 104 + dy)
 	body.add_child(head)
 	if Game.ctx.get("tracked") == null:  # a nudge, not a pick
 		var tip := Tok.label("Tap 🔍 on a part to track it", 12, Color("#e2b25a"), 700)
-		tip.position = Vector2(62, 103)
+		tip.position = Vector2(62, 103 + dy)
 		tip.set_meta("cmp", "todo:tip")
 		body.add_child(tip)
 	var tree := RefTree.new(RefTree.FLAT, _toggle)
 	tree.hint_name = _hint_name if hint_open else focus
-	var y := tree.nodes(body, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(8, 122), dw - 16)
+	var y := tree.nodes(body, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(8, 122 + dy), dw - 16)
 	body.custom_minimum_size = Vector2(dw, y + 24)
 	scroll.set_deferred("scroll_vertical", _detail_keep)

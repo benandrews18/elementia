@@ -9,6 +9,14 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Map: a station and its path are revealed once; coming back to the map again (even from the same station) doesn't replay it.
+- Arriving at a station: the Item Shop title, its line and "Tap on items..." fall with the header; only the cards come in from the right.
+- On a phone, the element balloons (and a few other pop-ups) now point at what you tapped instead of sitting lower down.
+- Crafting Bench: tapping a greyed suit badge (one you can't pay yet) opens Convert with that item's bench on top.
+- "Track it?" now reads "(icon) Item is 📌 pinned to your list! Do you want to 🔍 track this item now?", with the pictures inline.
+- To-Do List: opening it no longer opens the details panel (tap an item for that). Each row has a 🔍 Track button left of its 📌, both real buttons. In the details panel, each station it's made at gets its own line, and element parts show just their symbol in a thin coloured border.
+- Market: the "?" corners and tier numerals are gone from the squares; the title reads "Tap items to craft and earn (?)", and the line under the squares is gone. The "?" squares bounce when tapped.
+- Map: the station preview card now covers the corner Settings button, so the tracked item sits in the card's corner. The tracked pill at the bottom left matches the card's: the same icon and text size for every item and a thinner gold edge.
 - Data 2026.11.26b. Cruise Ship now also takes Solar Panel and Fish Cakes (8 parts across seven stations). On the Display Mat it has its own chip, Grand Voyage: +1 multiplier for each capstone crafted this run. New trophy: 🛳️ Bon Voyage (craft the Cruise Ship).
 - Full cards: a long recipe (Car, Fruit Cake, Cruise Ship) takes two rows of parts at the usual size instead of shrinking.
 - Unknown Element picker: the elements sit on the parchment (no blue backing), their names in black.
