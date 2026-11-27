@@ -50,6 +50,9 @@ func _ready() -> void:
 	layer.add_child(mouse)
 	tutorial = Tutorial.make()
 	add_child(tutorial)
+	# Input reaches the last child first: the tutorial stays last, so it sees
+	# every tap before a window that closes on "the next press anywhere".
+	child_entered_tree.connect(func(n): if n != tutorial and is_instance_valid(tutorial): move_child.call_deferred(tutorial, -1))
 	hints = Hints.make()
 	add_child(hints)
 	tutorial.resume.call_deferred()  # a run saved mid-tutorial
@@ -861,6 +864,7 @@ func _start_lock(on: bool) -> void:
 	p.position = Vector2((size.x - p.size.x) / 2, size.y - HubBar.H - 14 - 58 - 12 - p.size.y)  # over the 🔍 / ⚛️ row
 	p.pivot_offset = p.size / 2
 	add_child(p)
+	move_child(p, hub.get_index())  # under the hub: a line, not a window (the tutorial and Back look above the hub for those)
 
 
 ## canTravelTo(): not where you are, reachable (a path, or a Helicopter), run not over.

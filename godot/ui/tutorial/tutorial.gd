@@ -19,6 +19,7 @@ var _target: Control
 var _since := 0  # when the target was last seen (ms)
 var _paused := false  # the Skip question is open
 var _spot_at := Rect2()  # where the spotlight was last put (only moved when the target moves: no redraw a frame)
+var _cover: Control  # the window the step waits behind (only it takes taps)
 var _aside := false  # the game's own moment (the Market's, a window the step doesn't point into): unlocked, Mouse hidden
 
 
@@ -79,7 +80,16 @@ func _go(n: int) -> void:
 
 func _show() -> void:
 	var st := steps[i]
-	App.current.mouse.coach(st.pose, st.say, _target, st.until == "next", st.target == "" and not st.free)
+	# Several things in a row before a tap (Next steps and the one they lead
+	# to): "2/3" (the user, 2026-11-27).
+	var first := i
+	while first > 0 and steps[first - 1].until == "next":
+		first -= 1
+	var last := i
+	while last < steps.size() - 1 and steps[last].until == "next":
+		last += 1
+	var count := "%d/%d" % [i - first + 1, last - first + 1] if last > first else ""
+	App.current.mouse.coach(st.pose, st.say, _target, st.until == "next", st.target == "" and not st.free, count)
 
 
 func _process(_d: float) -> void:
@@ -123,7 +133,11 @@ func _process(_d: float) -> void:
 ## Every press outside the target and the bubble is swallowed (unless the
 ## step is free or the target is missing); a tap on the target moves on.
 func _input(ev: InputEvent) -> void:
-	if i < 0 or _paused or _aside or steps[i].free or App.current == null:
+	if i < 0 or _paused or steps[i].free or App.current == null:
+		return
+	if _aside:  # the game's own moment: a window takes taps only inside itself
+		if is_instance_valid(_cover) and (ev is InputEventMouseButton or ev is InputEventScreenTouch) 				and not _cover.get_global_rect().has_point(ev.position):
+			get_viewport().set_input_as_handled()
 		return
 	if ev.is_action_pressed("ui_cancel"):  # Escape: Back would close what the step needs
 		get_viewport().set_input_as_handled()
@@ -134,6 +148,8 @@ func _input(ev: InputEvent) -> void:
 	if _in_bubble(pos):
 		return
 	var on_target := _target != null and is_instance_valid(_target) and _target.get_global_rect().grow(App.current.mouse.pad).has_point(pos)
+	if not on_target and steps[i].target.ends_with("*"):  # "any of them" (a part's 🔍): each one counts
+		on_target = find_all(steps[i].target).any(func(t): return t.get_global_rect().has_point(pos))
 	if not on_target:
 		if steps[i].target == "" or _target != null or Time.get_ticks_msec() - _since < LOST_MS:
 			get_viewport().set_input_as_handled()
@@ -146,8 +162,11 @@ func _covered() -> bool:
 	if _target == null or not is_instance_valid(_target):
 		return false
 	var app := App.current
-	var wins := app.get_children().slice(app.hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
-	return not wins.is_empty() and not wins.back().is_ancestor_of(_target)
+	# Animations (ignoring the mouse) and the after-craft peek card aren't
+	# windows: they must not unlock the step.
+	var wins := app.get_children().slice(app.hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion() 		and c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not c.has_meta("peek"))
+	_cover = wins.back() if not wins.is_empty() and not wins.back().is_ancestor_of(_target) else null
+	return _cover != null
 
 
 func _on_target_input(ev: InputEvent, t: Control) -> void:
@@ -187,6 +206,21 @@ func _ready() -> void:
 
 ## The control a target names: a hub button, or the first visible control
 ## in the App tagged with it (meta "cmp"; "x*" a prefix; "tip:x": meta "tip").
+## Every visible Control tagged with a "prefix*" target.
+static func find_all(tag: String) -> Array:
+	var want := tag.trim_suffix("*")
+	var out := []
+	var stack: Array = [App.current]
+	while not stack.is_empty():
+		var n: Node = stack.pop_front()
+		if n is Control and (not n.is_visible_in_tree() or n.is_queued_for_deletion()):
+			continue
+		if str(n.get_meta("cmp", "")).begins_with(want):
+			out.append(n)
+		stack.append_array(n.get_children())
+	return out
+
+
 static func find(tag: String) -> Control:
 	var app := App.current
 	if tag.begins_with("hub:"):

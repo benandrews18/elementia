@@ -150,38 +150,58 @@ func _spot(target: Control) -> void:
 		m.set_shader_parameter("hole_size", Vector2.ZERO)
 
 
-## The first-play tutorial's step (Tutorial): docked on the side away from
-## its target (never over it), no ✕, "Skip tutorial" under the bubble; Next
-## only when the step waits for it. dim: all dark without a target.
-func coach(pose: int, text: String, target: Control, next: bool, dim: bool) -> void:
+## The first-play tutorial's step (Tutorial): Mouse stands on the hub (the
+## user, 2026-11-27), on the side away from his target; the bubble moves up
+## off the target if it would cover it. No ✕, "Skip tutorial" under the
+## bubble; Next only when the step waits for it. dim: all dark without a
+## target. count: "2/3" when he has several things to say in a row.
+func coach(pose: int, text: String, target: Control, next: bool, dim: bool, count := "") -> void:
 	coaching = true
 	tutorial = true
 	_dim = dim
-	var anchor := _dock(target)
 	$Bubble/Hide/Row/Label.text = skip_text
-	show_tip(pose, text, anchor, target, 17, -1.0, " " if next else "")
+	_place(pose, text, target, count if count != "" else (" " if next else ""))
+	$Bubble/Tour/Next.visible = next
+	$Bubble/Tour/Step.text = count
 	$Bubble/Close.visible = false
 	$Bubble/Hide.visible = true
-	$Bubble/Tour/Step.text = ""
-	if anchor.ends_with("left"):  # Mouse is on the bubble's left: Skip on its right, clear of him
+	if $Pose.position.x < $Bubble.position.x:  # Mouse on the bubble's left: Skip on its right, clear of him
 		var h: Control = $Bubble/Hide
 		h.position.x = $Bubble.size.x - h.size.x + 12
 
 
-## The corner away from target (never over it).
-func _dock(target: Control) -> String:
-	if target == null or not is_instance_valid(target):
-		return "bottom-left"
-	var c := target.get_global_rect().get_center()
-	return ("top-" if c.y > size.y * 0.45 else "bottom-") + ("right" if c.x < size.x * 0.35 else "left")
+## Standing on the hub, the side clear of target (the far side first); then
+## the bubble lifted above the target (or put below it) if they'd overlap.
+func _place(pose: int, text: String, target: Control, step: String) -> void:
+	var r := target.get_global_rect().grow(pad + 4) if target != null and is_instance_valid(target) else Rect2()
+	r.position -= global_position
+	var sides := ["bottom-right", "bottom-left"] if r.get_center().x < size.x / 2 else ["bottom-left", "bottom-right"]
+	for side in sides:
+		show_tip(pose, text, side, target, 17, -1.0, step)
+		if r.size == Vector2.ZERO or not $Pose.get_rect().intersects(r):
+			break
+	if r.size == Vector2.ZERO:
+		return
+	var b: Control = $Bubble
+	if not b.get_rect().grow(6).intersects(r):
+		return
+	var above := r.position.y - 12 - b.size.y
+	var below := r.end.y + 12
+	if above >= top:
+		b.position.y = above
+	elif below + b.size.y <= size.y - HubBar.H:
+		b.position.y = below
+	var box: StyleBoxFlat = (b.get_theme_stylebox("panel") as StyleBoxFlat).duplicate()
+	box.set_corner_radius_all(22)  # off Mouse: no corner pointing at him
+	b.add_theme_stylebox_override("panel", box)
 
 
-## A 💡 hint (Hints), tapped: docked away from what it's about, spotlit;
+## A 💡 hint (Hints), tapped: on the hub like the tutorial, spotlit;
 ## "✕ Hide" reads hide_text and hides just this hint for good.
 func hint(id: String, pose: int, text: String, target: Control, hide_text: String) -> void:
 	_hint_id = id
 	$Bubble/Hide/Row/Label.text = hide_text
-	show_tip(pose, text, _dock(target), target, 17)
+	_place(pose, text, target, "")
 
 
 ## The tutorial over: back to plain tips.

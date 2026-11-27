@@ -1436,6 +1436,29 @@ func _dev(app: App) -> void:
 	finished.dev = true
 
 
+## Taps on everything the step isn't asking for (the hub's buttons, spots
+## round the screen) change nothing: the user, 2026-11-27: the tutorial lets
+## you do only what Mouse asks.
+func _decoys(app: App, at: int) -> void:
+	var tut := app.tutorial
+	var st: TutorialStep = tut.steps[at]
+	var spots: Array = [Vector2(30, 70), Vector2(195, 300), Vector2(360, 200), Vector2(60, 520), Vector2(330, 600)]
+	for b in ["home", "inv", "jobs", "market", "codex"]:
+		spots.append(app.hub.button(b).get_global_rect().get_center())
+	var keep := func(): return [tut.i, app.panel, Game.ctx.get("screen"), Game.ctx.get("current"), TodoTray.detail, Game.ctx.get("tracked"),
+		JSON.stringify(Game.state), app.get_children().slice(app.hub.get_index() + 1).filter(func(c): return c is Control and c.visible and c.mouse_filter != Control.MOUSE_FILTER_IGNORE and not c.has_meta("peek")).size()]  # windows, not animations
+	for pos: Vector2 in spots:
+		var avoid: Array = Tutorial.find_all(st.target) if st.target.ends_with("*") else ([tut._target] if tut._target else [])
+		if avoid.any(func(t): return is_instance_valid(t) and t.get_global_rect().grow(app.mouse.pad + 4).has_point(pos)) or tut._in_bubble(pos):
+			continue
+		var before: Array = keep.call()
+		_vtap(pos)
+		await get_tree().create_timer(0.3).timeout
+		var after: Array = keep.call()
+		var diff := range(before.size()).filter(func(k): return before[k] != after[k]).map(func(k): return "%d:%s->%s" % [k, str(before[k]).left(40), str(after[k]).left(40)] if k != 6 else "state")
+		check(after == before, "step %d (%s, %s): a tap at %s off what Mouse asks changes nothing %s" % [at, st.target, st.until, pos, diff])
+
+
 ## The first-play tutorial (work queue 9), played with real taps through
 ## the viewport (so its lock is tested too): the first New Game starts it,
 ## each step's target shows and a tap on it moves on; taps elsewhere are
@@ -1479,6 +1502,7 @@ func _tutorial(app: App) -> void:
 						c._done()
 		elif st.until == "next":
 			check(await _until(func(): return app.mouse.showing and app.mouse.get_node("Bubble/Tour/Next").is_visible_in_tree()), "step %d: Mouse's Next shows" % at)
+			await _decoys(app, at)
 			_vtap(app.mouse.get_node("Bubble/Tour/Next").get_global_rect().get_center())
 		else:
 			for c in app.get_children():  # a window of the game's own ("New collection!"): closed as a player would
@@ -1494,6 +1518,12 @@ func _tutorial(app: App) -> void:
 				await get_tree().process_frame
 				check(app.panel != "codex" and tut.i == at, "a tap off the target is swallowed")
 			await get_tree().create_timer(1.2).timeout  # popups finish moving in, fades end
+			await _decoys(app, at)
+			if st.target == "todo:track:*":  # the opening's details panel: Mouse shows over it, and it stays open
+				check(app.mouse.visible and not tut._aside, "the track step's Mouse shows over the details panel")
+				_vtap(Tutorial.find("todo:close").get_global_rect().get_center())
+				await get_tree().process_frame
+				check(TodoTray.detail != "" and tut.i == at, "the details panel can't be closed mid-tutorial")
 			var r0: Rect2 = tut._target.get_global_rect()
 			if st.target == "hand":  # a card in the fan, not the gaps
 				r0 = tut._target.get_children().filter(func(c): return c.has_meta("hand"))[0].get_global_rect()

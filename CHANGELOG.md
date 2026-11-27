@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Guided tutorial: only what Professor Mouse asks for works. Taps anywhere else do nothing at every step (the details panel can't be closed, the craft animation no longer lets taps through), and any part's 🔍 counts when he asks you to track a part. Skipping the tutorial (and saying yes) gives the full game as before.
+- Professor Mouse now stands on the bottom hub, on the side away from what he's pointing at; his balloon moves up when it would cover it. When he has several things to say in a row, the balloon counts them (1/3, 2/3, 3/3). The 💡 hints use the same spot.
+- Desktop browsers: the game keeps its phone shape, scaled to the window's height with wood bars at the sides, instead of stretching wide. Phones and tablets fill the screen as before.
 - Faster taps: screens rebuild about twice as fast (their pieces stay loaded instead of being read from storage each time), the game saves just after a tap instead of during it, and the map or station under the Display Mat or the Items screen isn't redrawn while it's covered. Animations that start on a tap should no longer stutter at the start.
 - Small buttons are easier to hit: the Market's 📌 pins and a shop card's greyed suit badges take taps a little way around them.
 - The opening's glowing 🔍 Track buttons pulse 5 times and then stay lit; the clue gift wobbles 8 times, then rests (saves battery).
