@@ -272,7 +272,7 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 		for e in shown.filter(func(x): return x.tier == tier):
 			var owned := Catalog.owns(s, e.name)
 			var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
-			var row := DisplayMatScreen.list_row(e.name, lw)
+			var row := _wide_row(e.name, lw)
 			row.position = Vector2(6, y)
 			row.set_meta("cmp", "st:" + e.name)
 			if e.name == open_card:
@@ -280,14 +280,46 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 			if owned:
 				row.modulate = Color(0.7, 0.7, 0.7)
 				var tick := Tok.tick(Color.WHITE, 16, Tok.OK)
-				tick.position = Vector2(lw - 20, 4)
+				tick.position = Vector2(lw - 20, (WIDE_ROW_H - 16) / 2)
 				row.add_child(tick)
 			row.gui_input.connect(_on_tap.bind(func():
 				open_card = e.name
 				_redraw()))
 			page.add_child(row)
-			y += DisplayMatScreen.ROW_H + 6
+			y += row.size.y + 6
 	return y + 6
+
+
+## The list view's row (the user, 2026-11-26): picture, name, suit icons and
+## the parts, all in one line at the same sizes for every item (measured:
+## the widest, Fruit Cake, needs 324 px of the phone's 378; only Planet's 16
+## elements run onto a second line).
+const WIDE_ROW_H := 42.0
+
+static func _wide_row(name: String, lw: float) -> Panel:
+	var row := Panel.new()
+	row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
+	row.mouse_filter = MOUSE_FILTER_PASS
+	var ic := Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), 30)
+	ic.position = Vector2(6, (WIDE_ROW_H - 30) / 2)
+	row.add_child(ic)
+	var x := 42.0
+	var nm := Tok.label(name, 13, Tok.CARD_INK, 800)
+	var nw := Tok.font(800).get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	nm.position = Vector2(x, (WIDE_ROW_H - Tok.font(800).get_height(13)) / 2)
+	row.add_child(nm)
+	x += nw + 6
+	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):
+		var g := Tok.icon("suit:" + su, 13)
+		g.material = Tok.tinted(Tok.suit_color(su))
+		g.position = Vector2(x, (WIDE_ROW_H - 13) / 2)
+		row.add_child(g)
+		x += 15
+	x += 8
+	var parts := DisplayMatScreen.row_parts(name, Vector2(x, (WIDE_ROW_H - 22) / 2), 0, lw - 26 - x)  # clear of the owned tick
+	row.add_child(parts)
+	row.size = Vector2(lw, WIDE_ROW_H + parts.size.y - 22)
+	return row
 
 
 static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:

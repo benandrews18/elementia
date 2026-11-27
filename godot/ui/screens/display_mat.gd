@@ -632,7 +632,9 @@ static func list_row(name: String, lw: float) -> Panel:
 ## A row's components in one line (elements first, then items by points; no
 ## "+"), at ROW_FIT, shrunk to fit room when wider. Planet's 16 elements
 ## shrink too.
-static func row_parts(name: String, at: Vector2, room: float) -> Control:
+## wrap > 0: full size, onto a new line (22 + 4 down) past that width
+## instead of shrinking (the station's one-line rows: only Planet wraps).
+static func row_parts(name: String, at: Vector2, room: float, wrap := 0.0) -> Control:
 	var e = Catalog.entry(name)
 	var holder := Control.new()
 	holder.position = at
@@ -662,10 +664,18 @@ static func row_parts(name: String, at: Vector2, room: float) -> Control:
 		else:
 			part = Tok.icon(Data.t("ITEM_EMOJI").get(r.name, ""), 22)
 			part.size = Vector2(22, 22)
-		part.position = Vector2(x, 0)
+		var line := 0
+		if wrap > 0 and x > 0 and x + part.size.x > wrap:
+			x = 0.0
+			line = holder.get_meta("lines", 1)
+			holder.set_meta("lines", line + 1)
+		part.position = Vector2(x, 26.0 * holder.get_meta("lines", 1) - 26.0)
 		part.mouse_filter = MOUSE_FILTER_IGNORE
 		holder.add_child(part)
 		x += part.size.x + 4
+	if wrap > 0:
+		holder.size = Vector2(wrap, 26.0 * holder.get_meta("lines", 1) - 4)
+		return holder
 	var natural := maxf(1, x - 4)
 	var k := minf(ROW_FIT, room / natural)
 	holder.scale = Vector2(k, k)
