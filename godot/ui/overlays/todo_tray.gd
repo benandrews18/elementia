@@ -1,11 +1,14 @@
 ## The To-Do List (the hub's To-Do List button): a tray sliding in from the
 ## left, a quest log (the user, 2026-11-26: questline games keep one
 ## objective in view, chapters with counts, progress from what's owned).
-## Each pinned item is a quest: icon (its card), name, points, where it's
-## made, its 📌 (drop it), a bar of its direct parts owned. A tap folds or
-## opens it; open, its parts are rows (RefTree, one level per tap) with 🔍
-## Track. The quest holding the tracked item leads, open down to it; the
-## others are folded. Facts only, no advice; "Get a Hint" stays, asked for.
+## One background, no boxes (the user, 2026-11-26): each pinned item a row
+## (icon, name, points, its parts owned, its 📌 to drop it); a tap opens the
+## details panel over the list's right side, the icons and names still
+## showing at the left (the list still scrolls; another tap switches it; ✕
+## closes it): the item's card details, a parts bar, and its parts as a tree
+## (RefTree.FLAT, one level per tap) with 🔍 Track. The quest holding the
+## tracked item leads and opens in the panel, down to it. Facts only, no
+## advice; "Get a Hint" stays, asked for.
 class_name TodoTray
 extends Control
 
@@ -14,6 +17,9 @@ const INK := Color("#2a1f14")
 static var expanded := {}  # "refroot/<item>" and "ref/<root>/.../<item>" paths shown open
 static var hint_open := false
 static var focus := ""  # a shop card's tracked-item badge was tapped: this one lit in the tracked item's breakdown
+static var detail := ""  # the item in the details panel ("" closed)
+const LEFT_W := 138.0  # the list's icons and names, still showing beside the details panel
+const ROW_H := 58.0
 
 ## The layout is ui/overlays/todo_tray.tscn (the tray, the "Pinned" heading);
 ## this builds the pinned items' trees.
@@ -32,10 +38,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Scrim.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.close_panel())
 	var t = Game.ctx.get("tracked")
-	if t:  # the leading quest open down to the tracked item (or to the shop's 🔍 tap)
-		_open_to(lead(), focus if focus != "" else t)
+	if t:  # the leading quest in the details panel, open down to the tracked item (or to the shop's 🔍 tap)
+		detail = lead()
+		_open_to(detail, focus if focus != "" else t)
 	tree_exiting.connect(func(): focus = "")
-	var w := minf(400, size.x * 0.92)
+	var w := minf(560, size.x)  # the whole width: the details panel needs it
 	$Tray.size = Vector2(w, size.y - HubBar.H)
 	_scroll.size = $Tray.size - Vector2(3, 3)
 	Game.state_changed.connect(_redraw)
@@ -75,6 +82,8 @@ func _redraw() -> void:
 	for c in _list.get_children():
 		c.queue_free()
 	var w := _scroll.size.x - 40
+	if detail != "" and not Progress.is_pinned(detail):
+		detail = ""
 	var names: Array = Progress.prefs.pinnedItems.filter(func(n): return Catalog.entry(n) != null)
 	var first := lead()
 	if names.has(first):  # the quest holding the tracked item leads
@@ -90,16 +99,25 @@ func _redraw() -> void:
 		y = _hint_button(y) + 10
 		if hint_open:
 			y = _hint_card(hint, y, w) + 16
-		if Game.ctx.get("tracked") == null:  # a nudge, not a pick (the user, 2026-11-26)
+		if Game.ctx.get("tracked") == null and detail == "":  # a nudge, not a pick (the user, 2026-11-26); in the panel when it's open
 			var tip := Tok.label("Tip: tap 🔍 on a part to track it.", 13, Color("#b3becd"), 700)
 			tip.position = Vector2(20, y)
 			tip.set_meta("cmp", "todo:tip")
 			_list.add_child(tip)
 			y += 24
+		y += 4
 		for n in names:
-			y = _row(Catalog.entry(n), Vector2(20, y + 6), w) + 14
+			y = _row(Catalog.entry(n), y, _scroll.size.x)
 	$Tray/Scroll/List.custom_minimum_size = Vector2(_scroll.size.x, y + 20)
 	_scroll.set_deferred("scroll_vertical", keep)
+	_details()
+
+
+func _show(name: String) -> void:
+	detail = "" if detail == name else name
+	if detail != "":
+		expanded["refroot/" + detail] = true
+	_redraw()
 
 
 func _toggle(path: String) -> void:
@@ -173,7 +191,7 @@ static func _trails(root: String, target: String) -> Array:
 ## The hint's card: the item, why, whether it can be made now, where.
 func _hint_card(hint, y: float, w: float) -> float:
 	var card := Panel.new()
-	card.add_theme_stylebox_override("panel", Tok.box(Color("#241c3a"), 12, 1.5, Color("#4b3d77")))
+	card.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.06), 12))
 	card.position = Vector2(20, y)
 	_list.add_child(card)
 	if hint == null:
@@ -215,124 +233,158 @@ func _hint_card(hint, y: float, w: float) -> float:
 	return y + card.size.y
 
 
-## A quest: a parchment card with its pushpin; returns its bottom. The
-## tracked item's quest wears a gold ring and a 🔍 badge.
-func _row(e: Dictionary, at: Vector2, w: float) -> float:
+## A pinned item's row: icon (a green dot when craftable now, a 🔍 when the
+## tracked item is it or in it), name, points and parts owned, its 📌. A tap
+## shows it in the details panel. Returns its bottom.
+func _row(e: Dictionary, y: float, w: float) -> float:
 	var owned := Catalog.owns(Game.state, e.name)
-	var path: String = "refroot/" + e.name
-	var open := expanded.has(path)
-	var tracked: bool = e.name == Game.ctx.get("tracked")
-	var card := Panel.new()
-	card.add_theme_stylebox_override("panel", Tok.box(Color("#dff2e2") if owned else Color("#f3e6c8"), 14, 4 if tracked else 2,
-		Tok.GOLD if tracked else Color("#4fbf7a") if owned else Color("#c9a571"), 4, 2, Color(0, 0, 0, 0.3)))
-	card.position = at
-	card.mouse_filter = MOUSE_FILTER_PASS  # a drag scrolls the list; a tap folds or opens it
-	card.set_meta("cmp", "todo:quest:" + e.name)
-	card.gui_input.connect(func(ev): if Tap.tap(ev): _toggle(path))
-	_list.add_child(card)
-	if tracked:  # a 🔍 badge off its top-right corner
-		var badge := Panel.new()
-		badge.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD, 17, 2, Color.BLACK, 3, 2, Color(0, 0, 0, 0.4)))
-		badge.position = Vector2(w - 24, -12)
-		badge.size = Vector2(34, 34)
-		badge.mouse_filter = MOUSE_FILTER_IGNORE
-		var gl := Tok.icon("🔍", 18)
-		gl.position = Vector2(8, 8)
-		badge.add_child(gl)
-		card.add_child(badge)
-	var tack := Panel.new()  # the red pushpin at the top
-	tack.add_theme_stylebox_override("panel", Tok.box(Color("#d9483c"), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.4)))
-	tack.size = Vector2(13, 13)
-	tack.position = Vector2(w / 2 - 6.5, -6)
-	tack.mouse_filter = MOUSE_FILTER_IGNORE
-	card.add_child(tack)
-	var ic := Tok.icon(e.emoji, 40)  # a tap: its card
+	var row := Control.new()
+	row.position = Vector2(0, y)
+	row.size = Vector2(w, ROW_H)
+	row.mouse_filter = MOUSE_FILTER_PASS  # a drag scrolls the list
+	row.set_meta("cmp", "todo:quest:" + e.name)
+	row.gui_input.connect(func(ev): if Tap.tap(ev): _show(e.name))
+	_list.add_child(row)
+	if detail == e.name:
+		var sel := ColorRect.new()
+		sel.color = Color(1, 1, 1, 0.09)
+		sel.size = row.size
+		sel.mouse_filter = MOUSE_FILTER_IGNORE
+		row.add_child(sel)
+	var ic := Tok.icon(e.emoji, 34)
+	ic.position = Vector2(14, 12)
+	row.add_child(ic)
+	if RefTree.ready(e.name):
+		row.add_child(RefTree.ready_dot(Vector2(42, 8)))
+	if e.name == lead():  # the tracked item is this, or in it
+		var g := Tok.icon("🔍", 16)
+		g.position = Vector2(6, 6)
+		g.set_meta("cmp", "todo:lead")
+		row.add_child(g)
+	var room := LEFT_W - 56 - 4  # the name stays readable beside the details panel
+	var px := Tok.fit_px(e.name, Tok.font(800), 15, room)
+	var nl := Tok.label(e.name, px, Color("#5fd38a") if owned else Color.WHITE, 800)
+	nl.position = Vector2(56, 10 + (15 - px) * 0.6)
+	row.add_child(nl)
+	var pc := RefTree.parts(e)
+	var star := Tok.star(Color("#f5b400"), 11)
+	star.position = Vector2(56, 35)
+	row.add_child(star)
+	var sub := Tok.label("%d   %s" % [int(e.points), "crafted" if owned else "%d/%d parts" % [pc.x, pc.y]], 12, Color("#8fa3b5"), 700)
+	sub.position = Vector2(71, 31)
+	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
+	row.add_child(sub)
+	var pin := Tok.icon("📌", 20)  # drop it from the list
+	pin.position = Vector2(w - 38, (ROW_H - 20) / 2)
+	pin.mouse_filter = MOUSE_FILTER_STOP
+	pin.set_meta("cmp", "todo:pin:" + e.name)
+	pin.gui_input.connect(func(ev): if Tap.tap(ev):
+		pin.accept_event()
+		App.pin(e.name))
+	row.add_child(pin)
+	var line := ColorRect.new()
+	line.color = Color(1, 1, 1, 0.07)
+	line.position = Vector2(14, ROW_H - 1)
+	line.size = Vector2(w - 28, 1)
+	line.mouse_filter = MOUSE_FILTER_IGNORE
+	row.add_child(line)
+	return y + ROW_H
+
+
+static var _detail_keep := 0  # the details panel's scroll, kept across redraws
+
+
+## The details panel over the list's right side: ✕, the item (its icon opens
+## its card), points, where it's made, a parts bar, then its parts' tree.
+func _details() -> void:
+	var old := $Tray.get_node_or_null("Details")
+	if old:
+		var sc := old.get_node_or_null("Scroll")
+		if sc:
+			_detail_keep = sc.scroll_vertical
+		old.free()
+	var e = Catalog.entry(detail) if detail != "" else null
+	if e == null:
+		_detail_keep = 0
+		return
+	var tw: float = $Tray.size.x
+	var dw := tw - LEFT_W
+	var h: float = $Tray.size.y
+	var panel := Panel.new()
+	panel.name = "Details"
+	panel.add_theme_stylebox_override("panel", Tok.box(Color("#1d4456"), 0, 0, Color.BLACK, 14, 0, Color(0, 0, 0, 0.5)))
+	panel.position = Vector2(LEFT_W, 0)
+	panel.size = Vector2(dw, h)
+	panel.set_meta("cmp", "todo:details")
+	$Tray.add_child(panel)
+	var scroll := ScrollContainer.new()
+	scroll.name = "Scroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size = panel.size
+	panel.add_child(scroll)
+	var body := Control.new()
+	body.mouse_filter = MOUSE_FILTER_PASS
+	scroll.add_child(body)
+	var close := TextureRect.new()
+	close.texture = load("res://assets/ui/btn_close.webp")
+	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	close.size = Vector2(34, 34)
+	close.position = Vector2(dw - 34 - 10, 10)
+	close.set_meta("cmp", "todo:close")
+	close.gui_input.connect(func(ev): if Tap.tap(ev):
+		close.accept_event()
+		detail = ""
+		_redraw())
+	body.add_child(close)
+	var ic := Tok.icon(e.emoji, 44)
 	ic.position = Vector2(14, 14)
 	ic.mouse_filter = MOUSE_FILTER_STOP
 	ic.set_meta("cmp", "todo:card:" + e.name)
-	ic.gui_input.connect(func(ev): if Tap.tap(ev):
-		ic.accept_event()
-		if App.current: App.current.show_card(e.name))
-	card.add_child(ic)
-	if RefTree.ready(e.name):
-		card.add_child(RefTree.ready_dot(Vector2(48, 10)))
-	var arrow := RefTree.arrow(open, Color("#8a5a1a"))
-	arrow.position = Vector2(64, 21)
-	arrow.set_meta("cmp", "todo:fold:" + e.name)
-	card.add_child(arrow)
-	var pts := Panel.new()  # ⭐ points
-	pts.add_theme_stylebox_override("panel", Tok.box(Color("#fbe9b5"), 10))
-	pts.mouse_filter = MOUSE_FILTER_IGNORE
-	var ptxt := str(int(e.points))
-	pts.size = Vector2(20 + Tok.font(900).get_string_size(ptxt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 14, 20)
-	pts.position = Vector2(w - 54 - pts.size.x, 16)
-	var star := Tok.star(Color("#f5b400"), 12)
-	star.position = Vector2(7, 4)
-	pts.add_child(star)
-	var pl := Tok.label(ptxt, 12, INK, 900)
-	pl.position = Vector2(23, 1)
-	pts.add_child(pl)
-	card.add_child(pts)
-	var room := pts.position.x - 8 - 80 - (22.0 if owned else 0.0)
-	var px := Tok.fit_px(e.name, Tok.font(900), 17, room)
-	var name_l := Tok.label(e.name, px, INK, 900)
-	name_l.position = Vector2(80, 13 + (17 - px) * 0.6)
-	card.add_child(name_l)
-	if owned:
-		var t := Tok.tick(Color.WHITE, 16, Tok.OK)
-		t.position = Vector2(80 + Tok.font(900).get_string_size(e.name, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x + 6, 17)
-		card.add_child(t)
-	# The parts bar: direct parts owned of all (a quest's chapters).
+	ic.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(e.name))
+	body.add_child(ic)
+	var px := Tok.fit_px(e.name, Tok.font(900), 19, dw - 68 - 50)
+	var nl := Tok.label(e.name, px, Color.WHITE, 900)
+	nl.position = Vector2(68, 12 + (19 - px) * 0.6)
+	body.add_child(nl)
 	var pc := RefTree.parts(e)
-	var bar_w := 84.0
-	var bar := Panel.new()
-	bar.add_theme_stylebox_override("panel", Tok.box(Color("#e3cfa4"), 5))
-	bar.position = Vector2(80, 44)
-	bar.size = Vector2(bar_w, 10)
+	var star := Tok.star(Color("#f5b400"), 12)
+	star.position = Vector2(68, 42)
+	body.add_child(star)
+	var line := Tok.label("%d   %d/%d parts" % [int(e.points), pc.x, pc.y], 13, Color("#b3becd"), 700)
+	line.position = Vector2(84, 38)
+	body.add_child(line)
+	var bar := Panel.new()  # the parts bar
+	bar.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.12), 4))
+	bar.position = Vector2(68, 62)
+	bar.size = Vector2(dw - 68 - 16, 8)
 	bar.mouse_filter = MOUSE_FILTER_IGNORE
-	bar.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	if pc.x > 0:
 		var fill := Panel.new()
-		fill.add_theme_stylebox_override("panel", Tok.box(Tok.OK, 5))
-		fill.size = Vector2(maxf(10, bar_w * pc.x / maxf(1, pc.y)), 10)
+		fill.add_theme_stylebox_override("panel", Tok.box(Tok.OK, 4))
+		fill.size = Vector2(maxf(8, bar.size.x * pc.x / maxf(1, pc.y)), 8)
 		fill.mouse_filter = MOUSE_FILTER_IGNORE
 		bar.add_child(fill)
-	card.add_child(bar)
-	var cl := Tok.label("%d/%d parts" % [pc.x, pc.y], 12, Color("#8a5a1a"), 800)
-	cl.position = Vector2(80 + bar_w + 8, 39)
-	card.add_child(cl)
-	var hx := 80 + bar_w + 8 + Tok.font(800).get_string_size(cl.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 10
-	for h in Data.t("ENTRIES").filter(func(x): return x.name == e.name).map(func(x): return x.station):  # where it's made
-		if hx + 16 > w - 54:
-			break
-		var sic := Tok.icon(Catalog.station(h).emoji, 16)
-		sic.position = Vector2(hx, 40)
-		card.add_child(sic)
-		hx += 20
-	card.add_child(_pin_button(e.name, Vector2(w - 48, 14)))
-	var h := 70.0
-	if open:
-		var tree := RefTree.new(RefTree.PARCHMENT, _toggle)
-		tree.hint_name = _hint_name if hint_open else focus
-		h = tree.nodes(card, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(16, h + 4), w - 32) + 12
-	card.size = Vector2(w, h)
-	return at.y + h
-
-
-## A quest's pin (the big dark one): drops it from the list.
-func _pin_button(name: String, at: Vector2) -> Control:
-	var pinned := Progress.is_pinned(name)
-	var b := Panel.new()
-	b.add_theme_stylebox_override("panel", Tok.box(Color("#3a2414"), 8, 2, Tok.GOLD if pinned else Color("#b9b0a0"), 3, 2, Color(0, 0, 0, 0.3)))
-	b.size = Vector2(34, 34)
-	b.position = at
-	b.set_meta("cmp", "todo:pin:" + name)
-	var ic := Tok.icon("📌", 18)
-	ic.position = (b.size - Vector2(18, 18)) / 2
-	if not pinned:
-		ic.material = Tok.grey()
-	b.add_child(ic)
-	b.gui_input.connect(func(ev): if Tap.tap(ev):
-		b.accept_event()
-		App.pin(name))
-	return b
+	body.add_child(bar)
+	var hx := 68.0  # where it's made
+	for st in Data.t("ENTRIES").filter(func(x): return x.name == e.name).map(func(x): return x.station):
+		var sic := Tok.icon(Catalog.station(st).emoji, 14)
+		sic.position = Vector2(hx, 80)
+		body.add_child(sic)
+		var sl := Tok.label(st, 12, Color("#b3becd"), 600)
+		sl.position = Vector2(hx + 17, 78)
+		body.add_child(sl)
+		hx += 17 + Tok.font(600).get_string_size(st, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 10
+	var head := Tok.label("PARTS", 11, Color("#8fa3b5"), 800)
+	head.position = Vector2(14, 104)
+	body.add_child(head)
+	if Game.ctx.get("tracked") == null:  # a nudge, not a pick
+		var tip := Tok.label("Tap 🔍 on a part to track it", 12, Color("#e2b25a"), 700)
+		tip.position = Vector2(62, 103)
+		tip.set_meta("cmp", "todo:tip")
+		body.add_child(tip)
+	var tree := RefTree.new(RefTree.FLAT, _toggle)
+	tree.hint_name = _hint_name if hint_open else focus
+	var y := tree.nodes(body, RefTree.components(e), "ref/" + e.name, {e.name: true}, Vector2(8, 122), dw - 16)
+	body.custom_minimum_size = Vector2(dw, y + 24)
+	scroll.set_deferred("scroll_vertical", _detail_keep)

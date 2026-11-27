@@ -6,7 +6,7 @@
 extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
-	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "todo_quest", "pin_ask", "confirm", "reward",
+	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
@@ -100,13 +100,19 @@ func _ready() -> void:
 			Game.start_run("Robot")
 			Game.start_on_map()
 			if state == "start_todo":
-				TodoTray.expanded = {"refroot/Robot": true}
+				TodoTray.detail = "Robot"
 				app.open_panel("todo")
 			elif state == "start_ready":
 				Game.track("Magnet")
+		"todo_list":  # the list alone, the details panel closed
+			TodoTray.detail = ""
+			Game.ctx.tracked = null
+			Progress.prefs.pinnedItems = ["Metropolis", "Plastic", "Glass", "Robot"]
+			app.open_panel("todo")
 		"todo_quest", "pin_ask":  # a part of Metropolis tracked: its quest leads, open down to it; Plastic folded. A new pin asks.
 			TodoTray.hint_open = false
 			TodoTray.expanded = {}
+			TodoTray.detail = ""
 			if state == "pin_ask":
 				Progress.prefs.pinAsked = false
 				Progress.prefs.pinnedItems = ["Metropolis"]

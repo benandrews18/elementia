@@ -240,7 +240,8 @@ func _start(name: String, card: Control) -> void:
 	var go := func(): app.fade_through_black(func():
 		Game.start_run(name)
 		Game.start_on_map()  # the To-Do List shows the new quest; Start waits for a goal (the user, 2026-11-26)
-		TodoTray.expanded = {"refroot/" + name: true}
+		TodoTray.expanded = {}
+		TodoTray.detail = name
 		app.open_panel("todo"))
 	if not Progress.is_pinned(name):
 		Progress.toggle_pin(name)

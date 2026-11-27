@@ -331,11 +331,15 @@ func _todo(app: App) -> void:
 	await get_tree().process_frame
 	var pc := RefTree.parts(Catalog.entry("Metropolis"))
 	check(_find_meta(app._panel_node, "todo:bar:%d/%d" % [pc.x, pc.y]) != null, "the quest shows its parts bar (%d/%d)" % [pc.x, pc.y])
+	TodoTray.detail = ""
+	tray._redraw()
 	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
-	check(not TodoTray.expanded.has("refroot/Metropolis"), "a tap folds the quest")
+	check(TodoTray.detail == "Metropolis" and _find_meta(app._panel_node, "todo:details") != null, "a tap on an item opens its details panel")
+	await get_tree().process_frame
+	_find_meta(app._panel_node, "todo:close").gui_input.emit(_release())
+	check(TodoTray.detail == "" and _find_meta(app._panel_node, "todo:details") == null, "✕ closes the details panel")
 	await get_tree().process_frame
 	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
-	check(TodoTray.expanded.has("refroot/Metropolis"), "a second tap opens it")
 	await get_tree().process_frame
 	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items.filter(func(it): return not Catalog.owns(Game.state, it.name))[0].name
 	Game.set_tracked(null)

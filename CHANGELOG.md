@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- The To-Do List, slimmer: one background, each pinned item a plain row (icon, name, points, parts owned, its 📌). Tap one to open a details panel over the right side, with its parts' tree and 🔍 Track; the list's icons and names stay visible on the left, so you can scroll and tap another item. ✕ closes the panel.
 - The suit strip: each suit's icon in a gold ring on a thin pill, its count in a bubble; hidden while Convert is open. Convert's Unknown Element counter is a ring on the tray's corner, so the elements sit closer to the title. The map card's items have a thin dark edge instead of a brown square. The Close button's background stays inside its ring.
 - A new opening: after you pick your capstone, your To-Do List shows it and its parts. Pick one to track, then tap **Start** (it stays locked until you've chosen; a line above it says so). The map shows only your starting station until you leave it, then the other stations bounce into place. Professor Mouse's tutorial walks through it.
 - The To-Do List is a quest log: each pinned item is a quest with a bar of its parts done; tap it to fold or open it, one level at a time (nothing opens on its own). Parts show how many of their own parts you have, where they're made, and a green dot when you can craft them now. 🔍 on a part tracks it (and pins it). The quest holding your tracked item leads, open down to it.
