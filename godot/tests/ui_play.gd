@@ -116,6 +116,20 @@ func _run(app: App) -> void:
 		await get_tree().process_frame
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
 		if turns == 1:
+			check(app._screen._fresh.size() > 0, "the first trip to the map grows its neighbours (the opening didn't mark them seen)")
+			await _until(func(): return not app._screen.is_processing())
+			# Covered (a panel over the map), the reveal waits and nothing is seen yet.
+			var here: String = Game.state.lastStation
+			Game.state.mapSeen = Catalog.found_stations(Game.state, []).keys()
+			app.open_panel("todo")
+			app._screen_name = ""
+			app._sync()
+			for k in 5:
+				await get_tree().process_frame
+			check(not Game.state.mapSeen.has(Data.t("MAP_ADJ")[here][0]) and app._screen._pending.size() > 0, "a map under the To-Do List keeps its reveal for later")
+			app.close_panel()
+			check(await _until(func(): return not app._screen.is_processing()) and Game.state.mapSeen.has(Data.t("MAP_ADJ")[here][0]), "the reveal plays once the map is in view")
+			await get_tree().create_timer(2.0).timeout
 			var found := Catalog.found_stations(Game.state)
 			var shown: Array = app._screen._nodes().filter(func(n): return n.visible).map(func(n): return n.station)
 			check(shown.size() == found.size() and shown.size() > 1 and shown.size() < app._screen._nodes().size() and MapScreen.fresh_stations().is_empty() and Game.state.mapSeen.size() == found.size(),
@@ -303,6 +317,13 @@ func _market(app: App) -> void:
 	check(await _until(func(): return Util.get_or(Game.state, "emptyElements", 0) == q + 2 and Game.state.pendingBingoClears.is_empty()), "Nice pays the square's ?")
 	app._on_hub("market")
 	check(app.panel == "market" and not Game.state.marketUnseen and app.home_face() == "map", "the Market button opens the tray (Home reads Map) and clears its mark")
+	await get_tree().process_frame
+	_vtap(_find_meta(app.panel_node, "market:unknown").get_global_rect().get_center())
+	check(await _until(func(): return app.get_children().any(func(c): return c is ParchDialog and c.get_index() > app.panel_node.get_index())) and app.panel == "market", "a Market Unknown square opens its window over the tray")
+	for c in app.get_children().filter(func(c): return c is ParchDialog):
+		c.queue_free()
+	Tap._down = null  # the later sections send bare releases
+	await get_tree().process_frame
 	app._on_hub("home")
 	check(app.panel == "", "Home closes the tray")
 	own.call(row[2])
