@@ -28,19 +28,35 @@ func _ready() -> void:
 	gui_input.connect(_on_map_tap)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
-	var fresh := fresh_stations()
-	Game.state.mapSeen = Catalog.found_stations(Game.state).keys()  # each reveal plays once (the user, 2026-11-26)
-	if Juice.on():
-		for st in fresh:
-			_pending[st] = true
+	_fresh = fresh_stations()
+	if Game.ctx.get("awaitingStart"):  # the opening shows only where you start: its neighbours are found on leaving it
+		Game.state.mapSeen = Catalog.found_stations(Game.state, []).keys()
+	elif _fresh.is_empty() or not Juice.on():
+		Game.state.mapSeen = Catalog.found_stations(Game.state).keys()  # each reveal plays once (the user, 2026-11-26)
+	else:
+		for st in _fresh:
+			_pending[st] = true  # hidden until the reveal plays
 	_redraw()
-	_reveal(fresh)
+	set_process(not _pending.is_empty())
+
+
+## The reveal waits until the map is really in view: no panel, tray or
+## window over it (the user, 2026-11-27); only then are its stations seen.
+func _process(_d: float) -> void:
+	var app := App.current
+	if not is_visible_in_tree() or (app and (app.panel != "" or app.window_open())):
+		return
+	set_process(false)
+	Game.state.mapSeen = Catalog.found_stations(Game.state).keys()
+	Progress.save_all()
+	_reveal(_fresh)
 
 
 ## The map discovered as you go (step 28, the user 2026-11-26): only the
 ## stations found show (Catalog.found_stations: worked out from the visits,
 ## nothing saved). Back from a station, what leaving it found is new: its
 ## paths grow out of it and each station bounces in as its path arrives.
+var _fresh: Array = []  # found since the map was last seen: its reveal
 var _pending := {}  # station -> true until it bounces in
 var _grow := {}  # station -> 0..1: the path from here growing toward it
 
