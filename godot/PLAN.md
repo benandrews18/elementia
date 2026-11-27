@@ -620,9 +620,13 @@ Market, tutorials), motion last (it animates the final layouts).
    them). Now ~28 ms; the first opening of a run still loads its pictures
    once (~100 ms). The title: icon_market.webp at 26 px; every text white
    with a 1 px black shadow.
-24. **Combo Lab**: a tap adds a card to the mat, a tap on the mat takes it
+24. ✅ **Combo Lab**: a tap adds a card to the mat, a tap on the mat takes it
    off; the last tapped shows on the Crafting Bench below, no Add /
    Remove.
+   Done (2026-11-26): DisplayMatScreen._on_card_input toggles in the lab
+   (not locked(), no hand) and keeps the card as `selected`; _lab_bench()
+   (BenchPanel + plain ShopRow) under the mat's line; the list view's side
+   card shows it; _sel_acts gone. Play test and shot state lab_bench.
 25. **Tutorials** (once the screens settle: they describe them).
    - The 3-4 intro windows (the whole game in brief) back at the start of
      every game, until the player hides them.
@@ -648,6 +652,7 @@ Market, tutorials), motion last (it animates the final layouts).
    since the last map visit animates.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 24 (Combo Lab): taps put cards on and off the mat, the last on a Crafting Bench; no Add / Remove.
 - 2026-11-26: step 22 checked done; step 28 planned (the map discovered as you go). Step 23 (Market): opening ~170 -> ~28 ms (no full redraw on open; Data keeps icon textures), the stall icon and white shadowed text.
 - 2026-11-26: To-Do List polish (the user): hint card line by line, the tip, a bit wider, title in two lines on a darker band, panel slide-in, green parts counts, closest-first order (tracked on top), a tap below closes the panel. Next: step 23 (Market).
 - 2026-11-26: To-Do List v3 (the user): the list as wide as its rows (TodoTray._list_width), suit costs under pictures and first in an open part (RefTree.suit_row), the 🔍 column fixed.

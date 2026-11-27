@@ -139,15 +139,14 @@ func _redraw() -> void:
 	_body.add_child(line)
 	var line_y := y
 	y += 2
-	# The selected card's row on the Crafting Bench, Add / Remove below it.
+	# Combo Lab: the last card tapped (on or off the mat) on the Crafting Bench.
 	var sel_ok: bool = selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null
 	if sel_ok and not list_mode and not locked():
-		_sel_acts(0, y + 6, size.x)
-		y += 46
+		y = _lab_bench(y + 8) + 4
 	# The item list: search bar, then the owned cards by tier.
 	_scroll.position = Vector2(0, y)
 	_scroll.size = Vector2(size.x, size.y - _hub_h - y)
-	if list_mode:  # the side card stays put while the list scrolls; Add / Remove under it
+	if list_mode:  # the side card stays put while the list scrolls
 		var lw := _list_w(size.x)
 		var rx := LIST_PAD + lw + 8
 		var rw := size.x - LIST_PAD - rx
@@ -156,7 +155,6 @@ func _redraw() -> void:
 			var card := CardPop.side_card(selected, rw)
 			card.position = Vector2(rx, cy)
 			_body.add_child(card)
-			_sel_acts(rx, cy + card.size.y * card.scale.y + 8, rw)
 		else:
 			var hint := Tok.label("Tap an item to see its card", 13, Tok.MUTE, 700)
 			hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -675,13 +673,21 @@ static func row_parts(name: String, at: Vector2, room: float) -> Control:
 	return holder
 
 
-## A tap (not a scroll) selects the card: its row goes on the Crafting Bench
-## with Add / Remove (tap it again to put it back).
+## A tap (not a scroll): at a check, the card big; in the Combo Lab (the
+## user, 2026-11-26) it goes on the mat, or off it, and onto the Crafting
+## Bench; browsing a run, the list view's side card shows it (again: hidden).
 func _on_card_input(ev: InputEvent, name: String) -> void:
 	if not Tap.tap(ev):
 		return
 	if Game.check_hand() != null:  # a check: a card laid is a card played; a tap shows it big
 		enlarge(name)
+		return
+	if not locked():
+		selected = name
+		var msg := Game.toggle_mat_card(name)  # redraws when it changes the mat
+		if msg != "":
+			_show_toast(msg)
+			_redraw()
 		return
 	selected = "" if selected == name else name
 	_redraw()
@@ -1218,45 +1224,16 @@ func _last() -> void:
 		Game.mat_last_tap)
 
 
-## Add / Remove for the selected card (#matListActions), centred in a
-## column w wide from x at y. The Crafting Bench that held its row is gone
-## from the Inventory (the user, 2026-11-22: the card shows it all).
-func _sel_acts(x: float, y: float, w: float) -> void:
-	if locked():  # between checks the mat is locked in
-		return
-	var on: bool = Game.state.mat.has(selected)
-	var card = Catalog.mat_card(selected)
-	var fits: bool = card != null and Mat.fits(Mat.on_mat(Game.state) + [card], Mat.stage(Game.state))
-	var acts := Control.new()
-	acts.position = Vector2(x, y)
-	acts.mouse_filter = MOUSE_FILTER_IGNORE
-	var bw := minf(96, (w - 8) / 2)
-	var bx := (w - (bw * 2 + 8)) / 2
-	for i in 2:
-		var add := i == 0
-		var enabled := (not on and fits) if add else on
-		var b := Label.new()
-		b.text = ("+  Add" if add else "–  Remove")
-		b.add_theme_font_override("font", Tok.font(900))
-		b.add_theme_font_size_override("font_size", 13)
-		b.add_theme_color_override("font_color", Color.WHITE)
-		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		var bs := Tok.box(Tok.OK if add else Tok.BAD, 12, 2.5, Color.BLACK, 5, 4, Color(0, 0, 0, 0.35))
-		b.add_theme_stylebox_override("normal", bs)
-		b.position = Vector2(bx + i * (bw + 8), 0)
-		b.size = Vector2(bw, 34)
-		if not enabled:
-			b.modulate = Color(0.55, 0.55, 0.55, 0.6)
-		else:
-			b.mouse_filter = MOUSE_FILTER_STOP
-			b.gui_input.connect(func(ev): if Tap.tap(ev):
-				var msg := Game.toggle_mat_card(selected)
-				if msg != "":
-					_show_toast(msg))
-		b.set_meta("cmp", "mat:add" if add else "mat:remove")
-		acts.add_child(b)
-	_body.add_child(acts)
+## The Combo Lab's Crafting Bench: the last card tapped, its shop row (no
+## have/missing marks: it's owned). Returns its bottom.
+func _lab_bench(y: float) -> float:
+	var bench := BenchPanel.new()
+	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 16 - 36, func(_n, _at): pass, func(n): App.pin(n), true))
+	bench.position = Vector2(8, y)
+	bench.size = Vector2(size.x - 16, 30 + ShopRow.H + 18)
+	bench.set_meta("cmp", "mat:bench")
+	_body.add_child(bench)
+	return y + bench.size.y
 
 
 ## The Elements page: every element held, 8 to a row (elementsGridHTML()).

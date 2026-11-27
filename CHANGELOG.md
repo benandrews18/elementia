@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Combo Lab: tap a card to put it on the mat, tap it again (or on the mat) to take it off; the last one tapped shows on a Crafting Bench under the mat. No more Add / Remove buttons.
 - The Market opens much faster (pictures stay loaded, and opening it no longer redraws the whole game). Its title has the Market button's stall icon, and its text is white with a small shadow.
 - To-Do List: just the parts count under each name (no points).
 - To-Do List: a bigger title on its own darker band.

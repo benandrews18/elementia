@@ -717,7 +717,14 @@ func _collections(app: App) -> void:
 	var real := Game.state
 	app.open_combo_lab()
 	check(Game.ctx.get("comboLab") == true and Game.state != real and Game.state.items.size() > real.items.size() and not app._hub.visible, "Combo Lab: a sandbox run, every item, no hub")
-	Game.toggle_mat_card(Game.state.items[0])
+	var ldm := app._panel_node as DisplayMatScreen
+	var it: String = Game.state.items.filter(func(n): return Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)))[0]
+	ldm._on_card_input(_release(), it)
+	await get_tree().process_frame
+	check(Game.state.mat.has(it) and _find_meta(ldm, "mat:bench") != null and _find_meta(ldm, "mat:add") == null, "the lab: a tap puts a card on the mat and on the Crafting Bench (no Add / Remove)")
+	ldm._on_card_input(_release(), it)
+	check(not Game.state.mat.has(it) and ldm.selected == it, "a second tap takes it off; it stays on the bench")
+	ldm._on_card_input(_release(), it)
 	app.close_combo_lab()
 	check(Game.state == real and app._hub.visible and not Game.ctx.get("comboLab", false), "Exit puts the real run back")
 	# The Challenge Test (card playing, tried in the lab): a copy of the run at
