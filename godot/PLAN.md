@@ -588,7 +588,8 @@ Market, tutorials), motion last (it animates the final layouts).
      left (4 suits, totals), always where ⚛️ shows.
    - 22b: the opening: after the capstone pick the To-Do List shows it and
      its direct parts with a tip (track one part to start); Home is the
-     station's icon reading Start; the map behind shows only that station
+     station's icon reading Start, locked until an item is tracked (a line
+     above it says so); the map behind shows only that station
      (YOU ARE HERE under it); on leaving the first station the map shows it
      alone, then the other stations bounce in (every run).
 23. **Market.**
@@ -1539,7 +1540,8 @@ Recorded so they aren't re-argued. Add new ones with the date.
   shows beside ⚛️. Opening: no part suggested, only a tip. The map reveal
   (one station, then the rest bounce in) plays every run. Rejected: auto
   next step, a reward per tracked craft, tracking moving up a level.
-  Assumed (say if wrong): nothing tracked at a run's start; Get a Hint
+  A run starts with nothing tracked, and Start stays locked until the
+  player tracks something (a line above Start says so). Assumed: Get a Hint
   stays, opt-in; the suit pill's totals are the elements owned per suit.
 
 - 2026-11-26 (the user, step 17 grill): **capstones leave the mat.** Every
