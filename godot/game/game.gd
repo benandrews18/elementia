@@ -646,6 +646,13 @@ func toggle_mat_card(name: String) -> String:
 	if card == null or not Catalog.owns(state, name):
 		return "Not owned."
 	if Mat.is_capstone(card):
+		if state.has("labCapsOff"):  # the menu's Combo Lab: a capstone switches on and off (no slot either way)
+			if state.labCapsOff.has(name):
+				state.labCapsOff.erase(name)
+			else:
+				state.labCapsOff.append(name)
+			_changed()
+			return ""
 		return "Capstones are always on: they count without taking a slot."
 	if not Mat.fits(Mat.on_mat(state) + [card], st):
 		return "The display mat is full."

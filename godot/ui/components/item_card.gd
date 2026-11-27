@@ -87,7 +87,7 @@ func _ready() -> void:
 	if opts.get("wide") and not shop:
 		col.add_child(_gap(5))  # the HTML icon's line box sits ~5px above 66px art (inline image)
 	col.add_child(ic)
-	if not mini or grid_mini:
+	if (not mini or grid_mini) and not opts.get("no_name", false):  # no_name: the Display Mat's cards (the user, 2026-11-27)
 		# shortcut: wraps by the size set before _ready (fine while parents size cards first), re-measure on resize when a container sizes them
 		col.add_child(_name_box(item, grid_mini, size.x - 2 * (border + side)))
 	# Points badge, top-left, straddling the border.
@@ -260,14 +260,18 @@ func _place() -> void:
 	var psz := _pip_px()
 	var border := 3 if mini else 4
 	# CSS offsets are from inside the border: top/right -3px, bottom -3px (mini -6px).
+	# A tall stack (Cruise Ship, Planet: 4 suits) shrinks just enough to stay on the card.
+	var room := size.y - 2 * (border - 3)
+	var k := minf(1.0, (room + 2) / maxf(1.0, _pips.size() * (psz + 2)))
 	for i in _pips.size():
-		_pips[i].position = Vector2(size.x - border + 3 - psz, border - 3 + i * (psz + 2))
+		_pips[i].scale = Vector2(k, k)
+		_pips[i].position = Vector2(size.x - border + 3 - psz * k, border - 3 + i * (psz * k + 2))
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
 	if opts.get("stations_right"):  # from the bottom-right corner (the left one is the shop's pin)
 		_stations.position.x = size.x - border + 3 - _stations.size.x
 		_stations.position.y += 4  # straddling the edge: clear of the name
-	elif opts.get("stations_left"):  # the bottom-left corner (the Combo Lab's capstones: the user, 2026-11-26)
+	elif opts.get("stations_left"):  # the bottom-left corner, left to right (the Inventory and the Combo Lab: the user, 2026-11-27)
 		_stations.position.x = border - 3
 		_stations.position.y += 4
 	var sb := get_node_or_null("Size") as Control

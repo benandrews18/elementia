@@ -9,6 +9,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- To-Do List: the hint's item has its own 🔍 Track button. The hint and "Tap items to view details" stay in view with the details panel open (it opens below them). "Track item parts to guide your journey!" is gone.
+- Inventory and Combo Lab: every card's station icons sit in its bottom-left corner, left to right.
+- Combo Lab from the menu: tap a capstone to switch it on or off the mat (in a game they're always on).
+- Crafting Bench in the Combo Lab and the Inventory: no green tick (that's for station shops); a ✕ in its top-right corner closes it.
+- Display Mat: cards show no names; a tall suit stack (Cruise Ship, Planet) shrinks a little to stay on its card.
 - Station shops: when tier 1 items take more than one row, the shorter row is on top, so a full row sits right above the bigger cards (same order as before).
 - Tier 1 shop cards no longer show station icons; the item's full card shows every station it's sold at, right to left along the bottom.
 - Convert: the Unknown Element counter sits inside the tray's top-right corner, so a Crafting Bench opened from a missing element rests right on top of the tray.

@@ -97,6 +97,10 @@ func _ready() -> void:
 	check(Game.toggle_mat_card(cap).begins_with("Capstones are always on") and not s.mat.has(cap), "a capstone takes no slot")
 	check(Mat.has(Mat.on_mat(s), cap) and Mat.on_mat(s).size() == 9, "an owned capstone always counts, beside the full mat")
 	check(Mat.on_mat({"mat": [cap], "items": []}).is_empty(), "a capstone in an old save's mat, not owned: gone")
+	s.labCapsOff = []  # the menu's Combo Lab: capstones switch off and on
+	check(Game.toggle_mat_card(cap) == "" and not Mat.has(Mat.on_mat(s), cap), "the lab: a capstone switched off leaves the mat")
+	check(Game.toggle_mat_card(cap) == "" and Mat.has(Mat.on_mat(s), cap), "the lab: and back on")
+	s.erase("labCapsOff")
 	check(Game.toggle_mat_card(t2[0]) == "" and Game.toggle_mat_card(t2[1]) == "", "cards come off")
 	s.lastCheckedMat = [t2[0]]
 	var before: Array = s.mat.duplicate()

@@ -84,7 +84,7 @@ func _ready() -> void:
 		btn.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
 		btn.add_theme_constant_override("shadow_offset_y", 0)
 		btn.add_theme_stylebox_override("normal", locked_style)
-	if owned:  # .item.owned::after: a 28px tick, top right
+	if owned and not plain:  # .item.owned::after: a 28px tick, top right (station shops only: the user, 2026-11-27)
 		var t := Tok.tick(Color.WHITE, 28, Tok.OK, Tok.CARD)
 		t.position = Vector2(size.x - 20, -8)
 		$Tick.add_child(t)

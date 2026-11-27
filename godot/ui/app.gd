@@ -504,7 +504,9 @@ func open_combo_lab(from_run := false) -> void:
 	lab.items = Data.t("CORE_ITEM_NAMES").filter(func(n): return not unlocked.has(n) or seen.has(unlocked[n]))
 	lab.bingoCenterChosen = true
 	lab.visits = 20
+	lab.labCapsOff = []  # the menu's lab: capstones can be switched off (a run's lab: always on)
 	if from_run:
+		lab.erase("labCapsOff")
 		lab.items = Game.state.items.duplicate()
 		lab.mat = Game.state.mat.duplicate()
 		lab.visits = Game.state.visits

@@ -548,7 +548,7 @@ func _inventory(width: float) -> Control:
 				x = 0
 				y += h + 8
 			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": _spent(c.name), "tag": "inv:" + c.name,
-				"stations_left": Game.ctx.get("comboLab", false) and c.tier == "CAPSTONE"})  # the lab: its station bottom-left (the user, 2026-11-26)
+				"stations_left": true})  # stations bottom-left, left to right (the user, 2026-11-27)
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
 			card.set_meta("cmp", "inv:" + c.name)
@@ -822,6 +822,8 @@ func hand_pass() -> void:
 ## what's left shows what can still be drawn (the user, 2026-11-24).
 func _spent(n: String) -> bool:
 	var h = Game.check_hand()
+	if Game.state.has("labCapsOff") and Data.t("ITEM_TIER").get(n, "") == "CAPSTONE":  # the menu's lab: a capstone switched on
+		return not Game.state.labCapsOff.has(n)
 	return Game.state.mat.has(n) or (browsing and h != null and h.discards.has(n))
 
 
@@ -1244,6 +1246,17 @@ func _lab_bench(y: float) -> float:
 	bench.size = Vector2(size.x - 16, 30 + ShopRow.H + 18)
 	bench.set_meta("cmp", "mat:bench")
 	_body.add_child(bench)
+	var close := TextureRect.new()  # ✕ puts it away (the user, 2026-11-27)
+	close.texture = preload("res://assets/ui/btn_close.webp")
+	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	close.size = Vector2(32, 32)
+	close.position = Vector2(bench.position.x + bench.size.x - 32 - 2, y + 2)
+	close.set_meta("cmp", "mat:bench:close")
+	close.gui_input.connect(func(ev): if Tap.tap(ev):
+		selected = ""
+		_redraw())
+	_body.add_child(close)
 	return y + bench.size.y
 
 
@@ -1569,7 +1582,7 @@ func _slots(cards: Array, sc: Dictionary, page: Control, row_h: float, open: int
 	var stars := starred(Game.check_hand()) if Game.check_hand() != null else {}
 	var card_opts := func(c: Dictionary, mini: bool) -> Dictionary:
 		return {"mini": mini, "in_grid": false, "complete": sc.completeNames.has(c.name), "lit_suits": lit_suits, "lit_stations": lit_st,
-			"combo": in_combo.has(c.name), "star": stars.get(c.name, "")}
+			"combo": in_combo.has(c.name), "star": stars.get(c.name, ""), "no_name": true}  # no names on the mat (the user, 2026-11-27)
 	for i in pack.slot.size():
 		var sl: Dictionary = pack.slot[i]
 		if sl.kind == "locked":

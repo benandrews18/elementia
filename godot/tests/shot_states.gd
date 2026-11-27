@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -375,6 +375,13 @@ func _ready() -> void:
 			var it: String = Game.state.items.filter(func(n): return Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)))[0]
 			app._panel_node.selected = it
 			Game.toggle_mat_card(it)
+		"lab_mat":  # the lab's mat: Cruise Ship and Planet (their suit stacks inside the card), no names; Homestead switched off
+			app.open_combo_lab()
+			for n in ["Cruise Ship", "Planet", "Steel", "Car"]:
+				if not Game.state.items.has(n):
+					Game.state.items.append(n)
+				Game.toggle_mat_card(n)
+			Game.toggle_mat_card("Homestead")
 		"challenge_pick":  # the lab's Challenge Test: pick a check round
 			app.open_combo_lab()
 			app._challenge_pick()

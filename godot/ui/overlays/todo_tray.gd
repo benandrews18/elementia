@@ -45,6 +45,12 @@ func _ready() -> void:
 	$Tray.size = Vector2(w, size.y - HubBar.H)
 	_scroll.size = $Tray.size - Vector2(3, 3)
 	Game.state_changed.connect(_redraw)
+	_scroll.get_v_scroll_bar().value_changed.connect(func(_v):  # the details panel keeps to the rows' top
+		var d := $Tray.get_node_or_null("Details")
+		if d:
+			d.position.y = _panel_top()
+			d.size.y = $Tray.size.y - d.position.y
+			d.get_node("Scroll").size.y = d.size.y)
 	_redraw()
 
 
@@ -109,23 +115,14 @@ func _redraw() -> void:
 		y = _hint_button(y) + 10
 		if hint_open:
 			y = _hint_card(hint, y, w) + 16
-		if Game.ctx.get("tracked") == null and detail == "":  # a nudge, not a pick (the user, 2026-11-26); in the panel when it's open
+		if Game.ctx.get("tracked") == null:  # a nudge, not a pick (the user, 2026-11-26)
 			var tip := Tok.label("Tap items to view details", 13, Color("#b3becd"), 700)  # the user's words, 2026-11-26
 			tip.position = Vector2(20, y)
 			tip.set_meta("cmp", "todo:tip")
 			_list.add_child(tip)
 			y += 22
-			var g := Tok.icon("🔍", 15)
-			g.position = Vector2(20, y + 1)
-			_list.add_child(g)
-			var t2 := Tok.label("Track item parts to guide your journey!", 13, Color("#e2b25a"), 700)
-			t2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			t2.custom_minimum_size = Vector2(w - 20, 0)
-			t2.position = Vector2(40, y)
-			_list.add_child(t2)
-			t2.size = Vector2(w - 20, 0)
-			y += 6 + ceilf(Tok.font(700).get_multiline_string_size(t2.text, HORIZONTAL_ALIGNMENT_LEFT, w - 20, 13).y)
 		y += 4
+		_rows_top = y  # the details panel opens from here down: the hint and the tip stay in view (the user, 2026-11-27)
 		for n in names:
 			y = _row(Catalog.entry(n), y, _scroll.size.x)
 	# The empty space under the rows: a tap closes the details panel (✕ too).
@@ -270,7 +267,16 @@ func _hint_card(hint, y: float, w: float) -> float:
 	top.position = Vector2(14, ly)
 	card.add_child(top)
 	ly += 24
-	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w, 26, 16, Color.WHITE, 900, true)
+	if not Catalog.owns(Game.state, hint.name):  # track the hint straight from here (the user, 2026-11-27)
+		var on: bool = Game.ctx.get("tracked") == hint.name
+		var hn: String = hint.name
+		card.add_child(_button("🔍", on, Vector2(w - 10 - BTN, ly + (26 - BTN) / 2), "todo:hinttrack",
+			func():
+				if on:
+					Game.set_tracked(null)
+				else:
+					Game.track(hn)))
+	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w - BTN - 8, 26, 16, Color.WHITE, 900, true)
 	var others: Array = hint.roots.filter(func(r): return r != hint.name)
 	if not others.is_empty():
 		ly += 4
@@ -385,6 +391,14 @@ func _button(emoji: String, on: bool, at: Vector2, cmp: String, act: Callable) -
 	return b
 
 
+var _rows_top := 0.0
+
+
+## The details panel's top: the rows' top as the list scrolls (never above the tray).
+func _panel_top() -> float:
+	return maxf(0, _rows_top - _scroll.scroll_vertical)
+
+
 static var _detail_keep := 0  # the details panel's scroll, kept across redraws
 
 
@@ -403,11 +417,12 @@ func _details() -> void:
 		_detail_keep = 0
 		return
 	var dw := minf(size.x, 560) - LEFT_W  # past the list's tray, over the screen behind
-	var h: float = $Tray.size.y
+	var top := _panel_top()
+	var h: float = $Tray.size.y - top
 	var panel := Panel.new()
 	panel.name = "Details"
 	panel.add_theme_stylebox_override("panel", Tok.box(Color("#1d4456"), 0, 0, Color.BLACK, 14, 0, Color(0, 0, 0, 0.5)))
-	panel.position = Vector2(LEFT_W, 0)
+	panel.position = Vector2(LEFT_W, top)
 	panel.size = Vector2(dw, h)
 	panel.set_meta("cmp", "todo:details")
 	$Tray.add_child(panel)

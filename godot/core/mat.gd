@@ -10,9 +10,10 @@ static var _collections: Array  # MAT_COLLECTIONS: the raw list minus any with a
 ## save's capstone in s.mat is dropped.
 static func on_mat(s: Dictionary) -> Array:
 	var out: Array = s.mat.map(func(n): return Catalog.mat_card(n)).filter(func(c): return c != null and not is_capstone(c))
+	var off: Array = Util.get_or(s, "labCapsOff", [])  # the menu's Combo Lab: capstones switched off (the user, 2026-11-27)
 	for n in Util.get_or(s, "items", []):
 		var c = Catalog.mat_card(n)
-		if c != null and is_capstone(c):
+		if c != null and is_capstone(c) and not off.has(n):
 			out.append(c)
 	return out
 
