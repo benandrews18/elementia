@@ -138,11 +138,15 @@ func _stations(at: Vector2, w: float) -> float:
 	return 20 + d
 
 
-## An Unknown Element square: a tap bounces it, nothing opens (the user, 2026-11-26).
+## An Unknown Element square: a tap bounces it and opens the Unknown
+## Element window over the Market (the user, 2026-11-27).
 func _bounces(sq: Control) -> Control:
 	sq.mouse_filter = MOUSE_FILTER_STOP
 	sq.set_meta("cmp", "market:unknown")
-	sq.gui_input.connect(func(ev): if Tap.tap(ev): DisplayMatScreen.bounce(sq))
+	sq.gui_input.connect(func(ev): if Tap.tap(ev):
+		DisplayMatScreen.bounce(sq)
+		if App.current:
+			App.current.show_tip("unknown"))
 	return sq
 
 
