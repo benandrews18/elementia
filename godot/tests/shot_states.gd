@@ -6,7 +6,7 @@
 extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
-	"convert", "picker", "unknown", "market", "explain", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
+	"convert", "picker", "unknown", "market", "explain", "suit_counts", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
@@ -82,6 +82,12 @@ func _ready() -> void:
 			UnknownPick.open(app)
 		"market":
 			app._on_hub("market")
+		"suit_counts":  # the suit counter's ring tapped: the suit, its elements, how many of each you hold
+			await get_tree().process_frame
+			for c in _all(app):
+				if c is Control and str(c.get_meta("cmp", "")) == "suits:ring:reactive":
+					SuitSpend.show_suit("reactive", c, true)
+					break
 		"explain":  # a tapped suit icon: its balloon (the suit over its elements; Convert's chosen S)
 			Game.state.emptyElements = 1
 			app.open_panel("convert")

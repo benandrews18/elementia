@@ -583,7 +583,8 @@ static func suit_pill(conv_at: Vector2) -> Control:
 		ring.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), D / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
 		ring.size = Vector2(D, D)
 		ring.position = Vector2(4 + i * (D + GAP), (58 - D) / 2)
-		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.set_meta("cmp", "suits:ring:" + su)
+		SuitSpend.on_tap(ring, su, true)  # its balloon with how many of each you hold (the user, 2026-11-26); the pill: Convert
 		var ic := Tok.icon("suit:" + su, 17)
 		ic.material = Tok.tinted(Tok.suit_color(su))
 		ic.position = (ring.size - Vector2(17, 17)) / 2

@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- The suit counter at the bottom: tapping a suit's ring opens its balloon, the suit's icon and name over its elements, with exactly how many of each you hold. The pill around the rings still opens Convert.
 - Tapping a suit icon (an item's suit cost in the To-Do List or on its full card, Convert's chosen elements) opens the element balloon: the suit's icon and name (REACTIVE, ORGANIC, METAL or EARTH) over its elements. Counts show only when you're paying a suit cost while crafting.
 - Combo Lab: a capstone's station icon sits in its card's bottom-left corner.
 - The map is discovered as you go: at first only your starting station shows. Each time you leave a station, its paths grow out across the map and the stations at their ends bounce into view. Stations you've found stay; the Helicopter shows them all.

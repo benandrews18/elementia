@@ -69,6 +69,23 @@ func _run(app: App) -> void:
 	app._on_hub("home")
 	check(await _until(func(): return app._screen is StationScreen), "Start: the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
+	var ring := _find_meta(app, "suits:ring:organic")
+	check(ring != null, "the suit counter shows its rings")
+	if ring:  # the counter's ring: the suit's balloon with what you hold (the user, 2026-11-26)
+		ring.gui_input.emit(_release())
+		await get_tree().process_frame
+		var sb: Array = app.get_children().filter(func(c): return c is SuitSpend and c.view_counts)
+		var held := 0
+		for sym in Data.t("SUIT_CORE_ELEMENTS")["organic"]:
+			held += int(Catalog.count(Game.state, sym))
+		var shown := 0
+		for t in (_find_texts(sb[0]) if sb.size() == 1 else []):
+			if t.begins_with("×"):
+				shown += int(t.substr(1))
+		check(sb.size() == 1 and app.panel == "" and _find_meta(sb[0], "suitview:title") != null and shown == held,
+			"a suit ring's tap: its balloon, the exact counts held (not Convert)")
+		for c in sb:
+			c.queue_free()
 	var turns := 0
 	var rules_seen := false
 	var tip_seen := false
