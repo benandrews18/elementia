@@ -56,7 +56,7 @@ func _ready() -> void:
 			app.open_panel("drawer")
 			app._panel_node.selected = Game.state.items[0]
 			app._panel_node._redraw()
-		"station_list":  # the station shop's 📋 view: the list, Glass on the side card with Pin / Craft
+		"station_list":  # the station shop's 📋 view: rows across the screen, Glass on the Crafting Bench
 			StationScreen.list_mode = true
 			app._screen.open_card = "Glass"
 			app._screen._redraw()

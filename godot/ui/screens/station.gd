@@ -20,13 +20,10 @@ const TOP := QuarkTopBar.H
 @export var columns := 4
 @export var gap := 8.0
 @export var card_ratio := 1.4
-@export var act_h := 35.0
 
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
 const HEAD_H := 295.0  # the header's dark blue: the shop's title, then the crafted-items bar, to its foot
-static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
-var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
-var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
+static var list_mode := false  # 📋: the shop as compact rows across the screen (the user, 2026-11-26: no side card; card view on every arrival)
 var _bulbs := {}  # shop cards whose 💡 has shown this visit (station -> {name: true}): no fade-in again on a redraw
 @onready var _scroll: ScrollContainer = $Scroll
 @onready var _page: Control = $Scroll/Page
@@ -40,7 +37,6 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
-	_scroll.get_v_scroll_bar().value_changed.connect(func(_v): _place_side())
 	_redraw()
 
 
@@ -74,7 +70,7 @@ func _redraw() -> void:
 	_scroll.position = Vector2(0, top)
 	_scroll.size = Vector2(w, size.y - top)
 	var y := _shop_title(_header(_page, st, w))
-	if open_card != "" and not list_mode:
+	if open_card != "":  # both views: the tapped item on the Crafting Bench
 		y = _bench(_page, w, y)
 	y = _shop_list(_page, name, w, y) if list_mode else _shop(_page, name, w, y)
 	_page.custom_minimum_size = Vector2(w, y + HubBar.H + 80)
@@ -84,8 +80,6 @@ func _redraw() -> void:
 		qt.size = Vector2(w, TOP)
 		$Top.add_child(qt)
 	corner_buttons($Top, true)
-	if list_mode:
-		_side_card(w)
 
 
 ## Arriving from the map (step 26, the user 2026-11-26): the art fades in,
@@ -270,11 +264,10 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 	var s := Game.state
 	y += 14
 	page = $Scroll/Page/Shop
-	_list_top = y
 	var fold: bool = s.get("collapseCraftedItems", false)
 	var shown := shop_entries(station).filter(func(e): return not (fold and Catalog.owns(s, e.name) and e.tier != "CAPSTONE"))
 	var order := ["MATERIAL", "COMPONENT", "CREATION", "CAPSTONE"]
-	var lw := floorf((w - 12) * 0.5 - 4)
+	var lw := w - 12  # across the screen
 	for tier in order:
 		for e in shown.filter(func(x): return x.tier == tier):
 			var owned := Catalog.owns(s, e.name)
@@ -295,72 +288,6 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 			page.add_child(row)
 			y += DisplayMatScreen.ROW_H + 6
 	return y + 6
-
-
-## Where the suit-cost balloon points from the side card's Craft (the user,
-## 2026-11-26: at the card's suit badges, as from the Crafting Bench; it
-## pointed at Craft): the cost badges on screen (the card is scaled), or
-## the button when there are none.
-static func _costs_rect(costs: Control, btn: Control) -> Rect2:
-	var r := Rect2()
-	for c in costs.get_children():
-		var g: Rect2 = c.get_global_transform() * Rect2(Vector2.ZERO, c.size)
-		r = g if r.size == Vector2.ZERO else r.merge(g)
-	return r if r.size != Vector2.ZERO else btn.get_global_rect()
-
-
-## The side card for open_card with Pin and Craft under it (in place of the
-## Crafting Bench), right of the list; _place_side() keeps it on screen.
-func _side_card(w: float) -> void:
-	var lw := floorf((w - 12) * 0.5 - 4)
-	var rx := 6 + lw + 8
-	var rw := w - 6 - rx
-	_side = Control.new()
-	_side.mouse_filter = MOUSE_FILTER_IGNORE
-	_side.position.x = rx
-	$Top.add_child(_side)
-	$Top.move_child(_side, 0)  # under the Quark bar and the corner buttons
-	var e = Catalog.entry(open_card)
-	if e == null:
-		var hint := Tok.label("Tap an item to see its card", 13, Color("#e6eef6"), 700)
-		hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		hint.position = Vector2(0, 30)
-		hint.size = Vector2(rw, 40)
-		_side.add_child(hint)
-		_side.size = Vector2(rw, 80)
-		_place_side()
-		return
-	var card := CardPop.side_card(e.name, rw)
-	_side.add_child(card)
-	var ch := card.size.y * card.scale.y
-	var s := Game.state
-	var owned := Catalog.owns(s, e.name)
-	var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
-	var acts := ShopActs.make()
-	acts.position = Vector2(0, ch + 8)
-	acts.show_state(rw, act_h + 6, Progress.is_pinned(e.name), can, owned)
-	var pin: Control = acts.get_node("Pin")
-	pin.gui_input.connect(_on_tap.bind(_pin_tap.bind(e.name, _side, Vector2.ZERO, Vector2(rw, ch))))
-	pin.set_meta("cmp", "st:pin:" + e.name)
-	var btn: Control = acts.get_node("Craft")
-	if can:
-		var costs: Control = card.get_node("Card/Costs")
-		btn.gui_input.connect(_on_tap.bind(func(): _craft(e.name, _costs_rect(costs, btn))))
-		btn.set_meta("tip", "st:craft:" + e.name)
-	btn.set_meta("cmp", "st:craft:" + e.name)
-	_side.add_child(acts)
-	_side.size = Vector2(rw, ch + 8 + act_h + 6)
-	_place_side()
-
-
-## Level with the list's first row; once that scrolls up, held under the
-## top bar (the side card stays in view down the list).
-func _place_side() -> void:
-	if not is_instance_valid(_side):
-		return
-	var top := _scroll.position.y + 8
-	_side.position.y = maxf(top, _scroll.position.y + _list_top - _scroll.scroll_vertical)
 
 
 static func _first_free(taken: Dictionary, span: int, columns := 4) -> Vector2i:

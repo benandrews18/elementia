@@ -9,6 +9,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Paying a suit cost: the balloon's title says what to pick, "Choose 1 (suit), 2 (suit)", counting down as you pick.
+- Station list view: the side card is gone; the compact rows stretch across the screen, and a tap puts the item on the Crafting Bench as in the card view. Stations always open in the card view; the 📋 button switches to the list for that visit.
 - The suit counter at the bottom: tapping a suit's ring opens its balloon, the suit's icon and name over its elements, with exactly how many of each you hold. The pill around the rings still opens Convert.
 - Tapping a suit icon (an item's suit cost in the To-Do List or on its full card, Convert's chosen elements) opens the element balloon: the suit's icon and name (REACTIVE, ORGANIC, METAL or EARTH) over its elements. Counts show only when you're paying a suit cost while crafting.
 - Combo Lab: a capstone's station icon sits in its card's bottom-left corner.

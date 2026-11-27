@@ -111,6 +111,8 @@ func _sync() -> void:
 		add_child(_screen)
 		move_child(_screen, 0)
 		# Station transitions (step 26): arriving plays in; leaving for the map, a quick fade.
+		if _screen is StationScreen:
+			StationScreen.list_mode = false  # every arrival in the card view (the user, 2026-11-26)
 		if from == "map" and _screen is StationScreen:
 			_screen.arrive()
 			arrived = true

@@ -450,19 +450,24 @@ func _cards(app: App) -> void:
 	var sym: String = Catalog.sorted_dice(Catalog.station(Game.ctx.current))[0]
 	check(app.panel == "convert" and app._panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
 	app.close_panel()
-	# The list view's side card: a suit cost's balloon points at the card's suit badges, not at Craft.
-	var with_cost: Array = StationScreen.shop_entries(Game.ctx.current).filter(func(e): return not Data.t("ITEM_SUIT_COST_TABLE").get(e.name, []).is_empty())
-	if not with_cost.is_empty():
-		StationScreen.list_mode = true
-		app._screen.open_card = with_cost[0].name
-		app._screen._redraw()
+	# The list view (the user, 2026-11-26): rows across the screen, a tap puts
+	# the item on the Crafting Bench; the next arrival is back in the card view.
+	StationScreen.list_mode = true
+	app._screen._redraw()
+	await get_tree().process_frame
+	var first: String = StationScreen.shop_entries(Game.ctx.current)[0].name
+	var lrow := _find_meta(app._screen, "st:" + first)
+	check(lrow != null and lrow.size.x > app.size.x * 0.9, "the list view's rows stretch across the screen")
+	if lrow:
+		lrow.gui_input.emit(_release())
 		await get_tree().process_frame
-		var cbtn := _find_meta(app._screen, "st:craft:" + with_cost[0].name)
-		var r := StationScreen._costs_rect(app._screen._side.get_child(0).get_node("Card/Costs"), cbtn)
-		check(cbtn != null and r.end.y < cbtn.get_global_rect().position.y, "the list view's Craft: a suit cost's balloon points at the card's suit badges")
-		StationScreen.list_mode = false
-		app._screen.open_card = ""
-		app._screen._redraw()
+		check(app._screen.open_card == first and _find_meta(app._screen, "bench") != null, "a list row's tap: the item on the Crafting Bench")
+	Game.ctx.screen = "map"
+	Game.state_changed.emit()
+	Game.ctx.screen = "station"
+	Game.state_changed.emit()
+	await get_tree().process_frame
+	check(not StationScreen.list_mode, "arriving at a station: the card view again")
 	# The Crafting Bench: a missing element in the card's recipe opens Convert on it.
 	var shop: Array = StationScreen.shop_entries(Game.ctx.current)
 	var want = shop.filter(func(e): return e.reqs.any(func(r): return r.kind == "element" and Catalog.count(Game.state, r.name) == 0))
@@ -1636,6 +1641,8 @@ func _craft_through_balloon(app: App) -> bool:
 		for su in need:
 			spend += need[su]
 		app.craft_tap(e.name, Rect2(100, 400, 60, 35))
+		var bl: Array = app.get_children().filter(func(c): return c is SuitSpend)
+		check(bl.size() == 1 and need.keys().all(func(su): return _find_meta(bl[0], "suitspend:need:" + su) != null), "the balloon's title: Choose, with each suit still to pay")
 		_pay_balloon(app, need)
 		var after := 0.0
 		for v in Game.state.elements.values():

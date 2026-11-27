@@ -94,7 +94,7 @@ func _build() -> void:
 	for r in rows:
 		cols = maxi(cols, r.size())
 	var row_h := pick if view and not view_counts else pick + 5 + 18  # no counts: just looking
-	var top := TITLE_H if view else 0.0
+	var top := TITLE_H  # view: the suit's name; paying: "Choose 1 (icon), 2 (icon)" (what's still to pick)
 	var w := pad * 2 + cols * pick + (cols - 1) * gap.x
 	var h := pad * 2 + top + rows.size() * row_h + (rows.size() - 1) * gap.y
 	_balloon.size = Vector2(w, h)
@@ -114,6 +114,8 @@ func _build() -> void:
 		t.set_meta("cmp", "suitview:title")
 		_balloon.add_child(g)
 		_balloon.add_child(t)
+	if not view:
+		_choose_title(need, w)
 	var reserved := {} if view else _reserved()
 	for ri in rows.size():
 		var row: Array = rows[ri]
@@ -172,6 +174,39 @@ func _pick(sym: String, avail: int, have: int, suit: String, view := false) -> C
 	if not inert and not view:
 		c.gui_input.connect(func(ev): if Tap.tap(ev): _tap(sym, suit, avail))
 	return c
+
+
+## Paying (the user, 2026-11-26): "Choose" and, for each suit still short,
+## how many more and its icon ("Choose 1 (fire), 2 (leaf)"), centred.
+func _choose_title(need: Dictionary, w: float) -> void:
+	var f := Tok.font(900)
+	var parts: Array = [Tok.label("Choose", 15, Tok.INK, 900)]
+	var first := true
+	for su in Data.t("ELEMENT_SUIT_LABEL").keys():
+		var left: int = int(need.get(su, 0)) - _picked_for(su)
+		if left <= 0:
+			continue
+		var n := Tok.label(("" if first else ", ") + str(left), 15, Tok.INK, 900)
+		n.set_meta("cmp", "suitspend:need:" + su)
+		parts.append(n)
+		var g := Tok.icon("suit:" + su, 18)
+		g.material = Tok.tinted(Tok.suit_color(su))
+		parts.append(g)
+		first = false
+	var total := 0.0
+	for p in parts:
+		total += (f.get_string_size(p.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 4) if p is Label else 20.0
+	var x := (w - total) / 2
+	var mid := pad + 2 + 10.0
+	for p in parts:
+		if p is Label:
+			p.text = p.text + " " if p.text == "Choose" else p.text
+			p.position = Vector2(x, mid - f.get_height(15) / 2)
+			x += f.get_string_size(p.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 2
+		else:
+			p.position = Vector2(x, mid - 9)
+			x += 20.0
+		_balloon.add_child(p)
 
 
 ## One more from sym (back to none once it covers all its suit still needs);

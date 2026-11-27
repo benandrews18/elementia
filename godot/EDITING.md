@@ -63,7 +63,6 @@ How to change how the game looks in the Godot editor, without code.
 |---|---|
 | Every item card | `ui/components/item_card.tscn` |
 | The Crafting Bench's row | `ui/components/shop_row.tscn` |
-| Pin + Craft under a shop card | `ui/pieces/shop_acts.tscn` |
 | An element chip | `ui/pieces/element_chip.tscn` |
 | A map station (its disc and ring colours on the top node) | `ui/pieces/map_node.tscn` |
 | Every window's frame and title banner | `ui/pieces/parchment_window.tscn` |
