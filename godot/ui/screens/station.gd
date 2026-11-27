@@ -88,6 +88,47 @@ func _redraw() -> void:
 		_side_card(w)
 
 
+## Arriving from the map (step 26, the user 2026-11-26): the art fades in,
+## the header drops into place, the cards come in from the right a row at a
+## time, then the 🔍 marks pop on (App bounces the tracked pill with them).
+## Visual only (offset_transform, scale): taps work throughout.
+const ARRIVE_MARKS := 0.45  # when the 🔍 marks pop on
+
+func arrive() -> void:
+	if not Juice.on():
+		return
+	for n in [$Art, $Wash]:
+		n.modulate.a = 0.0
+		n.create_tween().tween_property(n, "modulate:a", 1.0, 0.35)
+	for nm in ["Head", "Icon", "Title", "ElementsLabel", "Chips", "CraftedLabel", "Fold", "Bar", "Crafted", "View"]:
+		_arrive_slide(_page.get_node(nm), Vector2(0, -60), 0.0)
+	for nm in ["ShopLine", "ShopLabel", "ShopHint", "Bench"]:
+		_arrive_slide(_page.get_node(nm), Vector2(size.x * 0.6, 0), 0.08)
+	var shop: Array = $Scroll/Page/Shop.get_children()
+	var top := INF
+	for c in shop:
+		top = minf(top, c.position.y)
+	for c in shop:
+		if not c is Control:
+			continue
+		var tag := str(c.get_meta("cmp", ""))
+		if tag.begins_with("st:slot:") and Game.feeds_tracked(tag.substr(8)):  # a 🔍: pops on last
+			c.pivot_offset = c.size / 2
+			c.scale = Vector2.ZERO
+			c.create_tween().tween_property(c, "scale", Vector2.ONE, 0.3).set_delay(ARRIVE_MARKS).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		else:
+			_arrive_slide(c, Vector2(size.x * 0.6, 0), 0.1 + (c.position.y - top) * 0.0005 + c.position.x * 0.0002)
+
+
+func _arrive_slide(c: Control, from: Vector2, delay: float) -> void:
+	c.offset_transform_enabled = true
+	c.offset_transform_position = from
+	c.modulate.a = 0.0
+	var tw := c.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(c, "offset_transform_position", Vector2.ZERO, 0.3).set_delay(delay)
+	tw.tween_property(c, "modulate:a", 1.0, 0.2).set_delay(delay)
+
+
 ## The dark header: icon and name, the element chips, the crafted-items bar.
 ## Returns where the shop starts (page coordinates).
 func _header(page: Control, st: Dictionary, w: float) -> float:

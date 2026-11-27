@@ -101,17 +101,33 @@ func sync_dev() -> void:
 ## The screen follows Game.ctx.screen; the hub follows everything.
 func _sync() -> void:
 	var want: String = Game.ctx.screen if Game.ctx.get("current") or Game.ctx.screen == "map" else "map"
+	var arrived := false
 	if want != _screen_name:
+		var from := _screen_name
 		_screen_name = want
 		if is_instance_valid(_screen):
 			_screen.queue_free()
 		_screen = StationScreen.make() if want == "station" else MapScreen.make()
 		add_child(_screen)
 		move_child(_screen, 0)
+		# Station transitions (step 26): arriving plays in; leaving for the map, a quick fade.
+		if from == "map" and _screen is StationScreen:
+			_screen.arrive()
+			arrived = true
+		elif from == "station" and Juice.on():
+			_screen.modulate.a = 0.0
+			_screen.create_tween().tween_property(_screen, "modulate:a", 1.0, 0.15)
 	if not screen_covered() and is_instance_valid(_screen) and _screen.stale:
 		_screen._redraw()
 	sync_hub()
 	_sync_floats()
+	if arrived:  # the tracked pill bounces as the 🔍 marks pop on
+		for p in _floats.get_children():
+			if p.get_meta("cmp", "") == "tracked":
+				p.pivot_offset = p.size / 2
+				var tw := p.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+				tw.tween_property(p, "scale", Vector2(1.15, 1.15), 0.17).set_delay(StationScreen.ARRIVE_MARKS)
+				tw.tween_property(p, "scale", Vector2.ONE, 0.17)
 	_market_check()
 	_maybe_end()
 	_collection_found.call_deferred()

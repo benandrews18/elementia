@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Arriving at a station plays in: the backdrop fades in, the header drops into place, the cards slide in from the right row by row, then the 🔍 marks pop on and the tracked pill bounces. You can tap straight away. Leaving for the map is a quick fade. (Off with Low motion.)
 - The game in brief is back: three quick slides at the start of every game, until you tap ✕ Hide. A run's first check opens the Display Mat rules again (now with how to play cards from your hand), and its first challenge the challenges tip; each has ✕ Hide. Professor Mouse still guides your very first game.
 - Combo Lab: tap a card to put it on the mat, tap it again (or on the mat) to take it off; the last one tapped shows on a Crafting Bench under the mat. No more Add / Remove buttons.
 - The Market opens much faster (pictures stay loaded, and opening it no longer redraws the whole game). Its title has the Market button's stall icon, and its text is white with a small shadow.

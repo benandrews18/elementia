@@ -640,10 +640,18 @@ Market, tutorials), motion last (it animates the final layouts).
    Neither while the tutorial runs. The 💡 hints stay as they are. Chosen
    (say if not): the windows every run until hidden, like the slides, not
    once ever.
-26. **Station transitions**: arriving fades in the backdrop, the header
+26. ✅ **Station transitions**: arriving fades in the backdrop, the header
    slides down, the cards come in from the right, the tracked pill bounces
    as the 🔍 marks appear; taps work throughout. Leaving for the map: a
    plain, quick fade.
+   Done (2026-11-26; godot-prompter tween-animation: code tweens, parallel
+   with delays, cubic/back ease-out; rejected an AnimationPlayer, the
+   screen is built in code): App._sync calls StationScreen.arrive() when the
+   screen swaps from the map (offset_transform slides and fades, cards
+   staggered by row, 🔍 slots scale in at ARRIVE_MARKS with the tracked
+   pill's bounce); the map fades in 0.15 s. Juice.on() gates it (Low
+   motion). Caveat: the frame that builds the station is long, so the art's
+   fade is mostly done by the first frame shown.
 27. **Every icon tells you something** (the user, 2026-11-26): a pass over
    every screen so almost any icon (items, elements, suits, stations,
    chips, badges, rewards) opens its card or a short explanation when
@@ -660,6 +668,7 @@ Market, tutorials), motion last (it animates the final layouts).
    since the last map visit animates.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 26 (station transitions): arriving plays in (art, header, cards from the right, 🔍 marks and the pill's bounce); the map fades in.
 - 2026-11-26: step 25 (tutorials): the How-to-Play slides every game until hidden; the Display Mat rules and challenges tip at a run's first check, each hideable.
 - 2026-11-26: step 24 (Combo Lab): taps put cards on and off the mat, the last on a Crafting Bench; no Add / Remove.
 - 2026-11-26: step 22 checked done; step 28 planned (the map discovered as you go). Step 23 (Market): opening ~170 -> ~28 ms (no full redraw on open; Data keeps icon textures), the stall icon and white shadowed text.
