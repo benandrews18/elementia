@@ -348,6 +348,14 @@ func _todo(app: App) -> void:
 	var find_track := func(): return _find_meta(app._panel_node, "todo:track:" + comp)
 	find_track.call().gui_input.emit(_release())
 	check(Game.ctx.tracked == comp and Progress.is_pinned(comp), "a tree row's 🔍 tracks %s and pins it (its own quest)" % comp)
+	await get_tree().process_frame
+	var rows: Array = app._panel_node._list.get_children().filter(func(c): return String(c.get_meta("cmp", "")).begins_with("todo:quest:") and not c.is_queued_for_deletion())
+	check(not rows.is_empty() and rows[0].get_meta("cmp") == "todo:quest:" + comp, "the tracked item tops the list")
+	_find_meta(app._panel_node, "todo:below").gui_input.emit(_release())
+	check(TodoTray.detail == "", "a tap under the rows closes the details panel")
+	TodoTray.detail = "Metropolis"
+	app._panel_node._redraw()
+	await get_tree().process_frame
 	check(TodoTray.lead() == "Metropolis", "the quest holding the tracked part leads")
 	await get_tree().process_frame
 	find_track.call().gui_input.emit(_release())

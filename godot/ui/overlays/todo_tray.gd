@@ -89,10 +89,14 @@ func _redraw() -> void:
 	$Tray.size.x = minf(size.x, _list_width(names))
 	_scroll.size.x = $Tray.size.x - 3
 	var w := _scroll.size.x - 40
-	var first := lead()
-	if names.has(first):  # the quest holding the tracked item leads
-		names.erase(first)
-		names.push_front(first)
+	# Closest first (the user, 2026-11-26: "almost done" goals keep long chains
+	# winnable): craftable now, then the most parts owned, then points; the
+	# tracked item always on top, the quest holding it next.
+	names = Util.stable_sort(names, func(a, b): return _closeness(b) - _closeness(a))
+	for top in [lead(), Game.ctx.get("tracked")]:
+		if top != null and names.has(top):
+			names.erase(top)
+			names.push_front(top)
 	var y := 20.0
 	$Tray/Scroll/List/Pin.visible = not names.is_empty()
 	$Tray/Scroll/List/Pinned.visible = not names.is_empty()
@@ -124,9 +128,27 @@ func _redraw() -> void:
 		y += 4
 		for n in names:
 			y = _row(Catalog.entry(n), y, _scroll.size.x)
+	# The empty space under the rows: a tap closes the details panel (✕ too).
+	var below := Control.new()
+	below.position = Vector2(0, y)
+	below.size = Vector2(_scroll.size.x, maxf(20, _scroll.size.y - y))
+	below.mouse_filter = MOUSE_FILTER_PASS
+	below.set_meta("cmp", "todo:below")
+	below.gui_input.connect(func(ev): if Tap.tap(ev) and detail != "":
+		detail = ""
+		_redraw())
+	_list.add_child(below)
 	$Tray/Scroll/List.custom_minimum_size = Vector2(_scroll.size.x, y + 20)
 	_scroll.set_deferred("scroll_vertical", keep)
 	_details()
+
+
+## How close a pinned item is to being made, for the list's order: craftable
+## now first, then the share of its parts owned, then points (as a tiebreak).
+static func _closeness(n: String) -> float:
+	var e: Dictionary = Catalog.entry(n)
+	var pc := RefTree.parts(e)
+	return (1000.0 if RefTree.ready(n) else 0.0) + 100.0 * pc.x / maxf(1, pc.y) + e.points / 1000.0
 
 
 ## A row's name size (fitted to the room beside the details panel) and its
@@ -291,11 +313,16 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	row.gui_input.connect(func(ev): if Tap.tap(ev): _show(e.name))
 	_list.add_child(row)
 	if detail == e.name:
-		var sel := ColorRect.new()
-		sel.color = Color(1, 1, 1, 0.09)
+		var sel := ColorRect.new()  # lit while the panel shows it: a stronger wash and a gold edge
+		sel.color = Color(1, 1, 1, 0.16)
 		sel.size = row.size
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		row.add_child(sel)
+		var edge := ColorRect.new()
+		edge.color = Tok.GOLD
+		edge.size = Vector2(4, ROW_H)
+		edge.mouse_filter = MOUSE_FILTER_IGNORE
+		row.add_child(edge)
 	var ic := Tok.icon(e.emoji, 30)
 	ic.position = Vector2(16, 6)
 	row.add_child(ic)
