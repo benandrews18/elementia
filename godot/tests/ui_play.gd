@@ -355,6 +355,10 @@ func _todo(app: App) -> void:
 	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
 	check(TodoTray.detail == "Metropolis" and _find_meta(app._panel_node, "todo:details") != null, "a tap on an item opens its details panel")
 	await get_tree().process_frame
+	var cost := _find_meta(app._panel_node, "suitcost:Metropolis")
+	if cost and cost.get_child_count() > 0:  # step 27: a suit icon explains itself
+		cost.get_child(0).gui_input.emit(_release())
+		check(app.get_children().any(func(c): return c is Explain and "suit" in c.text), "a suit icon's tap explains the suit")
 	_find_meta(app._panel_node, "todo:close").gui_input.emit(_release())
 	check(TodoTray.detail == "" and _find_meta(app._panel_node, "todo:details") == null, "✕ closes the details panel")
 	await get_tree().process_frame

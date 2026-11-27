@@ -125,6 +125,8 @@ func _stations(at: Vector2, w: float) -> float:
 		var ic := Tok.icon(Catalog.station(ORDER[i]).emoji, d * 0.6)
 		ic.position = Vector2(d * 0.2, d * 0.2)
 		c.add_child(ic)
+		var stn: String = ORDER[i]
+		Explain.on_tap(c, func(): return Explain.station(stn, "visited" if v else "not visited yet") + ". Visit all %d for an Unknown Element." % ORDER.size())
 		if v:
 			var t := Tok.tick(Color.WHITE, 13, Tok.OK, Tok.CARD)
 			t.position = Vector2(d - 9, -4)

@@ -652,10 +652,22 @@ Market, tutorials), motion last (it animates the final layouts).
    pill's bounce); the map fades in 0.15 s. Juice.on() gates it (Low
    motion). Caveat: the frame that builds the station is long, so the art's
    fade is mostly done by the first frame shown.
-27. **Every icon tells you something** (the user, 2026-11-26): a pass over
+27. ✅ **Every icon tells you something** (the user, 2026-11-26): a pass over
    every screen so almost any icon (items, elements, suits, stations,
    chips, badges, rewards) opens its card or a short explanation when
    tapped; list the ones that don't and fix them.
+   Done (2026-11-26): audited with a throwaway scan over all 111 shot
+   states (tests/tmp/icon_audit.gd: an icon whose tap reaches no handler
+   up its parents). Most hits were under open windows (not tappable
+   anyway). Fixed: Explain (ui/overlays/explain.gd: a short balloon by the
+   icon, gone on the next press; Explain.on_tap/suit/station); QuarkMeter
+   opens MatRules (not inside a window); RefTree.suit_row icons, Convert's
+   chosen-element suit badge, the Market's visited circles, CardPop's
+   station badge; the To-Do hint card's item pictures open their cards.
+   Left (say if wanted): the roll window's suit/dice icons (it's
+   moving); title icons (📌/🔍 To-Do, 📖 Items, 🏆 Capstones); element
+   chips' small suit badge (the chip's own tap: its card or a pick); the
+   map card's own station icon; a full card's main picture.
 28. **The map, discovered as you go** (the user, 2026-11-26; builds on 22b's
    one-station opening): not every station shows from the start. Each time
    the player comes back to the map from a station, that station's paths
@@ -668,6 +680,7 @@ Market, tutorials), motion last (it animates the final layouts).
    since the last map visit animates.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 27 (icons): an audit over every shot state; Explain balloons on suits, visited stations, card stations; the Quark Meter opens the rules.
 - 2026-11-26: step 26 (station transitions): arriving plays in (art, header, cards from the right, 🔍 marks and the pill's bounce); the map fades in.
 - 2026-11-26: step 25 (tutorials): the How-to-Play slides every game until hidden; the Display Mat rules and challenges tip at a run's first check, each hideable.
 - 2026-11-26: step 24 (Combo Lab): taps put cards on and off the mat, the last on a Crafting Bench; no Add / Remove.

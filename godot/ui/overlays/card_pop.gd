@@ -51,6 +51,7 @@ static func open(on: Control, name: String) -> CardPop:
 
 
 func _ready() -> void:
+	Explain.on_tap($Card/Station, func(): return "Made at " + str(entry.station))  # step 27
 	if side:
 		for n in [$Dim, $Close, $Actions]:
 			n.visible = false

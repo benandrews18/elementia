@@ -271,7 +271,7 @@ func _hint_card(hint, y: float, w: float) -> float:
 	top.position = Vector2(14, ly)
 	card.add_child(top)
 	ly += 24
-	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w, 26, 16, Color.WHITE, 900)
+	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w, 26, 16, Color.WHITE, 900, true)
 	var others: Array = hint.roots.filter(func(r): return r != hint.name)
 	if not others.is_empty():
 		ly += 4
@@ -280,7 +280,7 @@ func _hint_card(hint, y: float, w: float) -> float:
 		card.add_child(nf)
 		ly += 20
 		for r in others:
-			ly = _icon_line(card, Catalog.entry(r).emoji, r, ly, w, 18, 13, Color("#e8edf4"), 700)
+			ly = _icon_line(card, Catalog.entry(r).emoji, r, ly, w, 18, 13, Color("#e8edf4"), 700, true)
 	ly += 4
 	for h in hint.homes:  # where it's made
 		ly = _icon_line(card, Catalog.station(h).emoji, h, ly, w, 16, 12, Color("#e2b25a"), 700)
@@ -290,9 +290,12 @@ func _hint_card(hint, y: float, w: float) -> float:
 
 ## One line of the hint card: an icon and a name beside it (shrunk to fit
 ## the narrow tray); returns the next line's top.
-func _icon_line(card: Control, emoji: String, text: String, ly: float, w: float, ipx: float, px: int, color: Color, weight: int) -> float:
+func _icon_line(card: Control, emoji: String, text: String, ly: float, w: float, ipx: float, px: int, color: Color, weight: int, item := false) -> float:
 	var ic := Tok.icon(emoji, ipx)
 	ic.position = Vector2(14, ly)
+	if item:  # an item's picture opens its card (step 27)
+		ic.mouse_filter = MOUSE_FILTER_STOP
+		ic.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(text))
 	card.add_child(ic)
 	var fpx := Tok.fit_px(text, Tok.font(weight), px, w - 14 - ipx - 8 - 10)
 	var l := Tok.label(text, fpx, color, weight)

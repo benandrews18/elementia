@@ -24,6 +24,7 @@ var _passed := 0
 func _init() -> void:
 	custom_minimum_size = Vector2(0, LABELS_H + ROW_GAP + SEG_H)
 	mouse_filter = MOUSE_FILTER_PASS
+	gui_input.connect(_on_tap)  # the Display Mat rules: what Quarks and the dice mean (step 27)
 	_icon = Tok.icon("⚛️", 22)
 	_icon.custom_minimum_size = Vector2(30, 22)  # the HTML glyph box is ~30px wide
 	add_child(_icon)
@@ -132,3 +133,14 @@ func _layout() -> void:
 		_labels[i].position = Vector2(lx, seg_y - ROW_GAP - LABELS_H + (LABELS_H - lsz.y) / 2)
 	# Long numbers on a narrow meter: the 75% one steps left of the end's.
 	_labels[2].position.x = minf(_labels[2].position.x, _labels[3].position.x - 6 - _labels[2].size.x)
+
+
+func _on_tap(ev: InputEvent) -> void:
+	if not Tap.tap(ev) or App.current == null:
+		return
+	var p := get_parent()
+	while p != null:  # in a window (the Bonus Dice), it's part of the story: no rules over it
+		if p is ParchDialog or p is LockInReward:
+			return
+		p = p.get_parent()
+	MatRules.show_on(App.current)

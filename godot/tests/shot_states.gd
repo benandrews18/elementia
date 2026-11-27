@@ -6,7 +6,7 @@
 extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
-	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
+	"convert", "picker", "unknown", "market", "explain", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
@@ -82,6 +82,20 @@ func _ready() -> void:
 			UnknownPick.open(app)
 		"market":
 			app._on_hub("market")
+		"explain":  # step 27: a tapped icon's short explanation (a suit, under Convert)
+			Game.state.emptyElements = 1
+			app.open_panel("convert")
+			app._panel_node.from = "S"
+			app._panel_node.to = "Fe"
+			app._panel_node._redraw()
+			await get_tree().process_frame
+			var badge: Control = null
+			for c in _all(app._panel_node):
+				if c is Panel and c.get_signal_connection_list("gui_input").size() > 2 and c.size == Vector2(24, 24):
+					badge = c
+					break
+			if badge:
+				Explain.show_at(badge, Explain.suit(Data.t("ELEMENT_SUIT")["S"]))
 		"market_craft":
 			app._on_hub("market")
 			MarketCraft.open(app, "Plastic")
@@ -517,3 +531,10 @@ func _ready() -> void:
 				ClassicMode.show_on(app)
 		"mat_rules", "mat_rules2", "order_tip", "unknown_tip":
 			app.show_tip({"mat_rules": "mat_rules", "mat_rules2": "mat_rules2", "order_tip": "order", "unknown_tip": "unknown"}[state])
+
+
+static func _all(n: Node) -> Array:
+	var a := [n]
+	for c in n.get_children():
+		a.append_array(_all(c))
+	return a
