@@ -654,7 +654,15 @@ func _collections(app: App) -> void:
 	var dm := app._panel_node as DisplayMatScreen
 	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") == null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard and Draw under the mat, no Lock In")
 	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
-	check(app._hub.hand_sides.keys() == ["jobs"] and app._hub.off.get("market") == true, "the hub's other buttons as usual (the Challenge on Jobs), the Market shut")
+	check(app._hub.get_node("Jobs/Label").text == "To-Do List" and app._hub.off.get("market") == true, "the hub's other buttons as usual (the To-Do List too), the Market shut")
+	var goal := _find_meta(dm, "hand:goal")
+	check(goal != null and goal.position.x < _find_meta(dm, "hand:pass").position.x, "🎯 Goal above the hand, left of Pass")
+	if goal:
+		Tap._down = null
+		goal.gui_input.emit(_release())
+		check(top.call(OrderInfo).size() == 1, "Goal opens the challenge")
+		for c in top.call(OrderInfo):
+			c.queue_free()
 	check(_find_meta(dm, "hand:deck") != null, "the deck's count in the middle")
 	_find_meta(dm, "hand:deck").gui_input.emit(_release())
 	check(dm.browsing and dm._scroll.visible and _find_meta(dm, "hand") == null, "the deck tapped: the whole Inventory, no hand")

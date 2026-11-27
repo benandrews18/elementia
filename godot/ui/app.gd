@@ -906,12 +906,12 @@ func _check_convert() -> bool:
 
 
 ## The hub during a check with cards: Play (the picked hand cards), the
-## challenge on Jobs, the Market shut until the check ends; Inventory
-## (closes the mat: the check waits) and Codex as usual. True if handled.
+## Market shut until the check ends; the To-Do List, Inventory (closes the
+## mat: the check waits) and Codex as usual (the challenge: the 🎯 Goal
+## above the hand). True if handled.
 func _hand_tap(mat: DisplayMatScreen, id: String) -> bool:
 	match id:
 		"home": mat.hand_play()
-		"jobs": OrderInfo.open(self)
 		"market": mat._show_toast("The Market opens after the check.")
 		"inv":
 			return Game.ctx.get("challengeTest", false)  # the lab's test: nothing under the mat to go back to

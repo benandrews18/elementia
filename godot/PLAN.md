@@ -589,6 +589,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: after 20d (the user): the check's challenge is a 🎯 Goal button above the hand, left of Pass (HubBar.hand_sides now empty: the To-Do List stays); Metropolis's picture replaced (images/Metropolis Icon - 11-26.png).
 - 2026-11-26: step 20d (11 px minimum text): a floor in Tok, shrunk cards' fonts grown, names wrap, every screen scanned by the screens check; the Market's names under its squares, its new header; the Unknown picker as the station's chips.
 - 2026-11-26: step 20c (Collections window): grilled; tiles with names and run status, closest first, a legend, the rest counted, always tall.
 - 2026-11-26: step 20b (mat cards and stars): a tapped mat card shows big in place, the ⭐ on the picture opens Collections lit, no corner Convert at a check.

@@ -743,11 +743,13 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var row_y := page.position.y + page.size.y + 8
-	# Gold-rimmed circles (the user, 2026-11-26): Discard on the left, Pass
-	# in the middle (stop playing and lock in), the deck (a tap: the whole
+	# Gold-rimmed circles (the user, 2026-11-26): Discard on the left, Goal
+	# (the challenge) left of Pass, Pass in the middle (stop playing and lock in), the deck (a tap: the whole
 	# Inventory, to plan) and Draw on the right.
 	_hand_button("discard", _card_icon("cards_scatter"), "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
 	_hand_button("pass", Tok.icon("🏁", 30), "Pass", "", Vector2((size.x - BTN) / 2, row_y), false, hand_pass)
+	_hand_button("goal", Tok.icon("🎯", 30), "Goal", "", Vector2((size.x - BTN) / 2 - BTN - 14, row_y), false,  # the challenge (the user, 2026-11-26: was the hub's Challenge)
+		func(): if App.current: OrderInfo.open(App.current))
 	var draws := Hand.draws_left(h, Game.state)
 	var draw_ic := _card_icon("card")
 	var plus := Tok.label("+", 26, Tok.GOLD, 900)
