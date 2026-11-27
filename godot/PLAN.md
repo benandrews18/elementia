@@ -576,16 +576,21 @@ Market, tutorials), motion last (it animates the final layouts).
    label white on black; YOU ARE HERE above the Ocean, the Ocean moved up
    the beach clear of the bigger pill; the opening's components hang off
    the capstone on branch lines (the COMPONENTS label gone: the lines say it).
-22. **Tracking and the To-Do list** (grill + brainstorm: a redesign).
-   - The To-Do list rethought: compact and followable, no capstone tree
-     exploding open on the first tap (the tracked item's 🔍 at a station
-     too).
-   - Nudge players to track mid-tier and tier 1 items early (grill:
-     ideas, e.g. a suggested pick, a small reward for a tracked item made,
-     the capstone pinned but a part tracked).
-   - A suit pill out of Convert's left side (looks like the tracked
-     pill): the 4 suit icons with totals; grill: only while the tray is
-     open, or always.
+22. **Tracking and the To-Do list** (grilled 2026-11-26; see Decisions
+   "tracking as quests"). Two parts:
+   - 22a: the To-Do List as a quest log (the capstone a quest with a parts
+     bar, its parts as chapters, facts only, one level per tap, other
+     pinned items folded); 🔍 Track on tree rows (tracking pins); 📌 only on
+     quest headers; pinning no longer tracks (a first-pin window asks,
+     "Don't ask again", Settings "Auto-track on pin", off); crafting the
+     tracked item stops tracking with a "!" on the 🔍 button; the shop's 🔍
+     circle opens the To-Do List lit on it; a suit pill out of Convert's
+     left (4 suits, totals), always where ⚛️ shows.
+   - 22b: the opening: after the capstone pick the To-Do List shows it and
+     its direct parts with a tip (track one part to start); Home is the
+     station's icon reading Start; the map behind shows only that station
+     (YOU ARE HERE under it); on leaving the first station the map shows it
+     alone, then the other stations bounce in (every run).
 23. **Market.**
    - Opening lag: profile and fix.
    - Title: the Market button's icon (not the cart); all text white with
@@ -1513,6 +1518,29 @@ design happens in Godot.
 ## Decisions
 
 Recorded so they aren't re-argued. Add new ones with the date.
+
+- 2026-11-26 (the user, step 22 grill): **tracking as quests.** Long
+  questline games keep one objective on screen, chapters with counts,
+  progress worked out from what's owned (side trips never break it). The
+  To-Do List keeps the component tree as a quest path: the capstone (or
+  any pinned item) on top with a parts bar, its direct parts as chapters,
+  one level per tap, never opening on its own. **Not directive**: no NEXT
+  tags, no "Next:" line, no suggested pick; rows show facts (parts count,
+  where made, ✓ owned, a green dot when craftable now); the player chooses.
+  The quest holding the tracked item is open at the top; other pinned items
+  are folded one-liners. **Pin and track are separate**: pinning (to come
+  back to) never tracks unless Settings' "Auto-track on pin" (off by
+  default) is on; the first pin asks "Track it now?" with "Don't ask
+  again" (remembered as that setting). In the To-Do tree rows have only 🔍
+  Track; tracking a part pins it (its own quest); 📌 sits on quest headers
+  (drop the quest). **Crafting the tracked item stops tracking**, with a
+  "!" on the 🔍 button: players keep setting their own goals. The shop's 🔍
+  circle opens the compact list lit on that item. The suit pill always
+  shows beside ⚛️. Opening: no part suggested, only a tip. The map reveal
+  (one station, then the rest bounce in) plays every run. Rejected: auto
+  next step, a reward per tracked craft, tracking moving up a level.
+  Assumed (say if wrong): nothing tracked at a run's start; Get a Hint
+  stays, opt-in; the suit pill's totals are the elements owned per suit.
 
 - 2026-11-26 (the user, step 17 grill): **capstones leave the mat.** Every
   crafted capstone is always on, beside the mat: no slots, never drawn
