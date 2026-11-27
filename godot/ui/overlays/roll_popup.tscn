@@ -1,7 +1,6 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://ui/overlays/roll_popup.gd" id="1"]
-[ext_resource type="PackedScene" path="res://ui/pieces/pill_button.tscn" id="2"]
 [ext_resource type="FontFile" path="res://assets/fonts/Nunito-VariableFont_wght.ttf" id="nunito"]
 [ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f3b2.png" id="die"]
 
@@ -75,15 +74,3 @@ text = "GATHERING"
 anchors_preset = 0
 layout_mode = 0
 mouse_filter = 2
-
-[node name="Collect" parent="Box" instance=ExtResource("2")]
-visible = false
-modulate = Color(1, 1, 1, 0)
-layout_mode = 0
-offset_left = 72.0
-offset_top = 282.0
-offset_right = 286.0
-offset_bottom = 328.0
-
-[node name="Text" parent="Box/Collect" index="0"]
-text = "Collect"

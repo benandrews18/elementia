@@ -155,6 +155,21 @@ func show_item(name: String, keep_back := false) -> void:
 		cb.set_meta("cmp", "cp:cost%d" % $Card/Costs.get_child_count())
 		$Card/Costs.add_child(cb)
 	$Card/Station/Icon.texture = Data.icon(Catalog.station(entry.station).emoji)
+	for c in card.get_children():
+		if c.has_meta("extra_station"):
+			c.free()
+	if entry.tier == "MATERIAL":  # sold at several: every station, right to left along the bottom (the user, 2026-11-26)
+		var mc = Catalog.mat_card(name)
+		var others: Array = (mc.stations if mc else []).filter(func(st): return st != entry.station)
+		for i in others.size():
+			var b: Control = $Card/Station.duplicate(Node.DUPLICATE_GROUPS | Node.DUPLICATE_SCRIPTS)  # not its tap
+			b.set_meta("extra_station", true)
+			b.set_meta("cmp", "cp:station:" + others[i])
+			b.position.x -= (i + 1) * ($Card/Station.size.x - 6)
+			b.get_node("Icon").texture = Data.icon(Catalog.station(others[i]).emoji)
+			var stn: String = others[i]
+			Explain.on_tap(b, func(): return "Made at " + stn)
+			card.add_child(b)
 	var old_size := card.get_node_or_null("Size")
 	if old_size:
 		old_size.free()

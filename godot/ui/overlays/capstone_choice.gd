@@ -69,29 +69,40 @@ func _choice() -> void:
 	var cell := (inner - (columns - 1) * cell_gap) / columns
 	var gy := sub.position.y + sub_h + 14
 	var rows := ceili(caps.size() / float(columns))
-	var h := gy + rows * cell + (rows - 1) * cell_gap + 30
+	var row_h := cell + 3 + MarketTray.NAME_H  # the name under the square, as in the Market (the user, 2026-11-26)
+	var h := gy + rows * row_h + (rows - 1) * cell_gap + 24
 	box.size = Vector2(w, h)
 	for i in caps.size():
 		var c := _cell(caps[i], cell)
-		c.position = Vector2(sub.position.x + (i % columns) * (cell + cell_gap), gy + (i / columns) * (cell + cell_gap))
+		c.position = Vector2(sub.position.x + (i % columns) * (cell + cell_gap), gy + (i / columns) * (row_h + cell_gap))
 		grid.add_child(c)
 	_swap(box)
 
 
-## .bingo-cell: a cream tile, the capstone's icon, its station's at the
-## top-left, its name along the bottom.
+## .bingo-cell: a cream tile, the capstone's icon centred, its station's at
+## the top-left; its name under the tile (as in the Market).
 func _cell(name: String, sz: float) -> Control:
 	var c := Panel.new()
 	c.add_theme_stylebox_override("panel", Tok.box(Color("#f7efdf"), 12, 1.5, Color("#d9c39a"), 3, 2, Color(0, 0, 0, 0.25)))
 	c.size = Vector2(sz, sz)
-	var ic := Tok.icon(Data.t("ITEM_EMOJI")[name], sz * 0.62)
-	ic.position = Vector2(sz * 0.19, sz * 0.08)
+	var key: String = Data.t("ITEM_EMOJI")[name]
+	var tex := Data.icon(key)
+	var px := sz * 0.66
+	if tex and tex.get_width() > tex.get_height() * 1.2:  # a wide picture (Metropolis) fills the square's width like the rest
+		px = sz * 0.86
+	var ic := Tok.icon(key, px)
+	ic.position = (c.size - ic.size) / 2
 	c.add_child(ic)
-	var st := Tok.icon(Catalog.station(String(Data.t("CORE_ITEM_STATION")[name])).emoji, sz * 0.3)
-	st.position = Vector2(2, 2)
+	var st := Tok.icon(Catalog.station(String(Data.t("CORE_ITEM_STATION")[name])).emoji, sz * 0.28)
+	st.position = Vector2(3, 3)
 	c.add_child(st)
-	var n := Tok.label(name, 9, INK, 800)
-	Tok.centre_name(n, sz, sz - 15, 12)
+	var n := Tok.label(name, MarketTray.NAME_PX, INK, 800)
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	n.max_lines_visible = 2
+	n.add_theme_constant_override("line_spacing", -3)
+	n.size = Vector2(sz + 4, MarketTray.NAME_H)
+	n.position = Vector2(-2, sz + 3)
 	c.add_child(n)
 	c.set_meta("cmp", "cap:" + name)
 	c.gui_input.connect(func(ev): if Tap.tap(ev): _confirm(name))
@@ -109,14 +120,18 @@ func _confirm(name: String) -> void:
 	box.size.x = w
 	if is_instance_valid(_card):
 		_card.queue_free()
-	_card = MapScreen.station_card(st_name, inner, true)
-	_card.position = Vector2(20, 30)
+	# The map's own station preview at the screen's top, full width, down to
+	# its rule; the parchment comes out from behind it (the user, 2026-11-26).
+	_card = MapScreen.station_card(st_name, size.x, true, true)
 	$Confirm/Card.add_child(_card)
-	var y := _card.position.y + _card.size.y + 14
+	var tuck := 30.0  # the parchment's top, behind the card's bottom
+	var y := tuck + 14
 	var ic: TextureRect = $Confirm/Emoji
 	ic.texture = Data.icon(e.emoji)
+	var wide: bool = ic.texture and ic.texture.get_width() > ic.texture.get_height() * 1.2
+	ic.size = Vector2(104, 68) if wide else Vector2(64, 64)  # Metropolis as big as the rest
 	ic.position = Vector2((w - ic.size.x) / 2, y)
-	y += 66
+	y += ic.size.y + 2
 	$Confirm/Name.text = name
 	$Confirm/Name.position.y = y
 	y += 30
@@ -142,6 +157,8 @@ func _confirm(name: String) -> void:
 	go.position = Vector2((w - go.size.x) / 2, y)
 	box.size.y = y + go.size.y + 30
 	_swap(box)
+	box.position.y = _card.size.y - tuck
+	_card.position = -box.position
 
 
 func _line(box: Control, r: Rect2) -> void:

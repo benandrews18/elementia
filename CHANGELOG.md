@@ -8,6 +8,14 @@ on any printed PDFs. Bump it (date-based) when content changes. See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-27
+- Station shops: when tier 1 items take more than one row, the shorter row is on top, so a full row sits right above the bigger cards (same order as before).
+- Tier 1 shop cards no longer show station icons; the item's full card shows every station it's sold at, right to left along the bottom.
+- Convert: the Unknown Element counter sits inside the tray's top-right corner, so a Crafting Bench opened from a missing element rests right on top of the tray.
+- The Gathering window has no Collect button any more: tap Gather. The tutorial says so too.
+- Choosing a capstone: names sit under the squares (like the Market), the pictures centred; Metropolis fills its square like the others.
+- The capstone's confirm page: the top is the map's own station preview, full width (bigger element squares), with the parchment coming out from behind it; Metropolis is shown bigger.
+
 ## 2026-11-26
 - Map: a station and its path are revealed once; coming back to the map again (even from the same station) doesn't replay it.
 - Arriving at a station: the Item Shop title, its line and "Tap on items..." fall with the header; only the cards come in from the right.

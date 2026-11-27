@@ -17,7 +17,7 @@ const PAUSE := 0.35
 const PIP := Color("#c9d3e0")
 const PIPS := {1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]}
 
-## The layout is ui/overlays/roll_popup.tscn (the card, its title, Collect);
+## The layout is ui/overlays/roll_popup.tscn (the card, its title);
 ## this lays out the rolled chips and plays the reveal.
 const SCENE := "res://ui/overlays/roll_popup.tscn"
 const SPOT := preload("res://ui/theme/spotlight.gdshader")
@@ -27,7 +27,7 @@ var bonus := 0  # the last this many dice are the bonus earned at the last check
 var fly_to := Vector2.ZERO  # the Inventory button's centre
 var _chips: Array[Control] = []
 var collecting := false  # Collect tapped: the chips are flying (Home is back to its own face)
-@onready var _collect: Control = $Box/Collect
+var _rolled := false  # the dice have all landed: Gather collects
 @onready var _box: Panel = $Box
 
 
@@ -53,7 +53,7 @@ func _ready() -> void:
 	var row_h := row * ch + (row - 1) * GAP + frame_gap
 	var bw := minf(size.x - 32, maxf(3 * cw + 2 * GAP + 2 * 34, 250))  # fits the dice (the user, 2026-11-23: smaller)
 	var top := 18 + 19 + 16 + (8.0 if bonus > 0 and plain == 0 else 0.0)
-	var bh := top + row_h + 16 + 46 + 16
+	var bh := top + row_h + 20  # no Collect button: the hub's Gather (the user, 2026-11-26)
 	_box.size = Vector2(bw, bh)
 	_box.position = (size - _box.size) / 2
 	var title: Control = $Box/Title
@@ -76,10 +76,6 @@ func _ready() -> void:
 		_chips.append(c)
 	if bonus > 0:
 		_bonus_frame(bonus_rect.grow(6))
-	_collect.size = Vector2(maxf(bw * 0.6, 120), 46)
-	_collect.position = Vector2((bw - _collect.size.x) / 2, bh - 16 - 46)
-	_collect.set_meta("cmp", "roll:collect")
-	_collect.gui_input.connect(_on_collect)
 	_spotlight()
 	modulate.a = 0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.22)
@@ -98,8 +94,7 @@ func _ready() -> void:
 	var last := (_chips.size() - 1) * STAGGER + TUMBLE + PAUSE + 0.3
 	var show := create_tween()
 	show.tween_interval(last)
-	show.tween_callback(func(): _collect.visible = true)
-	show.tween_property(_collect, "modulate:a", 1.0, 0.2)
+	show.tween_callback(func(): _rolled = true)
 
 
 ## A rolled element: the white chip (suit border, number, badge, name),
@@ -206,14 +201,13 @@ func _spotlight() -> void:
 	add_child(ring)
 
 
-## Collect (its button, or the hub's Gather): the chips fly into the Inventory.
+## Collect (the hub's Gather): the chips fly into the Inventory.
 func collect() -> void:
-	if not _collect.visible:
+	if not _rolled or collecting:
 		return
 	collecting = true
 	if App.current:
 		App.current.sync_hub()
-	_collect.visible = false
 	Juice.buzz()
 	var fade := create_tween()
 	fade.tween_property(_box, "modulate:a", 0.0, 0.22)

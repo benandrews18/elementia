@@ -58,7 +58,7 @@ func _redraw() -> void:
 	tray.position = Vector2(0, size.y - HubBar.H - h)
 	tray.size = Vector2(w, h + HubBar.H)
 	_put_bench(tray.position.y, w)
-	content.add_child(_unknown_badge(Vector2(w - 16 - 46, -23)))
+	content.add_child(_unknown_badge(Vector2(w - 58, 0)))
 	# The quick grid: a tap on an element with 3+ sets FROM.
 	var y := grid_y
 	for i in held.size():
@@ -176,16 +176,23 @@ static func _arrow_glyph(color: Color) -> Control:
 func _unknown_badge(at: Vector2) -> Control:
 	var n := int(Util.get_or(Game.state, "emptyElements", 0))
 	var b := Panel.new()
-	b.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), 23, 2, Tok.GOLD, 4, 2, Color(0, 0, 0, 0.4)))
-	b.size = Vector2(46, 46)
+	# Tucked into the tray's top-right corner, its edge on the tray's curve (the user, 2026-11-26)
+	var sb := Tok.box(Color("#122e3c"), 0, 0, Tok.GOLD)
+	sb.border_width_left = 2
+	sb.border_width_bottom = 2
+	sb.border_width_top = 3
+	sb.corner_radius_top_right = 18
+	sb.corner_radius_bottom_left = 16
+	b.add_theme_stylebox_override("panel", sb)
+	b.size = Vector2(58, 50)
 	b.position = at
-	b.modulate.a = 1.0 if n > 0 else 0.6
 	b.set_meta("cmp", "cv:unknown")
-	var sq := LockInReward.unknown_square(24)
-	sq.position = Vector2(11, 11)
+	var sq := LockInReward.unknown_square(26)
+	sq.position = Vector2(12, 13)
 	sq.mouse_filter = MOUSE_FILTER_IGNORE
+	sq.modulate.a = 1.0 if n > 0 else 0.6
 	b.add_child(sq)
-	b.add_child(StationScreen.count_bubble(n, Vector2(46 - 14, -6)))
+	b.add_child(StationScreen.count_bubble(n, Vector2(58 - 24, 4)))
 	if n > 0:
 		b.gui_input.connect(func(ev): if Tap.tap(ev):
 			var app := App.current
@@ -244,6 +251,6 @@ func _put_bench(tray_y: float, w: float) -> void:
 	var bw := minf(w - 16, 420.0)
 	bench.add_child(ShopRow.make(e, bw - 36, func(n, at: Rect2): if App.current: App.current.craft_tap(n, at), func(n): App.pin(n)))
 	bench.size = Vector2(bw, 30 + ShopRow.H + 18)
-	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y - 28)  # clear of the "?" ring on the tray's corner
+	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y + 2)  # sitting on the tray (the "?" is inside its corner now)
 	add_child(bench)
 	_bench = bench

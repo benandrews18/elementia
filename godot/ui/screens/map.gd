@@ -281,7 +281,7 @@ static func _dashed(c: Control, a: Vector2, b: Vector2, color: Color, w: float) 
 
 ## The picked station's card at the top (mapCardHTML()). Also the opening's
 ## capstone confirm (boxed: all corners round, no capstone line).
-static func station_card(name: String, w: float, boxed := false) -> Control:
+static func station_card(name: String, w: float, boxed := false, flat_top := false) -> Control:
 	var st := Catalog.station(name)
 	var card := Control.new()
 	card.set_meta("cmp", "map:card")
@@ -367,7 +367,7 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 	card.size = Vector2(w, y)
 	card.draw.connect(func():
 		var sb := Tok.box(Color("#4a2b13"), 16, 3, Color("#d9a441"), 10, 6, Color(0, 0, 0, 0.45))
-		if not boxed:
+		if not boxed or flat_top:  # at the screen's top edge
 			sb.border_width_top = 0
 			sb.corner_radius_top_left = 0
 			sb.corner_radius_top_right = 0

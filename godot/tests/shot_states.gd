@@ -197,7 +197,7 @@ func _ready() -> void:
 			c.size = app.size
 			app.add_child(c)
 			if state == "capstone_confirm":
-				c._confirm("Robot")
+				c._confirm("Metropolis")  # the wide picture (the user, 2026-11-26)
 		"pin_tip":
 			TodoTray.expanded = {"refroot/Robot": true}
 			Progress.prefs.pinnedItems = ["Robot"]

@@ -242,9 +242,14 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		var cell_h := card_h + 3  # no Pin / Craft under the cards: tap one for the Crafting Bench (the user, 2026-11-22)
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
-		for e in items:
+		# Tier 1 over several rows: the short row on top, the full ones on the rest (the user, 2026-11-26)
+		var short := items.size() % columns if gi == 0 and items.size() > columns else 0
+		for i in items.size():
+			var e: Dictionary = items[i]
 			var span := 2 if e.tier == "CAPSTONE" else 1
 			var at := _first_free(taken, span, columns)
+			if short > 0:
+				at = Vector2i(0, i) if i < short else Vector2i(1 + (i - short) / columns, (i - short) % columns)
 			for k in span:
 				taken["%d,%d" % [at.x, at.y + k]] = true
 			rows = maxi(rows, at.x + 1)
@@ -348,10 +353,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.size = card_size + Vector2(12, 12)
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
-	# You are at its station: no badges, but a tier 1 item sold at several
-	# shows them all from the bottom right (the user, 2026-11-26).
-	var many: bool = t1 and Catalog.mat_card(e.name).stations.size() > 1
-	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": not many, "stations_right": many,
+	# You are at its station: no station badges (a tier 1 item's others: on its full card, the user 2026-11-26).
+	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,
 		"shop": not t1, "fade_suits": not owned})  # tier 1: the Inventory's small card
 	card.position = pos
 	card.size = card_size

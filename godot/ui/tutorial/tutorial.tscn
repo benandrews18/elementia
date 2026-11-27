@@ -65,9 +65,9 @@ dice = PackedStringArray("H", "O", "N", "N")
 
 [sub_resource type="Resource" id="step6"]
 script = ExtResource("2")
-say = "4 new elements! Tap [b]Collect[/b]."
+say = "4 new elements! Tap [b]Gather[/b]."
 pose = 3
-target = "roll:collect"
+target = "roll:gather"
 until = "wait"
 done_if = "collected"
 
@@ -203,9 +203,9 @@ dice = PackedStringArray("Al", "Mg", "O", "P")
 
 [sub_resource type="Resource" id="step25"]
 script = ExtResource("2")
-say = "[b]Collect[/b]."
+say = "[b]Gather[/b]."
 pose = 3
-target = "roll:collect"
+target = "roll:gather"
 until = "wait"
 done_if = "collected"
 
@@ -290,9 +290,9 @@ dice = PackedStringArray("C", "O", "K", "N")
 
 [sub_resource type="Resource" id="step37"]
 script = ExtResource("2")
-say = "[b]Collect[/b]."
+say = "[b]Gather[/b]."
 pose = 3
-target = "roll:collect"
+target = "roll:gather"
 until = "wait"
 done_if = "collected"
 
