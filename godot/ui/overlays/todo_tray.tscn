@@ -38,13 +38,20 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 mouse_filter = 1
 
-[node name="Pin" type="TextureRect" parent="Tray/Scroll/List"]
-custom_minimum_size = Vector2(15, 15)
+[node name="Head" type="ColorRect" parent="Tray/Scroll/List"]
 layout_mode = 0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 35.0
-offset_bottom = 35.0
+offset_right = 200.0
+offset_bottom = 76.0
+mouse_filter = 2
+color = Color(0.054902, 0.141176, 0.188235, 1)
+
+[node name="Pin" type="TextureRect" parent="Tray/Scroll/List"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 38.0
+offset_bottom = 34.0
 mouse_filter = 2
 texture = ExtResource("pin")
 expand_mode = 1
@@ -52,23 +59,23 @@ stretch_mode = 5
 
 [node name="Pinned" type="Label" parent="Tray/Scroll/List"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 18.0
-offset_right = 40.0
-offset_bottom = 18.0
+offset_left = 46.0
+offset_top = 11.0
+offset_right = 46.0
+offset_bottom = 11.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.886275, 0.698039, 0.352941, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 18
 text = "Pinned and"
 
 [node name="Glass" type="TextureRect" parent="Tray/Scroll/List"]
-custom_minimum_size = Vector2(15, 15)
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 0
-offset_left = 20.0
-offset_top = 44.0
-offset_right = 35.0
-offset_bottom = 59.0
+offset_left = 18.0
+offset_top = 42.0
+offset_right = 38.0
+offset_bottom = 62.0
 mouse_filter = 2
 texture = ExtResource("glass")
 expand_mode = 1
@@ -76,14 +83,14 @@ stretch_mode = 5
 
 [node name="Tracked" type="Label" parent="Tray/Scroll/List"]
 layout_mode = 0
-offset_left = 40.0
-offset_top = 42.0
-offset_right = 40.0
-offset_bottom = 42.0
+offset_left = 46.0
+offset_top = 39.0
+offset_right = 46.0
+offset_bottom = 39.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.886275, 0.698039, 0.352941, 1)
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 18
 text = "Tracked Items"
 
 [node name="Items" type="Control" parent="Tray/Scroll/List"]

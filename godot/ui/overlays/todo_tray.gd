@@ -102,8 +102,9 @@ func _redraw() -> void:
 	$Tray/Scroll/List/Pinned.visible = not names.is_empty()
 	$Tray/Scroll/List/Glass.visible = not names.is_empty()
 	$Tray/Scroll/List/Tracked.visible = not names.is_empty()
+	$Tray/Scroll/List/Head.size.x = _scroll.size.x  # the title's darker band (the user, 2026-11-26)
 	if not names.is_empty():
-		y += 26 + 24  # the two-line title
+		y += 26 + 24 + 22  # the two-line title on its band
 		var hint = Game.todo_hint() if hint_open else null
 		_hint_name = hint.name if hint != null else ""
 		y = _hint_button(y) + 10

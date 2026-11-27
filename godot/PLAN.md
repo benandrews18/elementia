@@ -630,6 +630,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: To-Do List polish (the user): hint card line by line, the tip, a bit wider, title in two lines on a darker band, panel slide-in, green parts counts, closest-first order (tracked on top), a tap below closes the panel. Next: step 23 (Market).
 - 2026-11-26: To-Do List v3 (the user): the list as wide as its rows (TodoTray._list_width), suit costs under pictures and first in an open part (RefTree.suit_row), the 🔍 column fixed.
 - 2026-11-26: To-Do List v2 (the user: borders in borders; iterate): flat rows on one background, a details panel (TodoTray.detail, LEFT_W 138 of the list still showing) with the parts tree in RefTree.FLAT.
 - 2026-11-26: after 22 (the user): the suit strip as gold rings on a thin pill with count bubbles (StationScreen.count_bubble), off over Convert; Convert's "?" a ring on the tray's corner (the bench 22 px higher); the map card's items outlined, no brown squares; Close's background round.
