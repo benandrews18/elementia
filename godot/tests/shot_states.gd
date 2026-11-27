@@ -104,6 +104,7 @@ func _ready() -> void:
 			d.dice = 3
 			d.unknown = true
 			d.quarks = 1234
+			d.tiers = {"one": 300, "two": 600, "three": 900, "four": 1200}
 			d.size = app.size
 			d.on_done = func(): pass
 			app.add_child(d)
@@ -175,6 +176,7 @@ func _ready() -> void:
 			var d := LockInReward.make()
 			d.unknown = true
 			d.quarks = 1234
+			d.tiers = {"one": 1500, "two": 2000, "three": 2500, "four": 3000}
 			d.size = app.size
 			d.on_done = func(): pass
 			app.add_child(d)

@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- The Bonus Dice window shows your quark meter above it, so you can see which breakpoints earned the dice.
 - Checks: the To-Do List stays on the hub; the challenge is the new 🎯 **Goal** button above your hand, left of Pass. Metropolis has a new picture.
 - Readable text everywhere: nothing smaller than 11 px on the phone (the element names, the top bar's numbers, the hub's labels, card names, the big cards). Long card names wrap to two lines instead of shrinking. The Market: item and capstone names under their squares, bigger, two lines when long; the header reads "Craft market items a reward" with the Unknown Element icon; no gift icon, the squares centred. The Unknown Element picker shows the station's chips exactly, in one row.
 - Collections, easier to read: a taller window; each item shows its name under its icon. In a run, each item's tile shows where it is (green: on your mat, gold: in your hand, plain: owned, faded: not yet), with a key at the top; each collection counts what you have, and the ones you're closest to finishing come first. At the bottom: how many collections are left to discover and how.

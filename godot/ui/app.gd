@@ -611,6 +611,7 @@ func challenge_lock_in() -> void:
 		dlg.dice = reward.dice
 		dlg.unknown = reward.unknown
 		dlg.quarks = total
+		dlg.tiers = Orders.tiers(int(Game.ctx.challengeTest))
 		dlg.size = size
 		dlg.on_done = end_challenge_test
 		add_child(dlg))
@@ -981,11 +982,13 @@ Are you sure?", func():
 			Game.confirm_lock_in())
 		return
 	var reward := Game.reward_of(Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state)))
+	var tiers := Orders.tiers(Orders.check_round(Game.state))
 	_count_then(func():
 		var dlg := LockInReward.make()
 		dlg.dice = reward.dice
 		dlg.unknown = reward.unknown
 		dlg.quarks = Game.mat_score().total
+		dlg.tiers = tiers
 		dlg.size = size
 		dlg.on_done = func(): fade_through_black(func():
 			close_panel()

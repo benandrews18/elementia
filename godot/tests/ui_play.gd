@@ -130,6 +130,8 @@ func _run(app: App) -> void:
 				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "turn %d: the Bonus Dice window opens" % turns)
 				var dlg: LockInReward = app.get_children().filter(func(c): return c is LockInReward)[0]
 				check(dlg.dice == mini(reward, 3) and dlg.unknown == (reward >= 4), "turn %d: shows the reward" % turns)
+				var qm := dlg.get_node_or_null("MeterBar/Meter") as QuarkMeter
+				check(qm != null and qm._passed == reward, "turn %d: the reward's quark meter shows the breakpoints passed" % turns)
 				check(not app._hub.greyed, "turn %d: Lock In back to colour after the count" % turns)
 				dlg._done()
 				check(await _until(func(): return app._screen is StationScreen and app.panel == ""), "turn %d: the fade lands at the station" % turns)

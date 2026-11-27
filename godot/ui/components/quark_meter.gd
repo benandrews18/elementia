@@ -130,3 +130,5 @@ func _layout() -> void:
 		_labels[i].size = lsz
 		var lx := x0 + w * (i + 1) * 0.25 - lsz.x / 2 if i < 3 else x0 + w - lsz.x
 		_labels[i].position = Vector2(lx, seg_y - ROW_GAP - LABELS_H + (LABELS_H - lsz.y) / 2)
+	# Long numbers on a narrow meter: the 75% one steps left of the end's.
+	_labels[2].position.x = minf(_labels[2].position.x, _labels[3].position.x - 6 - _labels[2].size.x)

@@ -1,6 +1,6 @@
 ## The Lock-In reward (showLockInRewardModal(), #lockInRewardOverlay): a
 ## parchment "Bonus Dice" window, a "+" and the dice popping in left to right
-## (or "No bonus dice this time"), "+1 Unknown Element" at the top
+## (or "No bonus dice this time") under a copy of the quark meter that earned them,, "+1 Unknown Element" at the top
 ## breakpoint, and Nice. The corner "?" says why; the "?" square what an
 ## Unknown Element does. Nice or a tap outside runs on_done (the travel).
 class_name LockInReward
@@ -20,6 +20,7 @@ const SCENE := "res://ui/overlays/lock_in_reward.tscn"
 var dice := 0
 var unknown := false  # the top breakpoint's "?" element
 var quarks := 0.0
+var tiers := {}  # this round's breakpoints: the meter at the top shows which were passed
 var on_done: Callable
 
 
@@ -37,6 +38,7 @@ func _ready() -> void:
 	var w := minf(420, size.x - 40)
 	var inner := w - 2 * 38
 	$Window.size.x = w
+	_meter(w)
 	_dice_row(inner)
 	var q := Util.thousands(int(quarks))
 	$Window/Why.text = why_none % q if dice == 0 else why_dice % [q, dice]
@@ -67,6 +69,27 @@ func _ready() -> void:
 func _done() -> void:
 	queue_free()
 	on_done.call()
+
+
+## The quark meter as it stands (the user, 2026-11-26), so the player sees
+## which breakpoints earned the dice; everything under it moves down.
+func _meter(w: float) -> void:
+	if tiers.is_empty():
+		return
+	var bar := Panel.new()  # on top of the window, not on the parchment (the user): the top bar's dark
+	bar.name = "MeterBar"
+	bar.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), 14, 2, Color(0, 0, 0, 0.5)))
+	bar.mouse_filter = MOUSE_FILTER_IGNORE
+	bar.size = Vector2(w, QuarkMeter.LABELS_H + QuarkMeter.ROW_GAP + QuarkMeter.SEG_H + 24)
+	var qm := QuarkMeter.new()
+	qm.name = "Meter"
+	qm.set_meta("cmp", "reward:meter")
+	qm.position = Vector2(12, 10)
+	qm.size = Vector2(w - 24, qm.custom_minimum_size.y)
+	qm.show_score(quarks, tiers)
+	bar.add_child(qm)
+	add_child(bar)
+	move_child(bar, $Window.get_index())  # behind the frame: its corner knobs stay on top
 
 
 ## "+" and the dice popping in left to right, centred (bounceIn, 150ms
@@ -117,7 +140,11 @@ func _layout() -> void:
 	var h := y + 16 + 46 + bottom_pad
 	var win: Control = $Window
 	win.size.y = h
-	win.position = Vector2((size.x - win.size.x) / 2, maxf(20, (size.y - HubBar.H - h) / 2))
+	var bar := get_node_or_null("MeterBar") as Control
+	var over := bar.size.y if bar else 0.0  # the meter right on top of the window (no gap, the user), the pair centred
+	win.position = Vector2((size.x - win.size.x) / 2, maxf(20 + over, (size.y - HubBar.H - h + over) / 2))
+	if bar:
+		bar.position = Vector2(win.position.x, win.position.y - over + 10)  # the frame draws 10px inside its box
 
 
 static func _center(l: Label, w: float, h: float) -> Label:
