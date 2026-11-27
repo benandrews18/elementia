@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
 SITE = REPO.parent / "elementia-site"
 OUT = ROOT / "build/web"
+sys.stdout.reconfigure(encoding="utf-8")  # an emoji in the message crashed the Windows console print mid-publish
 
 
 def run(cmd, cwd=REPO):
