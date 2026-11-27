@@ -95,7 +95,10 @@ func _run(app: App) -> void:
 		await get_tree().process_frame
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
 		if turns == 1:
-			check(Game.ctx.get("mapRevealed") and app._screen._nodes().all(func(n): return n.visible), "leaving the first station, the other stations bounce in")
+			var found := Catalog.found_stations(Game.state)
+			var shown: Array = app._screen._nodes().filter(func(n): return n.visible).map(func(n): return n.station)
+			check(shown.size() == found.size() and shown.size() > 1 and shown.size() < app._screen._nodes().size() and MapScreen.fresh_stations().size() == found.size() - 1,
+				"leaving the first station: its neighbours found (paths grow, they bounce in), the rest still hidden")
 		await _settle_market(app)  # a crafted Market square: its sequence and its "?" (Nice)
 		if app.panel == "market":
 			app.close_panel()

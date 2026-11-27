@@ -28,28 +28,68 @@ func _ready() -> void:
 	gui_input.connect(_on_map_tap)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
+	var fresh := fresh_stations()
+	if Juice.on():
+		for st in fresh:
+			_pending[st] = true
 	_redraw()
-	if not Game.ctx.get("awaitingStart") and int(Game.state.get("visits", 0)) == 1 and not Game.ctx.get("mapRevealed") and Game.state.get("lastStation") != null:
-		_reveal()
+	_reveal(fresh)
 
 
-## Leaving the first station (every run, the user 2026-11-26): the map shows
-## it alone, then the other stations bounce into place and the paths appear.
-func _reveal() -> void:
-	Game.ctx.mapRevealed = true
-	var others := _nodes().filter(func(n): return n.station != Game.state.lastStation)
-	$Area/Paths.modulate.a = 0
+## The map discovered as you go (step 28, the user 2026-11-26): only the
+## stations found show (Catalog.found_stations: worked out from the visits,
+## nothing saved). Back from a station, what leaving it found is new: its
+## paths grow out of it and each station bounces in as its path arrives.
+var _pending := {}  # station -> true until it bounces in
+var _grow := {}  # station -> 0..1: the path from here growing toward it
+
+
+## What leaving this station found: found now, not found without it.
+static func fresh_stations() -> Array:
+	var s := Game.state
+	var here = s.get("lastStation")
+	if here == null or Game.ctx.get("awaitingStart"):
+		return []
+	var before := Catalog.found_stations(s, Util.get_or(s, "visitedStations", {}).keys().filter(func(v): return v != here))
+	return Catalog.found_stations(s).keys().filter(func(st): return not before.has(st))
+
+
+func _reveal(fresh: Array) -> void:
+	if _pending.is_empty():
+		return
+	var adj: Array = Data.t("MAP_ADJ").get(Game.state.lastStation, [])
+	var badges: Control = $Area/Badges
+	badges.modulate.a = 0.0
 	var i := 0
-	for n in others:
-		var to: Vector2 = n.scale
-		n.scale = Vector2.ZERO
+	var last := 0.0
+	for st in fresh:
+		var n: MapNode = _node(st)
+		var start := 0.3 + i * 0.14
 		var tw: Tween = n.create_tween()
-		tw.tween_interval(0.5 + i * 0.09)
-		tw.tween_property(n, "scale", to, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_interval(start)
+		if adj.has(st):  # its path grows out of here first
+			_grow[st] = 0.0
+			tw.tween_method(func(v: float):
+				_grow[st] = v
+				$Area/Paths.queue_redraw(), 0.0, 1.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_callback(func():
+			_pending.erase(st)
+			_grow.erase(st)
+			$Area/Paths.queue_redraw())
+		var k: float = $Area.size.x / AREA_W
+		tw.tween_property(n, "scale", Vector2(k, k), 0.4).from(Vector2.ZERO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		last = maxf(last, start + 0.45 + 0.4)
 		i += 1
-	var pt: Tween = $Area/Paths.create_tween()
-	pt.tween_interval(0.5 + i * 0.09 + 0.2)
-	pt.tween_property($Area/Paths, "modulate:a", 1.0, 0.3)
+	var bt: Tween = badges.create_tween()
+	bt.tween_interval(last)
+	bt.tween_property(badges, "modulate:a", 1.0, 0.25)
+
+
+func _node(st: String) -> MapNode:
+	for n in _nodes():
+		if n.station == st:
+			return n
+	return null
 
 
 func _nodes() -> Array:
@@ -80,13 +120,14 @@ func _redraw() -> void:
 	# A station is 19.5% of the map's width (.map-node): the scene's size is for
 	# the phone's 402px, so a wider screen (a tablet) scales them up.
 	var k: float = $Area.size.x / AREA_W
+	var found := Catalog.found_stations(s)
 	for n in _nodes():
 		n.pivot_offset = n.size / 2
-		n.scale = Vector2(k, k)
+		n.scale = Vector2.ZERO if _pending.has(n.station) else Vector2(k, k)
 		var here: bool = n.station == s.get("lastStation")
 		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
-		n.visible = here or not ctx.get("awaitingStart")  # the opening: only where you start
+		n.visible = here or (not ctx.get("awaitingStart") and found.has(n.station))  # the opening: only where you start
 	$Area/Paths.visible = not ctx.get("awaitingStart")
 	$Area/Paths.queue_redraw()
 	_badges(k)
@@ -125,6 +166,8 @@ func _badges(k: float) -> void:
 				comps[x.station] = true
 	var off: float = $Area.size.x * 0.066  # margin-left/top:-6.6% (of the map's width)
 	for n: MapNode in _nodes():
+		if not n.visible:  # not found yet (step 28)
+			continue
 		var c := n.position + n.size / 2
 		if n.station == e.station:
 			var b := Panel.new()
@@ -198,9 +241,19 @@ func _draw_paths() -> void:
 	var c: Control = $Area/Paths
 	var at := {}
 	for n in _nodes():
-		at[n.station] = n.position + n.size / 2
+		if n.visible:  # found stations only (step 28)
+			at[n.station] = n.position + n.size / 2
 	for e in Data.t("MAP_EDGES"):
 		if not at.has(e[0]) or not at.has(e[1]):
+			continue
+		var growing = e[1] if e[0] == here and _grow.has(e[1]) else e[0] if e[1] == here and _grow.has(e[0]) else null
+		if growing != null:  # step 28: out of here toward a station just found
+			var tip: Vector2 = at[here].lerp(at[growing], _grow[growing])
+			if _grow[growing] > 0.01:
+				_dashed(c, at[here], tip, Color(0, 0, 0, 0.55), 7.2)
+				_dashed(c, at[here], tip, Color("#ffce54"), 5.2)
+			continue
+		if _pending.has(e[0]) or _pending.has(e[1]):
 			continue
 		var active: bool = e[0] == here or e[1] == here
 		if active:  # a dark halo under the gold so it reads over the art

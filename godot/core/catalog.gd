@@ -111,6 +111,27 @@ static func is_map_connected(a: Variant, b: Variant) -> bool:
 	return a != "" and b != null and b != "" and adj.has(a) and adj[a].has(b)
 
 
+## The stations a run has found (step 28, the user 2026-11-26): every one
+## visited and their neighbours; all of them with the Helicopter (it flies
+## anywhere). `left`: only the neighbours of these count (null: all visited).
+static func found_stations(s: Dictionary, left: Variant = null) -> Dictionary:
+	var out := {}
+	if s.get("items") != null and owns(s, "Helicopter"):  # (no run yet: no items)
+		for st in Data.t("MAP_NODE_POS").keys():
+			out[st] = true
+		return out
+	var adj: Dictionary = Data.t("MAP_ADJ")
+	var visited: Array = Util.get_or(s, "visitedStations", {}).keys()
+	if s.get("lastStation") != null and not visited.has(s.lastStation):
+		visited.append(s.lastStation)
+	for st in visited:
+		out[st] = true
+		if left == null or (left as Array).has(st):
+			for n in adj.get(st, []):
+				out[n] = true
+	return out
+
+
 ## isMatCheckVisit() / isSunsetVisit()
 static func is_mat_check_visit(s: Dictionary) -> bool:
 	var v := int(s.visits)

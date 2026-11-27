@@ -668,7 +668,7 @@ Market, tutorials), motion last (it animates the final layouts).
    moving); title icons (📌/🔍 To-Do, 📖 Items, 🏆 Capstones); element
    chips' small suit badge (the chip's own tap: its card or a pick); the
    map card's own station icon; a full card's main picture.
-28. **The map, discovered as you go** (the user, 2026-11-26; builds on 22b's
+28. ✅ **The map, discovered as you go** (the user, 2026-11-26; builds on 22b's
    one-station opening): not every station shows from the start. Each time
    the player comes back to the map from a station, that station's paths
    grow out of it (a short animation) and, as each path arrives, the station
@@ -678,8 +678,17 @@ Market, tutorials), motion last (it animates the final layouts).
    the start station plus the neighbours of every station left this run
    (worked out from the run's visits, nothing new saved); only what's new
    since the last map visit animates.
+   Done (2026-11-26): Catalog.found_stations(s, left) (visited + their
+   neighbours; all with the Helicopter: it flies anywhere; chosen, say if
+   not); MapScreen.fresh_stations() = found now minus found without the
+   station just left, so nothing is saved and a resume on the map replays
+   its last reveal; _reveal() grows each fresh neighbour's path
+   (tween_method on _grow, drawn in _draw_paths), then bounces the station;
+   the tracking badges fade in after. Low motion: shown at once.
+   ctx.mapRevealed gone.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 28 (the map discovered as you go): found = visited + neighbours; paths grow out of the station left, the found stations bounce in.
 - 2026-11-26: step 27 (icons): an audit over every shot state; Explain balloons on suits, visited stations, card stations; the Quark Meter opens the rules.
 - 2026-11-26: step 26 (station transitions): arriving plays in (art, header, cards from the right, 🔍 marks and the pill's bounce); the map fades in.
 - 2026-11-26: step 25 (tutorials): the How-to-Play slides every game until hidden; the Display Mat rules and challenges tip at a run's first check, each hideable.
