@@ -111,7 +111,8 @@ func _stations(at: Vector2, w: float) -> float:
 	var visited: Dictionary = Util.get_or(s, "visitedStations", {})
 	var ORDER: Array = Data.t("STATION_TRACKER_ORDER")
 	var n := ORDER.filter(func(st): return visited.has(st)).size()
-	var l := Tok.label("%d/%d STATIONS VISITED" % [n, ORDER.size()], 11, Color(1, 1, 1, 0.75), 800)
+	var l := Tok.label("%d/%d STATIONS VISITED" % [n, ORDER.size()], 11, Color.WHITE, 800)
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))  # white, a small shadow (the user, 2026-11-26)
 	l.position = at
 	$Bg/Scroll/Content/Tray/Stations.add_child(l)
 	var d := minf(32, (w - 30 - 8 - 7 * 5) / 8)

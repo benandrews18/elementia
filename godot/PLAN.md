@@ -606,12 +606,20 @@ Market, tutorials), motion last (it animates the final layouts).
      is left (ctx.mapRevealed); two tutorial steps (track a part, Start).
      Shortcut: a tutorial saved mid-way before this resumes 2 steps early
      (its done_if checks walk it forward).
-23. **Market.**
+23. ✅ **Market.**
    - Opening lag: profile and fix.
    - Title: the Market button's icon (not the cart); all text white with
      a small black shadow.
    - Done in 20d: names under the squares, bigger, 2 lines when long,
      centred, never touching; the same for the capstones.
+   Done (2026-11-26): the lag measured on the PC (tests/tmp/bench_market*):
+   ~170 ms to open. Two causes: the Market button called Game._changed()
+   after opening (every screen redrawn, the tray built twice; now it only
+   saves, and only when its "!" flags change), and Data.icon() reloaded each
+   picture from disk (load() drops a texture nothing holds; Data now keeps
+   them). Now ~28 ms; the first opening of a run still loads its pictures
+   once (~100 ms). The title: icon_market.webp at 26 px; every text white
+   with a 1 px black shadow.
 24. **Combo Lab**: a tap adds a card to the mat, a tap on the mat takes it
    off; the last tapped shows on the Crafting Bench below, no Add /
    Remove.
@@ -640,6 +648,7 @@ Market, tutorials), motion last (it animates the final layouts).
    since the last map visit animates.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 22 checked done; step 28 planned (the map discovered as you go). Step 23 (Market): opening ~170 -> ~28 ms (no full redraw on open; Data keeps icon textures), the stall icon and white shadowed text.
 - 2026-11-26: To-Do List polish (the user): hint card line by line, the tip, a bit wider, title in two lines on a darker band, panel slide-in, green parts counts, closest-first order (tracked on top), a tap below closes the panel. Next: step 23 (Market).
 - 2026-11-26: To-Do List v3 (the user): the list as wide as its rows (TodoTray._list_width), suit costs under pictures and first in an open part (RefTree.suit_row), the 🔍 column fixed.
 - 2026-11-26: To-Do List v2 (the user: borders in borders; iterate): flat rows on one background, a details panel (TodoTray.detail, LEFT_W 138 of the list still showing) with the parts tree in RefTree.FLAT.

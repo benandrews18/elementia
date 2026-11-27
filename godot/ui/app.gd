@@ -1197,10 +1197,12 @@ func _on_hub(id: String) -> void:
 			if panel == "market":
 				close_panel()
 			else:
+				var fresh: bool = not Game.state.get("marketVisited") or Game.state.get("marketUnseen")
 				Game.state.marketVisited = true
 				Game.state.marketUnseen = false
-				open_panel("market")
-				Game._changed()
+				open_panel("market")  # its _sync clears the hub's "!"
+				if fresh:  # saved without redrawing every screen (that built the tray twice: step 23's lag)
+					Progress.save_all()
 		"home":
 			match home_face():
 				"close":

@@ -8,6 +8,8 @@ extends Node
 
 var tables: Dictionary
 var icons: Dictionary  # icon key (emoji or __NAME__ or suit:x) -> res:// path
+var _textures := {}  # icon key -> its texture, kept: load() drops an image nothing holds, so each
+# tray opening read its pictures from disk again (the Market's lag, step 23: ~80 of its ~100 ms)
 
 func _init() -> void:
 	tables = _read_json("res://data/game_data.json")
@@ -22,6 +24,11 @@ func t(name: String) -> Variant:
 ## the UI emoji in assets/emoji (Noto images: the web has no emoji font), or
 ## null.
 func icon(key: String) -> Texture2D:
+	if not _textures.has(key):
+		_textures[key] = _icon(key)
+	return _textures[key]
+
+func _icon(key: String) -> Texture2D:
 	if icons.has(key):
 		return load(icons[key])
 	if icons.has(key + char(0xfe0f)):  # the item tables write some emoji with the variation selector
