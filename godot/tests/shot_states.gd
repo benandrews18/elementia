@@ -189,6 +189,7 @@ func _ready() -> void:
 			pop.bonus = 2
 			pop.size = app.size
 			app.add_child(pop)
+			app.sync_hub()  # Home reads Gather
 			for t in get_tree().get_processed_tweens():
 				t.custom_step(10)
 		"card_pop", "card_pop_cap":  # an item's card; a capstone's (landscape, with its rule)

@@ -740,6 +740,8 @@ func home_face() -> String:
 	var s := Game.state
 	var c := Game.ctx
 	var sel = c.get("selectedMapStation")
+	if get_children().any(func(n): return n is RollPopup and not n.collecting and not n.is_queued_for_deletion()):
+		return "gather"  # the roll's chips wait: Gather collects them
 	if _hand_mat():
 		return "play"
 	if s.get("finalCheckPending") and (panel == "" or panel == "drawer"):
@@ -789,8 +791,8 @@ func _sync_floats() -> void:
 		var nl: Label = pill.get_node("Row/Name")
 		nl.text = t
 		var tw := nl.get_theme_font("font").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, nl.get_theme_font_size("font_size")).x
-		pill.size = Vector2(minf(22 + 16 + 6 + tw + 14, size.x - 140), 34)
-		pill.position = Vector2(56, y + 58 - 34)
+		pill.size = Vector2(minf(26 + 32 + 8 + tw + 24, size.x - 140), 58)  # twice the old pill (the user, 2026-11-26): the 🔍's height; its text the 11 px minimum (asked after)
+		pill.position = Vector2(56, y)
 		pill.set_meta("cmp", "tracked")
 		var item: String = t
 		pill.gui_input.connect(func(ev): if Tap.tap(ev): CardPop.open(self, item).show_tracking())
@@ -839,13 +841,13 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 	ic.position = (c.size - ic.size) / 2
 	c.add_child(ic)
 	var start := from.get_center() - global_position - c.size / 2
-	var target := pill.position + Vector2(22 + 8, 17) - c.size / 2
+	var target := pill.position + Vector2(26 + 16, 29) - c.size / 2
 	var dv := target - start
 	c.position = start
 	c.scale = Vector2(0.6, 0.6)
 	c.modulate.a = 0
 	add_child(c)
-	var end := 22.0 / d
+	var end := 36.0 / d
 	var tw := c.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(c, "position", start + Vector2(dv.x * 0.1, dv.y * 0.1 - 30), 0.18)
 	tw.parallel().tween_property(c, "scale", Vector2(1.1, 1.1), 0.18)
@@ -948,6 +950,8 @@ func _roll() -> void:
 	pop.fly_to = _hub.button_center("inv")
 	pop.size = size
 	add_child(pop)
+	sync_hub()  # Home reads Gather
+	pop.tree_exited.connect(func(): if is_inside_tree(): sync_hub())
 
 
 ## Travel: on a board-check turn the shutter, then the mat opens for the
@@ -1136,6 +1140,10 @@ func _on_hub(id: String) -> void:
 					close_panel()
 				"roll":
 					_roll()
+				"gather":
+					for p in get_children():
+						if p is RollPopup:
+							p.collect()
 				"map":
 					if panel == "market":
 						close_panel()

@@ -44,6 +44,7 @@ func _ready() -> void:
 	if owned:
 		$Face.modulate.a = 0.62
 	$IconBox/Icon.texture = Data.icon(e.emoji)
+	_opens_card($IconBox, e.name)  # the picture and the component icons open the full card (the user, 2026-11-26)
 	var name_l: Label = $Name
 	name_l.text = e.name
 	# Suit-cost badges after the name: lit while the surplus covers them.
@@ -111,6 +112,12 @@ func _tax_anchor(btn: Control) -> Rect2:
 
 ## The recipe tokens: elements first (declared order), then items by points,
 ## each once, "+" between (recipeHTML() / sortIngredientTokens()).
+func _opens_card(c: Control, item: String) -> void:
+	c.mouse_filter = MOUSE_FILTER_STOP
+	c.set_meta("opens", item)
+	c.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(item))
+
+
 func _recipe(at: Vector2) -> void:
 	var e := entry
 	var s := Game.state
@@ -179,6 +186,7 @@ func _recipe(at: Vector2) -> void:
 			var item_ic := Tok.icon(Data.t("ITEM_EMOJI").get(r.name, ""), 26)
 			item_ic.position = Vector2(x, at.y)
 			item_ic.material = Tok.outline(26.0 * 1.5 / 1.0)  # 1px black outline (.tok-icon)
+			_opens_card(item_ic, r.name)
 			$Recipe.add_child(item_ic)
 		if have and not plain:
 			var t := Tok.tick(Color.WHITE, 15, Tok.OK, Tok.CARD)

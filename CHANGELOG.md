@@ -9,6 +9,10 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Stations: a white line over ITEM SHOP, "TAP ON ITEMS TO START CRAFTING" under your crafted items; tier 1 cards sold at several stations show them all; the tracking circle shows 🔍.
+- The middle button is bigger; after a roll it reads **Gather**: tap it again to collect. Travel's label is white.
+- The full card matches the station cards; long names (Stainless Steel, Aluminum Alloy, Natural Gas) sit on two lines; the tracked item's pill is twice as big; the Crafting Bench's picture and parts open their cards.
+- The map's station preview shows bigger icons in two rows; YOU ARE HERE sits above the Ocean; the opening's components branch up to the capstone.
 - The Bonus Dice window shows your quark meter above it, so you can see which breakpoints earned the dice.
 - Checks: the To-Do List stays on the hub; the challenge is the new 🎯 **Goal** button above your hand, left of Pass. Metropolis has a new picture.
 - Readable text everywhere: nothing smaller than 11 px on the phone (the element names, the top bar's numbers, the hub's labels, card names, the big cards). Long card names wrap to two lines instead of shrinking. The Market: item and capstone names under their squares, bigger, two lines when long; the header reads "Craft market items a reward" with the Unknown Element icon; no gift icon, the squares centred. The Unknown Element picker shows the station's chips exactly, in one row.

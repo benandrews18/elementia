@@ -14,6 +14,9 @@
 class_name ItemCard
 extends Control
 
+## Names on two lines on every small card (station, Inventory, mat; not
+## the full card): the user, 2026-11-23 and 2026-11-26.
+const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel", "Natural Gas"]
 const ROUND := preload("res://assets/ui/btn_round.webp")  # the star's rim (🔍's)
 
 const SHOP_ICON := 42.0  # a station shop card's item image, every tier (opts.shop)
@@ -39,7 +42,7 @@ var _pips: Array[Control] = []
 static func make(name: String, o := {}) -> ItemCard:
 	var c: ItemCard = load(SCENE).instantiate()
 	c.item = name
-	c.opts = o
+	c.opts = o if o.has("wrap") or not WRAP_NAMES.has(name) else o.merged({"wrap": true})
 	c.set_meta("cmp", name)
 	return c
 
@@ -247,6 +250,9 @@ func _place() -> void:
 		_pips[i].position = Vector2(size.x - border + 3 - psz, border - 3 + i * (psz + 2))
 	_stations.size = _stations.get_combined_minimum_size()
 	_stations.position = Vector2((size.x - _stations.size.x) / 2, size.y - border + (6 if mini else 3) - _stations.size.y)
+	if opts.get("stations_right"):  # from the bottom-right corner (the left one is the shop's pin)
+		_stations.position.x = size.x - border + 3 - _stations.size.x
+		_stations.position.y += 4  # straddling the edge: clear of the name
 	var sb := get_node_or_null("Size") as Control
 	if sb:  # bottom-left, straddling the border like the points badge; the stations centre right of it
 		sb.position = Vector2(border - 3, size.y - border + 3 - psz)

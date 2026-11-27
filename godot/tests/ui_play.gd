@@ -59,6 +59,13 @@ func _run(app: App) -> void:
 		check(app._screen is StationScreen, "turn %d: at a station" % turns)
 		check(app.home_face() == "roll", "turn %d: Home says Roll" % turns)
 		app._on_hub("home")  # roll
+		var pop: Array = app.get_children().filter(func(c): return c is RollPopup)
+		check(pop.size() == 1 and app.home_face() == "gather" and pop[0].has_node("Gather"), "turn %d: the roll's window up, Home says Gather in its spotlight" % turns)
+		if not pop.is_empty():
+			for t in get_tree().get_processed_tweens():  # the reveal, done: Collect shows
+				t.custom_step(10)
+			app._on_hub("home")  # tap twice to gather
+			check(pop[0].collecting and app.home_face() == "map", "turn %d: Gather collects, Home back to its own face" % turns)
 		if not balloon_done:
 			balloon_done = _craft_through_balloon(app)
 		if not convert_done:
@@ -367,6 +374,22 @@ func _cards(app: App) -> void:
 			check(app.panel == "convert" and app._panel_node.bench_item == want[0].name and is_instance_valid(app._panel_node._bench) and _find_meta(app._panel_node._bench, "craft:" + want[0].name) != null,
 				"and the card's Crafting Bench rides on the tray, Craft and all")
 		app.close_panel()
+		app.open_card("")
+	# The bench's picture and its component icons open the full card (step 21).
+	var with_part: Array = shop.filter(func(e): return e.reqs.any(func(r): return r.kind != "element"))
+	if not with_part.is_empty():
+		app.open_card(with_part[0].name)
+		await get_tree().process_frame
+		var row := _find_meta(app._screen, "row:" + with_part[0].name)
+		var opens: Array = row.find_children("*", "Control", true, false).filter(func(c): return c.has_meta("opens")) if row else []
+		for o in opens:
+			o.gui_input.emit(_press(Vector2.ZERO))
+			o.gui_input.emit(_release())
+			var pops: Array = app.get_children().filter(func(c): return c is CardPop and not c.is_queued_for_deletion())
+			check(not pops.is_empty() and pops[-1].entry.get("name") == o.get_meta("opens"), "the bench's %s opens the full card of %s" % ["picture" if o.name == "IconBox" else "component", o.get_meta("opens")])
+			for c in pops:
+				c.queue_free()
+		check(opens.size() >= 2, "the bench's picture and a component icon open cards")
 		app.open_card("")
 	# A hand card's pop-out (crafted): no ⚛ marks or ticks on its parts.
 	var plain := CardPop.side_card(want[0].name if not want.is_empty() else "Water", 150, true)

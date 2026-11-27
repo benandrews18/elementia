@@ -25,9 +25,10 @@ signal tapped(station: String)
 @export var here_color := Color("#3fb46c")
 @export var picked_color := Color("#e2b25a")
 
-## "YOU ARE HERE" at the bottom-right instead of under it (a station by the
-## screen's bottom edge, where the hub would cover it).
-@export var pill_bottom_right := false
+## "YOU ARE HERE" above the station, centred, instead of under it (a
+## station by the screen's bottom edge, where the hub would cover it; the
+## user, 2026-11-26: not off to its side).
+@export var pill_above := false
 var here := false
 var picked := false
 var reachable := true
@@ -45,8 +46,9 @@ func _ready() -> void:
 	var tw := l.get_theme_font("font").get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, l.get_theme_font_size("font_size")).x
 	pill.size = Vector2(tw + 24, pill.size.y)
 	pill.position.x = (size.x - pill.size.x) / 2
-	if pill_bottom_right:
-		pill.position = Vector2(size.x * 0.78, size.y * 0.72)
+	if pill_above:
+		pill.set_anchors_preset(PRESET_TOP_LEFT)
+		pill.position = Vector2((size.x - pill.size.x) / 2, -pill.size.y - 4)
 	pill.set_meta("cmp", "map:here")
 
 

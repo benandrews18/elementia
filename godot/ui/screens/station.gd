@@ -8,7 +8,6 @@ extends Control
 ## A tier 1 shop card: two of them, one above the other with the gap
 ## between, stand as tall as a tier 2/3 card (the user, 2026-11-24); the
 ## Inventory's and the mat's tier 1 cards are this size too.
-const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel"]  # shop card names on two lines (the user, 2026-11-23)
 
 ## The layout is ui/screens/station.tscn: the art and its wash, the header
 ## (icon, title, labels, the crafted bar), the shop's heading. This fills
@@ -24,7 +23,7 @@ const TOP := QuarkTopBar.H
 @export var act_h := 35.0
 
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
-const HEAD_H := 288.9  # the header's dark blue: the shop's title, then the crafted-items bar, to its foot
+const HEAD_H := 295.0  # the header's dark blue: the shop's title, then the crafted-items bar, to its foot
 static var list_mode := false  # 📋: the shop as a list, the selected item's side card on the right (the user, 2026-11-22)
 var _list_top := 0.0  # the list's first row (page y): the side card starts level with it
 var _side: Control  # the side card and its Pin / Craft, kept on screen as the page scrolls
@@ -127,9 +126,9 @@ func _header(page: Control, st: Dictionary, w: float) -> float:
 	return HEAD_H
 
 
-## "ITEM SHOP" and "Tap Items to Start Crafting!" on the header's dark blue
-## (the user, 2026-11-22), the crafted-items bar under them (both placed in
-## the scene). Returns the blue's foot.
+## A white line, "ITEM SHOP", the crafted-items bar, then "TAP ON ITEMS TO
+## START CRAFTING" under it on the header's dark blue (the user, 2026-11-26;
+## all placed in the scene). Returns the blue's foot.
 func _shop_title(y: float) -> float:
 	$Scroll/Page/Head.offset_bottom = y  # anchored across: size.y would warn
 	return y
@@ -350,8 +349,11 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.size = card_size + Vector2(12, 12)
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
-	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,  # you are at its station
-		"wrap": WRAP_NAMES.has(e.name) and not t1, "shop": not t1, "fade_suits": not owned})  # tier 1: the Inventory's small card
+	# You are at its station: no badges, but a tier 1 item sold at several
+	# shows them all from the bottom right (the user, 2026-11-26).
+	var many: bool = t1 and Catalog.mat_card(e.name).stations.size() > 1
+	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": not many, "stations_right": many,
+		"shop": not t1, "fade_suits": not owned})  # tier 1: the Inventory's small card
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench
@@ -381,8 +383,8 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		page.add_child(_pin_slot(e.name, page, pos, card_size, t1))
 
 
-## The card's bottom-left circle (the user, 2026-11-23): the tracked item's
-## icon when the tracked item still needs this one (a tap: the To-Do List,
+## The card's bottom-left circle (the user, 2026-11-23): a 🔍
+## when the tracked item still needs this one (a tap: the To-Do List,
 ## this one lit in its breakdown); else the 📌 (a tap pins and tracks it, or
 ## unpins it), the tracked item's own card included.
 func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1: bool) -> Control:
@@ -394,7 +396,7 @@ func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1
 	b.size = Vector2(d, d)
 	b.position = pos + Vector2(-5, card_size.y - d + 5)  # straddling the corner, like the points badge
 	b.set_meta("cmp", "st:slot:" + item)
-	var ic := Tok.icon(Catalog.entry(Game.ctx.tracked).emoji if feeds else "📌", d * 0.6)
+	var ic := Tok.icon("🔍" if feeds else "📌", d * 0.6)  # 🔍: the tracking mark, not the tracked item (the user, 2026-11-26)
 	ic.position = (b.size - ic.size) / 2
 	ic.mouse_filter = MOUSE_FILTER_IGNORE
 	if not feeds and not pinned:

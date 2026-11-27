@@ -7,13 +7,13 @@
 [node name="TrackedPill" type="Control"]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 123.0
-offset_bottom = 34.0
+offset_right = 200.0
+offset_bottom = 58.0
 script = ExtResource("1")
 texture = ExtResource("2")
 margin_x = 56.0
 margin_y = 56.0
-corner = 17.0
+corner = 29.0
 metadata/_edit_group_ = true
 
 [node name="Row" type="HBoxContainer" parent="."]
@@ -21,13 +21,13 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 22.0
-offset_right = -14.0
+offset_left = 26.0
+offset_right = -24.0
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/separation = 8
 
 [node name="Icon" type="TextureRect" parent="Row"]
-custom_minimum_size = Vector2(16, 16)
+custom_minimum_size = Vector2(32, 32)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -41,7 +41,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
 theme_override_constants/shadow_offset_y = 1
 theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Item"
 vertical_alignment = 1
 text_overrun_behavior = 3

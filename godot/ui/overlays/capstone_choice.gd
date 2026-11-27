@@ -9,6 +9,8 @@ extends Control
 
 const INK := Color("#3b2412")
 const INK2 := Color("#5e4026")
+const BRANCH := 12.0  # the org chart's steps: trunk to bar, bar to each part
+const BRANCH_COLOR := Color("#8a6a3a")
 
 ## The layout is ui/overlays/capstone_choice.tscn: the two windows (Choice,
 ## Confirm), their texts and styles; this fills in the capstones.
@@ -124,11 +126,10 @@ func _confirm(name: String) -> void:
 	$Confirm/Star.position = Vector2((w - pw - 18) / 2, y + 2)
 	pts.position = Vector2($Confirm/Star.position.x + 18, y)
 	y += 22 + 4
-	$Confirm/Components.position.y = y
-	y += 22
+	$Confirm/Components.visible = false  # the branch lines say it (the user, 2026-11-26: like an org chart)
 	for c in $Confirm/Parts.get_children():
 		c.queue_free()
-	y = _components($Confirm/Parts, e, y, w) + 16
+	y = _components($Confirm/Parts, e, y + 2 * BRANCH, w, y) + 16
 	var back: Control = $Confirm/Back
 	back.size = back.get_combined_minimum_size().max(Vector2(80, 46))
 	back.position = Vector2((w - back.size.x) / 2, y)
@@ -143,9 +144,18 @@ func _confirm(name: String) -> void:
 	_swap(box)
 
 
+func _line(box: Control, r: Rect2) -> void:
+	var l := ColorRect.new()
+	l.color = BRANCH_COLOR
+	l.position = r.position
+	l.size = r.size
+	l.mouse_filter = MOUSE_FILTER_IGNORE
+	box.add_child(l)
+
+
 ## The capstone's components, each once (elements first): a square (an
 ## element: white with its colour's border; an item: its icon) over its name.
-func _components(box: Control, e: Dictionary, y: float, w: float) -> float:
+func _components(box: Control, e: Dictionary, y: float, w: float, tree_from := -1.0) -> float:
 	var seen := {}
 	var toks := []
 	for r in e.reqs:
@@ -159,6 +169,13 @@ func _components(box: Control, e: Dictionary, y: float, w: float) -> float:
 	var sq := minf(46, col)
 	var x := (w - (toks.size() * col + (toks.size() - 1) * 6)) / 2
 	var tallest := 0.0
+	if tree_from >= 0:  # an org chart: a trunk down from the capstone, a bar, a drop to each part
+		var x0 := x + col / 2
+		var x1 := x + (toks.size() - 1) * (col + 6) + col / 2
+		_line(box, Rect2(w / 2 - 1, tree_from, 2, y - BRANCH - tree_from))
+		_line(box, Rect2(x0 - 1, y - BRANCH - 1, x1 - x0 + 2, 2))
+		for i in toks.size():
+			_line(box, Rect2(x0 + i * (col + 6) - 1, y - BRANCH, 2, BRANCH))
 	for r in toks:
 		var el: bool = r.kind == "element"
 		var p := Panel.new()

@@ -132,9 +132,9 @@ mouse_filter = 2
 [node name="CraftedLabel" type="Label" parent="Scroll/Page"]
 layout_mode = 0
 offset_left = 16.0
-offset_top = 222
+offset_top = 210
 offset_right = 16.0
-offset_bottom = 222
+offset_bottom = 210
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
@@ -146,9 +146,9 @@ text = "CRAFTED ITEMS:"
 [node name="Fold" type="Control" parent="Scroll/Page"]
 layout_mode = 0
 offset_left = 12.0
-offset_top = 244.5
+offset_top = 232.5
 offset_right = 42.0
-offset_bottom = 274.5
+offset_bottom = 262.5
 mouse_filter = 1
 
 [node name="Bar" type="Panel" parent="Scroll/Page"]
@@ -156,9 +156,9 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 48.0
-offset_top = 242.2
+offset_top = 230.2
 offset_right = -48.0
-offset_bottom = 276.9
+offset_bottom = 264.9
 mouse_filter = 2
 theme_override_styles/panel = SubResource("bar")
 
@@ -172,23 +172,34 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -42.0
-offset_top = 244.5
+offset_top = 232.5
 offset_right = -12.0
-offset_bottom = 274.5
+offset_bottom = 262.5
 mouse_filter = 1
 
 [node name="Bench" type="Control" parent="Scroll/Page"]
 layout_mode = 0
 mouse_filter = 1
 
+[node name="ShopLine" type="ColorRect" parent="Scroll/Page"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 22.0
+offset_top = 176.0
+offset_right = -22.0
+offset_bottom = 177.5
+mouse_filter = 2
+color = Color(1, 1, 1, 0.85)
+
 [node name="ShopLabel" type="Label" parent="Scroll/Page"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 6.0
-offset_top = 172
+offset_top = 182
 offset_right = -6.0
-offset_bottom = 189
+offset_bottom = 199
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
@@ -203,16 +214,16 @@ layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 6.0
-offset_top = 196
+offset_top = 271
 offset_right = -6.0
-offset_bottom = 214
+offset_bottom = 287
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.84, 0.9, 0.94, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
 theme_override_constants/shadow_offset_y = 1
-theme_override_fonts/font = ExtResource("f8")
-theme_override_font_sizes/font_size = 13
-text = "Tap Items to Start Crafting!"
+theme_override_fonts/font = SubResource("caps")
+theme_override_font_sizes/font_size = 12
+text = "TAP ON ITEMS TO START CRAFTING"
 horizontal_alignment = 1
 
 [node name="Shop" type="Control" parent="Scroll/Page"]

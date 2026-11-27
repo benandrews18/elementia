@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/emoji/emoji_u1f4cc.png" id="pin"]
 
 [sub_resource type="StyleBoxFlat" id="card"]
-bg_color = Color(0.968627, 0.960784, 0.941176, 1)
+bg_color = Color(0.94902, 0.901961, 0.8, 1)
 border_width_left = 16
 border_width_top = 16
 border_width_right = 16

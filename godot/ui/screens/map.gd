@@ -237,10 +237,13 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		_opens(chip, "", dice[i])
 		card.add_child(chip)
 	y += cw + 13.8 + 11
-	# Every item sold here, icon only (owned: gold-soft square with a tick).
+	# Every item sold here, icon only (owned: gold-soft square with a tick);
+	# bigger than before (36 px), rows of 5, each row centred (the user, 2026-11-26).
 	var items := StationScreen.shop_entries(name).filter(func(e): return e.tier != "CAPSTONE")
-	var slot := minf(25.0, (w - 38 - 5 * (items.size() - 1)) / max(1, items.size()))
-	var x0 := (w - (items.size() * slot + (items.size() - 1) * 5)) / 2
+	const PER := 5
+	const GAP := 8.0
+	var slot := minf(36.0, (w - 38 - GAP * (PER - 1)) / PER)  # 50 was too large (the user)
+	var rows := ceili(items.size() / float(PER))
 	for i in items.size():
 		var e: Dictionary = items[i]
 		var owned := Catalog.owns(Game.state, e.name)
@@ -248,18 +251,20 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if owned else Color.TRANSPARENT, 7))
 		if job.has(e.name):  # .station-item-icon.job-highlight
 			box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT, 7, 3, Tok.GOLD, 10, 0, Color(0.886, 0.698, 0.353, 0.55)))
-		box.position = Vector2(x0 + i * (slot + 5), y + 9)
+		var in_row := mini(PER, items.size() - i / PER * PER)
+		var x0 := (w - (in_row * slot + (in_row - 1) * GAP)) / 2
+		box.position = Vector2(x0 + i % PER * (slot + GAP), y + 9 + i / PER * (slot + GAP))
 		box.size = Vector2(slot, slot)
 		_opens(box, e.name)
 		var ic := Tok.icon(e.emoji, slot - 6)
 		ic.position = Vector2(3, 3)
 		box.add_child(ic)
 		if owned:
-			var t := Tok.tick(Color.WHITE, 14, Tok.OK, Color("#3b210d"))
-			t.position = Vector2(slot - 9, -5)
+			var t := Tok.tick(Color.WHITE, 16, Tok.OK, Color("#3b210d"))
+			t.position = Vector2(slot - 10, -6)
 			box.add_child(t)
 		card.add_child(box)
-	y += 43 + 11
+	y += rows * (slot + GAP) - GAP + 18 + 11
 	if boxed:
 		y -= 11
 	# The capstone, under a dashed rule.

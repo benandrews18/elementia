@@ -20,11 +20,13 @@ const PIPS := {1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6,
 ## The layout is ui/overlays/roll_popup.tscn (the card, its title, Collect);
 ## this lays out the rolled chips and plays the reveal.
 const SCENE := "res://ui/overlays/roll_popup.tscn"
+const SPOT := preload("res://ui/theme/spotlight.gdshader")
 
 var roll: Array  # [{face, sym}]
 var bonus := 0  # the last this many dice are the bonus earned at the last check: a row of their own in one frame
 var fly_to := Vector2.ZERO  # the Inventory button's centre
 var _chips: Array[Control] = []
+var collecting := false  # Collect tapped: the chips are flying (Home is back to its own face)
 @onready var _collect: Control = $Box/Collect
 @onready var _box: Panel = $Box
 
@@ -78,6 +80,7 @@ func _ready() -> void:
 	_collect.position = Vector2((bw - _collect.size.x) / 2, bh - 16 - 46)
 	_collect.set_meta("cmp", "roll:collect")
 	_collect.gui_input.connect(_on_collect)
+	_spotlight()
 	modulate.a = 0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.22)
 	# Each die tumbles, holds on its face, then fades off the element.
@@ -174,13 +177,49 @@ func _bonus_frame(r: Rect2) -> void:
 ## Collect: each chip flies to the Inventory button, shrinking into it; the
 ## card fades away underneath.
 func _on_collect(ev: InputEvent) -> void:
-	if not Tap.tap(ev) or not _collect.visible:
+	if Tap.tap(ev):
+		collect()
+
+
+## The hub's centre circle reads Gather (App.home_face()) and shows through
+## the dim in a gold spotlight ring: a second tap there collects too (the
+## user, 2026-11-26: tap twice to gather).
+func _spotlight() -> void:
+	var home: Control = App.current._hub.button("home") if App.current else null
+	if home == null:
 		return
+	var r := home.get_global_rect().grow(6)
+	var m := ShaderMaterial.new()
+	m.shader = SPOT
+	m.set_shader_parameter("shade", $Dim.color)
+	m.set_shader_parameter("hole_pos", r.position - global_position)
+	m.set_shader_parameter("hole_size", r.size)
+	m.set_shader_parameter("radius", r.size.x / 2)
+	$Dim.material = m
+	var ring := Panel.new()
+	ring.name = "Gather"
+	ring.set_meta("cmp", "roll:gather")
+	ring.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, r.size.x / 2, 4, Tok.GOLD))
+	ring.position = r.position - global_position
+	ring.size = r.size
+	ring.gui_input.connect(_on_collect)
+	add_child(ring)
+
+
+## Collect (its button, or the hub's Gather): the chips fly into the Inventory.
+func collect() -> void:
+	if not _collect.visible:
+		return
+	collecting = true
+	if App.current:
+		App.current.sync_hub()
 	_collect.visible = false
 	Juice.buzz()
 	var fade := create_tween()
 	fade.tween_property(_box, "modulate:a", 0.0, 0.22)
 	fade.parallel().tween_property(get_child(0), "modulate:a", 0.0, 0.22)
+	if has_node("Gather"):
+		fade.parallel().tween_property($Gather, "modulate:a", 0.0, 0.22)
 	for i in _chips.size():
 		var c := _chips[i]
 		var at := c.global_position

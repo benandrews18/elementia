@@ -14,14 +14,15 @@ signal pressed(id: String)
 const SCENE := "res://ui/components/hub_bar.tscn"
 const H := 65.0  # the bar itself; buttons rise above it
 const SIDE_H := 75.2
-const HOME := 76.0
+const HOME := 96.0  # bigger than its room: over its neighbours, past the screen's bottom (the user, 2026-11-26)
+const HOME_ROOM := 76.0  # the gap the side buttons leave it
 const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex", "Codex"]]  # id, node
 
 ## Home's faces: id -> [emoji, label, colour ("" = flat, inert)].
 @export var faces := {
 	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
-	"close": ["⬅️", "Close", ""], "play": ["ui:play", "Play", "#3fb46c"],
+	"close": ["⬅️", "Close", ""], "play": ["ui:play", "Play", "#1f7a45"], "gather": ["🧺", "Gather", "#3fb46c"],
 }
 @export var frame: Texture2D
 @export var active_frame: Texture2D  # a lit side button (its panel is open)
@@ -127,11 +128,11 @@ func _build() -> void:
 	$Wood.position = Vector2(0, top)
 	$Wood.size = Vector2(size.x, H)
 	# Side buttons share what the Home circle leaves, 2px margins each side.
-	var side_w := (size.x - (HOME + 8)) / 4 - 4
+	var side_w := (size.x - (HOME_ROOM + 8)) / 4 - 4
 	for i in 4:
-		var x := 2.0 + i * (side_w + 4) + (HOME + 8 if i >= 2 else 0.0)
+		var x := 2.0 + i * (side_w + 4) + (HOME_ROOM + 8 if i >= 2 else 0.0)
 		_side_button(SIDES[i][0], get_node(SIDES[i][1]), Rect2(x, top - 16.2, side_w, SIDE_H))
-	_home_button(Vector2((size.x - HOME) / 2, top - 21))
+	_home_button(Vector2((size.x - HOME) / 2, top - 27.1))  # its label level with the side buttons'
 
 
 func _side_button(id: String, b: Frame9, r: Rect2) -> void:
@@ -160,7 +161,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Flat.visible = f[2] == ""  # Close: flat pale blue-grey, deliberately inert
 	$Home/Ball.visible = f[2] != ""
 	if f[2] != "":
-		var c := Color("#8e8e8e") if greyed else Color(f[2]).lerp(Color("#9aa39c"), 0.7) if muted else Color(f[2])
+		var c := Color("#8e8e8e") if greyed else Color(f[2]).lerp(Color("#4f5a54"), 0.55) if muted else Color(f[2])
 		if _ball == null:
 			_ball = load("res://ui/theme/ball.gdshader")
 		var m := ShaderMaterial.new()
@@ -175,7 +176,7 @@ func _home_button(at: Vector2) -> void:
 	$Home/Icon.visible = tex != null
 	$Home/Glyph.visible = tex == null  # shortcut: no Noto image yet for this face's emoji; the font's (desktop only)
 	$Home/Glyph.text = glyph
-	var light_label := face in ["shop", "map"]
+	var light_label := face in ["shop", "map", "travel", "play"]  # white on a black shadow (Travel too, and Play on its dark green: the user, 2026-11-26)
 	var l: Label = $Home/Label
 	l.text = f[1]
 	l.add_theme_color_override("font_color", Color.WHITE if light_label else Color.BLACK)

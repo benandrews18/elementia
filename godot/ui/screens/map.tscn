@@ -154,15 +154,15 @@ icon = ExtResource("i6")
 [node name="Ocean" parent="Area" instance=ExtResource("3")]
 layout_mode = 1
 anchor_left = 0.499
-anchor_top = 0.892
+anchor_top = 0.856
 anchor_right = 0.499
-anchor_bottom = 0.892
+anchor_bottom = 0.856
 offset_left = -39.195
 offset_top = -39.195
 offset_right = 39.195
 offset_bottom = 39.195
 station = "The Ocean"
-pill_bottom_right = true
+pill_above = true
 icon = ExtResource("i7")
 
 [node name="Badges" type="Control" parent="Area"]

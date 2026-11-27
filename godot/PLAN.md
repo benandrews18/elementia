@@ -540,7 +540,7 @@ Market, tutorials), motion last (it animates the final layouts).
    breakpoints earned the dice. Done: on its dark strip right on top of the
    window, no gap (asked mid-step: not on the parchment); the meter's 75% number
    steps left when long numbers would touch the end's.
-21. **Stations and cards.**
+21. ✅ **Stations and cards.**
    - Card background: the station cards' off-white everywhere (the full
      card too).
    - A white line above "Item Shop", under the element pool; "TAP ON
@@ -561,6 +561,21 @@ Market, tutorials), motion last (it animates the final layouts).
    - The Ocean's "YOU ARE HERE" above the station, centred.
    - First screen (the start capstone): branch lines from the component
      row up to the capstone, like an org chart.
+   Done (2026-11-26): the full card's face is the station cards' parchment;
+   the header's white line, ITEM SHOP, the crafted bar, then the hint in
+   caps under it; the map card's items 36 px in centred rows of 5 (50 was too large);
+   ItemCard.WRAP_NAMES (now with Natural Gas) on every small card; a tier 1
+   shop card sold at several stations shows them all from its bottom right
+   (the pin keeps the bottom left); the shop's tracked circle shows 🔍
+   (it is the card's bottom-left circle, not the right: say if the right
+   was meant); the tracked pill the 🔍's height, its text 11 px (24 was too big); the
+   bench's picture and component icons open the full card; Home 96 px,
+   its label level with the side buttons', over its neighbours and past
+   the screen's bottom; the roll's window turns Home into 🧺 Gather in a
+   spotlight hole (a second tap collects; Collect still works); Travel's
+   label white on black; YOU ARE HERE above the Ocean, the Ocean moved up
+   the beach clear of the bigger pill; the opening's components hang off
+   the capstone on branch lines (the COMPONENTS label gone: the lines say it).
 22. **Tracking and the To-Do list** (grill + brainstorm: a redesign).
    - The To-Do list rethought: compact and followable, no capstone tree
      exploding open on the first tap (the tracked item's 🔍 at a station
@@ -595,6 +610,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 21 (stations and cards, 13 items); step 20 review fixes before it.
 - 2026-11-26: step 20e: the Bonus Dice window has the quark meter as it stands above it (LockInReward.tiers, both Lock-Ins); QuarkMeter keeps its last two numbers apart.
 - 2026-11-26: after 20d (the user): the check's challenge is a 🎯 Goal button above the hand, left of Pass (HubBar.hand_sides now empty: the To-Do List stays); Metropolis's picture replaced (images/Metropolis Icon - 11-26.png).
 - 2026-11-26: step 20d (11 px minimum text): a floor in Tok, shrunk cards' fonts grown, names wrap, every screen scanned by the screens check; the Market's names under its squares, its new header; the Unknown picker as the station's chips.
