@@ -160,7 +160,7 @@ func _name_px(name: String) -> int:
 
 func _sub_text(e: Dictionary) -> String:
 	var pc := RefTree.parts(e)
-	return "%d   %s" % [int(e.points), "crafted" if Catalog.owns(Game.state, e.name) else "%d/%d parts" % [pc.x, pc.y]]
+	return "crafted" if Catalog.owns(Game.state, e.name) else "%d/%d parts" % [pc.x, pc.y]  # no points (the user, 2026-11-26)
 
 
 func _list_width(names: Array) -> float:
@@ -168,7 +168,7 @@ func _list_width(names: Array) -> float:
 	for n in names:
 		var e: Dictionary = Catalog.entry(n)
 		widest = maxf(widest, Tok.font(800).get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, _name_px(n)).x)
-		widest = maxf(widest, 15 + Tok.font(700).get_string_size(_sub_text(e), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x)
+		widest = maxf(widest, Tok.font(700).get_string_size(_sub_text(e), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x)
 	return maxf(210, 56 + widest + 22 + 22 + 24)  # some air either side of the pins (the user: squished)
 
 
@@ -338,14 +338,8 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	nl.position = Vector2(56, 10 + (15 - px) * 0.6)
 	row.add_child(nl)
 	var pc := RefTree.parts(e)
-	var star := Tok.star(Color("#f5b400"), 11)
-	star.position = Vector2(56, 35)
-	row.add_child(star)
-	var pts := Tok.label("%d   " % int(e.points), 12, Color("#8fa3b5"), 700)
-	pts.position = Vector2(71, 31)
-	row.add_child(pts)
-	var sub := Tok.label("crafted" if owned else "%d/%d parts" % [pc.x, pc.y], 12, RefTree.GREEN if RefTree.ready(e.name) else Color("#8fa3b5"), 700)
-	sub.position = Vector2(71 + Tok.font(700).get_string_size(pts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, 31)
+	var sub := Tok.label(_sub_text(e), 12, RefTree.GREEN if RefTree.ready(e.name) else Color("#8fa3b5"), 700)
+	sub.position = Vector2(56, 31)
 	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	row.add_child(sub)
 	var pin := Tok.icon("📌", 22)  # drop it from the list
@@ -425,14 +419,8 @@ func _details() -> void:
 	nl.position = Vector2(68, 12 + (19 - px) * 0.6)
 	body.add_child(nl)
 	var pc := RefTree.parts(e)
-	var star := Tok.star(Color("#f5b400"), 12)
-	star.position = Vector2(68, 42)
-	body.add_child(star)
-	var dpts := Tok.label("%d   " % int(e.points), 13, Color("#b3becd"), 700)
-	dpts.position = Vector2(84, 38)
-	body.add_child(dpts)
 	var line := Tok.label("%d/%d parts" % [pc.x, pc.y], 13, RefTree.GREEN if RefTree.ready(e.name) else Color("#b3becd"), 700)
-	line.position = Vector2(84 + Tok.font(700).get_string_size(dpts.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x, 38)
+	line.position = Vector2(68, 38)
 	body.add_child(line)
 	var bar := Panel.new()  # the parts bar
 	bar.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.12), 4))
