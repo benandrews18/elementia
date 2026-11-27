@@ -15,7 +15,7 @@
  "CONVERT_RATE": 3,
  "DATA": {
   "take": 3,
-  "version": "2026.11.21a",
+  "version": "2026.11.26a",
   "suits": {
    "ocean": {
     "label": "OCEAN",
@@ -164,6 +164,13 @@
       "MATERIAL",
       "🍂 Plant Fiber + 🛠️ Tools",
       9
+     ],
+     [
+      "🛳️",
+      "Cruise Ship",
+      "CREATION",
+      "🚤 Speedboat + 🔩 Stainless Steel + 📡 Satellite Dish + 🎆 Fireworks + 🍩 Éclair + 🎺 Trumpet",
+      40
      ]
     ]
    },
@@ -2504,6 +2511,12 @@
   "Éclair": [
    "organic",
    "reactive"
+  ],
+  "Cruise Ship": [
+   "organic",
+   "reactive",
+   "earth",
+   "metal"
   ],
   "Trumpet": [
    "metal"

@@ -688,6 +688,7 @@ Market, tutorials), motion last (it animates the final layouts).
    ctx.mapRevealed gone.
 
 Log (newest first, one line per session):
+- 2026-11-26: after 28 (the user): the station list's rows on one line (StationScreen._wide_row, WIDE_ROW_H 42; row_parts(wrap): measured on all 109 items at 378 px, only Planet wraps); Cruise Ship added (Coral Reef's unlock, 40, all four suits; rules lock unchanged).
 - 2026-11-26: after 28 (the user): SuitSpend's paying title (Choose + each suit still short, _choose_title); the station list view without its side card (rows full width, the Crafting Bench in both views; ShopActs gone), card view on every arrival (App._sync resets StationScreen.list_mode).
 - 2026-11-26: Zinc gone from game_data.json (the user: not in the game; it was left in ELEMENT_NAMES, ELEMENT_SUIT, ATOMIC_NUMBER and the two colour tables, no die or recipe used it).
 - 2026-11-26: after 28 (the user): the suit counter's rings open SuitSpend.show_suit(su, ring, true) (view_counts: the held counts); three balloons now: paying (spare counts, taps), viewing (no counts), the counter (held counts).
