@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Combo Lab: a capstone's station icon sits in its card's bottom-left corner.
 - The map is discovered as you go: at first only your starting station shows. Each time you leave a station, its paths grow out across the map and the stations at their ends bounce into view. Stations you've found stay; the Helicopter shows them all.
 - More icons explain themselves when tapped: the Quark Meter opens the Display Mat rules; suit icons (item suit costs, Convert's chosen elements) say what the suit is and what it costs; the Market's station circles say whether you've visited; a full card's station badge says where it's made; the To-Do hint's pictures open their cards.
 - Arriving at a station plays in: the backdrop fades in, the header drops into place, the cards slide in from the right row by row, then the 🔍 marks pop on and the tracked pill bounces. You can tap straight away. Leaving for the map is a quick fade. (Off with Low motion.)

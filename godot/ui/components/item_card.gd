@@ -267,6 +267,9 @@ func _place() -> void:
 	if opts.get("stations_right"):  # from the bottom-right corner (the left one is the shop's pin)
 		_stations.position.x = size.x - border + 3 - _stations.size.x
 		_stations.position.y += 4  # straddling the edge: clear of the name
+	elif opts.get("stations_left"):  # the bottom-left corner (the Combo Lab's capstones: the user, 2026-11-26)
+		_stations.position.x = border - 3
+		_stations.position.y += 4
 	var sb := get_node_or_null("Size") as Control
 	if sb:  # bottom-left, straddling the border like the points badge; the stations centre right of it
 		sb.position = Vector2(border - 3, size.y - border + 3 - psz)

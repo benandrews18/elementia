@@ -547,7 +547,8 @@ func _inventory(width: float) -> Control:
 			if x + span > 4:
 				x = 0
 				y += h + 8
-			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": _spent(c.name), "tag": "inv:" + c.name})
+			var card := ItemCard.make(c.name, {"mini": t1, "wide": span == 2, "on": _spent(c.name), "tag": "inv:" + c.name,
+				"stations_left": Game.ctx.get("comboLab", false) and c.tier == "CAPSTONE"})  # the lab: its station bottom-left (the user, 2026-11-26)
 			card.position = Vector2(pad + x * (col_w + 8), y)
 			card.size = Vector2(col_w * span + 8 * (span - 1), h)
 			card.set_meta("cmp", "inv:" + c.name)
