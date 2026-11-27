@@ -534,6 +534,10 @@ Market, tutorials), motion last (it animates the final layouts).
    (the user, 2026-11-26): 11 px (first 12,
    then 11) at the phone's size, everywhere; a check flags any smaller
    label.
+20e. **The Bonus Dice window explains itself** (the user, 2026-11-26):
+   after the Lock-In count, the reward window (LockInReward) shows a copy
+   of the quark meter as it stands at its top, so the player sees which
+   breakpoints earned the dice.
 21. **Stations and cards.**
    - Card background: the station cards' off-white everywhere (the full
      card too).
