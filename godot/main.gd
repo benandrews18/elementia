@@ -8,6 +8,12 @@ var _app: App
 
 
 func _ready() -> void:
+	# A desktop browser (the user, 2026-11-27): the phone's shape, scaled to
+	# the window's height, wood bars at the sides, never stretched wide.
+	# Phones and tablets (touch) fill their screen as before.
+	if OS.has_feature("web") and not DisplayServer.is_touchscreen_available():
+		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+		RenderingServer.set_default_clear_color(Color("#1a120b"))
 	Progress.load_all()
 	var strip := ColorRect.new()
 	strip.color = Color("#1a120b")
