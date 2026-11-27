@@ -25,7 +25,7 @@ var on_done: Callable
 
 
 static func make() -> LockInReward:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

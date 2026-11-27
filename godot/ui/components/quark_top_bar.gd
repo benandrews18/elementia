@@ -9,7 +9,7 @@ const SCENE := "res://ui/components/quark_top_bar.tscn"  # its wood (HubWood, fl
 
 
 static func make() -> QuarkTopBar:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

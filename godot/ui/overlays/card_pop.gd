@@ -32,7 +32,7 @@ var plain := false  # a crafted card (the hand's): no fades, ⚛ or ticks on its
 
 ## The side card for name, scaled to width w (its top-left at 0, 0).
 static func side_card(name: String, w: float, plain := false) -> CardPop:
-	var p: CardPop = load(SCENE).instantiate()
+	var p: CardPop = Tok.make(SCENE)
 	p.side = true
 	p.plain = plain
 	p.size = Vector2(p.portrait.x, p.portrait.y)
@@ -43,7 +43,7 @@ static func side_card(name: String, w: float, plain := false) -> CardPop:
 
 
 static func open(on: Control, name: String) -> CardPop:
-	var p: CardPop = load(SCENE).instantiate()
+	var p: CardPop = Tok.make(SCENE)
 	p.size = on.size
 	on.add_child(p)
 	p.show_item(name)
@@ -82,11 +82,11 @@ func _ready() -> void:
 ## over the card, "You are tracking this item!" (.cp-celeb.cp-tracking).
 func show_tracking() -> void:
 	var card: Control = $Card
-	var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
+	var pill: Control = Tok.make("res://ui/pieces/tracked_pill.tscn")
 	pill.get_node("Row/Icon").visible = false
 	var nl: Label = pill.get_node("Row/Name")
 	nl.text = "You are tracking this item!"
-	nl.add_theme_font_override("font", load("res://ui/theme/fonts/nunito_900.tres"))
+	nl.add_theme_font_override("font", Tok.font(900))
 	nl.add_theme_font_size_override("font_size", 14)
 	(pill.get_node("Row") as Control).offset_left = 24
 	(pill.get_node("Row") as Control).offset_right = -16

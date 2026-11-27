@@ -9,7 +9,7 @@ cut short by --quit-after prints nothing and must never count.
       Godot run, drawn off-screen); --screens drawer,map just the states
       whose names start with those (the part whose look changed)
   python godot/tools/check.py full [--screens [names]]
-      all of fast and the whole play test (the end of a step)
+      all of fast, the whole play test and the redraw budget (tests/perf.gd)
   python godot/tools/check.py release
       full, and every screen (before a release)
   python godot/tools/check.py accept
@@ -102,6 +102,8 @@ def main() -> int:
         label = "play test" + (f" ({only})" if only and mode == "fast" else "")  # full / release: all of it
         ok &= godot_test(label, "res://tests/ui_play.tscn", r"^ui_play: PASS", 20000,
                          ["--", "--only", only] if only and mode == "fast" else [])
+    if mode in ("full", "release"):
+        ok &= godot_test("redraw budget", "res://tests/perf.tscn", r"^perf: PASS", 3000)
     print("ALL PASSED" if ok else "SOMETHING FAILED")
     return 0 if ok else 1
 

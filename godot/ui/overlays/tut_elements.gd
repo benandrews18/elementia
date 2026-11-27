@@ -17,7 +17,7 @@ func _ready() -> void:
 	var syms: Array = Util.stable_sort(Data.t("CORE_ELEMENT_SYMS"), func(a, b): return an[a] - an[b])
 	var grid: GridContainer = $Window/Content/Scroll/Grid
 	for sym in syms:
-		var c: PanelContainer = load(CARD).instantiate()
+		var c: PanelContainer = Tok.make(CARD)
 		var box: StyleBoxFlat = c.get_theme_stylebox("panel").duplicate()
 		box.border_color = Color(Data.t("ELEMENT_COLOR").get(sym, "#4a4f5c"))
 		c.add_theme_stylebox_override("panel", box)

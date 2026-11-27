@@ -53,7 +53,7 @@ var _tail_x := 0.0
 
 
 static func make() -> SuitSpend:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

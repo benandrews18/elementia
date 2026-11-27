@@ -21,7 +21,7 @@ var cells := {}  # card index -> its square (the row sequence bounces them)
 
 
 static func make() -> MarketTray:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:
@@ -192,6 +192,7 @@ func _cell(name: String, sz: float, inspect: bool) -> Control:
 	pin.add_child(pic)
 	pin.gui_input.connect(func(ev): if Tap.tap(ev):
 		App.pin(name))
+	Tok.grow_hit(pin, 8)
 	c.add_child(pin)
 	if e != null:  # not yet owned: craft it from here; else its card
 		c.gui_input.connect(func(ev): if Tap.tap(ev):

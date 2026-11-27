@@ -30,7 +30,7 @@ signal skip
 
 
 static func make() -> MouseTip:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

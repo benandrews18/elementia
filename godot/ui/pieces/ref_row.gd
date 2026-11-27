@@ -15,7 +15,7 @@ var item := ""
 
 
 static func make() -> RefRow:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## Fills the row for entry e at width w (open: its breakdown shows, built by

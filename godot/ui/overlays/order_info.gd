@@ -71,7 +71,7 @@ const SCENE := "res://ui/overlays/order_info.tscn"
 
 
 static func open(on: Control) -> OrderInfo:
-	var w: OrderInfo = load(SCENE).instantiate()
+	var w: OrderInfo = Tok.make(SCENE)
 	w.size = on.size
 	on.add_child(w)
 	return w

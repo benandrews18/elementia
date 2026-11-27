@@ -10,7 +10,7 @@ const SCENE := "res://ui/overlays/pin_tip.tscn"  # its layout, texts and styles
 
 
 static func open(on: Control, done: Callable) -> PinTip:
-	var t: PinTip = load(SCENE).instantiate()
+	var t: PinTip = Tok.make(SCENE)
 	t.on_done = done
 	t.size = on.size
 	on.add_child(t)

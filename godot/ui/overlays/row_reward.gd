@@ -9,7 +9,7 @@ var on_done: Callable
 
 ## Its layout, texts and styles: ui/overlays/row_reward.tscn.
 static func make(n: int, done: Callable) -> RowReward:
-	var r: RowReward = load("res://ui/overlays/row_reward.tscn").instantiate()
+	var r: RowReward = Tok.make("res://ui/overlays/row_reward.tscn")
 	r.rows = n
 	r.on_done = done
 	return r

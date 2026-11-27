@@ -16,7 +16,7 @@ static var _grey: ShaderMaterial
 
 
 static func make() -> MapScreen:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

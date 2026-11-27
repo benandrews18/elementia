@@ -20,7 +20,7 @@ var focus := ""  # a collection's id: its row lit and scrolled to (a card's ⭐)
 
 
 static func show_on(on: Control, menu := false, focus_id := "") -> CollectionsWindow:
-	var d: CollectionsWindow = load(SCENE).instantiate()
+	var d: CollectionsWindow = Tok.make(SCENE)
 	d.from_menu = menu
 	d.focus = focus_id
 	d.size = on.size

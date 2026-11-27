@@ -17,7 +17,7 @@ var key := ""
 ## combo: a chip's meta "combo" ("station:<name>", "suit:<suit>",
 ## "component:<item>" or "collection").
 static func open_for(on: Control, combo: String) -> ComboInfo:
-	var d: ComboInfo = load(SCENE).instantiate()
+	var d: ComboInfo = Tok.make(SCENE)
 	d.kind = combo.get_slice(":", 0)
 	d.key = combo.substr(combo.find(":") + 1) if combo.contains(":") else ""
 	d.size = on.size

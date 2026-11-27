@@ -50,12 +50,12 @@ func _ready() -> void:
 			app.open_panel("drawer")
 		"drawer_elements":
 			app.open_panel("drawer")
-			app._panel_node.view = "elements"
-			app._panel_node._redraw()
+			app.panel_node.view = "elements"
+			app.panel_node._redraw()
 		"drawer_selected":
 			app.open_panel("drawer")
-			app._panel_node.selected = Game.state.items[0]
-			app._panel_node._redraw()
+			app.panel_node.selected = Game.state.items[0]
+			app.panel_node._redraw()
 		"station_list":  # the station shop's 📋 view: rows across the screen, Glass on the Crafting Bench
 			StationScreen.list_mode = true
 			app._screen.open_card = "Glass"
@@ -66,17 +66,17 @@ func _ready() -> void:
 		"drawer_list":  # the 📋 view: the compact list, the selected card on the right
 			DisplayMatScreen.list_mode = true
 			app.open_panel("drawer")
-			app._panel_node.selected = Game.state.items[0]
-			app._panel_node._redraw()
+			app.panel_node.selected = Game.state.items[0]
+			app.panel_node._redraw()
 		"convert":
 			Game.state.emptyElements = 1
 			app.open_panel("convert")
-			app._panel_node.from = "S"
-			app._panel_node.to = "Fe"
-			app._panel_node._redraw()
+			app.panel_node.from = "S"
+			app.panel_node.to = "Fe"
+			app.panel_node._redraw()
 		"picker":
 			app.open_panel("convert")
-			app._panel_node._pick("to")
+			app.panel_node._pick("to")
 		"unknown":
 			Game.state.emptyElements = 1
 			UnknownPick.open(app)
@@ -91,12 +91,12 @@ func _ready() -> void:
 		"explain":  # a tapped suit icon: its balloon (the suit over its elements; Convert's chosen S)
 			Game.state.emptyElements = 1
 			app.open_panel("convert")
-			app._panel_node.from = "S"
-			app._panel_node.to = "Fe"
-			app._panel_node._redraw()
+			app.panel_node.from = "S"
+			app.panel_node.to = "Fe"
+			app.panel_node._redraw()
 			await get_tree().process_frame
 			var badge: Control = null
-			for c in _all(app._panel_node):
+			for c in _all(app.panel_node):
 				if c is Panel and c.get_signal_connection_list("gui_input").size() > 2 and c.size == Vector2(24, 24):
 					badge = c
 					break
@@ -114,8 +114,8 @@ func _ready() -> void:
 			TodoTray.hint_open = true
 			TodoTray.expanded = {"refroot/Plastic": true}
 			app._on_hub("jobs")
-			app._panel_node._open_hint_paths()
-			app._panel_node._redraw()
+			app.panel_node._open_hint_paths()
+			app.panel_node._redraw()
 		"start_todo", "start_locked", "start_ready":  # the opening: the To-Do List over the bare map; Start locked, then ready
 			Game.start_run("Robot")
 			Game.start_on_map()
@@ -140,12 +140,12 @@ func _ready() -> void:
 			else:
 				Game.track("Glass")
 				app._on_hub("jobs")
-				app._panel_node._show("Metropolis")  # the details panel opens on a tap only
+				app.panel_node._show("Metropolis")  # the details panel opens on a tap only
 		"todo_tools":  # the details panel: made at several stations (a line each); its elements just their symbols
 			TodoTray.detail = ""
 			Progress.prefs.pinnedItems = ["Tools"]
 			app.open_panel("todo")
-			app._panel_node._show("Tools")
+			app.panel_node._show("Tools")
 		"confirm":
 			ConfirmDialog.ask(app, "Reset the Display Mat to your last locked-in layout?", func(): pass)
 		"reward":
@@ -211,7 +211,7 @@ func _ready() -> void:
 		"expand":  # the mat grown from 1.5 rows to 2 (the reveal as played)
 			app.open_panel("drawer")
 			await get_tree().process_frame
-			var mat: DisplayMatScreen = app._panel_node
+			var mat: DisplayMatScreen = app.panel_node
 			mat.show_stage(2)
 			var mx := MatExpand.new()
 			mx.pages = mat.grow(MatExpand.GROW)
@@ -321,9 +321,9 @@ func _ready() -> void:
 		"mouse_bl", "mouse_tl", "mouse_c", "mouse_br":  # Professor Mouse in each corner (the HTML's tips)
 			await get_tree().process_frame
 			match state:
-				"mouse_bl": app.mouse.show_tip(3, "Tap [b]Roll[/b] to get elements!", "bottom-left", app._hub.button("home"), 14)
+				"mouse_bl": app.mouse.show_tip(3, "Tap [b]Roll[/b] to get elements!", "bottom-left", app.hub.button("home"), 14)
 				"mouse_tl": app.mouse.show_tip(7, "Tap a green card, then [b]Craft[/b]!", "top-left", app._screen.find_tagged("st:craft:"))
-				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app._hub.button("home"))
+				"mouse_c": app.mouse.show_tip(5, "Convert Elements! [b]3:1[/b]", "center", app.hub.button("home"))
 				"mouse_br": app.mouse.show_tip(7, "Your tracked item needs this one!", "bottom-right")
 		"hint_badge", "hint_open":  # a 💡 hint (Hints) out; tapped: Mouse says it, Don't show again
 			Progress.prefs.hints = true
@@ -340,7 +340,7 @@ func _ready() -> void:
 				app.get_children().filter(func(c): return c is ParchDialog)[0].pressed.emit("Next")
 		"tut_coach":  # the first-play tutorial's Roll step: Mouse docked away from it, Skip under him
 			await get_tree().process_frame
-			app.mouse.coach(3, "Every visit you roll the station's dice. Tap [b]Roll[/b]!", app._hub.button("home"), false, false)
+			app.mouse.coach(3, "Every visit you roll the station's dice. Tap [b]Roll[/b]!", app.hub.button("home"), false, false)
 		"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card":  # from tests/fixtures/collections_prefs.json
 			Progress.prefs.merge(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/collections_prefs.json")), true)
 			match state:
@@ -373,7 +373,7 @@ func _ready() -> void:
 		"lab_bench":  # a lab tap: the card on the mat and on the Crafting Bench
 			app.open_combo_lab()
 			var it: String = Game.state.items.filter(func(n): return Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)))[0]
-			app._panel_node.selected = it
+			app.panel_node.selected = it
 			Game.toggle_mat_card(it)
 		"lab_mat":  # the lab's mat: Cruise Ship and Planet (their suit stacks inside the card), no names; Homestead switched off
 			app.open_combo_lab()
@@ -393,7 +393,7 @@ func _ready() -> void:
 				if c is OrderInfo:
 					c.queue_free()
 			Hand.play(Game.state.hand, Game.state, Game.state.hand.hand.slice(0, 2))  # something on the cleared mat
-			var mat := app._panel_node as DisplayMatScreen
+			var mat := app.panel_node as DisplayMatScreen
 			mat.picks = [Game.state.hand.hand[2]]
 			mat._redraw()
 		"combo_info":  # the test's mat: a combo chip tapped lists the cards making it
@@ -417,7 +417,7 @@ func _ready() -> void:
 						Game.state.hand[k] = Game.state.hand[k].filter(func(n): return not Game.state.mat.has(n))
 					break
 			Game._changed()
-			var mat2 := app._panel_node as DisplayMatScreen
+			var mat2 := app.panel_node as DisplayMatScreen
 			var combos: Array = mat2._chip_nodes.keys().filter(func(k): return k != "order")
 			if not combos.is_empty():
 				ComboInfo.open_for(app, combos[0])
@@ -438,7 +438,7 @@ func _ready() -> void:
 				if by2[st].size() >= 3:
 					Game.state.hand.hand = by2[st].slice(0, 3) + Game.state.hand.hand.filter(func(n): return not by2[st].slice(0, 3).has(n)).slice(0, 4)
 					break
-			var mat4 := app._panel_node as DisplayMatScreen
+			var mat4 := app.panel_node as DisplayMatScreen
 			mat4.picks = Game.state.hand.hand.slice(0, 3)
 			mat4._redraw()
 			if state == "play_together":
@@ -476,7 +476,7 @@ func _ready() -> void:
 			var keep: Array = hd.hand.filter(func(n): return not trio.has(n) and not col3.items.has(n))
 			hd.hand = col3.items + keep.slice(0, 7 - col3.items.size())
 			Progress.prefs.everUnlockedMatCollections = [col3.id]
-			var mat6 := app._panel_node as DisplayMatScreen
+			var mat6 := app.panel_node as DisplayMatScreen
 			mat6.picks = [hd.hand[0]]
 			mat6._redraw()
 			if state == "mat_big":  # a mat card tapped: big over its place
@@ -493,7 +493,7 @@ func _ready() -> void:
 			for c in app.get_children():
 				if c is OrderInfo:
 					c.queue_free()
-			var mat5 := app._panel_node as DisplayMatScreen
+			var mat5 := app.panel_node as DisplayMatScreen
 			mat5.browsing = true
 			mat5._redraw()
 		"convert_bench":  # a card's missing element tapped: Convert, the card's Crafting Bench on top
@@ -506,7 +506,7 @@ func _ready() -> void:
 				app.open_convert(sym, withel[0].name)
 			await get_tree().create_timer(0.5).timeout
 		"keep_fan":  # a craft's kept component cards peeking up from behind the hub, fanned
-			Juice.craft_keep(app, ["Water", "Steel", "Glass", "Clay"], app._hub, 2.0)
+			Juice.craft_keep(app, ["Water", "Steel", "Glass", "Clay"], app.hub, 2.0)
 			await get_tree().create_timer(0.75).timeout
 		"hand_picks":  # two hand cards picked: raised and ticked, Play in full colour
 			app.open_combo_lab()
@@ -515,7 +515,7 @@ func _ready() -> void:
 			for c in app.get_children():
 				if c is OrderInfo:
 					c.queue_free()
-			var mat3 := app._panel_node as DisplayMatScreen
+			var mat3 := app.panel_node as DisplayMatScreen
 			Game.state.hand.hand = ["Soil", "Rubber", "Tree", "Cloud", "Plastic"]  # a fixed hand (the lab's run here can be thin)
 			mat3.picks = ["Rubber", "Cloud"]
 			mat3._redraw()
@@ -541,7 +541,7 @@ func _ready() -> void:
 					c.queue_free()
 			Game.state.elements = {"H": 2, "O": 4, "Fe": 1}
 			Game.state.emptyElements = 1
-			var mat := app._panel_node as DisplayMatScreen
+			var mat := app.panel_node as DisplayMatScreen
 			mat.view = "elements"
 			Game._changed()
 		"welcome", "classic_mode":  # the title screen; Play's Classic window over it

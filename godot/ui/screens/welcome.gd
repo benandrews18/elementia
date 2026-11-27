@@ -16,7 +16,7 @@ const SCENE := "res://ui/screens/welcome.tscn"
 
 
 static func show_on(on: Control) -> WelcomeScreen:
-	var w: WelcomeScreen = load(SCENE).instantiate()
+	var w: WelcomeScreen = Tok.make(SCENE)
 	w.size = on.size
 	on.add_child(w)
 	return w

@@ -11,13 +11,13 @@ const PILL_H := 28.0  # the tracked pill's height (MapScreen.tracked_pill)
 var panel := ""  # "", "drawer" (the Display Mat), "convert", "market" or "todo"
 var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
 var _squares_card := ""  # the card _squares is for (a new run or a load starts afresh)
-var _market_playing := false
+var market_playing := false
 var market_plays := 0  # how often the Market's moment has played (tests read it)
 var _screen: Control
 var _screen_name := ""
-var _panel_node: Control
+var panel_node: Control
 var _under: Control  # the Display Mat kept open under the Convert tray (back to it on close)
-var _hub: HubBar
+var hub: HubBar
 var _floats: Control  # the 🔍 button and the tracked pill, under the hub, over the panels
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
 var tutorial: Tutorial  # the first-play tutorial (its steps: ui/tutorial/tutorial.tscn)
@@ -39,10 +39,10 @@ func _ready() -> void:
 	_floats.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_floats.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(_floats)
-	_hub = HubBar.make()
-	_hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	add_child(_hub)
-	_hub.pressed.connect(_on_hub)
+	hub = HubBar.make()
+	hub.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	add_child(hub)
+	hub.pressed.connect(_on_hub)
 	var layer := CanvasLayer.new()
 	layer.layer = 2
 	add_child(layer)
@@ -119,8 +119,10 @@ func _sync() -> void:
 		elif from == "station" and Juice.on():
 			_screen.modulate.a = 0.0
 			_screen.create_tween().tween_property(_screen, "modulate:a", 1.0, 0.15)
-	if not screen_covered() and is_instance_valid(_screen) and _screen.stale:
-		_screen._redraw()
+	if is_instance_valid(_screen):
+		_screen.visible = not screen_covered()  # not drawn under an opaque panel
+		if _screen.visible and _screen.stale:
+			_screen._redraw()
 	sync_hub()
 	_sync_floats()
 	if arrived:  # the tracked pill bounces as the 🔍 marks pop on
@@ -143,7 +145,7 @@ func _sync() -> void:
 ## shortcut: no toast for a square (the HTML game's "Marketplace item done").
 func _market_check() -> void:
 	var s := Game.state
-	if _market_playing or s.get("bingoCard") == null:
+	if market_playing or s.get("bingoCard") == null:
 		return
 	var card: Array = s.bingoCard
 	var owned := range(card.size()).filter(func(i): return Catalog.owns(s, card[i]))
@@ -167,7 +169,7 @@ func _market_check() -> void:
 
 
 func _market_sequence(fresh: Array, lines: Array) -> void:
-	_market_playing = true
+	market_playing = true
 	market_plays += 1
 	var opened := panel != "market"
 	if opened:
@@ -175,10 +177,10 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 	var block := Control.new()
 	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(block)
-	var tray := _panel_node as MarketTray
+	var tray := panel_node as MarketTray
 	await get_tree().create_timer(0.45 if opened else 0.15).timeout  # the tray's slide-in first
 	# The tray can close or be rebuilt during the waits: bounce only while
-	# it's there, so the sequence always ends (its block and _market_playing
+	# it's there, so the sequence always ends (its block and market_playing
 	# would otherwise stay, freezing taps).
 	for i in fresh:
 		if is_instance_valid(tray):
@@ -190,13 +192,13 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 		rw.size = size
 		add_child(rw)
 		await rw.tree_exited  # until Nice
-		_market_playing = false
+		market_playing = false
 		Game.collect_market_rewards()
 	else:
-		_market_playing = false
+		market_playing = false
 	if opened:
 		await get_tree().create_timer(1.6).timeout
-		if is_instance_valid(tray) and _panel_node == tray:  # the tray this opened (not one the player reopened since)
+		if is_instance_valid(tray) and panel_node == tray:  # the tray this opened (not one the player reopened since)
 			close_panel()
 	_maybe_end()
 
@@ -204,12 +206,12 @@ func _market_sequence(fresh: Array, lines: Array) -> void:
 ## A Market square made away from the tray (after the run's first): the
 ## "?" it pays, on Nice; the tray stays shut (the Market button has its "!").
 func _market_reward(n: int) -> void:
-	_market_playing = true
+	market_playing = true
 	var rw := RowReward.make(n, func(): pass)
 	rw.size = size
 	add_child(rw)
 	await rw.tree_exited  # until Nice
-	_market_playing = false
+	market_playing = false
 	Game.collect_market_rewards()
 	_maybe_end()
 
@@ -218,7 +220,7 @@ func _market_reward(n: int) -> void:
 ## Overtime ending); crafting everything ends the run here.
 func _maybe_end() -> void:
 	var s := Game.state
-	if _market_playing:  # the end waits for the Market's own moment
+	if market_playing:  # the end waits for the Market's own moment
 		return
 	var key := "ended" if s.get("ended") or s.get("craftedEverything") else ("complete" if s.get("runComplete") else "")
 	if key == "" or key == Game.ctx.get("endShown", ""):
@@ -265,9 +267,9 @@ func _on_crafted(name: String) -> void:
 	var centre := size / 2 - Vector2(0, HubBar.H / 2)
 	Juice.craft_spend(self, spent, centre)
 	var kept: Array = Catalog.needs_of(e.reqs).items.map(func(r): return r.name)
-	var down := Juice.craft_keep(self, kept, _hub, pop_at)
+	var down := Juice.craft_keep(self, kept, hub, pop_at)
 	if down > 0:
-		_hub.create_tween().tween_interval(down).finished.connect(_hub.punch.bind("inv"))
+		hub.create_tween().tween_interval(down).finished.connect(hub.punch.bind("inv"))
 
 
 ## The small card: pops in at the middle, a moment's look, then flies into
@@ -282,7 +284,7 @@ func _craft_peek(name: String, wait := 0.5) -> void:
 	card.mouse_filter = MOUSE_FILTER_STOP
 	card.set_meta("peek", true)
 	add_child(card)
-	var to := _hub.button_center("inv") - card.size / 2
+	var to := hub.button_center("inv") - card.size / 2
 	var tw := card.create_tween()
 	tw.tween_property(card, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(card, "modulate:a", 1.0, 0.12)
@@ -293,7 +295,7 @@ func _craft_peek(name: String, wait := 0.5) -> void:
 	tw.parallel().tween_property(card, "modulate:a", 0.4, 0.45)
 	tw.tween_callback(func():
 		card.queue_free()
-		_hub.punch("inv"))
+		hub.punch("inv"))
 	card.gui_input.connect(func(ev): if Tap.tap(ev) and card.mouse_filter == MOUSE_FILTER_STOP:
 		tw.kill()
 		card.queue_free()
@@ -317,7 +319,7 @@ func _unlock_reveal(cap: String) -> void:
 	var names: Array = unlocked.keys().filter(func(n): return unlocked[n] == cap)
 	if names.is_empty() or Game.state.get("ended"):
 		return
-	while _window_open() or _market_playing or (_panel_node is DisplayMatScreen and _panel_node.playing):
+	while window_open() or market_playing or (panel_node is DisplayMatScreen and panel_node.playing):
 		await get_tree().create_timer(0.4).timeout
 		if not is_inside_tree():
 			return
@@ -403,9 +405,9 @@ func open_card(name: String) -> void:
 ## was never found: "New collection!", once nothing else is on screen (not
 ## during a Lock-In or the Market's moment); the next one after it's added.
 func _collection_found() -> void:
-	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or _market_playing or Game.ctx.get("comboLab"):
+	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or market_playing or Game.ctx.get("comboLab"):
 		return
-	if _window_open():
+	if window_open():
 		return  # something's open; the next change tries again
 	var c = Progress.undiscovered_on_mat()
 	if c != null:
@@ -434,7 +436,7 @@ func back() -> void:
 		if p is DevPanel and p.visible:
 			p.hide()
 			return
-	var wins := get_children().slice(_hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
+	var wins := get_children().slice(hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
 	if not wins.is_empty():
 		var w: Control = wins.back()
 		var t: Control = w if w.name == "LabBar" else w.find_child("Close", true, false)
@@ -460,8 +462,8 @@ static func _tap(n: Control) -> void:
 
 
 ## A window open over the screen (anything added after the hub).
-func _window_open() -> bool:
-	return get_children().slice(_hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
+func window_open() -> bool:
+	return get_children().slice(hub.get_index() + 1).any(func(c): return c is Control and not c.is_queued_for_deletion())
 
 
 ## The Periodic Table and the 16 Elements (Tutorial Messages): two
@@ -516,14 +518,14 @@ func open_combo_lab(from_run := false) -> void:
 	Game.ctx = Game.fresh_ctx()
 	Game.ctx.comboLab = true
 	Game.ctx.labFromRun = from_run  # no top bar: the mat's Exit goes back to the Inventory (the user, 2026-11-27)
-	_hub.visible = false
+	hub.visible = false
 	_dev_shown(false)  # the Dev Panel would replace the lab's run and save it over the real one
 	open_panel("drawer")
 	if is_instance_valid(_screen):
 		_screen.visible = false
 	if from_run:
 		return
-	var bar := load("res://ui/pieces/lab_bar.tscn").instantiate() as Control
+	var bar := Tok.make("res://ui/pieces/lab_bar.tscn") as Control
 	bar.name = "LabBar"
 	bar.size = Vector2(size.x, LAB_BAR)
 	bar.gui_input.connect(func(ev): if Tap.tap(ev): close_combo_lab())
@@ -560,7 +562,7 @@ func close_combo_lab() -> void:
 	Game.ctx = _real[1]
 	_real = []
 	_lab = []
-	_hub.visible = true
+	hub.visible = true
 	_dev_shown(true)
 	var bar := get_node_or_null("LabBar")
 	if bar:
@@ -581,7 +583,7 @@ func _challenge_pick() -> void:
 	var grid: Control = d.get_node("Window/Content/Rounds")
 	var every := int(Data.t("MAT_CHECK_EVERY"))
 	for r in range(every, int(Data.t("RUN_COMPLETE_VISIT")) + 1, every):  # the regular game's checks (40 is freeplay's cap)
-		var b: Control = load("res://ui/pieces/pill_button.tscn").instantiate()
+		var b: Control = Tok.make("res://ui/pieces/pill_button.tscn")
 		b.get_node("Text").text = str(r)
 		b.custom_minimum_size = Vector2(62, 46)
 		b.name = "R%d" % r
@@ -611,7 +613,7 @@ func start_challenge_test(round: int) -> void:
 	Game.state.hand = Hand.deal(s)
 	Game.ctx.challengeTest = round
 	_test_label("✕ End Test")
-	_hub.visible = true  # the hand's buttons
+	hub.visible = true  # the hand's buttons
 	open_panel("drawer")
 	Game.start_check_order()
 	OrderInfo.open(self)
@@ -624,7 +626,7 @@ func end_challenge_test() -> void:
 	Game.ctx = _lab[1]
 	_lab = []
 	_test_label("Challenge Test")
-	_hub.visible = false
+	hub.visible = false
 	open_panel("drawer")
 	Game.state_changed.emit()
 
@@ -688,7 +690,7 @@ func show_card(name: String) -> void:
 func open_items(name := "") -> void:
 	open_panel("codex")
 	if name != "":
-		(_panel_node as ItemsScreen).jump_to(name)
+		(panel_node as ItemsScreen).jump_to(name)
 
 
 ## Settings (the gear); page "rules" or "tuts" opens that window instead.
@@ -719,16 +721,16 @@ func show_element_card(sym: String) -> void:
 ## item: the card it's missing from (its bench rides on the tray).
 func open_convert(to_sym: String, item := "") -> void:
 	open_panel("convert")
-	_panel_node.to = to_sym
-	_panel_node.bench_item = item  # its Crafting Bench on top of the tray
-	_panel_node._redraw()
+	panel_node.to = to_sym
+	panel_node.bench_item = item  # its Crafting Bench on top of the tray
+	panel_node._redraw()
 
 
 ## Opens a panel over the screen ("drawer": the Display Mat).
 func open_panel(name: String) -> void:
-	if name == "convert" and panel == "drawer" and is_instance_valid(_panel_node):
-		_under = _panel_node  # Convert opens over the mat (the user: not back to the map)
-		_panel_node = null
+	if name == "convert" and panel == "drawer" and is_instance_valid(panel_node):
+		_under = panel_node  # Convert opens over the mat (the user: not back to the map)
+		panel_node = null
 		panel = ""
 	else:
 		close_panel(false)
@@ -736,11 +738,11 @@ func open_panel(name: String) -> void:
 		Game.deal_hand()  # a check's mat: its hand, the first time
 	panel = name
 	if name in ["drawer", "convert", "market", "todo", "codex", "pins"]:
-		_panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
-		add_child(_panel_node)
-		move_child(_panel_node, _floats.get_index())  # under the 🔍 button and the hub
+		panel_node = {"drawer": DisplayMatScreen, "convert": ConvertTray, "market": MarketTray, "todo": TodoTray, "codex": ItemsScreen, "pins": PinsTray}[name].make()
+		add_child(panel_node)
+		move_child(panel_node, _floats.get_index())  # under the 🔍 button and the hub
 		if name in ["convert", "market", "todo", "pins"]:  # the trays slide in from their own sides (the user, 2026-11-23)
-			Juice.slide_in(_panel_node, {"todo": Vector2(-size.x * 0.6, 0), "market": Vector2(0, -size.y * 0.4)}.get(name, Vector2.ZERO))
+			Juice.slide_in(panel_node, {"todo": Vector2(-size.x * 0.6, 0), "market": Vector2(0, -size.y * 0.4)}.get(name, Vector2.ZERO))
 	_sync()
 
 
@@ -748,13 +750,13 @@ func open_panel(name: String) -> void:
 ## (unless another panel is opening: back = false).
 func close_panel(back := true) -> void:
 	var to_hand := back and _check_convert() and not is_instance_valid(_under)
-	if is_instance_valid(_panel_node):
-		_panel_node.queue_free()
-	_panel_node = null
+	if is_instance_valid(panel_node):
+		panel_node.queue_free()
+	panel_node = null
 	panel = ""
 	if is_instance_valid(_under):
 		if back:  # Convert closed: the mat under it again
-			_panel_node = _under
+			panel_node = _under
 			_under = null
 			panel = "drawer"
 			_sync()
@@ -776,7 +778,7 @@ func home_face() -> String:
 	var sel = c.get("selectedMapStation")
 	if get_children().any(func(n): return n is RollPopup and not n.collecting and not n.is_queued_for_deletion()):
 		return "gather"  # the roll's chips wait: Gather collects them
-	if _hand_mat():
+	if hand_mat():
 		return "play"
 	if c.get("awaitingStart"):  # the opening: Start, even over a tray (the user, 2026-11-26)
 		return "start"
@@ -969,36 +971,36 @@ func sync_hub() -> void:
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
 		badges.market = "!"
 	var here = s.get("lastStation")
-	_hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
-	var mat := _hand_mat()
-	_hub.muted = false
+	hub.shop_glyph = Catalog.station(here).emoji if here else ""  # Shop shows where you are (the user)
+	var mat := hand_mat()
+	hub.muted = false
 	if mat:  # a check with cards: Play in the middle (muted until picked cards fit), the Challenge on Jobs
-		_hub.greyed = mat.playing
-		_hub.muted = not mat.can_play()
-		_hub.show_state("play", {"inv": true}, {}, false, true, {"market": true, "inv": Game.ctx.get("challengeTest", false)})
+		hub.greyed = mat.playing
+		hub.muted = not mat.can_play()
+		hub.show_state("play", {"inv": true}, {}, false, true, {"market": true, "inv": Game.ctx.get("challengeTest", false)})
 		return
 	if _check_convert():  # Close goes back to the hand
-		_hub.greyed = false
-		_hub.show_state("close", {}, {}, false, true, {"jobs": true, "inv": true, "market": true, "codex": true})
+		hub.greyed = false
+		hub.show_state("close", {}, {}, false, true, {"jobs": true, "inv": true, "market": true, "codex": true})
 		return
-	if _hub.hand:  # out of a check with cards: Draw's grey goes with it
-		_hub.greyed = false
-	_hub.muted = home_face() == "start" and Game.ctx.get("tracked") == null
-	_start_lock(_hub.muted)
-	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
+	if hub.hand:  # out of a check with cards: Draw's grey goes with it
+		hub.greyed = false
+	hub.muted = home_face() == "start" and Game.ctx.get("tracked") == null
+	_start_lock(hub.muted)
+	hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
 
 ## The Display Mat while a check is played with cards (else null).
-func _hand_mat() -> DisplayMatScreen:
-	return _panel_node as DisplayMatScreen if panel == "drawer" and Game.check_hand() != null else null
+func hand_mat() -> DisplayMatScreen:
+	return panel_node as DisplayMatScreen if panel == "drawer" and Game.check_hand() != null else null
 
 
 ## The Display Mat covers the map or station under it: that screen skips
 ## its redraws while it's open (every change in a check redrew it unseen)
 ## and catches up when it closes (_sync()).
 func screen_covered() -> bool:
-	return panel == "drawer"
+	return panel in ["drawer", "codex"]  # both opaque, full screen
 
 
 ## The Convert tray opened from a check with cards.
@@ -1024,7 +1026,7 @@ func _hand_tap(mat: DisplayMatScreen, id: String) -> bool:
 ## Lock In (under the mat, or the mat full after a play): the check's count,
 ## then on.
 func hand_lock_in() -> void:
-	var mat := _hand_mat()
+	var mat := hand_mat()
 	if mat == null or mat.playing:
 		return
 	if Game.ctx.get("challengeTest"):
@@ -1045,7 +1047,7 @@ func _roll() -> void:
 	pop.roll = out
 	if Game.state.get("matChecked"):  # the dice past the usual roll are the Quark score's bonus (do_roll() adds them last)
 		pop.bonus = maxi(0, out.size() - int(Data.t("TAKE")))
-	pop.fly_to = _hub.button_center("inv")
+	pop.fly_to = hub.button_center("inv")
 	pop.size = size
 	add_child(pop)
 	sync_hub()  # Home reads Gather
@@ -1108,7 +1110,7 @@ Are you sure?", func():
 ## Under the shutter: the mat-expansion reveal on a growth turn, then this
 ## check's challenge.
 func _check_intro() -> void:
-	var mat := _panel_node as DisplayMatScreen
+	var mat := panel_node as DisplayMatScreen
 	var r := MatExpand.fresh_rect(mat) if mat else Rect2()
 	if r.size == Vector2.ZERO:
 		_challenge()
@@ -1145,14 +1147,14 @@ func _deal_hand() -> void:
 	if HandView.deal_at >= 0:
 		return
 	HandView.deal(0.05)
-	var mat := _hand_mat()
+	var mat := hand_mat()
 	if mat:
 		mat._redraw()
 
 
 ## Back on the map after turn 24's shopping: the "Final Score!" shutter and
 ## the mat (startFinalCheck()).
-func _go_map() -> void:
+func go_map() -> void:
 	Game.go_map()
 	if Game.state.get("finalCheckPending"):
 		Shutter.play(self, "Final Score!", OrderInfo.shutter_line(Orders.current(Game.state)), func():
@@ -1174,20 +1176,20 @@ func _final_lock_in() -> void:
 ## Plays the drawer's Lock-In count with input blocked (and Home can't
 ## score twice), then runs then_do.
 func _count_then(then_do: Callable) -> void:
-	var mat := _panel_node as DisplayMatScreen
+	var mat := panel_node as DisplayMatScreen
 	if mat == null or mat.playing:
 		return
 	var block := Control.new()
 	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(block)
-	_hub.greyed = true  # the Lock-In button greys: no second tap while it counts
-	_hub._build()
+	hub.greyed = true  # the Lock-In button greys: no second tap while it counts
+	hub._build()
 	var held := [block]  # emptied once unblocked: a lambda capturing a freed node errors when called again
 	var unblock := func():  # also when the mat goes mid-count (its count never finishes then)
 		if not held.is_empty() and is_instance_valid(held[0]):
 			held[0].queue_free()
-			_hub.greyed = false
-			_hub._build()
+			hub.greyed = false
+			hub._build()
 		held.clear()
 	mat.tree_exiting.connect(unblock)
 	mat.play_lock_in(func():
@@ -1213,8 +1215,8 @@ func fade_through_black(midpoint: Callable) -> void:
 
 
 func _on_hub(id: String) -> void:
-	var hand_mat := _hand_mat()
-	if hand_mat and _hand_tap(hand_mat, id):
+	var mat_h := hand_mat()
+	if mat_h and _hand_tap(mat_h, id):
 		return
 	if _check_convert():
 		if id == "home":
@@ -1260,7 +1262,7 @@ func _on_hub(id: String) -> void:
 					if panel == "market":
 						close_panel()
 					else:
-						_go_map()
+						go_map()
 				"shop":  # back into the station you're at, free (no visit spent)
 					Game.ctx.screen = "station"
 					Game.ctx.current = Game.state.lastStation
@@ -1277,8 +1279,8 @@ func _on_hub(id: String) -> void:
 							TodoTray.expanded["refroot/" + caps[0]] = true
 						if panel != "todo":
 							open_panel("todo")
-						elif _panel_node is TodoTray:
-							_panel_node._redraw()
+						elif panel_node is TodoTray:
+							panel_node._redraw()
 						var lock := get_node_or_null("StartLock")
 						if lock:  # a little shake
 							var tw: Tween = lock.create_tween()

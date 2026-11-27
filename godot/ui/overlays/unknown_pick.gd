@@ -10,7 +10,7 @@ const SCENE := "res://ui/overlays/unknown_pick.tscn"
 
 
 static func open(on: Control) -> UnknownPick:
-	var p: UnknownPick = load(SCENE).instantiate()
+	var p: UnknownPick = Tok.make(SCENE)
 	p.size = on.size
 	on.add_child(p)
 	return p

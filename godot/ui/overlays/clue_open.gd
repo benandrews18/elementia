@@ -16,7 +16,7 @@ var _wobble: Tween
 
 
 static func show_on(on: Control, got: Array) -> ClueOpen:
-	var d: ClueOpen = load(SCENE).instantiate()
+	var d: ClueOpen = Tok.make(SCENE)
 	d.clues = got
 	d.size = on.size
 	on.add_child(d)
@@ -50,7 +50,7 @@ func _show_box() -> void:
 	box.pivot_offset = box.size / 2
 	if _wobble:
 		_wobble.kill()
-	_wobble = box.create_tween().set_loops()  # clueWobble: 1.4s, over and over
+	_wobble = box.create_tween().set_loops(8)  # clueWobble: 1.4s, 8 times, then still (an endless loop redraws every frame)
 	_wobble.tween_property(box, "rotation_degrees", -6.0, 0.28)
 	_wobble.parallel().tween_property(box, "scale", Vector2(1.04, 1.04), 0.28)
 	_wobble.tween_property(box, "rotation_degrees", 5.0, 0.28)

@@ -14,7 +14,7 @@ var id := ""
 
 
 static func make() -> TrophyTile:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## t: a Trophies.all() entry; got: its {at, last, n}, or null.

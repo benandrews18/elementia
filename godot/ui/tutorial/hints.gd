@@ -22,7 +22,7 @@ var _last_on := ""  # the hint and target tag last badged: put back after a redr
 
 
 static func make() -> Hints:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 static func enabled() -> bool:
@@ -72,13 +72,13 @@ func _process(d: float) -> void:
 func _quiet() -> bool:
 	var app := App.current
 	return enabled() and Game.state.get("mode") and not Game.state.get("ended") and not app.tutorial.running() \
-		and not app._market_playing and not Game.ctx.get("comboLab") and not app.mouse.showing
+		and not app.market_playing and not Game.ctx.get("comboLab") and not app.mouse.showing
 
 
 ## A window over the screen that t isn't in.
 static func _covered(t: Control) -> bool:
 	var app := App.current
-	var wins := app.get_children().slice(app._hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
+	var wins := app.get_children().slice(app.hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
 	return not wins.is_empty() and not wins.back().is_ancestor_of(t)
 
 

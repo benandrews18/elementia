@@ -15,7 +15,7 @@ var _row: Control
 
 
 static func open(on: Control, name: String) -> MarketCraft:
-	var m: MarketCraft = load(SCENE).instantiate()
+	var m: MarketCraft = Tok.make(SCENE)
 	m.item = name
 	m.size = on.size
 	on.add_child(m)

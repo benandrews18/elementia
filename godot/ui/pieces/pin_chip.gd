@@ -12,7 +12,7 @@ const SCENE := "res://ui/pieces/pin_chip.tscn"
 
 
 static func make() -> PinChip:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func fill(name: String, tracked: bool) -> void:

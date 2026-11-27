@@ -24,7 +24,7 @@ var _jump := ""
 
 
 static func make() -> ItemsScreen:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

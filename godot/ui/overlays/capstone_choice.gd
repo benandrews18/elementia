@@ -30,7 +30,7 @@ var _shown_name := ""  # the capstone it shows
 
 
 static func make() -> CapstoneChoice:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:
@@ -231,8 +231,8 @@ func _start(name: String, card: Control) -> void:
 		return
 	_busy = true
 	var app := App.current
-	var to := app._hub.button_global_center("inv")
-	app._hub.spotlight("inv", true)  # lit above the dim while the elements fly in (introInvLit)
+	var to := app.hub.button_global_center("inv")
+	app.hub.spotlight("inv", true)  # lit above the dim while the elements fly in (introInvLit)
 	var chips := card.get_children().filter(func(c): return c.has_meta("sym"))
 	for i in chips.size():
 		var chip: Control = chips[i]
@@ -251,9 +251,9 @@ func _start(name: String, card: Control) -> void:
 		tw.tween_property(fly, "scale", Vector2(0.12, 0.12), 0.16)
 		tw.parallel().tween_property(fly, "modulate:a", 0.0, 0.16)
 		tw.tween_callback(fly.queue_free)
-		get_tree().create_timer(i * 0.08 + 0.56 * 0.72).timeout.connect(app._hub.punch.bind("inv"))
+		get_tree().create_timer(i * 0.08 + 0.56 * 0.72).timeout.connect(app.hub.punch.bind("inv"))
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
-	app._hub.spotlight("inv", false)
+	app.hub.spotlight("inv", false)
 	var go := func(): app.fade_through_black(func():
 		Game.start_run(name)
 		Game.start_on_map()  # the To-Do List shows the new quest; Start waits for a goal (the user, 2026-11-26)

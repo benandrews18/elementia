@@ -11,7 +11,7 @@ var id := ""
 
 
 static func show_on(on: Control, trophy: String) -> TrophyDetail:
-	var d: TrophyDetail = load(SCENE).instantiate()
+	var d: TrophyDetail = Tok.make(SCENE)
 	d.id = trophy
 	d.size = on.size
 	on.add_child(d)

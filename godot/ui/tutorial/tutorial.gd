@@ -23,7 +23,7 @@ var _aside := false  # the game's own moment (the Market's, a window the step do
 
 
 static func make() -> Tutorial:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func running() -> bool:
@@ -90,7 +90,7 @@ func _process(_d: float) -> void:
 	if st.done_if != "" and met(st.done_if):
 		_go(i + 1)
 		return
-	_aside = app._market_playing or _covered() or Game.ctx.get("comboLab") \
+	_aside = app.market_playing or _covered() or Game.ctx.get("comboLab") \
 		or app.get_children().any(func(c): return c is WelcomeScreen and not c.is_queued_for_deletion())  # the title screen (every launch)
 	if _aside:  # wait it out, unlocked
 		app.mouse.visible = false
@@ -146,7 +146,7 @@ func _covered() -> bool:
 	if _target == null or not is_instance_valid(_target):
 		return false
 	var app := App.current
-	var wins := app.get_children().slice(app._hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
+	var wins := app.get_children().slice(app.hub.get_index() + 1).filter(func(c): return c is Control and c.visible and not c.is_queued_for_deletion())
 	return not wins.is_empty() and not wins.back().is_ancestor_of(_target)
 
 
@@ -190,7 +190,7 @@ func _ready() -> void:
 static func find(tag: String) -> Control:
 	var app := App.current
 	if tag.begins_with("hub:"):
-		return app._hub.button(tag.substr(4))
+		return app.hub.button(tag.substr(4))
 	var key := "cmp"
 	if tag.begins_with("tip:"):
 		key = "tip"
@@ -233,15 +233,15 @@ static func _met1(t: String) -> bool:
 		"begun": ok = int(s.get("visits", 0)) >= 1 and not Game.ctx.get("awaitingStart")
 		"owns": ok = Catalog.owns(s, v)
 		"has": ok = Catalog.count(s, v) >= 1
-		"from": ok = app._panel_node is ConvertTray and app._panel_node.from == v
+		"from": ok = app.panel_node is ConvertTray and app.panel_node.from == v
 		"panel": ok = app.panel == v
 		"nopanel": ok = app.panel == ""
 		"screen": ok = Game.ctx.get("screen") == v
 		"at": ok = Game.ctx.get("current") == v
 		"selected": ok = Game.ctx.get("selectedMapStation") == v
-		"check": ok = app._hand_mat() != null
-		"settled": ok = app._hand_mat() != null and not app._window_open()  # the check's windows closed
-		"picked": ok = app._hand_mat() != null and not app._hand_mat().picks.is_empty()
+		"check": ok = app.hand_mat() != null
+		"settled": ok = app.hand_mat() != null and not app.window_open()  # the check's windows closed
+		"picked": ok = app.hand_mat() != null and not app.hand_mat().picks.is_empty()
 		"played": ok = Game.check_hand() != null and not Util.get_or(s, "matPlays", []).is_empty()
 		"visit": ok = int(s.get("visits", 0)) >= int(v)
 		"unknown": ok = int(Util.get_or(s, "emptyElements", 0)) > 0

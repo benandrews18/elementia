@@ -32,7 +32,7 @@ var _rolled := false  # the dice have all landed: Gather collects
 
 
 static func make() -> RollPopup:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:
@@ -180,7 +180,7 @@ func _on_collect(ev: InputEvent) -> void:
 ## the dim in a gold spotlight ring: a second tap there collects too (the
 ## user, 2026-11-26: tap twice to gather).
 func _spotlight() -> void:
-	var home: Control = App.current._hub.button("home") if App.current else null
+	var home: Control = App.current.hub.button("home") if App.current else null
 	if home == null:
 		return
 	var r := home.get_global_rect().grow(6)
@@ -219,7 +219,7 @@ func collect() -> void:
 		var at := c.global_position
 		c.reparent(self)
 		c.global_position = at
-		var target := get_global_transform().affine_inverse() * (App.current._hub.button_global_center("inv") if App.current else fly_to) - c.size / 2  # its middle on the button's
+		var target := get_global_transform().affine_inverse() * (App.current.hub.button_global_center("inv") if App.current else fly_to) - c.size / 2  # its middle on the button's
 		var tw := create_tween()
 		tw.tween_interval(i * 0.045)
 		tw.tween_property(c, "position", target, 0.48 * 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
@@ -227,7 +227,7 @@ func collect() -> void:
 		tw.tween_property(c, "scale", Vector2(0.15, 0.15), 0.48 * 0.28)
 		tw.parallel().tween_property(c, "modulate:a", 0.0, 0.48 * 0.28)
 		if App.current:
-			tw.tween_callback(App.current._hub.punch.bind("inv"))  # the Inventory bounces as each lands (the user, 2026-11-23)
+			tw.tween_callback(App.current.hub.punch.bind("inv"))  # the Inventory bounces as each lands (the user, 2026-11-23)
 	var end := create_tween()
 	end.tween_interval((_chips.size() - 1) * 0.045 + 0.5)
 	end.tween_callback(func():

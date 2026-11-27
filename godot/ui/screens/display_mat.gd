@@ -54,7 +54,7 @@ var browsing := false  # a check: the deck count tapped, the whole Inventory sho
 
 
 static func make() -> DisplayMatScreen:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

@@ -16,7 +16,7 @@ var sym := ""
 
 
 static func open(on: Control, s: String) -> ElementCard:
-	var p: ElementCard = load(SCENE).instantiate()
+	var p: ElementCard = Tok.make(SCENE)
 	p.sym = s
 	p.size = on.size
 	on.add_child(p)

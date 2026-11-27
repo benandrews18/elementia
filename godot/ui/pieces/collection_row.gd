@@ -20,7 +20,7 @@ const HAND := Color("#e2b25a")
 
 
 static func make() -> CollectionRow:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## Where an item is in this run: "mat", "hand", "owned", "" (not yet).

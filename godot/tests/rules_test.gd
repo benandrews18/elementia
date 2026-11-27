@@ -270,6 +270,10 @@ func _ready() -> void:
 	check(Progress._read(path, {}) == {} and Progress._read(path, null) == null, "a file of the wrong kind reads as the default")
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path + ".tmp")
+	# Save versions: an unversioned (older) save upgrades and loads without
+	# the stamp; the stamp never lands on the live run.
+	check(Progress.upgrade({"visits": 2, "saveVersion": 1}) == {"visits": 2}, "a versioned save loads without its stamp")
+	check(Progress.upgrade({"visits": 2}) == {"visits": 2}, "an unversioned save upgrades to the current version")
 
 	# Dev mode (dev.js): a jump marks the run; its clock, check round and
 	# challenge follow the turn; grants skip the cost; snapshots round-trip;

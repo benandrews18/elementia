@@ -21,11 +21,15 @@ var _cap := 0  # the scenarios' capstone
 
 
 static func make() -> DevPanel:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
+
+
+var _base_bottom: Variant = null  # offset_bottom before the phone keyboard lifted the panel
 
 
 func _ready() -> void:
 	$V/Head/X.pressed.connect(hide)
+	get_viewport().gui_focus_changed.connect(_on_focus)
 	for t in TABS:
 		var b := Button.new()
 		b.text = t[1]
@@ -144,7 +148,7 @@ func _jump(body: Control) -> void:
 		_btn("Final check (%d)" % int(Data.t("RUN_COMPLETE_VISIT")), func():
 			Dev.set_turn(int(Data.t("RUN_COMPLETE_VISIT")))
 			hide()
-			App.current._go_map()),  # the "Final Score!" shutter and the mat
+			App.current.go_map()),  # the "Final Score!" shutter and the mat
 		_btn("Run Complete screen", func():
 			hide()
 			Dev.end_screen(true)),
@@ -265,7 +269,7 @@ func _snaps(body: Control) -> void:
 	_row(body, [paste, imp])
 	var sub := Label.new()
 	sub.text = "Ready-made scenarios"
-	sub.add_theme_font_override("font", load("res://ui/theme/fonts/nunito_800.tres"))
+	sub.add_theme_font_override("font", Tok.font(800))
 	body.add_child(sub)
 	body.add_child(_note("Each starts a new dev run."))
 	var caps: Array = Data.t("CAPSTONES")
@@ -276,3 +280,23 @@ func _snaps(body: Control) -> void:
 	for sc in Dev.SCENARIOS:
 		buttons.append(_btn(sc[1], func(): Dev.scenario(sc[0], caps[_cap])))
 	_grid(body, buttons)
+
+
+## A text field focused on a phone (review M6-9): the panel's foot rises
+## above the on-screen keyboard and the field scrolls into view; back down
+## when focus leaves the fields.
+func _on_focus(c: Control) -> void:
+	if visible and (c is LineEdit or c is TextEdit) and is_ancestor_of(c):
+		await get_tree().create_timer(0.35).timeout  # the keyboard is up by then
+		var kb := DisplayServer.virtual_keyboard_get_height() / get_viewport().get_final_transform().get_scale().y
+		if kb <= 0 or not is_instance_valid(c):
+			return
+		if _base_bottom == null:
+			_base_bottom = offset_bottom
+		offset_bottom = _base_bottom - kb
+		await get_tree().process_frame
+		if is_instance_valid(c):
+			$V/Scroll.ensure_control_visible(c)
+	elif _base_bottom != null:
+		offset_bottom = _base_bottom
+		_base_bottom = null

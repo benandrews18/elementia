@@ -43,7 +43,7 @@ var _pips: Array[Control] = []
 
 
 static func make(name: String, o := {}) -> ItemCard:
-	var c: ItemCard = load(SCENE).instantiate()
+	var c: ItemCard = Tok.make(SCENE)
 	c.item = name
 	c.opts = o if o.has("wrap") or not WRAP_NAMES.has(name) else o.merged({"wrap": true})
 	c.set_meta("cmp", name)

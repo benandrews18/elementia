@@ -12,7 +12,7 @@ var collection: Dictionary
 
 
 static func show_on(on: Control, c: Dictionary) -> CollectionFound:
-	var d: CollectionFound = load(SCENE).instantiate()
+	var d: CollectionFound = Tok.make(SCENE)
 	d.collection = c
 	d.size = on.size
 	on.add_child(d)

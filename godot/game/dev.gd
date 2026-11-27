@@ -19,6 +19,7 @@ static func touch() -> void:
 	if Game.state.get("dev"):
 		return
 	Progress.save_all()
+	Progress.flush()  # on disk before it's copied
 	if Progress.autosave and FileAccess.file_exists(Progress.SAVE_PATH):
 		var err := DirAccess.copy_absolute(Progress.SAVE_PATH, BACKUP_PATH)
 		if err != OK:
@@ -42,6 +43,7 @@ static func has_backup() -> bool:
 static func restore() -> void:
 	if not has_backup():
 		return
+	Progress.flush()  # a pending save must not land on the restored one
 	var err := DirAccess.rename_absolute(BACKUP_PATH, Progress.SAVE_PATH)
 	if err != OK:  # the dev run stays; the backup is still there to try again
 		push_error("Can't restore the real save: %s" % error_string(err))
@@ -54,6 +56,7 @@ static func restore() -> void:
 ## Clear Cache (clearAllGameData()): every file this game keeps, then a
 ## fresh start on the title screen, as on a first launch.
 static func clear_all() -> void:
+	Progress.flush()  # nothing pending writes a file back after the clear
 	for f in DirAccess.get_files_at("user://"):
 		if f.ends_with(".json") or f.ends_with(".tmp"):
 			DirAccess.remove_absolute("user://" + f)

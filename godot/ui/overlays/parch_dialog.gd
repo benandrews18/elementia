@@ -33,7 +33,7 @@ var values := {}
 
 
 static func open(on: Control, scene: String, vals := {}) -> ParchDialog:
-	var d: ParchDialog = load(scene).instantiate()
+	var d: ParchDialog = Tok.make(scene)
 	d.values = vals
 	d.size = on.size
 	on.add_child(d)

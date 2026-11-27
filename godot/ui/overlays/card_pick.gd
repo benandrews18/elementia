@@ -14,7 +14,7 @@ var sym := ""  # the element spent; "": an Unknown Element
 
 
 static func show_on(on: Control, element := "") -> CardPick:
-	var d: CardPick = load(SCENE).instantiate()
+	var d: CardPick = Tok.make(SCENE)
 	d.sym = element
 	d.size = on.size
 	on.add_child(d)

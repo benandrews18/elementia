@@ -13,7 +13,7 @@ const SCENE := "res://ui/overlays/pins_tray.tscn"
 
 
 static func make() -> PinsTray:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

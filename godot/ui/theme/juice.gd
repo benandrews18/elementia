@@ -88,7 +88,7 @@ static var _dust_rng := RandomNumberGenerator.new()  # its own (the firework's t
 
 
 static func make() -> Juice:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

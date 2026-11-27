@@ -9,6 +9,8 @@ const DEFAULT_PREFS := {"pinnedItems": [], "capstonesEverCrafted": [], "playDays
 	"minigamesEnabled": false,
 	"lowMotion": false, "vibration": true,
 	"autoTrackOnPin": false, "pinAsked": false}  # pinAsked: "Don't ask again" ticked on the first-pin window
+var _pending := false  # a save_all() waiting for the frame's end
+var _pending_run = null  # the run it saves (null: prefs only)
 var prefs: Dictionary = DEFAULT_PREFS.duplicate(true)
 
 
@@ -57,6 +59,7 @@ func grant_stars(n: int) -> void:
 # ---- saving (Game.state.js) and what's kept across runs (trophies.js, history.js)
 
 const SAVE_PATH := "user://save.json"
+const SAVE_VERSION := 1  # bump with a step in upgrade() when a save needs changing to load
 const PREFS_PATH := "user://prefs.json"
 const TROPHY_PATH := "user://trophies.json"
 const HISTORY_PATH := "user://history.json"
@@ -99,6 +102,7 @@ static func _write(path: String, value: Variant) -> void:
 
 ## loadAll(): the saved run (if any), prefs, trophies and history.
 func load_all() -> void:
+	flush()
 	prefs.merge(_read(PREFS_PATH, {}), true)
 	trophies = _read(TROPHY_PATH, {})
 	history = _read(HISTORY_PATH, [])
@@ -106,16 +110,52 @@ func load_all() -> void:
 	var saved = _read(SAVE_PATH, null)
 	Game.state = Game.fresh_state()
 	if saved is Dictionary:
-		Game.state.merge(saved, true)
+		Game.state.merge(upgrade(saved), true)
 	Game.resume()
 
 
+## Saves at the end of this frame, once however often it's asked (a write
+## is 6-9 ms: never in the middle of a tap's redraw). The run to save is the
+## one current now (the Combo Lab swaps Game.state for its throwaway run).
 func save_all() -> void:
 	if not autosave:
 		return
 	if Game.state.get("mode") and not Game.ctx.get("comboLab"):  # Combo Lab's throwaway run is never saved
-		_write(SAVE_PATH, Game.state)
+		_pending_run = Game.state
+	if not _pending:
+		_pending = true
+		flush.call_deferred()
+
+
+## Writes a pending save now (before reading the files, and when the app
+## is closed or sent to the background).
+func flush() -> void:
+	if not _pending:
+		return
+	_pending = false
+	if _pending_run != null:
+		var out: Dictionary = _pending_run.duplicate()  # shallow: the stamp stays off the live run
+		out.saveVersion = SAVE_VERSION
+		_write(SAVE_PATH, out)
+		_pending_run = null
 	_write(PREFS_PATH, prefs)
+
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_PREDELETE]:
+		flush()
+
+
+## A saved run brought up to SAVE_VERSION, one step per version (saves from
+## before versions are 0). Older shapes the screens read directly still
+## fall back where they're read (e.g. mapSeen from the visits).
+static func upgrade(s: Dictionary) -> Dictionary:
+	var v := int(s.get("saveVersion", 0))
+	if v > SAVE_VERSION:
+		push_warning("A save from a newer version (%d): loading what this one knows" % v)
+	# if v < 2: ... the step that turns a version 1 save into 2
+	s.erase("saveVersion")
+	return s
 
 
 func has_save() -> bool:

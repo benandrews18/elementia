@@ -23,7 +23,7 @@ var _completing := false
 
 
 static func make() -> EndGame:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 static func title_text() -> String:

@@ -43,7 +43,7 @@ static var _ball: Shader
 
 
 static func make() -> HubBar:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:

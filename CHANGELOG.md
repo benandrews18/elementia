@@ -1,14 +1,16 @@
 # Changelog
 
-All notable content/gameplay changes. The content version is `"version"`
-in `game/js/data.js`; it shows on the game's Settings screen and is stamped
-on any printed PDFs. Bump it (date-based) when content changes. See
+All notable content/gameplay changes, newest first. The game is the Godot
+project in `godot/` (the HTML entries before 2026-11-21 are history). See
 `CLAUDE.md` for how to build and publish.
 
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Faster taps: screens rebuild about twice as fast (their pieces stay loaded instead of being read from storage each time), the game saves just after a tap instead of during it, and the map or station under the Display Mat or the Items screen isn't redrawn while it's covered. Animations that start on a tap should no longer stutter at the start.
+- Small buttons are easier to hit: the Market's 📌 pins and a shop card's greyed suit badges take taps a little way around them.
+- The opening's glowing 🔍 Track buttons pulse 5 times and then stay lit; the clue gift wobbles 8 times, then rests (saves battery).
 - Inventory list view (📋): the station list view's one-line rows across the screen (picture, name, suit icons, parts); the side card is gone, a tap puts the item on the Crafting Bench above.
 - The opening: while nothing is tracked, the parts' 🔍 Track buttons glow and pulse. A locked Start opens the To-Do details on your chosen capstone.
 - To-Do details panel: back to full height; opening it changes nothing in the list beside it.

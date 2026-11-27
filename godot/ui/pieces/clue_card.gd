@@ -16,7 +16,7 @@ const SCENE := "res://ui/pieces/clue_card.tscn"
 
 
 static func make() -> ClueCard:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## c: a Mat.collections() entry; known: the items shown (all, when found);

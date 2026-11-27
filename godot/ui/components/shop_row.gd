@@ -25,7 +25,7 @@ var plain := false  # the Inventory's row (matShopRowHTML()): no have/missing ma
 
 
 static func make(e: Dictionary, width: float, craft: Callable, pin: Callable, plain_row := false) -> ShopRow:
-	var r: ShopRow = load(SCENE).instantiate()
+	var r: ShopRow = Tok.make(SCENE)
 	r.plain = plain_row
 	r.entry = e
 	r.on_craft = craft
@@ -64,6 +64,7 @@ func _ready() -> void:
 			b.mouse_filter = MOUSE_FILTER_STOP
 			b.set_meta("cmp", "tax:short:" + su)
 			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert("", e.name))
+			Tok.grow_hit(b, 5)
 		var g := Tok.icon("suit:" + su, 13)
 		g.position = Vector2(4.5, 4.5)
 		g.material = Tok.white()

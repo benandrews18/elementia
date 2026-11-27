@@ -17,7 +17,7 @@ signal delete_pressed
 
 
 static func make() -> LayoutRow:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## layout: {name, items}; w: the row's width. Returns its height.

@@ -52,7 +52,7 @@ signal toggled(on: bool)
 
 
 static func make(plain := false) -> SettingRow:
-	return load("res://ui/pieces/%s.tscn" % ("plain_row" if plain else "setting_row")).instantiate()
+	return Tok.make("res://ui/pieces/%s.tscn" % ("plain_row" if plain else "setting_row"))
 
 
 func _ready() -> void:

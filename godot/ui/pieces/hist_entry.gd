@@ -15,7 +15,7 @@ signal copied(json: String)
 
 
 static func make() -> HistEntry:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## h: a Progress.history entry; open: its turns shown.
@@ -52,7 +52,7 @@ func _turns(h: Dictionary) -> void:
 	$Body/Detail/Pad/Empty.visible = log.is_empty()
 	for i in log.size():
 		var t: Dictionary = log[i]
-		var turn: Control = load(TURN).instantiate()
+		var turn: Control = Tok.make(TURN)
 		turn.get_node("Rule").visible = i > 0
 		turn.get_node("Head/N").text = str(i + 1)
 		var st: String = t.get("station", "")

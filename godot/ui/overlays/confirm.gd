@@ -24,7 +24,7 @@ var checked := false
 ## Shows the dialog over `on` (the app); opts sets the vars above (title,
 ## yes_text, no_text, on_no, check_text).
 static func ask(on: Control, msg: String, yes: Callable, opts := {}) -> ConfirmDialog:
-	var d: ConfirmDialog = load(SCENE).instantiate()
+	var d: ConfirmDialog = Tok.make(SCENE)
 	d.message = msg
 	d.on_yes = yes
 	for k in opts:

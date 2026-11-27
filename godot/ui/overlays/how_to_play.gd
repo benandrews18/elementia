@@ -43,7 +43,7 @@ var _dot_off: StyleBox
 
 
 static func make() -> HowToPlay:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 ## Plays the slides over `on` (straight to then_do if hidden for good).

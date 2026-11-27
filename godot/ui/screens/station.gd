@@ -30,7 +30,7 @@ var _bulbs := {}  # shop cards whose 💡 has shown this visit (station -> {name
 
 
 static func make() -> StationScreen:
-	return load(SCENE).instantiate()
+	return Tok.make(SCENE)
 
 
 func _ready() -> void:
@@ -419,7 +419,7 @@ func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1
 ## is ui/pieces/element_chip.tscn; the colours and sizes come from the element
 ## and w. The name stays the last child (callers recaption or hide it).
 static func element_chip(sym: String, w: float) -> Control:
-	var col: Control = load("res://ui/pieces/element_chip.tscn").instantiate()
+	var col: Control = Tok.make("res://ui/pieces/element_chip.tscn")
 	col.size = Vector2(w, w + 13.8)
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
@@ -532,7 +532,7 @@ static func suit_pill(conv_at: Vector2) -> Control:
 	strip.size = Vector2(4 + row_w + 4 + 29, 58)  # the pill's right end hides under the button's middle
 	strip.position = Vector2(conv_at.x + 29 - strip.size.x, conv_at.y)
 	strip.set_meta("cmp", "suits")
-	var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
+	var pill: Control = Tok.make("res://ui/pieces/tracked_pill.tscn")
 	pill.get_node("Row").visible = false
 	pill.size = Vector2(strip.size.x, 18)
 	pill.position = Vector2(0, (58 - 18) / 2)

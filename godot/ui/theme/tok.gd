@@ -25,11 +25,31 @@ static var SHADOW: Color = T.shadow
 static var _fonts := {}
 static var _outlines := {}
 static var _tints := {}  # colour -> its tint material
+static var _scenes := {}  # path -> PackedScene, held: a scene nobody holds is re-read from disk by every load() (~3 ms)
 
 
 ## The game's font: Nunito (chosen 2026-11-15; assets/fonts, OFL), one
 ## variable file drawn at any weight. Bundled, so text looks the same on every
 ## device and on the web, where Godot can't use the phone's own fonts.
+## A new instance of the scene at path (kept loaded after its first use).
+static func make(path: String) -> Node:
+	if not _scenes.has(path):
+		_scenes[path] = load(path)
+	return _scenes[path].instantiate()
+
+
+## A bigger invisible tap area round a small button (review 9: fingers
+## miss 20px targets): taps on it pass up to c's own gui_input. Call once
+## c has its size.
+static func grow_hit(c: Control, pad: float) -> void:
+	var hit := Control.new()
+	hit.name = "Hit"
+	hit.position = -Vector2(pad, pad)
+	hit.size = c.size + Vector2(pad, pad) * 2
+	hit.mouse_filter = Control.MOUSE_FILTER_PASS
+	c.add_child(hit)
+
+
 static func font(weight := 400, spacing := 0) -> Font:
 	var key := "%d/%d" % [weight, spacing]
 	var path := "res://ui/theme/fonts/nunito_%d.tres" % weight  # shared with the scenes

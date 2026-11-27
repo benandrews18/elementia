@@ -60,16 +60,16 @@ func _run(app: App) -> void:
 	# (where you start) with YOU ARE HERE; Start locked until something's tracked.
 	check(await _until(func(): return app.panel == "todo" and app.home_face() == "start"), "the opening shows the To-Do List; Home reads Start")
 	check(app._screen is MapScreen and app._screen._nodes().filter(func(n): return n.visible).size() == 1 and Game.ctx.tracked == null, "the map shows only the starting station; nothing tracked")
-	check(app._hub.muted and app.get_node_or_null("StartLock") != null, "Start is locked, a line above it says why")
-	check(_find_meta(app._panel_node, "todo:trackglow") != null, "the parts' Track buttons glow while nothing is tracked")
+	check(app.hub.muted and app.get_node_or_null("StartLock") != null, "Start is locked, a line above it says why")
+	check(_find_meta(app.panel_node, "todo:trackglow") != null, "the parts' Track buttons glow while nothing is tracked")
 	TodoTray.detail = ""
-	app._panel_node._redraw()
+	app.panel_node._redraw()
 	app._on_hub("home")
 	check(app.home_face() == "start" and app._screen is MapScreen, "a locked Start does nothing")
-	check(TodoTray.detail == "Coral Reef" and _find_meta(app._panel_node, "todo:details") != null, "a locked Start opens the capstone's details again")
+	check(TodoTray.detail == "Coral Reef" and _find_meta(app.panel_node, "todo:details") != null, "a locked Start opens the capstone's details again")
 	var part: String = Catalog.needs_of(Catalog.entry("Coral Reef").reqs).items[0].name
-	_find_meta(app._panel_node, "todo:track:" + part).gui_input.emit(_release())
-	check(Game.ctx.tracked == part and not app._hub.muted, "tracking a part unlocks Start")
+	_find_meta(app.panel_node, "todo:track:" + part).gui_input.emit(_release())
+	check(Game.ctx.tracked == part and not app.hub.muted, "tracking a part unlocks Start")
 	app._on_hub("home")
 	check(await _until(func(): return app._screen is StationScreen), "Start: the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
@@ -161,10 +161,10 @@ func _run(app: App) -> void:
 			_dismiss(app)
 		if app.panel == "drawer":
 			var hd = Game.check_hand()
-			check(hd != null and hd.hand.size() == mini(Hand.start(), hd.hand.size() + hd.deck.size()) and app.home_face() == "play" and app._hub.hand, "turn %d: check turn: a hand (up to %d), Play in the middle" % [turns, Hand.start()])
+			check(hd != null and hd.hand.size() == mini(Hand.start(), hd.hand.size() + hd.deck.size()) and app.home_face() == "play" and app.hub.hand, "turn %d: check turn: a hand (up to %d), Play in the middle" % [turns, Hand.start()])
 			check(Game.state.mat.size() == Util.get_or(Game.state, "matPlays", []).reduce(func(a, p): return a + p.size(), 0), "turn %d: the mat cleared for the check (only this check's plays on it)" % turns)
 			# Play a card at a time while one fits (the hand refills), as a player would.
-			var mat := app._hand_mat()
+			var mat := app.hand_mat()
 			while hd != null and mat != null and Game.check_hand() != null and not mat.playing:
 				var fit: Array = hd.hand.filter(func(n): return Hand.gain(Game.state, Game.ctx, [n]) != null)
 				if fit.is_empty():
@@ -186,13 +186,13 @@ func _run(app: App) -> void:
 				ask[0].queue_free()
 			else:  # the count, then the Bonus Dice window; Nice travels
 				var reward := Orders.reward_for(Game.mat_score().total, Orders.check_round(Game.state))
-				check(app._hub.greyed, "turn %d: Lock In greys while it counts" % turns)
+				check(app.hub.greyed, "turn %d: Lock In greys while it counts" % turns)
 				check(await _until(func(): return app.get_children().any(func(c): return c is LockInReward)), "turn %d: the Bonus Dice window opens" % turns)
 				var dlg: LockInReward = app.get_children().filter(func(c): return c is LockInReward)[0]
 				check(dlg.dice == mini(reward, 3) and dlg.unknown == (reward >= 4), "turn %d: shows the reward" % turns)
 				var qm := dlg.get_node_or_null("MeterBar/Meter") as QuarkMeter
 				check(qm != null and qm._passed == reward, "turn %d: the reward's quark meter shows the breakpoints passed" % turns)
-				check(not app._hub.greyed, "turn %d: Lock In back to colour after the count" % turns)
+				check(not app.hub.greyed, "turn %d: Lock In back to colour after the count" % turns)
 				dlg._done()
 				check(await _until(func(): return app._screen is StationScreen and app.panel == ""), "turn %d: the fade lands at the station" % turns)
 				check(Game.state.get("hand") == null, "turn %d: the hand is gone after the check" % turns)
@@ -264,7 +264,7 @@ func _convert(app: App) -> bool:
 	var before_to := Catalog.count(Game.state, to)
 	app.open_panel("convert")
 	check(app.home_face() == "close", "Convert open: Home says Close")
-	var tray: ConvertTray = app._panel_node
+	var tray: ConvertTray = app.panel_node
 	for side in ["from", "to"]:
 		tray._pick(side)
 		var p: ElementPicker = app.get_children().filter(func(c): return c is ElementPicker).back()  # the last one's freed only at frame end
@@ -341,13 +341,13 @@ func _market(app: App) -> void:
 	check(await _until(func(): return not is_instance_valid(bench) or bench.is_queued_for_deletion()), "the Crafting Bench closes once it's made")
 	check(await _until(func(): return app.market_plays > plays), "the square bounces in the open tray")
 	check(await _nice(app), "its ? window")
-	check(await _until(func(): return not app._market_playing), "and the tray settles")
+	check(await _until(func(): return not app.market_playing), "and the tray settles")
 	# The tray closed in the middle of its bounces: the sequence still ends
 	# (it used to stop on the freed tray, its tap blocker left on screen).
 	var kids := app.get_child_count()
 	app._market_sequence([0], [])
 	app.close_panel()
-	check(await _until(func(): return not app._market_playing) and app.get_child_count() <= kids, "a tray closed mid-bounce: the sequence still ends, nothing left blocking taps")
+	check(await _until(func(): return not app.market_playing) and app.get_child_count() <= kids, "a tray closed mid-bounce: the sequence still ends, nothing left blocking taps")
 	app.close_panel()
 	finished.market = true
 
@@ -364,7 +364,7 @@ func _todo(app: App) -> void:
 	TodoTray.hint_open = false
 	app._on_hub("jobs")
 	check(app.panel == "todo" and app.home_face() == "close", "the To-Do List opens (Home reads Close)")
-	var tray: TodoTray = app._panel_node
+	var tray: TodoTray = app.panel_node
 	tray.hint_open = true
 	tray._open_hint_paths()
 	var hint = Game.todo_hint()
@@ -373,13 +373,13 @@ func _todo(app: App) -> void:
 	tray._redraw()
 	await get_tree().process_frame
 	var pc := RefTree.parts(Catalog.entry("Metropolis"))
-	check(_find_meta(app._panel_node, "todo:bar:%d/%d" % [pc.x, pc.y]) != null, "the quest shows its parts bar (%d/%d)" % [pc.x, pc.y])
+	check(_find_meta(app.panel_node, "todo:bar:%d/%d" % [pc.x, pc.y]) != null, "the quest shows its parts bar (%d/%d)" % [pc.x, pc.y])
 	TodoTray.detail = ""
 	tray._redraw()
-	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
-	check(TodoTray.detail == "Metropolis" and _find_meta(app._panel_node, "todo:details") != null, "a tap on an item opens its details panel")
+	_find_meta(app.panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
+	check(TodoTray.detail == "Metropolis" and _find_meta(app.panel_node, "todo:details") != null, "a tap on an item opens its details panel")
 	await get_tree().process_frame
-	var cost := _find_meta(app._panel_node, "suitcost:Metropolis")
+	var cost := _find_meta(app.panel_node, "suitcost:Metropolis")
 	if cost and cost.get_child_count() > 0:  # step 27: a suit icon explains itself
 		cost.get_child(0).gui_input.emit(_release())
 		await get_tree().process_frame
@@ -388,25 +388,25 @@ func _todo(app: App) -> void:
 			"a suit icon's tap: the suit's balloon, its name over its elements, no counts")
 		for c in sv:
 			c.queue_free()
-	_find_meta(app._panel_node, "todo:close").gui_input.emit(_release())
-	check(TodoTray.detail == "" and _find_meta(app._panel_node, "todo:details") == null, "✕ closes the details panel")
+	_find_meta(app.panel_node, "todo:close").gui_input.emit(_release())
+	check(TodoTray.detail == "" and _find_meta(app.panel_node, "todo:details") == null, "✕ closes the details panel")
 	await get_tree().process_frame
-	_find_meta(app._panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
+	_find_meta(app.panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
 	await get_tree().process_frame
 	var comp: String = Catalog.needs_of(Catalog.entry("Metropolis").reqs).items.filter(func(it): return not Catalog.owns(Game.state, it.name))[0].name
 	Game.set_tracked(null)
 	await get_tree().process_frame
-	check(_find_meta(app._panel_node, "todo:tip") != null, "untracked, the list says how to track a part")
-	var find_track := func(): return _find_meta(app._panel_node, "todo:track:" + comp)
+	check(_find_meta(app.panel_node, "todo:tip") != null, "untracked, the list says how to track a part")
+	var find_track := func(): return _find_meta(app.panel_node, "todo:track:" + comp)
 	find_track.call().gui_input.emit(_release())
 	check(Game.ctx.tracked == comp and Progress.is_pinned(comp), "a tree row's 🔍 tracks %s and pins it (its own quest)" % comp)
 	await get_tree().process_frame
-	var rows: Array = app._panel_node._list.get_children().filter(func(c): return String(c.get_meta("cmp", "")).begins_with("todo:quest:") and not c.is_queued_for_deletion())
+	var rows: Array = app.panel_node._list.get_children().filter(func(c): return String(c.get_meta("cmp", "")).begins_with("todo:quest:") and not c.is_queued_for_deletion())
 	check(not rows.is_empty() and rows[0].get_meta("cmp") == "todo:quest:" + comp, "the tracked item tops the list")
-	_find_meta(app._panel_node, "todo:below").gui_input.emit(_release())
+	_find_meta(app.panel_node, "todo:below").gui_input.emit(_release())
 	check(TodoTray.detail == "", "a tap under the rows closes the details panel")
 	TodoTray.detail = "Metropolis"
-	app._panel_node._redraw()
+	app.panel_node._redraw()
 	await get_tree().process_frame
 	check(TodoTray.lead() == "Metropolis", "the quest holding the tracked part leads")
 	await get_tree().process_frame
@@ -452,7 +452,7 @@ func _cards(app: App) -> void:
 	chip.gui_input.emit(press)
 	chip.gui_input.emit(_release())
 	var sym: String = Catalog.sorted_dice(Catalog.station(Game.ctx.current))[0]
-	check(app.panel == "convert" and app._panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
+	check(app.panel == "convert" and app.panel_node.to == sym, "a station's element chip opens Convert with it picked to convert into")
 	app.close_panel()
 	# The list view (the user, 2026-11-26): rows across the screen, a tap puts
 	# the item on the Crafting Bench; the next arrival is back in the card view.
@@ -486,8 +486,8 @@ func _cards(app: App) -> void:
 		if need:
 			need.gui_input.emit(_press(Vector2.ZERO))
 			need.gui_input.emit(_release())
-			check(app.panel == "convert" and app._panel_node.to == missing, "a missing element on the Crafting Bench opens Convert with it on the To side")
-			check(app.panel == "convert" and app._panel_node.bench_item == want[0].name and is_instance_valid(app._panel_node._bench) and _find_meta(app._panel_node._bench, "craft:" + want[0].name) != null,
+			check(app.panel == "convert" and app.panel_node.to == missing, "a missing element on the Crafting Bench opens Convert with it on the To side")
+			check(app.panel == "convert" and app.panel_node.bench_item == want[0].name and is_instance_valid(app.panel_node._bench) and _find_meta(app.panel_node._bench, "craft:" + want[0].name) != null,
 				"and the card's Crafting Bench rides on the tray, Craft and all")
 		app.close_panel()
 		app.open_card("")
@@ -521,7 +521,7 @@ func _cards(app: App) -> void:
 	Game.state.mat = three.duplicate()
 	app.open_panel("drawer")
 	await get_tree().process_frame
-	var chipn: Control = app._panel_node._chip_nodes.get("station:" + Game.ctx.current)
+	var chipn: Control = app.panel_node._chip_nodes.get("station:" + Game.ctx.current)
 	check(chipn != null, "three cards from this station: its combo chip")
 	if chipn:
 		Tap._down = null
@@ -530,7 +530,7 @@ func _cards(app: App) -> void:
 		check(ci.size() == 1 and ComboInfo.cards_for("station", Game.ctx.current).size() >= 3, "a tap on a combo chip lists the cards making it")
 		for c in ci:
 			c.queue_free()
-	var trophy := _find_meta(app._panel_node, "inv:collections")
+	var trophy := _find_meta(app.panel_node, "inv:collections")
 	if trophy:
 		Tap._down = null
 		trophy.gui_input.emit(_release())
@@ -622,7 +622,7 @@ func _cards(app: App) -> void:
 	var fx := func(): return app.get_children().filter(func(c): return c.has_meta("craft_fx") and not c.is_queued_for_deletion())
 	check(peeks.call().size() == 1, "a craft pops up its small card")
 	var keeps: Array = fx.call().filter(func(c): return c is ItemCard)
-	check(keeps.size() == 2 and keeps[0].get_index() < app._hub.get_index(), "a craft's kept items peek up from behind the hub")
+	check(keeps.size() == 2 and keeps[0].get_index() < app.hub.get_index(), "a craft's kept items peek up from behind the hub")
 	check(await _until(func(): return peeks.call().is_empty()), "the small card flies into the Inventory")
 	check(await _until(func(): return fx.call().is_empty()), "the kept items go back down, freed")
 	var el_item: Dictionary = Data.t("ENTRIES").filter(func(e): return e.tier != "CAPSTONE" and e.reqs.any(func(r): return r.kind == "element" and not r.catalyst))[0]
@@ -653,7 +653,7 @@ func _items(app: App) -> void:
 	await get_tree().process_frame
 	app._on_hub("codex")
 	check(app.panel == "codex" and app.home_face() == "close", "the hub's Items opens the Items screen (Home reads Close)")
-	var scr: ItemsScreen = app._panel_node
+	var scr: ItemsScreen = app.panel_node
 	var rows := func(): return scr._rows.filter(func(r): return is_instance_valid(r) and not r.is_queued_for_deletion())
 	var open_items: Array = Data.t("ENTRIES").map(func(e): return e.name).filter(func(n): return Catalog.item_open(Game.state, n))
 	var uniq := {}
@@ -736,7 +736,7 @@ func _items(app: App) -> void:
 ## from the title screen a clue costs Stars and opens as a gift; Combo Lab
 ## swaps in a sandbox run and Exit puts the real one back, unsaved.
 func _collections(app: App) -> void:
-	for c in app.get_children().slice(app._hub.get_index() + 1):
+	for c in app.get_children().slice(app.hub.get_index() + 1):
 		if c is Control:
 			c.queue_free()
 	Game.load_snapshot(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/mat_visit18.json")))
@@ -777,8 +777,8 @@ func _collections(app: App) -> void:
 	cw.close()
 	var real := Game.state
 	app.open_combo_lab()
-	check(Game.ctx.get("comboLab") == true and Game.state != real and Game.state.items.size() > real.items.size() and not app._hub.visible, "Combo Lab: a sandbox run, every item, no hub")
-	var ldm := app._panel_node as DisplayMatScreen
+	check(Game.ctx.get("comboLab") == true and Game.state != real and Game.state.items.size() > real.items.size() and not app.hub.visible, "Combo Lab: a sandbox run, every item, no hub")
+	var ldm := app.panel_node as DisplayMatScreen
 	var it: String = Game.state.items.filter(func(n): return Catalog.mat_card(n) != null and not Mat.is_capstone(Catalog.mat_card(n)))[0]
 	ldm._on_card_input(_release(), it)
 	await get_tree().process_frame
@@ -787,7 +787,7 @@ func _collections(app: App) -> void:
 	check(not Game.state.mat.has(it) and ldm.selected == it, "a second tap takes it off; it stays on the bench")
 	ldm._on_card_input(_release(), it)
 	app.close_combo_lab()
-	check(Game.state == real and app._hub.visible and not Game.ctx.get("comboLab", false), "Exit puts the real run back")
+	check(Game.state == real and app.hub.visible and not Game.ctx.get("comboLab", false), "Exit puts the real run back")
 	# The Challenge Test (card playing, tried in the lab): a copy of the run at
 	# the picked check, a hand to play; Lock In goes back to the lab.
 	var real_mat: Array = real.mat.duplicate()
@@ -803,10 +803,10 @@ func _collections(app: App) -> void:
 	var hd: Dictionary = Game.state.get("hand", {})
 	check(Game.state != real and Game.state != lab and int(Game.state.visits) == 12 and Game.state.order != null, "the test: a copy of the run at check 12, with its challenge")
 	check(hd.get("hand", []).size() == 7 and Game.state.mat.is_empty(), "a hand of 7; the mat cleared for the check")
-	var dm := app._panel_node as DisplayMatScreen
+	var dm := app.panel_node as DisplayMatScreen
 	check(not dm._scroll.visible and _find_meta(dm, "hand:discard") != null and _find_meta(dm, "hand:lockin") == null and _find_meta(dm, "hand:draw") != null, "the hand in place of the item list; Discard and Draw under the mat, no Lock In")
-	check(_find_meta(dm, "tab:Elements") == null and app._hub.visible and app._hub.hand and app._hub.face == "play" and app._hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
-	check(app._hub.get_node("Jobs/Label").text == "To-Do List" and app._hub.off.get("market") == true, "the hub's other buttons as usual (the To-Do List too), the Market shut")
+	check(_find_meta(dm, "tab:Elements") == null and app.hub.visible and app.hub.hand and app.hub.face == "play" and app.hub.muted, "no page tabs; the hub's middle button is Play, muted with nothing picked")
+	check(app.hub.get_node("Jobs/Label").text == "To-Do List" and app.hub.off.get("market") == true, "the hub's other buttons as usual (the To-Do List too), the Market shut")
 	var goal := _find_meta(dm, "hand:goal")
 	check(goal != null and goal.position.x < _find_meta(dm, "hand:pass").position.x, "🎯 Goal above the hand, left of Pass")
 	if goal:
@@ -825,13 +825,13 @@ func _collections(app: App) -> void:
 	var first: String = hd.hand[0]
 	dm._lift(first)
 	check(dm._page == page_was and dm.lifted == first, "picking a card doesn't rebuild the mat; one pick shows its card")
-	check(_find_meta(dm._page, "hand:gain") != null and not app._hub.muted, "picked: what it adds shows over the mat; Play in full colour")
+	check(_find_meta(dm._page, "hand:gain") != null and not app.hub.muted, "picked: what it adds shows over the mat; Play in full colour")
 	check(_find_meta(dm._page, "hand:landing") != null, "picked: the slot it would take lights up")
 	var deck_n: int = hd.deck.size()
 	app._on_hub("home")
 	check(Game.state.mat == [first] and hd.hand.size() == 7 and hd.deck.size() == deck_n - 1 and Game.state.matPlays == [[first]], "Play: the card on the mat, the hand refilled 1 for 1")
 	var flying := func(): return app.get_children().filter(func(c): return c.has_meta("flying") and not c.is_queued_for_deletion()).size()
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	check(flying.call() == 1 and dm._mat_nodes[first].modulate.a == 0.0, "the played card flies to its slot (hidden there until it lands)")
 	check(HandView._arrive.has(hd.hand[-1]), "the refill rises from below")
 	check(await _until(func(): return flying.call() == 0 and dm._mat_nodes[first].modulate.a == 1.0), "the flight ends: its copy freed, the card shows in its slot")
@@ -882,7 +882,7 @@ func _collections(app: App) -> void:
 		if not Game.state.items.has(n):
 			Game.state.items.append(n)
 	Game._changed()
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	dm._lift(col.items[0])
 	dm.hand_play()
 	await get_tree().process_frame
@@ -899,7 +899,7 @@ func _collections(app: App) -> void:
 	Progress.prefs.everUnlockedMatCollections = was_found
 	Game.state.mat = mat_was
 	Game._changed()
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	# Combo cards: those in a live group (a gold border).
 	var by_st := {}
 	for n in Game.state.items:
@@ -927,12 +927,12 @@ func _collections(app: App) -> void:
 	_find_meta(dm, "hand:discard").gui_input.emit(_release())
 	check(hd.hand.size() == 7 and hd.discards == two and hd.tosses == tosses - 1, "Discard: both cards out for one discard, the hand refilled")
 	check(flying.call() == 2 and hd.hand.filter(func(n): return not held.has(n)).all(func(n): return HandView._arrive.has(n)), "the discards fly off, the refills rise")
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	_find_meta(dm, "hand:deck").gui_input.emit(_release())
 	var faded := func(n): return _find_meta(dm, "inv:" + n) != null and _find_meta(dm, "inv:" + n).modulate != Color.WHITE
 	check(faded.call(two[0]) and faded.call(first) and not faded.call(hd.hand[0]), "browsing: the mat's cards and the discards faded, the rest not")
 	(_find_meta(dm, "hand:back") as Button).pressed.emit()
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	dm._lift(hd.hand[0])
 	dm._blank_tap(_release())
 	check(dm.picks.is_empty() and dm.lifted == "", "a tap on a blank space lets go of the picks")
@@ -968,25 +968,25 @@ func _collections(app: App) -> void:
 	Game.state.elements = {esym: 2}
 	Game.state.emptyElements = 1
 	Game._changed()
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	check(_find_meta(dm, "convert") == null, "no Convert in the mat's corner during a check")
 	dm.view = "elements"
 	dm._redraw()
 	check(_find_meta(dm, "convert") != null, "Convert on the Elements page")
 	dm.view = "mat"
 	app.open_panel("convert")
-	check(app._panel_node is ConvertTray and (app._panel_node as ConvertTray).to == "" and app._hub.face == "close", "its tray is the usual one")
+	check(app.panel_node is ConvertTray and (app.panel_node as ConvertTray).to == "" and app.hub.face == "close", "its tray is the usual one")
 	check(is_instance_valid(dm) and not dm.is_queued_for_deletion() and dm.visible, "Convert opens over the mat (the mat stays open under it)")
 	var over := _find_meta(app._floats, "convert")
 	check(over != null, "the Convert button shows over its tray")
 	if over:
 		Tap._down = null
 		over.gui_input.emit(_release())
-		check(app.panel == "drawer" and app._panel_node == dm, "a tap on it closes the tray, back to the same mat")
+		check(app.panel == "drawer" and app.panel_node == dm, "a tap on it closes the tray, back to the same mat")
 		app.open_panel("convert")
 	app._on_hub("home")
 	check(app.panel == "drawer" and Game.state.get("hand") == hd, "closing it goes back to the hand")
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	Tap._down = null
 	_find_meta(dm, "hand:draw").gui_input.emit(_release())
 	check(dm.view == "elements" and _find_meta(dm, "el:" + esym) != null, "Draw flips the mat to its Elements page")
@@ -1007,7 +1007,7 @@ func _collections(app: App) -> void:
 		Tap._scrolled = false
 		pc.gui_input.emit(_release())
 	check(hd.hand.size() == n_hand + 1 and hd.hand.has(want_card) and Catalog.count(Game.state, esym) == 1, "Elements tab: a tapped element is spent on the card picked")
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	var hand_was: Array = hd.hand.duplicate()
 	while hd.hand.size() < Hand.most():
 		hd.hand.append(hd.deck.pop_back())
@@ -1022,7 +1022,7 @@ func _collections(app: App) -> void:
 	if cps.size() == 1:
 		cps[0]._take(pick_card)
 	check(hd.hand.has(pick_card) and int(Game.state.emptyElements) == 0 and app.panel == "drawer", "an Unknown Element picks any card from the deck")
-	dm = app._panel_node as DisplayMatScreen
+	dm = app.panel_node as DisplayMatScreen
 	dm.view = "elements"
 	dm._redraw()
 	dm._lift(hd.hand[0])
@@ -1039,7 +1039,7 @@ func _collections(app: App) -> void:
 	check(await _until(func(): return not top.call(LockInReward).is_empty()), "Lock In counts, then the reward")
 	top.call(LockInReward)[0].on_done.call()
 	top.call(LockInReward)[0].queue_free()
-	check(Game.state == lab and not Game.state.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge") and not app._hub.visible, "then back to the lab")
+	check(Game.state == lab and not Game.state.has("hand") and app.get_node("LabBar/Test").text.contains("Challenge") and not app.hub.visible, "then back to the lab")
 	app.close_combo_lab()
 	check(Game.state == real and real.mat == real_mat, "the real run is untouched")
 	finished.collections = true
@@ -1055,7 +1055,7 @@ func _layouts(app: App) -> void:
 	app.close_panel()
 	app.open_panel("drawer")
 	await get_tree().process_frame
-	var locked_mat := app._panel_node as DisplayMatScreen
+	var locked_mat := app.panel_node as DisplayMatScreen
 	check(locked_mat.locked() and _find_meta(locked_mat, "btn:💾") == null and _find_meta(locked_mat, "btn:Clear") == null and _find_meta(locked_mat, "btn:Combo Lab") != null,
 		"between checks the mat is locked: no 💾, Clear or Last, a Combo Lab button")
 	var run_items: Array = Game.state.items.duplicate()
@@ -1063,7 +1063,7 @@ func _layouts(app: App) -> void:
 	check(Game.ctx.get("comboLab") and Game.state.items == run_items and Game.state.mat.size() > 0, "the Inventory's Combo Lab: this run's items and mat")
 	await get_tree().process_frame
 	var mat_before: Array = Game.state.mat.duplicate()
-	var save_btn: Button = app._panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:💾")[0]
+	var save_btn: Button = app.panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:💾")[0]
 	save_btn.pressed.emit()
 	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
 	check(top.call(LayoutsWindow).size() == 1, "the mat's 💾 opens Saved Layouts")
@@ -1085,14 +1085,14 @@ func _layouts(app: App) -> void:
 	check(Progress.prefs.savedMatLayouts.is_empty(), "then deletes it")
 	lw.close()
 	await get_tree().process_frame
-	check(app.get_node_or_null("LabBar") == null and _find_meta(app._panel_node, "btn:Exit") != null, "a run's lab: no top bar, an Exit button by Clear")
-	app._panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:Exit")[0].pressed.emit()
+	check(app.get_node_or_null("LabBar") == null and _find_meta(app.panel_node, "btn:Exit") != null, "a run's lab: no top bar, an Exit button by Clear")
+	app.panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:Exit")[0].pressed.emit()
 	await get_tree().process_frame
-	check(not Game.ctx.get("comboLab") and app.panel == "drawer" and (app._panel_node as DisplayMatScreen).locked(), "Exit: back to the run's Inventory")
-	var inv_mat := app._panel_node as DisplayMatScreen
+	check(not Game.ctx.get("comboLab") and app.panel == "drawer" and (app.panel_node as DisplayMatScreen).locked(), "Exit: back to the run's Inventory")
+	var inv_mat := app.panel_node as DisplayMatScreen
 	inv_mat._on_card_input(_release(), run_items[0])
 	await get_tree().process_frame
-	check(_find_meta(app._panel_node, "mat:bench") != null, "the Inventory: a tapped card shows its Crafting Bench")
+	check(_find_meta(app.panel_node, "mat:bench") != null, "the Inventory: a tapped card shows its Crafting Bench")
 	finished.layouts = true
 
 
@@ -1102,7 +1102,7 @@ func _layouts(app: App) -> void:
 func _tips(app: App) -> void:
 	# A clean screen: earlier sections jump between states mid-animation and
 	# can leave a pop-up or an input block behind (a player can't).
-	for c in app.get_children().slice(app._hub.get_index() + 1):
+	for c in app.get_children().slice(app.hub.get_index() + 1):
 		if c is Control:
 			c.queue_free()
 	app.mouse._queue.clear()  # and no tip from an earlier section (Settings turns the tips back on)
@@ -1115,7 +1115,7 @@ func _tips(app: App) -> void:
 	app.close_panel()
 	var badge := func(): return app.hints._badge if app.hints._on != null and is_instance_valid(app.hints._badge) else null
 	check(await _until(func(): return badge.call() != null and app.hints._on.id == "roll"), "a 💡 on Roll")
-	check(badge.call() != null and badge.call().get_parent() == app._hub.button("home") and not app.mouse.showing, "on the Roll button itself; Mouse waits for a tap")
+	check(badge.call() != null and badge.call().get_parent() == app.hub.button("home") and not app.mouse.showing, "on the Roll button itself; Mouse waits for a tap")
 	Tap._down = null
 	badge.call().gui_input.emit(_release())
 	var said: String = app.mouse.get_node("Bubble/Text").text
@@ -1142,7 +1142,7 @@ func _tips(app: App) -> void:
 	check(not app.get_children().any(func(c): return c is UnknownTip), "the first \"?\" held: no window (it's a hint)")
 	# The map's tracked-item badges say what they mean when tapped.
 	Game.ctx.tracked = "Coral Reef"
-	app._go_map()
+	app.go_map()
 	check(await _until(func(): return app._screen is MapScreen and app._screen.get_node("Area/Badges").get_child_count() > 0), "the map shows the tracked item's badges")
 	for b: Control in app._screen.get_node("Area/Badges").get_children():
 		Tap._down = null
@@ -1177,7 +1177,7 @@ func _pins(app: App) -> void:
 	var btn = func(): return floats.call().filter(func(c): return c.get_meta("cmp", "") == "pins").front()
 	check(floats.call().size() == 2, "the 🔍 button and the tracked pill")
 	app.open_items("")
-	var row: RefRow = app._panel_node._rows.filter(func(r): return r.item == "Steel")[0]
+	var row: RefRow = app.panel_node._rows.filter(func(r): return r.item == "Steel")[0]
 	row.get_node("Pin").gui_input.emit(_release())
 	await get_tree().process_frame
 	check(Game.ctx.tracked == "Coral Reef" and Progress.is_pinned("Steel"), "a 📌 tap pins, tracking stays (Auto-track on pin is off)")
@@ -1185,15 +1185,15 @@ func _pins(app: App) -> void:
 	app.close_panel()
 	await get_tree().process_frame
 	btn.call().gui_input.emit(_release())
-	check(app.panel == "pins" and app._panel_node is PinsTray, "🔍 opens the pins tray")
+	check(app.panel == "pins" and app.panel_node is PinsTray, "🔍 opens the pins tray")
 	await get_tree().process_frame
-	var chips: Array = app._panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	var chips: Array = app.panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
 	var steel: PinChip = chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0]
 	steel.gui_input.emit(_release())
 	check(Game.ctx.tracked == null, "the tracked chip stops tracking")
 	await get_tree().process_frame
 	check(btn.call().get_child_count() == 1, "nothing tracked: \"!\" on the 🔍 button")
-	chips = app._panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
+	chips = app.panel_node.get_node("Tray/Body/Col/Chips").get_children().filter(func(c): return c is PinChip and not c.is_queued_for_deletion())
 	chips.filter(func(c): return c.get_node("Row/Name").text == "Steel")[0].gui_input.emit(_release())
 	check(Game.ctx.tracked == "Steel", "a chip tracks it again")
 	btn.call().gui_input.emit(_release())
@@ -1210,15 +1210,15 @@ func _pins(app: App) -> void:
 	check(app.panel == "", "a tap on the map puts the pins tray away")
 	app.open_panel("drawer")
 	await get_tree().process_frame
-	var fold := _find_meta(app._panel_node, "mat:fold")
+	var fold := _find_meta(app.panel_node, "mat:fold")
 	check(fold != null, "the mat's fold button")
 	if fold:
 		Tap._down = null
 		fold.gui_input.emit(_release())
-		check(DisplayMatScreen.collapsed and _find_meta(app._panel_node, "mat:mini") != null and _find_meta(app._panel_node, "mat:page") == null, "fold: the mat minimised to its row of icons")
+		check(DisplayMatScreen.collapsed and _find_meta(app.panel_node, "mat:mini") != null and _find_meta(app.panel_node, "mat:page") == null, "fold: the mat minimised to its row of icons")
 		Tap._down = null
-		_find_meta(app._panel_node, "mat:mini").gui_input.emit(_release())
-		check(not DisplayMatScreen.collapsed and _find_meta(app._panel_node, "mat:page") != null, "a tap on the row shows the mat again")
+		_find_meta(app.panel_node, "mat:mini").gui_input.emit(_release())
+		check(not DisplayMatScreen.collapsed and _find_meta(app.panel_node, "mat:page") != null, "a tap on the row shows the mat again")
 	app.close_panel()
 	Tap._down = null
 	await get_tree().process_frame
@@ -1365,7 +1365,7 @@ func _settings(app: App) -> void:
 		c.queue_free()
 	app.open_panel("drawer")
 	await get_tree().process_frame
-	var help: Control = app._panel_node.get_node("Body").get_children().filter(func(c): return c.get_meta("cmp", "") == "btn:rules")[0]
+	var help: Control = app.panel_node.get_node("Body").get_children().filter(func(c): return c.get_meta("cmp", "") == "btn:rules")[0]
 	help.gui_input.emit(_release())
 	var mr: Array = top.call(MatRules)
 	check(mr.size() == 1, "the mat's \"?\" opens the Display Mat rules")
@@ -1442,7 +1442,7 @@ func _dev(app: App) -> void:
 ## swallowed; free steps are played like a player would; it ends after the
 ## first Lock In. Then Skip, and resuming a step whose bench closed.
 func _tutorial(app: App) -> void:
-	for c in app.get_children().slice(app._hub.get_index() + 1):
+	for c in app.get_children().slice(app.hub.get_index() + 1):
 		if c is Control:
 			c.queue_free()
 	app.close_panel()
@@ -1490,7 +1490,7 @@ func _tutorial(app: App) -> void:
 				break
 			if not swallowed and st.target == "hub:home":  # a tap elsewhere does nothing
 				swallowed = true
-				_vtap(app._hub.button("codex").get_global_rect().get_center())
+				_vtap(app.hub.button("codex").get_global_rect().get_center())
 				await get_tree().process_frame
 				check(app.panel != "codex" and tut.i == at, "a tap off the target is swallowed")
 			await get_tree().create_timer(1.2).timeout  # popups finish moving in, fades end
@@ -1523,7 +1523,7 @@ func _tutorial(app: App) -> void:
 	tut.finish()
 	for k in 30:  # the logo's moment, then the capstone choice: cleared for the next sections
 		await get_tree().process_frame
-	for c in app.get_children().slice(app._hub.get_index() + 1):
+	for c in app.get_children().slice(app.hub.get_index() + 1):
 		if c is Control:
 			c.queue_free()
 	Progress.prefs.tutorialSeen = true
@@ -1603,7 +1603,7 @@ func _settle_market(app: App) -> bool:
 			if c is RowReward and not c.is_queued_for_deletion():
 				c.queue_free()
 				c.on_done.call()
-		return not app._market_playing)
+		return not app.market_playing)
 
 
 func _squares_reset(app: App) -> void:
