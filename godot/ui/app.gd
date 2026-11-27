@@ -747,6 +747,8 @@ func home_face() -> String:
 		return "gather"  # the roll's chips wait: Gather collects them
 	if _hand_mat():
 		return "play"
+	if c.get("awaitingStart"):  # the opening: Start, even over a tray (the user, 2026-11-26)
+		return "start"
 	if s.get("finalCheckPending") and (panel == "" or panel == "drawer"):
 		return "final"
 	if panel == "drawer" and c.screen == "map" and sel and can_travel_to(sel) and c.get("travelPromptFor") == sel:
@@ -793,6 +795,32 @@ static func pin(name: String, from := Rect2()) -> void:
 	dlg.append(ConfirmDialog.ask(app, "%s is pinned to your To-Do List. Track it now? Its parts get 🔍 marks at the stations and on the map." % name,
 		func(): answer.call(true), {"title": "Track it?", "yes_text": "Track it", "no_text": "Not now",
 		"check_text": "Don't ask again", "on_no": func(): answer.call(false)}))
+
+
+## The opening's locked Start: a line above it saying why (the user,
+## 2026-11-26: Start only once something is tracked).
+func _start_lock(on: bool) -> void:
+	var lock := get_node_or_null("StartLock")
+	if not on:
+		if lock:
+			lock.queue_free()
+			lock.name = "StartLockGone"
+		return
+	if lock:
+		return
+	var p := Panel.new()
+	p.name = "StartLock"
+	p.add_theme_stylebox_override("panel", Tok.box(Color(0, 0, 0, 0.72), 14))
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	p.set_meta("cmp", "start:lock")
+	var l := Tok.label("Track an item to start", 15, Color.WHITE, 800)
+	var tw := Tok.font(800).get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+	p.size = Vector2(tw + 28, 30)
+	l.position = Vector2(14, 4)
+	p.add_child(l)
+	p.position = Vector2((size.x - p.size.x) / 2, size.y - HubBar.H - 14 - 58 - 12 - p.size.y)  # over the 🔍 / ⚛️ row
+	p.pivot_offset = p.size / 2
+	add_child(p)
 
 
 ## canTravelTo(): not where you are, reachable (a path, or a Helicopter), run not over.
@@ -924,6 +952,8 @@ func sync_hub() -> void:
 		return
 	if _hub.hand:  # out of a check with cards: Draw's grey goes with it
 		_hub.greyed = false
+	_hub.muted = home_face() == "start" and Game.ctx.get("tracked") == null
+	_start_lock(_hub.muted)
 	_hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
 		sel != null and not Catalog.is_map_connected(s.get("lastStation"), sel))
 
@@ -1193,6 +1223,18 @@ func _on_hub(id: String) -> void:
 					Game.state_changed.emit()
 				"travel":
 					_travel(Game.ctx.selectedMapStation)
+				"start":
+					if Game.ctx.get("tracked") == null:  # locked: the line above says why; the To-Do List is where to track
+						if panel != "todo":
+							open_panel("todo")
+						var lock := get_node_or_null("StartLock")
+						if lock:  # a little shake
+							var tw: Tween = lock.create_tween()
+							for dx in [8.0, -8.0, 5.0, 0.0]:
+								tw.tween_property(lock, "position:x", (size.x - lock.size.x) / 2 + dx, 0.06)
+						return
+					close_panel()
+					Game.begin()
 				"lockin":
 					_lock_in()
 				"final":

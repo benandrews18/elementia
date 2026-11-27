@@ -20,7 +20,7 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 
 ## Home's faces: id -> [emoji, label, colour ("" = flat, inert)].
 @export var faces := {
-	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "travel": ["🥾", "Travel", "#3aa9a0"],
+	"roll": ["🎲", "Roll", "#3fb46c"], "shop": ["🛒", "Shop", "#122e3c"], "start": ["🛒", "Start", "#1f7a45"], "travel": ["🥾", "Travel", "#3aa9a0"],
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
 	"close": ["⬅️", "Close", ""], "play": ["ui:play", "Play", "#1f7a45"], "gather": ["🧺", "Gather", "#3fb46c"],
 }
@@ -170,13 +170,13 @@ func _home_button(at: Vector2) -> void:
 		m.set_shader_parameter("base", c)
 		m.set_shader_parameter("dark", c.lerp(Color.BLACK, 0.25))
 		$Home/Ball.material = m
-	var glyph: String = "🚁" if face == "travel" and via_air else shop_glyph if face == "shop" and shop_glyph != "" else f[0]
+	var glyph: String = "🚁" if face == "travel" and via_air else shop_glyph if face in ["shop", "start"] and shop_glyph != "" else f[0]
 	var tex := Data.icon(glyph)
 	$Home/Icon.texture = tex
 	$Home/Icon.visible = tex != null
 	$Home/Glyph.visible = tex == null  # shortcut: no Noto image yet for this face's emoji; the font's (desktop only)
 	$Home/Glyph.text = glyph
-	var light_label := face in ["shop", "map", "travel", "play"]  # white on a black shadow (Travel too, and Play on its dark green: the user, 2026-11-26)
+	var light_label := face in ["shop", "map", "travel", "play", "start"]  # white on a black shadow (Travel too, and Play on its dark green: the user, 2026-11-26)
 	var l: Label = $Home/Label
 	l.text = f[1]
 	l.add_theme_color_override("font_color", Color.WHITE if light_label else Color.BLACK)

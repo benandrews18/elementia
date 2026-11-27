@@ -598,6 +598,14 @@ Market, tutorials), motion last (it animates the final layouts).
      above it says so); the map behind shows only that station
      (YOU ARE HERE under it); on leaving the first station the map shows it
      alone, then the other stations bounce in (every run).
+     Done (2026-11-26): Game.start_on_map() / begin() (ctx.awaitingStart:
+     visit 1 has begun, the map waits); start_run tracks nothing; Home's
+     "start" face (the station's icon), muted with App._start_lock()'s line
+     until something's tracked; MapScreen hides the other stations while
+     waiting and _reveal() bounces them in the first time visit 1's station
+     is left (ctx.mapRevealed); two tutorial steps (track a part, Start).
+     Shortcut: a tutorial saved mid-way before this resumes 2 steps early
+     (its done_if checks walk it forward).
 23. **Market.**
    - Opening lag: profile and fix.
    - Title: the Market button's icon (not the cart); all text white with
@@ -622,6 +630,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: step 22b: the opening's To-Do List and locked Start, the one-station map, the stations bouncing in.
 - 2026-11-26: step 22 grilled (tracking as quests); 22a: the To-Do List as a quest log, pin and track separate (Track it? window, Auto-track on pin), the suit pill.
 - 2026-11-26: after 21 (the user): Metropolis's wide art twice as wide on its cards and full card (ItemCard.BIG_ART); the tracked pill 44 px, 17 px text shrinking to fit by the screen's middle, the 🔍 and ⚛️ 6 px from the sides (App.EDGE).
 - 2026-11-26: step 21 (stations and cards, 13 items); step 20 review fixes before it.

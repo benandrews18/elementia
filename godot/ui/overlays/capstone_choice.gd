@@ -237,7 +237,11 @@ func _start(name: String, card: Control) -> void:
 		get_tree().create_timer(i * 0.08 + 0.56 * 0.72).timeout.connect(app._hub.punch.bind("inv"))
 	await get_tree().create_timer((chips.size() - 1) * 0.08 + 0.56 + 0.15).timeout
 	app._hub.spotlight("inv", false)
-	var go := func(): app.fade_through_black(func(): Game.start_run(name))
+	var go := func(): app.fade_through_black(func():
+		Game.start_run(name)
+		Game.start_on_map()  # the To-Do List shows the new quest; Start waits for a goal (the user, 2026-11-26)
+		TodoTray.expanded = {"refroot/" + name: true}
+		app.open_panel("todo"))
 	if not Progress.is_pinned(name):
 		Progress.toggle_pin(name)
 	queue_free()  # the pinning tip is the To-Do's 💡 hint now (Hints)

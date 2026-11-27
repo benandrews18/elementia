@@ -52,7 +52,18 @@ func _run(app: App) -> void:
 	check(Game.state.visits == 0 and app._screen is MapScreen, "the opening waits on the bare map")
 	pick._confirm("Coral Reef")
 	pick._start("Coral Reef", pick._card)
-	check(await _until(func(): return app._screen is StationScreen), "the opening lands at a station")
+	# The opening (step 22b): the To-Do List over the bare map, one station
+	# (where you start) with YOU ARE HERE; Start locked until something's tracked.
+	check(await _until(func(): return app.panel == "todo" and app.home_face() == "start"), "the opening shows the To-Do List; Home reads Start")
+	check(app._screen is MapScreen and app._screen._nodes().filter(func(n): return n.visible).size() == 1 and Game.ctx.tracked == null, "the map shows only the starting station; nothing tracked")
+	check(app._hub.muted and app.get_node_or_null("StartLock") != null, "Start is locked, a line above it says why")
+	app._on_hub("home")
+	check(app.home_face() == "start" and app._screen is MapScreen, "a locked Start does nothing")
+	var part: String = Catalog.needs_of(Catalog.entry("Coral Reef").reqs).items[0].name
+	_find_meta(app._panel_node, "todo:track:" + part).gui_input.emit(_release())
+	check(Game.ctx.tracked == part and not app._hub.muted, "tracking a part unlocks Start")
+	app._on_hub("home")
+	check(await _until(func(): return app._screen is StationScreen), "Start: the opening lands at a station")
 	check(Game.ctx.current == Data.t("CORE_ITEM_STATION")["Coral Reef"] and Progress.is_pinned("Coral Reef"), "at Coral Reef's station, Coral Reef pinned")
 	var turns := 0
 	while not Game.state.get("ended") and not Game.state.get("runComplete") and turns < 60:
@@ -77,6 +88,8 @@ func _run(app: App) -> void:
 		app._on_hub("home")  # map
 		await get_tree().process_frame
 		check(app._screen is MapScreen, "turn %d: on the map" % turns)
+		if turns == 1:
+			check(Game.ctx.get("mapRevealed") and app._screen._nodes().all(func(n): return n.visible), "leaving the first station, the other stations bounce in")
 		await _settle_market(app)  # a crafted Market square: its sequence and its "?" (Nice)
 		if app.panel == "market":
 			app.close_panel()
@@ -1069,7 +1082,9 @@ func _pins(app: App) -> void:
 	Game.start_run("Coral Reef")
 	app.close_panel()
 	await get_tree().process_frame
-	check(Game.ctx.tracked == "Coral Reef", "a new run tracks its capstone")
+	check(Game.ctx.tracked == null, "a new run tracks nothing (the player picks before Start)")
+	Game.track("Coral Reef")
+	await get_tree().process_frame
 	var floats := func(): return app._floats.get_children().filter(func(c): return not c.is_queued_for_deletion())
 	var btn = func(): return floats.call().filter(func(c): return c.get_meta("cmp", "") == "pins").front()
 	check(floats.call().size() == 2, "the 🔍 button and the tracked pill")
@@ -1432,9 +1447,9 @@ func _tutorial(app: App) -> void:
 	Game.state.rolledHere = true
 	Game.state.elements = {"H": 1, "O": 1}
 	app.close_panel()
-	Progress.prefs.tutorialStep = 9
+	Progress.prefs.tutorialStep = 11  # two steps before it since step 22b (track a part, Start)
 	tut.resume()
-	check(tut.i == 7, "resuming on Craft with the bench closed goes back to the shop (step %d)" % tut.i)
+	check(tut.i == 9, "resuming on Craft with the bench closed goes back to the shop (step %d)" % tut.i)
 	tut.finish()
 	Tap._down = null  # the real taps' last press: later sections tap with releases only
 	finished["tutorial"] = true

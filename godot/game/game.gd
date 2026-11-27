@@ -414,9 +414,26 @@ func start_run(capstone: String) -> void:
 	for d in dice:
 		state.elements[d] = Catalog.count(state, d) + 1
 	go_station(st, false)
-	ctx.tracked = capstone  # confirmCapstoneChoice()
+	ctx.tracked = null  # the player picks a goal before Start (the user, 2026-11-26)
 	for d in dice:  # the gift is part of what was collected on visit 1
 		state.visitLog[-1].elements[d] = state.visitLog[-1].elements.get(d, 0) + 1
+	_changed()
+
+
+## The opening (the user, 2026-11-26): after start_run, wait on the map
+## (only the starting station shown) until Start; begin() goes in. Visit 1
+## has started already: leaving to the map and coming back is free.
+func start_on_map() -> void:
+	go_map()
+	ctx.awaitingStart = true
+	_changed()
+
+
+func begin() -> void:
+	ctx.awaitingStart = false
+	ctx.screen = "station"
+	ctx.current = state.lastStation
+	ctx.selectedMapStation = null
 	_changed()
 
 

@@ -229,6 +229,8 @@ static func _met1(t: String) -> bool:
 		"rolled": ok = bool(s.get("rolledHere"))
 		"collected": ok = bool(s.get("rolledHere")) and not app.get_children().any(func(c): return c is RollPopup and not c.is_queued_for_deletion())
 		"started": ok = int(s.get("visits", 0)) >= 1
+		"tracked": ok = Game.ctx.get("tracked") != null
+		"begun": ok = int(s.get("visits", 0)) >= 1 and not Game.ctx.get("awaitingStart")
 		"owns": ok = Catalog.owns(s, v)
 		"has": ok = Catalog.count(s, v) >= 1
 		"from": ok = app._panel_node is ConvertTray and app._panel_node.from == v

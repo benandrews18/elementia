@@ -7,7 +7,7 @@ extends Control
 
 const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elements", "drawer_selected", "drawer_list", "drawer_mini", "station_list",
 	"convert", "picker", "unknown", "market", "market_craft", "row_reward", "todo", "todo_quest", "pin_ask", "confirm", "reward",
-	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "celebrate", "unlock", "pin_tip",
+	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
@@ -96,6 +96,14 @@ func _ready() -> void:
 			app._on_hub("jobs")
 			app._panel_node._open_hint_paths()
 			app._panel_node._redraw()
+		"start_todo", "start_locked", "start_ready":  # the opening: the To-Do List over the bare map; Start locked, then ready
+			Game.start_run("Robot")
+			Game.start_on_map()
+			if state == "start_todo":
+				TodoTray.expanded = {"refroot/Robot": true}
+				app.open_panel("todo")
+			elif state == "start_ready":
+				Game.track("Magnet")
 		"todo_quest", "pin_ask":  # a part of Metropolis tracked: its quest leads, open down to it; Plastic folded. A new pin asks.
 			TodoTray.hint_open = false
 			TodoTray.expanded = {}

@@ -29,6 +29,27 @@ func _ready() -> void:
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
 	_redraw()
+	if not Game.ctx.get("awaitingStart") and int(Game.state.get("visits", 0)) == 1 and not Game.ctx.get("mapRevealed") and Game.state.get("lastStation") != null:
+		_reveal()
+
+
+## Leaving the first station (every run, the user 2026-11-26): the map shows
+## it alone, then the other stations bounce into place and the paths appear.
+func _reveal() -> void:
+	Game.ctx.mapRevealed = true
+	var others := _nodes().filter(func(n): return n.station != Game.state.lastStation)
+	$Area/Paths.modulate.a = 0
+	var i := 0
+	for n in others:
+		var to: Vector2 = n.scale
+		n.scale = Vector2.ZERO
+		var tw: Tween = n.create_tween()
+		tw.tween_interval(0.5 + i * 0.09)
+		tw.tween_property(n, "scale", to, 0.42).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		i += 1
+	var pt: Tween = $Area/Paths.create_tween()
+	pt.tween_interval(0.5 + i * 0.09 + 0.2)
+	pt.tween_property($Area/Paths, "modulate:a", 1.0, 0.3)
 
 
 func _nodes() -> Array:
@@ -65,6 +86,8 @@ func _redraw() -> void:
 		var here: bool = n.station == s.get("lastStation")
 		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
+		n.visible = here or not ctx.get("awaitingStart")  # the opening: only where you start
+	$Area/Paths.visible = not ctx.get("awaitingStart")
 	$Area/Paths.queue_redraw()
 	_badges(k)
 	if checked:
@@ -93,7 +116,7 @@ func _badges(k: float) -> void:
 		c.queue_free()
 	var t = Game.ctx.get("tracked")
 	var e = Catalog.entry(t) if t else null
-	if e == null or Game.state.get("lastStation") == null:
+	if e == null or Game.state.get("lastStation") == null or Game.ctx.get("awaitingStart"):
 		return
 	var comps := {}
 	for n in Catalog.still_needed(Game.state, t):

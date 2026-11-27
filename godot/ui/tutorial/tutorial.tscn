@@ -1,4 +1,4 @@
-[gd_scene load_steps=51 format=3]
+[gd_scene load_steps=53 format=3]
 
 [ext_resource type="Script" path="res://ui/tutorial/tutorial.gd" id="1"]
 [ext_resource type="Script" path="res://ui/tutorial/tutorial_step.gd" id="2"]
@@ -30,6 +30,22 @@ pose = 7
 target = "cap:start"
 until = "wait"
 done_if = "started"
+
+[sub_resource type="Resource" id="stepTrack"]
+script = ExtResource("2")
+say = "Coral Reef is on your [b]To-Do List[/b]. Pick one of its parts to work on first: tap its 🔍!"
+pose = 7
+target = "todo:track:*"
+until = "wait"
+done_if = "tracked|begun"
+
+[sub_resource type="Resource" id="stepStart"]
+script = ExtResource("2")
+say = "Your goal is set. Tap [b]Start[/b] to go to The Ocean!"
+pose = 3
+target = "hub:home"
+until = "wait"
+done_if = "begun"
 
 [sub_resource type="Resource" id="step4"]
 script = ExtResource("2")
@@ -357,4 +373,4 @@ until = "next"
 
 [node name="Tutorial" type="Node"]
 script = ExtResource("1")
-steps = Array[ExtResource("2")]([SubResource("step0"), SubResource("step1"), SubResource("step2"), SubResource("step3"), SubResource("step4"), SubResource("step5"), SubResource("step6"), SubResource("step7"), SubResource("step8"), SubResource("step9"), SubResource("step10"), SubResource("step11"), SubResource("step12"), SubResource("step13"), SubResource("step14"), SubResource("step15"), SubResource("step16"), SubResource("step17"), SubResource("step18"), SubResource("step19"), SubResource("step20"), SubResource("step21"), SubResource("step22"), SubResource("step23"), SubResource("step24"), SubResource("step25"), SubResource("step26"), SubResource("step27"), SubResource("step28"), SubResource("step29"), SubResource("step30"), SubResource("step31"), SubResource("step32"), SubResource("step33"), SubResource("step34"), SubResource("step35"), SubResource("step36"), SubResource("step37"), SubResource("step38"), SubResource("step39"), SubResource("step40"), SubResource("step41"), SubResource("step42"), SubResource("step43"), SubResource("step44"), SubResource("step45"), SubResource("step46"), SubResource("step47")])
+steps = Array[ExtResource("2")]([SubResource("step0"), SubResource("step1"), SubResource("step2"), SubResource("step3"), SubResource("stepTrack"), SubResource("stepStart"), SubResource("step4"), SubResource("step5"), SubResource("step6"), SubResource("step7"), SubResource("step8"), SubResource("step9"), SubResource("step10"), SubResource("step11"), SubResource("step12"), SubResource("step13"), SubResource("step14"), SubResource("step15"), SubResource("step16"), SubResource("step17"), SubResource("step18"), SubResource("step19"), SubResource("step20"), SubResource("step21"), SubResource("step22"), SubResource("step23"), SubResource("step24"), SubResource("step25"), SubResource("step26"), SubResource("step27"), SubResource("step28"), SubResource("step29"), SubResource("step30"), SubResource("step31"), SubResource("step32"), SubResource("step33"), SubResource("step34"), SubResource("step35"), SubResource("step36"), SubResource("step37"), SubResource("step38"), SubResource("step39"), SubResource("step40"), SubResource("step41"), SubResource("step42"), SubResource("step43"), SubResource("step44"), SubResource("step45"), SubResource("step46"), SubResource("step47")])
