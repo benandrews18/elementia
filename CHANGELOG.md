@@ -9,6 +9,11 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- The opening: while nothing is tracked, the parts' 🔍 Track buttons glow and pulse. A locked Start opens the To-Do details on your chosen capstone.
+- To-Do details panel: back to full height; opening it changes nothing in the list beside it.
+- Combo Lab from a game: no top bar (Exit Combo Lab / Challenge Test belong to the menu's lab). The mat's buttons read 💾, Clear, Exit; Exit goes back to the Inventory. The ↺ Last button is gone.
+- Inventory in a game: tapping a card shows its Crafting Bench, as in the Combo Lab.
+- Display Mat combo chips: labels (+8, ×2, ×0.75) are bubbles on the icon's top-right corner, like the counts, not a line under it: the chip rows are shorter.
 - To-Do List: the hint's item has its own 🔍 Track button. The hint and "Tap items to view details" stay in view with the details panel open (it opens below them). "Track item parts to guide your journey!" is gone.
 - Inventory and Combo Lab: every card's station icons sit in its bottom-left corner, left to right.
 - Combo Lab from the menu: tap a capstone to switch it on or off the mat (in a game they're always on).

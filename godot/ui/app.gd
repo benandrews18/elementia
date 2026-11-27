@@ -515,11 +515,14 @@ func open_combo_lab(from_run := false) -> void:
 	Game.state = lab
 	Game.ctx = Game.fresh_ctx()
 	Game.ctx.comboLab = true
+	Game.ctx.labFromRun = from_run  # no top bar: the mat's Exit goes back to the Inventory (the user, 2026-11-27)
 	_hub.visible = false
 	_dev_shown(false)  # the Dev Panel would replace the lab's run and save it over the real one
 	open_panel("drawer")
 	if is_instance_valid(_screen):
 		_screen.visible = false
+	if from_run:
+		return
 	var bar := load("res://ui/pieces/lab_bar.tscn").instantiate() as Control
 	bar.name = "LabBar"
 	bar.size = Vector2(size.x, LAB_BAR)
@@ -542,6 +545,12 @@ func open_combo_lab(from_run := false) -> void:
 		else:
 			end_challenge_test())
 	bar.add_child(test)
+
+
+## A run's lab, Exit: back to that run's Inventory.
+func exit_run_lab() -> void:
+	close_combo_lab()
+	open_panel("drawer")
 
 
 func close_combo_lab() -> void:
@@ -1261,8 +1270,15 @@ func _on_hub(id: String) -> void:
 					_travel(Game.ctx.selectedMapStation)
 				"start":
 					if Game.ctx.get("tracked") == null:  # locked: the line above says why; the To-Do List is where to track
+						# its details panel open on the chosen capstone (the user, 2026-11-27)
+						var caps: Array = Progress.prefs.pinnedItems.filter(func(n): return Data.t("ITEM_TIER").get(n, "") == "CAPSTONE")
+						if not caps.is_empty():
+							TodoTray.detail = caps[0]
+							TodoTray.expanded["refroot/" + caps[0]] = true
 						if panel != "todo":
 							open_panel("todo")
+						elif _panel_node is TodoTray:
+							_panel_node._redraw()
 						var lock := get_node_or_null("StartLock")
 						if lock:  # a little shake
 							var tw: Tween = lock.create_tween()

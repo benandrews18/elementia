@@ -84,7 +84,7 @@ func _redraw() -> void:
 	_hub_h = 0.0 if lab and Game.check_hand() == null else HUB_H  # a lab check with cards keeps the hub
 	_drawer.size = Vector2(size.x, size.y - _hub_h)
 	var w := size.x - 2 * side
-	var y := maxf(top, App.LAB_TOP) if lab else top  # [data-combo-lab] #drawerTop: padding-top 52px
+	var y := maxf(top, App.LAB_TOP) if lab and not Game.ctx.get("labFromRun") else top  # [data-combo-lab] #drawerTop: padding-top 52px
 	# Quark Meter line.
 	var qm := QuarkMeter.new()
 	qm.position = Vector2(side, y)
@@ -141,7 +141,7 @@ func _redraw() -> void:
 	y += 2
 	# Combo Lab: the last card tapped (on or off the mat) on the Crafting Bench.
 	var sel_ok: bool = selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null
-	if sel_ok and not list_mode and not locked():
+	if sel_ok and not list_mode and Game.check_hand() == null:  # the lab, and the Inventory between checks (the user, 2026-11-27)
 		y = _lab_bench(y + 8) + 4
 	# The item list: search bar, then the owned cards by tier.
 	_scroll.position = Vector2(0, y)
@@ -366,7 +366,6 @@ func _page_controls(page: Control) -> void:
 	help.set_meta("cmp", "btn:rules")
 	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: MatRules.show_on(App.current))
 	_body.add_child(help)
-	var qs: bool = Game.state.get("quickSavedMat") != null
 	var x2 := right - 30
 	if locked():  # between checks: the Combo Lab is where combos are tried (with this run's items)
 		if Game._in_check():  # never during a check, even before its hand is dealt (the user, 2026-11-26)
@@ -380,17 +379,18 @@ func _page_controls(page: Control) -> void:
 		return
 	if view != "mat":
 		return
-	var btns := [["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)], ["Clear", 0.0, Game.clear_mat], ["↻" if qs else "↺", 30.0, _last]]
+	# Right to left: Exit (a run's lab: back to the Inventory), Clear, 💾 (the user, 2026-11-27; the ↺ Last button is gone)
+	var btns := [["Clear", 0.0, Game.clear_mat], ["💾", 30.0, func(): if App.current: LayoutsWindow.show_on(App.current)]]
+	if Game.ctx.get("labFromRun"):
+		btns.push_front(["Exit", 0.0, func(): if App.current: App.current.exit_run_lab()])
 	for b in btns:
 		var text: String = b[0]
 		var is_text: bool = b[1] == 0.0
 		var bw: float = b[1] if not is_text else Tok.font(800).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 24
 		var bh := 34.0 if is_text else 30.0
-		var px := 12 if is_text else (13 if text == "💾" else 18)
-		var bg := Color("#3f8fd0") if qs and text == "↻" else Tok.GOLD
-		var btn := _round_button(text if is_text else "", Vector2(bw, bh), px, bg)
-		if not is_text:  # 💾 as its Noto image; ↺ / ↻ drawn (not in Nunito)
-			var ic: Control = Tok.icon(text, 15) if text == "💾" else Tok.loop_arrow(Color.WHITE if qs else Tok.CARD_INK, 20, qs)
+		var btn := _round_button(text if is_text else "", Vector2(bw, bh), 12 if is_text else 13, Tok.GOLD)
+		if not is_text:  # 💾 as its Noto image
+			var ic: Control = Tok.icon(text, 15)
 			ic.position = (Vector2(bw, bh) - ic.size) / 2
 			btn.add_child(ic)
 		x2 -= bw
@@ -1029,7 +1029,7 @@ static func _preview_chips(before: Dictionary, after: Dictionary) -> Array:
 	for nm in after.completeNames:
 		if not before.completeNames.has(nm):
 			var x: int = (3 if homestead else 2) + (1 if after.together.complete.has(nm) else 0)
-			out.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(nm, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×%d" % x, 12))
+			out.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(nm, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×%d" % x))
 	return out
 
 
@@ -1178,13 +1178,13 @@ func _together_banner(tg: Dictionary, gain: float) -> Control:
 		var bg: Color = Tok.station_color(t.name) if t.kind == "station" else Tok.suit_color(t.name) if t.kind == "suit" else Tok.PARCHMENT
 		chips.append(_counted(_icon_circle(icon, bg, Color.TRANSPARENT, 0, t.kind != "suit"), t.k))
 	for n in tg.complete:
-		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(n, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×3", 13))
+		chips.append(_chip(_icon_circle(Data.t("ITEM_EMOJI").get(n, ""), Tok.PARCHMENT, Tok.GOLD, 2), "×3"))
 	for col in tg.cols:
 		var star := _icon_circle("", Color("#241c3a"), Color("#8a5ce0"), 1.5)
 		var st_ic := Tok.star(Color("#ffd166"), 15)
 		st_ic.position = Vector2(6, 5.5)
 		star.add_child(st_ic)
-		chips.append(_chip(star, "+%d" % int(col.bonus), 13))
+		chips.append(_chip(star, "+%d" % int(col.bonus)))
 	var box := Panel.new()
 	box.add_theme_stylebox_override("panel", Tok.box(Color("#fff3d6"), 16, 3, Tok.GOLD, 8, 4, Color(0, 0, 0, 0.45)))
 	box.mouse_filter = MOUSE_FILTER_STOP  # nothing under it while it shows
@@ -1224,17 +1224,6 @@ static func _find_cmp(n: Node, tag: String) -> Control:
 		if c.get_meta("cmp", "") == tag and not c.is_queued_for_deletion():
 			return c
 	return null
-
-
-## Last: back to the last locked-in mat (asks first, quick-saving this one);
-## with a quick save, it comes straight back.
-func _last() -> void:
-	if Game.state.get("quickSavedMat") != null:
-		Game.mat_last_tap()
-		return
-	ConfirmDialog.ask(App.current if App.current else self,
-		"Reset the Display Mat to your last locked-in layout? Your current mat is quick-saved -- tap the arrow again to bring it back.",  # ↻ isn't in Nunito
-		Game.mat_last_tap)
 
 
 ## The Combo Lab's Crafting Bench: the last card tapped, its shop row (no
@@ -1382,7 +1371,7 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		chips[-1].set_meta("tip", "order")  # the challenge hint's 💡
 		chips[-1].gui_input.connect(func(ev): if Tap.tap(ev) and App.current: OrderInfo.open(App.current))
 	for g in sc.sigs:  # every owned capstone (always on) and a Cruise Ship on the mat: a tap shows its card (the user, 2026-11-26)
-		var cap := _chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 13, 0.45 if not g.on else 1.0)
+		var cap := _chip(_icon_circle(Data.t("ITEM_EMOJI")[g.name], Tok.PARCHMENT, Tok.GOLD, 2), g.label, 0.45 if not g.on else 1.0)
 		cap.set_meta("cap", g.name)
 		Juice._ignore_mouse(cap)
 		cap.mouse_filter = MOUSE_FILTER_STOP
@@ -1412,7 +1401,7 @@ static func combo_chips(sc: Dictionary, live := true) -> Array:
 		chips.append(_counted(star, known.size(), Color("#8a5ce0"), Color.WHITE))
 		chips[-1].set_meta("combo", "collection")
 	if sc.cols.any(func(c): return not found.has(c.id)):
-		chips.append(_chip(_text_circle("!", 18, Color.WHITE, Tok.BAD, Color.WHITE, 2), "", 0))
+		chips.append(_chip(_text_circle("!", 18, Color.WHITE, Tok.BAD, Color.WHITE, 2), ""))
 		chips[-1].set_meta("combo", "new")
 	return chips
 
@@ -1458,43 +1447,32 @@ func _place_chips(chips: Array, at: Vector2, w: float) -> float:
 	return maxf(40, h)
 
 
-## .mm-combo: icon circle on top, an optional bold label under it, padding
-## 6px 7px 2px 3px.
-static func _chip(circle: Control, label: String, size_px: float, alpha := 1.0, color := Tok.GOLD) -> Control:
+## .mm-combo: an icon circle, padding 6px 7px 2px 3px; its label (a count,
+## "+8", "×2") a bubble on the circle's top-right corner, never a line under
+## it (the user, 2026-11-27: the chip rows stay compact).
+static func _chip(circle: Control, label: String, alpha := 1.0, color := Tok.GOLD, ink := Color.TRANSPARENT) -> Control:
 	var c := Control.new()
 	c.mouse_filter = MOUSE_FILTER_PASS
 	circle.position = Vector2(3, 6)
 	c.add_child(circle)
-	var h := 6.0 + 27.0 + 2.0
+	c.custom_minimum_size = Vector2(37, 6.0 + 27.0 + 2.0)
 	if label != "":
-		var b := Tok.label(label, size_px, color, 900)
-		b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var bh := size_px  # line-height 1
-		b.position = Vector2(0, 6 + 27 + 1 + (bh - b.get_minimum_size().y) / 2)
-		c.add_child(b)
-		h += 1 + bh
-		var bw := Tok.font(900).get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, int(size_px)).x
-		c.custom_minimum_size = Vector2(maxf(37, bw + 10), h)
-		b.size = Vector2(c.custom_minimum_size.x - 10, b.get_minimum_size().y)
-		b.position.x = 3
-		circle.position.x = 3 + (c.custom_minimum_size.x - 10 - 27) / 2
-	else:
-		c.custom_minimum_size = Vector2(37, h)
+		var num := Tok.label(label, 10.5, ink if ink.a > 0 else (Color.WHITE if color == Tok.BAD else Tok.CARD_INK), 900)
+		num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		var w := maxf(17, num.get_minimum_size().x + 6 + 3)
+		num.add_theme_stylebox_override("normal", Tok.box(color, 9, 1.5))
+		num.size = Vector2(w, 17)
+		num.position = Vector2(maxf(27 + 8 - w, 13), -6)  # a count overhangs the corner; a wider label (+55, ×0.75) runs on right, clear of the icon
+		circle.add_child(num)
+		c.custom_minimum_size.x = maxf(37, 3 + num.position.x + w + 2)
 	c.modulate.a = alpha
 	return c
 
 
 ## A chip whose icon carries a count badge on its top-right corner (.mm-ccount).
 static func _counted(circle: Control, n: int, bg := Tok.GOLD, ink := Tok.CARD_INK) -> Control:
-	var num := Tok.label(str(n), 10.5, ink, 900)
-	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var w := maxf(17, num.get_minimum_size().x + 6 + 3)
-	num.add_theme_stylebox_override("normal", Tok.box(bg, 9, 1.5))
-	num.size = Vector2(w, 17)
-	num.position = Vector2(27 + 8 - w, -6)
-	circle.add_child(num)
-	return _chip(circle, "", 0)
+	return _chip(circle, str(n), 1.0, bg, ink)
 
 
 static func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
@@ -1531,7 +1509,7 @@ static func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 	if bad:
 		circle.get_meta("box").border_color = Tok.BAD
 		circle.get_meta("box").bg_color = Color("#371913")
-	var chip := _chip(circle, label, 13, 1.0 if bad or (kind == "request" and ok) else 0.55, Tok.BAD if bad else Tok.GOLD)
+	var chip := _chip(circle, label, 1.0 if bad or (kind == "request" and ok) else 0.55, Tok.BAD if bad else Tok.GOLD)
 	return chip
 
 

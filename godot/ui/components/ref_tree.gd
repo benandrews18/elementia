@@ -362,6 +362,22 @@ static func track_button(name: String, at: Vector2, px := 40.0) -> Control:
 	var ic := Tok.icon("🔍", ipx)
 	ic.position = (b.size - Vector2(ipx, ipx)) / 2
 	b.add_child(ic)
+	if Game.ctx.get("awaitingStart") and Game.ctx.get("tracked") == null:  # the opening: track something to Start (the user, 2026-11-27)
+		var glow := Panel.new()  # a soft gold halo, breathing
+		glow.add_theme_stylebox_override("panel", Tok.box(Color(Tok.GOLD, 0.25), px / 2 + 3, 2, Tok.GOLD, 8, 0, Color(Tok.GOLD, 0.6)))
+		glow.position = Vector2(-3, -3)
+		glow.size = b.size + Vector2(6, 6)
+		glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		glow.set_meta("cmp", "todo:trackglow")
+		b.add_child(glow)
+		b.move_child(glow, 0)
+		if Juice.on():
+			glow.pivot_offset = glow.size / 2
+			var tw := glow.create_tween().set_loops().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			tw.tween_property(glow, "modulate:a", 0.35, 0.8)
+			tw.parallel().tween_property(glow, "scale", Vector2(1.08, 1.08), 0.8)
+			tw.tween_property(glow, "modulate:a", 1.0, 0.8)
+			tw.parallel().tween_property(glow, "scale", Vector2.ONE, 0.8)
 	b.gui_input.connect(func(ev): if Tap.tap(ev):
 		b.accept_event()
 		if on:

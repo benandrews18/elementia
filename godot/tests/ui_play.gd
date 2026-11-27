@@ -61,8 +61,12 @@ func _run(app: App) -> void:
 	check(await _until(func(): return app.panel == "todo" and app.home_face() == "start"), "the opening shows the To-Do List; Home reads Start")
 	check(app._screen is MapScreen and app._screen._nodes().filter(func(n): return n.visible).size() == 1 and Game.ctx.tracked == null, "the map shows only the starting station; nothing tracked")
 	check(app._hub.muted and app.get_node_or_null("StartLock") != null, "Start is locked, a line above it says why")
+	check(_find_meta(app._panel_node, "todo:trackglow") != null, "the parts' Track buttons glow while nothing is tracked")
+	TodoTray.detail = ""
+	app._panel_node._redraw()
 	app._on_hub("home")
 	check(app.home_face() == "start" and app._screen is MapScreen, "a locked Start does nothing")
+	check(TodoTray.detail == "Coral Reef" and _find_meta(app._panel_node, "todo:details") != null, "a locked Start opens the capstone's details again")
 	var part: String = Catalog.needs_of(Catalog.entry("Coral Reef").reqs).items[0].name
 	_find_meta(app._panel_node, "todo:track:" + part).gui_input.emit(_release())
 	check(Game.ctx.tracked == part and not app._hub.muted, "tracking a part unlocks Start")
@@ -1080,7 +1084,15 @@ func _layouts(app: App) -> void:
 	ask[0].get_node("Window/Content/Buttons/Yes").gui_input.emit(_release())
 	check(Progress.prefs.savedMatLayouts.is_empty(), "then deletes it")
 	lw.close()
-	app.close_combo_lab()
+	await get_tree().process_frame
+	check(app.get_node_or_null("LabBar") == null and _find_meta(app._panel_node, "btn:Exit") != null, "a run's lab: no top bar, an Exit button by Clear")
+	app._panel_node.find_children("*", "Button", true, false).filter(func(b): return b.get_meta("cmp", "") == "btn:Exit")[0].pressed.emit()
+	await get_tree().process_frame
+	check(not Game.ctx.get("comboLab") and app.panel == "drawer" and (app._panel_node as DisplayMatScreen).locked(), "Exit: back to the run's Inventory")
+	var inv_mat := app._panel_node as DisplayMatScreen
+	inv_mat._on_card_input(_release(), run_items[0])
+	await get_tree().process_frame
+	check(_find_meta(app._panel_node, "mat:bench") != null, "the Inventory: a tapped card shows its Crafting Bench")
 	finished.layouts = true
 
 

@@ -45,12 +45,6 @@ func _ready() -> void:
 	$Tray.size = Vector2(w, size.y - HubBar.H)
 	_scroll.size = $Tray.size - Vector2(3, 3)
 	Game.state_changed.connect(_redraw)
-	_scroll.get_v_scroll_bar().value_changed.connect(func(_v):  # the details panel keeps to the rows' top
-		var d := $Tray.get_node_or_null("Details")
-		if d:
-			d.position.y = _panel_top()
-			d.size.y = $Tray.size.y - d.position.y
-			d.get_node("Scroll").size.y = d.size.y)
 	_redraw()
 
 
@@ -122,7 +116,6 @@ func _redraw() -> void:
 			_list.add_child(tip)
 			y += 22
 		y += 4
-		_rows_top = y  # the details panel opens from here down: the hint and the tip stay in view (the user, 2026-11-27)
 		for n in names:
 			y = _row(Catalog.entry(n), y, _scroll.size.x)
 	# The empty space under the rows: a tap closes the details panel (✕ too).
@@ -391,14 +384,6 @@ func _button(emoji: String, on: bool, at: Vector2, cmp: String, act: Callable) -
 	return b
 
 
-var _rows_top := 0.0
-
-
-## The details panel's top: the rows' top as the list scrolls (never above the tray).
-func _panel_top() -> float:
-	return maxf(0, _rows_top - _scroll.scroll_vertical)
-
-
 static var _detail_keep := 0  # the details panel's scroll, kept across redraws
 
 
@@ -417,12 +402,11 @@ func _details() -> void:
 		_detail_keep = 0
 		return
 	var dw := minf(size.x, 560) - LEFT_W  # past the list's tray, over the screen behind
-	var top := _panel_top()
-	var h: float = $Tray.size.y - top
+	var h: float = $Tray.size.y  # always full height (the user, 2026-11-27)
 	var panel := Panel.new()
 	panel.name = "Details"
 	panel.add_theme_stylebox_override("panel", Tok.box(Color("#1d4456"), 0, 0, Color.BLACK, 14, 0, Color(0, 0, 0, 0.5)))
-	panel.position = Vector2(LEFT_W, top)
+	panel.position = Vector2(LEFT_W, 0)
 	panel.size = Vector2(dw, h)
 	panel.set_meta("cmp", "todo:details")
 	$Tray.add_child(panel)
