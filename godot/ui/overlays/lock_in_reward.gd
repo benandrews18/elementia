@@ -1,7 +1,7 @@
 ## The Lock-In reward (showLockInRewardModal(), #lockInRewardOverlay): a
 ## parchment "Bonus Dice" window, a "+" and the dice popping in left to right
-## (or "No bonus dice this time") under a copy of the quark meter that earned them,, "+1 Unknown Element" at the top
-## breakpoint, and Nice. The corner "?" says why; the "?" square what an
+## (or "No bonus dice this time"), "+1 Unknown Element" at the top
+## breakpoint, a copy of the quark meter that earned them on top of it, and Nice. The corner "?" says why; the "?" square what an
 ## Unknown Element does. Nice or a tap outside runs on_done (the travel).
 class_name LockInReward
 extends Control
@@ -72,7 +72,7 @@ func _done() -> void:
 
 
 ## The quark meter as it stands (the user, 2026-11-26), so the player sees
-## which breakpoints earned the dice; everything under it moves down.
+## which breakpoints earned the dice: on a dark strip on top of the window.
 func _meter(w: float) -> void:
 	if tiers.is_empty():
 		return

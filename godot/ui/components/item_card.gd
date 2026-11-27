@@ -14,6 +14,8 @@
 class_name ItemCard
 extends Control
 
+const ROUND := preload("res://assets/ui/btn_round.webp")  # the star's rim (🔍's)
+
 const SHOP_ICON := 42.0  # a station shop card's item image, every tier (opts.shop)
 const SHOP_NAME := 13  # its name
 const SHOP_CIRCLE := 26.0  # its points circle and suit pips
@@ -204,7 +206,7 @@ func _name_box(text: String, one_line: bool, width: float) -> Control:
 ## right. A tap opens Collections on that collection (col_id), lit.
 static func star_button(px: float, col_id: String) -> Control:
 	var b := TextureRect.new()
-	b.texture = load("res://assets/ui/btn_round.webp")
+	b.texture = ROUND
 	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	b.size = Vector2(px, px)

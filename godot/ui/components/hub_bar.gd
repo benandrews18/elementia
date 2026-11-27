@@ -23,9 +23,6 @@ const SIDES := [["jobs", "Jobs"], ["inv", "Inv"], ["market", "Market"], ["codex"
 	"lockin": ["🔒", "Lock In", "#8a5ce0"], "final": ["🏁", "End", "#e2b25a"], "map": ["🗺️", "Map", "#4d7cf2"],
 	"close": ["⬅️", "Close", ""], "play": ["ui:play", "Play", "#3fb46c"],
 }
-## A check with cards (card playing): these side buttons change (id ->
-## [emoji, label]), the rest keep their own; see App._hand_tap().
-@export var hand_sides := {}  # none now: the check's 🎯 Goal is above the hand (the user, 2026-11-26)
 @export var frame: Texture2D
 @export var active_frame: Texture2D  # a lit side button (its panel is open)
 @export var label_color := Color.WHITE
@@ -38,9 +35,8 @@ var muted := false  # Play with nothing to play: its colour faded (the user, 202
 var active := {}  # id -> true for a lit side button (its panel is open)
 var badges := {}  # id -> text of its red badge ("!")
 var via_air := false  # Travel by helicopter (off the paths): 🚁 instead of 🥾
-var hand := false  # a check with cards: hand_sides on the side buttons
+var hand := false  # a check with cards (App._hand_tap() takes some taps)
 var off := {}  # id -> true for a greyed side button (its tap still comes, the screen says why)
-var _own := {}  # id -> [icon, label]: the side buttons' own, for after a check
 
 static var _ball: Shader
 
@@ -52,7 +48,6 @@ static func make() -> HubBar:
 func _ready() -> void:
 	for s in SIDES:
 		get_node(s[1]).gui_input.connect(_tap.bind(s[0]))
-		_own[s[0]] = [get_node(s[1] + "/Icon").texture, get_node(s[1] + "/Label").text]
 	$Home.gui_input.connect(_tap.bind("home"))
 	resized.connect(_build)
 	_build()
@@ -116,7 +111,7 @@ func punch(id: String) -> void:
 
 
 ## Shows a new state: face, lit buttons, badges (and a check with cards:
-## hand_sides, some greyed).
+## some greyed).
 func show_state(new_face: String, new_active: Dictionary, new_badges: Dictionary, air := false, hand_on := false, new_off := {}) -> void:
 	face = new_face
 	active = new_active
@@ -145,10 +140,6 @@ func _side_button(id: String, b: Frame9, r: Rect2) -> void:
 	b.size = r.size
 	b.modulate = Color(0.6, 0.6, 0.6, 0.75) if off.get(id) else Color.WHITE
 	var ic: TextureRect = b.get_node("Icon")
-	if not _own.is_empty():
-		var mine: bool = hand and hand_sides.has(id)
-		ic.texture = Data.icon(hand_sides[id][0]) if mine else _own[id][0]
-		b.get_node("Label").text = hand_sides[id][1] if mine else _own[id][1]
 	var tex := ic.texture
 	ic.size = Vector2(42.0 * tex.get_width() / tex.get_height(), 42)
 	ic.position = Vector2((r.size.x - ic.size.x) / 2, 9)

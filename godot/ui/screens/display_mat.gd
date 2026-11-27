@@ -1644,7 +1644,8 @@ static func starred(h: Dictionary) -> Dictionary:
 	for col in Mat.collections():
 		if found.has(col.id) and col.items.all(func(n): return h.hand.has(n) or on_mat.has(n)) and col.items.any(func(n): return h.hand.has(n)):
 			for n in col.items:
-				out[n] = col.id
+				if not out.has(n):  # in two: its first collection's
+					out[n] = col.id
 	return out
 
 

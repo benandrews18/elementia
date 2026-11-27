@@ -67,7 +67,6 @@ static func box(bg: Color, radius: float, border := 0.0, border_color := Color.B
 	return s
 
 
-## A label in the game's font.
 ## The smallest text anywhere (step 20d, the user 2026-11-26: 11 px on the
 ## phone; tests/text_floor.gd checks every screen).
 const MIN_TEXT := 11
@@ -81,6 +80,7 @@ static func floor_text(n: Node, s: float) -> void:
 			l.add_theme_font_size_override("font_size", ceili(MIN_TEXT / s))
 
 
+## A label in the game's font (never under MIN_TEXT).
 static func label(text: String, size: float, color: Color, weight := 400) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -105,7 +105,7 @@ static func centre_name(n: Label, w: float, y: float, h: float) -> void:
 
 
 ## The largest font size up to px at which text fits on one line in w (a
-## card's name never wraps: the user, 2026-11-23). Never below 6.
+## card's name never wraps: the user, 2026-11-23). Never below MIN_TEXT.
 static func fit_px(text: String, f: Font, px: int, w: float) -> int:
 	var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	return px if tw <= w or tw <= 0 else maxi(MIN_TEXT, floori(px * w / tw))
