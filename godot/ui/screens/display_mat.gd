@@ -141,27 +141,11 @@ func _redraw() -> void:
 	y += 2
 	# Combo Lab: the last card tapped (on or off the mat) on the Crafting Bench.
 	var sel_ok: bool = selected != "" and Catalog.owns(s, selected) and Catalog.entry(selected) != null
-	if sel_ok and not list_mode and Game.check_hand() == null:  # the lab, and the Inventory between checks (the user, 2026-11-27)
+	if sel_ok and Game.check_hand() == null:  # the lab, and the Inventory between checks (the user, 2026-11-27)
 		y = _lab_bench(y + 8) + 4
 	# The item list: search bar, then the owned cards by tier.
 	_scroll.position = Vector2(0, y)
 	_scroll.size = Vector2(size.x, size.y - _hub_h - y)
-	if list_mode:  # the side card stays put while the list scrolls
-		var lw := _list_w(size.x)
-		var rx := LIST_PAD + lw + 8
-		var rw := size.x - LIST_PAD - rx
-		var cy := y + LIST_TOP
-		if sel_ok:
-			var card := CardPop.side_card(selected, rw)
-			card.position = Vector2(rx, cy)
-			_body.add_child(card)
-		else:
-			var hint := Tok.label("Tap an item to see its card", 13, Tok.MUTE, 700)
-			hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			hint.position = Vector2(rx, cy + 40)
-			hint.size = Vector2(rw, 40)
-			_body.add_child(hint)
 	var key := "%d|%d|%s" % [s.items.size(), int(size.x), list_mode]
 	if key != _inv_key:
 		_inv_key = key
@@ -565,68 +549,27 @@ func _inventory(width: float) -> Control:
 	return list
 
 
-## The 📋 view (the user, 2026-11-22; to cut the repeated Craft and pin
-## buttons at stations): a compact list on the left (each row: the icon, the
-## name with its suits, the components in one row under it), the selected
-## item's side card on the right (placed by _redraw(), outside the scroll so
-## it stays put).
-const LIST_PAD := 18.0
-const LIST_TOP := 16.0 + 14.0 + 38.0 + 10.0  # the search bar's row
-const ROW_H := 58.0
-const ROW_FIT := 0.99  # the components' shared size: every row fits at it but Car, Fruit Cake (0.82) and Planet, which shrink
+## The 📋 view: the station list view's one-line rows, across the screen
+## (picture, name, suit icons, parts; the user, 2026-11-27); a tap puts the
+## item on the Crafting Bench above, as in the card view.
+const ROW_FIT := 0.99  # row_parts' shared size: every row fits at it but Car, Fruit Cake (0.82) and Planet, which shrink
 
 
-static func _list_w(width: float) -> float:
-	return floorf((width - 2 * LIST_PAD) * 0.5 - 4)
-
-
-func _inv_list(list: Control, inv: Array, pad: float, _w: float, y: float, width: float) -> Control:
-	var lw := _list_w(width)
+func _inv_list(list: Control, inv: Array, pad: float, w: float, y: float, width: float) -> Control:
 	for c in inv:
-		var row := list_row(c.name, lw)
+		var row := StationScreen.wide_row(c.name, w)
 		row.position = Vector2(pad, y)
+		row.set_meta("cmp", "inv:" + c.name)
 		_inv_cards[c.name] = row
 		row.gui_input.connect(_on_card_input.bind(c.name))
 		list.add_child(row)
-		y += ROW_H + 6
+		y += row.size.y + 6
 	_inv_ring = _selected_ring(Vector2.ZERO, Vector2.ZERO)
 	_inv_ring.visible = false
 	list.add_child(_inv_ring)
 	list.move_child(_inv_ring, 0)
 	list.custom_minimum_size = Vector2(width, y + 150)
 	return list
-
-
-## A list row (the Inventory's 📋 view, the station shop's): the icon, the
-## name with its suits, its components in one row under it. Its parent
-## places it and wires its tap.
-static func list_row(name: String, lw: float) -> Panel:
-	var row := Panel.new()
-	row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
-	row.size = Vector2(lw, ROW_H)
-	row.mouse_filter = MOUSE_FILTER_PASS
-	row.set_meta("cmp", "inv:" + name)
-	var ic := Tok.icon(Data.t("ITEM_EMOJI").get(name, ""), 30)
-	ic.position = Vector2(6, (ROW_H - 30) / 2)
-	row.add_child(ic)
-	var x0 := 42.0
-	var nm := Tok.label(name, 12, Tok.CARD_INK, 800)
-	var nw := minf(Tok.font(800).get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x, lw - x0 - 8)
-	nm.clip_text = true
-	nm.position = Vector2(x0, 5)
-	nm.size = Vector2(nw + 2, 16)
-	row.add_child(nm)
-	var sx := x0 + nw + 5
-	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):  # its suits, after the name
-		if sx + 11 > lw - 4:
-			break
-		var g := Tok.icon("suit:" + su, 11)
-		g.material = Tok.tinted(Tok.suit_color(su))
-		g.position = Vector2(sx, 8)
-		row.add_child(g)
-		sx += 13
-	row.add_child(row_parts(name, Vector2(x0, 27), lw - x0 - 6))
-	return row
 
 
 ## A row's components in one line (elements first, then items by points; no

@@ -276,7 +276,7 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 		for e in shown.filter(func(x): return x.tier == tier):
 			var owned := Catalog.owns(s, e.name)
 			var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
-			var row := _wide_row(e.name, lw)
+			var row := wide_row(e.name, lw)
 			row.position = Vector2(6, y)
 			row.set_meta("cmp", "st:" + e.name)
 			if e.name == open_card:
@@ -300,7 +300,7 @@ func _shop_list(page: Control, station: String, w: float, y: float) -> float:
 ## elements run onto a second line).
 const WIDE_ROW_H := 42.0
 
-static func _wide_row(name: String, lw: float) -> Panel:
+static func wide_row(name: String, lw: float) -> Panel:
 	var row := Panel.new()
 	row.add_theme_stylebox_override("panel", Tok.box(Color("#f3e6c8"), 10, 1.5, Color("#c9a571"), 2, 1, Color(0, 0, 0, 0.25)))
 	row.mouse_filter = MOUSE_FILTER_PASS

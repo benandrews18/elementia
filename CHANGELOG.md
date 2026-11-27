@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Inventory list view (📋): the station list view's one-line rows across the screen (picture, name, suit icons, parts); the side card is gone, a tap puts the item on the Crafting Bench above.
 - The opening: while nothing is tracked, the parts' 🔍 Track buttons glow and pulse. A locked Start opens the To-Do details on your chosen capstone.
 - To-Do details panel: back to full height; opening it changes nothing in the list beside it.
 - Combo Lab from a game: no top bar (Exit Combo Lab / Challenge Test belong to the menu's lab). The mat's buttons read 💾, Clear, Exit; Exit goes back to the Inventory. The ↺ Last button is gone.
