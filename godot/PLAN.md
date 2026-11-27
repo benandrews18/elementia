@@ -576,7 +576,7 @@ Market, tutorials), motion last (it animates the final layouts).
    label white on black; YOU ARE HERE above the Ocean, the Ocean moved up
    the beach clear of the bigger pill; the opening's components hang off
    the capstone on branch lines (the COMPONENTS label gone: the lines say it).
-22. **Tracking and the To-Do list** (grilled 2026-11-26; see Decisions
+22. ✅ **Tracking and the To-Do list** (grilled 2026-11-26; see Decisions
    "tracking as quests"). Two parts:
    - 22a: the To-Do List as a quest log (the capstone a quest with a parts
      bar, its parts as chapters, facts only, one level per tap, other
@@ -628,6 +628,16 @@ Market, tutorials), motion last (it animates the final layouts).
    every screen so almost any icon (items, elements, suits, stations,
    chips, badges, rewards) opens its card or a short explanation when
    tapped; list the ones that don't and fix them.
+28. **The map, discovered as you go** (the user, 2026-11-26; builds on 22b's
+   one-station opening): not every station shows from the start. Each time
+   the player comes back to the map from a station, that station's paths
+   grow out of it (a short animation) and, as each path arrives, the station
+   at its end bounces into view. Stations already found stay; an explorer
+   finds them all quickly (the map is well connected). Replaces 22b's
+   "all stations bounce in on leaving the first". Likely shape: found =
+   the start station plus the neighbours of every station left this run
+   (worked out from the run's visits, nothing new saved); only what's new
+   since the last map visit animates.
 
 Log (newest first, one line per session):
 - 2026-11-26: To-Do List polish (the user): hint card line by line, the tip, a bit wider, title in two lines on a darker band, panel slide-in, green parts counts, closest-first order (tracked on top), a tap below closes the panel. Next: step 23 (Market).
