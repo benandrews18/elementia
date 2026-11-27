@@ -5,6 +5,9 @@
 class_name App
 extends Control
 
+const EDGE := 6.0  # the 🔍 and ⚛️ corner buttons' gap to the screen's side (the user, 2026-11-26: room for the tracked pill)
+const PILL_H := 44.0  # the tracked pill's height
+
 var panel := ""  # "", "drawer" (the Display Mat), "convert", "market" or "todo"
 var _squares := []  # Market squares owned when last looked (a new one plays the sequence)
 var _squares_card := ""  # the card _squares is for (a new run or a load starts afresh)
@@ -790,9 +793,14 @@ func _sync_floats() -> void:
 		pill.get_node("Row/Icon").texture = Data.icon(e.emoji)
 		var nl: Label = pill.get_node("Row/Name")
 		nl.text = t
-		var tw := nl.get_theme_font("font").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, nl.get_theme_font_size("font_size")).x
-		pill.size = Vector2(minf(26 + 32 + 8 + tw + 24, size.x - 140), 58)  # twice the old pill (the user, 2026-11-26): the 🔍's height; its text the 11 px minimum (asked after)
-		pill.position = Vector2(56, y)
+		# Readable first (the user, 2026-11-26): 17 px, out to the screen's
+		# middle at most, a long name shrinking to fit (never under 11).
+		pill.position = Vector2(EDGE + 40, y + (58 - PILL_H) / 2)
+		var room := size.x / 2 - pill.position.x - (26 + 30 + 8 + 20)
+		var px := Tok.fit_px(t, nl.get_theme_font("font"), 17, room)
+		nl.add_theme_font_size_override("font_size", px)
+		var tw := nl.get_theme_font("font").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		pill.size = Vector2(26 + 30 + 8 + tw + 20, PILL_H)
 		pill.set_meta("cmp", "tracked")
 		var item: String = t
 		pill.gui_input.connect(func(ev): if Tap.tap(ev): CardPop.open(self, item).show_tracking())
@@ -800,7 +808,7 @@ func _sync_floats() -> void:
 	if panel == "pins":  # .floatbtn.active: a green glow ring
 		var ring := Panel.new()
 		ring.add_theme_stylebox_override("panel", Tok.box(Color(0, 0, 0, 0), 32, 3, Tok.OK, 14, 0, Tok.OK))
-		ring.position = Vector2(16, y)
+		ring.position = Vector2(EDGE, y)
 		ring.size = Vector2(58, 58)
 		ring.mouse_filter = MOUSE_FILTER_IGNORE
 		_floats.add_child(ring)
@@ -808,7 +816,7 @@ func _sync_floats() -> void:
 	b.texture = load("res://assets/ui/btn_search.webp")
 	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	b.position = Vector2(16, y)
+	b.position = Vector2(EDGE, y)
 	b.size = Vector2(58, 58)
 	b.set_meta("cmp", "pins")
 	b.gui_input.connect(func(ev): if Tap.tap(ev):
@@ -841,13 +849,13 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 	ic.position = (c.size - ic.size) / 2
 	c.add_child(ic)
 	var start := from.get_center() - global_position - c.size / 2
-	var target := pill.position + Vector2(26 + 16, 29) - c.size / 2
+	var target := pill.position + Vector2(26 + 15, PILL_H / 2) - c.size / 2
 	var dv := target - start
 	c.position = start
 	c.scale = Vector2(0.6, 0.6)
 	c.modulate.a = 0
 	add_child(c)
-	var end := 36.0 / d
+	var end := 34.0 / d
 	var tw := c.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(c, "position", start + Vector2(dv.x * 0.1, dv.y * 0.1 - 30), 0.18)
 	tw.parallel().tween_property(c, "scale", Vector2(1.1, 1.1), 0.18)

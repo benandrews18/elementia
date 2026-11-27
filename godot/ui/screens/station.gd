@@ -507,7 +507,7 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 		on.add_child(gear)
 	var conv := convert_button(58) if convert else null
 	if conv:
-		conv.position = Vector2(w - 16 - 58, on.size.y - HubBar.H - 14 - 58)
+		conv.position = Vector2(w - App.EDGE - 58, on.size.y - HubBar.H - 14 - 58)
 		on.add_child(conv)
 
 

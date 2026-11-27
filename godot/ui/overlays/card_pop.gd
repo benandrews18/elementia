@@ -185,21 +185,28 @@ func show_item(name: String, keep_back := false) -> void:
 		sig.add_theme_constant_override("line_spacing", int(round(line - sf.get_height(spx))))
 		sig_h = roundf(sf.get_multiline_string_size(sig.text, HORIZONTAL_ALIGNMENT_LEFT, parts_w - 16, spx).y / sf.get_height(spx)) * line + 12 + 3
 	var icon_px := 100.0
+	var k: float = ItemCard.BIG_ART.get(name, 1.0)
+	var art_h := 0.0  # a BIG_ART picture's own height
 	var icon_h := (bottom - pad_top) / 2  # portrait: the art gets the top half
 	if cap:
 		# The art takes what's left (at least 56px); the card grows past 7:5
 		# when its parts don't fit (CSS aspect-ratio gives way to content).
 		icon_px = minf(72, size.x * 0.16)
+		var tex := Data.icon(entry.emoji)
+		art_h = icon_px * k * tex.get_height() / tex.get_width() if k != 1.0 and tex else 0.0
 		var rest := 2 + name_h + 6 + 1 + 6 + 14.8 + 5 + parts_h + (8 + sig_h if sig.visible else 0.0)
-		card.size.y = maxf(card.size.y, pad_top + 56 + rest + 50)
+		card.size.y = maxf(card.size.y, pad_top + maxf(56, art_h) + rest + 50)
 		bottom = card.size.y - 50
 		icon_h = bottom - pad_top - rest
 	elif Data.t("PDF_ENLARGED_ICONS").has(name):
 		icon_px = 150.0
 	var icon: TextureRect = $Card/Icon
 	icon.texture = Data.icon(entry.emoji)
-	icon.size = Vector2(icon_px, icon_px)
-	icon.position = Vector2((card.size.x - icon_px) / 2, pad_top + (icon_h - icon_px) / 2 + (0.0 if cap else 3.0))
+	var isz := Vector2(icon_px * k, art_h if art_h > 0 else icon_px * k)
+	if k != 1.0 and art_h == 0 and icon.texture:  # portrait card: as tall as the art, within its half
+		isz.y = minf(icon_h, isz.x * icon.texture.get_height() / icon.texture.get_width())
+	icon.size = isz
+	icon.position = Vector2((card.size.x - isz.x) / 2, pad_top + (icon_h - isz.y) / 2 + (0.0 if cap else 3.0))
 	var y := pad_top + icon_h + (2.0 if cap else 6.0)
 	name_l.size = Vector2(name_w, 0)  # grows to its text: centred on the CSS line boxes
 	name_l.position = Vector2(inner_x + (36.0 if cap else 0.0), y + (name_h - name_l.size.y) / 2)

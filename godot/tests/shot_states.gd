@@ -10,7 +10,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
-	"card_pop", "card_pop_cap", "card_pop_back", "element_card", "items", "items_open", "items_search",
+	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
@@ -192,6 +192,8 @@ func _ready() -> void:
 			app.sync_hub()  # Home reads Gather
 			for t in get_tree().get_processed_tweens():
 				t.custom_step(10)
+		"card_pop_metro":  # Metropolis's wide art, twice as wide (ItemCard.BIG_ART)
+			app.show_card("Metropolis")
 		"card_pop", "card_pop_cap":  # an item's card; a capstone's (landscape, with its rule)
 			app.show_card("Bridge" if state == "card_pop" else "Robot")
 		"card_pop_back":  # drilled into a component: Back shows where from

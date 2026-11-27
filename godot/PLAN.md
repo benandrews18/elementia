@@ -610,6 +610,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: after 21 (the user): Metropolis's wide art twice as wide on its cards and full card (ItemCard.BIG_ART); the tracked pill 44 px, 17 px text shrinking to fit by the screen's middle, the 🔍 and ⚛️ 6 px from the sides (App.EDGE).
 - 2026-11-26: step 21 (stations and cards, 13 items); step 20 review fixes before it.
 - 2026-11-26: step 20e: the Bonus Dice window has the quark meter as it stands above it (LockInReward.tiers, both Lock-Ins); QuarkMeter keeps its last two numbers apart.
 - 2026-11-26: after 20d (the user): the check's challenge is a 🎯 Goal button above the hand, left of Pass (HubBar.hand_sides now empty: the To-Do List stays); Metropolis's picture replaced (images/Metropolis Icon - 11-26.png).

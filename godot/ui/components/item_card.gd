@@ -17,6 +17,9 @@ extends Control
 ## Names on two lines on every small card (station, Inventory, mat; not
 ## the full card): the user, 2026-11-23 and 2026-11-26.
 const WRAP_NAMES := ["Aluminum Alloy", "Stainless Steel", "Natural Gas"]
+## Wide art that draws small in a square box: this many times as wide on
+## the small cards and the full card (the user, 2026-11-26).
+const BIG_ART := {"Metropolis": 2.0}
 const ROUND := preload("res://assets/ui/btn_round.webp")  # the star's rim (🔍's)
 
 const SHOP_ICON := 42.0  # a station shop card's item image, every tier (opts.shop)
@@ -76,7 +79,7 @@ func _ready() -> void:
 	if shop:
 		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)
 	icon_px = opts.get("icon_px", icon_px)  # a caller's own size (the craft's poke-up cards)
-	var ic := Tok.icon(card.emoji, icon_px)
+	var ic := art(card.emoji, icon_px, BIG_ART.get(item, 1.0))
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	ic.set_meta("cmp", opts.get("tag", item) + ":icon")
 	if not mini and not opts.get("wide") and not shop:
@@ -222,6 +225,17 @@ static func star_button(px: float, col_id: String) -> Control:
 	b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
 		CollectionsWindow.show_on(App.current, false, col_id))
 	return b
+
+
+## An item's picture px wide (k times that for BIG_ART), its box only as
+## tall as the art when scaled up, so the name stays under it.
+static func art(emoji: String, px: float, k := 1.0) -> TextureRect:
+	var ic := Tok.icon(emoji, px * k)
+	if k != 1.0 and ic.texture:
+		var h := minf(px * k, px * k * ic.texture.get_height() / ic.texture.get_width())
+		ic.custom_minimum_size.y = h
+		ic.size.y = h
+	return ic
 
 
 ## The space nearest the middle of text (where a name splits in two).

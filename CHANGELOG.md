@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- Metropolis's picture is twice as big on its cards. The tracked item's pill reads better (bigger text, out to the middle of the screen), with the 🔍 and ⚛️ buttons closer to the edges.
 - Stations: a white line over ITEM SHOP, "TAP ON ITEMS TO START CRAFTING" under your crafted items; tier 1 cards sold at several stations show them all; the tracking circle shows 🔍.
 - The middle button is bigger; after a roll it reads **Gather**: tap it again to collect. Travel's label is white.
 - The full card matches the station cards; long names (Stainless Steel, Aluminum Alloy, Natural Gas) sit on two lines; the tracked item's pill is twice as big; the Crafting Bench's picture and parts open their cards.
