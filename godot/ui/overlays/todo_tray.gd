@@ -215,50 +215,60 @@ static func _trails(root: String, target: String) -> Array:
 	return out
 
 
-## The hint's card: the item, why, whether it can be made now, where.
+## The hint's card, line by line (the user, 2026-11-26): "Try crafting...",
+## the item (icon, name; the green dot when it can be crafted now), "Needed
+## for:" and each pinned item that needs it, then where it's made.
 func _hint_card(hint, y: float, w: float) -> float:
 	var card := Panel.new()
 	card.add_theme_stylebox_override("panel", Tok.box(Color(1, 1, 1, 0.06), 12))
 	card.position = Vector2(20, y)
+	card.set_meta("cmp", "todo:hintcard")
 	_list.add_child(card)
 	if hint == null:
 		var none := Tok.label("Everything on your list is already crafted!", 13, Color("#b3becd"), 700)
+		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		none.custom_minimum_size = Vector2(w - 28, 0)
 		none.position = Vector2(14, 12)
 		card.add_child(none)
-		card.size = Vector2(w, 42)
-		return y + 42
-	var ic := Tok.icon(hint.entry.emoji, 26)
-	ic.position = Vector2(12, 12)
-	card.add_child(ic)
+		none.size = Vector2(w - 28, 0)
+		var nh := ceilf(Tok.font(700).get_multiline_string_size(none.text, HORIZONTAL_ALIGNMENT_LEFT, w - 28, 13).y)
+		card.size = Vector2(w, nh + 24)
+		return y + card.size.y
+	var ly := 10.0
+	var top := Tok.label("Try crafting...", 13, Color("#b3becd"), 800)
+	top.position = Vector2(14, ly)
+	card.add_child(top)
+	ly += 24
+	ly = _icon_line(card, hint.entry.emoji, hint.name, ly, w, 26, 16, Color.WHITE, 900)
+	if hint.can_now:
+		card.add_child(RefTree.ready_dot(Vector2(14 + 26 - 8, ly - 30 - 3)))
 	var others: Array = hint.roots.filter(func(r): return r != hint.name)
-	var why := "It's on your list"
 	if not others.is_empty():
-		why = "Needed for " + " and ".join(others.slice(0, 2)) + (" and %d more" % (others.size() - 2) if others.size() > 2 else "")
-	var status := "You can craft it now!" if hint.can_now else ("Still need: " + ", ".join(hint.missing) if not hint.missing.is_empty() else "You have its elements -- check its suit cost")
-	var lines := [["Try crafting " + hint.name, 15, Color.WHITE, 900], [why, 12, Color("#b3becd"), 400],
-		[status, 12, Color("#4fe583") if hint.can_now else Color("#b3becd"), 900]]
-	var ly := 12.0
-	for l in lines:  # each wraps in the (narrow) tray
-		var t := Tok.label(l[0], l[1], l[2], l[3])
-		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		t.custom_minimum_size = Vector2(w - 56, 0)
-		t.position = Vector2(46, ly)
-		card.add_child(t)
-		t.size = Vector2(w - 56, 0)
-		var lines_n := ceilf(Tok.font(l[3]).get_multiline_string_size(l[0], HORIZONTAL_ALIGNMENT_LEFT, w - 56, l[1]).y / Tok.font(l[3]).get_height(l[1]))
-		ly += Tok.font(l[3]).get_height(l[1]) * maxf(1, lines_n) + 2
-	var x := 46.0
-	for h in hint.homes:
-		var sic := Tok.icon(Catalog.station(h).emoji, 14)
-		sic.position = Vector2(x, ly + 2)
-		card.add_child(sic)
-		var hl := Tok.label(h, 12, Color("#e8edf4"), 700)
-		hl.position = Vector2(x + 18, ly)
-		card.add_child(hl)
-		x += 18 + Tok.font(700).get_string_size(h, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 12
-	ly += 22
-	card.size = Vector2(w, ly + 10)
+		ly += 4
+		var nf := Tok.label("Needed for:", 12, Color("#b3becd"), 800)
+		nf.position = Vector2(14, ly)
+		card.add_child(nf)
+		ly += 20
+		for r in others:
+			ly = _icon_line(card, Catalog.entry(r).emoji, r, ly, w, 18, 13, Color("#e8edf4"), 700)
+	ly += 4
+	for h in hint.homes:  # where it's made
+		ly = _icon_line(card, Catalog.station(h).emoji, h, ly, w, 16, 12, Color("#e2b25a"), 700)
+	card.size = Vector2(w, ly + 8)
 	return y + card.size.y
+
+
+## One line of the hint card: an icon and a name beside it (shrunk to fit
+## the narrow tray); returns the next line's top.
+func _icon_line(card: Control, emoji: String, text: String, ly: float, w: float, ipx: float, px: int, color: Color, weight: int) -> float:
+	var ic := Tok.icon(emoji, ipx)
+	ic.position = Vector2(14, ly)
+	card.add_child(ic)
+	var fpx := Tok.fit_px(text, Tok.font(weight), px, w - 14 - ipx - 8 - 10)
+	var l := Tok.label(text, fpx, color, weight)
+	l.position = Vector2(14 + ipx + 8, ly + (ipx - Tok.font(weight).get_height(fpx)) / 2)
+	card.add_child(l)
+	return ly + ipx + 6
 
 
 ## A pinned item's row: icon (a green dot when craftable now, a 🔍 when the

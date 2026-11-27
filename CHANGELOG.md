@@ -9,6 +9,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-26
+- The hint reads top to bottom: "Try crafting...", the item, "Needed for:" with each pinned item that needs it, then where it's made.
 - To-Do List: the list is only as wide as its rows (the screen shows beside it); each item's suit cost sits under its picture, in the list and in its details; an open part starts with its suit cost; owned parts keep the 🔍 column clear.
 - The To-Do List, slimmer: one background, each pinned item a plain row (icon, name, points, parts owned, its 📌). Tap one to open a details panel over the right side, with its parts' tree and 🔍 Track; the list's icons and names stay visible on the left, so you can scroll and tap another item. ✕ closes the panel.
 - The suit strip: each suit's icon in a gold ring on a thin pill, its count in a bubble; hidden while Convert is open. Convert's Unknown Element counter is a ring on the tray's corner, so the elements sit closer to the title. The map card's items have a thin dark edge instead of a brown square. The Close button's background stays inside its ring.
