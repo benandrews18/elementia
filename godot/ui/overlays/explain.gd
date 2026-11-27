@@ -64,13 +64,6 @@ func _ready() -> void:
 	_born = Engine.get_process_frames()
 
 
-## A suit's line: what its icon on a card means.
-static func suit(su: String) -> String:
-	var label: String = str(Data.t("ELEMENT_SUIT_LABEL").get(su, su)).capitalize()
-	var els: Array = Data.t("ELEMENT_SUIT").keys().filter(func(s): return Data.t("ELEMENT_SUIT")[s] == su)
-	return "%s suit (%s). On an item: crafting it also costs one %s element." % [label, ", ".join(els.slice(0, 6)), label]
-
-
 ## A station's line.
 static func station(name: String, extra := "") -> String:
 	return name + (": " + extra if extra != "" else "")

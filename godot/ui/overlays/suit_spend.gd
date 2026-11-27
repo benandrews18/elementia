@@ -19,6 +19,27 @@ const SCENE := "res://ui/overlays/suit_spend.tscn"
 
 var item: String
 var anchor: Rect2  # the button it points at, in screen coordinates
+var view_suit := ""  # just looking (a tapped suit icon, the user 2026-11-26): its name over its elements, no counts, no taps
+const TITLE_H := 30.0
+
+
+## A tapped suit icon: the balloon pointing at it, the suit's name (its icon
+## and REACTIVE, ...) over its elements. A tap anywhere closes it.
+static func show_suit(su: String, target: Control) -> void:
+	if App.current == null:
+		return
+	var b := make()
+	b.view_suit = su
+	b.anchor = target.get_global_rect()
+	b.size = App.current.size
+	b.set_meta("cmp", "suitview:" + su)
+	App.current.add_child(b)
+
+
+## Makes a suit icon open show_suit() when tapped.
+static func on_tap(c: Control, su: String) -> void:
+	c.mouse_filter = Control.MOUSE_FILTER_STOP
+	c.gui_input.connect(func(ev): if Tap.tap(ev): show_suit(su, c))
 var _picks := {}
 var _above := true
 var _tail_x := 0.0
@@ -59,36 +80,51 @@ func _picked_for(suit: String) -> int:
 func _build() -> void:
 	for c in _balloon.get_children():
 		c.queue_free()
-	var need := _need()
-	var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys().filter(func(s): return need.has(s))
+	var view := view_suit != ""
+	var need := {} if view else _need()
+	var suits: Array = [view_suit] if view else Data.t("ELEMENT_SUIT_LABEL").keys().filter(func(s): return need.has(s))
 	var rows: Array = suits.map(func(su): return Data.t("SUIT_CORE_ELEMENTS")[su])
 	var cols := 0
 	for r in rows:
 		cols = maxi(cols, r.size())
-	var row_h := pick + 5 + 18
+	var row_h := pick if view else pick + 5 + 18  # counts only when paying
+	var top := TITLE_H if view else 0.0
 	var w := pad * 2 + cols * pick + (cols - 1) * gap.x
-	var h := pad * 2 + rows.size() * row_h + (rows.size() - 1) * gap.y
+	var h := pad * 2 + top + rows.size() * row_h + (rows.size() - 1) * gap.y
 	_balloon.size = Vector2(w, h)
 	_above = anchor.position.y - h - 12 >= 4
 	var x := clampf(anchor.get_center().x - w / 2, 8, size.x - w - 8)
 	_balloon.position = Vector2(x, anchor.position.y - h - 12 if _above else anchor.end.y + 12)
 	_tail_x = clampf(anchor.get_center().x - x, 14, w - 14)
 	_balloon.queue_redraw()
-	var reserved := _reserved()
+	if view:  # the title: the suit's icon and its name
+		var g := Tok.icon("suit:" + view_suit, 20)
+		g.material = Tok.tinted(Tok.suit_color(view_suit))
+		var t := Tok.label(str(Data.t("ELEMENT_SUIT_LABEL")[view_suit]), 15, Tok.INK, 900)
+		t.add_theme_font_override("font", Tok.font(900, 1))
+		var tw := 20 + 6 + Tok.font(900, 1).get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		g.position = Vector2((w - tw) / 2, pad + 2)
+		t.position = Vector2(g.position.x + 26, pad + 2 + (20 - Tok.font(900, 1).get_height(15)) / 2)
+		t.set_meta("cmp", "suitview:title")
+		_balloon.add_child(g)
+		_balloon.add_child(t)
+	var reserved := {} if view else _reserved()
 	for ri in rows.size():
 		var row: Array = rows[ri]
 		for ci in row.size():
 			var sym: String = row[ci]
-			var avail := maxf(0, Catalog.count(Game.state, sym) - reserved.get(sym, 0))
+			var avail := -1.0 if view else maxf(0, Catalog.count(Game.state, sym) - reserved.get(sym, 0))
 			var p := _pick(sym, int(avail), _picks.get(sym, 0), suits[ri])
-			p.position = Vector2(pad + ci * (pick + gap.x), pad + ri * (row_h + gap.y))
+			p.position = Vector2(pad + ci * (pick + gap.x), pad + top + ri * (row_h + gap.y))
 			_balloon.add_child(p)
 
 
 func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 	var c := Control.new()
-	c.size = Vector2(pick, pick + 5 + 18)
-	var inert := avail <= 0 and have == 0
+	var view := avail < 0  # just looking: no count, no taps
+	c.size = Vector2(pick, pick if view else pick + 5 + 18)
+	c.mouse_filter = MOUSE_FILTER_IGNORE if view else MOUSE_FILTER_STOP
+	var inert := not view and avail <= 0 and have == 0
 	if inert:
 		c.modulate.a = 0.4
 	var color := Color(Data.t("ELEMENT_COLOR").get(sym, "#8a94a6"))
@@ -114,11 +150,12 @@ func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 		g.material = Tok.white()
 		b.add_child(g)
 		c.add_child(b)
-	var q := Tok.label("×%d" % avail, 13, Tok.INK, 800)
-	q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	q.position = Vector2(0, pick + 3)
-	q.size = Vector2(pick, 18)
-	c.add_child(q)
+	if not view:
+		var q := Tok.label("×%d" % avail, 13, Tok.INK, 800)
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		q.position = Vector2(0, pick + 3)
+		q.size = Vector2(pick, 18)
+		c.add_child(q)
 	if have > 0:  # how many picked, top-left
 		var pk := Tok.label(str(have), 11, Color("#0f2733"), 800)
 		pk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -127,7 +164,7 @@ func _pick(sym: String, avail: int, have: int, suit: String) -> Control:
 		pk.position = Vector2(-6, -6)
 		pk.size = Vector2(22, 22)
 		c.add_child(pk)
-	if not inert:
+	if not inert and not view:
 		c.gui_input.connect(func(ev): if Tap.tap(ev): _tap(sym, suit, avail))
 	return c
 

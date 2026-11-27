@@ -92,7 +92,7 @@ static func suit_row(name: String, at: Vector2, px: float) -> Control:
 		g.material = Tok.tinted(Tok.suit_color(suits[i]))
 		g.position = Vector2(i * step, 0)
 		var su: String = suits[i]
-		Explain.on_tap(g, func(): return Explain.suit(su))  # what the suit cost means (step 27)
+		SuitSpend.on_tap(g, su)  # the suit and its elements (step 27; the user, 2026-11-26)
 		r.add_child(g)
 	return r
 

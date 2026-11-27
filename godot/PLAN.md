@@ -688,6 +688,7 @@ Market, tutorials), motion last (it animates the final layouts).
    ctx.mapRevealed gone.
 
 Log (newest first, one line per session):
+- 2026-11-26: after 28 (the user): a tapped suit icon opens SuitSpend's balloon in view mode (SuitSpend.show_suit: the suit's name over its elements, no counts, no taps) instead of the Explain text; also on the full card's suit-cost badges.
 - 2026-11-26: after 28 (the user): the Combo Lab's capstone cards have their station bottom-left (ItemCard opts.stations_left).
 - 2026-11-26: step 28 (the map discovered as you go): found = visited + neighbours; paths grow out of the station left, the found stations bounce in.
 - 2026-11-26: step 27 (icons): an audit over every shot state; Explain balloons on suits, visited stations, card stations; the Quark Meter opens the rules.

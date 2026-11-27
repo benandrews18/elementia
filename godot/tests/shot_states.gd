@@ -82,7 +82,7 @@ func _ready() -> void:
 			UnknownPick.open(app)
 		"market":
 			app._on_hub("market")
-		"explain":  # step 27: a tapped icon's short explanation (a suit, under Convert)
+		"explain":  # a tapped suit icon: its balloon (the suit over its elements; Convert's chosen S)
 			Game.state.emptyElements = 1
 			app.open_panel("convert")
 			app._panel_node.from = "S"
@@ -95,7 +95,7 @@ func _ready() -> void:
 					badge = c
 					break
 			if badge:
-				Explain.show_at(badge, Explain.suit(Data.t("ELEMENT_SUIT")["S"]))
+				SuitSpend.show_suit(Data.t("ELEMENT_SUIT")["S"], badge)
 		"market_craft":
 			app._on_hub("market")
 			MarketCraft.open(app, "Plastic")

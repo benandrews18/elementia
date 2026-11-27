@@ -154,7 +154,7 @@ func _big_box(sym: String, sz: float) -> Control:
 		g.position = Vector2(4, 4)
 		g.material = Tok.white()
 		badge.add_child(g)
-		Explain.on_tap(badge, func(): return Explain.suit(suit))
+		SuitSpend.on_tap(badge, suit)
 		b.add_child(badge)
 	return b
 

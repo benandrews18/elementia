@@ -265,7 +265,7 @@ static func _cost_badge(su: String) -> Panel:
 	var b := Panel.new()
 	b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), 30, 4, Color.BLACK, 3, 2, Color(0, 0, 0, 0.3)))
 	b.custom_minimum_size = Vector2(60, 60)
-	b.mouse_filter = MOUSE_FILTER_IGNORE
+	SuitSpend.on_tap(b, su)  # the suit and its elements (the user, 2026-11-26)
 	var g := Tok.icon("suit:" + su, 36)
 	g.position = Vector2(12, 12)
 	g.material = Tok.white()

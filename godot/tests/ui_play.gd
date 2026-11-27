@@ -361,7 +361,12 @@ func _todo(app: App) -> void:
 	var cost := _find_meta(app._panel_node, "suitcost:Metropolis")
 	if cost and cost.get_child_count() > 0:  # step 27: a suit icon explains itself
 		cost.get_child(0).gui_input.emit(_release())
-		check(app.get_children().any(func(c): return c is Explain and "suit" in c.text), "a suit icon's tap explains the suit")
+		await get_tree().process_frame
+		var sv: Array = app.get_children().filter(func(c): return c is SuitSpend and c.view_suit != "")
+		check(sv.size() == 1 and _find_meta(sv[0], "suitview:title") != null and not _find_texts(sv[0]).any(func(t): return t.begins_with("×")),
+			"a suit icon's tap: the suit's balloon, its name over its elements, no counts")
+		for c in sv:
+			c.queue_free()
 	_find_meta(app._panel_node, "todo:close").gui_input.emit(_release())
 	check(TodoTray.detail == "" and _find_meta(app._panel_node, "todo:details") == null, "✕ closes the details panel")
 	await get_tree().process_frame
@@ -1647,3 +1652,13 @@ func _pay_balloon(app: App, need: Dictionary) -> void:
 			break
 		if not tapped:
 			break
+
+
+## Every Label's text under n.
+func _find_texts(n: Node) -> Array:
+	var out := []
+	if n is Label:
+		out.append(n.text)
+	for c in n.get_children():
+		out.append_array(_find_texts(c))
+	return out
