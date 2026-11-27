@@ -260,7 +260,8 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		_opens(chip, "", dice[i])
 		card.add_child(chip)
 	y += cw + 13.8 + 11
-	# Every item sold here, icon only (owned: gold-soft square with a tick);
+	# Every item sold here, icon only, a thin dark edge round each picture (owned: a tick; no
+	# square behind it, the user 2026-11-26);
 	# bigger than before (36 px), rows of 5, each row centred (the user, 2026-11-26).
 	var items := StationScreen.shop_entries(name).filter(func(e): return e.tier != "CAPSTONE")
 	const PER := 5
@@ -271,9 +272,9 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		var e: Dictionary = items[i]
 		var owned := Catalog.owns(Game.state, e.name)
 		var box := Panel.new()
-		box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT if owned else Color.TRANSPARENT, 7))
+		box.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 7))
 		if job.has(e.name):  # .station-item-icon.job-highlight
-			box.add_theme_stylebox_override("panel", Tok.box(Tok.GOLD_SOFT, 7, 3, Tok.GOLD, 10, 0, Color(0.886, 0.698, 0.353, 0.55)))
+			box.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 7, 3, Tok.GOLD, 10, 0, Color(0.886, 0.698, 0.353, 0.55)))
 		var in_row := mini(PER, items.size() - i / PER * PER)
 		var x0 := (w - (in_row * slot + (in_row - 1) * GAP)) / 2
 		box.position = Vector2(x0 + i % PER * (slot + GAP), y + 9 + i / PER * (slot + GAP))
@@ -281,6 +282,7 @@ static func station_card(name: String, w: float, boxed := false) -> Control:
 		_opens(box, e.name)
 		var ic := Tok.icon(e.emoji, slot - 6)
 		ic.position = Vector2(3, 3)
+		ic.material = Tok.outline(slot - 6)
 		box.add_child(ic)
 		if owned:
 			var t := Tok.tick(Color.WHITE, 16, Tok.OK, Color("#3b210d"))

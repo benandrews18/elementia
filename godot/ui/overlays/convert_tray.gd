@@ -53,12 +53,12 @@ func _redraw() -> void:
 	var rows := ceili(held.size() / 8.0)
 	var grid_h := rows * (cell + 16) + maxf(0, rows - 1) * 6
 	var big := minf(110.0, (w - 32 - 72 - 40) / 2)
-	var grid_y := TOP_PAD + 26 + 30 + 10  # under the title and the "?" counter
+	var grid_y := TOP_PAD + 26 + 12  # under the title (the "?" counter sits on the corner)
 	var h := grid_y + grid_h + 26 + big + 30 + 20
 	tray.position = Vector2(0, size.y - HubBar.H - h)
 	tray.size = Vector2(w, h + HubBar.H)
 	_put_bench(tray.position.y, w)
-	content.add_child(_unknown_badge(Vector2(w - 16 - 54, TOP_PAD + 26)))
+	content.add_child(_unknown_badge(Vector2(w - 16 - 46, -23)))
 	# The quick grid: a tap on an element with 3+ sets FROM.
 	var y := grid_y
 	for i in held.size():
@@ -169,21 +169,22 @@ static func _arrow_glyph(color: Color) -> Control:
 	return c
 
 
-## The "?" counter: the square and how many are held (faded at 0).
+## The "?" counter (the user, 2026-11-26): the square in a gold ring on the
+## tray's top-right corner, how many are held in a bubble on the ring's top
+## right (faded at 0).
 func _unknown_badge(at: Vector2) -> Control:
 	var n := int(Util.get_or(Game.state, "emptyElements", 0))
 	var b := Panel.new()
-	b.add_theme_stylebox_override("panel", Tok.box(Color(0, 0, 0, 0.3), 14, 1.5, Tok.GOLD if n > 0 else Color(1, 1, 1, 0.2)))
-	b.size = Vector2(54, 30)
+	b.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), 23, 2, Tok.GOLD, 4, 2, Color(0, 0, 0, 0.4)))
+	b.size = Vector2(46, 46)
 	b.position = at
-	b.modulate.a = 1.0 if n > 0 else 0.5
-	var sq := LockInReward.unknown_square(20)
-	sq.position = Vector2(6, 5)
+	b.modulate.a = 1.0 if n > 0 else 0.6
+	b.set_meta("cmp", "cv:unknown")
+	var sq := LockInReward.unknown_square(24)
+	sq.position = Vector2(11, 11)
 	sq.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(sq)
-	var l := Tok.label(str(n), 14, Tok.GOLD if n > 0 else Color.WHITE, 900)
-	l.position = Vector2(32, 4)
-	b.add_child(l)
+	b.add_child(StationScreen.count_bubble(n, Vector2(46 - 14, -6)))
 	if n > 0:
 		b.gui_input.connect(func(ev): if Tap.tap(ev):
 			var app := App.current
@@ -242,6 +243,6 @@ func _put_bench(tray_y: float, w: float) -> void:
 	var bw := minf(w - 16, 420.0)
 	bench.add_child(ShopRow.make(e, bw - 36, func(n, at: Rect2): if App.current: App.current.craft_tap(n, at), func(n): App.pin(n)))
 	bench.size = Vector2(bw, 30 + ShopRow.H + 18)
-	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y - 6)
+	bench.position = Vector2((w - bw) / 2, tray_y - bench.size.y - 28)  # clear of the "?" ring on the tray's corner
 	add_child(bench)
 	_bench = bench

@@ -14,10 +14,10 @@
 
 [sub_resource type="StyleBoxFlat" id="flat"]
 bg_color = Color(0.827451, 0.878431, 0.945098, 1)
-corner_radius_top_left = 38
-corner_radius_top_right = 38
-corner_radius_bottom_right = 38
-corner_radius_bottom_left = 38
+corner_radius_top_left = 48
+corner_radius_top_right = 48
+corner_radius_bottom_right = 48
+corner_radius_bottom_left = 48
 
 [node name="HubBar" type="Control"]
 layout_mode = 3

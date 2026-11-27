@@ -499,7 +499,7 @@ static func gear_button(px: float) -> TextureRect:
 
 ## Settings (top right; on the map, under its card) and Convert (bottom
 ## right, once any element is held), on screen `on`.
-static func corner_buttons(on: Control, settings: bool, convert := true) -> void:
+static func corner_buttons(on: Control, settings: bool, convert := true, suits := true) -> void:
 	var w := on.size.x
 	var gear := gear_button(46)
 	gear.position = Vector2(w - 14 - 46, (TOP if Game.state.get("matChecked") else 0.0) + 10)
@@ -508,49 +508,66 @@ static func corner_buttons(on: Control, settings: bool, convert := true) -> void
 	var conv := convert_button(58) if convert else null
 	if conv:
 		conv.position = Vector2(w - App.EDGE - 58, on.size.y - HubBar.H - 14 - 58)
-		on.add_child(suit_pill(conv.position))
+		if suits:
+			on.add_child(suit_pill(conv.position))
 		on.add_child(conv)
 
 
-## The suit pill (the user, 2026-11-26): out of Convert's left side like the
-## tracked pill, each suit's icon over how many of its elements are held
-## (what suit costs are paid from). A tap opens Convert too.
+## The suit strip (the user, 2026-11-26): left of Convert, each suit's icon
+## in a thin gold ring sitting on a narrow pill, how many of its elements
+## are held in a bubble on the ring's top right (what suit costs are paid
+## from). A tap opens Convert too. Hidden over the Convert tray.
 static func suit_pill(conv_at: Vector2) -> Control:
-	const COL := 22.0
-	const GAP := 8.0
+	const D := 28.0  # a ring (four fit right of the screen's middle, clear of the tracked pill)
+	const GAP := 4.0
 	var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
 	var held := {}
 	for sym in Util.get_or(Game.state, "elements", {}):
 		var su: String = Data.t("ELEMENT_SUIT").get(sym, "")
 		held[su] = held.get(su, 0) + int(Catalog.count(Game.state, sym))
+	var strip := Control.new()
+	var row_w := suits.size() * D + (suits.size() - 1) * GAP
+	strip.size = Vector2(4 + row_w + 4 + 29, 58)  # the pill's right end hides under the button's middle
+	strip.position = Vector2(conv_at.x + 29 - strip.size.x, conv_at.y)
+	strip.set_meta("cmp", "suits")
 	var pill: Control = load("res://ui/pieces/tracked_pill.tscn").instantiate()
 	pill.get_node("Row").visible = false
-	var inner := suits.size() * COL + (suits.size() - 1) * GAP
-	pill.size = Vector2(16 + inner + 29 + 8, App.PILL_H)  # its right end hides under the button's middle
-	pill.position = Vector2(conv_at.x + 29 - pill.size.x, conv_at.y + (58 - App.PILL_H) / 2)
-	pill.set_meta("cmp", "suits")
+	pill.size = Vector2(strip.size.x, 18)
+	pill.position = Vector2(0, (58 - 18) / 2)
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	strip.add_child(pill)
 	for i in suits.size():
 		var su: String = suits[i]
-		var x := 16 + i * (COL + GAP)
-		var ic := Tok.icon("suit:" + su, 16)
+		var ring := Panel.new()
+		ring.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), D / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
+		ring.size = Vector2(D, D)
+		ring.position = Vector2(4 + i * (D + GAP), (58 - D) / 2)
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ic := Tok.icon("suit:" + su, 17)
 		ic.material = Tok.tinted(Tok.suit_color(su))
-		ic.position = Vector2(x + (COL - 16) / 2, 5)
+		ic.position = (ring.size - Vector2(17, 17)) / 2
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pill.add_child(ic)
-		var n := Tok.label(str(held.get(su, 0)), 12, Color.WHITE, 800)
-		n.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
-		n.add_theme_constant_override("shadow_offset_y", 1)
-		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		n.position = Vector2(x - 4, 21)
-		n.size = Vector2(COL + 8, 16)
+		ring.add_child(ic)
+		var n := count_bubble(held.get(su, 0), Vector2(D - 11, -9))
 		n.set_meta("cmp", "suits:" + su)
-		pill.add_child(n)
-	pill.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:
-		if App.current.panel == "convert":
-			App.current.close_panel()
-		else:
-			App.current.open_panel("convert"))
-	return pill
+		ring.add_child(n)
+		strip.add_child(ring)
+	strip.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_panel("convert"))
+	return strip
+
+
+## A count in a small round bubble (the suit strip's, the "?" counter's):
+## white on navy with a gold rim, wider for longer numbers.
+static func count_bubble(n: int, at: Vector2) -> Label:
+	var l := Tok.label(str(n), 11, Color.WHITE, 900)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_stylebox_override("normal", Tok.box(Color("#0b1c25"), 9, 1.5, Tok.GOLD))
+	var tw := Tok.font(900).get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+	l.size = Vector2(maxf(19, tw + 10), 19)
+	l.position = at
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
 
 
 ## Convert: on screen once any element is held (state.convertRevealed in

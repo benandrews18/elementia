@@ -838,7 +838,7 @@ func _sync_floats() -> void:
 	for c in _floats.get_children():
 		c.queue_free()
 	if panel == "convert":  # its button over the tray: a tap closes it again
-		StationScreen.corner_buttons(_floats, false)
+		StationScreen.corner_buttons(_floats, false, true, false)  # no suit strip over the tray (the user, 2026-11-26)
 		return
 	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab"):
 		return

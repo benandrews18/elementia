@@ -630,6 +630,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: after 22 (the user): the suit strip as gold rings on a thin pill with count bubbles (StationScreen.count_bubble), off over Convert; Convert's "?" a ring on the tray's corner (the bench 22 px higher); the map card's items outlined, no brown squares; Close's background round.
 - 2026-11-26: step 22b: the opening's To-Do List and locked Start, the one-station map, the stations bouncing in.
 - 2026-11-26: step 22 grilled (tracking as quests); 22a: the To-Do List as a quest log, pin and track separate (Track it? window, Auto-track on pin), the suit pill.
 - 2026-11-26: after 21 (the user): Metropolis's wide art twice as wide on its cards and full card (ItemCard.BIG_ART); the tracked pill 44 px, 17 px text shrinking to fit by the screen's middle, the 🔍 and ⚛️ 6 px from the sides (App.EDGE).
