@@ -77,6 +77,25 @@ static func ready(name: String) -> bool:
 	return e != null and not Catalog.owns(Game.state, name) and Catalog.can_craft(Game.state, e) and Game.suit_cost_payable(name)
 
 
+## An item's suit cost (its "element tax"), as a row of suit icons centred
+## on `at` (x: the middle; y: the top). Empty if it has none.
+static func suit_row(name: String, at: Vector2, px: float) -> Control:
+	var suits: Array = Data.t("ITEM_SUIT_COST_TABLE").get(name, [])
+	var r := Control.new()
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.set_meta("cmp", "suitcost:" + name)
+	var step := px + 3
+	r.size = Vector2(maxf(0, suits.size() * step - 3), px)
+	r.position = Vector2(at.x - r.size.x / 2, at.y)
+	for i in suits.size():
+		var g := Tok.icon("suit:" + suits[i], px)
+		g.material = Tok.tinted(Tok.suit_color(suits[i]))
+		g.position = Vector2(i * step, 0)
+		g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		r.add_child(g)
+	return r
+
+
 ## The green "can craft now" dot, on an icon's top-right corner.
 static func ready_dot(at: Vector2) -> Control:
 	var d := Panel.new()
@@ -225,10 +244,9 @@ func _flat(parent: Control, name: String, kind: String, path: String, seen: Dict
 	row.add_child(ic)
 	if ready(name):
 		row.add_child(ready_dot(Vector2(30, 3)))
-	var right := w
+	var right := w - 36  # the 🔍 column, kept clear even when owned (no 🔍: nothing moves into it)
 	if not has:
 		row.add_child(track_button(name, Vector2(w - 30, 4), 30))
-		right = w - 36
 	right = where(row, name, "item", right + 10, 10)
 	if not has:
 		var pc := parts(e)
@@ -252,7 +270,10 @@ func _flat(parent: Control, name: String, kind: String, path: String, seen: Dict
 		var seen2 := seen.duplicate()
 		seen2[name] = true
 		var top := y
-		y = nodes(parent, components(e), path, seen2, Vector2(at.x + 16, top), w - 16)
+		if not Data.t("ITEM_SUIT_COST_TABLE").get(name, []).is_empty():  # its suit cost first (the user, 2026-11-26)
+			parent.add_child(suit_row(name, Vector2(at.x + 16 + 14, y + 4), 16))
+			y += 26
+		y = nodes(parent, components(e), path, seen2, Vector2(at.x + 16, y), w - 16)
 		var rule := ColorRect.new()
 		rule.color = look.rule
 		rule.position = Vector2(at.x + 4, top)

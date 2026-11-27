@@ -81,10 +81,14 @@ func _redraw() -> void:
 	var keep := _scroll.scroll_vertical
 	for c in _list.get_children():
 		c.queue_free()
-	var w := _scroll.size.x - 40
 	if detail != "" and not Progress.is_pinned(detail):
 		detail = ""
 	var names: Array = Progress.prefs.pinnedItems.filter(func(n): return Catalog.entry(n) != null)
+	# Only as wide as its rows, the pins just clear of the longest name (the
+	# user, 2026-11-26): the screen behind shows beside it.
+	$Tray.size.x = minf(size.x, _list_width(names))
+	_scroll.size.x = $Tray.size.x - 3
+	var w := _scroll.size.x - 40
 	var first := lead()
 	if names.has(first):  # the quest holding the tracked item leads
 		names.erase(first)
@@ -100,17 +104,40 @@ func _redraw() -> void:
 		if hint_open:
 			y = _hint_card(hint, y, w) + 16
 		if Game.ctx.get("tracked") == null and detail == "":  # a nudge, not a pick (the user, 2026-11-26); in the panel when it's open
-			var tip := Tok.label("Tip: tap 🔍 on a part to track it.", 13, Color("#b3becd"), 700)
+			var tip := Tok.label("Tip: open an item, then tap 🔍 on a part to track it.", 13, Color("#b3becd"), 700)
+			tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			tip.custom_minimum_size = Vector2(w, 0)
 			tip.position = Vector2(20, y)
 			tip.set_meta("cmp", "todo:tip")
 			_list.add_child(tip)
-			y += 24
+			tip.size = Vector2(w, 0)
+			y += 6 + ceilf(Tok.font(700).get_multiline_string_size(tip.text, HORIZONTAL_ALIGNMENT_LEFT, w, 13).y)
 		y += 4
 		for n in names:
 			y = _row(Catalog.entry(n), y, _scroll.size.x)
 	$Tray/Scroll/List.custom_minimum_size = Vector2(_scroll.size.x, y + 20)
 	_scroll.set_deferred("scroll_vertical", keep)
 	_details()
+
+
+## A row's name size (fitted to the room beside the details panel) and its
+## line under it; the list's width: the widest row, its pin, a margin.
+func _name_px(name: String) -> int:
+	return Tok.fit_px(name, Tok.font(800), 15, LEFT_W - 56 - 4)
+
+
+func _sub_text(e: Dictionary) -> String:
+	var pc := RefTree.parts(e)
+	return "%d   %s" % [int(e.points), "crafted" if Catalog.owns(Game.state, e.name) else "%d/%d parts" % [pc.x, pc.y]]
+
+
+func _list_width(names: Array) -> float:
+	var widest := 0.0
+	for n in names:
+		var e: Dictionary = Catalog.entry(n)
+		widest = maxf(widest, Tok.font(800).get_string_size(n, HORIZONTAL_ALIGNMENT_LEFT, -1, _name_px(n)).x)
+		widest = maxf(widest, 15 + Tok.font(700).get_string_size(_sub_text(e), HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x)
+	return maxf(190, 56 + widest + 12 + 22 + 14)
 
 
 func _show(name: String) -> void:
@@ -200,8 +227,8 @@ func _hint_card(hint, y: float, w: float) -> float:
 		card.add_child(none)
 		card.size = Vector2(w, 42)
 		return y + 42
-	var ic := Tok.icon(hint.entry.emoji, 36)
-	ic.position = Vector2(14, 0)
+	var ic := Tok.icon(hint.entry.emoji, 26)
+	ic.position = Vector2(12, 12)
 	card.add_child(ic)
 	var others: Array = hint.roots.filter(func(r): return r != hint.name)
 	var why := "It's on your list"
@@ -211,14 +238,16 @@ func _hint_card(hint, y: float, w: float) -> float:
 	var lines := [["Try crafting " + hint.name, 15, Color.WHITE, 900], [why, 12, Color("#b3becd"), 400],
 		[status, 12, Color("#4fe583") if hint.can_now else Color("#b3becd"), 900]]
 	var ly := 12.0
-	for l in lines:
+	for l in lines:  # each wraps in the (narrow) tray
 		var t := Tok.label(l[0], l[1], l[2], l[3])
-		t.position = Vector2(62, ly)
-		t.size = Vector2(w - 72, 0)
 		t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		t.custom_minimum_size = Vector2(w - 56, 0)
+		t.position = Vector2(46, ly)
 		card.add_child(t)
-		ly += l[1] * 1.45
-	var x := 62.0
+		t.size = Vector2(w - 56, 0)
+		var lines_n := ceilf(Tok.font(l[3]).get_multiline_string_size(l[0], HORIZONTAL_ALIGNMENT_LEFT, w - 56, l[1]).y / Tok.font(l[3]).get_height(l[1]))
+		ly += Tok.font(l[3]).get_height(l[1]) * maxf(1, lines_n) + 2
+	var x := 46.0
 	for h in hint.homes:
 		var sic := Tok.icon(Catalog.station(h).emoji, 14)
 		sic.position = Vector2(x, ly + 2)
@@ -229,7 +258,6 @@ func _hint_card(hint, y: float, w: float) -> float:
 		x += 18 + Tok.font(700).get_string_size(h, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 12
 	ly += 22
 	card.size = Vector2(w, ly + 10)
-	ic.position.y = (card.size.y - 36) / 2
 	return y + card.size.y
 
 
@@ -251,18 +279,18 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 		sel.size = row.size
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		row.add_child(sel)
-	var ic := Tok.icon(e.emoji, 34)
-	ic.position = Vector2(14, 12)
+	var ic := Tok.icon(e.emoji, 30)
+	ic.position = Vector2(16, 6)
 	row.add_child(ic)
+	row.add_child(RefTree.suit_row(e.name, Vector2(31, 41), 11))  # its suit cost, under the picture
 	if RefTree.ready(e.name):
-		row.add_child(RefTree.ready_dot(Vector2(42, 8)))
+		row.add_child(RefTree.ready_dot(Vector2(40, 3)))
 	if e.name == lead():  # the tracked item is this, or in it
 		var g := Tok.icon("🔍", 16)
 		g.position = Vector2(6, 6)
 		g.set_meta("cmp", "todo:lead")
 		row.add_child(g)
-	var room := LEFT_W - 56 - 4  # the name stays readable beside the details panel
-	var px := Tok.fit_px(e.name, Tok.font(800), 15, room)
+	var px := _name_px(e.name)  # the name stays readable beside the details panel
 	var nl := Tok.label(e.name, px, Color("#5fd38a") if owned else Color.WHITE, 800)
 	nl.position = Vector2(56, 10 + (15 - px) * 0.6)
 	row.add_child(nl)
@@ -270,12 +298,12 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	var star := Tok.star(Color("#f5b400"), 11)
 	star.position = Vector2(56, 35)
 	row.add_child(star)
-	var sub := Tok.label("%d   %s" % [int(e.points), "crafted" if owned else "%d/%d parts" % [pc.x, pc.y]], 12, Color("#8fa3b5"), 700)
+	var sub := Tok.label(_sub_text(e), 12, Color("#8fa3b5"), 700)
 	sub.position = Vector2(71, 31)
 	sub.set_meta("cmp", "todo:bar:%d/%d" % [pc.x, pc.y])
 	row.add_child(sub)
-	var pin := Tok.icon("📌", 20)  # drop it from the list
-	pin.position = Vector2(w - 38, (ROW_H - 20) / 2)
+	var pin := Tok.icon("📌", 22)  # drop it from the list
+	pin.position = Vector2(w - 14 - 22, (ROW_H - 22) / 2)
 	pin.mouse_filter = MOUSE_FILTER_STOP
 	pin.set_meta("cmp", "todo:pin:" + e.name)
 	pin.gui_input.connect(func(ev): if Tap.tap(ev):
@@ -307,8 +335,7 @@ func _details() -> void:
 	if e == null:
 		_detail_keep = 0
 		return
-	var tw: float = $Tray.size.x
-	var dw := tw - LEFT_W
+	var dw := minf(size.x, 560) - LEFT_W  # past the list's tray, over the screen behind
 	var h: float = $Tray.size.y
 	var panel := Panel.new()
 	panel.name = "Details"
@@ -343,6 +370,7 @@ func _details() -> void:
 	ic.set_meta("cmp", "todo:card:" + e.name)
 	ic.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(e.name))
 	body.add_child(ic)
+	body.add_child(RefTree.suit_row(e.name, Vector2(36, 64), 14))  # its suit cost, under the picture
 	var px := Tok.fit_px(e.name, Tok.font(900), 19, dw - 68 - 50)
 	var nl := Tok.label(e.name, px, Color.WHITE, 900)
 	nl.position = Vector2(68, 12 + (19 - px) * 0.6)

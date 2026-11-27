@@ -630,6 +630,7 @@ Market, tutorials), motion last (it animates the final layouts).
    tapped; list the ones that don't and fix them.
 
 Log (newest first, one line per session):
+- 2026-11-26: To-Do List v3 (the user): the list as wide as its rows (TodoTray._list_width), suit costs under pictures and first in an open part (RefTree.suit_row), the 🔍 column fixed.
 - 2026-11-26: To-Do List v2 (the user: borders in borders; iterate): flat rows on one background, a details panel (TodoTray.detail, LEFT_W 138 of the list still showing) with the parts tree in RefTree.FLAT.
 - 2026-11-26: after 22 (the user): the suit strip as gold rings on a thin pill with count bubbles (StationScreen.count_bubble), off over Convert; Convert's "?" a ring on the tray's corner (the bench 22 px higher); the map card's items outlined, no brown squares; Close's background round.
 - 2026-11-26: step 22b: the opening's To-Do List and locked Start, the one-station map, the stations bouncing in.
