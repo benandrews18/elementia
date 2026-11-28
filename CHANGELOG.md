@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- "3 Cards Sharing a Part" challenge: instead of a thread icon, three little recipe trees, each card a different shape over two parts, the same gold star among the parts of all three.
 - Professor Mouse's pictures: the pale patches round his feet and edges are cleaned away.
 - Quick Rules: tapping the missing Calcium on "Let's do some SCIENCE!" works like Next; the Convert cards sit on the tray, covering the Crafting Bench until its Craft is lit, with the Mouse standing on them; "Each game of Elementia has 24 turns" and its clock fit one line.
 - The first check's "you haven't crafted any items yet" Mouse uses the new poses, and only comes when you truly have no items at all.

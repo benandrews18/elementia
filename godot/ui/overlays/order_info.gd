@@ -228,7 +228,7 @@ func _rule(o: Dictionary, row: Control) -> void:
 		"collector": parts = [Tok.star(Tok.GOLD, I), Tok.tick(Tok.OK, I * 0.9)]
 		"fullRecipe": parts = [Tok.icon("🧩", I), txt.call("×2")]
 		"suitSet": parts = [txt.call("3+"), _suit(p)]
-		"commonThread": parts = [Tok.icon("🧵", I), txt.call("3+")]
+		"commonThread": parts = [_thread_trees()]
 		"rainbow":
 			for su in Data.t("ELEMENT_SUIT_LABEL"):
 				parts.append(_suit(su))
@@ -254,6 +254,53 @@ func _rule(o: Dictionary, row: Control) -> void:
 		row.add_child(c)
 		x += sz.x + 12
 	row.size = Vector2(x - 12, rh)
+
+
+## Cards Sharing a Part (the user, 2026-11-27): three little recipe trees,
+## each a card (a shape) over two parts, one of them the same gold star in
+## all three; plain shapes, not real items: the point is what they share.
+static func _thread_trees() -> Control:
+	const TW := 78.0  # one tree's width
+	const H := 86.0
+	var c := Control.new()
+	c.size = Vector2(TW * 3 + 16, H)
+	c.mouse_filter = MOUSE_FILTER_IGNORE
+	var ink := Color("#3b2412")
+	var shapes := [[6, Color("#7fb2d8")], [5, Color("#9ccf8a")], [4, Color("#e59a8a")]]  # each card: sides, colour
+	var others := [[3, Color("#c9a6e0")], [8, Color("#e8c37a")], [7, Color("#8fd0c8")]]
+	var poly := func(at: Vector2, r: float, sides: int, rot: float) -> PackedVector2Array:
+		var p := PackedVector2Array()
+		for k in sides:
+			var a := rot + TAU * k / sides
+			p.append(at + Vector2(cos(a), sin(a)) * r)
+		return p
+	c.draw.connect(func():
+		for t in 3:
+			var x0 := t * (TW + 8)
+			var top := Vector2(x0 + TW / 2, 18)
+			var kids := [Vector2(x0 + TW * 0.25, H - 16), Vector2(x0 + TW * 0.75, H - 16)]
+			var star_left := t == 1  # the shared part moves about, so it reads as a match, not a position
+			for k in kids:  # lines first, under the shapes
+				c.draw_line(top + Vector2(0, 14), k - Vector2(0, 12), Color("#8a6a48"), 2.5, true)
+			var pts: PackedVector2Array = poly.call(top, 16, shapes[t][0], -PI / 2)
+			c.draw_colored_polygon(pts, shapes[t][1])
+			pts.append(pts[0])
+			c.draw_polyline(pts, ink, 2.5, true)
+			var other: Vector2 = kids[1] if star_left else kids[0]
+			var star: Vector2 = kids[0] if star_left else kids[1]
+			var op: PackedVector2Array = poly.call(other, 12, others[t][0], -PI / 2)
+			c.draw_colored_polygon(op, others[t][1])
+			op.append(op[0])
+			c.draw_polyline(op, ink, 2, true)
+			var sp := PackedVector2Array()  # the shared part: a gold star
+			for k in 10:
+				var a := -PI / 2 + PI * k / 5
+				sp.append(star + Vector2(cos(a), sin(a)) * (14.0 if k % 2 == 0 else 6.0))
+			for k in 10:  # filled as a fan from its middle (a star isn't convex)
+				c.draw_colored_polygon(PackedVector2Array([star, sp[k], sp[(k + 1) % 10]]), Tok.GOLD)
+			sp.append(sp[0])
+			c.draw_polyline(sp, ink, 2, true))
+	return c
 
 
 ## .ord-suit: a circle in the suit's colour with its white icon.

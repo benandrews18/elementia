@@ -9,7 +9,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"convert", "picker", "unknown", "market", "explain", "suit_counts", "market_craft", "row_reward", "todo", "todo_list", "todo_quest", "todo_tools", "pin_ask", "confirm", "reward",
 	"order", "end_over", "end_done", "howto0", "howto1", "howto2", "capstone", "capstone_confirm", "start_todo", "start_locked", "start_ready", "celebrate", "unlock", "pin_tip",
 	"suit_spend", "expand", "reward_open", "roll",
-	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
+	"order_restrict", "order_grand", "order_rainbow", "order_tour", "order_thread", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "mat_rules3", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
@@ -165,8 +165,8 @@ func _ready() -> void:
 			var su: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
 			Game.state.order = {"id": "doubleDrought", "p": su[0] + "|" + su[1], "round": Game.state.visits} if state == "order_restrict" 				else {"id": "grand", "p": null, "round": Game.state.visits}
 			OrderInfo.open(app)
-		"order_rainbow", "order_tour":  # the requests added 2026-11-26
-			Game.state.order = {"id": "rainbow" if state == "order_rainbow" else "grandTour", "p": null, "round": Game.state.visits}
+		"order_rainbow", "order_tour", "order_thread":  # the requests added 2026-11-26; Cards Sharing a Part's trees
+			Game.state.order = {"id": {"order_rainbow": "rainbow", "order_tour": "grandTour", "order_thread": "commonThread"}[state], "p": null, "round": Game.state.visits}
 			OrderInfo.open(app)
 		"end_over", "end_done":
 			if state == "end_over":
