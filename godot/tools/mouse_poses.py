@@ -34,6 +34,16 @@ def clean(im: Image.Image) -> Image.Image:
     # soft edges next to kept pixels stay (anti-aliasing), the rest goes
     near = ndimage.binary_dilation(mask, iterations=2)
     a[:, :, 3] = np.where(near, a[:, :, 3], 0)
+    # The ground smudge under his feet: pale, greyish, partly see-through, low down.
+    ys = np.where(a[:, :, 3] > 24)[0]
+    if ys.size:
+        top, bot = ys.min(), ys.max()
+        low = np.zeros(a.shape[:2], bool)
+        low[int(bot - (bot - top) * 0.14):, :] = True
+        rgb = a[:, :, :3].astype(float)
+        pale = (rgb.mean(axis=2) > 150) & (rgb.max(axis=2) - rgb.min(axis=2) < 40) & (a[:, :, 3] < 235)
+        a[:, :, 3] = np.where(low & pale, 0, a[:, :, 3])
+
     # The background removal left the white coat half see-through: inside the
     # silhouette (not its soft outer edge), anything partly there is put on white.
     inside = ndimage.binary_erosion(ndimage.binary_fill_holes(a[:, :, 3] > 24), iterations=1) & (a[:, :, 3] >= 12)
@@ -41,6 +51,12 @@ def clean(im: Image.Image) -> Image.Image:
     flat = (a[:, :, :3] * al + 255 * (1 - al)).astype(np.uint8)
     a[:, :, :3] = np.where(inside[:, :, None], flat, a[:, :, :3])
     a[:, :, 3] = np.where(inside, 255, a[:, :, 3])
+    # The old background's pale halo round his outline (the coat is solid by now)
+    sil = ndimage.binary_fill_holes(a[:, :, 3] > 24)
+    band = sil & ~ndimage.binary_erosion(sil, iterations=4)
+    rgb = a[:, :, :3].astype(float)
+    halo = (rgb.mean(axis=2) > 170) & (rgb.max(axis=2) - rgb.min(axis=2) < 40) & (a[:, :, 3] < 200)
+    a[:, :, 3] = np.where(band & halo, 0, a[:, :, 3])
     out = Image.fromarray(a)
     return out.crop(out.getbbox())
 

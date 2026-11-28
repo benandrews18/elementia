@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Professor Mouse's pictures: the pale patches round his feet and edges are cleaned away.
+- Quick Rules: tapping the missing Calcium on "Let's do some SCIENCE!" works like Next; the Convert cards sit on the tray, covering the Crafting Bench until its Craft is lit, with the Mouse standing on them; "Each game of Elementia has 24 turns" and its clock fit one line.
+- The first check's "you haven't crafted any items yet" Mouse uses the new poses, and only comes when you truly have no items at all.
 - New icon art (the user's sheet): the four suit discs on every card, the eight station pictures everywhere, the Display Mat's Discard / Goal / Pass / Deck / Draw buttons as their own tiles, and new Quarks, dice, pin, magnifying glass and "?" (Unknown Element) pictures.
 - Inventory and Display Mat cards: bigger item pictures, filling the card up to its badges.
 - Quick Rules: Professor Mouse holds his flask for the Convert tray's "3 of a kind".

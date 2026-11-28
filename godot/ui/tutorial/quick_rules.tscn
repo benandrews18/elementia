@@ -456,6 +456,7 @@ say = "Let's do some [b]SCIENCE[/b]! {__CONVERT__}"
 place = "below:bench"
 act = PackedStringArray("bench:Limestone")
 spot = PackedStringArray("need:Ca")
+tap = PackedStringArray("need:Ca")
 
 [sub_resource type="Resource" id="q57"]
 script = ExtResource("2")
@@ -469,13 +470,13 @@ tap = PackedStringArray("convert", "need:Ca")
 script = ExtResource("2")
 mouse = "props_hold_flask"
 say = "[b]3[/b] of a kind to create a new element! {__CONVERT__}"
-place = "top"
+place = "over:cv:tray"
 act = PackedStringArray("cvopen:Ca:Limestone")
 
 [sub_resource type="Resource" id="q59"]
 script = ExtResource("2")
 say = "Begin the conversion! {🧪}"
-place = "top"
+place = "over:cv:tray"
 act = PackedStringArray("cvload:C:Ca")
 spot = PackedStringArray("cv:go")
 tap = PackedStringArray("cv:go")
@@ -509,7 +510,7 @@ wait = "reveal"
 
 [sub_resource type="Resource" id="q63"]
 script = ExtResource("2")
-say = "Each game of Elementia has [b]24 turns[/b] {🕒}
+say = "[font_size=14]Each game of Elementia has [b]24 turns[/b] {🕒}[/font_size]
 Each move {🥾} starts a new turn!"
 act = PackedStringArray("clock")
 spot = PackedStringArray("clock")

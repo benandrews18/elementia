@@ -149,8 +149,8 @@ func _go(n: int) -> void:
 	_since = 0.0
 	_card.visible = _wait == ""
 	var anchor := Rect2()  # "above:<spot>" / "below:<spot>": where that spot is
-	if st.place.begins_with("above:") or st.place.begins_with("below:"):
-		for c in _spots(st.place.substr(6)):
+	if st.place.get_slice(":", 0) in ["above", "below", "over"]:
+		for c in _spots(st.place.substr(st.place.find(":") + 1)):
 			if c is Control and c.is_visible_in_tree():
 				var g: Rect2 = c.get_global_rect()
 				g = Rect2(g.position - global_position, g.size)
@@ -467,7 +467,7 @@ func _place_mouse() -> void:
 		_mouse_side = 1 if spot.x < size.x / 2 else -1
 	var card := _card.target
 	var hub_y := size.y - HubBar.H - 6  # feet on the side buttons' tops
-	var on_card := card.end.y > hub_y - MOUSE_H * 0.6
+	var on_card := card.end.y > hub_y - MOUSE_H * 0.6 or st.place.begins_with("over:")  # resting on a tray: he'd cover it
 	var feet := card.position.y + 10 if on_card else hub_y
 	var pose := st.mouse
 	var head := Vector2(size.x * (0.2 if _mouse_side < 0 else 0.8), feet - MOUSE_H * 0.75)
@@ -752,6 +752,9 @@ func _spots(word: String) -> Array:
 		return st.get_node("Scroll/Page/Chips").get_children() if st else []
 	if word == "mat:combos":  # the Display Mat's combo row
 		return Tutorial.find_all("chip")
+	if word == "cv:tray":  # the Convert tray itself (not the bench riding on it)
+		var ct := _app.panel_node as ConvertTray
+		return [ct.get_node("Tray")] if ct else []
 	if word == "map:found":  # every station on the map
 		var map := _map()
 		return map._nodes().filter(func(n): return n.visible) if map else []

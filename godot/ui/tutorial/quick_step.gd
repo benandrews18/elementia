@@ -21,7 +21,8 @@ extends Resource
 ## Where the card sits: "middle", "high" (a little above the middle), "top",
 ## "bottom" (just above the hub; over it when the step spots nothing there),
 ## "hub" (just above the hub's bar), "above:<spot>" or "below:<spot>" (just
-## above or under that spot, e.g. "above:map:The Ocean", "below:bench").
+## above or under that spot, e.g. "above:map:The Ocean", "below:bench"),
+## or "over:<spot>" (its foot resting on that spot's top edge).
 @export var place := "middle"
 ## What the step does as it starts, in order (QuickRules._act), e.g.
 ## "station:Old Growth Forest" (it bounces onto the map), "hub:home" (the

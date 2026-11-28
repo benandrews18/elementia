@@ -64,14 +64,14 @@ func _ready() -> void:
 ## showMouseTip(): pose 1-12, text (BBCode: [b]...[/b]) at px, anchor one of
 ## bottom-left, bottom-right, top-left, top-right, center; target spotlit
 ## (or none). bottom: the bottom corners' line, when not over the hub.
-func show_tip(pose: int, text: String, anchor := "bottom-left", target: Control = null, px := 19, bottom := -1.0, step := "", last := false) -> void:
+func show_tip(pose: Variant, text: String, anchor := "bottom-left", target: Control = null, px := 19, bottom := -1.0, step := "", last := false) -> void:
 	if _blocked() and step == "" and not tutorial:
 		_queue.append([pose, text, anchor, target, px, bottom])
 		return
 	showing = true
 	visible = true
 	var img: TextureRect = $Pose
-	img.texture = load("res://assets/mouse/%d.webp" % pose)
+	img.texture = load("res://assets/mouse_qr/%s.webp" % pose) if pose is String else load("res://assets/mouse/%d.webp" % pose)  # a name: the new poses
 	img.size = Vector2(114, 114.0 * img.texture.get_height() / img.texture.get_width())
 	var t: RichTextLabel = $Bubble/Text
 	t.text = ParchDialog.emojify(text, px)  # {🎯}: the emoji's image

@@ -105,7 +105,9 @@ func _layout() -> void:
 	var y: float = {"middle": win.position.y, "high": win.position.y - 120,
 		"top": 24.0, "bottom": (size.y - 12 if low else hub_top) - win.size.y,
 		"hub": size.y - HubBar.H - 14 - win.size.y}.get(place, win.position.y)
-	if place.begins_with("above:") and anchor.has_area():
+	if place.begins_with("over:") and anchor.has_area():  # its foot on the spot's top edge
+		y = anchor.position.y + 6 - win.size.y
+	elif place.begins_with("above:") and anchor.has_area():
 		y = anchor.position.y - 14 - win.size.y
 	elif place.begins_with("below:") and anchor.has_area():
 		y = anchor.end.y + 10

@@ -1081,7 +1081,7 @@ func auto_lock_in() -> void:
 	var mat := hand_mat()
 	if mat == null or mat.playing:
 		return  # already counting (Pass came first)
-	if h == null or tutorial.running() or Game.state.get("matChecked") or Game.state.get("finalCheckPending") or Game.ctx.get("challengeTest") 			or not (h.hand.is_empty() and h.deck.is_empty()):
+	if h == null or tutorial.running() or Game.state.get("matChecked") or Game.state.get("finalCheckPending") or Game.ctx.get("challengeTest") 			or not (h.hand.is_empty() and h.deck.is_empty()) or not Util.get_or(Game.state, "items", []).is_empty():  # truly nothing crafted yet (the user, 2026-11-27)
 		hand_lock_in()
 		return
 	var block := Control.new()  # the game waits under him
@@ -1089,8 +1089,8 @@ func auto_lock_in() -> void:
 	block.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(block)
 	var turn := Orders.check_round(Game.state) + int(Data.t("MAT_CHECK_EVERY"))
-	_empty_says = [[5, "Looks like you haven't crafted any items yet!"],
-		[3, "Try to craft some before the next Display Mat Challenge on turn %d! {🕒}" % turn]]
+	_empty_says = [["reacting_astonished", "Looks like you haven't crafted any items yet!"],
+		["props_clipboard_checklist", "Try to craft some before the next Display Mat Challenge on turn %d! {🕒}" % turn]]
 	_empty_for = h
 	mouse.coaching = true
 	mouse.next_step.connect(_empty_next)
