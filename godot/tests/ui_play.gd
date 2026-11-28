@@ -1420,6 +1420,10 @@ func _quick(app: App) -> void:
 			await get_tree().process_frame
 		check(await _until(func(): return q._card.visible), "step %d's card shows (after what it waits for)" % q.i)
 		check(not q.steps[q.i].section_only, "step %d: the Inventory part's own steps never show in the full Quick Rules" % q.i)
+		if Array(q.steps[q.i].act).any(func(a): return a.begins_with("trio:")):
+			await get_tree().process_frame
+			var trio := q.get_children().filter(func(c): return c is CardPop and c.has_meta("lifted"))
+			check(trio.size() == 3 and trio.all(func(c): return Rect2(Vector2.ZERO, q.size).encloses(Rect2(c.position, c.size * c.scale))), "step %d: \"same icons\": three cards side by side, on screen" % q.i)
 		if q.steps[q.i].act.has("deal"):
 			dealt = Game.check_hand() != null and Game.check_hand().hand.size() == q.hand_cards.size()
 		if q.steps[q.i].wait == "reward":

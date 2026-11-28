@@ -155,6 +155,7 @@ func show_item(name: String, keep_back := false) -> void:
 		if side and not plain and not Catalog.owns(Game.state, name) and not Game.suit_held(su):  # never on a card you own (the user, 2026-11-24)
 			cb.modulate.a = 0.35  # none of this suit held
 		cb.set_meta("cmp", "cp:cost%d" % $Card/Costs.get_child_count())
+		cb.set_meta("suit", su)
 		$Card/Costs.add_child(cb)
 	$Card/Station/Icon.texture = Data.icon(Catalog.station(entry.station).emoji)
 	for c in card.get_children():
@@ -342,6 +343,7 @@ func _row(toks: Array, k: float, lots: bool, holder: Control, w: float, wraps :=
 			parts.append(plus)
 		parts.append(_element(r.name, lots, k) if r.kind == "element" else _item(r.name, icon_px))
 		parts.back().set_meta("cmp", "cp:ing%d" % i)
+		parts.back().set_meta("part", r.name)  # what it is (Quick Rules rings what cards share)
 		var group_w := 0.0
 		for c in parts:
 			group_w += c.size.x + gap

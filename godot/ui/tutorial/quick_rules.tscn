@@ -152,7 +152,7 @@ spot = PackedStringArray("cp:station")
 script = ExtResource("2")
 say = "Items with the same icons {suit:organic}{🌲}{💧} can combine in special ways to give you more points! Let's see what combos {⚛️} we can make..."
 place = "bottom"
-spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
+act = PackedStringArray("nocard", "trio:Salmon,Tree,Deer")
 
 [sub_resource type="Resource" id="q19"]
 script = ExtResource("2")
@@ -212,7 +212,7 @@ script = ExtResource("2")
 mouse = "reacting_excited_clap"
 say = "These cards share a few icons {suit:organic}{💧}. Matching [b]3+[/b] icons earns you a multiplier bonus!"
 place = "bottom"
-act = PackedStringArray("demomat:", "play:Apple,Banana,Tree")
+act = PackedStringArray("demomat:", "play:Apple,Banana,Tree", "trio:Tree,Apple,Banana")
 wait = "mat"
 
 [sub_resource type="Resource" id="q27"]
@@ -561,7 +561,7 @@ section_only = true
 script = ExtResource("2")
 say = "Items with the same icons {suit:earth}{🌲} can combine in special ways to give you more points! Let's see how..."
 place = "bottom"
-spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
+act = PackedStringArray("nocard", "trio:Deer,Canoe,Log Cabin")
 section_only = true
 
 [node name="QuickRules" type="Control"]

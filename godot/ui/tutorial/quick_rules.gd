@@ -51,6 +51,7 @@ var _mouse: TextureRect  # Professor Mouse (the user, 2026-11-27): on the hub, o
 var _mouse_side := -1  # -1 left, 1 right
 var _mouse_glide: Tween
 var _pop: CardPop  # a big card the steps show
+var _trio: PackedStringArray = []  # the step's three cards side by side (act trio)
 var _holes: Array = []  # the spotlit rects last drawn (local)
 var _wait := ""  # the step's card waits for this (QuickStep.wait)
 var _since := 0.0  # game time since the step started (s: follows a fixed frame rate and the test's speed-up)
@@ -157,6 +158,7 @@ func _go(n: int) -> void:
 	for c in get_children():  # the last step's lifted copies go
 		if c.has_meta("lifted"):
 			c.queue_free()
+	_trio = []
 	for a in st.act:
 		_act(a)
 	_wait = st.wait
@@ -177,6 +179,7 @@ func _go(n: int) -> void:
 	_update.call_deferred()
 	if _card.visible:
 		_place_mouse.call_deferred()  # after the card's own layout (also deferred)
+		_show_trio.call_deferred()
 	_fit_pop.call_deferred()
 
 
@@ -295,6 +298,8 @@ func _act(a: String) -> void:
 					_pop.get_node(n).visible = false
 			else:
 				_pop.show_item(arg)
+		"trio":  # three cards side by side, shown with the words (_show_trio)
+			_trio = arg.split(",")
 		"nocard":
 			if is_instance_valid(_pop):
 				_pop.queue_free()
@@ -468,6 +473,78 @@ const MOUSE_DIR := {"pointing_point_left": -1}  # which way a pose faces (the re
 ## leans its way, pointing only now and then (the user, 2026-11-27).
 const MOUSE_TOWARD := ["pointing_present_below", "pointing_call_out", "reacting_thinking", "reacting_excited_clap",
 	"reacting_thumbs_up_wink", "pointing_point_left", "reacting_whisper_secret", "reacting_wave_hello"]
+
+
+## "Same icons" (the user, 2026-11-28): the step's three full cards side by
+## side, the size of the hand's last-tapped card or a little under, what all
+## three share (a suit, the station, a part) ringed in gold; over the
+## Display Mat while it's out, else just above the words.
+func _show_trio() -> void:
+	if _trio.is_empty():
+		return
+	const GAP := 8.0
+	var w := minf(150.0, (size.x - 16 - 2 * GAP) / 3)  # 150: HandView.lifted_w
+	var shared := {}
+	for k in _trio.size():
+		var e = Catalog.entry(_trio[k])
+		var mine := {"st:" + str(e.station): true}
+		for r in e.reqs:
+			mine["part:" + r.name] = true
+		for su in Data.t("ITEM_SUIT_COST_TABLE").get(_trio[k], []):
+			mine["suit:" + su] = true
+		if k == 0:
+			shared = mine
+		else:
+			for key in shared.keys():
+				if not mine.has(key):
+					shared.erase(key)
+	var cards: Array[CardPop] = []
+	var h := 0.0
+	for nm in _trio:
+		var c := CardPop.side_card(nm, w, true)
+		cards.append(c)
+		h = maxf(h, c.size.y * c.scale.y)
+	var top := _card.target.position.y - MOUSE_H + 10 - h  # above the Mouse standing on the words
+	var mat := _app.hand_mat()
+	if mat and is_instance_valid(mat._page):
+		var r := mat._page.get_global_rect()
+		top = r.get_center().y - global_position.y - h / 2
+	top = maxf(4.0, top)
+	var x0 := (size.x - (3 * w + 2 * GAP)) / 2
+	for k in cards.size():
+		var c := cards[k]
+		c.position = Vector2(x0 + k * (w + GAP), top)
+		c.set_meta("lifted", true)  # gone at the next step
+		c.get_node("Card/Components").visible = false  # the parts row speaks for itself at this size
+		if shared.has("st:" + str(c.entry.station)):
+			_ring(c.get_node("Card/Station"))
+		for b in c.get_node("Card/Costs").get_children():
+			if shared.has("suit:" + str(b.get_meta("suit", ""))):
+				_ring(b)
+		for p in _all_nodes(c.get_node("Card/Parts")):
+			if p.has_meta("part") and shared.has("part:" + str(p.get_meta("part"))):
+				_ring(p)
+		add_child(c)
+		move_child(c, _mouse.get_index())  # the Mouse in front of them (over the mat, he stands below)
+
+
+## A gold ring round n (a shared icon on the trio's cards).
+func _ring(n: Control) -> void:
+	var r := Panel.new()
+	var sz := n.size.max(n.custom_minimum_size)  # a badge in a container: not laid out yet
+	var d := maxf(sz.x, sz.y) + 14
+	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, d / 2, 9, Tok.GOLD))  # the card is drawn ~0.4x: about 3.5 px
+	r.size = Vector2(d, d)
+	r.position = sz / 2 - r.size / 2
+	r.mouse_filter = MOUSE_FILTER_IGNORE
+	n.add_child(r)
+
+
+static func _all_nodes(n: Node) -> Array:
+	var out := [n]
+	for c in n.get_children():
+		out.append_array(_all_nodes(c))
+	return out
 
 
 func _place_mouse() -> void:
@@ -800,6 +877,7 @@ func _process(d: float) -> void:
 		_wait = ""
 		_card.visible = true
 		_place_mouse.call_deferred()
+		_show_trio.call_deferred()
 	_update()
 
 
