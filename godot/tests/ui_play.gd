@@ -1353,6 +1353,19 @@ func _quick(app: App) -> void:
 	menu.get_node("Window/Content/HowToPlay").pressed.emit()
 	check(QuickRules.running() and Game.ctx.get("demo") and Game.state != real and not menu.visible and not app.hub.visible, "Quick Rules: its own run, the menu and the hub out of sight")
 	var q := QuickRules.current
+	# Every picture is one of the game's images (no device emoji), and nothing wraps alone.
+	var token := RegEx.create_from_string("[{]([^}]+)[}]")
+	var bad := []
+	for st in q.steps:
+		var words: String = q._words(st.say)
+		for m in token.search_all(words):
+			if Data.icon(m.get_string(1)) == null:
+				bad.append(m.get_string())
+		for ch in token.sub(words, "", true):
+			if ch.unicode_at(0) >= 0x2190 and ch != "×":
+				bad.append(ch)
+	check(bad.is_empty(), "Quick Rules' pictures are all the game's images (%s)" % ", ".join(bad))
+	check(QuickCard.keep_together("a b c {🧺}\n{⚛️} x y") == "a b c {🧺}\n{⚛️} x y", "a picture keeps to its word, a line's last two words wrap together")
 	var steps := 0
 	var dealt := false
 	var tapped := false

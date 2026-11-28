@@ -34,7 +34,7 @@ extra = "elements"
 
 [sub_resource type="Resource" id="q4"]
 script = ExtResource("2")
-say = "This is the [b]center button[/b]! You'll be tapping this button to move around {🥾}, gather elements {🧺}, and more {ui:discard}"
+say = "This is the [b]center button[/b]! You'll be tapping this button to move around {🥾}, gather elements {🧺}, and more {🃏}"
 place = "bottom"
 act = PackedStringArray("mapcard:", "hub")
 spot = PackedStringArray("hub:home")
@@ -82,13 +82,13 @@ spot = PackedStringArray("market:stations")
 
 [sub_resource type="Resource" id="q11"]
 script = ExtResource("2")
-say = "Craft items found in the Market. You can even craft Market items directly from the Marketplace!"
+say = "Craft items found in the Market {ui:market}. You can even craft Market items directly from the Marketplace!"
 place = "bottom"
 spot = PackedStringArray("market:market")
 
 [sub_resource type="Resource" id="q12"]
 script = ExtResource("2")
-say = "These are the [b]Capstone[/b] items. The biggest items in the game! You'll need items from almost every station to craft these. They give HUGE point bonuses and even game-changing effects!"
+say = "These are the [b]Capstone[/b] items {🏆}. The biggest items in the game! You'll need items from almost every station to craft these. They give HUGE point bonuses and even game-changing effects!"
 place = "top"
 act = PackedStringArray("scroll:market:name:Ecosystem")
 spot = PackedStringArray("market:caps")
@@ -138,13 +138,13 @@ act = PackedStringArray("nocard", "inventory")
 
 [sub_resource type="Resource" id="q20"]
 script = ExtResource("2")
-say = "Here are some items to get started!"
+say = "Here are some items to get started! {🎁}"
 place = "top"
 act = PackedStringArray("items")
 
 [sub_resource type="Resource" id="q21"]
 script = ExtResource("2")
-say = "As you explore the world and craft items, you'll also need to complete [b]challenges[/b]!"
+say = "As you explore the world and craft items, you'll also need to complete [b]challenges[/b] {🎯}!"
 place = "top"
 
 [sub_resource type="Resource" id="q22"]
@@ -155,7 +155,7 @@ extra = "meter"
 
 [sub_resource type="Resource" id="q23"]
 script = ExtResource("2")
-say = "Let's walk through a challenge now!"
+say = "Let's walk through a challenge now! {🃏}"
 place = "top"
 
 [sub_resource type="Resource" id="q24"]
@@ -167,7 +167,7 @@ wait = "mat"
 
 [sub_resource type="Resource" id="q25"]
 script = ExtResource("2")
-say = "The trick is to match item icons to create [b]combos[/b] between the cards on the Display Mat."
+say = "The trick is to match item icons to create [b]combos[/b] {⚛️} between the cards on the Display Mat."
 place = "bottom"
 
 [sub_resource type="Resource" id="q26"]
@@ -202,7 +202,7 @@ spot = PackedStringArray("hand:draw", "el:O")
 
 [sub_resource type="Resource" id="q30"]
 script = ExtResource("2")
-say = "Perfect match! Let's play the last card to complete our display."
+say = "Perfect match! {🌟} Let's play the last card to complete our display."
 place = "top"
 act = PackedStringArray("draw:O:Egg")
 wait = "mat"
@@ -229,20 +229,20 @@ wait = "arrive"
 
 [sub_resource type="Resource" id="q34"]
 script = ExtResource("2")
-say = "Here we can gather"
+say = "Here we can gather {🧺}"
 spot = PackedStringArray("st:chips")
 extra = "pool"
 
 [sub_resource type="Resource" id="q35"]
 script = ExtResource("2")
-say = "Let's see what we get!"
+say = "Let's see what we get! {🎲}"
 place = "bottom"
 spot = PackedStringArray("hub:home")
 tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q36"]
 script = ExtResource("2")
-say = "Awesome! Let's put those in our inventory."
+say = "Awesome! Let's put those in our inventory {ui:inventory}"
 place = "top"
 act = PackedStringArray("roll:Si,O,C,C,Mg")
 wait = "roll"
@@ -250,7 +250,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q37"]
 script = ExtResource("2")
-say = "Now let's craft some items!"
+say = "Now let's craft some items! {🛠️}"
 place = "bottom"
 act = PackedStringArray("gather")
 wait = "gathered"
@@ -280,7 +280,7 @@ tap = PackedStringArray("pin:Tree")
 
 [sub_resource type="Resource" id="q41"]
 script = ExtResource("2")
-say = "I love a good plan!"
+say = "I love a good plan! {ui:todo}"
 place = "bottom"
 act = PackedStringArray("pin:Tree", "todo")
 
@@ -301,7 +301,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q44"]
 script = ExtResource("2")
-say = "Woah! [b]4[/b] new locations to visit!"
+say = "Woah! [b]4[/b] new locations to visit! {🗺️}"
 act = PackedStringArray("map", "reveal")
 wait = "reveal"
 place = "top"
@@ -320,7 +320,7 @@ place = "top"
 
 [sub_resource type="Resource" id="q47"]
 script = ExtResource("2")
-say = "Let's track that item from our To-Do List."
+say = "Let's track that item from our To-Do List {ui:todo}"
 place = "top"
 act = PackedStringArray("pins")
 spot = PackedStringArray("pins:chip:Tree")
@@ -328,7 +328,7 @@ tap = PackedStringArray("pins:chip:Tree")
 
 [sub_resource type="Resource" id="q48"]
 script = ExtResource("2")
-say = "Now we can see where to find its parts!"
+say = "Now we can see where to find its parts {🔍}!"
 act = PackedStringArray("track:Tree")
 spot = PackedStringArray("map:finds")
 place = "top"
@@ -347,7 +347,7 @@ act = PackedStringArray("select:The Ocean")
 
 [sub_resource type="Resource" id="q51"]
 script = ExtResource("2")
-say = "Looks like it's got some items that we need! Let's go there now."
+say = "Looks like it's got some items that we need! Let's go there now {🥾}"
 spot = PackedStringArray("hub:home")
 tap = PackedStringArray("hub:home")
 
@@ -361,7 +361,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q53"]
 script = ExtResource("2")
-say = "Nice!"
+say = "Nice! {🎉}"
 place = "top"
 act = PackedStringArray("roll:H,O,O,C,C")
 wait = "roll"
@@ -369,7 +369,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q54"]
 script = ExtResource("2")
-say = "Let's do some crafting!"
+say = "Let's do some crafting! {🛠️}"
 place = "bottom"
 act = PackedStringArray("gather", "bench:Water")
 spot = PackedStringArray("craft:Water")
@@ -400,14 +400,14 @@ tap = PackedStringArray("convert", "need:Ca")
 
 [sub_resource type="Resource" id="q58"]
 script = ExtResource("2")
-say = "We can convert our extra elements into whatever we need!
+say = "We can convert our extra elements into whatever we need! {__CONVERT__}
 It takes [b]3[/b]-of-a-kind to create a new element."
 place = "top"
 act = PackedStringArray("cvopen:Ca:Limestone")
 
 [sub_resource type="Resource" id="q59"]
 script = ExtResource("2")
-say = "Begin the conversion!"
+say = "Begin the conversion! {🧪}"
 place = "top"
 act = PackedStringArray("cvload:C:Ca")
 spot = PackedStringArray("cv:go")
@@ -415,7 +415,7 @@ tap = PackedStringArray("cv:go")
 
 [sub_resource type="Resource" id="q60"]
 script = ExtResource("2")
-say = "Excellent! Now we can keep crafting."
+say = "Excellent! Now we can keep crafting {🛠️}"
 place = "top"
 act = PackedStringArray("cvgo")
 spot = PackedStringArray("craft:Limestone")
@@ -447,12 +447,12 @@ spot = PackedStringArray("clock")
 
 [sub_resource type="Resource" id="q64"]
 script = ExtResource("2")
-say = "Every game is a new adventure!
-Try crafting new capstones, and keep an eye out for secret items along the way."
+say = "Every game is a new adventure! {🧭}
+Try crafting new capstones {🏆}, and keep an eye out for secret items {❓} along the way."
 
 [sub_resource type="Resource" id="q65"]
 script = ExtResource("2")
-say = "Have fun crafting and exploring the world of Elementia!"
+say = "Have fun crafting and exploring the world of Elementia! {🌍}"
 
 [node name="QuickRules" type="Control"]
 layout_mode = 3

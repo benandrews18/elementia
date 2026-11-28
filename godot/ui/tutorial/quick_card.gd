@@ -15,7 +15,7 @@ var _glide: Tween
 func show_step(say: String, where: String, extra: Control, next: String) -> void:
 	place = where
 	var text: RichTextLabel = $Window/Content/Text
-	text.text = "[center]%s[/center]" % emojify(say, PX + 3)
+	text.text = "[center]%s[/center]" % emojify(keep_together(say), PX + 6)
 	var holder: Control = $Window/Content/Extra
 	for c in holder.get_children():
 		c.queue_free()
@@ -24,6 +24,26 @@ func show_step(say: String, where: String, extra: Control, next: String) -> void
 		holder.add_child(extra)
 	($Window/Content/Buttons/Next/Text as Label).text = next
 	_layout.call_deferred()
+
+
+## No word or picture alone on a line (the user, 2026-11-27): a {picture}
+## holds on to the word before it (or after it, starting a line), and each
+## line's last two words (or recipe parts) wrap together. Non-breaking
+## spaces: the text server keeps inline images on them too.
+static func keep_together(say: String) -> String:
+	const NB := " "
+	var before := RegEx.create_from_string("(?<=[^ ]) (?=[{])")  # one space: the recipe's wide gaps between parts stay
+	var after := RegEx.create_from_string("^([{][^}]*[}]) (?! )")
+	var last := RegEx.create_from_string(" +(?=[^ ]*$)")
+	var lines := say.replace("-", "-⁠").split("\n")  # a word joiner: To-Do doesn't break at its hyphen (invisible: HarfBuzz hides it)
+	for k in lines.size():
+		var l: String = after.sub(lines[k], "$1" + NB)
+		l = before.sub(l, NB, true)
+		var m := last.search(l)
+		if m:
+			l = l.substr(0, m.get_start()) + NB.repeat(m.get_string().length()) + l.substr(m.get_end())
+		lines[k] = l
+	return "\n".join(lines)
 
 
 ## The words' width inside the window.
