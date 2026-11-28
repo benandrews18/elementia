@@ -7,6 +7,9 @@ extends Resource
 ## The card's words ([b]...[/b]: bold; {🌲}, {suit:organic}, {ui:market}:
 ## the game's picture of it, inline).
 @export_multiline var say := ""
+## Professor Mouse's pose (a file in assets/mouse_qr, e.g. "props_hold_die");
+## "": he points at the step's first spot (or calls out when there's none).
+@export var mouse := ""
 ## A title over the words, its picture to the left (hub buttons' cards:
 ## e.g. title "Inventory", title_icon "ui:inventory").
 @export var title := ""

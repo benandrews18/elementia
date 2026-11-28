@@ -43,6 +43,9 @@ var _app: App
 var _real: Array = []  # the real run, its context, the prefs and the To-Do List's open rows, put back at the end
 var _hidden: Array = []  # windows over the App (the title screen, the Play menu): hidden, then shown again
 var _card: QuickCard
+var _mouse: TextureRect  # Professor Mouse (the user, 2026-11-27): on the hub, or on top of the words' card
+var _mouse_side := -1  # -1 left, 1 right
+var _mouse_glide: Tween
 var _pop: CardPop  # a big card the steps show
 var _holes: Array = []  # the spotlit rects last drawn (local)
 var _wait := ""  # the step's card waits for this (QuickStep.wait)
@@ -107,6 +110,13 @@ func _ready() -> void:
 	floor_strip.size = Vector2(size.x, HubBar.H)
 	add_child(floor_strip)
 	move_child(floor_strip, 0)
+	_mouse = TextureRect.new()
+	_mouse.name = "Mouse"
+	_mouse.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_mouse.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+	_mouse.mouse_filter = MOUSE_FILTER_IGNORE
+	_mouse.visible = false
+	add_child(_mouse)  # under the card: the words come first (the user, 2026-11-27)
 	_card = Tok.make(CARD)
 	_card.size = size
 	add_child(_card)
@@ -149,6 +159,7 @@ func _go(n: int) -> void:
 	_card.set_corner(_corner(st.corner))
 	_holes = [null]  # redrawn whatever this step spots (none: last step's rings go)
 	_update.call_deferred()
+	_place_mouse.call_deferred()  # after the card's own layout (also deferred)
 	_fit_pop.call_deferred()
 
 
@@ -428,6 +439,87 @@ func _act(a: String) -> void:
 			Game.ctx.qr.clock = true
 			Game.state_changed.emit()
 			_slide_in(Tutorial.find_all("clock"), Vector2(0, -160))
+
+
+## Professor Mouse: standing on the hub (its side buttons' tops) at the
+## side away from what's spotlit, or, when the words' card sits down there,
+## on the card's top edge (clear of its ✕ and its corner badge). Never in
+## mid-air. His pose: the step's, else pointing at its first spot.
+const MOUSE_H := 150.0
+const MOUSE_DIR := {"pointing_point_left": -1}  # which way a pose faces (the rest: right)
+## Poses for a step with a spot and no pose of its own: he turns to it and
+## leans its way, pointing only now and then (the user, 2026-11-27).
+const MOUSE_TOWARD := ["pointing_present_below", "pointing_call_out", "reacting_thinking", "reacting_excited_clap",
+	"reacting_thumbs_up_wink", "pointing_point_left", "reacting_whisper_secret", "reacting_wave_hello"]
+
+
+func _place_mouse() -> void:
+	if i < 0 or i >= steps.size():
+		return
+	var st := steps[i]
+	var spot = null  # the first spot's centre (this node's coordinates)
+	for word in st.spot:
+		for c in _spots(word):
+			if spot == null and c is Control and c.is_visible_in_tree():
+				spot = c.get_global_rect().get_center() - global_position
+	if spot != null:
+		_mouse_side = 1 if spot.x < size.x / 2 else -1
+	var card := _card.target
+	var hub_y := size.y - HubBar.H - 6  # feet on the side buttons' tops
+	var on_card := card.end.y > hub_y - MOUSE_H * 0.6
+	var feet := card.position.y + 10 if on_card else hub_y
+	var pose := st.mouse
+	var head := Vector2(size.x * (0.2 if _mouse_side < 0 else 0.8), feet - MOUSE_H * 0.75)
+	var dir := -_mouse_side  # facing the middle
+	var lean := 0.0  # toward the spot, once he's there
+	if spot != null:
+		var d: Vector2 = spot - head
+		dir = 1 if d.x >= 0 else -1  # he faces what's spotlit
+		lean = dir
+	if pose == "" and spot != null:
+		pose = MOUSE_TOWARD[i % MOUSE_TOWARD.size()]
+		if pose == "pointing_point_left":  # the pointing one: which way
+			var d: Vector2 = spot - head
+			if d.y < -60 and absf(d.x) < absf(d.y) * 1.2:
+				pose = "pointing_point_up"
+			elif d.y > 40 and absf(d.x) < 70:
+				pose = "pointing_point_down"
+			elif d.y > 40:
+				pose = "pointing_point_down_left"  # drawn pointing down and out to his front
+	if pose == "":
+		pose = "pointing_call_out"
+	var tex: Texture2D = load("res://assets/mouse_qr/%s.webp" % pose)
+	if tex == null:
+		return
+	var w := MOUSE_H * tex.get_width() / tex.get_height()
+	var x: float
+	if on_card:  # on the card's top edge: the left end past a corner badge, or the right end short of the ✕
+		x = card.position.x + 40 if _mouse_side < 0 else card.end.x - 48 - w
+	else:
+		x = 2.0 if _mouse_side < 0 else size.x - w - 2
+	var changed := _mouse.texture != tex
+	_mouse.texture = tex
+	_mouse.flip_h = dir != MOUSE_DIR.get(pose, 1)
+	_mouse.size = Vector2(w, MOUSE_H)
+	_mouse.pivot_offset = Vector2(w / 2, MOUSE_H)
+	var to := Vector2(x, feet - MOUSE_H)
+	if _mouse_glide and _mouse_glide.is_valid():
+		_mouse_glide.kill()
+	_mouse.rotation_degrees = 0
+	if not _mouse.visible or not Juice.on():
+		_mouse.position = to
+		_mouse.visible = true
+		return
+	_mouse_glide = _mouse.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_mouse_glide.tween_property(_mouse, "position", to, 0.35)
+	if changed:  # a new pose pops in
+		_mouse.scale = Vector2(0.92, 0.92)
+		_mouse_glide.tween_property(_mouse, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
+	if lean != 0.0:  # a little hop and lean toward the spot, then back upright
+		_mouse_glide.chain().tween_property(_mouse, "rotation_degrees", 7.0 * lean, 0.18).set_trans(Tween.TRANS_SINE)
+		_mouse_glide.parallel().tween_property(_mouse, "position", to + Vector2(10 * lean, -8), 0.18).set_trans(Tween.TRANS_SINE)
+		_mouse_glide.chain().tween_property(_mouse, "rotation_degrees", 0.0, 0.3).set_trans(Tween.TRANS_BACK)
+		_mouse_glide.parallel().tween_property(_mouse, "position", to, 0.3).set_trans(Tween.TRANS_BOUNCE)
 
 
 ## Arrives at a station (Game.go_station, without its first-visit pin).

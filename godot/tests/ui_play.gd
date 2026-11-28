@@ -1369,6 +1369,7 @@ func _quick(app: App) -> void:
 	var steps := 0
 	var dealt := false
 	var tapped := false
+	var no_mouse := []  # steps without Professor Mouse
 	while QuickRules.running() and steps < 80:
 		steps += 1
 		for k in 3:
@@ -1384,6 +1385,8 @@ func _quick(app: App) -> void:
 			check(q._shade.visible, "step %d spotlights what it's about" % q.i)
 		if q.steps[q.i].act.has("market"):
 			check(app.panel == "market", "the Market opens")
+		if not (q._mouse.visible and q._mouse.texture != null):
+			no_mouse.append(q.i)
 		if q.steps[q.i].act.has("visit:Old Growth Forest"):
 			check(app._screen is StationScreen and Game.state.items.is_empty() and Progress.prefs.pinnedItems.is_empty(), "part 3: at the Old Growth Forest, nothing crafted or pinned yet")
 		if q.steps[q.i].act.has("track:Tree"):
@@ -1407,6 +1410,7 @@ func _quick(app: App) -> void:
 		q._card.pressed.emit("Next")
 	check(not QuickRules.running() and steps == q.steps.size(), "Next through every step to the end (%d)" % steps)
 	check(dealt, "the challenge's hand was dealt")
+	check(no_mouse.is_empty(), "Professor Mouse is on every step (missing: %s)" % [no_mouse])
 	check(Game.state == real and Game.state.items == ["Water", "Sand"] and Progress.prefs.pinnedItems == pins and not Game.ctx.has("demo"), "the real run and the pins are as they were")
 	check(menu.visible and app.hub.visible and app.hub.button("market").visible and app.panel == "", "back at the Play menu, the hub whole")
 	# ✕ and Back ask first.

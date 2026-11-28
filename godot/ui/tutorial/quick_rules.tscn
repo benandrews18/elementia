@@ -9,6 +9,7 @@ shader = ExtResource("3")
 
 [sub_resource type="Resource" id="q0"]
 script = ExtResource("2")
+mouse = "reacting_wave_hello"
 say = "[font_size=22][b]Welcome to[/b][/font_size]
 [font_size=34][b][color=#b5541b]ELEMENTIA![/color][/b][/font_size]
 
@@ -19,6 +20,7 @@ to build new [b]creations[/b] {🛠️}"
 
 [sub_resource type="Resource" id="q1"]
 script = ExtResource("2")
+mouse = "props_unfold_map"
 say = "This is the [b]world map[/b] {🗺️}. You'll use this to find your way around the world of Elementia!"
 place = "high"
 
@@ -33,6 +35,7 @@ spot = PackedStringArray("map:Old Growth Forest")
 
 [sub_resource type="Resource" id="q3"]
 script = ExtResource("2")
+mouse = "pointing_present_below"
 say = "Each location has its own pool of elements to gather {🧺}."
 place = "bottom"
 act = PackedStringArray("mapcard:Old Growth Forest")
@@ -85,6 +88,7 @@ spot = PackedStringArray("hub:market")
 
 [sub_resource type="Resource" id="q9"]
 script = ExtResource("2")
+mouse = "props_wrapped_gift"
 say = "The Market is full of rewards {🎁} to help you on your journey!"
 place = "bottom"
 act = PackedStringArray("market")
@@ -111,12 +115,14 @@ spot = PackedStringArray("market:caps")
 
 [sub_resource type="Resource" id="q13"]
 script = ExtResource("2")
+mouse = "props_magnifying_glass"
 say = "Let's take a closer look at one now."
 place = "above:market:name:Ecosystem"
 spot = PackedStringArray("market:name:Ecosystem")
 
 [sub_resource type="Resource" id="q14"]
 script = ExtResource("2")
+mouse = "reacting_astonished"
 say = "This is the [b]Ecosystem[/b]. It's the capstone of the Old Growth Forest {🌲}. To craft it, you'll need:
 {recipe:Ecosystem}"
 place = "bottom"
@@ -124,6 +130,7 @@ act = PackedStringArray("card:Ecosystem")
 
 [sub_resource type="Resource" id="q15"]
 script = ExtResource("2")
+mouse = "pointing_point_up"
 say = "Each one of those components has its own crafting recipe, like the [b]Salmon[/b] {🐟}! It's made of:
 {recipe:Salmon}"
 place = "bottom"
@@ -149,6 +156,7 @@ spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
 
 [sub_resource type="Resource" id="q19"]
 script = ExtResource("2")
+mouse = "reacting_thinking"
 title = "Inventory"
 title_icon = "ui:inventory"
 say = "This is your [b]Inventory[/b] {ui:inventory}. There's nothing here yet..."
@@ -156,18 +164,21 @@ act = PackedStringArray("nocard", "inventory")
 
 [sub_resource type="Resource" id="q20"]
 script = ExtResource("2")
+mouse = "props_wrapped_gift"
 say = "[font_size=15]Here are some items to get started![/font_size] {🎁}"
 place = "hub"
 act = PackedStringArray("items")
 
 [sub_resource type="Resource" id="q21"]
 script = ExtResource("2")
+mouse = "pointing_call_out"
 say = "As you explore the world and craft items, you'll also need to complete [b]challenges[/b] {🎯}!"
 place = "bottom"
 corner = "🎯"
 
 [sub_resource type="Resource" id="q22"]
 script = ExtResource("2")
+mouse = "reacting_proud_arms_crossed"
 say = "Getting a high score in the challenges is the key to success!"
 place = "bottom"
 corner = "🎯"
@@ -175,12 +186,14 @@ extra = "meter"
 
 [sub_resource type="Resource" id="q23"]
 script = ExtResource("2")
+mouse = "props_playing_cards"
 say = "[font_size=16]Let's walk through a challenge now![/font_size]"
 place = "top"
 extra = "cardtools"
 
 [sub_resource type="Resource" id="q24"]
 script = ExtResource("2")
+mouse = "props_playing_cards"
 say = "A challenge happens every [b]3 turns[/b] {🕒}. It's like a card game {🃏}! You'll need to use the items you've crafted so far to create a beautiful display {🌈}"
 place = "above:hand:discard"
 act = PackedStringArray("deal")
@@ -195,6 +208,7 @@ spot = PackedStringArray("mat:combos")
 
 [sub_resource type="Resource" id="q26"]
 script = ExtResource("2")
+mouse = "reacting_excited_clap"
 say = "These cards share a few icons {suit:organic}{💧}. Matching [b]3+[/b] icons earns you a multiplier bonus!"
 place = "bottom"
 act = PackedStringArray("demomat:", "play:Apple,Banana,Tree")
@@ -211,6 +225,7 @@ corner = "discard"
 
 [sub_resource type="Resource" id="q28"]
 script = ExtResource("2")
+mouse = "reacting_thinking"
 say = "Cards add up their total score, then multiply by the combos you made!
 [font_size=15]{⚛️}[b]Quarks[/b] = {🃏}[b]Points[/b] × {🔥}[b]Combos[/b][/font_size]"
 place = "bottom"
@@ -236,6 +251,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q31"]
 script = ExtResource("2")
+mouse = "reacting_excited_clap"
 say = "Elements are made of [b]Quarks[/b]!
 More Quarks = More Elements."
 place = "bottom"
@@ -244,11 +260,13 @@ wait = "reward"
 
 [sub_resource type="Resource" id="q32"]
 script = ExtResource("2")
+mouse = "ui_walk_with_backpack"
 say = "Let's go gather {🧺} some elements now!"
 place = "bottom"
 
 [sub_resource type="Resource" id="q33"]
 script = ExtResource("2")
+mouse = "reacting_wave_hello"
 say = "Welcome to the [b]Old Growth Forest[/b] {🌲}"
 place = "bottom"
 act = PackedStringArray("visit:Old Growth Forest")
@@ -262,6 +280,7 @@ extra = "pool"
 
 [sub_resource type="Resource" id="q35"]
 script = ExtResource("2")
+mouse = "props_hold_die"
 say = "Let's see what we get! {🎲}"
 place = "bottom"
 spot = PackedStringArray("hub:home")
@@ -269,6 +288,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q36"]
 script = ExtResource("2")
+mouse = "reacting_excited_clap"
 say = "Awesome! Let's put those in our inventory {ui:inventory}"
 place = "top"
 act = PackedStringArray("roll:Si,O,C,C,Mg")
@@ -277,6 +297,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q37"]
 script = ExtResource("2")
+mouse = "pointing_call_out"
 say = "Now let's craft some items! {🛠️}"
 place = "bottom"
 act = PackedStringArray("gather")
@@ -293,6 +314,7 @@ tap = PackedStringArray("craft:Sand")
 
 [sub_resource type="Resource" id="q39"]
 script = ExtResource("2")
+mouse = "reacting_thinking"
 say = "Let's come back for some of these bigger items when we have the right materials."
 place = "bottom"
 act = PackedStringArray("craft:Sand")
@@ -308,6 +330,7 @@ tap = PackedStringArray("pin:Tree")
 
 [sub_resource type="Resource" id="q41"]
 script = ExtResource("2")
+mouse = "props_clipboard_checklist"
 say = "I love a good plan! {ui:todo}"
 place = "bottom"
 act = PackedStringArray("pin:Tree", "todo")
@@ -322,6 +345,7 @@ spot = PackedStringArray("todo:details")
 
 [sub_resource type="Resource" id="q43"]
 script = ExtResource("2")
+mouse = "reacting_thumbs_up_wink"
 say = "Great work! Let's explore a new location by going back to the map {ui:map}
 {stations}"
 place = "bottom"
@@ -331,6 +355,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q44"]
 script = ExtResource("2")
+mouse = "reacting_astonished"
 say = "Woah! [b]4[/b] new locations to visit! {🗺️}"
 act = PackedStringArray("map", "reveal")
 wait = "reveal"
@@ -338,12 +363,14 @@ place = "top"
 
 [sub_resource type="Resource" id="q45"]
 script = ExtResource("2")
+mouse = "props_unfold_map"
 say = "Before we venture forth, let's decide where to go next.
 {stations}"
 place = "top"
 
 [sub_resource type="Resource" id="q46"]
 script = ExtResource("2")
+mouse = "props_magnifying_glass"
 say = "This is the [b]Item Tracker[/b] {🔍}!"
 act = PackedStringArray("floats")
 spot = PackedStringArray("pins")
@@ -373,12 +400,14 @@ place = "above:map:The Ocean"
 
 [sub_resource type="Resource" id="q50"]
 script = ExtResource("2")
+mouse = "reacting_thinking"
 say = "[b]Station Preview[/b]"
 act = PackedStringArray("select:The Ocean")
 place = "above:map:The Ocean"
 
 [sub_resource type="Resource" id="q51"]
 script = ExtResource("2")
+mouse = "ui_walk_with_backpack"
 say = "Let's go! {🥾}"
 place = "above:map:The Ocean"
 spot = PackedStringArray("hub:home")
@@ -386,6 +415,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q52"]
 script = ExtResource("2")
+mouse = "props_hold_die"
 say = "Let's see what we get! {🎲}"
 act = PackedStringArray("travel:The Ocean")
 spot = PackedStringArray("st:chips", "hub:home")
@@ -394,6 +424,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q53"]
 script = ExtResource("2")
+mouse = "reacting_excited_clap"
 say = "Nice! {🎉}"
 place = "top"
 act = PackedStringArray("roll:H,O,O,C,C")
@@ -411,6 +442,7 @@ tap = PackedStringArray("craft:Water")
 
 [sub_resource type="Resource" id="q55"]
 script = ExtResource("2")
+mouse = "props_magnifying_glass"
 say = "Let's poke around a little more..."
 place = "bottom"
 act = PackedStringArray("craft:Water")
@@ -418,6 +450,7 @@ wait = "crafted"
 
 [sub_resource type="Resource" id="q56"]
 script = ExtResource("2")
+mouse = "props_hold_flask"
 say = "Let's do some [b]SCIENCE[/b]! {__CONVERT__}"
 place = "below:bench"
 act = PackedStringArray("bench:Limestone")
@@ -433,6 +466,7 @@ tap = PackedStringArray("convert", "need:Ca")
 
 [sub_resource type="Resource" id="q58"]
 script = ExtResource("2")
+mouse = "reacting_whisper_secret"
 say = "[b]3[/b] of a kind to create a new element! {__CONVERT__}"
 place = "top"
 act = PackedStringArray("cvopen:Ca:Limestone")
@@ -447,6 +481,7 @@ tap = PackedStringArray("cv:go")
 
 [sub_resource type="Resource" id="q60"]
 script = ExtResource("2")
+mouse = "reacting_thumbs_up_wink"
 say = "Excellent! Now we can keep crafting {🛠️}"
 place = "top"
 act = PackedStringArray("cvgo")
@@ -464,6 +499,7 @@ tap = PackedStringArray("hub:home")
 
 [sub_resource type="Resource" id="q62"]
 script = ExtResource("2")
+mouse = "reacting_astonished"
 say = "Wow! An [b]Observatory[/b] {🔭}! I wonder what we'll find there {🚀}..."
 place = "bottom"
 act = PackedStringArray("map", "reveal")
@@ -480,6 +516,7 @@ corner = "clock"
 
 [sub_resource type="Resource" id="q64"]
 script = ExtResource("2")
+mouse = "ui_walk_with_backpack"
 say = "[font_size=24][b]Every game is a
 [color=#b5541b]new adventure![/color][/b][/font_size] {🧭}
 
@@ -488,6 +525,7 @@ Find [b][color=#b5541b]secret items[/color][/b] {❓}"
 
 [sub_resource type="Resource" id="q65"]
 script = ExtResource("2")
+mouse = "reacting_wave_hello"
 say = "[font_size=22][b]Have fun[/b][/font_size]
 crafting {🛠️} and exploring {🗺️}
 the world of

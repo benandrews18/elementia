@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Quick Rules: Professor Mouse is back, with 32 new poses. He stands on the hub, or on top of the words' card when it sits down there (never in mid-air, the words always in front), turns toward whatever is lit and leans its way, and acts out each line: waving hello, unfolding the map, holding the dice, the flask for science, the clipboard for the To-Do List, walking off with his backpack.
 - Station shops: much bigger item pictures; the names under the cards are 1.5x bigger (a long word shrinks to fit rather than break); the 🔍 / 📌 corner circles are bigger and the same size on every tier; tier 1 cards show the stations that make them along the bottom, from the right.
 - Station shops: each card's name now sits under it (as in the Market), and the pictures are bigger in the room it left.
 - Every item picture in the game has a thin dark outline.
