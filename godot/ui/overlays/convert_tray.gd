@@ -21,6 +21,7 @@ var to := ""
 ## Opened from a card's missing element (the user, 2026-11-23): that card's
 ## Crafting Bench rides on top of the tray, Craft and all, until it's made.
 var bench_item := ""
+const DIM := 0.55  # the screen behind the tray and its bench
 var _bench: Control
 var _to_box: Control
 var _ready_now := false
@@ -242,7 +243,13 @@ func _put_bench(tray_y: float, w: float) -> void:
 	if is_instance_valid(_bench):
 		_bench.queue_free()
 	var e = Catalog.entry(bench_item) if bench_item != "" else null
-	if e == null or Catalog.owns(Game.state, bench_item):
+	var dim := e != null and not Catalog.owns(Game.state, bench_item)  # with the bench on it: the screen behind dimmed (the user, 2026-11-28)
+	var scrim: ColorRect = $Scrim
+	if dim and scrim.color.a == 0.0 and Juice.on():
+		scrim.create_tween().tween_property(scrim, "color:a", DIM, 0.25)
+	else:
+		scrim.color.a = DIM if dim else 0.0
+	if not dim:
 		return
 	var bench := BenchPanel.new()
 	var bw := minf(w - 16, 420.0)
