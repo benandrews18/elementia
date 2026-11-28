@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Station shops: much bigger item pictures; the names under the cards are 1.5x bigger (a long word shrinks to fit rather than break); the 🔍 / 📌 corner circles are bigger and the same size on every tier; tier 1 cards show the stations that make them along the bottom, from the right.
 - Station shops: each card's name now sits under it (as in the Market), and the pictures are bigger in the room it left.
 - Every item picture in the game has a thin dark outline.
 - Display Mat Score window: bigger, bolder text ("3 turns", "COMBOS", "BONUS DICE"). Quark Combos is now two windows: Quark Combos (Quarks, the one-line score formula, DOUBLE points with a little tree of the Apple over its recipe pieces) and Combo Multiplier (match 3+ icons: the stations in one row, the suits as on the cards, ingredient items).

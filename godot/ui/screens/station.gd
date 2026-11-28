@@ -22,6 +22,8 @@ const TOP := QuarkTopBar.H
 @export var card_ratio := 1.4
 
 var open_card := ""  # the shop card whose row is on the Crafting Bench (stationCardOpen); the side card's in the list view
+const NAME_PX := 18  # the names under the shop's cards (the user, 2026-11-27: 1.5x the Market's)
+const NAME_H := 42.0  # room for two lines
 const HEAD_H := 295.0  # the header's dark blue: the shop's title, then the crafted-items bar, to its foot
 static var list_mode := false  # 📋: the shop as compact rows across the screen (the user, 2026-11-26: no side card; card view on every arrival)
 var _bulbs := {}  # shop cards whose 💡 has shown this visit (station -> {name: true}): no fade-in again on a redraw
@@ -240,7 +242,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		if items.is_empty():
 			continue
 		var card_h := (row_h - gap) / 2 if gi == 0 else row_h
-		var cell_h := card_h + 3 + MarketTray.NAME_H  # the name under the card (the user, 2026-11-27: as in the Market); Pin and Craft are on the Crafting Bench
+		var cell_h := card_h + 3 + NAME_H  # the name under the card (the user, 2026-11-27: as in the Market); Pin and Craft are on the Crafting Bench
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
 		# Tier 1 over several rows: the short row on top, the full ones on the rest (the user, 2026-11-26)
@@ -355,18 +357,20 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		sel.mouse_filter = MOUSE_FILTER_IGNORE
 		page.add_child(sel)
 	# You are at its station: no station badges (a tier 1 item's others: on its full card, the user 2026-11-26).
-	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,
+	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": not t1, "stations_right": t1, "station_px": 24.0,  # tier 1: where else it's made, along the bottom from the right (the user, 2026-11-27)
 		"shop": not t1, "fade_suits": not owned, "no_name": true,
-		"icon_px": 36.0 if t1 else 64.0 if e.tier == "CAPSTONE" else 56.0})  # the room the name left: bigger pictures  # tier 1: the Inventory's small card; the name goes under it
-	var n := Tok.label(e.name, MarketTray.NAME_PX, Color(1, 1, 1, 0.7) if owned else Color.WHITE, 800)  # as in the Market (MarketTray._cell)
+		"icon_px": minf(card_size.y * 0.78, card_size.x * 0.72) if t1 else minf(card_size.y * 0.62, card_size.x * 0.82)})  # the picture fills the room the name left (the user, 2026-11-27)
+	var n := Tok.label(e.name, NAME_PX, Color(1, 1, 1, 0.7) if owned else Color.WHITE, 800)  # under the card, as in the Market (MarketTray._cell), 1.5x its size
 	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	n.max_lines_visible = 2
 	n.add_theme_constant_override("line_spacing", -3)
 	n.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	n.add_theme_constant_override("outline_size", 4)
-	n.size = Vector2(card_size.x + 4, MarketTray.NAME_H)
-	n.position = pos + Vector2(-2, card_size.y + 3)
+	n.size = Vector2(card_size.x + 4, NAME_H)
+	var longest: String = Array(e.name.split(" ")).reduce(func(a, b): return a if a.length() >= b.length() else b)
+	n.add_theme_font_size_override("font_size", Tok.fit_px(longest, Tok.font(800), NAME_PX, n.size.x - 4))  # never a word broken in two
+	n.position = pos + Vector2(-2, card_size.y + (10 if t1 else 3))  # tier 1: under its station badges
 	n.mouse_filter = MOUSE_FILTER_IGNORE
 	n.set_meta("cmp", "st:name:" + e.name)
 	page.add_child(n)
@@ -404,7 +408,7 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 ## this one lit in its breakdown); else the 📌 (a tap pins and tracks it, or
 ## unpins it), the tracked item's own card included.
 func _pin_slot(item: String, page: Control, pos: Vector2, card_size: Vector2, t1: bool) -> Control:
-	var d := 20.0 if t1 else ItemCard.SHOP_CIRCLE  # the points badge's size (a tier 1 card's small one)
+	var d := 34.0  # one size on every tier, big enough to see and tap (the user, 2026-11-27)
 	var feeds := Game.feeds_tracked(item)
 	var pinned := Progress.is_pinned(item)
 	var b := Panel.new()

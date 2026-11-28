@@ -133,15 +133,16 @@ func _ready() -> void:
 		$Pips.add_child(pip)
 		_pips.append(pip)
 	# Station badges: a row centred on the bottom edge (placed in _place()).
-	var ssz := 18.0 if mini else 26.0
+	var ssz: float = opts.get("station_px", 18.0 if mini else 26.0)  # station_px: a caller's own size (the shop's tier 1 cards)
 	for st in card.stations:
 		var b := Panel.new()
 		var lit_st: bool = opts.get("lit_stations", []).has(st)
 		b.add_theme_stylebox_override("panel", Tok.box(Tok.station_color(st), ssz / 2, 2.5 if lit_st else 1.5, Tok.GOLD if lit_st else Color.BLACK))
 		b.custom_minimum_size = Vector2(ssz, ssz)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
-		var g := Tok.icon(Catalog.station(st).emoji, 12.0 if mini else 17.0)
-		g.material = Tok.outline(12.0 if mini else 17.0)
+		var gpx := roundf(ssz * 0.66)
+		var g := Tok.icon(Catalog.station(st).emoji, gpx)
+		g.material = Tok.outline(gpx)
 		var k := "%s:st%d" % [opts.get("tag", item), _stations.get_child_count()]
 		b.set_meta("cmp", k)
 		g.set_meta("cmp", k + "icon")
