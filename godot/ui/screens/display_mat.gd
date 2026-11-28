@@ -844,11 +844,14 @@ static func _lit_ring() -> Panel:
 func _lift(n: String) -> void:
 	if n == "":
 		picks = []
+		lifted = ""
 	elif picks.has(n):
 		picks.erase(n)
+		if lifted == n:  # put back; no other card jumps up in its place (the user, 2026-11-27)
+			lifted = ""
 	else:
 		picks.append(n)
-	lifted = picks.back() if not picks.is_empty() else ""
+		lifted = n
 	if view == "elements" and not picks.is_empty():  # picking to play: the mat again
 		view = "mat"
 		_redraw()
