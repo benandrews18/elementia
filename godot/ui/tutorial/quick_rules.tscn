@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=37 format=3]
 
 [ext_resource type="Script" path="res://ui/tutorial/quick_rules.gd" id="1"]
 [ext_resource type="Script" path="res://ui/tutorial/quick_step.gd" id="2"]
@@ -131,12 +131,105 @@ say = "Items with the same icons {suit:organic}{🌲}{💧} can combine in speci
 place = "top"
 spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
 
+[sub_resource type="Resource" id="q19"]
+script = ExtResource("2")
+say = "This is your [b]Inventory[/b] {ui:inventory}. There's nothing here yet..."
+act = PackedStringArray("nocard", "inventory")
+
+[sub_resource type="Resource" id="q20"]
+script = ExtResource("2")
+say = "Here are some items to get started!"
+place = "top"
+act = PackedStringArray("items")
+
+[sub_resource type="Resource" id="q21"]
+script = ExtResource("2")
+say = "As you explore the world and craft items, you'll also need to complete [b]challenges[/b]!"
+place = "top"
+
+[sub_resource type="Resource" id="q22"]
+script = ExtResource("2")
+say = "Getting a high score in the challenges is the key to success!"
+place = "top"
+extra = "meter"
+
+[sub_resource type="Resource" id="q23"]
+script = ExtResource("2")
+say = "Let's walk through a challenge now!"
+place = "top"
+
+[sub_resource type="Resource" id="q24"]
+script = ExtResource("2")
+say = "A challenge happens every [b]3 turns[/b] {🕒}. It's like a card game {🃏}! You'll need to use the items you've crafted so far to create a beautiful display {🌈}"
+place = "top"
+act = PackedStringArray("deal")
+wait = "mat"
+
+[sub_resource type="Resource" id="q25"]
+script = ExtResource("2")
+say = "The trick is to match item icons to create [b]combos[/b] between the cards on the Display Mat."
+place = "bottom"
+
+[sub_resource type="Resource" id="q26"]
+script = ExtResource("2")
+say = "These cards share a few icons {suit:organic}{💧}. Matching [b]3+[/b] icons earns you a multiplier bonus!"
+place = "bottom"
+act = PackedStringArray("play:Apple,Banana,Tree")
+wait = "mat"
+
+[sub_resource type="Resource" id="q27"]
+script = ExtResource("2")
+say = "Search for combos by [b]discarding[/b] some cards from your hand to get new ones from your inventory. But be careful! You won't get these cards back until the next challenge!"
+place = "top"
+act = PackedStringArray("discard:Sand,Bone")
+spot = PackedStringArray("hand:discard")
+wait = "mat"
+
+[sub_resource type="Resource" id="q28"]
+script = ExtResource("2")
+say = "Cards add up their total score, then multiply by the combos you made!
+{⚛️} [b]Quark Score[/b] = Item Score × Combo Score"
+place = "bottom"
+act = PackedStringArray("play:Deer,Canoe,Cloud,Chicken")
+wait = "mat"
+
+[sub_resource type="Resource" id="q29"]
+script = ExtResource("2")
+say = "Sometimes you might know JUST the right card to play. You can search through your deck for the right card by spending an element that matches an icon on the card."
+place = "bottom"
+act = PackedStringArray("view:elements")
+spot = PackedStringArray("hand:draw", "el:O")
+
+[sub_resource type="Resource" id="q30"]
+script = ExtResource("2")
+say = "Perfect match! Let's play the last card to complete our display."
+place = "top"
+act = PackedStringArray("draw:O:Egg")
+wait = "mat"
+
+[sub_resource type="Resource" id="q31"]
+script = ExtResource("2")
+say = "Elements are made of [b]Quarks[/b]!
+More Quarks = More Elements."
+place = "bottom"
+act = PackedStringArray("play:Egg")
+wait = "reward"
+
+[sub_resource type="Resource" id="q32"]
+script = ExtResource("2")
+say = "Let's go gather {🧺} some elements now!"
+place = "bottom"
+
 [node name="QuickRules" type="Control"]
 layout_mode = 3
 offset_right = 390.0
 offset_bottom = 844.0
 script = ExtResource("1")
-steps = Array[ExtResource("2")]([SubResource("q0"), SubResource("q1"), SubResource("q2"), SubResource("q3"), SubResource("q4"), SubResource("q5"), SubResource("q6"), SubResource("q7"), SubResource("q8"), SubResource("q9"), SubResource("q10"), SubResource("q11"), SubResource("q12"), SubResource("q13"), SubResource("q14"), SubResource("q15"), SubResource("q16"), SubResource("q17"), SubResource("q18")])
+steps = Array[ExtResource("2")]([SubResource("q0"), SubResource("q1"), SubResource("q2"), SubResource("q3"), SubResource("q4"), SubResource("q5"), SubResource("q6"), SubResource("q7"), SubResource("q8"), SubResource("q9"), SubResource("q10"), SubResource("q11"), SubResource("q12"), SubResource("q13"), SubResource("q14"), SubResource("q15"), SubResource("q16"), SubResource("q17"), SubResource("q18"), SubResource("q19"), SubResource("q20"), SubResource("q21"), SubResource("q22"), SubResource("q23"), SubResource("q24"), SubResource("q25"), SubResource("q26"), SubResource("q27"), SubResource("q28"), SubResource("q29"), SubResource("q30"), SubResource("q31"), SubResource("q32")])
+items = PackedStringArray("Water", "Seaweed", "Sugar", "Sand", "Clay", "Bone", "Soil", "Limestone", "Tree", "Egg", "Apple", "Banana", "Cloud", "Chicken", "Deer", "Canoe", "Farm")
+hand_cards = PackedStringArray("Apple", "Banana", "Tree", "Sand", "Bone", "Deer", "Canoe")
+deck_cards = PackedStringArray("Cloud", "Chicken", "Water", "Seaweed", "Sugar", "Farm", "Clay", "Soil", "Limestone", "Egg")
+elements = {"C": 1, "H": 1, "O": 2}
 
 [node name="Shade" type="ColorRect" parent="."]
 visible = false

@@ -1357,10 +1357,16 @@ func _quick(app: App) -> void:
 	check(QuickRules.running() and Game.ctx.get("demo") and Game.state != real and not menu.visible and not app.hub.visible, "Quick Rules: its own run, the menu and the hub out of sight")
 	var q := QuickRules.current
 	var steps := 0
+	var dealt := false
 	while QuickRules.running() and steps < 80:
 		steps += 1
 		for k in 3:
 			await get_tree().process_frame
+		check(await _until(func(): return q._card.visible), "step %d's card shows (after what it waits for)" % q.i)
+		if q.steps[q.i].act.has("deal"):
+			dealt = Game.check_hand() != null and Game.check_hand().hand.size() == q.hand_cards.size()
+		if q.steps[q.i].wait == "reward":
+			check(Game.state.mat.size() == 8 and Game.state.mat.has("Egg") and Game.state.hand.discards == ["Sand", "Bone"], "the challenge: 8 cards on the mat, the Egg drawn with an element, Sand and Bone discarded")
 		if q.i == 4:
 			check(app.hub.visible and app.hub.button("home").visible and not app.hub.button("inv").visible, "the hub rises with only its middle button")
 		if q.steps[q.i].spot.size() > 0:
@@ -1369,6 +1375,7 @@ func _quick(app: App) -> void:
 			check(app.panel == "market", "the Market opens")
 		q._card.pressed.emit("Next")
 	check(not QuickRules.running() and steps == q.steps.size(), "Next through every step to the end (%d)" % steps)
+	check(dealt, "the challenge's hand was dealt")
 	check(Game.state == real and Game.state.items == ["Water", "Sand"] and Progress.prefs.pinnedItems == pins and not Game.ctx.has("demo"), "the real run and the pins are as they were")
 	check(menu.visible and app.hub.visible and app.hub.button("market").visible and app.panel == "", "back at the Play menu, the hub whole")
 	# ✕ and Back ask first.

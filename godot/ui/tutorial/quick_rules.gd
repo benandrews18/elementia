@@ -16,6 +16,19 @@ const SIDES := ["inv", "codex", "jobs", "market"]
 const NBSP := " "  # a picture and its name stay on one line
 
 @export var steps: Array[QuickStep] = []
+@export_group("The challenge")
+## What flies into the empty Inventory.
+@export var items: PackedStringArray
+## The challenge's hand, and its deck in the order it's drawn.
+@export var hand_cards: PackedStringArray
+@export var deck_cards: PackedStringArray
+## The elements held for the challenge's draw.
+@export var elements := {}
+## The check's round (its Quark breakpoints) and the mat's size then (0-3:
+## the first check's 3 slots are too few to show a whole hand's worth).
+@export var check_round := 3
+@export var mat_stage := 3
+@export_group("")
 @export_multiline var leave_ask := "Leave Quick Rules?"
 @export var next_text := "Next"
 @export var last_text := "Finish"
@@ -30,6 +43,9 @@ var _hidden: Array = []  # windows over the App (the title screen, the Play menu
 var _card: QuickCard
 var _pop: CardPop  # a big card the steps show
 var _holes: Array = []  # the spotlit rects last drawn (local)
+var _wait := ""  # the step's card waits for this (QuickStep.wait)
+var _since := 0.0  # game time since the step started (s: follows a fixed frame rate and the test's speed-up)
+var _locked := false  # the challenge's Lock In has started
 @onready var _shade: ColorRect = $Shade
 @onready var _rings: Control = $Rings
 
@@ -105,6 +121,9 @@ func _go(n: int) -> void:
 	var st := steps[n]
 	for a in st.act:
 		_act(a)
+	_wait = st.wait
+	_since = 0.0
+	_card.visible = _wait == ""
 	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == steps.size() - 1 else next_text)
 	_holes = [null]  # redrawn whatever this step spots (none: last step's rings go)
 	_update.call_deferred()
@@ -148,6 +167,9 @@ func finish() -> void:
 	current = null
 	if is_instance_valid(_pop):
 		_pop.queue_free()
+	for c in _app.get_children():
+		if c is LockInReward:
+			c.queue_free()
 	Game.state = _real[0]
 	Game.ctx = _real[1]
 	Progress.prefs = _real[2]
@@ -208,6 +230,57 @@ func _act(a: String) -> void:
 					_pop.get_node(n).visible = false
 			else:
 				_pop.show_item(arg)
+		"nocard":
+			if is_instance_valid(_pop):
+				_pop.queue_free()
+		"inventory":  # the Inventory (the Display Mat drawer)
+			_app.open_panel("drawer")
+		"items":  # they fly up into the Inventory, one after another
+			Game.state.items = Array(items)
+			Game._changed()
+			_rise_items.call_deferred()
+		"deal":  # a challenge: the hand dealt in
+			var s := Game.state
+			s.visits = check_round
+			s.checkRound = check_round
+			s.demoStage = mat_stage
+			s.elements = elements.duplicate()
+			s.mat = []
+			s.matPlays = []
+			s.hand = {"deck": Array(deck_cards), "hand": Array(hand_cards), "discards": [], "fresh": [], "tosses": int(Data.t("HAND_DISCARDS"))}
+			Game.ctx.challengeTest = check_round
+			HandView.deal(0.2)
+			_app.open_panel("drawer")
+		"pick":  # cards raised in the hand
+			var mat := _app.hand_mat()
+			if mat:
+				mat.picks = Array(arg.split(","))
+				mat._redraw()
+		"play":  # cards picked and played onto the mat
+			var mat := _app.hand_mat()
+			if mat:
+				mat.picks = Array(arg.split(","))
+				mat.hand_play()
+		"discard":  # cards picked, then discarded
+			var mat := _app.hand_mat()
+			if mat:
+				mat.picks = Array(arg.split(","))
+				mat._redraw()
+				await get_tree().create_timer(0.8).timeout
+				if is_instance_valid(mat) and running():
+					mat.hand_discard()
+		"view":  # the mat's page: "elements" (Draw's) or "mat"
+			var mat := _app.hand_mat()
+			if mat:
+				mat.view = arg
+				mat._redraw()
+		"draw":  # draw:O:Egg: an element spent on a card of its suit
+			var h = Game.check_hand()
+			var mat := _app.hand_mat()
+			if h != null and mat:
+				Hand.suit_draw(h, Game.state, arg, a.get_slice(":", 2))
+				mat.view = "mat"
+				Game._changed()
 		"scroll":  # the Market tray's list to a spot
 			var t := _find(arg)
 			var tray := _app.panel_node as MarketTray
@@ -215,9 +288,51 @@ func _act(a: String) -> void:
 				tray.get_node("Bg/Scroll").ensure_control_visible(t)
 
 
+## The challenge's Lock In (App.hand_lock_in, once the mat is full): the
+## real count, then the Bonus Dice it earned (Next goes on, not its Nice).
+func lock_in() -> void:
+	if _locked:
+		return
+	_locked = true
+	_app._count_then(func():
+		var total: float = Game.mat_score().total
+		var reward := Game.reward_of(Orders.reward_for(total, check_round))
+		var dlg := LockInReward.make()
+		dlg.dice = reward.dice
+		dlg.unknown = reward.unknown
+		dlg.quarks = total
+		dlg.tiers = Orders.tiers(check_round)
+		dlg.size = _app.size
+		dlg.on_done = func(): pass
+		_app.add_child(dlg))
+
+
+## The Inventory's new cards rise in from below the screen, one by one.
+func _rise_items() -> void:
+	var mat := _app.panel_node as DisplayMatScreen
+	if mat == null or not Juice.on():
+		return
+	var k := 0
+	for n in items:
+		var c: Control = mat._inv_cards.get(n)
+		if c == null:
+			continue
+		var y := c.position.y
+		c.position.y = y + size.y
+		c.create_tween().tween_property(c, "position:y", y, 0.5).set_delay(0.06 * k).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		k += 1
+
+
 ## A step's picture under its words.
 func _extra(name: String) -> Control:
 	match name:
+		"meter":  # a Quark Meter on its way to the second breakpoint
+			var m := QuarkMeter.new()
+			m.custom_minimum_size.x = _card.content_width()
+			m.mouse_filter = MOUSE_FILTER_IGNORE
+			var t := Orders.tiers(check_round)
+			m.show_score.call_deferred(lerpf(float(t.one), float(t.two), 0.5), t)
+			return m
 		"elements":  # the 16, by suit then atomic number: 2 rows of 8
 			var w := _card.content_width()
 			var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
@@ -277,8 +392,22 @@ func _map() -> MapScreen:
 	return null
 
 
-func _process(_d: float) -> void:
+func _process(d: float) -> void:
+	_since += d
+	if _wait != "" and _waited():
+		_wait = ""
+		_card.visible = true
 	_update()
+
+
+func _waited() -> bool:
+	match _wait:
+		"mat":
+			var mat := _app.hand_mat()
+			return _since > 1.5 and (mat == null or not mat.playing) 				and not _app.get_children().any(func(c): return c.has_meta("flying"))
+		"reward":
+			return _app.get_children().any(func(c): return c is LockInReward)
+	return true
 
 
 ## The spotlight follows its targets (a tray sliding in, a list scrolling).

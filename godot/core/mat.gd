@@ -32,6 +32,8 @@ static func is_tier1(c: Dictionary) -> bool:
 
 ## matStage(): 0..3, how far the mat has grown (MAT_GROW_ROUNDS).
 static func stage(s: Dictionary) -> int:
+	if s.has("demoStage"):  # Quick Rules' challenge: a bigger mat than its round's (never in a real run)
+		return int(s.demoStage)
 	var v := int(s.get("visits", 0))
 	var n := 0
 	for r in Data.t("MAT_GROW_ROUNDS"):

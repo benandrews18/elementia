@@ -148,7 +148,7 @@ func _sync() -> void:
 ## shortcut: no toast for a square (the HTML game's "Marketplace item done").
 func _market_check() -> void:
 	var s := Game.state
-	if market_playing or s.get("bingoCard") == null:
+	if market_playing or s.get("bingoCard") == null or Game.ctx.get("demo"):  # Quick Rules' items owned at once: no Market moment
 		return
 	var card: Array = s.bingoCard
 	var owned := range(card.size()).filter(func(i): return Catalog.owns(s, card[i]))
@@ -411,7 +411,7 @@ func open_card(name: String) -> void:
 ## was never found: "New collection!", once nothing else is on screen (not
 ## during a Lock-In or the Market's moment); the next one after it's added.
 func _collection_found() -> void:
-	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or market_playing or Game.ctx.get("comboLab"):
+	if not Game.state.get("mode") or Game.ctx.get("lockInCommitted") or market_playing or Game.ctx.get("comboLab") or Game.ctx.get("demo"):
 		return
 	if window_open():
 		return  # something's open; the next change tries again
@@ -984,12 +984,6 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 
 func sync_hub() -> void:
 	var s := Game.state
-	if Game.ctx.get("qr") != null:  # Quick Rules: its own face, nothing lit
-		hub.greyed = false
-		hub.muted = false
-		_start_lock(false)
-		hub.show_state("map" if panel == "market" else Game.ctx.qr.face, {"market": panel == "market"}, {})
-		return
 	var sel = Game.ctx.get("selectedMapStation")
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):
@@ -1009,6 +1003,11 @@ func sync_hub() -> void:
 		return
 	if hub.hand:  # out of a check with cards: Draw's grey goes with it
 		hub.greyed = false
+	if Game.ctx.get("qr") != null:  # Quick Rules: its own face, nothing lit but what's open
+		hub.muted = false
+		_start_lock(false)
+		hub.show_state("map" if panel == "market" else Game.ctx.qr.face, {"market": panel == "market", "inv": panel == "drawer"}, {})
+		return
 	hub.muted = home_face() == "start" and Game.ctx.get("tracked") == null
 	_start_lock(hub.muted)
 	hub.show_state(home_face(), {"inv": panel == "drawer", "market": panel == "market", "jobs": panel == "todo", "codex": panel == "codex"}, badges,
@@ -1053,7 +1052,9 @@ func hand_lock_in() -> void:
 	var mat := hand_mat()
 	if mat == null or mat.playing:
 		return
-	if Game.ctx.get("challengeTest"):
+	if QuickRules.running():
+		QuickRules.current.lock_in()
+	elif Game.ctx.get("challengeTest"):
 		challenge_lock_in()
 	elif Game.state.get("finalCheckPending"):
 		_final_lock_in()

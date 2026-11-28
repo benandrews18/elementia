@@ -17,5 +17,9 @@ extends Resource
 @export var act: PackedStringArray
 ## What's spotlit (the rest dimmed), e.g. "market:stations", "cp:station".
 @export var spot: PackedStringArray
-## A picture under the words: "elements" (the 16 elements, by suit).
+## A picture under the words: "elements" (the 16 elements, by suit),
+## "meter" (a Quark Meter, partly filled).
 @export var extra := ""
+## The card waits until ("": it shows at once): "mat" (the Display Mat's play or deal has
+## finished), "reward" (the Lock In's Bonus Dice window is up).
+@export var wait := ""

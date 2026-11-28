@@ -8,6 +8,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Quick Rules, part 2 of 3: the challenge. The empty Inventory fills with items rising in from below; a Quark Meter shows what challenges are about; then a whole challenge plays itself step by step: the hand is dealt, Apple, Banana and Tree go onto the mat together (they share ORGANIC and Water), Sand and Bone are discarded, four more cards fill the mat to one short, an Oxygen is spent to draw the Egg, it completes the display, and the Lock In counts up to the Bonus Dice. The cards sit over the hand while the mat is the point, and wait for each play to land.
+- Fixed: a card played onto the mat while the screen redraws no longer leaves an error behind when it lands.
 - Play menu: a **Back** button (to the title screen) and **How to Play**, which offers the Guided Tutorial (Professor Mouse) or the new **Quick Rules**.
 - Quick Rules, part 1 of 3: the game built up one piece at a time on its real screens, with Next: the bare map, the welcome, the world map, the 8 stations (the Old Growth Forest bounces in), its elements (all 16, by suit), the hub's buttons rising in one by one, the Market (rewards, station visits, Market items, Capstones), the Ecosystem's card, and the Salmon's card (its recipe, its ORGANIC cost, its station, the icons that make combos). It runs on a practice game: your saved game is never touched. ✕ (or Back) asks before leaving.
 - The first New Game now asks which tutorial you'd like: Guided Tutorial, Quick Rules, or Just play. It asks once; How to Play is always on the Play menu.

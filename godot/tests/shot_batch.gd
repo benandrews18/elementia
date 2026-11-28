@@ -43,6 +43,10 @@ func _ready() -> void:
 		screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		for i in 3:
 			await get_tree().process_frame
+		for i in 1200:  # a state still playing its way there (Quick Rules' challenge)
+			if not screen.busy:
+				break
+			await get_tree().process_frame
 		await get_tree().create_timer(WAIT).timeout
 		await RenderingServer.frame_post_draw
 		for t in load("res://tests/text_floor.gd").small(screen):

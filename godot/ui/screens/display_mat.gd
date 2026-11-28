@@ -1064,7 +1064,7 @@ func hand_play() -> void:
 		return
 	var found: Array = Util.get_or(Progress.prefs, "everUnlockedMatCollections", [])
 	var fresh: Array = Hand.score_after(Game.state, Game.ctx, played).cols.filter(func(c): return not found.has(c.id))
-	if not fresh.is_empty() and App.current:  # a collection found: its reveal first, then the count
+	if not fresh.is_empty() and App.current and not Game.ctx.get("demo"):  # a collection found: its reveal first, then the count
 		playing = true
 		for col in fresh:
 			await CollectionFound.show_on(App.current, col).closed

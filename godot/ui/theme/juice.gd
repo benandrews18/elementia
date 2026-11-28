@@ -203,13 +203,15 @@ static func fly(card: Control, from: Rect2, to: Control) -> void:
 	var tw := _tween(card).set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(card, "position", dest.position, cfg.fly_time)
 	tw.tween_property(card, "scale", Vector2.ONE, cfg.fly_time)
+	var to_ref: WeakRef = weakref(to)  # a redraw mid-flight frees `to`: a captured freed node errors when the lambda runs
 	tw.chain().tween_callback(func():
 		card.queue_free()
-		if is_instance_valid(to):
-			to.modulate.a = 1.0
-			to.offset_transform_enabled = true
-			to.offset_transform_scale = Vector2.ONE * cfg.settle_from
-			_tween(to).tween_property(to, "offset_transform_scale", Vector2.ONE, cfg.settle_time).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
+		var slot: Control = to_ref.get_ref()
+		if slot:
+			slot.modulate.a = 1.0
+			slot.offset_transform_enabled = true
+			slot.offset_transform_scale = Vector2.ONE * cfg.settle_from
+			_tween(slot).tween_property(slot, "offset_transform_scale", Vector2.ONE, cfg.settle_time).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT))
 
 
 ## A replaced card (a copy, not yet in the tree) drops away from `at`
