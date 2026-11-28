@@ -1,0 +1,68 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://ui/overlays/tutorial_pick.gd" id="s"]
+[ext_resource type="PackedScene" path="res://ui/pieces/dim.tscn" id="dim"]
+[ext_resource type="PackedScene" path="res://ui/pieces/parchment_window.tscn" id="win"]
+[ext_resource type="PackedScene" path="res://ui/pieces/setting_row.tscn" id="row"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_close.webp" id="x"]
+
+[node name="TutorialPick" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("s")
+bottom_pad = 44.0
+top_gap = 12.0
+
+[node name="Dim" parent="." instance=ExtResource("dim")]
+layout_mode = 1
+
+[node name="Window" parent="." instance=ExtResource("win")]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 220.0
+offset_right = 370.0
+offset_bottom = 560.0
+title = "How to Play"
+
+[node name="Content" type="VBoxContainer" parent="Window"]
+layout_mode = 0
+offset_left = 38.0
+offset_top = 71.0
+offset_right = 312.0
+offset_bottom = 300.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Guided" parent="Window/Content" instance=ExtResource("row")]
+layout_mode = 2
+text = "Guided Tutorial"
+sub = "Play a real game with Professor Mouse"
+emoji = "🐭"
+button_text = "Play"
+
+[node name="Quick" parent="Window/Content" instance=ExtResource("row")]
+layout_mode = 2
+text = "Quick Rules"
+sub = "A quick tour of every part of the game"
+emoji = "📖"
+button_text = "Go"
+
+[node name="Play" parent="Window/Content" instance=ExtResource("row")]
+layout_mode = 2
+text = "Just play"
+sub = "Jump straight into the game"
+emoji = "🗺️"
+button_text = "Play"
+
+[node name="Close" type="TextureRect" parent="Window"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -44.0
+offset_right = 0.0
+offset_bottom = 44.0
+texture = ExtResource("x")
+expand_mode = 1
+stretch_mode = 5

@@ -95,6 +95,9 @@ func _show() -> void:
 func _process(_d: float) -> void:
 	if i < 0 or _paused or App.current == null:
 		return
+	if Game.ctx.get("demo"):  # Quick Rules over a run mid-tutorial: its run isn't this one
+		App.current.mouse.visible = false
+		return
 	var st := steps[i]
 	var app := App.current
 	if st.done_if != "" and met(st.done_if):

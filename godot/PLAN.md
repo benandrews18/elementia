@@ -16,6 +16,7 @@ mechanics. The 2026-11-27 whole-game review is in `REVIEW.md`.
 One step at a time, in this order unless the user says otherwise.
 
 1. Done 2026-11-27: **review fixes** (REVIEW.md 1-8).
+1b. **Quick Rules** (Decisions 2026-11-27), in three parts.
 2. **Sound effects** (no music: the user brings their own later). Kenney CC0
    packs (download approved, 2026-11-27): Interface, Casino (cards, chips),
    Impact. One `Sfx` autoload with a voice pool, `data/sounds.json`, SFX/UI
@@ -189,6 +190,36 @@ godot/
 ## Decisions
 
 Recorded so they aren't re-argued. Add new ones with the date.
+
+- 2026-11-27 (the user, Quick Rules grill): **a second tutorial, Quick
+  Rules**, to compare with the guided one. The Play menu gets **Back** (to
+  the title screen) and **How to Play** (Guided Tutorial or Quick Rules).
+  Quick Rules builds the game up one part at a time on real screens (bare
+  map, stations, hub buttons, Market, a capstone card, a challenge, a
+  station visit, the map, convert, the clock) with Next; key moments also
+  take the real tap (roll, gather, craft, travel, convert), sparingly.
+  - **Delivered in three parts**, each published: (1) menu, map, hub,
+    Market, capstone card; (2) the challenge; (3) station, map, Ocean,
+    convert, clock.
+  - **A demo, never saved**: a throwaway run like the Combo Lab; the real
+    save is untouched.
+  - **Text in a parchment card, no Professor Mouse**; it moves to keep
+    clear of what it shows.
+  - **The first New Game asks** Guided Tutorial / Quick Rules / just play;
+    once answered it never asks again (How to Play is always there).
+    Quick Rules picked there goes **straight into the new game** at its
+    end; replays (How to Play) end **back at the Play menu**.
+  - **✕ to leave, asking first.**
+  - The 16-element rows: **by suit, then atomic number** (H C N O · P S K
+    Ca / Mg Al Si Ti · Fe Ni Cu Ag).
+  - Built (our choice): a QuickRules node with its steps as resources on
+    its scene (editable in the Inspector, like the Tutorial's); each step
+    stages the screen itself (hide/slide hub buttons, open a tray, play a
+    card) and only Next, ✕ and the step's own target take taps. Rejected:
+    reusing Tutorial/TutorialStep (its steps wait on the player's real
+    progress and resume from a save; Quick Rules drives the game itself
+    and is never saved); and still pictures of screens (they'd drift from
+    the game).
 
 - 2026-11-26 (the user, step 22 grill): **tracking as quests.** Long
   questline games keep one objective on screen, chapters with counts,
@@ -388,4 +419,5 @@ One line per batch (details: CHANGELOG.md and git).
 - 2026-11-27: F11 on the web (head_include stops it reaching Godot's canvas); map reveal waits for the map in view (opening doesn't mark neighbours seen); Market Unknown squares open UnknownTip; Display Mat Score and Quark Combos texts.
 - 2026-11-27: empty first check: App.auto_lock_in (the mat's self-ending check goes through it) shows Mouse's two lines (1/2, 2/2) behind a blocker, then hand_lock_in; not in the tutorial, the final check, a Challenge Test, or once matChecked.
 - 2026-11-27: the details' track tip and Mouse's "tap its 🔍" draw the Noto image (no emoji in text); StartLock shows a round 🔍; the opening's Track glow is rings outside the button (draw_arc for round ones), nothing inside.
+- 2026-11-27: Quick Rules part 1: QuickRules (ui/tutorial: steps as QuickStep resources; Game.ctx.demo never saved, ctx.qr filters the map and hub; a multi-hole spotlight shader), QuickCard, TutorialPick (How to Play; the first New Game asks once), Play menu Back; emojify takes {ui:...} and tinted {suit:...}. Test section "quick"; screens tutorial_pick, quick_*.
 - 2026-11-27: RefTree.suit_row(ringed) gives the breakdown the suit strip's rings; Named Collections' ★ is a drawn star in the banner's icon spot.

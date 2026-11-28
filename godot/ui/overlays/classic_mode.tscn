@@ -128,3 +128,23 @@ text = "History"
 sub = "See your past runs"
 emoji = "🕓"
 button_text = "View"
+
+[node name="HowToPlay" parent="Window/Content" instance=ExtResource("row")]
+layout_mode = 2
+text = "How to Play"
+sub = "Guided Tutorial or Quick Rules"
+emoji = "📖"
+button_text = "Open"
+
+[node name="BackGap" type="Control" parent="Window/Content"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Back" parent="Window/Content" instance=ExtResource("gloss")]
+custom_minimum_size = Vector2(130, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+metadata/button = true
+text = "Back"
+font_size = 14

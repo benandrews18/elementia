@@ -351,8 +351,9 @@ func _confetti() -> void:
 
 ## New Game (restartRun() / startNewRun()): the finished run goes into
 ## History; a fresh run waits on the bare map: the Elementia logo, the
-## how-to-play slides, then the capstone is chosen (playClassicIntro()).
-func new_game() -> void:
+## how-to-play slides (the first New Game instead asks which tutorial;
+## guided: the Guided Tutorial), then the capstone is chosen (playClassicIntro()).
+func new_game(guided := false) -> void:
 	end_run()
 	var logo := TextureRect.new()  # #introLogo: bounces in, a second on screen
 	logo.texture = load("res://assets/banners/elementia-logo.webp")
@@ -377,9 +378,11 @@ func new_game() -> void:
 			var c := CapstoneChoice.make()
 			c.size = size
 			add_child(c)
-		if not Progress.prefs.get("tutorialSeen"):  # everyone's first New Game since the tutorial came in
+		if guided:  # How to Play's Guided Tutorial
 			choose.call()
 			tutorial.start()
+		elif not Progress.prefs.get("tutorialSeen"):  # the first New Game asks: Guided, Quick Rules or just play (the user, 2026-11-27)
+			TutorialPick.show_on(self, true, choose)
 		else:  # the game in brief, every game until hidden (step 25)
 			HowToPlay.play(self, choose))
 
@@ -432,6 +435,9 @@ func _unhandled_input(ev: InputEvent) -> void:
 ## own rules: a step that can't be skipped has neither, or ignores it); else
 ## the open panel. Nothing open: nothing.
 func back() -> void:
+	if QuickRules.running():
+		QuickRules.current.ask_leave()
+		return
 	if tutorial.running() and not tutorial.steps[tutorial.i].free:
 		return  # the step needs what Back would close
 	var dev := get_node_or_null("Dev")
@@ -484,8 +490,7 @@ func show_elements() -> void:
 func replay_tutorial() -> void:
 	ConfirmDialog.ask(self, "Play the tutorial again?
 It starts a new game.", func():
-		Progress.prefs.tutorialSeen = false
-		new_game())
+		new_game(true))
 
 
 ## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
@@ -893,7 +898,7 @@ func _sync_floats() -> void:
 	if panel == "convert":  # its button over the tray: a tap closes it again
 		StationScreen.corner_buttons(_floats, false, true, false)  # no suit strip over the tray (the user, 2026-11-26)
 		return
-	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab"):
+	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab") or Game.ctx.get("qr") != null:
 		return
 	var y := size.y - HubBar.H - 14 - 58
 	var t = Game.ctx.get("tracked")
@@ -979,6 +984,12 @@ func fly_to_tracker(name: String, from: Rect2) -> void:
 
 func sync_hub() -> void:
 	var s := Game.state
+	if Game.ctx.get("qr") != null:  # Quick Rules: its own face, nothing lit
+		hub.greyed = false
+		hub.muted = false
+		_start_lock(false)
+		hub.show_state("map" if panel == "market" else Game.ctx.qr.face, {"market": panel == "market"}, {})
+		return
 	var sel = Game.ctx.get("selectedMapStation")
 	var badges := {}
 	if not (s.get("marketVisited") and not s.get("marketUnseen")):

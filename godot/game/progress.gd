@@ -120,7 +120,7 @@ func load_all() -> void:
 func save_all() -> void:
 	if not autosave:
 		return
-	if Game.state.get("mode") and not Game.ctx.get("comboLab"):  # Combo Lab's throwaway run is never saved
+	if Game.state.get("mode") and not Game.ctx.get("comboLab") and not Game.ctx.get("demo"):  # Combo Lab's and Quick Rules' throwaway runs are never saved
 		_pending_run = Game.state
 	if not _pending:
 		_pending = true

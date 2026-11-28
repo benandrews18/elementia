@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Play menu: a **Back** button (to the title screen) and **How to Play**, which offers the Guided Tutorial (Professor Mouse) or the new **Quick Rules**.
+- Quick Rules, part 1 of 3: the game built up one piece at a time on its real screens, with Next: the bare map, the welcome, the world map, the 8 stations (the Old Growth Forest bounces in), its elements (all 16, by suit), the hub's buttons rising in one by one, the Market (rewards, station visits, Market items, Capstones), the Ecosystem's card, and the Salmon's card (its recipe, its ORGANIC cost, its station, the icons that make combos). It runs on a practice game: your saved game is never touched. ✕ (or Back) asks before leaving.
+- The first New Game now asks which tutorial you'd like: Guided Tutorial, Quick Rules, or Just play. It asks once; How to Play is always on the Play menu.
 - To-Do details breakdown: an item's suit icons now sit in the same gold rings as the suit strip by Convert.
 - Named Collections window: its ★ is drawn as a picture, so it looks the same on every device.
 - The 🔍 in the To-Do details' "Tap 🔍 on a part to track it" (and in Professor Mouse's "tap its 🔍") is now the game's own picture, so it looks the same on every device instead of showing as a broken emoji on some.

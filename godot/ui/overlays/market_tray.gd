@@ -32,6 +32,8 @@ func _ready() -> void:
 
 
 func _redraw() -> void:
+	if is_queued_for_deletion():  # closed this frame (a run swapped back under it)
+		return
 	var keep := _scroll.scroll_vertical
 	for holder in [$Bg/Scroll/Content/Tray/Stations, $Bg/Scroll/Content/Tray/Market/Rows, $Bg/Scroll/Content/Tray/Caps]:
 		for c in holder.get_children():

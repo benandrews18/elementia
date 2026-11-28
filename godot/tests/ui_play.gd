@@ -32,7 +32,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "pins", "tips", "tutorial", "layouts", "collections", "dev"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "quick", "pins", "tips", "tutorial", "layouts", "collections", "dev"] if only == "" else [only]
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -1332,6 +1332,73 @@ func _welcome(app: App) -> void:
 	finished.welcome = true
 
 
+## The Play menu's Back and How to Play; Quick Rules from there (every step,
+## the real run untouched, back to the menu at the end; ✕ and Back ask
+## first); the first New Game asks which tutorial, Quick Rules then goes
+## on into that new game.
+func _quick(app: App) -> void:
+	Game.start_run("Coral Reef")
+	Game.state.items = ["Water", "Sand"]
+	app.close_panel()
+	await get_tree().process_frame
+	var top := func(cls): return app.get_children().filter(func(c): return is_instance_of(c, cls) and not c.is_queued_for_deletion())
+	var real := Game.state
+	var pins: Array = Progress.prefs.pinnedItems.duplicate()
+	WelcomeScreen.show_on(app)
+	var menu := ClassicMode.show_on(app, top.call(WelcomeScreen)[0])
+	menu.pressed.emit("Back")
+	await get_tree().process_frame
+	check(top.call(ClassicMode).is_empty() and top.call(WelcomeScreen).size() == 1, "the Play menu's Back: the title screen again")
+	menu = ClassicMode.show_on(app, top.call(WelcomeScreen)[0])
+	menu.get_node("Window/Content/HowToPlay").pressed.emit()
+	var pick: Array = top.call(TutorialPick)
+	check(pick.size() == 1 and pick[0].has_node("Window/Close") and not pick[0].has_node("Window/Content/Play"), "How to Play: Guided or Quick Rules, with a ✕")
+	pick[0].pressed.emit("Quick")
+	check(QuickRules.running() and Game.ctx.get("demo") and Game.state != real and not menu.visible and not app.hub.visible, "Quick Rules: its own run, the menu and the hub out of sight")
+	var q := QuickRules.current
+	var steps := 0
+	while QuickRules.running() and steps < 80:
+		steps += 1
+		for k in 3:
+			await get_tree().process_frame
+		if q.i == 4:
+			check(app.hub.visible and app.hub.button("home").visible and not app.hub.button("inv").visible, "the hub rises with only its middle button")
+		if q.steps[q.i].spot.size() > 0:
+			check(q._shade.visible, "step %d spotlights what it's about" % q.i)
+		if q.steps[q.i].act.has("market"):
+			check(app.panel == "market", "the Market opens")
+		q._card.pressed.emit("Next")
+	check(not QuickRules.running() and steps == q.steps.size(), "Next through every step to the end (%d)" % steps)
+	check(Game.state == real and Game.state.items == ["Water", "Sand"] and Progress.prefs.pinnedItems == pins and not Game.ctx.has("demo"), "the real run and the pins are as they were")
+	check(menu.visible and app.hub.visible and app.hub.button("market").visible and app.panel == "", "back at the Play menu, the hub whole")
+	# ✕ and Back ask first.
+	QuickRules.begin(app, Callable())
+	await get_tree().process_frame
+	app.back()
+	var asks: Array = QuickRules.current.get_children().filter(func(c): return c is ConfirmDialog)
+	check(asks.size() == 1 and QuickRules.running(), "Back asks before leaving Quick Rules")
+	QuickRules.current._card.pressed.emit("Leave")
+	check(QuickRules.current.get_children().filter(func(c): return c is ConfirmDialog).size() == 1, "and ✕ doesn't ask twice")
+	asks[0].on_yes.call()
+	check(not QuickRules.running() and Game.state == real, "Yes leaves it")
+	menu.queue_free()
+	for w in top.call(WelcomeScreen):
+		w.queue_free()
+	# The first New Game asks which; Quick Rules then leads into that game.
+	Progress.prefs.erase("tutorialSeen")
+	app.new_game()
+	check(await _until(func(): return not top.call(TutorialPick).is_empty()), "the first New Game asks which tutorial")
+	pick = top.call(TutorialPick)
+	check(not pick[0].has_node("Window/Close") and pick[0].has_node("Window/Content/Play"), "with Just play, and no ✕")
+	pick[0].pressed.emit("Quick")
+	check(QuickRules.running() and Progress.prefs.tutorialSeen, "Quick Rules, and it won't ask again")
+	QuickRules.current.finish()
+	check(await _until(func(): return not top.call(CapstoneChoice).is_empty()), "at its end: the new game's capstone choice")
+	for c in top.call(CapstoneChoice):
+		c.queue_free()
+	finished.quick = true
+
+
 ## Settings and the rules: the gear opens Settings; Game Rules' switch is
 ## saved by Save (turning tips back on restores the hidden ones); Tutorial
 ## Messages opens each tip window and ✕ goes back to Settings; Reset asks
@@ -1518,7 +1585,8 @@ func _tutorial(app: App) -> void:
 	Progress.prefs.hiddenTips = []
 	app.new_game()
 	var tut := app.tutorial
-	check(await _until(func(): return tut.running()), "the first New Game starts the tutorial")
+	await _pick_guided(app)
+	check(await _until(func(): return tut.running()), "the first New Game's Guided Tutorial starts")
 	check(not app.get_children().any(func(c): return c is HowToPlay), "no how-to-play slides in the tutorial")
 	var guard := 0
 	var swallowed := false
@@ -1577,6 +1645,7 @@ func _tutorial(app: App) -> void:
 	# Skip: asks, then ends it.
 	Progress.prefs.erase("tutorialSeen")
 	app.new_game()
+	await _pick_guided(app)
 	check(await _until(func(): return tut.running()), "a fresh first New Game")
 	app.mouse.skip.emit()
 	var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
@@ -1703,6 +1772,14 @@ func _dismiss(app: App) -> void:
 
 
 ## Waits (up to ~600 frames) until cond() is true.
+## The first New Game's question: the Guided Tutorial.
+func _pick_guided(app: App) -> void:
+	var picks := func(): return app.get_children().filter(func(c): return c is TutorialPick and not c.is_queued_for_deletion())
+	check(await _until(func(): return not picks.call().is_empty()), "the first New Game asks which tutorial")
+	for p in picks.call():
+		p.pressed.emit("Guided")
+
+
 func _until(cond: Callable) -> bool:
 	for i in 600:
 		if cond.call():

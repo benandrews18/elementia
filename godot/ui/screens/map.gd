@@ -105,6 +105,16 @@ func _reveal(fresh: Array) -> void:
 	bt.tween_property(badges, "modulate:a", 1.0, 0.25)
 
 
+## Quick Rules: a station bounces onto the map.
+func bounce_in(st: String) -> void:
+	var n := _node(st)
+	if n == null or not Juice.on():
+		return
+	var k: float = $Area.size.x / AREA_W
+	n.pivot_offset = n.size / 2
+	n.create_tween().tween_property(n, "scale", Vector2(k, k), 0.5).from(Vector2.ZERO).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
 func _node(st: String) -> MapNode:
 	for n in _nodes():
 		if n.station == st:
@@ -141,6 +151,7 @@ func _redraw() -> void:
 	# the phone's 402px, so a wider screen (a tablet) scales them up.
 	var k: float = $Area.size.x / AREA_W
 	var found := Catalog.found_stations(s)
+	var qr = ctx.get("qr")  # Quick Rules: only what its steps have shown so far
 	for n in _nodes():
 		n.pivot_offset = n.size / 2
 		n.scale = Vector2.ZERO if _pending.has(n.station) else Vector2(k, k)
@@ -148,9 +159,15 @@ func _redraw() -> void:
 		var reach: bool = not here and not s.get("ended") and (s.get("lastStation") == null or app == null or app.can_travel_to(n.station))
 		n.show_state(here, n.station == ctx.get("selectedMapStation"), reach)
 		n.visible = here or (not ctx.get("awaitingStart") and found.has(n.station))  # the opening: only where you start
-	$Area/Paths.visible = not ctx.get("awaitingStart")
+		if qr != null:
+			n.visible = qr.stations.has(n.station)
+	$Area/Paths.visible = not ctx.get("awaitingStart") and qr == null
 	$Area/Paths.queue_redraw()
 	_badges(k)
+	if qr != null:
+		if qr.card != "":
+			$Dynamic.add_child(station_card(qr.card, size.x, false, false, true))
+		return
 	if checked:
 		var qt := QuarkTopBar.make()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
@@ -297,7 +314,7 @@ static func _dashed(c: Control, a: Vector2, b: Vector2, color: Color, w: float) 
 
 ## The picked station's card at the top (mapCardHTML()). Also the opening's
 ## capstone confirm (boxed: all corners round, no capstone line).
-static func station_card(name: String, w: float, boxed := false, flat_top := false) -> Control:
+static func station_card(name: String, w: float, boxed := false, flat_top := false, elements_only := false) -> Control:
 	var st := Catalog.station(name)
 	var card := Control.new()
 	card.set_meta("cmp", "map:card")
@@ -327,6 +344,15 @@ static func station_card(name: String, w: float, boxed := false, flat_top := fal
 		_opens(chip, "", dice[i])
 		card.add_child(chip)
 	y += cw + 13.8 + 11
+	if elements_only:  # Quick Rules: the card down to its elements
+		card.size = Vector2(w, y + 3)
+		card.draw.connect(func():
+			var sb := Tok.box(Color("#4a2b13"), 16, 3, Color("#d9a441"), 10, 6, Color(0, 0, 0, 0.45))
+			sb.border_width_top = 0
+			sb.corner_radius_top_left = 0
+			sb.corner_radius_top_right = 0
+			card.draw_style_box(sb, Rect2(Vector2.ZERO, card.size)))
+		return card
 	# Every item sold here, icon only, a thin dark edge round each picture (owned: a tick; no
 	# square behind it, the user 2026-11-26);
 	# bigger than before (36 px), rows of 5, each row centred (the user, 2026-11-26).

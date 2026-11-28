@@ -72,7 +72,7 @@ func _process(d: float) -> void:
 func _quiet() -> bool:
 	var app := App.current
 	return enabled() and Game.state.get("mode") and not Game.state.get("ended") and not app.tutorial.running() \
-		and not app.market_playing and not Game.ctx.get("comboLab") and not app.mouse.showing
+		and not app.market_playing and not Game.ctx.get("comboLab") and not Game.ctx.get("demo") and not app.mouse.showing
 
 
 ## A window over the screen that t isn't in.

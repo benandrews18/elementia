@@ -1,0 +1,155 @@
+[gd_scene load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://ui/tutorial/quick_rules.gd" id="1"]
+[ext_resource type="Script" path="res://ui/tutorial/quick_step.gd" id="2"]
+[ext_resource type="Shader" path="res://ui/theme/spotlights.gdshader" id="3"]
+
+[sub_resource type="ShaderMaterial" id="shade"]
+shader = ExtResource("3")
+
+[sub_resource type="Resource" id="q0"]
+script = ExtResource("2")
+say = "Welcome to [b]Elementia[/b]! In this game, you play as a curious scientist {🧪} who explores the world {🌍} searching for chemical elements {__CONVERT__} to help you build new creations {🛠️}"
+
+[sub_resource type="Resource" id="q1"]
+script = ExtResource("2")
+say = "This is the [b]world map[/b] {🗺️}. You'll use this to find your way around the world of Elementia!"
+place = "high"
+
+[sub_resource type="Resource" id="q2"]
+script = ExtResource("2")
+say = "There are [b]8[/b] unique locations to visit.
+{stations}
+This one is the [b]Old Growth Forest[/b]! {🌲}"
+place = "top"
+act = PackedStringArray("station:Old Growth Forest")
+spot = PackedStringArray("map:Old Growth Forest")
+
+[sub_resource type="Resource" id="q3"]
+script = ExtResource("2")
+say = "Each location has its own pool of elements to gather {🧺}. You'll need to visit all 8 stations to gather all the elements!"
+place = "bottom"
+act = PackedStringArray("mapcard:Old Growth Forest")
+extra = "elements"
+
+[sub_resource type="Resource" id="q4"]
+script = ExtResource("2")
+say = "This is the [b]center button[/b]! You'll be tapping this button to move around {🥾}, gather elements {🧺}, and more {ui:discard}"
+place = "bottom"
+act = PackedStringArray("mapcard:", "hub")
+spot = PackedStringArray("hub:home")
+
+[sub_resource type="Resource" id="q5"]
+script = ExtResource("2")
+say = "This is your [b]Inventory[/b] {ui:inventory}. You'll store all your elements and items in here!"
+place = "bottom"
+act = PackedStringArray("slide:inv")
+spot = PackedStringArray("hub:inv")
+
+[sub_resource type="Resource" id="q6"]
+script = ExtResource("2")
+say = "You can find information about all the items in the game using this guide book {ui:items}"
+place = "bottom"
+act = PackedStringArray("slide:codex")
+spot = PackedStringArray("hub:codex")
+
+[sub_resource type="Resource" id="q7"]
+script = ExtResource("2")
+say = "Use the [b]To-Do List[/b] {ui:todo} to keep track of what items you want to create {📌} and where to craft them {🛠️}"
+place = "bottom"
+act = PackedStringArray("slide:jobs")
+spot = PackedStringArray("hub:jobs")
+
+[sub_resource type="Resource" id="q8"]
+script = ExtResource("2")
+say = "This is the [b]Market[/b] {ui:market}. There's always lots to see there! Let's check it out now."
+place = "bottom"
+act = PackedStringArray("slide:market")
+spot = PackedStringArray("hub:market")
+
+[sub_resource type="Resource" id="q9"]
+script = ExtResource("2")
+say = "The Market is full of rewards {🎁} to help you on your journey!"
+place = "bottom"
+act = PackedStringArray("market")
+
+[sub_resource type="Resource" id="q10"]
+script = ExtResource("2")
+say = "Visit all 8 stations
+{stations}"
+place = "bottom"
+spot = PackedStringArray("market:stations")
+
+[sub_resource type="Resource" id="q11"]
+script = ExtResource("2")
+say = "Craft items found in the Market. You can even craft Market items directly from the Marketplace!"
+place = "bottom"
+spot = PackedStringArray("market:market")
+
+[sub_resource type="Resource" id="q12"]
+script = ExtResource("2")
+say = "These are the [b]Capstone[/b] items. The biggest items in the game! You'll need items from almost every station to craft these. They give HUGE point bonuses and even game-changing effects!"
+place = "top"
+act = PackedStringArray("scroll:market:name:Ecosystem")
+spot = PackedStringArray("market:caps")
+
+[sub_resource type="Resource" id="q13"]
+script = ExtResource("2")
+say = "Let's take a closer look at one now."
+place = "top"
+spot = PackedStringArray("market:name:Ecosystem")
+
+[sub_resource type="Resource" id="q14"]
+script = ExtResource("2")
+say = "This is the [b]Ecosystem[/b]. It's the capstone of the Old Growth Forest {🌲}. To craft it, you'll need:
+{recipe:Ecosystem}"
+place = "bottom"
+act = PackedStringArray("card:Ecosystem")
+
+[sub_resource type="Resource" id="q15"]
+script = ExtResource("2")
+say = "Each one of those components has its own crafting recipe, like the [b]Salmon[/b] {🐟}! It's made of:
+{recipe:Salmon}"
+place = "top"
+act = PackedStringArray("card:Salmon")
+
+[sub_resource type="Resource" id="q16"]
+script = ExtResource("2")
+say = "Bigger items need a little extra to craft. You'll need to spend an [b]ORGANIC[/b] element {suit:organic} to craft the Salmon."
+place = "top"
+spot = PackedStringArray("cp:costs")
+
+[sub_resource type="Resource" id="q17"]
+script = ExtResource("2")
+say = "The [b]Salmon[/b] {🐟} card can be crafted at the [b]Old Growth Forest[/b] {🌲}"
+place = "top"
+spot = PackedStringArray("cp:station")
+
+[sub_resource type="Resource" id="q18"]
+script = ExtResource("2")
+say = "Items with the same icons {suit:organic}{🌲}{💧} can combine in special ways to give you more points! Let's see what combos {⚛️} we can make..."
+place = "top"
+spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
+
+[node name="QuickRules" type="Control"]
+layout_mode = 3
+offset_right = 390.0
+offset_bottom = 844.0
+script = ExtResource("1")
+steps = Array[ExtResource("2")]([SubResource("q0"), SubResource("q1"), SubResource("q2"), SubResource("q3"), SubResource("q4"), SubResource("q5"), SubResource("q6"), SubResource("q7"), SubResource("q8"), SubResource("q9"), SubResource("q10"), SubResource("q11"), SubResource("q12"), SubResource("q13"), SubResource("q14"), SubResource("q15"), SubResource("q16"), SubResource("q17"), SubResource("q18")])
+
+[node name="Shade" type="ColorRect" parent="."]
+visible = false
+material = SubResource("shade")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Rings" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
