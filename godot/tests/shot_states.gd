@@ -11,7 +11,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"suit_spend", "expand", "reward_open", "roll",
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
-	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
+	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "mat_rules3", "order_tip", "unknown_tip",
 	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
@@ -566,8 +566,8 @@ func _ready() -> void:
 					break
 				await get_tree().process_frame
 			busy = false
-		"mat_rules", "mat_rules2", "order_tip", "unknown_tip":
-			app.show_tip({"mat_rules": "mat_rules", "mat_rules2": "mat_rules2", "order_tip": "order", "unknown_tip": "unknown"}[state])
+		"mat_rules", "mat_rules2", "mat_rules3", "order_tip", "unknown_tip":
+			app.show_tip({"mat_rules": "mat_rules", "mat_rules2": "mat_rules2", "mat_rules3": "mat_rules3", "order_tip": "order", "unknown_tip": "unknown"}[state])
 
 
 static func _all(n: Node) -> Array:

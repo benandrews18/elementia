@@ -74,7 +74,7 @@ func _ready() -> void:
 	if opts.get("wide") and not shop:
 		col.offset_top -= 19  # capstone art rides up into the free top centre (margin-top:-19px)
 	col.offset_bottom = -(border + side)
-	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini and not shop else BoxContainer.ALIGNMENT_CENTER
+	col.alignment = BoxContainer.ALIGNMENT_BEGIN if grid_mini and not shop and not opts.get("no_name", false) else BoxContainer.ALIGNMENT_CENTER
 	var icon_px := (17.0 if opts.get("wrap") else 26.0) if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	if shop:
 		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)

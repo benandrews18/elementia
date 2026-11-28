@@ -48,13 +48,13 @@ theme_override_constants/separation = 0
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = 1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r4")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center]{🕒} Display Mat [b]challenge[/b] every {every} turns[/center]"
+text = "[center]{🕒} A [b]challenge[/b] every\n[font_size=28][b][color=#b5541b]{every} turns[/color][/b][/font_size][/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -68,13 +68,13 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = 1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r4")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center]{🃏} Play item cards from your [b]hand[/b] onto the mat to make [b]combos[/b][/center]"
+text = "[center]Play cards from your [b]hand[/b] {🃏}\nto make [font_size=24][b][color=#b5541b]COMBOS[/color][/b][/font_size] {🔥}[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -88,13 +88,13 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = 1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r4")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center]{🎲} Your [b]Quark Score[/b] earns [b]bonus dice[/b][/center]"
+text = "[center][b]{⚛️} Quarks[/b] earn\n[font_size=24][b][color=#b5541b]BONUS DICE[/color][/b][/font_size] {🎲}[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
@@ -127,18 +127,38 @@ theme_override_constants/separation = 0
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = 1
-theme_override_fonts/normal_font = ExtResource("r4")
+theme_override_constants/line_separation = 4
+theme_override_fonts/normal_font = ExtResource("r7")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center][b]Elements are made of Quarks![/b]\n[b]{⚛️} Generate Quarks from your card display[/b]\n[b]{🎲} More Quarks = More Elements to gather[/b][/center]"
+text = "[center][b]Elements are made of[/b]\n[font_size=28][b][color=#b5541b]QUARKS![/color][/b][/font_size] {⚛️}[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
 [node name="G1" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Sub2" type="RichTextLabel" parent="Window/Content/Page2"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 4
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
+bbcode_enabled = true
+text = "[center]Generate Quarks from your display {🌈}\nMore Quarks = More Elements {🎲}[/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G2" type="Control" parent="Window/Content/Page2"]
 custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 mouse_filter = 2
@@ -147,19 +167,19 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = -1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r7")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center]Quark Score =\nDisplay Score × Combo Multiplier[/center]"
+text = "[center][font_size=15]{⚛️}[b]Quarks[/b] = {🃏}[b]Points[/b] × {🔥}[b]Combos[/b][/font_size][/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
-[node name="G2" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 4)
+[node name="G3" type="Control" parent="Window/Content/Page2"]
+custom_minimum_size = Vector2(0, 14)
 layout_mode = 2
 mouse_filter = 2
 
@@ -167,107 +187,127 @@ mouse_filter = 2
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = -1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r7")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
 bbcode_enabled = true
-text = "[center]Items with their own complete recipe\nearn DOUBLE the points![/center]"
-fit_content = true
-scroll_active = false
-autowrap_mode = 3
-
-[node name="G3" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 4)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="D3" type="RichTextLabel" parent="Window/Content/Page2"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = -1
-theme_override_fonts/normal_font = ExtResource("r7")
-theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
-bbcode_enabled = true
-text = "[center]Build Combo Multiplier by matching 3+ icons[/center]"
+text = "[center]Items with their whole recipe on the mat earn\n[font_size=24][b][color=#b5541b]DOUBLE[/color][/b][/font_size] the points! {💯}[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
 [node name="G4" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 5)
+custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Stations" type="HFlowContainer" parent="Window/Content/Page2"]
+[node name="NextRow" type="HBoxContainer" parent="Window/Content/Page2"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 5
 alignment = 1
 
-[node name="G5" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 6)
+[node name="Next2" parent="Window/Content/Page2/NextRow" instance=ExtResource("r6")]
+custom_minimum_size = Vector2(86, 46)
+layout_mode = 2
+metadata/button = true
+
+[node name="Text" parent="Window/Content/Page2/NextRow/Next2" index="0"]
+text = "Next"
+
+[node name="Page3" type="VBoxContainer" parent="Window/Content"]
+visible = false
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 0
 
-[node name="Suits" type="HFlowContainer" parent="Window/Content/Page2"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 5
-alignment = 1
-
-[node name="G6" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 5)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="D4" type="RichTextLabel" parent="Window/Content/Page2"]
+[node name="D3" type="RichTextLabel" parent="Window/Content/Page3"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
-theme_override_constants/line_separation = -1
+theme_override_constants/line_separation = 4
 theme_override_fonts/normal_font = ExtResource("r7")
 theme_override_fonts/bold_font = ExtResource("r5")
-theme_override_font_sizes/normal_font_size = 13
-theme_override_font_sizes/bold_font_size = 13
+theme_override_font_sizes/normal_font_size = 17
+theme_override_font_sizes/bold_font_size = 17
 bbcode_enabled = true
-text = "[center]Ingredient items count toward Combo Multiplier too![/center]"
+text = "[center]Match [font_size=26][b][color=#b5541b]3+[/color][/b][/font_size] icons\nto build your [b]Combo Multiplier[/b] {🔥}[/center]"
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
-[node name="G7" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 5)
+[node name="G1" type="Control" parent="Window/Content/Page3"]
+custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Items" type="HFlowContainer" parent="Window/Content/Page2"]
+[node name="Stations" type="HFlowContainer" parent="Window/Content/Page3"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/h_separation = 5
+theme_override_constants/h_separation = 7
+theme_override_constants/v_separation = 7
 alignment = 1
 
-[node name="G8" type="Control" parent="Window/Content/Page2"]
-custom_minimum_size = Vector2(0, 19)
+[node name="G2" type="Control" parent="Window/Content/Page3"]
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="OkRow" type="HBoxContainer" parent="Window/Content/Page2"]
+[node name="Suits" type="HFlowContainer" parent="Window/Content/Page3"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 7
+theme_override_constants/v_separation = 7
+alignment = 1
+
+[node name="G3" type="Control" parent="Window/Content/Page3"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="D4" type="RichTextLabel" parent="Window/Content/Page3"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.368627, 0.25098, 0.14902, 1)
+theme_override_constants/line_separation = 4
+theme_override_fonts/normal_font = ExtResource("r7")
+theme_override_fonts/bold_font = ExtResource("r5")
+theme_override_font_sizes/normal_font_size = 15
+theme_override_font_sizes/bold_font_size = 15
+bbcode_enabled = true
+text = "[center][b][color=#b5541b]Ingredient[/color][/b] items on a card count\ntoward combos too![/center]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="G4" type="Control" parent="Window/Content/Page3"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Items" type="HFlowContainer" parent="Window/Content/Page3"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 7
+theme_override_constants/v_separation = 7
+alignment = 1
+
+[node name="G5" type="Control" parent="Window/Content/Page3"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="OkRow" type="HBoxContainer" parent="Window/Content/Page3"]
 layout_mode = 2
 mouse_filter = 2
 alignment = 1
 
-[node name="Ok" parent="Window/Content/Page2/OkRow" instance=ExtResource("r6")]
+[node name="Ok" parent="Window/Content/Page3/OkRow" instance=ExtResource("r6")]
 custom_minimum_size = Vector2(86, 46)
 layout_mode = 2
 
-[node name="Text" parent="Window/Content/Page2/OkRow/Ok" index="0"]
+[node name="Text" parent="Window/Content/Page3/OkRow/Ok" index="0"]
 text = "Got it"
 
 [node name="Hide" parent="Window" instance=ExtResource("r8")]

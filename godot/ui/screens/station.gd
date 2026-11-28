@@ -240,7 +240,7 @@ func _shop(page: Control, station: String, w: float, y: float) -> float:
 		if items.is_empty():
 			continue
 		var card_h := (row_h - gap) / 2 if gi == 0 else row_h
-		var cell_h := card_h + 3  # no Pin / Craft under the cards: tap one for the Crafting Bench (the user, 2026-11-22)
+		var cell_h := card_h + 3 + MarketTray.NAME_H  # the name under the card (the user, 2026-11-27: as in the Market); Pin and Craft are on the Crafting Bench
 		var taken := {}  # "row,col" -> true (dense packing)
 		var rows := 0
 		# Tier 1 over several rows: the short row on top, the full ones on the rest (the user, 2026-11-26)
@@ -356,7 +356,20 @@ func _cell(page: Control, e: Dictionary, pos: Vector2, card_size: Vector2, t1: b
 		page.add_child(sel)
 	# You are at its station: no station badges (a tier 1 item's others: on its full card, the user 2026-11-26).
 	var card := ItemCard.make(e.name, {"mini": t1, "wide": e.tier == "CAPSTONE", "tag": "st:" + e.name, "no_stations": true,
-		"shop": not t1, "fade_suits": not owned})  # tier 1: the Inventory's small card
+		"shop": not t1, "fade_suits": not owned, "no_name": true,
+		"icon_px": 36.0 if t1 else 64.0 if e.tier == "CAPSTONE" else 56.0})  # the room the name left: bigger pictures  # tier 1: the Inventory's small card; the name goes under it
+	var n := Tok.label(e.name, MarketTray.NAME_PX, Color(1, 1, 1, 0.7) if owned else Color.WHITE, 800)  # as in the Market (MarketTray._cell)
+	n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	n.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	n.max_lines_visible = 2
+	n.add_theme_constant_override("line_spacing", -3)
+	n.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	n.add_theme_constant_override("outline_size", 4)
+	n.size = Vector2(card_size.x + 4, MarketTray.NAME_H)
+	n.position = pos + Vector2(-2, card_size.y + 3)
+	n.mouse_filter = MOUSE_FILTER_IGNORE
+	n.set_meta("cmp", "st:name:" + e.name)
+	page.add_child(n)
 	card.position = pos
 	card.size = card_size
 	card.gui_input.connect(_on_tap.bind(func():  # the card's row on the Crafting Bench

@@ -140,7 +140,20 @@ static func icon(key: String, px: float) -> TextureRect:
 	t.custom_minimum_size = Vector2(px, px)
 	t.size = Vector2(px, px)
 	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _is_item(key):  # every item's picture: a tight dark edge (the user, 2026-11-27); a caller's own material replaces it
+		t.material = outline(px)
 	return t
+
+
+static var _items := {}  # item picture keys (ITEM_EMOJI's values, with and without FE0F)
+
+
+static func _is_item(key: String) -> bool:
+	if _items.is_empty():
+		for v in Data.t("ITEM_EMOJI").values():
+			_items[v] = true
+			_items[v.replace(char(0xfe0f), "")] = true
+	return _items.has(key)
 
 
 ## The --icon-outline look: a dark edge around the shape of an icon drawn

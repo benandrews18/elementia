@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Station shops: each card's name now sits under it (as in the Market), and the pictures are bigger in the room it left.
+- Every item picture in the game has a thin dark outline.
+- Display Mat Score window: bigger, bolder text ("3 turns", "COMBOS", "BONUS DICE"). Quark Combos is now two windows: Quark Combos (Quarks, the one-line score formula, DOUBLE points with a little tree of the Apple over its recipe pieces) and Combo Multiplier (match 3+ icons: the stations in one row, the suits as on the cards, ingredient items).
 - The Crafting Bench's Craft button is easier to hit (a bigger tap area around it).
 - "Market item made!": tapping its "?" square explains Unknown Elements.
 - Quick Rules, polish from play-testing: titles with big icons on the hub buttons' cards and the empty Inventory; badges on card corners (🎯 for challenges, the Discard button, the turn clock at 24); cards placed by what they talk about (under the Old Growth Forest, above the Ecosystem, the Salmon's in the lower half, over the Display Mat, just above the hub, above the Ocean, under the Crafting Bench); when nothing on the hub is lit, bottom cards sit over the hub. The welcome and the last two cards in big, bold, coloured type; shorter lines in places ("Station Preview", "Let's go!", "Let's do some SCIENCE!", "3 of a kind to create a new element!"); a row of the challenge's buttons, the most-used tier 1 items, the stations and the four suits where they help; a partly made Display Mat (Wire, Battery, Light Bulb) shows how its combo row reads; "Perfect match!" asks you to tap Play (lit, the Egg picked); the score formula is one line of pictures; the Convert button slides in over the words.

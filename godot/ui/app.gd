@@ -714,10 +714,12 @@ func open_settings(page := "") -> void:
 ## A rules or tip window by name (mat_rules, mat_rules2, order, unknown).
 func show_tip(name: String) -> void:
 	match name:
-		"mat_rules", "mat_rules2":
+		"mat_rules", "mat_rules2", "mat_rules3":  # 2, 3: straight to Quark Combos / Combo Multiplier (screenshots)
 			var m := MatRules.show_on(self)
 			if name == "mat_rules2":
-				m._page2()
+				m._page(2, m.combos_title)
+			elif name == "mat_rules3":
+				m._page(3, m.multiplier_title)
 		"order": MatRules.order_tip(self)
 		"unknown": ParchDialog.open(self, UnknownTip.SCENE)
 

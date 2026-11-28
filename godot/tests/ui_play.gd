@@ -1517,7 +1517,9 @@ func _settings(app: App) -> void:
 	if not mr.is_empty():
 		mr[0].get_node("Window/Content/Page1/NextRow/Next").gui_input.emit(_release())
 		check(mr[0].get_node("Window/Content/Page2").visible and mr[0].get_node("Window").title == "Quark Combos", "Next turns to Quark Combos")
-		mr[0].get_node("Window/Content/Page2/OkRow/Ok").gui_input.emit(_release())
+		mr[0].pressed.emit("Next2")
+		check(mr[0].get_node("Window/Content/Page3").visible and mr[0].get_node("Window").title == "Combo Multiplier", "then Combo Multiplier")
+		mr[0].get_node("Window/Content/Page3/OkRow/Ok").gui_input.emit(_release())
 		await get_tree().process_frame
 		check(top.call(MatRules).is_empty(), "Got it closes them")
 	# Back (Android) / Escape: the top window, then the panel, never a quit.
