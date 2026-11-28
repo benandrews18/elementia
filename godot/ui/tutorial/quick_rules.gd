@@ -917,10 +917,11 @@ func _update() -> void:
 				r = g if r.size == Vector2.ZERO else r.merge(g)
 		if r.size != Vector2.ZERO:
 			holes.append(Rect2(r.position - global_position, r.size).grow(6))
+	# The "same icons" cards: everything behind them, the words and the Mouse dimmed (the user, 2026-11-28)
+	_shade.visible = not holes.is_empty() or (not _trio.is_empty() and _card.visible)
 	if holes == _holes:
 		return
 	_holes = holes
-	_shade.visible = not holes.is_empty()
 	var m: ShaderMaterial = _shade.material
 	m.set_shader_parameter("size", size)
 	m.set_shader_parameter("count", holes.size())
