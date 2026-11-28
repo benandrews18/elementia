@@ -8,8 +8,8 @@ extends Resource
 @export var id := ""
 ## What Mouse says ([b]...[/b]: bold; {🔍}: an emoji's image).
 @export_multiline var say := ""
-## His pose (assets/mouse/1-12.webp).
-@export_range(1, 12) var pose := 7
+## His pose (assets/mouse_qr/<name>.webp: the new poses, the user 2026-11-28).
+@export var pose := "pointing_call_out"
 ## Where the 💡 goes: as a TutorialStep's target ("hub:<id>", a cmp tag,
 ## "x*" a prefix), or "tip:<tag>" for the meta "tip" (a craftable card).
 @export var target := ""

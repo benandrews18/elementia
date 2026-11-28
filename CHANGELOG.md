@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-28
+- 💡 hints: Professor Mouse uses his new pictures; no more hints on the Convert button or in the Inventory and challenges.
 - Quick Rules: Professor Mouse disappears and pops back in with each text window instead of sliding around and waiting.
 - Tapping a needed element opens Convert with the Crafting Bench on top, and now the screen behind them is dimmed (a tap there closes it, as before).
 - Crafting Bench: Craft is a tall, rounded 3D green button (grey when you can't craft yet) at the bench's right end, inside the wood; the title is bigger, in a pill on the bench's top edge; the item picture is a little smaller; the pin sits on the bench's top-left corner.

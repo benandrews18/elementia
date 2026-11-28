@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/tutorial/hints.gd" id="1"]
 [ext_resource type="Script" path="res://ui/tutorial/hint.gd" id="2"]
@@ -7,7 +7,7 @@
 script = ExtResource("2")
 id = "roll"
 say = "Tap [b]Roll[/b] to gather this station's elements!"
-pose = 3
+pose = "props_throw_die"
 target = "hub:home"
 when = "screen:station&!rolled"
 
@@ -15,31 +15,15 @@ when = "screen:station&!rolled"
 script = ExtResource("2")
 id = "craft"
 say = "You can craft this one! Tap the card, then [b]Craft[/b]."
-pose = 7
+pose = "props_hold_flask"
 target = "tip:st:craft:*"
 when = "screen:station&rolled"
-
-[sub_resource type="Resource" id="hint2"]
-script = ExtResource("2")
-id = "unknown"
-say = "That [b]?[/b] is an Unknown Element. In [b]Convert[/b] it can become any element from this station."
-pose = 5
-target = "convert"
-when = "screen:station&unknown"
-
-[sub_resource type="Resource" id="hint3"]
-script = ExtResource("2")
-id = "convert"
-say = "Three of one element? [b]Convert[/b] trades 3 for 1 of the element you need."
-pose = 5
-target = "convert"
-when = "screen:station&rolled&canconvert"
 
 [sub_resource type="Resource" id="hint4"]
 script = ExtResource("2")
 id = "map"
 say = "Done here? Tap the [b]Map[/b] to travel to the next station."
-pose = 12
+pose = "props_unfold_map"
 target = "hub:home"
 when = "screen:station&rolled"
 
@@ -47,7 +31,7 @@ when = "screen:station&rolled"
 script = ExtResource("2")
 id = "market"
 say = "Check out the [b]Market[/b]! Craft its items to finish rows and win prizes."
-pose = 1
+pose = "pointing_call_out"
 target = "hub:market"
 when = "screen:map&visit:1&!marketvisited"
 
@@ -55,34 +39,10 @@ when = "screen:map&visit:1&!marketvisited"
 script = ExtResource("2")
 id = "track"
 say = "Tap {🔍} to track an item: the shops light up what it needs. Try its smaller parts first!"
-pose = 10
+pose = "props_magnifying_glass"
 target = "todo:track:*"
 when = "panel:todo"
 
-[sub_resource type="Resource" id="hint7"]
-script = ExtResource("2")
-id = "hand"
-say = "Pick up to 5 cards, then tap Play: combos made in one play count twice. A higher Quark Score earns more bonus dice!"
-pose = 7
-target = "hand"
-when = "check"
-
-[sub_resource type="Resource" id="hint8"]
-script = ExtResource("2")
-id = "challenge"
-say = "This check's challenge: {✅} Requests multiply your Quarks, {⛔} Restrictions cut them."
-pose = 1
-target = "tip:order"
-when = "check"
-
-[sub_resource type="Resource" id="hint9"]
-script = ExtResource("2")
-id = "rules"
-say = "Tap here for the Display Mat rules. A score under the first breakpoint earns no bonus dice!"
-pose = 10
-target = "btn:rules"
-when = "panel:drawer"
-
 [node name="Hints" type="Node"]
 script = ExtResource("1")
-hints = Array[ExtResource("2")]([SubResource("hint0"), SubResource("hint1"), SubResource("hint2"), SubResource("hint3"), SubResource("hint4"), SubResource("hint5"), SubResource("hint6"), SubResource("hint7"), SubResource("hint8"), SubResource("hint9")])
+hints = Array[ExtResource("2")]([SubResource("hint0"), SubResource("hint1"), SubResource("hint4"), SubResource("hint5"), SubResource("hint6")])

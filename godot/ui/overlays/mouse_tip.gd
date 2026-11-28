@@ -172,7 +172,7 @@ func coach(pose: int, text: String, target: Control, next: bool, dim: bool, coun
 
 ## Standing on the hub, the side clear of target (the far side first); then
 ## the bubble lifted above the target (or put below it) if they'd overlap.
-func _place(pose: int, text: String, target: Control, step: String) -> void:
+func _place(pose: Variant, text: String, target: Control, step: String) -> void:
 	var r := target.get_global_rect().grow(pad + 4) if target != null and is_instance_valid(target) else Rect2()
 	r.position -= global_position
 	var sides := ["bottom-right", "bottom-left"] if r.get_center().x < size.x / 2 else ["bottom-left", "bottom-right"]
@@ -198,7 +198,7 @@ func _place(pose: int, text: String, target: Control, step: String) -> void:
 
 ## A 💡 hint (Hints), tapped: on the hub like the tutorial, spotlit;
 ## "✕ Hide" reads hide_text and hides just this hint for good.
-func hint(id: String, pose: int, text: String, target: Control, hide_text: String) -> void:
+func hint(id: String, pose: Variant, text: String, target: Control, hide_text: String) -> void:
 	_hint_id = id
 	$Bubble/Hide/Row/Label.text = hide_text
 	_place(pose, text, target, "")

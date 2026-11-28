@@ -1185,6 +1185,8 @@ func _layouts(app: App) -> void:
 ## ✕ closes it, "✕ Hide" turns the tips off; the first "?" ever held brings
 ## the Unknown Element tip; How to Play runs its two windows and 7 steps.
 func _tips(app: App) -> void:
+	check(app.hints.hints.all(func(h): return h.target != "convert" and h.when != "check" and not h.when.contains("drawer") and h.pose is String),
+		"no 💡 on Convert, the Inventory or a challenge; the new Mouse poses (the user, 2026-11-28)")
 	# A clean screen: earlier sections jump between states mid-animation and
 	# can leave a pop-up or an input block behind (a player can't).
 	for c in app.get_children().slice(app.hub.get_index() + 1):
