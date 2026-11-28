@@ -205,9 +205,10 @@ Recorded so they aren't re-argued. Add new ones with the date.
     save is untouched.
   - **Text in a parchment card, no Professor Mouse**; it moves to keep
     clear of what it shows.
-  - **The first New Game asks** Guided Tutorial / Quick Rules / just play;
-    once answered it never asks again (How to Play is always there).
-    Quick Rules picked there goes **straight into the new game** at its
+  - ~~The first New Game asks Guided Tutorial / Quick Rules / just play~~
+    (replaced 2026-11-27, the user: **the first New Game plays Quick Rules**,
+    no choice; the Guided Tutorial is out of the menus for now).
+    Quick Rules there goes **straight into the new game** at its
     end; replays (How to Play) end **back at the Play menu**.
   - **✕ to leave, asking first.**
   - The 16-element rows: **by suit, then atomic number** (H C N O · P S K
@@ -419,6 +420,7 @@ One line per batch (details: CHANGELOG.md and git).
 - 2026-11-27: F11 on the web (head_include stops it reaching Godot's canvas); map reveal waits for the map in view (opening doesn't mark neighbours seen); Market Unknown squares open UnknownTip; Display Mat Score and Quark Combos texts.
 - 2026-11-27: empty first check: App.auto_lock_in (the mat's self-ending check goes through it) shows Mouse's two lines (1/2, 2/2) behind a blocker, then hand_lock_in; not in the tutorial, the final check, a Challenge Test, or once matChecked.
 - 2026-11-27: the details' track tip and Mouse's "tap its 🔍" draw the Noto image (no emoji in text); StartLock shows a round 🔍; the opening's Track glow is rings outside the button (draw_arc for round ones), nothing inside.
+- 2026-11-27 (the user): Quick Rules is the only tutorial in the menus: the first New Game plays it (no TutorialPick: deleted), How to Play (Play menu, Settings) = App.replay_tutorial() = Quick Rules. The Guided Tutorial stays in the code (App.new_game(true); its test section starts it there) until the user wants it back.
 - 2026-11-27: Quick Rules part 3 (two stations): acts visit/travel (ctx without go_station's first-visit pin), roll (a set roll in RollPopup), gather, bench, craft, pin, todo, detail, close, map, reveal (MapScreen._reveal on qr.stations), floats, pins, track, select, convert, cvopen/cvload/cvgo, clock; waits arrive/roll/gathered/crafted/reveal; QuickStep.tap (a real tap on a spot = Next); extra "pool"; ctx.qr flags paths/track/floats/convert/clock gate the map's paths and clock, the station's Settings and Convert, the 🔍 tracker and Track buttons (QuickRules.no_track). Its own pins (prefs restored; prefs not written in ctx.demo). Screens quick_pool/finds/convert/clock (shot budget per quick state 3000 frames); ui_play --only takes a comma list.
 - 2026-11-27: Quick Rules part 2 (the challenge): QuickRules acts inventory/items/deal/play/discard/view/draw and lock_in() (App.hand_lock_in defers to it); QuickStep.wait ("mat", "reward", game time); the challenge's cards exported on quick_rules.tscn; Mat.stage honours state.demoStage (an 8-slot mat at turn 3's breakpoints); no Market moment, collection reveal or "New collection!" in ctx.demo. Juice.fly keeps a weakref to its slot. shot_batch waits on a state's `busy`; screens quick_hand, quick_reward.
 - 2026-11-27: Quick Rules part 1: QuickRules (ui/tutorial: steps as QuickStep resources; Game.ctx.demo never saved, ctx.qr filters the map and hub; a multi-hole spotlight shader), QuickCard, TutorialPick (How to Play; the first New Game asks once), Play menu Back; emojify takes {ui:...} and tinted {suit:...}. Test section "quick"; screens tutorial_pick, quick_*.

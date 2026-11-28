@@ -12,7 +12,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
-	"welcome", "classic_mode", "tutorial_pick", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
+	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
@@ -549,8 +549,6 @@ func _ready() -> void:
 			app.show_welcome()
 			if state == "classic_mode":
 				ClassicMode.show_on(app)
-		"tutorial_pick":  # the first New Game's question
-			TutorialPick.show_on(app, true)
 		"quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_pool", "quick_finds", "quick_convert", "quick_clock":  # Quick Rules at a step
 			busy = true
 			var q := QuickRules.begin(app, Callable())

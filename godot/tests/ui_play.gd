@@ -1351,9 +1351,6 @@ func _quick(app: App) -> void:
 	check(top.call(ClassicMode).is_empty() and top.call(WelcomeScreen).size() == 1, "the Play menu's Back: the title screen again")
 	menu = ClassicMode.show_on(app, top.call(WelcomeScreen)[0])
 	menu.get_node("Window/Content/HowToPlay").pressed.emit()
-	var pick: Array = top.call(TutorialPick)
-	check(pick.size() == 1 and pick[0].has_node("Window/Close") and not pick[0].has_node("Window/Content/Play"), "How to Play: Guided or Quick Rules, with a ✕")
-	pick[0].pressed.emit("Quick")
 	check(QuickRules.running() and Game.ctx.get("demo") and Game.state != real and not menu.visible and not app.hub.visible, "Quick Rules: its own run, the menu and the hub out of sight")
 	var q := QuickRules.current
 	var steps := 0
@@ -1412,14 +1409,11 @@ func _quick(app: App) -> void:
 	menu.queue_free()
 	for w in top.call(WelcomeScreen):
 		w.queue_free()
-	# The first New Game asks which; Quick Rules then leads into that game.
+	# The first New Game plays Quick Rules (no choice), then goes into that game.
 	Progress.prefs.erase("tutorialSeen")
 	app.new_game()
-	check(await _until(func(): return not top.call(TutorialPick).is_empty()), "the first New Game asks which tutorial")
-	pick = top.call(TutorialPick)
-	check(not pick[0].has_node("Window/Close") and pick[0].has_node("Window/Content/Play"), "with Just play, and no ✕")
-	pick[0].pressed.emit("Quick")
-	check(QuickRules.running() and Progress.prefs.tutorialSeen, "Quick Rules, and it won't ask again")
+	check(await _until(func(): return QuickRules.running()), "the first New Game plays Quick Rules")
+	check(Progress.prefs.tutorialSeen and not app.tutorial.running(), "once only, and not the Guided Tutorial")
 	QuickRules.current.finish()
 	check(await _until(func(): return not top.call(CapstoneChoice).is_empty()), "at its end: the new game's capstone choice")
 	for c in top.call(CapstoneChoice):
@@ -1611,10 +1605,9 @@ func _tutorial(app: App) -> void:
 	Progress.prefs.erase("tutorialSeen")
 	Progress.prefs.hints = true  # the 💡 hints stay quiet while it runs
 	Progress.prefs.hiddenTips = []
-	app.new_game()
+	app.new_game(true)  # out of the menus for now (the user, 2026-11-27)
 	var tut := app.tutorial
-	await _pick_guided(app)
-	check(await _until(func(): return tut.running()), "the first New Game's Guided Tutorial starts")
+	check(await _until(func(): return tut.running()), "the Guided Tutorial starts")
 	check(not app.get_children().any(func(c): return c is HowToPlay), "no how-to-play slides in the tutorial")
 	var guard := 0
 	var swallowed := false
@@ -1671,10 +1664,8 @@ func _tutorial(app: App) -> void:
 	check(not tut.running() and Game.state.visits == 4 and Game.state.items.has("Soil") and Game.state.items.has("Limestone"), "the tutorial runs to the first Lock In (visit %d)" % Game.state.visits)
 	check(int(Progress.prefs.tutorialStep) == -1 and Progress.prefs.tutorialSeen and not app.mouse.showing, "then it's over for good")
 	# Skip: asks, then ends it.
-	Progress.prefs.erase("tutorialSeen")
-	app.new_game()
-	await _pick_guided(app)
-	check(await _until(func(): return tut.running()), "a fresh first New Game")
+	app.new_game(true)
+	check(await _until(func(): return tut.running()), "a fresh Guided Tutorial")
 	app.mouse.skip.emit()
 	var ask := app.get_children().filter(func(c): return c is ConfirmDialog)
 	check(ask.size() == 1 and tut.running(), "Skip asks first")
@@ -1682,15 +1673,12 @@ func _tutorial(app: App) -> void:
 		ask[0].on_yes.call()
 		ask[0].queue_free()
 	check(not tut.running() and Progress.prefs.tutorialStep == -1, "Yes ends it")
-	# Settings' How to Play: asks, then a new game with the tutorial.
+	# Settings' How to Play: Quick Rules, on its own practice game.
+	var run := Game.state
 	app.replay_tutorial()
-	ask = app.get_children().filter(func(c): return c is ConfirmDialog and not c.is_queued_for_deletion())
-	check(ask.size() == 1, "How to Play asks first (it starts a new game)")
-	if ask.size() == 1:
-		ask[0].on_yes.call()
-		ask[0].queue_free()
-	check(await _until(func(): return tut.running()), "then the tutorial runs again")
-	tut.finish()
+	check(QuickRules.running() and not tut.running(), "How to Play replays Quick Rules")
+	QuickRules.current.finish()
+	check(Game.state == run, "and leaves the game as it was")
 	for k in 30:  # the logo's moment, then the capstone choice: cleared for the next sections
 		await get_tree().process_frame
 	for c in app.get_children().slice(app.hub.get_index() + 1):
@@ -1800,14 +1788,6 @@ func _dismiss(app: App) -> void:
 
 
 ## Waits (up to ~600 frames) until cond() is true.
-## The first New Game's question: the Guided Tutorial.
-func _pick_guided(app: App) -> void:
-	var picks := func(): return app.get_children().filter(func(c): return c is TutorialPick and not c.is_queued_for_deletion())
-	check(await _until(func(): return not picks.call().is_empty()), "the first New Game asks which tutorial")
-	for p in picks.call():
-		p.pressed.emit("Guided")
-
-
 func _until(cond: Callable) -> bool:
 	for i in 600:
 		if cond.call():

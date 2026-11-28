@@ -3,8 +3,8 @@
 ## or a new run's opening when there's none) and New Game (asks first when
 ## there's a save). Either one also closes the title screen under it.
 ## The layout is ui/overlays/classic_mode.tscn.
-## Its History row opens History (HistoryWindow); How to Play, the
-## tutorials (TutorialPick); Back, the title screen again.
+## Its History row opens History (HistoryWindow); How to Play, Quick
+## Rules; Back, the title screen again.
 class_name ClassicMode
 extends ParchDialog
 
@@ -40,7 +40,7 @@ func _on_pressed(button: String) -> void:
 		"History":
 			HistoryWindow.show_on(app)
 		"HowToPlay":
-			TutorialPick.show_on(app)
+			app.replay_tutorial()
 		"Back":  # to the title screen (the user, 2026-11-27)
 			close()
 		"NewGame":

@@ -132,7 +132,7 @@ button_text = "View"
 [node name="HowToPlay" parent="Window/Content" instance=ExtResource("row")]
 layout_mode = 2
 text = "How to Play"
-sub = "Guided Tutorial or Quick Rules"
+sub = "Quick Rules"
 emoji = "📖"
 button_text = "Open"
 

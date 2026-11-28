@@ -37,7 +37,7 @@ func _sync_dev() -> void:
 func _on_pressed(button: String) -> void:
 	var app := App.current
 	match button:
-		"HowToPlay":  # the first-play tutorial again (a new game)
+		"HowToPlay":  # Quick Rules again
 			close()
 			app.replay_tutorial()
 		"Rules":

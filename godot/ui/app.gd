@@ -378,11 +378,13 @@ func new_game(guided := false) -> void:
 			var c := CapstoneChoice.make()
 			c.size = size
 			add_child(c)
-		if guided:  # How to Play's Guided Tutorial
+		if guided:  # the Guided Tutorial (Professor Mouse): out of the menus for now (the user, 2026-11-27); tests start it here
 			choose.call()
 			tutorial.start()
-		elif not Progress.prefs.get("tutorialSeen"):  # the first New Game asks: Guided, Quick Rules or just play (the user, 2026-11-27)
-			TutorialPick.show_on(self, true, choose)
+		elif not Progress.prefs.get("tutorialSeen"):  # a brand new player: Quick Rules, then this game (the user, 2026-11-27: no choice)
+			Progress.prefs.tutorialSeen = true
+			Progress.save_all()
+			QuickRules.begin(self, choose)
 		else:  # the game in brief, every game until hidden (step 25)
 			HowToPlay.play(self, choose))
 
@@ -487,10 +489,10 @@ func show_elements() -> void:
 
 ## How to Play (Settings): the first-play tutorial again, in a new game
 ## (this run goes into History).
+## How to Play (the Play menu, Settings): Quick Rules again, on its own
+## practice game; back where you were at its end.
 func replay_tutorial() -> void:
-	ConfirmDialog.ask(self, "Play the tutorial again?
-It starts a new game.", func():
-		new_game(true))
+	QuickRules.begin(self, Callable())
 
 
 ## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
