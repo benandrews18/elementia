@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-28
+- Crafting Bench: Craft is a tall, rounded 3D green button (grey when you can't craft yet) at the bench's right end, inside the wood; the title is bigger, in a pill on the bench's top edge; the item picture is a little smaller; the pin sits on the bench's top-left corner.
 - Crafting Bench: a bigger name, suit costs, recipe and Craft button, using the room on the wood.
 - The Play button is the plain hand of cards again.
 - The Inventory's "?" asks before it starts the Inventory & Display tutorial.

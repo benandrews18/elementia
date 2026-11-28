@@ -191,6 +191,7 @@ func _bench(page: Control, w: float, y: float) -> float:
 	var pin := func(n):
 		App.pin(n)  # saves, then redraws
 	bench.add_child(ShopRow.make(e, w - 36, craft, pin))
+	y += 10  # room for the title pill on its top edge
 	bench.position = Vector2(0, y)
 	bench.size = Vector2(w, 30 + ShopRow.H + 18)
 	page = $Scroll/Page/Bench

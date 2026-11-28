@@ -44,7 +44,7 @@ func _ready() -> void:
 	if owned:
 		$IconBox.modulate.a = 0.62
 	$IconBox/Icon.texture = Data.icon(e.emoji)  # straight on the bench's wood, big (the user, 2026-11-28: no pale face)
-	$IconBox/Icon.material = Tok.outline(86)
+	$IconBox/Icon.material = Tok.outline(72)
 	_opens_card($IconBox, e.name)  # the picture and the component icons open the full card (the user, 2026-11-26)
 	var name_l: Label = $Name
 	name_l.text = e.name
@@ -73,21 +73,30 @@ func _ready() -> void:
 		b.add_child(g)
 		$Badges.add_child(b)
 		x += 32
-	_recipe(Vector2(94, 53))
+	_recipe(Vector2(88, 53))
 	# Craft (centred down the right edge), or the owned tick.
 	var btn: Label = $Craft
 	btn.set_meta("cmp", "craft:" + e.name)
 	btn.visible = not owned
+	# The pill buttons' 3D green with its gold rim (the user, 2026-11-28: not flat); greyed when it can't craft
+	btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	var pill: NineSlice = Tok.make("res://ui/pieces/pill_button.tscn")
+	pill.get_node("Text").free()
+	pill.mouse_filter = MOUSE_FILTER_IGNORE
+	pill.show_behind_parent = true
+	pill.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	btn.add_child(pill)
+	btn.add_theme_color_override("font_outline_color", Color("#123d22"))
+	btn.add_theme_constant_override("outline_size", 5)
 	if can:
-		btn.add_theme_stylebox_override("normal", can_style)
 		btn.mouse_filter = MOUSE_FILTER_STOP
 		Tok.grow_hit(btn, 10)  # easier to hit (the user, 2026-11-27)
 		btn.gui_input.connect(func(ev): if Tap.tap(ev): on_craft.call(e.name, _tax_anchor(btn)))
 	else:
-		btn.add_theme_color_override("font_color", locked_color)
-		btn.add_theme_color_override("font_shadow_color", Color.TRANSPARENT)
-		btn.add_theme_constant_override("shadow_offset_y", 0)
-		btn.add_theme_stylebox_override("normal", locked_style)
+		pill.material = Tok.grey()
+		pill.modulate = Color(0.75, 0.75, 0.75)
+		btn.add_theme_color_override("font_color", Color("#e6e6e6"))
+		btn.add_theme_color_override("font_outline_color", Color("#3a3a3a"))
 	if owned and not plain:  # .item.owned::after: a 28px tick, top right (station shops only: the user, 2026-11-27)
 		var t := Tok.tick(Color.WHITE, 28, Tok.OK, Tok.CARD)
 		t.position = Vector2(size.x - 20, -8)

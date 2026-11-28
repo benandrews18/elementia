@@ -1194,6 +1194,7 @@ static func _find_cmp(n: Node, tag: String) -> Control:
 ## The Combo Lab's Crafting Bench: the last card tapped, its shop row (no
 ## have/missing marks: it's owned). Returns its bottom.
 func _lab_bench(y: float) -> float:
+	y += 14  # room for the title pill on its top edge, clear of the fold button
 	var bench := BenchPanel.new()
 	bench.add_child(ShopRow.make(Catalog.entry(selected), size.x - 16 - 36, func(_n, _at): pass, func(n): App.pin(n), true))
 	bench.position = Vector2(8, y)
