@@ -42,8 +42,9 @@ func _ready() -> void:
 	var can := not owned and Catalog.can_craft(s, e) and Game.suit_cost_payable(e.name)
 	set_meta("cmp", "row:" + e.name)
 	if owned:
-		$Face.modulate.a = 0.62
-	$IconBox/Icon.texture = Data.icon(e.emoji)
+		$IconBox.modulate.a = 0.62
+	$IconBox/Icon.texture = Data.icon(e.emoji)  # straight on the bench's wood, big (the user, 2026-11-28: no pale face)
+	$IconBox/Icon.material = Tok.outline(86)
 	_opens_card($IconBox, e.name)  # the picture and the component icons open the full card (the user, 2026-11-26)
 	var name_l: Label = $Name
 	name_l.text = e.name
@@ -56,7 +57,7 @@ func _ready() -> void:
 		seen[su] = k + 1
 		var lit: bool = owned or Game.suit_surplus(su, reserved) > k
 		var b := Panel.new()
-		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su) if lit else Color("#8a94a6"), 11))
+		b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		b.position = Vector2(x, 8.1)
 		b.size = Vector2(22, 22)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
@@ -66,9 +67,9 @@ func _ready() -> void:
 			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:  # Convert, a random element of that suit to make (the user, 2026-11-27)
 				App.current.open_convert(Data.t("SUIT_CORE_ELEMENTS")[su].pick_random(), e.name))
 			Tok.grow_hit(b, 5)
-		var g := Tok.icon("suit:" + su, 13)
-		g.position = Vector2(4.5, 4.5)
-		g.material = Tok.white()
+		var g := Tok.icon("suitdisc:" + su, 22)  # the card's suit disc (the user, 2026-11-28); short of it: grey
+		if not lit:
+			g.material = Tok.grey()
 		b.add_child(g)
 		$Badges.add_child(b)
 		x += 26
@@ -147,7 +148,7 @@ func _recipe(at: Vector2) -> void:
 		convertible += int(v) / int(Data.t("CONVERT_RATE"))
 	for r in els + items:
 		if not first:
-			var plus := Tok.label("+", 14, Color("#4d6076"), 700)
+			var plus := Tok.label("+", 14, Color("#ffe08a"), 900)  # on the wood
 			plus.position = Vector2(x + 5, at.y + 2)
 			$Recipe.add_child(plus)
 			x += 5 + 9.9 + 5
@@ -174,6 +175,11 @@ func _recipe(at: Vector2) -> void:
 			chip.position = Vector2(x, at.y - 3)
 			chip.size = Vector2(w, 30)
 			$Recipe.add_child(chip)
+			var su: String = Data.t("ELEMENT_SUIT").get(r.name, "")
+			if su != "":  # its suit disc on the top-left corner, as on the element cards (the user, 2026-11-28)
+				var d := Tok.icon("suitdisc:" + su, 15)
+				d.position = Vector2(x - 5, at.y - 9)
+				$Recipe.add_child(d)
 			if not have:  # .tok.el.need: a tap opens Convert with it on the To side
 				var sym: String = r.name
 				chip.set_meta("cmp", "need:" + sym)

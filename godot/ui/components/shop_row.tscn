@@ -100,6 +100,7 @@ pin_off = SubResource("pin_off")
 needed_style = SubResource("needed")
 
 [node name="Face" type="Panel" parent="."]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -108,21 +109,20 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("face")
 
 [node name="IconBox" type="Panel" parent="."]
+self_modulate = Color(1, 1, 1, 0)
 layout_mode = 0
-offset_left = 7.0
-offset_top = 7.0
-offset_right = 79.0
-offset_bottom = 79.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 86.0
+offset_bottom = 86.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("icon_box")
 
 [node name="Icon" type="TextureRect" parent="IconBox"]
-custom_minimum_size = Vector2(52, 52)
+custom_minimum_size = Vector2(86, 86)
 layout_mode = 0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 62.0
-offset_bottom = 62.0
+offset_right = 86.0
+offset_bottom = 86.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
@@ -134,7 +134,9 @@ offset_top = 7.0
 offset_right = 94.0
 offset_bottom = 7.0
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.109804, 0.168627, 0.239216, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.18, 0.1, 0.04, 1)
+theme_override_constants/outline_size = 6
 theme_override_fonts/font = ExtResource("f8")
 theme_override_font_sizes/font_size = 18
 text = "Glass"
