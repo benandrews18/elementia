@@ -234,7 +234,7 @@ wait = "mat"
 
 [sub_resource type="Resource" id="q29"]
 script = ExtResource("2")
-say = "Sometimes you might know JUST the right card to play. You can search through your deck for the right card by spending an element that matches an icon on the card."
+say = "Search your [b]Inventory[/b] {ui:inventory} [b]Deck[/b] {ui:deck} by spending an element of a matching suit!"
 place = "bottom"
 act = PackedStringArray("view:elements")
 extra = "suits"

@@ -124,5 +124,6 @@
  "⚛️": "res://assets/icons/v2/quark.png",
  "🎲": "res://assets/icons/v2/dice.png",
  "📌": "res://assets/icons/v2/pin.png",
- "🔍": "res://assets/icons/v2/track.png"
+ "🔍": "res://assets/icons/v2/track.png",
+ "ui:deck": "res://assets/icons/v2/card_deck.png"
 }
