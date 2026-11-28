@@ -157,17 +157,10 @@ static func _center(l: Label, w: float, h: float) -> Label:
 ## emptyElSquareHTML(): an element square with a "?" (white face, 3px black
 ## border) and a solid black suit badge in its corner.
 static func unknown_square(px: float) -> Control:
-	var sq := Panel.new()
-	sq.add_theme_stylebox_override("panel", Tok.box(Color.WHITE, 7, 3, Color.BLACK))
+	var sq := Panel.new()  # the user's "?" square (2026-11-27), on a bare panel (callers take taps on it)
+	sq.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	sq.size = Vector2(px, px)
-	var q := _center(Tok.label("?", int(round(px * 0.55)), Color("#181614"), 800), px, px)
-	q.mouse_filter = MOUSE_FILTER_IGNORE
-	sq.add_child(q)
-	var b := Panel.new()
-	var bp := roundf(px * 0.42)
-	b.add_theme_stylebox_override("panel", Tok.box(Color.BLACK, bp / 2))
-	b.size = Vector2(bp, bp)
-	b.position = Vector2(px - bp - 1, 1)
-	b.mouse_filter = MOUSE_FILTER_IGNORE
-	sq.add_child(b)
+	var ic := Tok.icon("unknown", px)
+	ic.texture = load("res://assets/icons/v2/unknown.png")
+	sq.add_child(ic)
 	return sq

@@ -40,8 +40,7 @@ func _ready() -> void:
 		var s := Catalog.station(st)
 		get_node(p2 + "Stations").add_child(_circle(Data.t("DATA").suits[s.suit].color, s.emoji, 28))  # 8 in one row
 	for su in Data.t("ELEMENT_SUIT_LABEL").keys():
-		var c := _circle(Tok.suit_color(su).to_html(), "suit:" + su)  # its dark icon on its colour, as on the cards
-		get_node(p2 + "Suits").add_child(c)
+		get_node(p2 + "Suits").add_child(Tok.icon("suitdisc:" + su, 34))  # as on the cards
 	for n in combo_items:
 		get_node(p2 + "Items").add_child(_circle("#4a4f5c", Data.t("ITEM_EMOJI").get(n, "")))
 	$Window/Content/Page2.add_child(_recipe_tree(double_item))

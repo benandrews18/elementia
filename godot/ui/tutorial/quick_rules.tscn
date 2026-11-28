@@ -466,7 +466,7 @@ tap = PackedStringArray("convert", "need:Ca")
 
 [sub_resource type="Resource" id="q58"]
 script = ExtResource("2")
-mouse = "reacting_whisper_secret"
+mouse = "props_hold_flask"
 say = "[b]3[/b] of a kind to create a new element! {__CONVERT__}"
 place = "top"
 act = PackedStringArray("cvopen:Ca:Limestone")

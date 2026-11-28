@@ -78,6 +78,8 @@ func _ready() -> void:
 	var icon_px := (17.0 if opts.get("wrap") else 26.0) if grid_mini else 32.0 if mini else 66.0 if opts.get("wide") else 44.0
 	if shop:
 		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)
+	if not shop and not opts.get("wide") and size.x > 0:  # the Inventory's and the mat's cards: the picture fills the card, short of its badges (the user, 2026-11-27)
+		icon_px = maxf(icon_px, minf(size.x * 0.66, size.y * (0.62 if opts.get("no_name", false) else 0.44 if not mini else 0.5)))
 	icon_px = opts.get("icon_px", icon_px)  # a caller's own size (the craft's poke-up cards)
 	var ic := art(card.emoji, icon_px, BIG_ART.get(item, 1.0))
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
@@ -121,11 +123,10 @@ func _ready() -> void:
 		var su: String = card.pips[i]
 		var pip := Panel.new()
 		var lit_su: bool = opts.get("lit_suits", []).has(su)
-		pip.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), psz / 2, 2.5 if lit_su else 1.5, Tok.GOLD if lit_su else Color.BLACK))
+		pip.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, psz / 2 + 2, 2.5, Tok.GOLD) if lit_su else StyleBoxEmpty.new())
 		pip.size = Vector2(psz, psz)
 		pip.mouse_filter = MOUSE_FILTER_IGNORE
-		var g := Tok.icon("suit:" + su, psz * 0.6 if shop else 11.0 if mini else 16.0)
-		g.position = (pip.size - g.size) / 2
+		var g := Tok.icon("suitdisc:" + su, psz)  # the user's suit discs (2026-11-27); lit: a gold ring round it
 		pip.add_child(g)
 		if opts.get("fade_suits") and not Game.suit_held(su):  # a shop card: a suit you hold none of (the user, 2026-11-24)
 			pip.modulate.a = 0.35

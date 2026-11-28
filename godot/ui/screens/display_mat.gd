@@ -797,7 +797,9 @@ static func _card_icon(n: String) -> TextureRect:
 ## while its page shows.
 func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false) -> void:
 	var b := TextureRect.new()
-	b.texture = load("res://assets/ui/btn_round.webp")
+	b.texture = load("res://assets/icons/v2/card_%s.png" % id)  # the user's tiles (2026-11-27): the picture is the button
+	if ic is TextureRect:
+		ic.texture = null  # what rides on it stays (the deck's count, Draw's "+")
 	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	b.position = at
@@ -828,7 +830,7 @@ func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vec
 ## Draw while its page shows: a pale gold ring round the button.
 static func _lit_ring() -> Panel:
 	var r := Panel.new()
-	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, BTN / 2 + 3, 3, Color("#ffe08a")))
+	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 14, 3, Color("#ffe08a")))  # round the square tile
 	r.position = Vector2(-3, -3)
 	r.size = Vector2(BTN + 6, BTN + 6)
 	r.mouse_filter = MOUSE_FILTER_IGNORE

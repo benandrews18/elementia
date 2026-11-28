@@ -618,15 +618,12 @@ func _corner(what: String) -> Control:
 		return null
 	if what == "clock":
 		return OrderInfo._clock(int(Data.t("RUN_COMPLETE_VISIT")))
-	if what == "discard":  # the mat's Discard button: its gold-rimmed circle and card picture
+	if what == "discard":  # the mat's Discard button
 		var r := TextureRect.new()
-		r.texture = load("res://assets/ui/btn_round.webp")
+		r.texture = load("res://assets/icons/v2/card_discard.png")
 		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		r.size = Vector2(58, 58)
-		var ci := DisplayMatScreen._card_icon("cards_scatter")
-		ci.position = (r.size - ci.size) / 2
-		r.add_child(ci)
 		return r
 	var b := Panel.new()  # the clock's look: a cream disc in a gold ring
 	b.add_theme_stylebox_override("panel", Tok.box(Color("#fff7e0"), 29, 3, Color("#a8730f"), 4, 2, Color(0, 0, 0, 0.3)))
@@ -666,37 +663,23 @@ func _extra(name: String) -> Control:
 				nm.size = Vector2(cell, 12)
 				box.add_child(chip)
 			return box
-		"cardtools":  # the challenge's round buttons as the mat shows them: Discard, Goal, Pass, Deck, Draw
+		"cardtools":  # the challenge's buttons as the mat shows them: Discard, Goal, Pass, Deck, Draw
 			var w := _card.content_width()
 			var cell := w / 5
 			var d := 44.0
 			var box := Control.new()
 			box.mouse_filter = MOUSE_FILTER_IGNORE
 			box.custom_minimum_size = Vector2(w, d + 18)
-			var icons := [DisplayMatScreen._card_icon("cards_scatter"), Tok.icon("🎯", 23), Tok.icon("🏁", 23),
-				DisplayMatScreen._card_icon("cards_deck"), DisplayMatScreen._card_icon("card")]
+			var ids := ["discard", "goal", "pass", "deck", "draw"]
 			var names := ["Discard", "Goal", "Pass", "Deck", "Draw"]
 			for k in 5:
 				var b := TextureRect.new()
-				b.texture = load("res://assets/ui/btn_round.webp")
+				b.texture = load("res://assets/icons/v2/card_%s.png" % ids[k])  # the mat's own tiles
 				b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 				b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				b.size = Vector2(d, d)
 				b.position = Vector2(k * cell + (cell - d) / 2, 0)
 				b.mouse_filter = MOUSE_FILTER_IGNORE
-				var ic: Control = icons[k]
-				if ic.size.x > 30:  # the card pictures: as on the mat, a little smaller here
-					ic.size = Vector2(24, 24)
-				ic.position = (b.size - ic.size) / 2
-				b.add_child(ic)
-				if k == 4:  # Draw's gold "+"
-					var plus := Tok.label("+", 20, Tok.GOLD, 900)
-					plus.add_theme_color_override("font_outline_color", Color("#3b2412"))
-					plus.add_theme_constant_override("outline_size", 5)
-					plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-					plus.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-					plus.size = ic.size
-					ic.add_child(plus)
 				box.add_child(b)
 				var nm := Tok.label(names[k], 11, Color("#5e4026"), 800)
 				nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -704,7 +687,7 @@ func _extra(name: String) -> Control:
 				nm.size = Vector2(cell, 14)
 				box.add_child(nm)
 			return box
-		"suits":  # the four suits in the suit strip's gold rings, named
+		"suits":  # the four suits' discs, named
 			var w := _card.content_width()
 			var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
 			var cell := w / suits.size()
@@ -714,16 +697,9 @@ func _extra(name: String) -> Control:
 			box.custom_minimum_size = Vector2(w, d + 18)
 			for k in suits.size():
 				var su: String = suits[k]
-				var ring := Panel.new()
-				ring.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), d / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
-				ring.size = Vector2(d, d)
-				ring.position = Vector2(k * cell + (cell - d) / 2, 0)
-				ring.mouse_filter = MOUSE_FILTER_IGNORE
-				var ic := Tok.icon("suit:" + su, 21)
-				ic.material = Tok.tinted(Tok.suit_color(su))
-				ic.position = (ring.size - Vector2(21, 21)) / 2
-				ring.add_child(ic)
-				box.add_child(ring)
+				var disc := Tok.icon("suitdisc:" + su, d)  # as on the cards
+				disc.position = Vector2(k * cell + (cell - d) / 2, 0)
+				box.add_child(disc)
 				var nm := Tok.label(Data.t("ELEMENT_SUIT_LABEL")[su], 11, Tok.suit_color(su).darkened(0.25), 800)
 				nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				nm.position = Vector2(k * cell, d + 3)
