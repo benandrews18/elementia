@@ -112,3 +112,21 @@ title screen and in History.
 - The simulator (`tests/sim.gd`) needs a simple picking policy, so the
   breakpoints can be tuned again with catalysts in play.
 - Old saves load with no catalysts and the White Stake.
+
+## Game modes: decisions (godot-grill, 2026-11-28)
+
+| Decision | Choice | Why | Revisit when |
+|---|---|---|---|
+| When modes appear | New Game opens a pick of mode cards, only after the first normal game is finished | New players learn Classic first | a mode is meant for beginners |
+| First mode built | Hard Mode, then Missions | Smallest rule change, easiest to tune with the simulator | |
+| Hard Mode uses | Every item breaks after 3 uses as a craft part | 200 simulated runs: 3 uses ~13 re-crafts a run (Water ~3, Furnace/Tree/Tools ~2, Glass/Wire/Sugar 1; mid-tier items like Clay and Steel sit right on the line); 2 uses ~26, close to single-use tedium | play tests say it's too soft or too harsh |
+| Broken item | Gone everywhere (Inventory, challenge deck, Display Mat) until crafted again; a re-craft starts at 3/3 | Simple and easy to feel | |
+| Capstones and end-game cards | No exception: none is a part in 3 or more recipes, so they never break | The user | a recipe uses one 3+ times |
+| Challenge targets | Same as Classic | Tune after simulating Hard runs | the sim shows Hard runs failing checks much more often |
+| Showing uses (x/3) | Craft pop-up cards; the Inventory list; the full card view; the Crafting Bench (below each part's icon, the most important). Never in the hand or on the Display Mat | The user | |
+| Last use | The card rises to the middle of the screen and breaks into pieces | The user | |
+| Progress | Hard runs count for trophies, Collections and History; History shows a Hard badge | The user | |
+
+### Open / deferred
+- Missions: their list, how they're picked, and how "seen end-game cards" is stored: a later grill.
+- Other modes to weigh: Stakes, Catalysts, Station events, a weekly seeded Mission, Zen (no turn limit).
