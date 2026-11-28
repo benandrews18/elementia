@@ -234,6 +234,7 @@ wait = "mat"
 
 [sub_resource type="Resource" id="q29"]
 script = ExtResource("2")
+mouse = "props_magnifying_glass"
 say = "Search your [b]Inventory[/b] {ui:inventory} [b]Deck[/b] {ui:deck} by spending an element of a matching suit!"
 place = "bottom"
 act = PackedStringArray("view:elements")
@@ -359,14 +360,14 @@ mouse = "reacting_astonished"
 say = "Woah! [b]4[/b] new locations to visit! {🗺️}"
 act = PackedStringArray("map", "reveal")
 wait = "reveal"
-place = "top"
+place = "above:map:found"
 
 [sub_resource type="Resource" id="q45"]
 script = ExtResource("2")
 mouse = "props_unfold_map"
 say = "Before we venture forth, let's decide where to go next.
 {stations}"
-place = "top"
+place = "above:map:found"
 
 [sub_resource type="Resource" id="q46"]
 script = ExtResource("2")
@@ -374,12 +375,12 @@ mouse = "props_magnifying_glass"
 say = "This is the [b]Item Tracker[/b] {🔍}!"
 act = PackedStringArray("floats")
 spot = PackedStringArray("pins")
-place = "top"
+place = "above:map:found"
 
 [sub_resource type="Resource" id="q47"]
 script = ExtResource("2")
 say = "Let's track that item from our To-Do List {ui:todo}"
-place = "top"
+place = "above:map:found"
 act = PackedStringArray("pins")
 spot = PackedStringArray("pins:chip:Tree")
 tap = PackedStringArray("pins:chip:Tree")
@@ -389,7 +390,7 @@ script = ExtResource("2")
 say = "Now we can see where to find its parts {🔍}!"
 act = PackedStringArray("track:Tree")
 spot = PackedStringArray("map:finds")
-place = "top"
+place = "above:map:found"
 
 [sub_resource type="Resource" id="q49"]
 script = ExtResource("2")

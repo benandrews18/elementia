@@ -151,9 +151,10 @@ func _go(n: int) -> void:
 	var anchor := Rect2()  # "above:<spot>" / "below:<spot>": where that spot is
 	if st.place.begins_with("above:") or st.place.begins_with("below:"):
 		for c in _spots(st.place.substr(6)):
-			if c is Control:
+			if c is Control and c.is_visible_in_tree():
 				var g: Rect2 = c.get_global_rect()
-				anchor = Rect2(g.position - global_position, g.size)
+				g = Rect2(g.position - global_position, g.size)
+				anchor = g if not anchor.has_area() else anchor.merge(g)
 	_card.low = not (Array(st.spot) + Array(st.tap)).any(func(w): return w.begins_with("hub:"))  # nothing on the hub to see: "bottom" may cover it
 	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == steps.size() - 1 else next_text, anchor, st.title, st.title_icon)
 	_card.set_corner(_corner(st.corner))
@@ -751,6 +752,9 @@ func _spots(word: String) -> Array:
 		return st.get_node("Scroll/Page/Chips").get_children() if st else []
 	if word == "mat:combos":  # the Display Mat's combo row
 		return Tutorial.find_all("chip")
+	if word == "map:found":  # every station on the map
+		var map := _map()
+		return map._nodes().filter(func(n): return n.visible) if map else []
 	if word == "map:finds":  # the 🔍 marks on the stations
 		return Tutorial.find_all("map:find:")
 	var n := _find(word)
