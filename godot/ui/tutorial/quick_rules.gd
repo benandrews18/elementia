@@ -28,6 +28,8 @@ const NBSP := " "  # a picture and its name stay on one line
 @export var elements := {}
 ## The check's round (its Quark breakpoints) and the mat's size then (0-3:
 ## the first check's 3 slots are too few to show a whole hand's worth).
+## The Inventory's "?" plays these steps, first to last (the user, 2026-11-28).
+@export var inventory_steps := Vector2i(19, 31)
 @export var check_round := 3
 @export var mat_stage := 3
 @export_group("")
@@ -38,6 +40,8 @@ const NBSP := " "  # a picture and its name stay on one line
 static var current: QuickRules
 
 var i := -1
+var last := -1  # >= 0: the last step played (a section; begin's `to`)
+var _first := 0
 var then := Callable()
 var _app: App
 var _real: Array = []  # the real run, its context, the prefs and the To-Do List's open rows, put back at the end
@@ -66,10 +70,14 @@ static func no_track() -> bool:
 
 
 ## Starts it over everything on app; `done` runs once it's over (Finish or ✕).
-static func begin(app: App, done: Callable) -> QuickRules:
+## section: play only the inventory_steps.
+static func begin(app: App, done: Callable, section := false) -> QuickRules:
 	var q: QuickRules = Tok.make(SCENE)
 	q._app = app
 	q.then = done
+	if section:
+		q._first = q.inventory_steps.x
+		q.last = q.inventory_steps.y
 	var layer := CanvasLayer.new()
 	layer.name = "QuickRules"
 	layer.layer = 2  # over every window the steps open (the App's are on layer 0)
@@ -125,7 +133,11 @@ func _ready() -> void:
 			_go(i + 1)
 		elif b == "Leave":
 			ask_leave())
-	_go(0)
+	for k in _first:  # a section: the hub as the steps before it left it
+		for a in steps[k].act:
+			if a.get_slice(":", 0) in ["hub", "slide"]:
+				_act(a)
+	_go(_first)
 
 
 func ask_leave() -> void:
@@ -135,7 +147,7 @@ func ask_leave() -> void:
 
 
 func _go(n: int) -> void:
-	if n >= steps.size():
+	if n >= steps.size() or (last >= 0 and n > last):
 		finish()
 		return
 	i = n
@@ -156,7 +168,7 @@ func _go(n: int) -> void:
 				g = Rect2(g.position - global_position, g.size)
 				anchor = g if not anchor.has_area() else anchor.merge(g)
 	_card.low = not (Array(st.spot) + Array(st.tap)).any(func(w): return w.begins_with("hub:"))  # nothing on the hub to see: "bottom" may cover it
-	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == steps.size() - 1 else next_text, anchor, st.title, st.title_icon)
+	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == (steps.size() - 1 if last < 0 else last) else next_text, anchor, st.title, st.title_icon)
 	_card.set_corner(_corner(st.corner))
 	_holes = [null]  # redrawn whatever this step spots (none: last step's rings go)
 	_update.call_deferred()

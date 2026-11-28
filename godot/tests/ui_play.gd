@@ -47,6 +47,9 @@ func _run(app: App) -> void:
 	# the run starts at its station.
 	Progress.prefs.hiddenTips = []
 	app.new_game()
+	await get_tree().process_frame
+	await get_tree().process_frame  # its _process has run
+	check(app._gear.is_visible_in_tree(), "New Game: the Settings gear over everything from the start")
 	check(await _until(func(): return app.get_children().any(func(c): return c is HowToPlay)), "New Game: the logo, then the game in brief (step 25)")
 	for h in app.get_children().filter(func(c): return c is HowToPlay):
 		for k in 3:
@@ -1532,17 +1535,29 @@ func _settings(app: App) -> void:
 	app.open_panel("drawer")
 	await get_tree().process_frame
 	var help: Control = app.panel_node.get_node("Body").get_children().filter(func(c): return c.get_meta("cmp", "") == "btn:rules")[0]
+	var state_was := Game.state
 	help.gui_input.emit(_release())
-	var mr: Array = top.call(MatRules)
-	check(mr.size() == 1, "the mat's \"?\" opens the Display Mat rules")
-	if not mr.is_empty():
-		mr[0].get_node("Window/Content/Page1/NextRow/Next").gui_input.emit(_release())
-		check(mr[0].get_node("Window/Content/Page2").visible and mr[0].get_node("Window").title == "Quark Combos", "Next turns to Quark Combos")
-		mr[0].pressed.emit("Next2")
-		check(mr[0].get_node("Window/Content/Page3").visible and mr[0].get_node("Window").title == "Combo Multiplier", "then Combo Multiplier")
-		mr[0].get_node("Window/Content/Page3/OkRow/Ok").gui_input.emit(_release())
+	var qr := QuickRules.current
+	check(QuickRules.running() and qr.i == qr.inventory_steps.x and qr.last == qr.inventory_steps.y, "the Inventory's \"?\": Quick Rules from its Inventory step")
+	if QuickRules.running():
+		qr._go(qr.inventory_steps.y + 1)  # past its last step: over
 		await get_tree().process_frame
-		check(top.call(MatRules).is_empty(), "Got it closes them")
+		check(not QuickRules.running() and is_same(Game.state, state_was) and app.panel == "drawer", "after its last step: the run put back, the Inventory again")
+		app.inventory_rules()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		check(app._gear.is_visible_in_tree(), "over Quick Rules: the Settings gear")
+		app._gear.gui_input.emit(_release())
+		check(app._top.get_children().any(func(c): return c is SettingsWindow), "its Settings over Quick Rules")
+		for c in app._top.get_children():
+			if c is SettingsWindow:
+				c.free()
+		QuickRules.current.ask_leave()
+		var ask: Array = QuickRules.current.get_children().filter(func(c): return c is ConfirmDialog)
+		check(ask.size() == 1, "✕ asks first")
+		QuickRules.current.finish()
+		await get_tree().process_frame
+		check(not QuickRules.running() and app.panel == "drawer", "and leaves at once")
 	# Back (Android) / Escape: the top window, then the panel, never a quit.
 	for c in app.get_children():  # rolls earlier sections never collected
 		if c is RollPopup:

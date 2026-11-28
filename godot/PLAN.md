@@ -415,6 +415,7 @@ Recorded so they aren't re-argued. Add new ones with the date.
 
 One line per batch (details: CHANGELOG.md and git).
 
+- 2026-11-28 (the user): the hand's last pick shows HandView.full_card (CardPop.side_card with pic_px = the fan card's picture); DisplayMatScreen.enlarge uses it and corrects the grow-in pivot's offset (it pushed the card off screen); CardPop's picture gets Tok.outline(isz/2); ShopRow on the bench's wood (no Face, no icon box, 86 px picture, white name), suit discs on its badges and recipe chips; every 'suit:' glyph-on-circle switched to 'suitdisc:' (ui:play/ui:discard to v2 too); QuickRules.begin(section) plays inventory_steps (19-31) from the Inventory's '?' (App.inventory_rules); App's top layer (3): an opening/Quick Rules Settings gear, Settings over Quick Rules opens there (its windows follow; Home/How to Play/Reset end Quick Rules first); web.py stamps build files index-<time>.* and ships a self-removing sw.js.
 - 2026-11-27: whole-game review (REVIEW.md); review fixes; PLAN.md trimmed.
 - 2026-11-27: tutorial strict (Tutorial last in the App for input; animations and the peek card aren't windows; a real window takes taps only inside itself; ui_play decoy taps every step); Mouse on the hub, balloon off the target, x/y counts; desktop web letterboxed (main.gd: KEEP aspect without a touchscreen).
 - 2026-11-27: F11 on the web (head_include stops it reaching Godot's canvas); map reveal waits for the map in view (opening doesn't mark neighbours seen); Market Unknown squares open UnknownTip; Display Mat Score and Quark Combos texts.

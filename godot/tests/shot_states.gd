@@ -12,7 +12,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "order_thread", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "mat_rules3", "order_tip", "unknown_tip",
-	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
+	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "quick_inv", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
@@ -395,8 +395,8 @@ func _ready() -> void:
 					c.queue_free()
 			Hand.play(Game.state.hand, Game.state, Game.state.hand.hand.slice(0, 2))  # something on the cleared mat
 			var mat := app.panel_node as DisplayMatScreen
-			mat.picks = [Game.state.hand.hand[2]]
 			mat._redraw()
+			mat._lift(Game.state.hand.hand[2])
 		"combo_info":  # the test's mat: a combo chip tapped lists the cards making it
 			app.open_combo_lab()
 			Rng.feed(range(60).map(func(i): return fmod(i * 0.37, 1.0)))
@@ -564,6 +564,15 @@ func _ready() -> void:
 			for w in 400:
 				if q._card.visible:
 					break
+				await get_tree().process_frame
+			busy = false
+		"quick_inv":  # the Inventory's "?": its Quick Rules section, the items arrived
+			busy = true
+			app.open_panel("drawer")
+			app.inventory_rules()
+			await get_tree().process_frame
+			QuickRules.current._card.pressed.emit("Next")
+			for w in 120:  # the items rise in
 				await get_tree().process_frame
 			busy = false
 		"mat_rules", "mat_rules2", "mat_rules3", "order_tip", "unknown_tip":

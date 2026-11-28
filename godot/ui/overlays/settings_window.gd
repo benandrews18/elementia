@@ -36,22 +36,26 @@ func _sync_dev() -> void:
 
 func _on_pressed(button: String) -> void:
 	var app := App.current
+	var on: Control = get_parent()  # its windows open where it is (over Quick Rules: the top layer)
+	if button in ["HowToPlay", "Home"]:
+		app.leave_quick_rules()
+		on = app
 	match button:
 		"HowToPlay":  # Quick Rules again
 			close()
 			app.replay_tutorial()
 		"Rules":
 			close()
-			ParchDialog.open(app, GameRules.SCENE)
+			ParchDialog.open(on, GameRules.SCENE)
 		"Tuts":
 			close()
-			ParchDialog.open(app, TutorialMessages.SCENE)
+			ParchDialog.open(on, TutorialMessages.SCENE)
 		"Home":
 			close()
 			app.show_welcome()
 		"DevTools":
 			close()
-			ParchDialog.open(app, DevTools.SCENE)
+			ParchDialog.open(on, DevTools.SCENE)
 		"Version":  # five taps, each within 1.5s of the last
 			var now := Time.get_ticks_msec()
 			_taps = _taps + 1 if now - _last_tap < 1500 else 1
@@ -66,6 +70,7 @@ func _on_pressed(button: String) -> void:
 			app.sync_dev()
 			_sync_dev()
 		"Reset":
-			ConfirmDialog.ask(app, "Start a new run? Your inventory and visits will be cleared.", func():
+			ConfirmDialog.ask(on, "Start a new run? Your inventory and visits will be cleared.", func():
+				app.leave_quick_rules()
 				close()
 				app.new_game())

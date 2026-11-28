@@ -22,6 +22,12 @@ var _floats: Control  # the 🔍 button and the tracked pill, under the hub, ove
 var mouse: MouseTip  # Professor Mouse, on a layer above everything
 var tutorial: Tutorial  # the first-play tutorial (its steps: ui/tutorial/tutorial.tscn)
 var hints: Hints  # later plays' 💡 hints (ui/tutorial/hints.tscn)
+## A new game's opening (until its first visit) and Quick Rules: a Settings
+## gear on a layer over everything, always tappable (the user, 2026-11-28);
+## Settings opened over Quick Rules goes on that layer too (_top).
+var _opening := false
+var _top: Control
+var _gear: Control
 const LAB_BAR := 40.0  # Combo Lab's exit bar
 const LAB_TOP := 52.0  # where the lab's mat starts, under it
 var _real: Array = []  # Combo Lab: the real run and its context, put back on exit
@@ -48,6 +54,16 @@ func _ready() -> void:
 	add_child(layer)
 	mouse = MouseTip.make()
 	layer.add_child(mouse)
+	var top := CanvasLayer.new()
+	top.layer = 3  # over Quick Rules (2)
+	add_child(top)
+	_top = Control.new()
+	_top.mouse_filter = MOUSE_FILTER_IGNORE
+	top.add_child(_top)
+	_gear = StationScreen.gear_button(46)
+	_gear.set_meta("cmp", "settings:top")
+	_gear.visible = false
+	_top.add_child(_gear)
 	tutorial = Tutorial.make()
 	add_child(tutorial)
 	# Input reaches the last child first: the tutorial stays last, so it sees
@@ -355,6 +371,7 @@ func _confetti() -> void:
 ## guided: the Guided Tutorial), then the capstone is chosen (playClassicIntro()).
 func new_game(guided := false) -> void:
 	end_run()
+	_opening = true
 	var logo := TextureRect.new()  # #introLogo: bounces in, a second on screen
 	logo.texture = load("res://assets/banners/elementia-logo.webp")
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -493,6 +510,13 @@ func show_elements() -> void:
 ## practice game; back where you were at its end.
 func replay_tutorial() -> void:
 	QuickRules.begin(self, Callable())
+
+
+## The Inventory's "?" (the user, 2026-11-28): Quick Rules' Inventory and
+## challenge steps; ✕ leaves any time; back to the Inventory after.
+func inventory_rules() -> void:
+	var was := panel
+	QuickRules.begin(self, func(): if was == "drawer": open_panel("drawer"), true)
 
 
 ## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
@@ -685,6 +709,7 @@ func end_run() -> void:
 ## The title screen over everything (launch, Settings' Home, the end
 ## screen's Main Menu); the run underneath is untouched.
 func show_welcome() -> void:
+	_opening = false
 	if not get_children().any(func(c): return c is WelcomeScreen and not c.is_queued_for_deletion()):  # Home from Settings opened over it
 		WelcomeScreen.show_on(self)
 
@@ -708,7 +733,25 @@ func open_settings(page := "") -> void:
 	match page:
 		"rules": ParchDialog.open(self, GameRules.SCENE)
 		"tuts": ParchDialog.open(self, TutorialMessages.SCENE)
-		_: SettingsWindow.show_on(self)
+		_: SettingsWindow.show_on(_top if QuickRules.running() else self)
+
+
+func _process(_d: float) -> void:
+	_top.position = global_position  # the App sits under a phone's notch
+	_top.size = size
+	_gear.position = Vector2(size.x - 14 - 46, 10 + (StationScreen.TOP if QuickRules.running() and panel == "drawer" else 0.0))  # where the screens' own gear sits (the Inventory: under its meter)
+	if _opening and _screen is StationScreen and not QuickRules.running():  # the first station: its own gear from here
+		_opening = false
+	_gear.visible = (QuickRules.running() or _opening) \
+		and _top.get_child_count() == 1 and not get_children().any(func(c): return c is SettingsWindow or c is WelcomeScreen)
+
+
+## Settings' Home, Reset and How to Play over Quick Rules: it ends first
+## (its own "then" skipped).
+func leave_quick_rules() -> void:
+	if QuickRules.running():
+		QuickRules.current.then = Callable()
+		QuickRules.current.finish()
 
 
 ## A rules or tip window by name (mat_rules, mat_rules2, order, unknown).

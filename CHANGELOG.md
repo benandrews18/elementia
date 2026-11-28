@@ -7,6 +7,16 @@ project in `godot/` (the HTML entries before 2026-11-21 are history). See
 Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
+## 2026-11-28
+- The hand: the last card you tap shows its full card again, components and all, with its picture the same size as in the hand.
+- Display Mat cards tapped during a challenge open that same full card, always on screen (cards near the right edge opened off the screen before).
+- Full card views: item pictures get a bold dark outline, like the new icon art.
+- Crafting Bench: no pale panel; the item's picture is bigger, straight on the wood, its name in white; suit costs and the recipe's elements show the new suit discs.
+- The new suit discs replace the old flat suit symbols everywhere (Convert, the suit strip, element cards, challenges, combo windows, Items, the suit picker).
+- The Inventory's "?" plays the Quick Rules part about the Inventory and the Display Mat challenge; the ✕ leaves at any time.
+- Settings is tappable from the very start of a new game, over the logo, Quick Rules and the opening; over Quick Rules it opens on top.
+- Website: each update's files get new names, and the old prototype's offline copy is cleared, so every device loads the latest version.
+
 ## 2026-11-27
 - Hand and other item cards: bigger pictures (a touch under the full increase); the last card you tap rises a little above the other picks.
 - A short suit-cost badge on the Crafting Bench opens Convert with an element of that suit ready to make.

@@ -96,7 +96,8 @@ func _redraw() -> void:
 	# Combo chips (min height 40, wrapping rows), Settings at their end.
 	var gear := StationScreen.gear_button(40)
 	gear.position = Vector2(side + w - 40, y)
-	_body.add_child(gear)
+	if Game.ctx.get("qr") == null:  # Quick Rules: the App's own gear is there (over everything)
+		_body.add_child(gear)
 	y += _chips(sc, Vector2(side, y), w - 48) + 6
 	# The mat page: as many columns as are open, and one row, a row and a
 	# half-height strip, or two, as the mat has grown.
@@ -348,7 +349,7 @@ func _page_controls(page: Control) -> void:
 	help.size = Vector2(34, 34)
 	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
 	help.set_meta("cmp", "btn:rules")
-	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: MatRules.show_on(App.current))
+	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.inventory_rules())
 	_body.add_child(help)
 	var x2 := right - 30
 	if locked():  # between checks: the Combo Lab is where combos are tried (with this run's items)
@@ -1436,7 +1437,7 @@ static func _order_chip(o: Dictionary, sc: Dictionary) -> Control:
 			circle = _icon_circle("", Color("#fff3c4"), Tok.GOLD, 2)
 			var two: PackedStringArray = o.p.split("|")
 			for i in 2:
-				var ic := Tok.icon("suit:" + two[i], 11)
+				var ic := Tok.icon("suitdisc:" + two[i], 11)
 				ic.position = Vector2(2.5 + i * 11, 8)
 				circle.add_child(ic)
 		_:
@@ -1473,7 +1474,10 @@ static func _icon_circle(key: String, bg: Color, border := Color.TRANSPARENT, bw
 	p.set_meta("box", sb)
 	p.size = Vector2(27, 27)
 	p.mouse_filter = MOUSE_FILTER_IGNORE
-	if key != "":
+	if key.begins_with("suit:"):  # the suit disc fills the circle (the user, 2026-11-28)
+		sb.bg_color = Color.TRANSPARENT
+		p.add_child(Tok.icon("suitdisc:" + key.substr(5), 27))
+	elif key != "":
 		var ic := Tok.icon(key, 18)
 		ic.position = Vector2(4.5, 4.5)
 		if outline:
