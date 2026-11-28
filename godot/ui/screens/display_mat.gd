@@ -313,9 +313,20 @@ func _beat_pop(on: Control, b: Dictionary) -> void:
 ## Tabs under the page's lower-left corner; Last / Clear / Layouts and the
 ## rules "?" riding its lower-right edge (renderMatTop()).
 func _page_controls(page: Control) -> void:
-	if Game.check_hand() != null:  # a check: Discard, Lock In and Draw under the page (_hand_area)
-		return
 	var bottom := page.position.y + page.size.y
+	var right := page.position.x + page.size.x
+	var help := TextureRect.new()  # the Inventory & Display tutorial (App.inventory_rules)
+	help.texture = load("res://assets/ui/btn_help.webp")
+	help.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	help.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	help.size = Vector2(34, 34)
+	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
+	help.set_meta("cmp", "btn:rules")
+	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.inventory_rules())
+	if Game.check_hand() != null:  # a check: on the mat's bottom-right corner (the user, 2026-11-28); Discard, Pass and Draw under the page (_hand_area)
+		help.position = Vector2(right - 30, bottom - 38)
+		_body.add_child(help)
+		return
 	var x := page.position.x + 4
 	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), view == "elements"], ["Display Mat", Color("#cda874"), Color("#a67c4a"), view == "mat"],
 			["Capstones", Color("#ecd68e"), Color("#b8962e"), view == "caps"]]:
@@ -346,15 +357,6 @@ func _page_controls(page: Control) -> void:
 		_body.add_child(tab)
 		x += tab.size.x + 2
 	_tabs_end = x
-	var right := page.position.x + page.size.x
-	var help := TextureRect.new()
-	help.texture = load("res://assets/ui/btn_help.webp")
-	help.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	help.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	help.size = Vector2(34, 34)
-	help.position = Vector2(right + 8 - 34, bottom + 24 - 34)
-	help.set_meta("cmp", "btn:rules")
-	help.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.inventory_rules())
 	_body.add_child(help)
 	var x2 := right - 30
 	if locked():  # between checks: the Combo Lab is where combos are tried (with this run's items)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=70 format=3]
+[gd_scene load_steps=74 format=3]
 
 [ext_resource type="Script" path="res://ui/tutorial/quick_rules.gd" id="1"]
 [ext_resource type="Script" path="res://ui/tutorial/quick_step.gd" id="2"]
@@ -175,6 +175,7 @@ mouse = "pointing_call_out"
 say = "As you explore the world and craft items, you'll also need to complete [b]challenges[/b] {🎯}!"
 place = "bottom"
 corner = "🎯"
+act = PackedStringArray("nocard")
 
 [sub_resource type="Resource" id="q22"]
 script = ExtResource("2")
@@ -533,12 +534,42 @@ crafting {🛠️} and exploring {🗺️}
 the world of
 [font_size=34][b][color=#b5541b]ELEMENTIA![/color][/b][/font_size] {🌍}"
 
+[sub_resource type="Resource" id="q66"]
+script = ExtResource("2")
+mouse = "props_magnifying_glass"
+say = "Let's look at one of your new cards, the [b]Deer[/b] {🦌}! It's made of:
+{recipe:Deer}"
+place = "bottom"
+act = PackedStringArray("card:Deer")
+section_only = true
+
+[sub_resource type="Resource" id="q67"]
+script = ExtResource("2")
+say = "Bigger items need a little extra to craft. You'll need to spend an [b]EARTH[/b] element {suit:earth} to craft the Deer."
+place = "bottom"
+spot = PackedStringArray("cp:costs")
+section_only = true
+
+[sub_resource type="Resource" id="q68"]
+script = ExtResource("2")
+say = "The [b]Deer[/b] {🦌} card can be crafted at the [b]Old Growth Forest[/b] {🌲}"
+place = "bottom"
+spot = PackedStringArray("cp:station")
+section_only = true
+
+[sub_resource type="Resource" id="q69"]
+script = ExtResource("2")
+say = "Items with the same icons {suit:earth}{🌲} can combine in special ways to give you more points! Let's see how..."
+place = "bottom"
+spot = PackedStringArray("cp:costs", "cp:station", "cp:parts", "cp:pts")
+section_only = true
+
 [node name="QuickRules" type="Control"]
 layout_mode = 3
 offset_right = 390.0
 offset_bottom = 844.0
 script = ExtResource("1")
-steps = Array[ExtResource("2")]([SubResource("q0"), SubResource("q1"), SubResource("q2"), SubResource("q3"), SubResource("q4"), SubResource("q5"), SubResource("q6"), SubResource("q7"), SubResource("q8"), SubResource("q9"), SubResource("q10"), SubResource("q11"), SubResource("q12"), SubResource("q13"), SubResource("q14"), SubResource("q15"), SubResource("q16"), SubResource("q17"), SubResource("q18"), SubResource("q19"), SubResource("q20"), SubResource("q21"), SubResource("q22"), SubResource("q23"), SubResource("q24"), SubResource("q25"), SubResource("q26"), SubResource("q27"), SubResource("q28"), SubResource("q29"), SubResource("q30"), SubResource("q31"), SubResource("q32"), SubResource("q33"), SubResource("q34"), SubResource("q35"), SubResource("q36"), SubResource("q37"), SubResource("q38"), SubResource("q39"), SubResource("q40"), SubResource("q41"), SubResource("q42"), SubResource("q43"), SubResource("q44"), SubResource("q45"), SubResource("q46"), SubResource("q47"), SubResource("q48"), SubResource("q49"), SubResource("q50"), SubResource("q51"), SubResource("q52"), SubResource("q53"), SubResource("q54"), SubResource("q55"), SubResource("q56"), SubResource("q57"), SubResource("q58"), SubResource("q59"), SubResource("q60"), SubResource("q61"), SubResource("q62"), SubResource("q63"), SubResource("q64"), SubResource("q65")])
+steps = Array[ExtResource("2")]([SubResource("q0"), SubResource("q1"), SubResource("q2"), SubResource("q3"), SubResource("q4"), SubResource("q5"), SubResource("q6"), SubResource("q7"), SubResource("q8"), SubResource("q9"), SubResource("q10"), SubResource("q11"), SubResource("q12"), SubResource("q13"), SubResource("q14"), SubResource("q15"), SubResource("q16"), SubResource("q17"), SubResource("q18"), SubResource("q19"), SubResource("q20"), SubResource("q66"), SubResource("q67"), SubResource("q68"), SubResource("q69"), SubResource("q21"), SubResource("q22"), SubResource("q23"), SubResource("q24"), SubResource("q25"), SubResource("q26"), SubResource("q27"), SubResource("q28"), SubResource("q29"), SubResource("q30"), SubResource("q31"), SubResource("q32"), SubResource("q33"), SubResource("q34"), SubResource("q35"), SubResource("q36"), SubResource("q37"), SubResource("q38"), SubResource("q39"), SubResource("q40"), SubResource("q41"), SubResource("q42"), SubResource("q43"), SubResource("q44"), SubResource("q45"), SubResource("q46"), SubResource("q47"), SubResource("q48"), SubResource("q49"), SubResource("q50"), SubResource("q51"), SubResource("q52"), SubResource("q53"), SubResource("q54"), SubResource("q55"), SubResource("q56"), SubResource("q57"), SubResource("q58"), SubResource("q59"), SubResource("q60"), SubResource("q61"), SubResource("q62"), SubResource("q63"), SubResource("q64"), SubResource("q65")])
 items = PackedStringArray("Water", "Seaweed", "Sugar", "Sand", "Clay", "Bone", "Soil", "Limestone", "Tree", "Egg", "Apple", "Banana", "Cloud", "Chicken", "Deer", "Canoe", "Farm")
 hand_cards = PackedStringArray("Apple", "Banana", "Tree", "Sand", "Bone", "Deer", "Canoe")
 deck_cards = PackedStringArray("Cloud", "Chicken", "Water", "Seaweed", "Sugar", "Farm", "Clay", "Soil", "Limestone", "Egg")

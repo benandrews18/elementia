@@ -1419,6 +1419,7 @@ func _quick(app: App) -> void:
 		for k in 3:
 			await get_tree().process_frame
 		check(await _until(func(): return q._card.visible), "step %d's card shows (after what it waits for)" % q.i)
+		check(not q.steps[q.i].section_only, "step %d: the Inventory part's own steps never show in the full Quick Rules" % q.i)
 		if q.steps[q.i].act.has("deal"):
 			dealt = Game.check_hand() != null and Game.check_hand().hand.size() == q.hand_cards.size()
 		if q.steps[q.i].wait == "reward":
@@ -1452,7 +1453,7 @@ func _quick(app: App) -> void:
 			check(q.i == was + 1, "a tap on the step's spot goes on, like Next")
 			continue
 		q._card.pressed.emit("Next")
-	check(not QuickRules.running() and steps == q.steps.size(), "Next through every step to the end (%d)" % steps)
+	check(not QuickRules.running() and steps == q.steps.filter(func(st): return not st.section_only).size(), "Next through every step to the end (%d)" % steps)
 	check(dealt, "the challenge's hand was dealt")
 	check(no_mouse.is_empty(), "Professor Mouse is on every step (missing: %s)" % [no_mouse])
 	check(Game.state == real and Game.state.items == ["Water", "Sand"] and Progress.prefs.pinnedItems == pins and not Game.ctx.has("demo"), "the real run and the pins are as they were")
@@ -1569,6 +1570,9 @@ func _settings(app: App) -> void:
 	var qr := QuickRules.current
 	check(QuickRules.running() and qr.i == qr.inventory_steps.x and qr.last == qr.inventory_steps.y, "the Inventory's \"?\": Quick Rules from its Inventory step")
 	if QuickRules.running():
+		qr._go(qr.i + 1)  # the gifts
+		qr._go(qr.i + 1)
+		check(qr.steps[qr.i].section_only and is_instance_valid(qr._pop) and qr._pop.entry.name == "Deer", "after the gifts: one of them, the Deer, explained like the Salmon")
 		qr._go(qr.inventory_steps.y + 1)  # past its last step: over
 		await get_tree().process_frame
 		check(not QuickRules.running() and is_same(Game.state, state_was) and app.panel == "drawer", "after its last step: the run put back, the Inventory again")

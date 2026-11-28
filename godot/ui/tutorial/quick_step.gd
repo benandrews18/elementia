@@ -44,3 +44,6 @@ extends Resource
 ## Spots where a real tap does what Next does (the user, 2026-11-27: at key
 ## moments, sparingly), e.g. "hub:home" (Roll, Gather), "craft:Sand".
 @export var tap: PackedStringArray
+## Only in the Inventory's "?" part (the user, 2026-11-28): the full Quick
+## Rules skips it.
+@export var section_only := false

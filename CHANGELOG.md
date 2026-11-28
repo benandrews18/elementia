@@ -8,6 +8,7 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-28
+- The Inventory & Display tutorial's "?" is also on the Display Mat's bottom-right corner during a challenge; that tutorial now explains one of the gifted cards, the Deer, the way Quick Rules explains the Salmon.
 - 💡 hints: Professor Mouse uses his new pictures; no more hints on the Convert button or in the Inventory and challenges.
 - Quick Rules: Professor Mouse disappears and pops back in with each text window instead of sliding around and waiting.
 - Tapping a needed element opens Convert with the Crafting Bench on top, and now the screen behind them is dimmed (a tap there closes it, as before).

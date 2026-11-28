@@ -29,7 +29,7 @@ const NBSP := " "  # a picture and its name stay on one line
 ## The check's round (its Quark breakpoints) and the mat's size then (0-3:
 ## the first check's 3 slots are too few to show a whole hand's worth).
 ## The Inventory's "?" plays these steps, first to last (the user, 2026-11-28).
-@export var inventory_steps := Vector2i(19, 31)
+@export var inventory_steps := Vector2i(19, 35)
 @export var check_round := 3
 @export var mat_stage := 3
 @export_group("")
@@ -147,6 +147,8 @@ func ask_leave() -> void:
 
 
 func _go(n: int) -> void:
+	while last < 0 and n < steps.size() and steps[n].section_only:  # the Inventory's "?" part only
+		n += 1
 	if n >= steps.size() or (last >= 0 and n > last):
 		finish()
 		return
