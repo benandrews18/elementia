@@ -58,8 +58,8 @@ func _ready() -> void:
 		var lit: bool = owned or Game.suit_surplus(su, reserved) > k
 		var b := Panel.new()
 		b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
-		b.position = Vector2(x, 8.1)
-		b.size = Vector2(22, 22)
+		b.position = Vector2(x, 6)
+		b.size = Vector2(28, 28)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		if not lit:  # short of it: a tap opens Convert, this bench on top (the user, 2026-11-26)
 			b.mouse_filter = MOUSE_FILTER_STOP
@@ -67,12 +67,12 @@ func _ready() -> void:
 			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:  # Convert, a random element of that suit to make (the user, 2026-11-27)
 				App.current.open_convert(Data.t("SUIT_CORE_ELEMENTS")[su].pick_random(), e.name))
 			Tok.grow_hit(b, 5)
-		var g := Tok.icon("suitdisc:" + su, 22)  # the card's suit disc (the user, 2026-11-28); short of it: grey
+		var g := Tok.icon("suitdisc:" + su, 28)  # the card's suit disc (the user, 2026-11-28); short of it: grey
 		if not lit:
 			g.material = Tok.grey()
 		b.add_child(g)
 		$Badges.add_child(b)
-		x += 26
+		x += 32
 	_recipe(Vector2(94, 53))
 	# Craft (centred down the right edge), or the owned tick.
 	var btn: Label = $Craft
@@ -209,7 +209,7 @@ func _recipe(at: Vector2) -> void:
 		x += w
 	# Never under the Craft button (the user, 2026-11-23): a long recipe shrinks to fit beside it.
 	var room: float = ($Craft.position.x if $Craft.visible else size.x - 12) - 8 - at.x
-	var k := minf(1.0, room / maxf(1.0, x - at.x))
+	var k := minf(1.3, room / maxf(1.0, x - at.x))  # and grows into the bench's room (the user, 2026-11-28)
 	$Recipe.scale = Vector2(k, k)
 	$Recipe.position = at * (1.0 - k) + Vector2(0, 13 * (1.0 - k))  # shrinks toward its start, kept on the line's middle
 

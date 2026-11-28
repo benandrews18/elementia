@@ -8,6 +8,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-28
+- Crafting Bench: a bigger name, suit costs, recipe and Craft button, using the room on the wood.
+- The Play button is the plain hand of cards again.
 - The Inventory's "?" asks before it starts the Inventory & Display tutorial.
 - Display Mat: a third tab, Capstones, shows the capstones in play: 2 by 2, then 3 by 2 from 5 of them, 4 by 2 from 7.
 - During a challenge the Inventory button no longer closes the Inventory.
