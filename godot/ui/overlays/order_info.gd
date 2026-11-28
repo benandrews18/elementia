@@ -300,12 +300,9 @@ static func _thread_trees() -> Control:
 func _suit(su: String) -> Control:
 	var c := Panel.new()
 	var d := ICON * 1.1
-	c.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), d / 2))
+	c.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	c.size = Vector2(d, d)
-	var ic := Tok.icon("suit:" + su, d * 0.63)
-	ic.position = Vector2(d * 0.185, d * 0.185)
-	ic.material = Tok.white()
-	c.add_child(ic)
+	c.add_child(Tok.icon("suitdisc:" + su, d))
 	return c
 
 

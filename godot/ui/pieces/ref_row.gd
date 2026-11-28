@@ -27,9 +27,8 @@ func fill(e: Dictionary, w: float, open: bool, tree: RefTree) -> float:
 	if owned:
 		add_theme_stylebox_override("panel", owned_style)
 	$Icon.texture = Data.icon(e.emoji)
-	for su in Data.t("ITEM_SUIT_COST_TABLE").get(e.name, []):  # bare glyphs in their suit's colour
-		var g := Tok.icon("suit:" + su, 12)
-		g.material = Tok.tinted(Tok.suit_color(su))
+	for su in Data.t("ITEM_SUIT_COST_TABLE").get(e.name, []):  # the suit discs (the user, 2026-11-28)
+		var g := Tok.icon("suitdisc:" + su, 14)
 		$Suits.add_child(g)
 	var name_l: Label = $Name
 	name_l.text = e.name

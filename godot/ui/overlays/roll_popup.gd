@@ -123,13 +123,10 @@ func _chip(r: Dictionary) -> Control:
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	if suit != "":
 		var b := Panel.new()
-		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(suit), 10, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
+		b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		b.position = Vector2(CHIP - 6 + 7 - 20, -7 + 6)
 		b.size = Vector2(20, 20)
-		var g := Tok.icon("suit:" + suit, 14)
-		g.position = Vector2(3, 3)
-		g.material = Tok.white()
-		b.add_child(g)
+		b.add_child(Tok.icon("suitdisc:" + suit, 20))
 		face.add_child(b)
 	c.add_child(face)
 	var die := Control.new()  # .rc-die: the face's pips on a dark square

@@ -104,8 +104,7 @@ func _build() -> void:
 	_tail_x = clampf(anchor.get_center().x - x, 14, w - 14)
 	_balloon.queue_redraw()
 	if view:  # the title: the suit's icon and its name
-		var g := Tok.icon("suit:" + view_suit, 20)
-		g.material = Tok.tinted(Tok.suit_color(view_suit))
+		var g := Tok.icon("suitdisc:" + view_suit, 20)
 		var t := Tok.label(str(Data.t("ELEMENT_SUIT_LABEL")[view_suit]), 15, Tok.INK, 900)
 		t.add_theme_font_override("font", Tok.font(900, 1))
 		var tw := 20 + 6 + Tok.font(900, 1).get_string_size(t.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
@@ -148,14 +147,11 @@ func _pick(sym: String, avail: int, have: int, suit: String, view := false) -> C
 	var es: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	if es != "":
 		var b := Panel.new()
-		b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(es), 6.5, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
+		b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		b.position = Vector2(pick - 14, 3)
 		b.size = Vector2(13, 13)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
-		var g := Tok.icon("suit:" + es, 9)
-		g.position = Vector2(2, 2)
-		g.material = Tok.white()
-		b.add_child(g)
+		b.add_child(Tok.icon("suitdisc:" + es, 13))
 		c.add_child(b)
 	if avail >= 0:
 		var q := Tok.label("×%d" % avail, 13, Tok.INK, 800)
@@ -189,8 +185,7 @@ func _choose_title(need: Dictionary, w: float) -> void:
 		var n := Tok.label(("" if first else ", ") + str(left), 15, Tok.INK, 900)
 		n.set_meta("cmp", "suitspend:need:" + su)
 		parts.append(n)
-		var g := Tok.icon("suit:" + su, 18)
-		g.material = Tok.tinted(Tok.suit_color(su))
+		var g := Tok.icon("suitdisc:" + su, 18)
 		parts.append(g)
 		first = false
 	var total := 0.0

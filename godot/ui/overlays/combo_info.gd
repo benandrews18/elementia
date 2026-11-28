@@ -49,7 +49,7 @@ func _ready() -> void:
 		for p in plays:
 			extra += p.size()
 		$Window.title = "%s ×%d" % [label, cards.size() + extra]
-		$Window.icon = Data.icon(Catalog.station(key).emoji if kind == "station" else "suit:" + key if kind == "suit" else Data.t("ITEM_EMOJI").get(key, ""))
+		$Window.icon = Data.icon(Catalog.station(key).emoji if kind == "station" else "suitdisc:" + key if kind == "suit" else Data.t("ITEM_EMOJI").get(key, ""))
 		for c in cards:
 			box.add_child(_row(c, w))
 		for p in plays:
@@ -98,13 +98,10 @@ func _row(c: Dictionary, w: float) -> Control:
 	var cy := 6 + (row_px - 22) / 2
 	if kind == "suit":
 		var dot := Panel.new()
-		dot.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(key), 11, 1.5))
+		dot.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		dot.position = Vector2(cx, cy)
 		dot.size = Vector2(22, 22)
-		var g := Tok.icon("suit:" + key, 13)
-		g.position = Vector2(4.5, 4.5)
-		g.material = Tok.white()
-		dot.add_child(g)
+		dot.add_child(Tok.icon("suitdisc:" + key, 22))
 		row.add_child(dot)
 	else:
 		var counted := Tok.icon(Catalog.station(key).emoji if kind == "station" else Data.t("ITEM_EMOJI").get(key, ""), 22)

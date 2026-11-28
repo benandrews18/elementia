@@ -287,13 +287,10 @@ func _show_pin() -> void:
 ## .pc-suitcost-badge: a 60px circle in the suit's colour, its glyph in white.
 static func _cost_badge(su: String) -> Panel:
 	var b := Panel.new()
-	b.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(su), 30, 4, Color.BLACK, 3, 2, Color(0, 0, 0, 0.3)))
+	b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	b.custom_minimum_size = Vector2(60, 60)
 	SuitSpend.on_tap(b, su)  # the suit and its elements (the user, 2026-11-26)
-	var g := Tok.icon("suit:" + su, 36)
-	g.position = Vector2(12, 12)
-	g.material = Tok.white()
-	b.add_child(g)
+	b.add_child(Tok.icon("suitdisc:" + su, 60))  # the suit disc (the user, 2026-11-28)
 	return b
 
 

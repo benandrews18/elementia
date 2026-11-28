@@ -50,7 +50,7 @@ func _filters() -> void:
 	for st in Data.t("STATION_TRACKER_ORDER"):
 		grid.add_child(_filter_button(Catalog.station(st).emoji, Tok.station_color(st), stations, st, true))
 	for su in Data.t("ELEMENT_SUIT_LABEL").keys():
-		grid.add_child(_filter_button("suit:" + su, Tok.suit_color(su), suits, su, false))
+		grid.add_child(_filter_button("suitdisc:" + su, Tok.suit_color(su), suits, su, false))
 
 
 func _filter_button(icon: String, bg: Color, group: Dictionary, key: String, outline: bool) -> Panel:

@@ -147,13 +147,10 @@ func _big_box(sym: String, sz: float) -> Control:
 	var suit: String = Data.t("ELEMENT_SUIT").get(sym, "")
 	if suit != "":
 		var badge := Panel.new()
-		badge.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(suit), 12, 0, Color.BLACK, 2, 1, Color(0, 0, 0, 0.45)))
+		badge.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		badge.size = Vector2(24, 24)
 		badge.position = Vector2(sz - 24 - 10, 10)
-		var g := Tok.icon("suit:" + suit, 16)
-		g.position = Vector2(4, 4)
-		g.material = Tok.white()
-		badge.add_child(g)
+		badge.add_child(Tok.icon("suitdisc:" + suit, 24))
 		SuitSpend.on_tap(badge, suit)
 		b.add_child(badge)
 	return b

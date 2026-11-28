@@ -317,9 +317,8 @@ static func wide_row(name: String, lw: float) -> Panel:
 	row.add_child(nm)
 	x += nw + 6
 	for su in Data.t("ITEM_SUIT_COST_TABLE").get(name, []):
-		var g := Tok.icon("suit:" + su, 13)
-		g.material = Tok.tinted(Tok.suit_color(su))
-		g.position = Vector2(x, (WIDE_ROW_H - 13) / 2)
+		var g := Tok.icon("suitdisc:" + su, 14)
+		g.position = Vector2(x, (WIDE_ROW_H - 14) / 2)
 		row.add_child(g)
 		x += 15
 	x += 8
@@ -456,13 +455,13 @@ static func element_chip(sym: String, w: float) -> Control:
 	var b: Panel = col.get_node("Badge")
 	b.visible = suit != ""
 	if suit != "":
-		var bsb: StyleBoxFlat = b.get_theme_stylebox("panel").duplicate()
-		bsb.bg_color = Tok.suit_color(suit)
-		b.add_theme_stylebox_override("panel", bsb)
-		b.position = Vector2(w - 14, 1)  # top/right -4px from inside the 5px border
+		b.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		b.position = Vector2(w - 15, 0)  # top/right -4px from inside the 5px border
+		b.size = Vector2(15, 15)
 		var g: TextureRect = b.get_node("Glyph")
-		g.texture = Data.icon("suit:" + suit)
-		g.material = Tok.white()
+		g.texture = Data.icon("suitdisc:" + suit)  # the suit disc (the user, 2026-11-28)
+		g.position = Vector2.ZERO
+		g.size = b.size
 	var nm: Label = col.get_node("Name")
 	nm.text = Data.t("ELEMENT_NAMES").get(sym, sym)
 	nm.position = Vector2(-8, w + 3)
@@ -559,14 +558,12 @@ static func suit_pill(conv_at: Vector2) -> Control:
 	for i in suits.size():
 		var su: String = suits[i]
 		var ring := Panel.new()
-		ring.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), D / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
+		ring.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, D / 2 + 1, 1.5, Tok.GOLD))
 		ring.size = Vector2(D, D)
 		ring.position = Vector2(4 + i * (D + GAP), (58 - D) / 2)
 		ring.set_meta("cmp", "suits:ring:" + su)
 		SuitSpend.on_tap(ring, su, true)  # its balloon with how many of each you hold (the user, 2026-11-26); the pill: Convert
-		var ic := Tok.icon("suit:" + su, 17)
-		ic.material = Tok.tinted(Tok.suit_color(su))
-		ic.position = (ring.size - Vector2(17, 17)) / 2
+		var ic := Tok.icon("suitdisc:" + su, D)  # the suit disc in the gold ring (the user, 2026-11-28)
 		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ring.add_child(ic)
 		var n := count_bubble(held.get(su, 0), Vector2(D - 11, -9))

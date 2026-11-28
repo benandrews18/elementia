@@ -300,12 +300,9 @@ func _combos(st: Dictionary) -> Array:
 	var suits := []
 	for i in 3:
 		var c := Panel.new()
-		c.add_theme_stylebox_override("panel", Tok.box(Tok.suit_color(suit), 13))
+		c.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 		c.size = Vector2(26, 26)
-		var g := Tok.icon("suit:" + suit, 15)
-		g.position = Vector2(5.5, 5.5)
-		g.material = Tok.white()
-		c.add_child(g)
+		c.add_child(Tok.icon("suitdisc:" + suit, 26))
 		suits.append(c)
 	out.append([strip.call(suits), combo_suit])
 	# A component shared by the most cards, and a card with its 2-item recipe.

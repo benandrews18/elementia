@@ -37,18 +37,17 @@ func _ready() -> void:
 	bub.border_color = color
 	# The bubbles: the four corner boxes as the scene places them (drawn over
 	# the frame, under the numbers and glyphs).
-	var boxes: Array = [$Card/NumTL, $Card/NumBR, $Card/GlyphTR, $Card/GlyphBL].map(func(n): return Rect2(n.position, n.size))
+	var boxes: Array = [$Card/NumTL, $Card/NumBR].map(func(n): return Rect2(n.position, n.size))
 	card.draw.connect(func():
 		for r in boxes:
 			card.draw_style_box(bub, r))
 	var num := str(int(Data.t("ATOMIC_NUMBER").get(sym, 0)))
 	$Card/NumTL.text = num
 	$Card/NumBR.text = num
-	var big := suit == "metal"  # metal's glyph is drawn 1.5x
 	for g: TextureRect in [$Card/GlyphTR, $Card/GlyphBL]:
 		var box := Rect2(g.position, g.size)
-		var inner := (box.size.x - 20) * (0.87 if big else 0.58)  # of the bubble inside its 10px ring
-		g.texture = Data.icon("suit:" + suit) if suit != "" else null
+		var inner := box.size.x  # the suit disc fills its corner box (the user, 2026-11-28)
+		g.texture = Data.icon("suitdisc:" + suit) if suit != "" else null
 		g.size = Vector2(inner, inner)
 		g.position = box.get_center() - g.size / 2
 	$Card/Sym.text = sym

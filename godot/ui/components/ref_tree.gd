@@ -89,15 +89,12 @@ static func suit_row(name: String, at: Vector2, px: float, ringed := false) -> C
 	r.size = Vector2(maxf(0, suits.size() * step - 3), px)
 	r.position = Vector2(at.x - r.size.x / 2, at.y)
 	for i in suits.size():
-		var ipx := px * 17.0 / 28.0 if ringed else px
-		var g := Tok.icon("suit:" + suits[i], ipx)
-		g.material = Tok.tinted(Tok.suit_color(suits[i]))
-		var slot: Control = g
-		if ringed:  # the user, 2026-11-27
+		var slot: Control = Tok.icon("suitdisc:" + suits[i], px)  # the suit discs (the user, 2026-11-28)
+		if ringed:  # the user, 2026-11-27: a gold ring round it
+			var g := slot
 			slot = Panel.new()
-			slot.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), px / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
+			slot.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, px / 2 + 1, 1.5, Tok.GOLD))
 			slot.size = Vector2(px, px)
-			g.position = (slot.size - Vector2(ipx, ipx)) / 2
 			slot.add_child(g)
 		slot.position = Vector2(i * step, 0)
 		var su: String = suits[i]
