@@ -973,9 +973,9 @@ func _collections(app: App) -> void:
 	var two: Array = hd.hand.slice(0, 2)
 	dm._lift(two[0])
 	dm._lift(two[1])
-	check(dm.picks == two and _find_meta(dm._hand_view, "hand:lifted") == null, "two hand cards picked: both raised alike, no big card")
+	check(dm.picks == two and dm.lifted == two[1] and _find_meta(dm._hand_view, "hand:lifted") != null, "two hand cards picked: both raised, the last tapped shows its full card")
 	dm._lift(two[1])
-	check(dm.picks == [two[0]], "a picked card tapped again goes back; the other stays picked")
+	check(dm.picks == [two[0]] and dm.lifted == "", "a picked card tapped again goes back; the other stays picked, not big")
 	dm._lift(two[1])
 	var tosses: int = hd.tosses
 	var held: Array = hd.hand.duplicate()
@@ -998,6 +998,10 @@ func _collections(app: App) -> void:
 	check(Game.state.mat.has(first) and dm.selected == "" and big != null and big.get_meta("card") == first, "a mat card tapped: shown big over its place; nothing comes off the mat")
 	check(_find_meta(dm, "convert") == null, "no Convert in the check's corner (it's on the Elements page)")
 	if big:
+		var bc: Control = big.get_child(1)
+		await get_tree().create_timer(0.5).timeout  # its grow-in done
+		var br := Rect2(bc.get_global_transform().origin, bc.size * bc.scale)
+		check(Rect2(app.global_position, app.size).encloses(br), "the big card is all on screen %s" % br)
 		big.get_node("Close").gui_input.emit(_release())
 		await get_tree().process_frame
 		check(not is_instance_valid(big) or big.is_queued_for_deletion(), "a tap anywhere puts it back")

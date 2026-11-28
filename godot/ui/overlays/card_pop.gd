@@ -28,14 +28,16 @@ var _back: Array = []  # the cards drilled in from (Back pops one)
 ## suit you hold none of faded too; an item component opens its own card.
 var side := false
 var plain := false  # a crafted card (the hand's): no fades, ⚛ or ticks on its parts (the user, 2026-11-23)
+var pic_px := 0.0  # > 0: the picture this wide in the card's own units (the hand's full card: its fan card's size)
 
 
 ## The side card for name, scaled to width w (its top-left at 0, 0).
-static func side_card(name: String, w: float, plain := false) -> CardPop:
+static func side_card(name: String, w: float, plain := false, pic := 0.0) -> CardPop:
 	var p: CardPop = Tok.make(SCENE)
 	p.side = true
 	p.plain = plain
 	p.size = Vector2(p.portrait.x, p.portrait.y)
+	p.pic_px = pic * p.portrait.x / w  # on screen: pic px wide
 	p.show_item(name)
 	p.scale = Vector2.ONE * w / p.size.x
 	Tok.floor_text(p, p.scale.x)
@@ -220,12 +222,15 @@ func show_item(name: String, keep_back := false) -> void:
 		var rest_p := 6 + name_h + 10 + 1 + 10 + 14.8 + 9 + parts_h + 8 + sig_h
 		icon_h = minf(icon_h, card.size.y - 50 - pad_top - rest_p)
 		icon_px = minf(icon_px, icon_h - 6)
+	if pic_px > 0 and not cap:
+		icon_px = minf(icon_px, pic_px)
 	var icon: TextureRect = $Card/Icon
 	icon.texture = Data.icon(entry.emoji)
 	var isz := Vector2(icon_px * k, art_h if art_h > 0 else icon_px * k)
 	if k != 1.0 and art_h == 0 and icon.texture:  # portrait card: as tall as the art, within its half
 		isz.y = minf(icon_h, isz.x * icon.texture.get_height() / icon.texture.get_width())
 	icon.size = isz
+	icon.material = Tok.outline(isz.x / 2)  # a bold dark edge, like the icon sheet's art (the user, 2026-11-28: the telescope's)
 	icon.position = Vector2((card.size.x - isz.x) / 2, pad_top + (icon_h - isz.y) / 2 + (0.0 if cap else 3.0))
 	var y := pad_top + icon_h + (2.0 if cap else 6.0)
 	name_l.size = Vector2(name_w, 0)  # grows to its text: centred on the CSS line boxes

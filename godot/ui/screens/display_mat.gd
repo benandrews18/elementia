@@ -670,8 +670,7 @@ func enlarge(name: String) -> void:
 	back.size = app.size
 	back.gui_input.connect(func(ev): if Tap.tap(ev): enlarge(name))
 	_big.add_child(back)
-	var cap: bool = Data.t("ITEM_TIER").get(name, "") == "CAPSTONE"
-	var full := CardPop.side_card(name, 260.0 if cap else 150.0, true)
+	var full: CardPop = _hand_view.full_card(name) if is_instance_valid(_hand_view) else CardPop.side_card(name, 150.0, true)  # the hand's last-tapped card, its size (the user, 2026-11-28)
 	var sz: Vector2 = full.size * full.scale
 	var r: Rect2 = app.local_rect(at.get_global_rect())
 	full.position = Vector2(clampf(r.get_center().x - sz.x / 2, 8, app.size.x - 8 - sz.x), clampf(r.get_center().y - sz.y / 2, 8, app.size.y - 8 - sz.y))
@@ -680,8 +679,8 @@ func enlarge(name: String) -> void:
 	app.add_child(_big)
 	if Juice.on():  # grows out of the mat card
 		var s0: Vector2 = full.scale
-		full.pivot_offset = r.get_center() - full.position
-		full.pivot_offset /= s0  # pivot in the card's own units
+		full.pivot_offset = (r.get_center() - full.position) / s0  # pivot in the card's own units
+		full.position -= full.pivot_offset * (Vector2.ONE - s0)  # a pivot shifts a scaled card: it ends where it was put, on screen (it went off the right edge)
 		full.scale = s0 * (r.size.x / sz.x)
 		full.create_tween().tween_property(full, "scale", s0, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
@@ -699,7 +698,7 @@ func _exit_tree() -> void:
 ## they'd add shows over the mat.
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	picks = picks.filter(func(n): return h.hand.has(n))
-	lifted = ""  # no big card over the hand: every pick is raised and ticked alike (the user, 2026-11-27)
+	lifted = lifted if picks.has(lifted) else ""  # the last tapped shows its full card, components and all (the user, 2026-11-28)
 	selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var row_y := page.position.y + page.size.y + 8
@@ -844,10 +843,14 @@ static func _lit_ring() -> Panel:
 func _lift(n: String) -> void:
 	if n == "":
 		picks = []
+		lifted = ""
 	elif picks.has(n):
 		picks.erase(n)
+		if lifted == n:  # put back; no other card jumps up in its place (the user, 2026-11-27)
+			lifted = ""
 	else:
 		picks.append(n)
+		lifted = n
 	if view == "elements" and not picks.is_empty():  # picking to play: the mat again
 		view = "mat"
 		_redraw()

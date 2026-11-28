@@ -28,6 +28,7 @@ signal lift(name: String)  # a card tapped (pick or put back); "": a blank tap, 
 var lifted := ""
 var picks: Array = []  # picked: raised (two or more: ticked)
 var starred := {}  # card name -> its collection's id: its ⭐
+var _cw := 0.0  # the fan's card width (show_hand)
 ## When the check's deal starts (Time ticks, ms; 0: none). The hand is
 ## rebuilt on every redraw, so each card works out how far along its own
 ## fly-in is from this, and a redraw mid-deal doesn't restart it.
@@ -69,6 +70,7 @@ func show_hand(names: Array, lifted_name: String, picked: Array = [], stars := {
 		return
 	var rows: Array = [names] if n <= per_row else [names.slice(0, n - n / 2), names.slice(n - n / 2)]
 	var cw := minf(card_w, (size.y - 8) / (rows.size() * (1.0 - row_overlap) + row_overlap) / 1.4)
+	_cw = cw
 	var ch := cw * 1.4
 	var gap := minf(ch + 4, size.y - 8 - ch)  # foot to foot: apart when there's room, else tucked
 	var lift_x := -1.0
@@ -124,7 +126,7 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 ## buttons); a tap puts it back.
 func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> void:
 	var cap: bool = Data.t("ITEM_TIER").get(nm, "") == "CAPSTONE"
-	var full := CardPop.side_card(nm, lifted_cap_w if cap else lifted_w, true)
+	var full := full_card(nm)
 	var sz: Vector2 = full.size * full.scale
 	var room := maxf(foot + 4, least_h)
 	if sz.y > room:  # taller than the room above its foot: smaller
@@ -145,6 +147,15 @@ func _lifted_card(nm: String, centre_x: float, foot: float, least_h: float) -> v
 		pic.add_child(star)
 	holder.gui_input.connect(func(ev): if Tap.tap(ev): lift.emit(nm))
 	add_child(holder)
+
+
+## The full card (CardPop's side card, components and all) at the lifted
+## size, its picture the fan cards' size (the user, 2026-11-28; the mat's
+## tapped cards use it too).
+func full_card(nm: String) -> CardPop:
+	var cap: bool = Data.t("ITEM_TIER").get(nm, "") == "CAPSTONE"
+	var pic := maxf(44.0, 0.9 * minf(_cw * 0.74, _cw * 1.4 * 0.56))  # ItemCard's picture for a fan card (its _ready)
+	return CardPop.side_card(nm, lifted_cap_w if cap else lifted_w, true, pic if _cw > 0 else 0.0)
 
 
 ## The names not shown last time start rising now, one after another.
