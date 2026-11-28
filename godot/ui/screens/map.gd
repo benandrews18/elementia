@@ -25,6 +25,7 @@ func _ready() -> void:
 	for n in _nodes():
 		n.tapped.connect(_on_node)
 	$Area/Paths.draw.connect(_draw_paths)
+	$Area/Paths.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED  # the dashes (_dashed)
 	gui_input.connect(_on_map_tap)
 	Game.state_changed.connect(_redraw)
 	resized.connect(_redraw)
@@ -308,18 +309,42 @@ func _draw_paths() -> void:
 		_dashed(c, at[e[0]], at[e[1]], Color("#ffce54") if active else Color(1, 1, 1, 0.2), 5.2 if active else 4.2)
 
 
-## stroke-dasharray 5 4.5 with round caps.
+## stroke-dasharray 5 4.5 with round caps: one quad a path, its dash texture
+## repeating along it (Paths repeats textures). The dashes drawn one by one
+## were ~1,400 draw calls, the map's lag on phones (play testers, 2026-11-28).
 static func _dashed(c: Control, a: Vector2, b: Vector2, color: Color, w: float) -> void:
 	var d := b - a
 	var n := d.length()
-	var u := d / n
-	var t := 0.0
-	while t < n:
-		var e := minf(t + 5, n)
-		c.draw_line(a + u * t, a + u * e, color, w)
-		c.draw_circle(a + u * t, w / 2, color)
-		c.draw_circle(a + u * e, w / 2, color)
-		t += 9.5
+	if n < 0.5:
+		return
+	var side := Vector2(-d.y, d.x) / n * (w / 2 + 1)  # 1px clear round the dash for its soft edge
+	var pts := PackedVector2Array([a + side, b + side, b - side, a - side])
+	var uvs := PackedVector2Array([Vector2(0, 0), Vector2(n / DASH_PERIOD, 0), Vector2(n / DASH_PERIOD, 1), Vector2(0, 1)])
+	c.draw_colored_polygon(pts, color, uvs, _dash_tex(w))
+
+
+const DASH_PERIOD := 9.5
+const DASH_LEN := 5.0
+static var _dash_texs := {}  # width -> one dash and its gap, white
+
+
+static func _dash_tex(w: float) -> Texture2D:
+	if _dash_texs.has(w):
+		return _dash_texs[w]
+	const H := 32
+	var tw := maxi(8, roundi(H * DASH_PERIOD / (w + 2)))
+	var img := Image.create(tw, H, false, Image.FORMAT_RGBA8)
+	for py in H:
+		for px in tw:
+			var ux := (px + 0.5) / tw * DASH_PERIOD
+			var uy := (py + 0.5) / H * (w + 2) - (w + 2) / 2
+			var dist := INF
+			for off in [-DASH_PERIOD, 0.0, DASH_PERIOD]:  # the next dash's cap wraps round
+				var x: float = ux + off
+				dist = minf(dist, Vector2(x - clampf(x, 0, DASH_LEN), uy).length())
+			img.set_pixel(px, py, Color(1, 1, 1, clampf(w / 2 - dist + 0.5, 0, 1)))
+	_dash_texs[w] = ImageTexture.create_from_image(img)
+	return _dash_texs[w]
 
 
 ## The picked station's card at the top (mapCardHTML()). Also the opening's

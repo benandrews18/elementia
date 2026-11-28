@@ -8,6 +8,9 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-28
+- ✕ buttons are easier to tap: every window's ✕ and the Crafting Bench's catch taps a little around them, and the bench's ✕ is bigger and fully on the screen.
+- Fixed a freeze in the To-Do List's details panel: tapping inside it while it rebuilt could crash the game.
+- The map's paths draw far faster (one piece each instead of hundreds), so revealing new stations no longer lags.
 - Quick Rules' "same icons" moments dim everything behind the three cards, the words and Professor Mouse.
 - Quick Rules' "same icons" moments show three cards side by side with what they share ringed in gold: Salmon, Tree and Deer; Tree, Apple and Banana over the Display Mat in the challenge; Deer, Canoe and Log Cabin in the Inventory tutorial.
 - The Inventory & Display tutorial's "?" is also on the Display Mat's bottom-right corner during a challenge; that tutorial now explains one of the gifted cards, the Deer, the way Quick Rules explains the Salmon.
