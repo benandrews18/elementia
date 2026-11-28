@@ -85,6 +85,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var tap := func(ev): return Tap.tap(ev)
 	$Dim.gui_input.connect(func(ev): if tap.call(ev): queue_free())
+	Tok.grow_hit($Window/Close, 12)
 	$Window/Close.gui_input.connect(func(ev): if tap.call(ev): queue_free())
 	$Window/OK.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	# The swap: ↻ and a "?" square (one Unknown Element for another challenge).

@@ -45,6 +45,7 @@ func _ready() -> void:
 			var col := Color("#7d8899")
 			mark.draw_line(c - Vector2(k, k), c + Vector2(k, k), col, 2.0, true)
 			mark.draw_line(c + Vector2(-k, k), c + Vector2(k, -k), col, 2.0, true))
+	Tok.grow_hit($Bubble/Close, 10)
 	$Bubble/Close.gui_input.connect(func(ev): if Tap.tap(ev): hide_tip())
 	$Bubble/Tour/Next.gui_input.connect(func(ev): if Tap.tap(ev): next_step.emit())
 	_hide_text = $Bubble/Hide/Row/Label.text

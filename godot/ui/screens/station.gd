@@ -200,8 +200,9 @@ func _bench(page: Control, w: float, y: float) -> float:
 	close.texture = load("res://assets/ui/btn_close.webp")
 	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.position = Vector2(w - 34 + 4, y - 6)  # the top-right corner (the user, 2026-11-23)
-	close.size = Vector2(34, 34)
+	close.size = Vector2(38, 38)
+	close.position = Vector2(w - 38 - 2, y - 6)  # the top-right corner (the user, 2026-11-23), all of it on the screen
+	Tok.grow_hit(close, 12)  # play testers missed it (the user, 2026-11-28)
 	close.mouse_filter = MOUSE_FILTER_PASS
 	close.gui_input.connect(_on_tap.bind(func():
 		open_card = ""

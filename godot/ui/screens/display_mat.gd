@@ -1207,8 +1207,9 @@ func _lab_bench(y: float) -> float:
 	close.texture = preload("res://assets/ui/btn_close.webp")
 	close.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	close.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	close.size = Vector2(32, 32)
-	close.position = Vector2(bench.position.x + bench.size.x - 32 - 2, y + 2)
+	close.size = Vector2(38, 38)
+	close.position = Vector2(bench.position.x + bench.size.x - 38 - 2, y)
+	Tok.grow_hit(close, 12)  # play testers missed it (the user, 2026-11-28)
 	close.set_meta("cmp", "mat:bench:close")
 	close.gui_input.connect(func(ev): if Tap.tap(ev):
 		selected = ""

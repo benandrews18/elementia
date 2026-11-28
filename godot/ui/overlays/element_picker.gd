@@ -26,6 +26,7 @@ static func make() -> ElementPicker:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	$Dim.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
+	Tok.grow_hit($Window/Close, 12)
 	$Window/Close.gui_input.connect(func(ev): if Tap.tap(ev): queue_free())
 	var is_from := side == "from"
 	if not is_from:

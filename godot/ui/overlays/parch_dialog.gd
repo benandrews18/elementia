@@ -58,6 +58,8 @@ func _wire(n: Node) -> void:
 		if c is Control and c.name in ["Close", "Ok", "Hide"]:
 			var nm: String = c.name
 			c.mouse_filter = MOUSE_FILTER_STOP
+			if nm == "Close":  # play testers missed the corner ✕ (the user, 2026-11-28)
+				Tok.grow_hit(c, 12)
 			c.gui_input.connect(func(ev): if Tap.tap(ev):
 				if nm == "Hide" and tip_id != "":
 					Progress.hide_tip(tip_id)
