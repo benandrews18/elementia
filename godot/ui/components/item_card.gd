@@ -79,7 +79,7 @@ func _ready() -> void:
 	if shop:
 		icon_px = SHOP_ICON * (0.75 if opts.get("wrap") else 1.0)
 	if not shop and not opts.get("wide") and size.x > 0:  # the Inventory's and the mat's cards: the picture fills the card, short of its badges (the user, 2026-11-27)
-		icon_px = maxf(icon_px, minf(size.x * 0.66, size.y * (0.62 if opts.get("no_name", false) else 0.44 if not mini else 0.5)))
+		icon_px = maxf(icon_px, 0.9 * minf(size.x * 0.74, size.y * (0.69 if opts.get("no_name", false) else 0.56 if not mini else 0.56)))  # 0.9: dialled back a touch (the user, 2026-11-27)
 	icon_px = opts.get("icon_px", icon_px)  # a caller's own size (the craft's poke-up cards)
 	var ic := art(card.emoji, icon_px, BIG_ART.get(item, 1.0))
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER

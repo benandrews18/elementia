@@ -8,6 +8,8 @@ Entries before 2026-11-08 refer to `build_guide.py`, `build_all.py` and
 `Elementia_Handoff/`, which are now gone or moved (see the 2026-11-08 entry).
 
 ## 2026-11-27
+- Hand and other item cards: bigger pictures (a touch under the full increase); the last card you tap rises a little above the other picks.
+- A short suit-cost badge on the Crafting Bench opens Convert with an element of that suit ready to make.
 - "3 Cards Sharing a Part" challenge: instead of a thread icon, three little recipe trees in plain black shapes, the same gold star among the parts of all three.
 - The hand: every picked card is raised and ticked the same way; no big card stands over the hand any more, so nothing jumps up or down as you pick and unpick.
 - Professor Mouse's pictures: the pale patches round his feet and edges are cleaned away.
