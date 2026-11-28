@@ -160,6 +160,7 @@ func _go(n: int) -> void:
 	_wait = st.wait
 	_since = 0.0
 	_card.visible = _wait == ""
+	_mouse.visible = false  # he goes and comes with the words (the user, 2026-11-28)
 	var anchor := Rect2()  # "above:<spot>" / "below:<spot>": where that spot is
 	if st.place.get_slice(":", 0) in ["above", "below", "over"]:
 		for c in _spots(st.place.substr(st.place.find(":") + 1)):
@@ -172,7 +173,8 @@ func _go(n: int) -> void:
 	_card.set_corner(_corner(st.corner))
 	_holes = [null]  # redrawn whatever this step spots (none: last step's rings go)
 	_update.call_deferred()
-	_place_mouse.call_deferred()  # after the card's own layout (also deferred)
+	if _card.visible:
+		_place_mouse.call_deferred()  # after the card's own layout (also deferred)
 	_fit_pop.call_deferred()
 
 
@@ -510,7 +512,6 @@ func _place_mouse() -> void:
 		x = card.position.x + 40 if _mouse_side < 0 else card.end.x - 48 - w
 	else:
 		x = 2.0 if _mouse_side < 0 else size.x - w - 2
-	var changed := _mouse.texture != tex
 	_mouse.texture = tex
 	_mouse.flip_h = dir != MOUSE_DIR.get(pose, 1)
 	_mouse.size = Vector2(w, MOUSE_H)
@@ -519,15 +520,15 @@ func _place_mouse() -> void:
 	if _mouse_glide and _mouse_glide.is_valid():
 		_mouse_glide.kill()
 	_mouse.rotation_degrees = 0
-	if not _mouse.visible or not Juice.on():
-		_mouse.position = to
-		_mouse.visible = true
+	_mouse.position = to  # no gliding about: he pops in with the words' card (the user, 2026-11-28)
+	_mouse.visible = true
+	if not Juice.on():
 		return
 	_mouse_glide = _mouse.create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_mouse_glide.tween_property(_mouse, "position", to, 0.35)
-	if changed:  # a new pose pops in
-		_mouse.scale = Vector2(0.92, 0.92)
-		_mouse_glide.tween_property(_mouse, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
+	_mouse.scale = Vector2(0.85, 0.85)
+	_mouse.modulate.a = 0.0
+	_mouse_glide.tween_property(_mouse, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK)
+	_mouse_glide.tween_property(_mouse, "modulate:a", 1.0, 0.15)
 	if lean != 0.0:  # a little hop and lean toward the spot, then back upright
 		_mouse_glide.chain().tween_property(_mouse, "rotation_degrees", 7.0 * lean, 0.18).set_trans(Tween.TRANS_SINE)
 		_mouse_glide.parallel().tween_property(_mouse, "position", to + Vector2(10 * lean, -8), 0.18).set_trans(Tween.TRANS_SINE)
@@ -796,6 +797,7 @@ func _process(d: float) -> void:
 	if _wait != "" and _waited():
 		_wait = ""
 		_card.visible = true
+		_place_mouse.call_deferred()
 	_update()
 
 
