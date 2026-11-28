@@ -867,7 +867,7 @@ func _collections(app: App) -> void:
 	var page_was: Panel = dm._page
 	var first: String = hd.hand[0]
 	dm._lift(first)
-	check(dm._page == page_was and dm.lifted == first, "picking a card doesn't rebuild the mat; one pick shows its card")
+	check(dm._page == page_was and dm.picks == [first], "picking a card doesn't rebuild the mat")
 	check(_find_meta(dm._page, "hand:gain") != null and not app.hub.muted, "picked: what it adds shows over the mat; Play in full colour")
 	check(_find_meta(dm._page, "hand:landing") != null, "picked: the slot it would take lights up")
 	var deck_n: int = hd.deck.size()
@@ -960,9 +960,9 @@ func _collections(app: App) -> void:
 	var two: Array = hd.hand.slice(0, 2)
 	dm._lift(two[0])
 	dm._lift(two[1])
-	check(dm.picks == two and dm.lifted == two[1] and _find_meta(dm._hand_view, "hand:lifted") != null, "two hand cards picked: both raised, the last tapped big in the fan")
+	check(dm.picks == two and _find_meta(dm._hand_view, "hand:lifted") == null, "two hand cards picked: both raised alike, no big card")
 	dm._lift(two[1])
-	check(dm.picks == [two[0]] and dm.lifted == two[0], "a picked card tapped again goes back; one left shows its card")
+	check(dm.picks == [two[0]], "a picked card tapped again goes back; the other stays picked")
 	dm._lift(two[1])
 	var tosses: int = hd.tosses
 	var held: Array = hd.hand.duplicate()

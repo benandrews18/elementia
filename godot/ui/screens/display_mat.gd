@@ -699,7 +699,7 @@ func _exit_tree() -> void:
 ## they'd add shows over the mat.
 func _hand_area(h: Dictionary, page: Panel) -> void:
 	picks = picks.filter(func(n): return h.hand.has(n))
-	lifted = picks.back() if not picks.is_empty() else ""  # the last tapped stays big (the user, 2026-11-26)
+	lifted = ""  # no big card over the hand: every pick is raised and ticked alike (the user, 2026-11-27)
 	selected = ""
 	var bottom := size.y - _hub_h - 18  # clear of the hub's raised buttons
 	var row_y := page.position.y + page.size.y + 8
@@ -844,14 +844,10 @@ static func _lit_ring() -> Panel:
 func _lift(n: String) -> void:
 	if n == "":
 		picks = []
-		lifted = ""
 	elif picks.has(n):
 		picks.erase(n)
-		if lifted == n:  # put back; no other card jumps up in its place (the user, 2026-11-27)
-			lifted = ""
 	else:
 		picks.append(n)
-		lifted = n
 	if view == "elements" and not picks.is_empty():  # picking to play: the mat again
 		view = "mat"
 		_redraw()

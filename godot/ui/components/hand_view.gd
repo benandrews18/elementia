@@ -109,7 +109,7 @@ func _fan(names: Array, cw: float, foot: float, first := 0) -> float:
 		add_child(card)
 		if picks.has(nm):  # picked: raised (two or more: ticked, for Discard)
 			card.position.y -= 18
-		if picks.size() > 1 and picks.has(nm):
+		if picks.has(nm):  # raised and ticked: every pick alike (the user, 2026-11-27)
 			var tk := Tok.tick(Color.WHITE, 22, Tok.OK, Tok.CARD)
 			tk.position = Vector2(cw - 16, -8)
 			tk.mouse_filter = MOUSE_FILTER_IGNORE
