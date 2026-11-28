@@ -516,7 +516,8 @@ func replay_tutorial() -> void:
 ## challenge steps; ✕ leaves any time; back to the Inventory after.
 func inventory_rules() -> void:
 	var was := panel
-	QuickRules.begin(self, func(): if was == "drawer": open_panel("drawer"), true)
+	ConfirmDialog.ask(self, "See the Inventory & Display tutorial?", func():  # asks first (the user, 2026-11-28)
+		QuickRules.begin(self, func(): if was == "drawer": open_panel("drawer"), true))
 
 
 ## Combo Lab (openComboLab(); the title screen): a sandbox mat. The real run
@@ -1042,7 +1043,7 @@ func sync_hub() -> void:
 	if mat:  # a check with cards: Play in the middle (muted until picked cards fit), the Challenge on Jobs
 		hub.greyed = mat.playing
 		hub.muted = not mat.can_play()
-		hub.show_state("play", {"inv": true}, {}, false, true, {"market": true, "inv": Game.ctx.get("challengeTest", false)})
+		hub.show_state("play", {"inv": true}, {}, false, true, {"market": true, "inv": true})
 		return
 	if _check_convert():  # Close goes back to the hand
 		hub.greyed = false
@@ -1087,8 +1088,8 @@ func _hand_tap(mat: DisplayMatScreen, id: String) -> bool:
 	match id:
 		"home": mat.hand_play()
 		"market": mat._show_toast("The Market opens after the check.")
-		"inv":
-			return Game.ctx.get("challengeTest", false)  # the lab's test: nothing under the mat to go back to
+		"inv":  # the Inventory stays open until the challenge is done (the user, 2026-11-28)
+			mat._show_toast("Finish the challenge first.")
 		_:
 			return false
 	return true
@@ -1346,6 +1347,8 @@ func _on_hub(id: String) -> void:
 		return
 	match id:
 		"inv":
+			if panel == "drawer" and Game._in_check():  # a challenge before its hand is dealt: stays open too
+				return
 			if panel == "drawer":
 				close_panel()
 			else:

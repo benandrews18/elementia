@@ -33,6 +33,7 @@ var _inv_key := ""  # what the list was built for: item count and width
 var view := "mat"  # which page under the score card: "mat" or "elements" (matDrawerView)
 var selected := ""  # the card on the Crafting Bench (matListOpen)
 var _big: Control  # a mat card shown big at a check (enlarge())
+var _tabs_end := 0.0  # where the page's tabs end (the fold button clears them)
 static var collapsed := false  # the fold button: the mat minimised to a row of its icons (setMatCollapsed())
 static var list_mode := false  # the 📋 view: a compact list on the left, the selected card on the right
 var playing := false  # the Lock-In count is running: no redraws under it
@@ -121,6 +122,8 @@ func _redraw() -> void:
 		page.gui_input.connect(_blank_tap)
 		if elements:
 			_elements(page)
+		elif view == "caps":
+			_caps(page)
 		else:
 			_slots(cards, sc, page, row_h, open)
 		_page_controls(page)
@@ -176,7 +179,7 @@ func _redraw() -> void:
 	var fold := Panel.new()
 	fold.add_theme_stylebox_override("panel", fold_style)
 	fold.size = Vector2(38, 20)
-	fold.position = Vector2((size.x - 38) / 2, line_y + 1 - 10)
+	fold.position = Vector2(maxf((size.x - 38) / 2, _tabs_end + 4), line_y + 1 - 10)  # clear of the three tabs
 	fold.add_child(_chevron())
 	fold.set_meta("cmp", "mat:fold")
 	fold.gui_input.connect(func(ev): if Tap.tap(ev):
@@ -314,7 +317,8 @@ func _page_controls(page: Control) -> void:
 		return
 	var bottom := page.position.y + page.size.y
 	var x := page.position.x + 4
-	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), view == "elements"], ["Display Mat", Color("#cda874"), Color("#a67c4a"), view == "mat"]]:
+	for t in [["Elements", Color("#f2e6cc"), Color("#c3a06a"), view == "elements"], ["Display Mat", Color("#cda874"), Color("#a67c4a"), view == "mat"],
+			["Capstones", Color("#ecd68e"), Color("#b8962e"), view == "caps"]]:
 		var tab := Label.new()
 		tab.text = t[0]
 		tab.add_theme_font_override("font", Tok.font(800))
@@ -335,12 +339,13 @@ func _page_controls(page: Control) -> void:
 			tab.modulate = Color(0.72, 0.72, 0.72)  # the inactive tab, recessed
 		tab.set_meta("cmp", "tab:" + t[0])
 		tab.mouse_filter = MOUSE_FILTER_STOP
-		var to: String = "elements" if t[0] == "Elements" else "mat"
+		var to: String = {"Elements": "elements", "Display Mat": "mat", "Capstones": "caps"}[t[0]]
 		tab.gui_input.connect(func(ev): if Tap.tap(ev):
 			view = to
 			_redraw())
 		_body.add_child(tab)
 		x += tab.size.x + 2
+	_tabs_end = x
 	var right := page.position.x + page.size.x
 	var help := TextureRect.new()
 	help.texture = load("res://assets/ui/btn_help.webp")
@@ -706,10 +711,20 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	# Gold-rimmed circles (the user, 2026-11-26): Discard on the left, Goal
 	# (the challenge) left of Pass, Pass in the middle (stop playing and lock in), the deck (a tap: the whole
 	# Inventory, to plan) and Draw on the right.
-	_hand_button("discard", _card_icon("cards_scatter"), "Discard", str(h.tosses), Vector2(side, row_y), h.tosses <= 0 or picks.is_empty(), hand_discard)
-	_hand_button("pass", Tok.icon("🏁", 30), "Pass", "", Vector2((size.x - BTN) / 2, row_y), false, hand_pass)
-	_hand_button("goal", Tok.icon("🎯", 30), "Goal", "", Vector2((size.x - BTN) / 2 - BTN - 14, row_y), false,  # the challenge (the user, 2026-11-26: was the hub's Challenge)
-		func(): if App.current: OrderInfo.open(App.current))
+	# Six in a row, spread evenly; Discard, Pass and Draw a little bigger (the user, 2026-11-28).
+	var px := [BTN_BIG, BTN_SMALL, BTN_BIG, BTN_SMALL, BTN_SMALL, BTN_BIG]
+	var gap: float = (size.x - 2 * side - px.reduce(func(a, b): return a + b)) / (px.size() - 1)
+	var at := []
+	var bx := side
+	for p in px:
+		at.append(Vector2(bx, row_y + (BTN - p) / 2))
+		bx += p + gap
+	_hand_button("discard", _card_icon("cards_scatter"), "Discard", str(h.tosses), at[0], h.tosses <= 0 or picks.is_empty(), hand_discard, false, px[0])
+	_hand_button("goal", Tok.icon("🎯", 30), "Goal", "", at[1], false,  # the challenge (the user, 2026-11-26: was the hub's Challenge)
+		func(): if App.current: OrderInfo.open(App.current), false, px[1])
+	_hand_button("pass", Tok.icon("🏁", 30), "Pass", "", at[2], false, hand_pass, false, px[2])
+	_hand_button("collections", Control.new(), "Collections", "", at[3], false,  # the user, 2026-11-28
+		func(): if App.current: CollectionsWindow.show_on(App.current), false, px[3])
 	var draws := Hand.draws_left(h, Game.state)
 	var draw_ic := _card_icon("card")
 	var plus := Tok.label("+", 26, Tok.GOLD, 900)
@@ -720,7 +735,7 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	plus.size = draw_ic.size
 	plus.mouse_filter = MOUSE_FILTER_IGNORE
 	draw_ic.add_child(plus)
-	_hand_button("draw", draw_ic, "Draw", str(draws), Vector2(size.x - side - BTN, row_y), draws <= 0, _flip_view, view == "elements")
+	_hand_button("draw", draw_ic, "Draw", str(draws), at[5], draws <= 0, _flip_view, view == "elements", px[5])
 	var deck_ic := _card_icon("cards_deck")
 	var dn := Tok.label(str(h.deck.size()), 17, Color.WHITE, 900)
 	dn.add_theme_color_override("font_outline_color", Color("#0b2a40"))
@@ -730,7 +745,7 @@ func _hand_area(h: Dictionary, page: Panel) -> void:
 	dn.size = deck_ic.size - Vector2(0, 6)
 	dn.mouse_filter = MOUSE_FILTER_IGNORE
 	deck_ic.add_child(dn)
-	_hand_button("deck", deck_ic, "Deck", "", Vector2(size.x - side - 2 * BTN - 10, row_y), false, func():
+	_hand_button("deck", deck_ic, "Deck", "", at[4], false, func():
 		browsing = true
 		picks = []
 		_redraw())
@@ -776,7 +791,9 @@ func _flip_view() -> void:
 	_redraw()
 
 
-const BTN := 58.0  # the check's round buttons: the size of 🔍 and Convert
+const BTN := 58.0  # the check's round buttons: the size of 🔍 and Convert (the row's height)
+const BTN_BIG := 64.0  # Discard, Pass, Draw
+const BTN_SMALL := 54.0  # Goal, Collections, the deck
 
 
 ## A white card icon (images/playing_card_icons.png, cut by hand into
@@ -795,7 +812,7 @@ static func _card_icon(n: String) -> TextureRect:
 ## btn_round.webp, 🔍's rim) with its icon, its name under it and a count
 ## badge; dimmed when it can't be used (its tap still says why); lit: Draw
 ## while its page shows.
-func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false) -> void:
+func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vector2, dim: bool, fn: Callable, lit := false, px := BTN) -> void:
 	var b := TextureRect.new()
 	b.texture = load("res://assets/icons/v2/card_%s.png" % id)  # the user's tiles (2026-11-27): the picture is the button
 	if ic is TextureRect:
@@ -803,24 +820,24 @@ func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vec
 	b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	b.position = at
-	b.size = Vector2(BTN, BTN)
+	b.size = Vector2(px, px)
 	b.mouse_filter = MOUSE_FILTER_STOP
 	b.set_meta("cmp", "hand:" + id)
 	if lit:
-		b.add_child(_lit_ring())
-	ic.position = (Vector2(BTN, BTN) - ic.size) / 2
+		b.add_child(_lit_ring(px))
+	ic.position = (Vector2(px, px) - ic.size) / 2
 	ic.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(ic)
 	var l := Tok.label(label, 11, Color.WHITE, 900)
 	l.add_theme_color_override("font_outline_color", Color("#0b1a2a"))
 	l.add_theme_constant_override("outline_size", 4)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.position = Vector2(-10, BTN - 1)
-	l.size = Vector2(BTN + 20, 14)
+	l.position = Vector2(-10, (BTN + px) / 2 - 1)  # every label on one line, whatever the button's size
+	l.size = Vector2(px + 20, 14)
 	l.mouse_filter = MOUSE_FILTER_IGNORE
 	b.add_child(l)
 	if badge != "":
-		b.add_child(HubBar._badge(badge, Vector2(BTN - 16, -6)))
+		b.add_child(HubBar._badge(badge, Vector2(px - 16, -6)))
 	if dim:
 		b.modulate = Color(0.6, 0.6, 0.6, 0.75)
 	b.gui_input.connect(func(ev): if Tap.tap(ev): fn.call())
@@ -828,11 +845,11 @@ func _hand_button(id: String, ic: Control, label: String, badge: String, at: Vec
 
 
 ## Draw while its page shows: a pale gold ring round the button.
-static func _lit_ring() -> Panel:
+static func _lit_ring(px := BTN) -> Panel:
 	var r := Panel.new()
 	r.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 14, 3, Color("#ffe08a")))  # round the square tile
 	r.position = Vector2(-3, -3)
-	r.size = Vector2(BTN + 6, BTN + 6)
+	r.size = Vector2(px + 6, px + 6)
 	r.mouse_filter = MOUSE_FILTER_IGNORE
 	return r
 
@@ -1198,6 +1215,33 @@ func _lab_bench(y: float) -> float:
 
 
 ## The Elements page: every element held, 8 to a row (elementsGridHTML()).
+## The Capstones tab (the user, 2026-11-28): the capstones in play, 2 by 2;
+## 3 by 2 from 5 of them, 4 by 2 from 7. A tap shows the card.
+func _caps(page: Control) -> void:
+	var caps: Array = Mat.on_mat(Game.state).filter(Mat.is_capstone)
+	if caps.is_empty():
+		var l := Tok.label("Capstones you craft show here. They're always in play.", 13, Tok.CARD_INK, 800)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.position = Vector2(14, 7)
+		l.size = page.size - Vector2(28, 14)
+		l.set_meta("cmp", "caps:none")
+		page.add_child(l)
+		return
+	var cols := 2 if caps.size() <= 4 else 3 if caps.size() <= 6 else 4
+	var gap := 7.0
+	var cell := Vector2((page.size.x - 14 - (cols - 1) * gap) / cols, (page.size.y - 14 - gap) / 2)
+	for k in caps.size():
+		var nm: String = caps[k].name
+		var card := ItemCard.make(nm, {"tag": "caps:" + nm, "in_grid": false, "no_name": true})  # as on the mat: no names
+		card.size = cell
+		card.position = Vector2(7 + (k % cols) * (cell.x + gap), 7 + floorf(float(k) / cols) * (cell.y + gap))
+		card.mouse_filter = MOUSE_FILTER_STOP
+		card.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_card(nm))
+		page.add_child(card)
+
+
 func _elements(page: Control) -> void:
 	var hand = Game.check_hand()
 	var held: Array = Game.state.elements.keys().filter(func(k): return Game.state.elements[k] > 0)

@@ -15,7 +15,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "quick_inv", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
-	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
+	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "mat_caps", "mat_caps5", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
 	"dev_tools", "dev_jump", "dev_inv", "dev_snaps", "history_dev"]
 
 
@@ -383,6 +383,14 @@ func _ready() -> void:
 					Game.state.items.append(n)
 				Game.toggle_mat_card(n)
 			Game.toggle_mat_card("Homestead")
+		"mat_caps", "mat_caps5":  # the Capstones tab: the lab's capstones (all 8: 4 by 2; 5: 3 by 2)
+			app.open_combo_lab()
+			if state == "mat_caps5":
+				for n in ["Homestead", "Robot", "Metropolis"]:
+					Game.toggle_mat_card(n)
+			var matc := app.panel_node as DisplayMatScreen
+			matc.view = "caps"
+			matc._redraw()
 		"challenge_pick":  # the lab's Challenge Test: pick a check round
 			app.open_combo_lab()
 			app._challenge_pick()
@@ -570,6 +578,9 @@ func _ready() -> void:
 			busy = true
 			app.open_panel("drawer")
 			app.inventory_rules()
+			for d in app.get_children().filter(func(c): return c is ConfirmDialog):  # Yes
+				d.on_yes.call()
+				d.free()
 			await get_tree().process_frame
 			QuickRules.current._card.pressed.emit("Next")
 			for w in 120:  # the items rise in

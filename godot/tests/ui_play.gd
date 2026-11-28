@@ -1020,8 +1020,30 @@ func _collections(app: App) -> void:
 	check(top.call(CardPop).size() == 1 and top.call(CardPop)[0].entry.name == cap, "a capstone's chip tapped: its card")
 	for c in top.call(CardPop):
 		c.queue_free()
+	# The Capstones tab: 2 columns, 3 from 5 capstones, 4 from 7.
+	var caps_all: Array = Data.t("CAPSTONES").filter(func(c): return not Catalog.owns(Game.state, c))
+	var grid_ok := func(extra: int) -> bool:  # the columns used, for the cards shown
+		for c in caps_all.slice(0, extra):
+			Game.state.items.append(c)
+		dm.view = "caps"
+		dm._redraw()
+		var xs := {}
+		var n := 0
+		for c in dm._page.get_children():
+			if str(c.get_meta("cmp", "")).begins_with("caps:"):
+				xs[c.position.x] = true
+				n += 1
+		for c in caps_all.slice(0, extra):
+			Game.state.items.erase(c)
+		return n > 0 and xs.size() == mini(n, 2 if n <= 4 else 3 if n <= 6 else 4)
+	check([0, 2, 3, 4, 5, 6].all(func(k): return grid_ok.call(k)), "the Capstones tab: 2 by 2, 3 by 2 from 5, 4 by 2 from 7")
+	dm.view = "mat"
 	Game.state.items.erase(cap)
 	dm._redraw()
+	dm = app.panel_node as DisplayMatScreen
+	app._on_hub("inv")
+	check(app.panel == "drawer", "the Inventory button can't close the Inventory during a challenge")
+	check(_find_meta(dm, "hand:collections") != null, "Collections beside Pass")
 	# Element draws on the mat's Elements tab; Convert works as ever.
 	var esym := ""
 	for sym in Data.t("CLASSIC_ELEMENTS"):
@@ -1537,6 +1559,11 @@ func _settings(app: App) -> void:
 	var help: Control = app.panel_node.get_node("Body").get_children().filter(func(c): return c.get_meta("cmp", "") == "btn:rules")[0]
 	var state_was := Game.state
 	help.gui_input.emit(_release())
+	var asks: Array = top.call(ConfirmDialog)
+	check(asks.size() == 1 and not QuickRules.running(), "the Inventory's \"?\" asks first")
+	for d in asks:
+		d.on_yes.call()
+		d.free()
 	var qr := QuickRules.current
 	check(QuickRules.running() and qr.i == qr.inventory_steps.x and qr.last == qr.inventory_steps.y, "the Inventory's \"?\": Quick Rules from its Inventory step")
 	if QuickRules.running():
@@ -1544,6 +1571,9 @@ func _settings(app: App) -> void:
 		await get_tree().process_frame
 		check(not QuickRules.running() and is_same(Game.state, state_was) and app.panel == "drawer", "after its last step: the run put back, the Inventory again")
 		app.inventory_rules()
+		for d in top.call(ConfirmDialog):
+			d.on_yes.call()
+			d.free()
 		await get_tree().process_frame
 		await get_tree().process_frame
 		check(app._gear.is_visible_in_tree(), "over Quick Rules: the Settings gear")
