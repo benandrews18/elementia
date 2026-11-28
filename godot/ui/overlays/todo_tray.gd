@@ -396,7 +396,10 @@ func _details() -> void:
 		var sc := old.get_node_or_null("Scroll")
 		if sc:
 			_detail_keep = sc.scroll_vertical
-		old.free()
+		# Out now, freed later: a tap inside it is still being handled (free() here
+		# deleted the tapped row mid-signal; play testers' freeze, 2026-11-28)
+		$Tray.remove_child(old)
+		old.queue_free()
 	var e = Catalog.entry(detail) if detail != "" else null
 	if e == null:
 		_detail_keep = 0
@@ -427,6 +430,7 @@ func _details() -> void:
 	close.size = Vector2(34, 34)
 	close.position = Vector2(dw - 34 - 10, 10)
 	close.set_meta("cmp", "todo:close")
+	Tok.grow_hit(close, 12)
 	close.gui_input.connect(func(ev): if Tap.tap(ev):
 		close.accept_event()
 		detail = ""

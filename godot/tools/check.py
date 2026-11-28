@@ -35,7 +35,8 @@ def godot_test(name: str, scene: str, pass_re: str, frames: int, extra=()) -> bo
     cmd = [GODOT, "--headless", "--path", str(ROOT), "--quit-after", str(frames), scene, *extra]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)  # check lines carry emoji
     out = r.stdout + r.stderr
-    errors = [l for l in out.splitlines() if "SCRIPT ERROR" in l or l.startswith("FAIL")]
+    # A node freed inside its own tap: a crash or freeze on phones (the to-do details, 2026-11-28)
+    errors = [l for l in out.splitlines() if "SCRIPT ERROR" in l or l.startswith("FAIL") or "while a signal is being emitted" in l]
     ok = r.returncode == 0 and re.search(pass_re, out, re.M) is not None and not errors
     print(f"{'PASS' if ok else 'FAIL'}  {name}  ({time.time() - t:.0f}s)")
     if errors:

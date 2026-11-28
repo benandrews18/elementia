@@ -425,7 +425,9 @@ func _todo(app: App) -> void:
 			"a suit icon's tap: the suit's balloon, its name over its elements, no counts")
 		for c in sv:
 			c.queue_free()
-	_find_meta(app.panel_node, "todo:close").gui_input.emit(_release())
+	await get_tree().create_timer(0.5).timeout  # slid in
+	_vtap(_find_meta(app.panel_node, "todo:close").get_global_rect().get_center())  # a real tap: the panel it's in is rebuilt under it
+	Tap._down = null
 	check(TodoTray.detail == "" and _find_meta(app.panel_node, "todo:details") == null, "✕ closes the details panel")
 	await get_tree().process_frame
 	_find_meta(app.panel_node, "todo:quest:Metropolis").gui_input.emit(_release())
