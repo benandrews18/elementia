@@ -130,12 +130,23 @@ func _go(n: int) -> void:
 		return
 	i = n
 	var st := steps[n]
+	for c in get_children():  # the last step's lifted copies go
+		if c.has_meta("lifted"):
+			c.queue_free()
 	for a in st.act:
 		_act(a)
 	_wait = st.wait
 	_since = 0.0
 	_card.visible = _wait == ""
-	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == steps.size() - 1 else next_text)
+	var anchor := Rect2()  # "above:<spot>" / "below:<spot>": where that spot is
+	if st.place.begins_with("above:") or st.place.begins_with("below:"):
+		for c in _spots(st.place.substr(6)):
+			if c is Control:
+				var g: Rect2 = c.get_global_rect()
+				anchor = Rect2(g.position - global_position, g.size)
+	_card.low = not (Array(st.spot) + Array(st.tap)).any(func(w): return w.begins_with("hub:"))  # nothing on the hub to see: "bottom" may cover it
+	_card.show_step(_words(st.say), st.place, _extra(st.extra), last_text if n == steps.size() - 1 else next_text, anchor, st.title, st.title_icon)
+	_card.set_corner(_corner(st.corner))
 	_holes = [null]  # redrawn whatever this step spots (none: last step's rings go)
 	_update.call_deferred()
 	_fit_pop.call_deferred()
@@ -148,6 +159,16 @@ func _words(say: String) -> String:
 	for st in Data.t("STATION_TRACKER_ORDER"):
 		row += "{%s}" % Catalog.station(st).emoji
 	say = say.replace("{stations}", row)
+	if say.contains("{common}"):  # the tier 1 items most recipes use (from the game data)
+		var uses := {}
+		var tier: Dictionary = Data.t("ITEM_TIER")
+		for e in Data.t("ENTRIES"):
+			for r in e.reqs:
+				if r.kind == "item" and tier.get(r.name) == "MATERIAL":
+					uses[r.name] = uses.get(r.name, 0) + 1
+		var top: Array = uses.keys()
+		top.sort_custom(func(a, b): return uses[a] > uses[b] or (uses[a] == uses[b] and a < b))
+		say = say.replace("{common}", "".join(top.slice(0, 6).map(func(n): return "{%s}" % Data.t("ITEM_EMOJI")[n])))
 	var re := RegEx.create_from_string("[{]recipe:([^}]+)[}]")
 	for m in re.search_all(say):
 		var e = Catalog.entry(m.get_string(1))
@@ -285,6 +306,9 @@ func _act(a: String) -> void:
 				await get_tree().create_timer(0.8).timeout
 				if is_instance_valid(mat) and running():
 					mat.hand_discard()
+		"demomat":  # demomat:Wire,Battery: these on the mat for a look at its combos ("": cleared)
+			Game.state.mat = Array(arg.split(",", false))
+			Game._changed()
 		"view":  # the mat's page: "elements" (Draw's) or "mat"
 			var mat := _app.hand_mat()
 			if mat:
@@ -387,7 +411,7 @@ func _act(a: String) -> void:
 		"convert":  # the Convert button slides in from the right
 			Game.ctx.qr.convert = true
 			Game.state_changed.emit()
-			_slide_in(Tutorial.find_all("convert") + Tutorial.find_all("suits"), Vector2(160, 0))
+			_slide_in(Tutorial.find_all("convert") + Tutorial.find_all("suits") + [_lift("convert")], Vector2(160, 0))
 		"cvopen":  # cvopen:Ca:Limestone: the Convert tray on Ca, the card's bench on top
 			_app.open_convert(arg, a.get_slice(":", 2))
 		"cvload":  # cvload:C:Ca: what's converted, into what
@@ -433,6 +457,30 @@ func _slide_in(nodes: Array, by: Vector2) -> void:
 			c.create_tween().tween_property(c, "offset_transform_position", Vector2.ZERO, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## A copy of a spot's control over the card (the user, 2026-11-27: the
+## Convert button comes in on top of the words), ringed; a tap on it is the
+## step's tap. Gone at the next step.
+func _lift(tag: String) -> Control:
+	var src := _find(tag)
+	if src == null:
+		return null
+	var c: Control = src.duplicate(DUPLICATE_SCRIPTS)  # no signals: its taps are the step's
+	c.set_meta("lifted", true)
+	var g := src.get_global_rect()
+	c.position = g.position - global_position
+	c.size = g.size
+	c.mouse_filter = MOUSE_FILTER_STOP
+	c.gui_input.connect(func(ev): if Tap.tap(ev) and _card.visible: _go(i + 1))
+	var ring := Panel.new()
+	ring.add_theme_stylebox_override("panel", Tok.box(Color.TRANSPARENT, 12, 3, Color("#ffe08a")))
+	ring.position = Vector2(-6, -6)
+	ring.size = g.size + Vector2(12, 12)
+	ring.mouse_filter = MOUSE_FILTER_IGNORE
+	c.add_child(ring)
+	add_child(c)
+	return c
+
+
 func _station() -> StationScreen:
 	return _app._screen as StationScreen if is_instance_valid(_app._screen) else null
 
@@ -472,6 +520,31 @@ func _rise_items() -> void:
 		k += 1
 
 
+## A step's corner badge (QuickStep.corner), or null.
+func _corner(what: String) -> Control:
+	if what == "":
+		return null
+	if what == "clock":
+		return OrderInfo._clock(int(Data.t("RUN_COMPLETE_VISIT")))
+	if what == "discard":  # the mat's Discard button: its gold-rimmed circle and card picture
+		var r := TextureRect.new()
+		r.texture = load("res://assets/ui/btn_round.webp")
+		r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		r.size = Vector2(58, 58)
+		var ci := DisplayMatScreen._card_icon("cards_scatter")
+		ci.position = (r.size - ci.size) / 2
+		r.add_child(ci)
+		return r
+	var b := Panel.new()  # the clock's look: a cream disc in a gold ring
+	b.add_theme_stylebox_override("panel", Tok.box(Color("#fff7e0"), 29, 3, Color("#a8730f"), 4, 2, Color(0, 0, 0, 0.3)))
+	b.size = Vector2(58, 58)
+	var ic := Tok.icon(what, 38)
+	ic.position = (b.size - Vector2(38, 38)) / 2
+	b.add_child(ic)
+	return b
+
+
 ## A step's picture under its words.
 func _extra(name: String) -> Control:
 	match name:
@@ -500,6 +573,70 @@ func _extra(name: String) -> Control:
 				nm.position = Vector2(-(cell - cw) / 2, cw + 3)
 				nm.size = Vector2(cell, 12)
 				box.add_child(chip)
+			return box
+		"cardtools":  # the challenge's round buttons as the mat shows them: Discard, Goal, Pass, Deck, Draw
+			var w := _card.content_width()
+			var cell := w / 5
+			var d := 44.0
+			var box := Control.new()
+			box.mouse_filter = MOUSE_FILTER_IGNORE
+			box.custom_minimum_size = Vector2(w, d + 18)
+			var icons := [DisplayMatScreen._card_icon("cards_scatter"), Tok.icon("🎯", 23), Tok.icon("🏁", 23),
+				DisplayMatScreen._card_icon("cards_deck"), DisplayMatScreen._card_icon("card")]
+			var names := ["Discard", "Goal", "Pass", "Deck", "Draw"]
+			for k in 5:
+				var b := TextureRect.new()
+				b.texture = load("res://assets/ui/btn_round.webp")
+				b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				b.size = Vector2(d, d)
+				b.position = Vector2(k * cell + (cell - d) / 2, 0)
+				b.mouse_filter = MOUSE_FILTER_IGNORE
+				var ic: Control = icons[k]
+				if ic.size.x > 30:  # the card pictures: as on the mat, a little smaller here
+					ic.size = Vector2(24, 24)
+				ic.position = (b.size - ic.size) / 2
+				b.add_child(ic)
+				if k == 4:  # Draw's gold "+"
+					var plus := Tok.label("+", 20, Tok.GOLD, 900)
+					plus.add_theme_color_override("font_outline_color", Color("#3b2412"))
+					plus.add_theme_constant_override("outline_size", 5)
+					plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+					plus.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+					plus.size = ic.size
+					ic.add_child(plus)
+				box.add_child(b)
+				var nm := Tok.label(names[k], 11, Color("#5e4026"), 800)
+				nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				nm.position = Vector2(k * cell, d + 3)
+				nm.size = Vector2(cell, 14)
+				box.add_child(nm)
+			return box
+		"suits":  # the four suits in the suit strip's gold rings, named
+			var w := _card.content_width()
+			var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
+			var cell := w / suits.size()
+			var d := 34.0
+			var box := Control.new()
+			box.mouse_filter = MOUSE_FILTER_IGNORE
+			box.custom_minimum_size = Vector2(w, d + 18)
+			for k in suits.size():
+				var su: String = suits[k]
+				var ring := Panel.new()
+				ring.add_theme_stylebox_override("panel", Tok.box(Color("#122e3c"), d / 2, 1.5, Tok.GOLD, 3, 1, Color(0, 0, 0, 0.35)))
+				ring.size = Vector2(d, d)
+				ring.position = Vector2(k * cell + (cell - d) / 2, 0)
+				ring.mouse_filter = MOUSE_FILTER_IGNORE
+				var ic := Tok.icon("suit:" + su, 21)
+				ic.material = Tok.tinted(Tok.suit_color(su))
+				ic.position = (ring.size - Vector2(21, 21)) / 2
+				ring.add_child(ic)
+				box.add_child(ring)
+				var nm := Tok.label(Data.t("ELEMENT_SUIT_LABEL")[su], 11, Tok.suit_color(su).darkened(0.25), 800)
+				nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				nm.position = Vector2(k * cell, d + 3)
+				nm.size = Vector2(cell, 14)
+				box.add_child(nm)
 			return box
 		"elements":  # the 16, by suit then atomic number: 2 rows of 8
 			var w := _card.content_width()
@@ -544,6 +681,8 @@ func _spots(word: String) -> Array:
 	if word == "st:chips":  # the station's element pool
 		var st := _station()
 		return st.get_node("Scroll/Page/Chips").get_children() if st else []
+	if word == "mat:combos":  # the Display Mat's combo row
+		return Tutorial.find_all("chip")
 	if word == "map:finds":  # the 🔍 marks on the stations
 		return Tutorial.find_all("map:find:")
 	var n := _find(word)

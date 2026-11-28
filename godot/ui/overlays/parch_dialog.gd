@@ -89,10 +89,10 @@ static func emojify(text: String, px: int) -> String:
 	var re := RegEx.create_from_string("[{]((?:__[A-Z_]+__)|(?:(?:ui|suit):[a-z_]+)|[^{}a-zA-Z0-9_ ][^{}]*)[}]")
 	for m in re.search_all(text):
 		var key := m.get_string(1)
+		if key.begins_with("suit:"):  # on its coloured circle, as on the cards' suit pips (tools/suit_discs.py)
+			key = "suitdisc:" + key.substr(5)
 		var tex := Data.icon(key)
 		var img := "[img=%dx%d]%s[/img]" % [px, px, tex.resource_path] if tex else ""
-		if tex and key.begins_with("suit:"):  # its suit's colour, as everywhere else
-			img = "[img width=%d height=%d color=#%s]%s[/img]" % [px, px, Tok.suit_color(key.substr(5)).to_html(false), tex.resource_path]
 		text = text.replace(m.get_string(), img)
 	return text
 

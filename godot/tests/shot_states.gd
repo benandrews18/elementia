@@ -12,7 +12,7 @@ const STATES := ["map", "map_card", "station", "bench", "drawer", "drawer_elemen
 	"order_restrict", "order_grand", "order_rainbow", "order_tour", "station_fold",
 	"card_pop", "card_pop_cap", "card_pop_metro", "card_pop_back", "element_card", "items", "items_open", "items_search",
 	"settings", "game_rules", "tutorial_messages", "mat_rules", "mat_rules2", "order_tip", "unknown_tip",
-	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
+	"welcome", "classic_mode", "quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock", "trophies", "trophy_detail", "history", "history_open",
 	"pins", "tracked_card", "tracked_map", "tracked_say", "tracked_station", "map_ocean", "station_early", "station_mine", "clock_info",
 	"mouse_bl", "mouse_tl", "mouse_c", "mouse_br", "hint_badge", "hint_open", "tut_intro", "tut_elements", "tut_coach",
 	"layouts", "coll_run", "coll_menu", "coll_found", "clue_box", "clue_card", "combo_lab", "lab_bench", "lab_mat", "challenge_pick", "challenge_hand", "hand_picks", "challenge_elements", "combo_info", "play_together", "hand_preview", "hand_inventory", "convert_bench", "keep_fan", "element_pick", "hand_combo", "mat_big", "coll_focus",
@@ -549,11 +549,11 @@ func _ready() -> void:
 			app.show_welcome()
 			if state == "classic_mode":
 				ClassicMode.show_on(app)
-		"quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_pool", "quick_finds", "quick_convert", "quick_clock":  # Quick Rules at a step
+		"quick_elements", "quick_market", "quick_caps", "quick_salmon", "quick_hand", "quick_reward", "quick_draw", "quick_play", "quick_early", "quick_details", "quick_explore", "quick_pool", "quick_finds", "quick_convert", "quick_clock":  # Quick Rules at a step
 			busy = true
 			var q := QuickRules.begin(app, Callable())
 			await get_tree().process_frame
-			for k in {"quick_elements": 3, "quick_market": 10, "quick_caps": 12, "quick_salmon": 18, "quick_hand": 26, "quick_reward": 31,
+			for k in {"quick_elements": 3, "quick_market": 10, "quick_caps": 12, "quick_salmon": 18, "quick_hand": 26, "quick_reward": 31, "quick_draw": 29, "quick_play": 30, "quick_early": 38, "quick_details": 42, "quick_explore": 43,
 				"quick_pool": 34, "quick_finds": 48, "quick_convert": 59, "quick_clock": 63}[state]:
 				for w in 400:  # a step waiting on the mat or the reward
 					if q._card.visible:

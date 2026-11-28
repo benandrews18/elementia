@@ -116,5 +116,9 @@
  "suit:organic": "res://assets/icons/suit_organic.png",
  "suit:reactive": "res://assets/icons/suit_reactive.png",
  "suit:metal": "res://assets/icons/suit_metal.png",
- "suit:earth": "res://assets/icons/suit_earth.png"
+ "suit:earth": "res://assets/icons/suit_earth.png",
+ "suitdisc:organic": "res://assets/icons/suit_disc_organic.png",
+ "suitdisc:reactive": "res://assets/icons/suit_disc_reactive.png",
+ "suitdisc:metal": "res://assets/icons/suit_disc_metal.png",
+ "suitdisc:earth": "res://assets/icons/suit_disc_earth.png"
 }
