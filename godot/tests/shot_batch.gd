@@ -43,7 +43,7 @@ func _ready() -> void:
 		screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		for i in 3:
 			await get_tree().process_frame
-		for i in 1200:  # a state still playing its way there (Quick Rules' challenge)
+		for i in 4000:  # a state still playing its way there (Quick Rules' steps)
 			if not screen.busy:
 				break
 			await get_tree().process_frame

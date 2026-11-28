@@ -346,7 +346,7 @@ func _row(e: Dictionary, y: float, w: float) -> float:
 	# 🔍 Track and 📌 (drop it from the list), as buttons (the user, 2026-11-26)
 	var pin := _button("📌", true, Vector2(w - 14 - BTN, (ROW_H - BTN) / 2), "todo:pin:" + e.name, func(): App.pin(e.name))
 	row.add_child(pin)
-	if not owned:
+	if not owned and not QuickRules.no_track():
 		var on: bool = Game.ctx.get("tracked") == e.name
 		row.add_child(_button("🔍", on, pin.position - Vector2(BTN + 8, 0), "todo:rowtrack:" + e.name,
 			func():
@@ -472,7 +472,7 @@ func _details() -> void:
 	var head := Tok.label("PARTS", 11, Color("#8fa3b5"), 800)
 	head.position = Vector2(14, 104 + dy)
 	body.add_child(head)
-	if Game.ctx.get("tracked") == null:  # a nudge, not a pick
+	if Game.ctx.get("tracked") == null and not QuickRules.no_track():  # a nudge, not a pick
 		var tip := Control.new()  # 🔍 as its image: an emoji in text draws differently per device
 		tip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tip.position = Vector2(62, 103 + dy)

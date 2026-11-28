@@ -138,7 +138,8 @@ func flush() -> void:
 		out.saveVersion = SAVE_VERSION
 		_write(SAVE_PATH, out)
 		_pending_run = null
-	_write(PREFS_PATH, prefs)
+	if not Game.ctx.get("demo"):  # Quick Rules' pins and switches are its own (the real ones come back at its end)
+		_write(PREFS_PATH, prefs)
 
 
 func _notification(what: int) -> void:

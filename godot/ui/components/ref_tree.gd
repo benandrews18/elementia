@@ -368,6 +368,7 @@ static func track_button(name: String, at: Vector2, px := 40.0) -> Control:
 	b.size = Vector2(px, px)
 	b.position = at
 	b.set_meta("cmp", "todo:track:" + name)
+	b.visible = not QuickRules.no_track()  # Quick Rules shows tracking later
 	var ipx := px / 2
 	var ic := Tok.icon("🔍", ipx)
 	ic.position = (b.size - Vector2(ipx, ipx)) / 2

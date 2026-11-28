@@ -92,6 +92,7 @@ func _ready() -> void:
 	# The pin, off the top-left corner (14px out from inside the border).
 	var pinned := Progress.is_pinned(e.name)
 	var pin: Panel = $Pin
+	pin.set_meta("cmp", "pin:" + e.name)
 	pin.add_theme_stylebox_override("panel", pin_on if pinned else pin_off)
 	pin.modulate.a = 1.0 if pinned else 0.5
 	if not pinned:

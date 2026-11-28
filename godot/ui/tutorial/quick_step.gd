@@ -21,5 +21,11 @@ extends Resource
 ## "meter" (a Quark Meter, partly filled).
 @export var extra := ""
 ## The card waits until ("": it shows at once): "mat" (the Display Mat's play or deal has
-## finished), "reward" (the Lock In's Bonus Dice window is up).
+## finished), "reward" (the Lock In's Bonus Dice window is up), "arrive" (a
+## station's cards are in), "roll" (the dice have landed), "gathered" (the
+## roll's elements are in the Inventory), "crafted" (the craft has played),
+## "reveal" (the map's new stations are in).
 @export var wait := ""
+## Spots where a real tap does what Next does (the user, 2026-11-27: at key
+## moments, sparingly), e.g. "hub:home" (Roll, Gather), "craft:Sand".
+@export var tap: PackedStringArray

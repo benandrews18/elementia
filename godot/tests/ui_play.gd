@@ -32,7 +32,7 @@ func _ready() -> void:
 	add_child(app)
 	app.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var only: String = load("res://tests/shot.gd")._args().get("only", "")
-	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "quick", "pins", "tips", "tutorial", "layouts", "collections", "dev"] if only == "" else [only]
+	var parts: Array = ["run", "final_score", "market", "todo", "cards", "items", "settings", "welcome", "quick", "pins", "tips", "tutorial", "layouts", "collections", "dev"] if only == "" else Array(only.split(","))
 	for part in parts:
 		await call("_" + part, app)
 	for part in parts:
@@ -1358,6 +1358,7 @@ func _quick(app: App) -> void:
 	var q := QuickRules.current
 	var steps := 0
 	var dealt := false
+	var tapped := false
 	while QuickRules.running() and steps < 80:
 		steps += 1
 		for k in 3:
@@ -1373,6 +1374,26 @@ func _quick(app: App) -> void:
 			check(q._shade.visible, "step %d spotlights what it's about" % q.i)
 		if q.steps[q.i].act.has("market"):
 			check(app.panel == "market", "the Market opens")
+		if q.steps[q.i].act.has("visit:Old Growth Forest"):
+			check(app._screen is StationScreen and Game.state.items.is_empty() and Progress.prefs.pinnedItems.is_empty(), "part 3: at the Old Growth Forest, nothing crafted or pinned yet")
+		if q.steps[q.i].act.has("track:Tree"):
+			check(Game.ctx.get("tracked") == "Tree" and not Tutorial.find_all("tracked").is_empty() and not Tutorial.find_all("map:find:").is_empty(), "the Tree tracked: the pill, and 🔍 marks on the map")
+		if q.i == q.steps.size() - 1:
+			check(["Sand", "Water", "Limestone"].all(func(n): return Catalog.owns(Game.state, n)) and int(Game.state.visits) == 2 and not Tutorial.find_all("clock").is_empty(),
+				"the tour: Sand, Water and Limestone (after a conversion) crafted, two turns on the clock")
+		if not tapped and q.steps[q.i].tap.has("hub:home"):  # a real tap there does what Next does
+			tapped = true
+			var at: Vector2 = app.hub.button("home").get_global_rect().get_center()
+			var was := q.i
+			for down in [true, false]:
+				var ev := InputEventMouseButton.new()
+				ev.button_index = MOUSE_BUTTON_LEFT
+				ev.pressed = down
+				ev.global_position = at
+				q._gui_input(ev)
+			Tap._down = null  # the other sections' taps are releases alone
+			check(q.i == was + 1, "a tap on the step's spot goes on, like Next")
+			continue
 		q._card.pressed.emit("Next")
 	check(not QuickRules.running() and steps == q.steps.size(), "Next through every step to the end (%d)" % steps)
 	check(dealt, "the challenge's hand was dealt")

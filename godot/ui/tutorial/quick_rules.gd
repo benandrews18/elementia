@@ -4,7 +4,9 @@
 ## put back at the end, which then runs `then` (into the new game, or back
 ## to the Play menu). Game.ctx.qr says what the screens show meanwhile:
 ## stations (the map's), card (the map's station card, cut after its
-## elements), face (the hub's middle button).
+## elements), face (the hub's middle button: "" its real face), and once
+## their steps come: paths, track (the 🔍 Track buttons), floats (the 🔍
+## tracker button and the tracked pill), convert (its button), clock.
 ## The steps are QuickStep resources on ui/tutorial/quick_rules.tscn; what a
 ## step's `act` and `spot` words do is below (_act, _spots).
 class_name QuickRules
@@ -38,7 +40,7 @@ static var current: QuickRules
 var i := -1
 var then := Callable()
 var _app: App
-var _real: Array = []  # the real run, its context and the prefs, put back at the end
+var _real: Array = []  # the real run, its context, the prefs and the To-Do List's open rows, put back at the end
 var _hidden: Array = []  # windows over the App (the title screen, the Play menu): hidden, then shown again
 var _card: QuickCard
 var _pop: CardPop  # a big card the steps show
@@ -52,6 +54,12 @@ var _locked := false  # the challenge's Lock In has started
 
 static func running() -> bool:
 	return is_instance_valid(current)
+
+
+## The 🔍 Track buttons wait for their step (the user, 2026-11-27).
+static func no_track() -> bool:
+	var qr = Game.ctx.get("qr")
+	return qr != null and not qr.get("track", false)
 
 
 ## Starts it over everything on app; `done` runs once it's over (Finish or ✕).
@@ -71,7 +79,10 @@ func _ready() -> void:
 	current = self
 	position = _app.global_position  # the App sits under a phone's notch
 	size = _app.size
-	_real = [Game.state, Game.ctx, Progress.prefs.duplicate(true)]
+	_real = [Game.state, Game.ctx, Progress.prefs.duplicate(true), TodoTray.detail, TodoTray.expanded.duplicate()]
+	Progress.prefs.pinnedItems = []  # the steps pin their own
+	Progress.prefs.autoTrackOnPin = false
+	Progress.prefs.pinAsked = true  # no "Track it?" window: a later step tracks it
 	for c in _app.get_children().slice(_app.hub.get_index() + 1):
 		if c is Control and c.visible:
 			c.visible = false
@@ -168,11 +179,16 @@ func finish() -> void:
 	if is_instance_valid(_pop):
 		_pop.queue_free()
 	for c in _app.get_children():
-		if c is LockInReward:
+		if c is LockInReward or c is RollPopup or c is SuitSpend or c.has_meta("peek"):
 			c.queue_free()
+	var st := _station()
+	if st:
+		st.open_card = ""
 	Game.state = _real[0]
 	Game.ctx = _real[1]
 	Progress.prefs = _real[2]
+	TodoTray.detail = _real[3]
+	TodoTray.expanded = _real[4]
 	randomize()  # the seed above made every run's dice the same
 	_app.close_panel(false)
 	var hub := _app.hub
@@ -286,6 +302,139 @@ func _act(a: String) -> void:
 			var tray := _app.panel_node as MarketTray
 			if t and tray:
 				tray.get_node("Bg/Scroll").ensure_control_visible(t)
+		"visit":  # the first station, fresh: nothing held or crafted (its whole shop to try)
+			for c in _app.get_children():
+				if c is LockInReward:
+					c.queue_free()
+			_app.close_panel(false)
+			var s := Game.state
+			s.items = []
+			s.elements = {}
+			s.mat = []
+			s.matPlays = []
+			s.erase("hand")
+			s.erase("demoStage")
+			s.visits = 0
+			Game.ctx.erase("challengeTest")
+			Game.ctx.qr.face = ""
+			_visit(arg)
+		"travel":
+			_visit(arg)
+		"roll":  # roll:Si,O,C: these come up (the steps craft from them)
+			var s := Game.state
+			var dice := Catalog.sorted_dice(Catalog.station(Game.ctx.current))
+			var out := []
+			for sym in arg.split(","):
+				s.elements[sym] = Catalog.count(s, sym) + 1
+				out.append({"face": maxi(1, dice.find(sym) + 1), "sym": sym})
+			s.rolledHere = true
+			s.lastRoll = out
+			var pop := RollPopup.make()
+			pop.roll = out
+			pop.size = _app.size
+			_app.add_child(pop)
+			_app.sync_hub()  # Home reads Gather
+			pop.tree_exited.connect(func(): if App.current and App.current.is_inside_tree(): App.current.sync_hub())
+		"gather":
+			for c in _app.get_children():
+				if c is RollPopup:
+					c.collect()
+		"bench":  # a shop card's row on the Crafting Bench
+			_app.open_card(arg)
+		"craft":
+			Game.craft(arg, Game.suggest_suit_picks(arg))
+		"pin":
+			Game.toggle_pin(arg)
+		"todo":
+			_app.open_panel("todo")
+		"detail":  # the To-Do List's details panel
+			TodoTray.detail = arg
+			if _app.panel_node is TodoTray:
+				_app.panel_node._redraw()
+		"close":
+			_app.close_panel(false)
+		"map":
+			_app.close_panel(false)
+			Game.go_map()
+		"reveal":  # what leaving the station found bounces in, its paths growing out to them
+			var qr: Dictionary = Game.ctx.qr
+			var fresh: Array = Catalog.found_stations(Game.state).keys().filter(func(st): return not qr.stations.has(st))
+			qr.stations.append_array(fresh)
+			qr.paths = true
+			var map := _map()
+			if map:
+				for st in fresh:
+					map._pending[st] = true
+				map._redraw()
+				map._reveal(fresh)
+		"floats":  # the 🔍 tracker button slides in from the left
+			Game.ctx.qr.floats = true
+			_app._sync_floats()
+			_slide_in(_app._floats.get_children(), Vector2(-120, 0))
+		"pins":  # the tracker's tray
+			_app.open_panel("pins")
+		"track":  # tracked from the tracker's tray: it flies to the pill
+			var chip := _find("pins:chip:" + arg)
+			var from := chip.get_global_rect() if chip else Rect2()
+			Game.ctx.qr.track = true
+			Game.track(arg)
+			_app.close_panel(false)
+			if from.has_area():
+				_app.fly_to_tracker(arg, from)
+		"select":  # a station tapped on the map: its full card
+			Game.ctx.selectedMapStation = arg
+			Game.state_changed.emit()
+		"convert":  # the Convert button slides in from the right
+			Game.ctx.qr.convert = true
+			Game.state_changed.emit()
+			_slide_in(Tutorial.find_all("convert") + Tutorial.find_all("suits"), Vector2(160, 0))
+		"cvopen":  # cvopen:Ca:Limestone: the Convert tray on Ca, the card's bench on top
+			_app.open_convert(arg, a.get_slice(":", 2))
+		"cvload":  # cvload:C:Ca: what's converted, into what
+			var tray := _app.panel_node as ConvertTray
+			if tray:
+				tray.from = arg
+				tray.to = a.get_slice(":", 2)
+				tray._redraw()
+		"cvgo":
+			var tray := _app.panel_node as ConvertTray
+			if tray:
+				tray.do_convert()
+		"clock":  # the turn clock drops into its corner
+			Game.ctx.qr.clock = true
+			Game.state_changed.emit()
+			_slide_in(Tutorial.find_all("clock"), Vector2(0, -160))
+
+
+## Arrives at a station (Game.go_station, without its first-visit pin).
+func _visit(name: String) -> void:
+	var s := Game.state
+	var ctx := Game.ctx
+	ctx.current = name
+	ctx.screen = "station"
+	ctx.selectedMapStation = null
+	s.visits = int(s.visits) + 1
+	s.rolledHere = false
+	s.lastRoll = null
+	s.visitedStations[name] = true
+	if not ctx.qr.stations.has(name):
+		ctx.qr.stations.append(name)
+	Game.state_changed.emit()
+
+
+## Controls slide in from `by` away (visual only: taps land where they are).
+func _slide_in(nodes: Array, by: Vector2) -> void:
+	if not Juice.on():
+		return
+	for c in nodes:
+		if c is Control:
+			c.offset_transform_enabled = true
+			c.offset_transform_position = by
+			c.create_tween().tween_property(c, "offset_transform_position", Vector2.ZERO, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _station() -> StationScreen:
+	return _app._screen as StationScreen if is_instance_valid(_app._screen) else null
 
 
 ## The challenge's Lock In (App.hand_lock_in, once the mat is full): the
@@ -333,6 +482,25 @@ func _extra(name: String) -> Control:
 			var t := Orders.tiers(check_round)
 			m.show_score.call_deferred(lerpf(float(t.one), float(t.two), 0.5), t)
 			return m
+		"pool":  # the station's six elements, named: 2 rows of 3 (six 11px names don't fit one row in the card)
+			var w := _card.content_width()
+			var dice := Catalog.sorted_dice(Catalog.station(Game.ctx.current))
+			var cell := w / 3
+			var cw := 40.0
+			var box := Control.new()
+			box.mouse_filter = MOUSE_FILTER_IGNORE
+			box.custom_minimum_size = Vector2(w, 2 * (cw + 18) + 6)
+			for k in dice.size():
+				var chip := StationScreen.element_chip(dice[k], cw)
+				chip.get_node("Num").visible = false
+				chip.get_node("Badge").visible = false
+				chip.position = Vector2(k % 3 * cell + (cell - cw) / 2, k / 3 * (cw + 24))
+				var nm: Label = chip.get_node("Name")
+				nm.add_theme_color_override("font_color", Color("#5e4026"))
+				nm.position = Vector2(-(cell - cw) / 2, cw + 3)
+				nm.size = Vector2(cell, 12)
+				box.add_child(chip)
+			return box
 		"elements":  # the 16, by suit then atomic number: 2 rows of 8
 			var w := _card.content_width()
 			var suits: Array = Data.t("ELEMENT_SUIT_LABEL").keys()
@@ -373,6 +541,11 @@ func _spots(word: String) -> Array:
 			return [_pop.get_node("Card/" + {"cp:costs": "Costs", "cp:station": "Station", "cp:parts": "Parts", "cp:pts": "Pts"}[word])]
 	if word.begins_with("hub:"):
 		return [_app.hub.button(word.substr(4))]
+	if word == "st:chips":  # the station's element pool
+		var st := _station()
+		return st.get_node("Scroll/Page/Chips").get_children() if st else []
+	if word == "map:finds":  # the 🔍 marks on the stations
+		return Tutorial.find_all("map:find:")
 	var n := _find(word)
 	return [n] if n else []
 
@@ -407,6 +580,16 @@ func _waited() -> bool:
 			return _since > 1.5 and (mat == null or not mat.playing) 				and not _app.get_children().any(func(c): return c.has_meta("flying"))
 		"reward":
 			return _app.get_children().any(func(c): return c is LockInReward)
+		"arrive":
+			return _since > 0.9
+		"roll":
+			return _app.get_children().any(func(c): return c is RollPopup and c._rolled)
+		"gathered":
+			return _since > 0.3 and not _app.get_children().any(func(c): return c is RollPopup)
+		"crafted":
+			return _since > 0.8 and not _app.get_children().any(func(c): return c.has_meta("peek") or c.has_meta("flying"))
+		"reveal":
+			return _since > 2.0
 	return true
 
 
@@ -420,6 +603,9 @@ func _update() -> void:
 		for c in _spots(word):
 			if c is Control and c.is_visible_in_tree():
 				var g: Rect2 = c.get_global_rect()
+				if word == "map:finds":  # apart across the map: a hole each
+					holes.append(Rect2(g.position - global_position, g.size).grow(6))
+					continue
 				r = g if r.size == Vector2.ZERO else r.merge(g)
 		if r.size != Vector2.ZERO:
 			holes.append(Rect2(r.position - global_position, r.size).grow(6))
@@ -443,7 +629,14 @@ func _draw_rings() -> void:
 		_rings.draw_style_box(Tok.box(Color.TRANSPARENT, 12, 3, Color("#ffe08a")), h)
 
 
-## Taps go nowhere but the card and the ✕ question (shortcut: Next only; the
-## real taps at key moments come with the challenge and station parts).
+## Taps go nowhere but the card, the ✕ question and the step's `tap` spots,
+## where a tap does what Next does (the next step does the real thing).
 func _gui_input(ev: InputEvent) -> void:
 	accept_event()
+	if not (_card.visible and i >= 0 and i < steps.size() and Tap.tap(ev)):
+		return
+	for word in steps[i].tap:
+		for c in _spots(word):
+			if c is Control and c.is_visible_in_tree() and c.get_global_rect().grow(6).has_point(ev.global_position):
+				_go(i + 1)
+				return

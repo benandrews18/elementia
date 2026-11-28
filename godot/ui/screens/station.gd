@@ -79,7 +79,8 @@ func _redraw() -> void:
 		var qt := QuarkTopBar.make()
 		qt.size = Vector2(w, TOP)
 		$Top.add_child(qt)
-	corner_buttons($Top, true)
+	var qr = Game.ctx.get("qr")  # Quick Rules: no Settings; Convert once its step comes
+	corner_buttons($Top, qr == null, qr == null or qr.get("convert", false))
 
 
 ## Arriving from the map (step 26, the user 2026-11-26): the art fades in,

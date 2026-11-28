@@ -31,7 +31,7 @@ func _ready() -> void:
 	_fresh = fresh_stations()
 	if Game.ctx.get("awaitingStart"):  # the opening shows only where you start: its neighbours are found on leaving it
 		Game.state.mapSeen = Catalog.found_stations(Game.state, []).keys()
-	elif _fresh.is_empty() or not Juice.on():
+	elif _fresh.is_empty() or not Juice.on() or Game.ctx.get("qr") != null:  # Quick Rules plays its own reveals
 		Game.state.mapSeen = Catalog.found_stations(Game.state).keys()  # each reveal plays once (the user, 2026-11-26)
 	else:
 		for st in _fresh:
@@ -161,26 +161,35 @@ func _redraw() -> void:
 		n.visible = here or (not ctx.get("awaitingStart") and found.has(n.station))  # the opening: only where you start
 		if qr != null:
 			n.visible = qr.stations.has(n.station)
-	$Area/Paths.visible = not ctx.get("awaitingStart") and qr == null
+	$Area/Paths.visible = not ctx.get("awaitingStart") and (qr == null or qr.get("paths", false))
 	$Area/Paths.queue_redraw()
 	_badges(k)
 	if qr != null:
 		if qr.card != "":
 			$Dynamic.add_child(station_card(qr.card, size.x, false, false, true))
+		if qr.get("clock"):
+			_clock(top)
+		if ctx.get("selectedMapStation"):
+			$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
 		return
 	if checked:
 		var qt := QuarkTopBar.make()
 		qt.size = Vector2(size.x, QuarkTopBar.H)
 		$Dynamic.add_child(qt)
 	if s.get("lastStation") != null:  # the turn clock, top-left (not on the first pick)
-		var clock := TurnClock.make(int(s.get("visits", 0)))
-		clock.position = Vector2(8, top + 4)
-		clock.mouse_filter = MOUSE_FILTER_STOP
-		clock.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: ClockInfo.show_on(App.current))
-		$Dynamic.add_child(clock)
+		_clock(top)
 	StationScreen.corner_buttons($Dynamic, true)  # Settings from every screen (the user, 2026-11-26)
 	if ctx.get("selectedMapStation"):  # over the Quark bar, as in the HTML game
 		$Dynamic.add_child(station_card(ctx.selectedMapStation, size.x))
+
+
+func _clock(top: float) -> void:
+	var clock := TurnClock.make(int(Game.state.get("visits", 0)))
+	clock.position = Vector2(8, top + 4)
+	clock.mouse_filter = MOUSE_FILTER_STOP
+	clock.set_meta("cmp", "clock")
+	clock.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: ClockInfo.show_on(App.current))
+	$Dynamic.add_child(clock)
 
 
 ## The tracked item's marks, over the station circles (the user: the HTML had
@@ -222,6 +231,7 @@ func _badges(k: float) -> void:
 			g.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			g.size = Vector2(28, 28) * k
 			g.position = c + Vector2(off, -off) - g.size / 2
+			g.set_meta("cmp", "map:find:" + n.station)
 			holder.add_child(g)
 			_on_badge(g, "Components for {%s} are here!" % e.emoji)
 

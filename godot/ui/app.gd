@@ -898,7 +898,7 @@ func _sync_floats() -> void:
 	if panel == "convert":  # its button over the tray: a tap closes it again
 		StationScreen.corner_buttons(_floats, false, true, false)  # no suit strip over the tray (the user, 2026-11-26)
 		return
-	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab") or Game.ctx.get("qr") != null:
+	if Progress.prefs.pinnedItems.is_empty() or not panel in ["", "pins"] or Game.ctx.get("comboLab") or (Game.ctx.get("qr") != null and not Game.ctx.qr.get("floats")):
 		return
 	var y := size.y - HubBar.H - 14 - 58
 	var t = Game.ctx.get("tracked")
@@ -1003,10 +1003,11 @@ func sync_hub() -> void:
 		return
 	if hub.hand:  # out of a check with cards: Draw's grey goes with it
 		hub.greyed = false
-	if Game.ctx.get("qr") != null:  # Quick Rules: its own face, nothing lit but what's open
+	if Game.ctx.get("qr") != null:  # Quick Rules: its own face ("": the real one), nothing lit but what's open
 		hub.muted = false
 		_start_lock(false)
-		hub.show_state("map" if panel == "market" else Game.ctx.qr.face, {"market": panel == "market", "inv": panel == "drawer"}, {})
+		var face: String = Game.ctx.qr.face if Game.ctx.qr.face != "" else home_face()
+		hub.show_state("map" if panel == "market" else face, {"market": panel == "market", "inv": panel == "drawer", "jobs": panel == "todo"}, {})
 		return
 	hub.muted = home_face() == "start" and Game.ctx.get("tracked") == null
 	_start_lock(hub.muted)

@@ -33,6 +33,7 @@ func _redraw() -> void:
 	for n in names:
 		var chip := PinChip.make()
 		chip.fill(n, Game.ctx.get("tracked") == n)
+		chip.set_meta("cmp", "pins:chip:" + n)
 		var item: String = n
 		chip.gui_input.connect(func(ev): if Tap.tap(ev):  # toggleJobSelect()
 			Game.set_tracked(null) if Game.ctx.get("tracked") == item else Game.track(item))
