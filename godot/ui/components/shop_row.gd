@@ -63,7 +63,8 @@ func _ready() -> void:
 		if not lit:  # short of it: a tap opens Convert, this bench on top (the user, 2026-11-26)
 			b.mouse_filter = MOUSE_FILTER_STOP
 			b.set_meta("cmp", "tax:short:" + su)
-			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.open_convert("", e.name))
+			b.gui_input.connect(func(ev): if Tap.tap(ev) and App.current:  # Convert, a random element of that suit to make (the user, 2026-11-27)
+				App.current.open_convert(Data.t("SUIT_CORE_ELEMENTS")[su].pick_random(), e.name))
 			Tok.grow_hit(b, 5)
 		var g := Tok.icon("suit:" + su, 13)
 		g.position = Vector2(4.5, 4.5)

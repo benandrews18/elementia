@@ -288,6 +288,19 @@ func _convert(app: App) -> bool:
 	check(Catalog.count(Game.state, from) == before_from - 3 and Catalog.count(Game.state, to) == before_to + 1, "converted 3 %s into 1 %s" % [from, to])
 	check(tray.from == "" and tray.to == "", "the tray resets after converting")
 	app.close_panel()
+	# A short suit tax's badge: Convert, an element of that suit already set to make.
+	var row := ShopRow.make(Catalog.entry("Tree"), 300, func(_n, _r): pass, func(_n): pass)
+	var saved: Dictionary = Game.state.elements
+	Game.state.elements = {}
+	add_child(row)
+	var tax: Array = row.find_children("*", "Panel", true, false).filter(func(n): return str(n.get_meta("cmp", "")).begins_with("tax:short:"))
+	if not tax.is_empty():
+		Tap._down = null
+		tax[0].gui_input.emit(_release())
+		check(app.panel_node is ConvertTray and Data.t("SUIT_CORE_ELEMENTS")["organic"].has((app.panel_node as ConvertTray).to), "a short suit tax opens Convert on an element of that suit")
+		app.close_panel()
+	row.queue_free()
+	Game.state.elements = saved
 	await get_tree().process_frame
 	return true
 
