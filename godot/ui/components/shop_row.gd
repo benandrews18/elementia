@@ -79,6 +79,7 @@ func _ready() -> void:
 	if can:
 		btn.add_theme_stylebox_override("normal", can_style)
 		btn.mouse_filter = MOUSE_FILTER_STOP
+		Tok.grow_hit(btn, 10)  # easier to hit (the user, 2026-11-27)
 		btn.gui_input.connect(func(ev): if Tap.tap(ev): on_craft.call(e.name, _tax_anchor(btn)))
 	else:
 		btn.add_theme_color_override("font_color", locked_color)

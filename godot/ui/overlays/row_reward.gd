@@ -35,6 +35,9 @@ func _ready() -> void:
 	for i in rows:
 		var sq := LockInReward.unknown_square(48)
 		sq.position = Vector2(x, 0)
+		sq.mouse_filter = MOUSE_FILTER_STOP  # a tap: what an Unknown Element is (the user, 2026-11-27)
+		sq.set_meta("cmp", "row:unknown")
+		sq.gui_input.connect(func(ev): if Tap.tap(ev) and App.current: App.current.show_tip("unknown"))
 		$Window/Squares.add_child(sq)
 		x += 56
 	var nice: Control = $Window/Nice

@@ -1758,10 +1758,21 @@ func _press(at: Vector2) -> InputEventMouseButton:
 
 ## The handed-over ingredients aren't new Market squares (only the craft is).
 ## Waits for a Market "?" window and taps its Nice. False if none came.
+var _row_tip_seen := false
+
+
 func _nice(app: App) -> bool:
 	if not await _until(func(): return app.get_children().any(func(c): return c is RowReward and not c.is_queued_for_deletion())):
 		return false
 	var rw: RowReward = app.get_children().filter(func(c): return c is RowReward and not c.is_queued_for_deletion())[0]
+	if not _row_tip_seen:  # its "?" explains Unknown Elements
+		_row_tip_seen = true
+		Tap._down = null
+		rw.find_children("*", "Panel", true, false).filter(func(n): return n.get_meta("cmp", "") == "row:unknown")[0].gui_input.emit(_release())
+		var tips: Array = app.get_children().filter(func(c): return c is UnknownTip)
+		check(tips.size() == 1, "the Market reward's ? opens the Unknown Element window")
+		for t in tips:
+			t.queue_free()
 	rw.queue_free()
 	rw.on_done.call()
 	return true
